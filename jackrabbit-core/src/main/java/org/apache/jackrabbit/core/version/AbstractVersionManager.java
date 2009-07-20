@@ -21,10 +21,12 @@ import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
@@ -71,6 +73,11 @@ abstract class AbstractVersionManager implements VersionManager {
      * Persistent root node of the activities.
      */
     protected NodeStateEx activitiesRoot;
+
+    /**
+     * Persistent root node of the configurations.
+     */
+    protected NodeStateEx configurationsRoot;
 
     /**
      * the lock on this version manager
@@ -360,6 +367,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * @param id the id of the node
      * @throws RepositoryException if an error occurs while reading from the
      *                             repository.
+     * @return the nodestate for the given id.
      */
     protected abstract NodeStateEx getNodeStateEx(NodeId id)
             throws RepositoryException;
@@ -432,6 +440,57 @@ abstract class AbstractVersionManager implements VersionManager {
             throw new RepositoryException(e);
         } finally {
             operation.close();
+        }
+    }
+
+    /**
+     * Creates aew configuration node
+     * @param rootId the id of the root node of the workspace configuration
+     * @param baseline the optional baseline
+     * @return a node state of the created configuration
+     * @throws RepositoryException if an error occurs
+     */
+    NodeStateEx internalCreateConfiguration(NodeId rootId, InternalBaseline baseline)
+            throws RepositoryException {
+        if (baseline != null) {
+            // the exact behavior is not clarified yet.
+            // see http://jsr-283.dev.java.net/issues/show_bug.cgi?id=795
+            throw new UnsupportedRepositoryOperationException(
+                    "creating configurations based on a baseline not supported, yet");
+        }
+
+        WriteOperation ops = startWriteOperation();
+        try {
+            // If the parameter baseline is null, a new version history is created
+            // to store baselines of the new configuration, and the jcr:baseVersion
+            // of the new configuration references the root of the new version history.
+            NodeId configId = new NodeId();
+            NodeStateEx configParent = getParentNode(configurationsRoot,
+                    configId.toString(), NameConstants.REP_CONFIGURATIONS);
+            Name name = getName(configId.toString());
+            NodeStateEx config = configParent.addNode(name, NameConstants.NT_CONFIGURATION, configId, true);
+            config.setPropertyValue(NameConstants.JCR_ROOT, InternalValue.create(rootId));
+
+            // now create the version history of the baseline
+            String uuid = new NodeId().toString();
+            NodeStateEx histParent = getParentNode(historyRoot, uuid, NameConstants.REP_VERSIONSTORAGE);
+            Name histName = getName(uuid);
+            NodeStateEx history =
+                InternalVersionHistoryImpl.create(this, histParent, histName, config.getState(), null);
+            InternalVersionHistory vh = new InternalVersionHistoryImpl(this, history);
+
+            // and set the base version and history to the config
+            NodeId blId = vh.getRootVersion().getId();
+            config.setPropertyValue(NameConstants.JCR_BASEVERSION, InternalValue.create(blId));
+            config.setPropertyValue(NameConstants.JCR_VERSIONHISTORY, InternalValue.create(vh.getId()));
+            configParent.store();
+            ops.save();
+
+            return config;
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } finally {
+            ops.close();
         }
     }
 

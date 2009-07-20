@@ -155,6 +155,20 @@ public interface VersionManager {
     InternalVersion getHeadVersionOfNode(NodeId id) throws RepositoryException;
 
     /**
+     * Creates a new internal configuration that represents a configuration
+     * of the tree rooted at the node specified by <code>rootId</code>
+     * 
+     * @param session the session that creates the configuration
+     * @param rootId root id of the configuration
+     * @param baseline the baseline or <code>null</code>
+     * @return a new internal configuration
+     * @throws RepositoryException if an error occurs
+     */
+    InternalConfiguration createConfiguration(Session session, NodeId rootId,
+                                              InternalBaseline baseline)
+            throws RepositoryException;
+
+    /**
      * Creates a new activity
      * @param session the current session
      * @param title title of the new activity

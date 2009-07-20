@@ -23,20 +23,20 @@ import java.util.Map;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.version.ActivityViolationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.ActivityViolationException;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
@@ -51,10 +51,10 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
@@ -86,6 +86,11 @@ public class VersionManagerImpl extends AbstractVersionManager
      */
     private static final Path ACTIVITIES_PATH;
 
+    /**
+     * The path to the configurations storage: /jcr:system/jcr:versionStorage/jcr:configurations
+     */
+    private static final Path CONFIGURATIONS_PATH;
+
     static {
         try {
             PathBuilder builder = new PathBuilder();
@@ -100,6 +105,13 @@ public class VersionManagerImpl extends AbstractVersionManager
             builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
             builder.addLast(NameConstants.JCR_ACTIVITIES);
             ACTIVITIES_PATH = builder.getPath();
+
+            builder = new PathBuilder();
+            builder.addRoot();
+            builder.addLast(NameConstants.JCR_SYSTEM);
+            builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
+            builder.addLast(NameConstants.JCR_CONFIGURATIONS);
+            CONFIGURATIONS_PATH = builder.getPath();
         } catch (MalformedPathException e) {
             // will not happen. path is always valid
             throw new InternalError("Cannot initialize path");
@@ -134,12 +146,24 @@ public class VersionManagerImpl extends AbstractVersionManager
     /**
      * Map of returned items. this is kept for invalidating
      */
+    @SuppressWarnings("unchecked")
     private final Map<ItemId, InternalVersionItem> versionItems =
             new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
-     * Creates a new version manager
+     * Creates a new internal version manager
      *
+     * @param pMgr underlying persistence manager
+     * @param fs workspace file system
+     * @param ntReg node type registry
+     * @param obsMgr observation manager
+     * @param rootParentId node id of the version storage parent (i.e. jcr:system)
+     * @param storageId node id of the version storage (i.e. jcr:versionStorage)
+     * @param activitiesId node id of the activities storage (i.e. jcr:activities)
+     * @param configurationsId node if of the configurations storage (i.e. jcr:configurations)
+     * @param cacheFactory item state cache factory
+     * @param ismLocking workspace item state locking
+     * @throws RepositoryException if an error occurs
      */
     public VersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
                               NodeTypeRegistry ntReg,
@@ -147,6 +171,7 @@ public class VersionManagerImpl extends AbstractVersionManager
                               NodeId rootParentId,
                               NodeId storageId,
                               NodeId activitiesId,
+                              NodeId configurationsId,
                               ItemStateCacheFactory cacheFactory,
                               ISMLocking ismLocking) throws RepositoryException {
         super(ntReg);
@@ -201,6 +226,32 @@ public class VersionManagerImpl extends AbstractVersionManager
                 pMgr.store(cl);
             }
 
+            // check for jcr:configurations
+            if (!pMgr.exists(configurationsId)) {
+                NodeState root = pMgr.createNew(configurationsId);
+                root.setParentId(storageId);
+                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_VERSIONSTORAGE).getApplicableChildNodeDef(
+                        NameConstants.JCR_CONFIGURATIONS, NameConstants.REP_CONFIGURATIONS, ntReg).getId());
+                root.setNodeTypeName(NameConstants.REP_CONFIGURATIONS);
+                PropertyState pt = pMgr.createNew(new PropertyId(activitiesId, NameConstants.JCR_PRIMARYTYPE));
+                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_CONFIGURATIONS).getApplicablePropertyDef(
+                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
+                pt.setMultiValued(false);
+                pt.setType(PropertyType.NAME);
+                pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_CONFIGURATIONS)});
+                root.addPropertyName(pt.getName());
+
+                // add activities as child
+                NodeState historyState = pMgr.load(storageId);
+                historyState.addChildNodeEntry(NameConstants.JCR_CONFIGURATIONS, configurationsId);
+
+                ChangeLog cl = new ChangeLog();
+                cl.added(root);
+                cl.added(pt);
+                cl.modified(historyState);
+                pMgr.store(cl);
+            }
+
             sharedStateMgr = createItemStateManager(pMgr, storageId, ntReg, cacheFactory, ismLocking);
 
             stateMgr = LocalItemStateManager.createInstance(sharedStateMgr, escFactory, cacheFactory);
@@ -211,6 +262,9 @@ public class VersionManagerImpl extends AbstractVersionManager
 
             nodeState = (NodeState) stateMgr.getItemState(activitiesId);
             activitiesRoot =  new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_ACTIVITIES);
+
+            nodeState = (NodeState) stateMgr.getItemState(configurationsId);
+            configurationsRoot =  new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_CONFIGURATIONS);
 
             // create the virtual item state provider
             versProvider = new VersionItemStateProvider(
@@ -292,6 +346,22 @@ public class VersionManagerImpl extends AbstractVersionManager
             }
         });
         return state.getNodeId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalConfiguration createConfiguration(Session session,
+                                                     final NodeId rootId,
+                                                     final InternalBaseline baseline)
+            throws RepositoryException {
+        NodeStateEx state = (NodeStateEx)
+                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
+            public Object run() throws RepositoryException {
+                return internalCreateConfiguration(rootId, baseline);
+            }
+        });
+        return new InternalConfigurationImpl(this, state);
     }
 
     /**

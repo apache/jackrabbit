@@ -283,6 +283,18 @@ public class NameConstants {
      */
     public static final Name JCR_ACTIVITY_TITLE = FACTORY.create(Name.NS_JCR_URI, "activityTitle");
 
+    /**
+     * jcr:configurations
+     * @since 2.0
+     */
+    public static final Name JCR_CONFIGURATIONS = FACTORY.create(Name.NS_JCR_URI, "configurations");
+
+    /**
+     * jcr:configuration
+     * @since 2.0
+     */
+    public static final Name JCR_CONFIGURATION = FACTORY.create(Name.NS_JCR_URI, "configuration");
+
 
     //--------------------------------< node type related item name constants >
 
@@ -543,6 +555,12 @@ public class NameConstants {
      */
     public static final Name NT_ACTIVITY = FACTORY.create(Name.NS_NT_URI, "activity");
 
+    /**
+     * nt:configuration
+     * @since 2.0
+     */
+    public static final Name NT_CONFIGURATION = FACTORY.create(Name.NS_NT_URI, "configuration");
+
     //--------------------------------------------------------------------------
     /**
      * rep:root
@@ -563,6 +581,11 @@ public class NameConstants {
      * rep:activities
      */
     public static final Name REP_ACTIVITIES = FACTORY.create(Name.NS_REP_URI, "activities");
+
+    /**
+     * rep:activities
+     */
+    public static final Name REP_CONFIGURATIONS = FACTORY.create(Name.NS_REP_URI, "configurations");
 
     /**
      * rep:versionReference
