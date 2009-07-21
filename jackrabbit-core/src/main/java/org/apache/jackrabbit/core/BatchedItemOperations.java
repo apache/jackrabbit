@@ -269,7 +269,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check access rights, lock status, node type constraints, etc.
         checkAddNode(destParentState, destName,
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
+                | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. verify that source has mixin mix:shareable
         if (!isShareable(srcState)) {
@@ -403,7 +403,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         checkAddNode(destParentState, destName.getName(),
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
+                | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
         // check read access right on source node using source access manager
         try {
             if (!srcAccessMgr.isGranted(srcPath, Permission.READ)) {
@@ -547,11 +547,11 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check if target state can be removed from old/added to new parent
 
         checkRemoveNode(target, srcParent.getNodeId(),
-                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS
+                CHECK_ACCESS | CHECK_LOCK | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS
                 | CHECK_HOLD | CHECK_RETENTION);
         checkAddNode(destParent, destName.getName(),
                 target.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
+                | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. do move operation (modify and store affected states)
         boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
@@ -637,7 +637,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. check if target state can be removed from parent
         checkRemoveNode(target, parentId,
-                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING
+                CHECK_ACCESS | CHECK_LOCK | CHECK_CHECKED_OUT
                 | CHECK_CONSTRAINTS | CHECK_REFERENCES | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. do remove operation
@@ -661,7 +661,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                     parent node</li>
      *                     <li><code>{@link #CHECK_LOCK}</code>: make sure
      *                     there's no foreign lock on parent node</li>
-     *                     <li><code>{@link #CHECK_VERSIONING}</code>: make sure
+     *                     <li><code>{@link #CHECK_CHECKED_OUT}</code>: make sure
      *                     parent node is checked-out</li>
      *                     <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                     make sure no node type constraints would be violated</li>
@@ -693,7 +693,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. versioning status
 
-        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
+        if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
             // make sure parent node is checked-out
             verifyCheckedOut(parentPath);
         }
@@ -789,7 +789,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                    and remove privilege on target node</li>
      *                    <li><code>{@link #CHECK_LOCK}</code>: make sure
      *                    there's no foreign lock on parent node</li>
-     *                    <li><code>{@link #CHECK_VERSIONING}</code>: make sure
+     *                    <li><code>{@link #CHECK_CHECKED_OUT}</code>: make sure
      *                    parent node is checked-out</li>
      *                    <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                    make sure no node type constraints would be violated</li>
@@ -827,7 +827,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                    and remove privilege on target node</li>
      *                    <li><code>{@link #CHECK_LOCK}</code>: make sure
      *                    there's no foreign lock on parent node</li>
-     *                    <li><code>{@link #CHECK_VERSIONING}</code>: make sure
+     *                    <li><code>{@link #CHECK_CHECKED_OUT}</code>: make sure
      *                    parent node is checked-out</li>
      *                    <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                    make sure no node type constraints would be violated</li>
@@ -867,7 +867,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. versioning status
 
-        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
+        if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
             // make sure parent node is checked-out
             verifyCheckedOut(parentPath);
         }
@@ -1602,7 +1602,7 @@ public class BatchedItemOperations extends ItemValidator {
                     checkRemoveNode(nodeState, targetState.getNodeId(),
                             CHECK_ACCESS
                             | CHECK_LOCK
-                            | CHECK_VERSIONING
+                            | CHECK_CHECKED_OUT
                             | CHECK_HOLD
                             | CHECK_RETENTION
                     );
@@ -1732,7 +1732,7 @@ public class BatchedItemOperations extends ItemValidator {
                         checkRemoveNode(existingState,
                                 CHECK_ACCESS
                                 | CHECK_LOCK
-                                | CHECK_VERSIONING
+                                | CHECK_CHECKED_OUT
                                 | CHECK_CONSTRAINTS
                                 | CHECK_HOLD
                                 | CHECK_RETENTION);

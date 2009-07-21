@@ -190,7 +190,7 @@ public class WorkspaceImporter implements Importer {
             itemOps.checkRemoveNode(conflicting,
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
-                    | BatchedItemOperations.CHECK_VERSIONING
+                    | BatchedItemOperations.CHECK_CHECKED_OUT
                     | BatchedItemOperations.CHECK_CONSTRAINTS
                     | BatchedItemOperations.CHECK_HOLD
                     | BatchedItemOperations.CHECK_RETENTION);
@@ -231,7 +231,7 @@ public class WorkspaceImporter implements Importer {
             itemOps.checkRemoveNode(conflicting,
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
-                    | BatchedItemOperations.CHECK_VERSIONING
+                    | BatchedItemOperations.CHECK_CHECKED_OUT
                     | BatchedItemOperations.CHECK_CONSTRAINTS
                     | BatchedItemOperations.CHECK_HOLD
                     | BatchedItemOperations.CHECK_RETENTION);
@@ -253,7 +253,7 @@ public class WorkspaceImporter implements Importer {
                     nodeInfo.getNodeTypeName(),
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
-                    | BatchedItemOperations.CHECK_VERSIONING
+                    | BatchedItemOperations.CHECK_CHECKED_OUT
                     | BatchedItemOperations.CHECK_CONSTRAINTS
                     | BatchedItemOperations.CHECK_HOLD
                     | BatchedItemOperations.CHECK_RETENTION);

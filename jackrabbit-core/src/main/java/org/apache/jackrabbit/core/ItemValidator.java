@@ -62,10 +62,11 @@ public class ItemValidator {
      * option to check lock status
      */
     public static final int CHECK_LOCK = 2;
+
     /**
      * option to check checked-out status
      */
-    public static final int CHECK_VERSIONING = 4;
+    public static final int CHECK_CHECKED_OUT = 4;
 
     /**
      * check for referential integrity upon removal
@@ -294,7 +295,7 @@ public class ItemValidator {
                 throw new ConstraintViolationException(msg);
             }
         }
-        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
+        if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
             NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
             if (!node.internalIsCheckedOut()) {
                 String msg = "Unable to perform operation. Node is checked-in.";
@@ -342,7 +343,7 @@ public class ItemValidator {
                 return false;
             }
         }
-        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
+        if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
             NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
             if (!node.internalIsCheckedOut()) {
                 return false;

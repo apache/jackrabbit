@@ -755,7 +755,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // make sure that parent node is checked-out and not locked
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT;
         session.getValidator().checkModify(parentNode, options, Permission.NONE);
 
         // delegate the creation of the child node to the parent node
@@ -1036,7 +1036,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
                 | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:(simple)versionable. since adding the mixin alters
@@ -1142,7 +1142,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
                 | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         session.getValidator().checkModify(this, options, permissions);
@@ -1377,7 +1377,7 @@ public class NodeImpl extends ItemImpl implements Node {
     protected void checkSetProperty()
             throws VersionException, LockException, RepositoryException {
         // make sure this node is checked-out and is not locked
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT;
         session.getValidator().checkModify(this, options, Permission.NONE);
     }
 
@@ -1636,7 +1636,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         // make sure this node is checked-out and not locked by another session.
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         NodeTypeImpl nt = null;
@@ -1867,7 +1867,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // make sure this node is checked-out and neither protected nor locked
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
                 | ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
@@ -2036,7 +2036,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // (1) make sure that parent node is checked-out
         // (2) check lock status
         // (3) check protected flag of parent (i.e. this) node
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_CONSTRAINTS;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // (4) check for name collisions
@@ -2876,7 +2876,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return false;
         }
 
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
                 | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:(simple)versionable. since adding the mixin alters
@@ -3732,7 +3732,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // make sure this node is checked-out, neither protected nor locked and
         // the editing session has sufficient permission to change the primary type.
-        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK
+        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK
                 | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         session.getValidator().checkModify(this, options, Permission.NODE_TYPE_MNGMT);
 
