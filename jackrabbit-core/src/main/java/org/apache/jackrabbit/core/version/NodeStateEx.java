@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;

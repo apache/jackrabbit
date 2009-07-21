@@ -156,7 +156,7 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
     /**
      * {@inheritDoc}
      */
-    public Map<NodeId, InternalVersion> getChangeSet() throws RepositoryException {
+    public VersionSet getChangeSet() throws RepositoryException {
         Map<NodeId, InternalVersion> changeset = new HashMap<NodeId, InternalVersion>();
         if (node.hasProperty(NameConstants.REP_VERSIONS)) {
             for (InternalValue ref: node.getPropertyValues(NameConstants.REP_VERSIONS)) {
@@ -164,6 +164,6 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
                 changeset.put(v.getVersionHistory().getId(), v);
             }
         }
-        return changeset;
+        return new VersionSet(changeset);
     }
 }

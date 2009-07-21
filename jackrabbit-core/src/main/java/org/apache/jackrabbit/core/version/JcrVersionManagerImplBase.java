@@ -290,7 +290,11 @@ abstract public class JcrVersionManagerImplBase {
      * @throws RepositoryException if an error occurs
      */
     protected InternalVersion getVersion(Version v) throws RepositoryException {
-        return vMgr.getVersion(((VersionImpl) v).getNodeId());
+        if (v == null) {
+            return null;
+        } else {
+            return vMgr.getVersion(((VersionImpl) v).getNodeId());
+        }
     }
 
     /**

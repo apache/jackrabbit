@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.version;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -348,17 +349,30 @@ public class VersionManagerImpl extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public InternalConfiguration createConfiguration(Session session,
-                                                     final NodeId rootId,
-                                                     final InternalBaseline baseline)
+    public NodeId createConfiguration(Session session, final NodeId rootId)
             throws RepositoryException {
         NodeStateEx state = (NodeStateEx)
                 escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
-                return internalCreateConfiguration(rootId, baseline);
+                return internalCreateConfiguration(rootId);
             }
         });
-        return new InternalConfigurationImpl(this, state);
+        return state.getNodeId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalBaseline checkin(Session session,
+                                    final InternalConfiguration config,
+                                    final Set<NodeId> baseVersions)
+            throws RepositoryException {
+        return (InternalBaseline)
+                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
+            public Object run() throws RepositoryException {
+                return internalCheckin((InternalConfigurationImpl) config, baseVersions);
+            }
+        });
     }
 
     /**

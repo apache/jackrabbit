@@ -16,14 +16,10 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Map;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 
 /**
@@ -48,7 +44,15 @@ class InternalBaselineImpl extends InternalVersionImpl
     /**
      * {@inheritDoc}
      */
-    public Map<NodeId, InternalVersion> getBaseVersions() throws RepositoryException {
+    public VersionSet getBaseVersions() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("InternalBaseline.getBaseversions()");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalConfiguration getConfiguration() throws RepositoryException {
+        NodeId configId = getVersionHistory().getVersionableId();
+        return (InternalConfiguration) vMgr.getItem(configId);
     }
 }

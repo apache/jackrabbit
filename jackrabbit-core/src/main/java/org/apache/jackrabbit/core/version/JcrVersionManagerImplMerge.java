@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
@@ -454,13 +453,12 @@ abstract public class JcrVersionManagerImplMerge extends JcrVersionManagerImplRe
     protected void merge(InternalActivity activity, List<ItemId> failedIds)
             throws RepositoryException {
 
-        Map<NodeId, InternalVersion> changeSet = activity.getChangeSet();
-        ChangeSetVersionSelector vsel = new ChangeSetVersionSelector(changeSet);
+        VersionSet changeSet = activity.getChangeSet();
         WriteOperation ops = startWriteOperation();
         try {
-            Iterator<NodeId> iter = changeSet.keySet().iterator();
+            Iterator<NodeId> iter = changeSet.versions().keySet().iterator();
             while (iter.hasNext()) {
-                InternalVersion v = changeSet.remove(iter.next());
+                InternalVersion v = changeSet.versions().remove(iter.next());
                 NodeStateEx state = getNodeStateEx(v.getFrozenNode().getFrozenId());
                 if (state != null) {
                     InternalVersion base = getBaseVersion(state);
@@ -474,48 +472,20 @@ abstract public class JcrVersionManagerImplMerge extends JcrVersionManagerImplRe
                         setMergeFailed(state, set);
                         state.store();
                     } else {
-                        for (InternalVersion restored: internalRestore(state, v, vsel, true)) {
-                            changeSet.remove(restored.getVersionHistory().getId());
+                        for (InternalVersion restored: internalRestore(state, v, changeSet, true)) {
+                            changeSet.versions().remove(restored.getVersionHistory().getId());
                         }
                     }
                 }
 
                 // reset iterator
-                iter = changeSet.keySet().iterator();
+                iter = changeSet.versions().keySet().iterator();
             }
             ops.save();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
             ops.close();
-        }
-    }
-
-    /**
-     * Internal version selector that selects the version in the changeset.
-     */
-    private static class ChangeSetVersionSelector implements VersionSelector {
-
-        /**
-         * the change set.
-         */
-        private final Map<NodeId, InternalVersion> changeSet;
-
-        /**
-         * creates a changeset version selector
-         * @param changeSet the changeset map from history id -> version
-         */
-        private ChangeSetVersionSelector(Map<NodeId, InternalVersion> changeSet) {
-            this.changeSet = changeSet;
-        }
-
-        /**
-         * {@inheritDoc}
-         *
-         * Selects the version in the changeset
-         */
-        public InternalVersion select(InternalVersionHistory vh) throws RepositoryException {
-            return changeSet.get(vh.getId());
         }
     }
 

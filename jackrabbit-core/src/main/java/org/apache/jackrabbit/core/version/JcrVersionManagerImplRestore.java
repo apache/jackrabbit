@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.version;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.ItemExistsException;
@@ -52,8 +51,11 @@ import org.slf4j.LoggerFactory;
 /**
  * The JCR Version Manager impementation is split in several classes in order to
  * group related methods together.
- * </p>
+ * <p/>
  * this class provides methods for the restore operations.
+ * <p/>
+ * Implementation note: methods starting with "internal" are considered to be
+ * executed within a "write operations" block.
  */
 abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImplBase {
 
@@ -74,7 +76,7 @@ abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImpl
         super(session, stateMgr, hierMgr);
     }
 
-        /**
+    /**
      * @param state the state to restore
      * @param version the version to restore
      * @param removeExisting remove existing flag
@@ -201,64 +203,41 @@ abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImpl
      * @param versions Versions to restore
      * @param removeExisting remove existing flag
      * @throws RepositoryException if an error occurs
+     * @throws ItemStateException if an error occurs
      *
      * @see VersionManager#restore(Version[], boolean)
      * @see VersionManager#restore(Version, boolean)
      */
-    protected void restore(final Map<NodeId, InternalVersion> versions,
-                           boolean removeExisting)
-            throws RepositoryException {
-
-        // create a version selector to the set of versions
-        VersionSelector vsel = new VersionSelector() {
-            public InternalVersion select(InternalVersionHistory versionHistory) throws RepositoryException {
-                // try to select version as specified
-                InternalVersion v = versions.get(versionHistory.getId());
-                if (v == null) {
-                    // select latest one
-                    v = DateVersionSelector.selectByDate(versionHistory, null);
-                }
-                return v;
-            }
-        };
-
-        WriteOperation ops = startWriteOperation();
-        try {
-            // now restore all versions that have a node in the workspace
-            int numRestored = 0;
-            while (versions.size() > 0) {
-                Set<InternalVersion> restored = null;
-                for (InternalVersion v : versions.values()) {
-                    NodeStateEx state = getNodeStateEx(v.getFrozenNode().getFrozenId());
-                    if (state != null) {
-                        // todo: check should operate on workspace states, too
-                        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
-                        checkModify(state, options, Permission.NONE);
-                        restored = internalRestore(state, v, vsel, removeExisting);
-                        // remove restored versions from set
-                        for (InternalVersion r : restored) {
-                            versions.remove(r.getVersionHistory().getId());
-                        }
-                        numRestored += restored.size();
-                        break;
+    protected void internalRestore(VersionSet versions, boolean removeExisting)
+            throws RepositoryException, ItemStateException {
+        // now restore all versions that have a node in the workspace
+        int numRestored = 0;
+        while (versions.versions().size() > 0) {
+            Set<InternalVersion> restored = null;
+            for (InternalVersion v : versions.versions().values()) {
+                NodeStateEx state = getNodeStateEx(v.getFrozenNode().getFrozenId());
+                if (state != null) {
+                    // todo: check should operate on workspace states, too
+                    int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+                    checkModify(state, options, Permission.NONE);
+                    restored = internalRestore(state, v, versions, removeExisting);
+                    // remove restored versions from set
+                    for (InternalVersion r : restored) {
+                        versions.versions().remove(r.getVersionHistory().getId());
                     }
-                }
-                if (restored == null) {
-                    if (numRestored == 0) {
-                        throw new VersionException("Unable to restore. At least one version needs"
-                                + " existing versionable node in workspace.");
-                    } else {
-                        throw new VersionException("Unable to restore. All versions with non"
-                                + " existing versionable nodes need parent.");
-                    }
+                    numRestored += restored.size();
+                    break;
                 }
             }
-            ops.save();
-        } catch (ItemStateException e) {
-            log.error("Error while reverting changes applied during restore.", e);
-            throw new RepositoryException(e);
-        } finally {
-            ops.close();
+            if (restored == null) {
+                if (numRestored == 0) {
+                    throw new VersionException("Unable to restore. At least one version needs"
+                            + " existing versionable node in workspace.");
+                } else {
+                    throw new VersionException("Unable to restore. All versions with non"
+                            + " existing versionable nodes need parent.");
+                }
+            }
         }
     }
     
@@ -295,7 +274,7 @@ abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImpl
         //    added to, depending on their corresponding copies in V and their
         //    own OnParentVersion attributes (see 7.2.8, below, for details).
         Set<InternalVersion> restored = new HashSet<InternalVersion>();
-        restoreFrozenState(state, version.getFrozenNode(), vsel, restored, removeExisting);
+        internalRestoreFrozen(state, version.getFrozenNode(), vsel, restored, removeExisting);
         restored.add(version);
 
         if (isFull) {
@@ -331,7 +310,7 @@ abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImpl
      * @throws RepositoryException if an error occurs
      * @throws ItemStateException if an error occurs
      */
-    protected void restoreFrozenState(NodeStateEx state, InternalFrozenNode freeze, VersionSelector vsel,
+    protected void internalRestoreFrozen(NodeStateEx state, InternalFrozenNode freeze, VersionSelector vsel,
                                    Set<InternalVersion> restored, boolean removeExisting)
             throws RepositoryException, ItemStateException {
 
@@ -451,7 +430,7 @@ abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImpl
                 if (restoredChild == null) {
                     restoredChild = state.addNode(f.getName(), f.getFrozenPrimaryType(), f.getFrozenId());
                     restoredChild.setMixins(f.getFrozenMixinTypes());
-                    restoreFrozenState(restoredChild, f, vsel, restored, removeExisting);
+                    internalRestoreFrozen(restoredChild, f, vsel, restored, removeExisting);
                 }
 
             } else if (child instanceof InternalFrozenVersionHistory) {
@@ -548,5 +527,4 @@ abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImpl
             }
         }
     }
-
 }
