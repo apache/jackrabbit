@@ -841,7 +841,7 @@ public abstract class ItemImpl implements Item {
             session.getValidator().checkRemove(this, options, Permission.NONE);
 
             // parent node: make sure it is checked-out and not protected nor locked.
-            options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+            options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT |
                     ItemValidator.CHECK_CONSTRAINTS;
             session.getValidator().checkModify(parentNode, options, Permission.NONE);
         }

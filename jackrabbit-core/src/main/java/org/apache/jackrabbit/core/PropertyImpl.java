@@ -240,7 +240,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // make sure the parent is checked-out and neither locked nor under retention
-        options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
+        options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
                 ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         session.getValidator().checkModify(parent, options, Permission.NONE);
     }

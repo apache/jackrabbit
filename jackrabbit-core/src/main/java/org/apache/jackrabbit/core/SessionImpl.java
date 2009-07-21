@@ -1053,7 +1053,7 @@ public class SessionImpl extends AbstractSession
         // verify for both source and destination parent nodes that
         // - they are checked-out
         // - are not protected neither by node type constraints nor by retention/hold
-        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
+        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkRemove(srcParentNode, options, Permission.NONE);
         getValidator().checkModify(destParentNode, options, Permission.NONE);
@@ -1150,7 +1150,7 @@ public class SessionImpl extends AbstractSession
 
         // verify that parent node is checked-out, not locked and not protected
         // by either node type constraints nor by some retention or hold.
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT |
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkModify(parent, options, Permission.NONE);
 
