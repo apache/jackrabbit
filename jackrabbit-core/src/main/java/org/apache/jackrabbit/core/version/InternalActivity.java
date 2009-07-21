@@ -16,11 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Map;
-
 import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * This interface defines the internal activity.
@@ -39,11 +35,11 @@ public interface InternalActivity extends InternalVersionItem {
     /**
      * Returns the changeset of this activity.
      * This is the set of versions that are the latest members of this activity
-     * in their respective version histories. the changeset is a map grouped by
-     * the nodeid of the respective histories.
+     * in their respective version histories.
+     *
      * @return the changeset
      * @throws RepositoryException if an error occurs
      */
-    Map<NodeId, InternalVersion> getChangeSet() throws RepositoryException;
+    VersionSet getChangeSet() throws RepositoryException;
 
 }

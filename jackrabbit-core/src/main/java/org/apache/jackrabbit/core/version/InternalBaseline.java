@@ -16,11 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Map;
-
 import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * This interface defines the internal baseline.
@@ -42,6 +38,14 @@ public interface InternalBaseline extends InternalVersion {
      * version history.
      * @throws RepositoryException if an error occurs
      */
-    Map<NodeId, InternalVersion> getBaseVersions() throws RepositoryException;
+    VersionSet getBaseVersions() throws RepositoryException;
 
+    /**
+     * Returns the configuration of this baseline. this is basically the
+     * versionable node.
+     *
+     * @return the configuration
+     * @throws RepositoryException if an error occurs or the configuration does not exist.
+     */
+    InternalConfiguration getConfiguration() throws RepositoryException;
 }

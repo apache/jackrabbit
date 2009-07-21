@@ -578,17 +578,27 @@ public class NameConstants {
     public static final Name REP_VERSIONSTORAGE = FACTORY.create(Name.NS_REP_URI, "versionStorage");
 
     /**
-     * rep:activities
+     * rep:Activities
      */
-    public static final Name REP_ACTIVITIES = FACTORY.create(Name.NS_REP_URI, "activities");
+    public static final Name REP_ACTIVITIES = FACTORY.create(Name.NS_REP_URI, "Activities");
 
     /**
-     * rep:activities
+     * rep:Configurations
      */
-    public static final Name REP_CONFIGURATIONS = FACTORY.create(Name.NS_REP_URI, "configurations");
+    public static final Name REP_CONFIGURATIONS = FACTORY.create(Name.NS_REP_URI, "Configurations");
 
     /**
-     * rep:versionReference
+     * rep:Baseline
+     */
+    public static final Name REP_BASELINE = FACTORY.create(Name.NS_REP_URI, "Baseline");
+
+    /**
+     * rep:baseVersions
+     */
+    public static final Name REP_BASEVERSIONS = FACTORY.create(Name.NS_REP_URI, "baseVersions");
+
+    /**
+     * rep:VersionReference
      */
     public static final Name REP_VERSION_REFERENCE = FACTORY.create(Name.NS_REP_URI, "VersionReference");
 

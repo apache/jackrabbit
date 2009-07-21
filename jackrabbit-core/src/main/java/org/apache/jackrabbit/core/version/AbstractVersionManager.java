@@ -16,18 +16,16 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Set;
+
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.PropertyType;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
@@ -36,6 +34,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -97,6 +96,18 @@ abstract class AbstractVersionManager implements VersionManager {
     public InternalVersion getVersion(NodeId id) throws RepositoryException {
         // lock handling via getItem()
         InternalVersion v = (InternalVersion) getItem(id);
+        if (v == null) {
+            log.warn("Versioning item not found: " + id);
+        }
+        return v;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalBaseline getBaseline(NodeId id) throws RepositoryException {
+        // lock handling via getItem()
+        InternalBaseline v = (InternalBaseline) getItem(id);
         if (v == null) {
             log.warn("Versioning item not found: " + id);
         }
@@ -445,37 +456,33 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     /**
-     * Creates aew configuration node
+     * Creates a new configuration node.
+     * <p/>
+     * The nt:confguration is stored within the nt:configurations storage using
+     * the nodeid of the configuration root (rootId) as path.
+     *
      * @param rootId the id of the root node of the workspace configuration
-     * @param baseline the optional baseline
      * @return a node state of the created configuration
      * @throws RepositoryException if an error occurs
      */
-    NodeStateEx internalCreateConfiguration(NodeId rootId, InternalBaseline baseline)
+    NodeStateEx internalCreateConfiguration(NodeId rootId)
             throws RepositoryException {
-        if (baseline != null) {
-            // the exact behavior is not clarified yet.
-            // see http://jsr-283.dev.java.net/issues/show_bug.cgi?id=795
-            throw new UnsupportedRepositoryOperationException(
-                    "creating configurations based on a baseline not supported, yet");
-        }
-
         WriteOperation ops = startWriteOperation();
         try {
             // If the parameter baseline is null, a new version history is created
             // to store baselines of the new configuration, and the jcr:baseVersion
             // of the new configuration references the root of the new version history.
-            NodeId configId = new NodeId();
             NodeStateEx configParent = getParentNode(configurationsRoot,
-                    configId.toString(), NameConstants.REP_CONFIGURATIONS);
-            Name name = getName(configId.toString());
+                    rootId.toString(), NameConstants.REP_CONFIGURATIONS);
+            Name name = getName(rootId.toString());
+
+            NodeId configId = new NodeId();
             NodeStateEx config = configParent.addNode(name, NameConstants.NT_CONFIGURATION, configId, true);
             config.setPropertyValue(NameConstants.JCR_ROOT, InternalValue.create(rootId));
 
             // now create the version history of the baseline
-            String uuid = new NodeId().toString();
-            NodeStateEx histParent = getParentNode(historyRoot, uuid, NameConstants.REP_VERSIONSTORAGE);
-            Name histName = getName(uuid);
+            NodeStateEx histParent = getParentNode(historyRoot, configId.toString(), NameConstants.REP_VERSIONSTORAGE);
+            Name histName = getName(configId.toString());
             NodeStateEx history =
                 InternalVersionHistoryImpl.create(this, histParent, histName, config.getState(), null);
             InternalVersionHistory vh = new InternalVersionHistoryImpl(this, history);
@@ -484,6 +491,9 @@ abstract class AbstractVersionManager implements VersionManager {
             NodeId blId = vh.getRootVersion().getId();
             config.setPropertyValue(NameConstants.JCR_BASEVERSION, InternalValue.create(blId));
             config.setPropertyValue(NameConstants.JCR_VERSIONHISTORY, InternalValue.create(vh.getId()));
+            config.setPropertyValue(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+            InternalValue[] preds = new InternalValue[]{InternalValue.create(blId)};
+            config.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, preds, true);
             configParent.store();
             ops.save();
 
@@ -493,6 +503,40 @@ abstract class AbstractVersionManager implements VersionManager {
         } finally {
             ops.close();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalConfiguration getConfigurationForNode(NodeId rootId) throws RepositoryException {
+        ReadLock lock = acquireReadLock();
+        try {
+            String uuid = rootId.toString();
+            Name name = getName(uuid);
+
+            NodeStateEx parent = getParentNode(configurationsRoot, uuid, null);
+            if (parent != null && parent.hasNode(name)) {
+                NodeStateEx config = parent.getNode(name, 1);
+                return new InternalConfigurationImpl(this, config);
+            } else {
+                return null;
+            }
+        } finally {
+            lock.release();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalConfiguration getConfiguration(NodeId nodeId)
+            throws RepositoryException {
+        // lock handling via getItem()
+        InternalConfiguration config = (InternalConfiguration) getItem(nodeId);
+        if (config == null) {
+            throw new ItemNotFoundException(nodeId.toString());
+        }
+        return config;
     }
 
     /**
@@ -599,7 +643,8 @@ abstract class AbstractVersionManager implements VersionManager {
         WriteOperation operation = startWriteOperation();
         try {
             String versionName = calculateCheckinVersionName(history, node, simple);
-            InternalVersionImpl v = history.checkin(NameFactoryImpl.getInstance().create("", versionName), node);
+            InternalVersionImpl v = history.checkin(
+                    NameFactoryImpl.getInstance().create("", versionName), node, null);
 
             // check for jcr:activity
             if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
@@ -607,6 +652,44 @@ abstract class AbstractVersionManager implements VersionManager {
                 InternalActivityImpl act = (InternalActivityImpl) getItem(actId);
                 act.addVersion(v);
             }
+            operation.save();
+            return v;
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } finally {
+            operation.close();
+        }
+    }
+
+    /**
+     * internally checks in a configuration
+     * @param config the config
+     * @param baseVersions the base versions to record
+     * @return the new baseline
+     * @throws RepositoryException if an error occurs
+     */
+    protected InternalBaseline internalCheckin(InternalConfigurationImpl config,
+                                               Set<NodeId> baseVersions)
+            throws RepositoryException {
+        InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) getVersionHistoryOfNode(config.getId());
+        WriteOperation operation = startWriteOperation();
+        try {
+            NodeStateEx node = config.node;
+            String versionName = calculateCheckinVersionName(vh, node, false);
+            InternalBaseline v = (InternalBaseline) vh.checkin(
+                    NameFactoryImpl.getInstance().create("", versionName),
+                    node, baseVersions);
+            // update properties on 'node' to point to the new base version
+            // but leave it checked out
+            node.setPropertyValue(
+                    NameConstants.JCR_BASEVERSION,
+                    InternalValue.create(v.getId()));
+            node.setPropertyValues(
+                    NameConstants.JCR_PREDECESSORS,
+                    PropertyType.REFERENCE,
+                    new InternalValue[]{InternalValue.create(v.getId())}
+            );
+            node.store();
             operation.save();
             return v;
         } catch (ItemStateException e) {
@@ -796,6 +879,8 @@ abstract class AbstractVersionManager implements VersionManager {
                     return new InternalVersionHistoryImpl(this, pNode);
                 } else if (ntName.equals(NameConstants.NT_ACTIVITY)) {
                     return new InternalActivityImpl(this, pNode);
+                } else if (ntName.equals(NameConstants.NT_CONFIGURATION)) {
+                    return new InternalConfigurationImpl(this, pNode);
                 } else {
                     return null;
                 }

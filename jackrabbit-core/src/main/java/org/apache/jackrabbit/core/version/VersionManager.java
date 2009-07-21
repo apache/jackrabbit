@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Set;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -132,10 +134,60 @@ public interface VersionManager {
      * Returns the version with the given id
      *
      * @param id id of the version to retrieve
-     * @return the version.
+     * @return the version or <code>null</code>
      * @throws RepositoryException if an error occurs
      */
     InternalVersion getVersion(NodeId id) throws RepositoryException;
+
+    /**
+     * Returns the baseline with the given id
+     *
+     * @param id id of the baseline version to retrieve
+     * @return the baseline or <code>null</code> if not found
+     * @throws RepositoryException if an error occurs
+     */
+    InternalBaseline getBaseline(NodeId id) throws RepositoryException;
+
+    /**
+     * Creates a new internal configuration that represents a configuration
+     * of the tree rooted at the node specified by <code>rootId</code>
+     *
+     * @param session the session that creates the configuration
+     * @param rootId root id of the configuration
+     * @return the node id of the new internal configuration
+     * @throws RepositoryException if an error occurs
+     */
+    NodeId createConfiguration(Session session, NodeId rootId)
+            throws RepositoryException;
+
+    /**
+     * Returns the configuration for the workspace node with the given id.
+     * @param rootId the node id for the configuration root node.
+     * @return the configuration or <code>null</code> if it does not exist.
+     * @throws RepositoryException if an error occurs
+     */
+    InternalConfiguration getConfigurationForNode(NodeId rootId) throws RepositoryException;
+
+    /**
+     * Returns the configuration for the given id.
+     * @param nodeId the node id
+     * @return the configuration
+     * @throws RepositoryException if not exist or an error occurs
+     */
+    InternalConfiguration getConfiguration(NodeId nodeId) throws RepositoryException;
+
+    /**
+     * Performs a checkin of the configuration.
+     *
+     * @param session session that performs the checkin
+     * @param config internal configuration
+     * @param baseVersions set of base versions to record in the baseline
+     * @return the new baseline
+     * @throws RepositoryException if an error occurs
+     */
+    InternalBaseline checkin(Session session, InternalConfiguration config,
+                             Set<NodeId> baseVersions)
+            throws RepositoryException;
 
     /**
      * Returns the activity with the given id
@@ -156,20 +208,6 @@ public interface VersionManager {
      * @throws RepositoryException if an error occurs
      */
     InternalVersion getHeadVersionOfNode(NodeId id) throws RepositoryException;
-
-    /**
-     * Creates a new internal configuration that represents a configuration
-     * of the tree rooted at the node specified by <code>rootId</code>
-     * 
-     * @param session the session that creates the configuration
-     * @param rootId root id of the configuration
-     * @param baseline the baseline or <code>null</code>
-     * @return a new internal configuration
-     * @throws RepositoryException if an error occurs
-     */
-    InternalConfiguration createConfiguration(Session session, NodeId rootId,
-                                              InternalBaseline baseline)
-            throws RepositoryException;
 
     /**
      * Creates a new activity
@@ -196,4 +234,5 @@ public interface VersionManager {
      * @throws Exception if an error occurs
      */
     void close() throws Exception;
+
 }

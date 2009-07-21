@@ -260,10 +260,9 @@ class InternalVersionImpl extends InternalVersionItemImpl
             throws RepositoryException {
         InternalValue[] values = new InternalValue[cessors.size()];
         for (int i = 0; i < values.length; i++) {
-            values[i] = InternalValue.create(
-                    ((InternalVersion) cessors.get(i)).getId());
+            values[i] = InternalValue.create((cessors.get(i)).getId());
         }
-        node.setPropertyValues(propname, PropertyType.STRING, values);
+        node.setPropertyValues(propname, PropertyType.REFERENCE, values);
         if (store) {
             node.store();
         }

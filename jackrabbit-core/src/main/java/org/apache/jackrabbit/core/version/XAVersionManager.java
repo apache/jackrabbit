@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -178,17 +179,31 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public InternalConfiguration createConfiguration(Session session,
-                                                     NodeId rootId,
-                                                     InternalBaseline baseline)
+    public NodeId createConfiguration(Session session, NodeId rootId)
             throws RepositoryException {
         if (isInXA()) {
-            NodeStateEx state = internalCreateConfiguration(rootId, baseline);
+            NodeStateEx state = internalCreateConfiguration(rootId);
             InternalConfiguration config = new InternalConfigurationImpl(vMgr, state);
             xaItems.put(state.getNodeId(), config);
-            return config;
+            return config.getId();
         } else {
-            return vMgr.createConfiguration(session, rootId, baseline);
+            return vMgr.createConfiguration(session, rootId);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalBaseline checkin(Session session,
+                                    InternalConfiguration config,
+                                    Set<NodeId> baseVersions)
+            throws RepositoryException {
+        if (isInXA()) {
+            InternalBaseline version = internalCheckin((InternalConfigurationImpl) config, baseVersions);
+            xaItems.put(version.getId(), version);
+            return version;
+        } else {
+            return vMgr.checkin(session, config, baseVersions);
         }
     }
 

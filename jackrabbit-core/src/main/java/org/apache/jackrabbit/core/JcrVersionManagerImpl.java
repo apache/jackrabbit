@@ -38,12 +38,16 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.InternalActivity;
+import org.apache.jackrabbit.core.version.InternalBaseline;
+import org.apache.jackrabbit.core.version.InternalConfiguration;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.JcrVersionManagerImplMerge;
+import org.apache.jackrabbit.core.version.JcrVersionManagerImplConfig;
 import org.apache.jackrabbit.core.version.NodeStateEx;
 import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionSet;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -60,7 +64,7 @@ import org.slf4j.LoggerFactory;
  * Note: For a cleaner architecture, we should probably rename the existing classes
  * that implement the internal version manager, and name this VersionManagerImpl.
  */
-public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
+public class JcrVersionManagerImpl extends JcrVersionManagerImplConfig
         implements javax.jcr.version.VersionManager {
 
     /**
@@ -84,11 +88,16 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
      * {@inheritDoc}
      */
     public Version checkin(String absPath) throws RepositoryException {
-        // check lock status, holds and permissions
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD |
-                ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
-        NodeStateEx state = getNodeState(absPath, options, Permission.VERSION_MNGMT);
-        NodeId baseId = checkoutCheckin(state, true, false);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
+                Permission.VERSION_MNGMT);
+        NodeId baseId;
+        if (isConfiguration(state)) {
+            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
+            baseId = checkin(config);
+        } else {
+            baseId = checkoutCheckin(state, true, false);
+        }
         return (VersionImpl) session.getNodeById(baseId);
     }
 
@@ -96,20 +105,30 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
      * {@inheritDoc}
      */
     public void checkout(String absPath) throws RepositoryException {
-        // check lock status, holds and permissions
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
-        NodeStateEx state = getNodeState(absPath, options, Permission.VERSION_MNGMT);
-        checkoutCheckin(state, false, true);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+                Permission.VERSION_MNGMT);
+        if (isConfiguration(state)) {
+            // currently has no effect
+        } else {
+            checkoutCheckin(state, false, true);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public Version checkpoint(String absPath) throws RepositoryException {
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD |
-                ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
-        NodeStateEx state = getNodeState(absPath, options, Permission.VERSION_MNGMT);
-        NodeId baseId = checkoutCheckin(state, true, true);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
+                Permission.VERSION_MNGMT);
+        NodeId baseId;
+        if (isConfiguration(state)) {
+            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
+            baseId = checkin(config);
+        } else {
+            baseId = checkoutCheckin(state, true, true);
+        }
         return (VersionImpl) session.getNodeById(baseId);
     }
 
@@ -160,43 +179,72 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
             throw new InvalidItemStateException(msg);
         }
         // add all versions to map of versions to restore
-        final Map<NodeId, InternalVersion> toRestore = new HashMap<NodeId, InternalVersion>();
+        Map<NodeId, InternalVersion> toRestore = new HashMap<NodeId, InternalVersion>();
         for (Version version : versions) {
             InternalVersion v = vMgr.getVersion(((VersionImpl) version).getNodeId());
-            NodeId historyId = v.getVersionHistory().getId();
-            // check for collision
-            if (toRestore.containsKey(historyId)) {
-                throw new VersionException("Unable to restore. Two or more versions have same version history.");
+            if (v instanceof InternalBaseline) {
+                // do simple explode, ignore restoring of nt:configuration node for now.
+                for (InternalVersion bv: ((InternalBaseline) v).getBaseVersions().versions().values()) {
+                    // check for collision
+                    NodeId historyId = bv.getVersionHistory().getId();
+                    if (toRestore.containsKey(historyId)) {
+                        throw new VersionException("Unable to restore. Two or more versions have same version history.");
+                    }
+                    toRestore.put(historyId, bv);
+                }
+            } else {
+                // check for collision
+                NodeId historyId = v.getVersionHistory().getId();
+                if (toRestore.containsKey(historyId)) {
+                    throw new VersionException("Unable to restore. Two or more versions have same version history.");
+                }
+                toRestore.put(historyId, v);
             }
-            toRestore.put(historyId, v);
         }
-        restore(toRestore, removeExisting);
+        WriteOperation ops = startWriteOperation();
+        try {
+            internalRestore(new VersionSet(toRestore, true), removeExisting);
+            ops.save();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } finally {
+            ops.close();
+        }
     }
 
     /**
      * {@inheritDoc}
      */
-    public void restore(String absPath, String versionName,
-                        boolean removeExisting)
+    public void restore(String absPath, String versionName, boolean removeExisting)
             throws RepositoryException {
-        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
-        NodeStateEx state = getNodeState(absPath, options, Permission.NONE);
-        restore(state, session.getQName(versionName), removeExisting);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+                Permission.NONE);
+        if (isConfiguration(state)) {
+            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
+            restore(config, session.getQName(versionName), removeExisting);
+        } else {
+            restore(state, session.getQName(versionName), removeExisting);
+        }
     }
-
 
     /**
      * {@inheritDoc}
      */
     public void restore(String absPath, Version version, boolean removeExisting)
             throws RepositoryException {
-
         // first check if node exists
         if (session.nodeExists(absPath)) {
             // normal restore
-            int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
-            NodeStateEx state = getNodeState(absPath, options, Permission.NONE);
-            restore(state, version, removeExisting);
+            NodeStateEx state = getNodeState(absPath,
+                    ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+                    Permission.NONE);
+            if (isConfiguration(state)) {
+                InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
+                restore(config, version, removeExisting);
+            } else {
+                restore(state, version, removeExisting);
+            }
         } else {
             // parent has to exist
             Path path = session.getQPath(absPath);
@@ -204,8 +252,9 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
             Name name = path.getNameElement().getName();
             NodeImpl parent = session.getItemManager().getNode(parentPath);
 
-            int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
-            NodeStateEx state = getNodeState(parent, options, Permission.NONE);
+            NodeStateEx state = getNodeState(parent,
+                    ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+                    Permission.NONE);
             restore(state, name, version, removeExisting);
         }
     }
@@ -213,12 +262,17 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
     /**
      * {@inheritDoc}
      */
-    public void restoreByLabel(String absPath, String versionLabel,
-                               boolean removeExisting)
+    public void restoreByLabel(String absPath, String versionLabel, boolean removeExisting)
             throws RepositoryException {
-        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
-        NodeStateEx state = getNodeState(absPath, options, Permission.NONE);
-        restoreByLabel(state, session.getQName(versionLabel), removeExisting);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+                Permission.NONE);
+        if (isConfiguration(state)) {
+            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
+            restoreByLabel(config, session.getQName(versionLabel), removeExisting);
+        } else {
+            restoreByLabel(state, session.getQName(versionLabel), removeExisting);
+        }
     }
 
     /**
@@ -231,7 +285,9 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
      */
     public void update(NodeImpl node, String srcWorkspaceName)
             throws RepositoryException {
-        NodeStateEx state = getNodeState(node, ItemValidator.CHECK_PENDING_CHANGES, Permission.VERSION_MNGMT);
+        NodeStateEx state = getNodeState(node,
+                ItemValidator.CHECK_PENDING_CHANGES,
+                Permission.VERSION_MNGMT);
         mergeOrUpdate(state, srcWorkspaceName, null, false, false);
     }
 
@@ -250,7 +306,9 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
     public NodeIterator merge(String absPath, String srcWorkspaceName,
                               boolean bestEffort, boolean isShallow)
             throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath, ItemValidator.CHECK_PENDING_CHANGES, Permission.VERSION_MNGMT);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_PENDING_CHANGES,
+                Permission.VERSION_MNGMT);
         List<ItemId> failedIds = new LinkedList<ItemId>();
         mergeOrUpdate(state, srcWorkspaceName, failedIds, bestEffort, isShallow);
         return new LazyItemIterator(session.getItemManager(), failedIds);
@@ -306,8 +364,9 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
      */
     public void doneMerge(String absPath, Version version)
             throws RepositoryException {
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD;
-        NodeStateEx state = getNodeState(absPath, options, Permission.VERSION_MNGMT);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD,
+                Permission.VERSION_MNGMT);
         finishMerge(state, version, false);
     }
 
@@ -316,8 +375,9 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
      */
     public void cancelMerge(String absPath, Version version)
             throws RepositoryException {
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD;
-        NodeStateEx state = getNodeState(absPath, options, Permission.VERSION_MNGMT);
+        NodeStateEx state = getNodeState(absPath,
+                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD,
+                Permission.VERSION_MNGMT);
         finishMerge(state, version, true);
     }
 
@@ -326,7 +386,61 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
      */
     public Node createConfiguration(String absPath, Version baseline)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("comming soon...");
+        if (session.nodeExists(absPath)) {
+            // refuse to create a configuration if a baseline is specified.
+            if (baseline != null) {
+                throw new UnsupportedRepositoryOperationException(
+                        "Create configuration to existing nodes only allowed without specifying a basline: " + absPath);
+            }
+
+            NodeStateEx state = getNodeState(absPath,
+                    ItemValidator.CHECK_LOCK | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD,
+                    Permission.VERSION_MNGMT);
+            // check versionable
+            if (!checkVersionable(state)) {
+                throw new UnsupportedRepositoryOperationException("Node not full versionable: " + absPath);
+            }
+            if (state.getPropertyValue(NameConstants.JCR_CONFIGURATION) != null) {
+                throw new UnsupportedRepositoryOperationException("Node is already a configuration root: " + absPath);
+            }
+
+            WriteOperation ops = startWriteOperation();
+            try {
+                NodeId configId = vMgr.createConfiguration(session, state.getNodeId());
+                state.setPropertyValue(NameConstants.JCR_CONFIGURATION, InternalValue.create(configId));
+                state.store();
+                ops.save();
+                return session.getNodeById(configId);
+            } catch (ItemStateException e) {
+                throw new RepositoryException(e);
+            } finally {
+                ops.close();
+            }
+        } else {
+            // check if supplied baseline is valid
+            if (baseline == null) {
+                throw new UnsupportedRepositoryOperationException(
+                        "CreateConfiguration on non-existing path must supply a baseline: " + absPath);
+            }
+            VersionImpl v = (VersionImpl) baseline;
+            InternalBaseline bl = vMgr.getBaseline(v.getNodeId());
+            if (bl == null) {
+                throw new UnsupportedRepositoryOperationException(
+                        "Supplied version is not a baseline: " + v.safeGetJCRPath());
+            }
+
+            // parent has to exist
+            Path path = session.getQPath(absPath);
+            Path parentPath = path.getAncestor(1);
+            Name name = path.getNameElement().getName();
+            NodeImpl parent = session.getItemManager().getNode(parentPath);
+
+            NodeStateEx state = getNodeState(parent,
+                    ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+                    Permission.NONE);
+            InternalConfiguration config = restore(state, name, bl);
+            return session.getNodeById(config.getId());
+        }
     }
 
     /**
@@ -443,4 +557,19 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplMerge
             throw new RepositoryException(e);
         }
     }
+
+    /**
+     * Checks if the given node state is a nt:configuration. Note that this check
+     * is currently used to either avoid versioning operations on nt:configuration
+     * nodes or to use a differnt strategy for such nodes.
+     *
+     * @param state the state to check
+     * @return <code>true</code> if it is a configuration
+     * @throws RepositoryException if an error occurs
+     */
+    private boolean isConfiguration(NodeStateEx state) throws RepositoryException {
+        return state.getEffectiveNodeType().includesNodeType(NameConstants.NT_CONFIGURATION);
+    }
+
+
 }
