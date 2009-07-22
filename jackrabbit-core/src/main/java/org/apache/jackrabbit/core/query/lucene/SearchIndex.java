@@ -1270,28 +1270,32 @@ public class SearchIndex extends AbstractQueryHandler {
                                     getNamespaceMappings().translateName(propState.getName()), "");
                             NodeState parent = (NodeState) ism.getItemState(propState.getParentId());
                             Document aDoc = createDocument(parent, getNamespaceMappings(), getIndex().getIndexFormatVersion());
-                            // find the right fields to transfer
-                            Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
-                            Token t = new Token();
-                            for (int k = 0; k < fields.length; k++) {
-                                Fieldable field = fields[k];
-                                // assume properties fields use SingleTokenStream
-                                t = field.tokenStreamValue().next(t);
-                                String value = new String(t.termBuffer(), 0, t.termLength());
-                                if (value.startsWith(namePrefix)) {
-                                    // extract value
-                                    value = value.substring(namePrefix.length());
-                                    // create new named value
-                                    Path p = getRelativePath(state, propState);
-                                    String path = getNamespaceMappings().translatePath(p);
-                                    value = FieldNames.createNamedValue(path, value);
-                                    t.setTermBuffer(value);
-                                    doc.add(new Field(field.name(), new SingletonTokenStream(t)));
-                                    doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
-                                            parent.getNodeId().getUUID().toString(),
-                                            Field.Store.NO,
-                                            Field.Index.NOT_ANALYZED_NO_NORMS));
+                            try {
+                                // find the right fields to transfer
+                                Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
+                                Token t = new Token();
+                                for (int k = 0; k < fields.length; k++) {
+                                    Fieldable field = fields[k];
+                                    // assume properties fields use SingleTokenStream
+                                    t = field.tokenStreamValue().next(t);
+                                    String value = new String(t.termBuffer(), 0, t.termLength());
+                                    if (value.startsWith(namePrefix)) {
+                                        // extract value
+                                        value = value.substring(namePrefix.length());
+                                        // create new named value
+                                        Path p = getRelativePath(state, propState);
+                                        String path = getNamespaceMappings().translatePath(p);
+                                        value = FieldNames.createNamedValue(path, value);
+                                        t.setTermBuffer(value);
+                                        doc.add(new Field(field.name(), new SingletonTokenStream(t)));
+                                        doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
+                                                parent.getNodeId().getUUID().toString(),
+                                                Field.Store.NO,
+                                                Field.Index.NOT_ANALYZED_NO_NORMS));
+                                    }
                                 }
+                            } finally {
+                                Util.disposeDocument(aDoc);
                             }
                         }
                     }
