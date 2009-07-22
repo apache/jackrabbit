@@ -35,7 +35,7 @@ class InternalConfigurationImpl extends InternalVersionItemImpl
      * @param node version history node state
      * @throws RepositoryException if an error occurs
      */
-    public InternalConfigurationImpl(AbstractVersionManager vMgr, NodeStateEx node)
+    public InternalConfigurationImpl(InternalVersionManagerBase vMgr, NodeStateEx node)
             throws RepositoryException {
         super(vMgr, node);
     }

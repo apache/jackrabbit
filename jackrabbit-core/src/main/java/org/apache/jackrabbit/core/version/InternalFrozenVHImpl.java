@@ -34,7 +34,7 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
      *
      * @param node
      */
-    public InternalFrozenVHImpl(AbstractVersionManager vMgr, NodeStateEx node,
+    public InternalFrozenVHImpl(InternalVersionManagerBase vMgr, NodeStateEx node,
                                 InternalVersionItem parent) {
         super(vMgr, node, parent);
     }

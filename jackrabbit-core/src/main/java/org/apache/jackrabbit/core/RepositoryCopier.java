@@ -32,7 +32,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.persistence.PersistenceCopier;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,7 +176,7 @@ public class RepositoryCopier {
     }
 
     private void copyVersionStore(
-            VersionManagerImpl source, VersionManagerImpl target)
+            InternalVersionManagerImpl source, InternalVersionManagerImpl target)
             throws RepositoryException, ItemStateException {
         logger.info("Copying version histories");
 

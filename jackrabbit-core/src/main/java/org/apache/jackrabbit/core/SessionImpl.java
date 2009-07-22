@@ -89,8 +89,8 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
+import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.spi.Name;
@@ -198,7 +198,7 @@ public class SessionImpl extends AbstractSession
     /**
      * The version manager for this session
      */
-    protected final VersionManager versionMgr;
+    protected final InternalVersionManager versionMgr;
 
     /**
      * Listeners (weak references)
@@ -338,7 +338,7 @@ public class SessionImpl extends AbstractSession
      * the repository version manager.
      * @return version manager
      */
-    protected VersionManager createVersionManager(RepositoryImpl rep)
+    protected InternalVersionManager createVersionManager(RepositoryImpl rep)
             throws RepositoryException {
 
         return rep.getVersionManager();
@@ -476,11 +476,11 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns the <code>VersionManager</code> associated with this session.
+     * Returns the <code>InternalVersionManager</code> associated with this session.
      *
-     * @return the <code>VersionManager</code> associated with this session
+     * @return the <code>InternalVersionManager</code> associated with this session
      */
-    public VersionManager getVersionManager() {
+    public InternalVersionManager getInternalVersionManager() {
         return versionMgr;
     }
 
@@ -643,7 +643,7 @@ public class SessionImpl extends AbstractSession
      */
     public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
         ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
-        VersionManagerImpl vm = (VersionManagerImpl) rep.getVersionManager();
+        InternalVersionManagerImpl vm = (InternalVersionManagerImpl) rep.getVersionManager();
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);
         String[] wspNames = rep.getWorkspaceNames();

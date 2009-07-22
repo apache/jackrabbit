@@ -77,7 +77,7 @@ abstract public class JcrVersionManagerImplBase {
     /**
      * the session version manager.
      */
-    protected final VersionManager vMgr;
+    protected final InternalVersionManager vMgr;
 
     /**
      * the lock on this version manager
@@ -102,7 +102,7 @@ abstract public class JcrVersionManagerImplBase {
         this.stateMgr = stateMgr;
         this.hierMgr = hierMgr;
         this.ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
-        this.vMgr = session.getVersionManager();
+        this.vMgr = session.getInternalVersionManager();
     }
 
     /**

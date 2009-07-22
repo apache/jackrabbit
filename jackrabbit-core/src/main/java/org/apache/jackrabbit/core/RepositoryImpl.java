@@ -97,8 +97,8 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
+import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -169,7 +169,7 @@ public class RepositoryImpl extends AbstractRepository
 
     private final NamespaceRegistryImpl nsReg;
     private final NodeTypeRegistry ntReg;
-    private final VersionManagerImpl vMgr;
+    private final InternalVersionManagerImpl vMgr;
     private final VirtualNodeTypeStateManager virtNTMgr;
 
     /**
@@ -459,7 +459,7 @@ public class RepositoryImpl extends AbstractRepository
      * @return the newly created version manager
      * @throws RepositoryException if an error occurs
      */
-    protected VersionManagerImpl createVersionManager(VersioningConfig vConfig,
+    protected InternalVersionManagerImpl createVersionManager(VersioningConfig vConfig,
                                                       DelegatingObservationDispatcher delegatingDispatcher)
             throws RepositoryException {
 
@@ -475,7 +475,7 @@ public class RepositoryImpl extends AbstractRepository
 
         ISMLocking ismLocking = vConfig.getISMLocking();
 
-        return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
+        return new InternalVersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 SYSTEM_ROOT_NODE_ID,
                 VERSION_STORAGE_NODE_ID,
                 ACTIVITIES_NODE_ID,
@@ -701,7 +701,7 @@ public class RepositoryImpl extends AbstractRepository
         return ntReg;
     }
 
-    protected VersionManager getVersionManager() {
+    protected InternalVersionManager getVersionManager() {
         return vMgr;
     }
 
@@ -2338,7 +2338,7 @@ public class RepositoryImpl extends AbstractRepository
         }
     }
 
-    VersionManagerImpl getVersionManagerImpl() {
+    InternalVersionManagerImpl getVersionManagerImpl() {
         return vMgr;
     }
 

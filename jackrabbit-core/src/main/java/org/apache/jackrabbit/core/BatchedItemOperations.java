@@ -59,7 +59,7 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionHistoryInfo;
-import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -1814,7 +1814,7 @@ public class BatchedItemOperations extends ItemValidator {
                     PropertyState prop = (PropertyState) srcStateMgr.getItemState(propId);
                     copiedFrom = prop.getValues()[0].getNodeId();
                 }
-                VersionManager manager = session.getVersionManager();
+                InternalVersionManager manager = session.getInternalVersionManager();
                 history = manager.getVersionHistory(session, newState, copiedFrom);
             }
             // copy properties

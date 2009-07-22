@@ -109,7 +109,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @param node version history node state
      * @throws RepositoryException if an error occurs
      */
-    public InternalVersionHistoryImpl(AbstractVersionManager vMgr, NodeStateEx node)
+    public InternalVersionHistoryImpl(InternalVersionManagerBase vMgr, NodeStateEx node)
             throws RepositoryException {
         super(vMgr, node);
         init();
@@ -585,7 +585,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @throws RepositoryException if an error occurs
      */
     static NodeStateEx create(
-            AbstractVersionManager vMgr, NodeStateEx parent, Name name,
+            InternalVersionManagerBase vMgr, NodeStateEx parent, Name name,
             NodeState nodeState, NodeId copiedFrom) throws RepositoryException {
 
         // create history node

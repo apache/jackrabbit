@@ -66,7 +66,7 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionHistoryInfo;
-import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -731,7 +731,7 @@ public abstract class ItemImpl implements Item {
                 if (nt.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                     if (!nodeState.hasPropertyName(NameConstants.JCR_VERSIONHISTORY)) {
                         NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
-                        VersionManager vMgr = session.getVersionManager();
+                        InternalVersionManager vMgr = session.getInternalVersionManager();
                         /**
                          * check if there's already a version history for that
                          * node; this would e.g. be the case if a versionable
@@ -762,7 +762,7 @@ public abstract class ItemImpl implements Item {
                     // we need to check the version manager for an existing
                     // version history, since simple versioning does not
                     // expose it's reference in a property
-                    VersionManager vMgr = session.getVersionManager();
+                    InternalVersionManager vMgr = session.getInternalVersionManager();
                     vMgr.getVersionHistory(session, nodeState, null);
 
                     // create isCheckedOutProperty if not already exists

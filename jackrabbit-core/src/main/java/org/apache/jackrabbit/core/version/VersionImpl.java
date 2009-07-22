@@ -61,7 +61,7 @@ public class VersionImpl extends NodeImpl implements Version {
      */
     protected InternalVersion getInternalVersion() throws RepositoryException {
         InternalVersion version =
-                session.getVersionManager().getVersion((NodeId) id);
+                session.getInternalVersionManager().getVersion((NodeId) id);
         if (version == null) {
             throw new InvalidItemStateException(id + ": the item does not exist anymore");
         }
