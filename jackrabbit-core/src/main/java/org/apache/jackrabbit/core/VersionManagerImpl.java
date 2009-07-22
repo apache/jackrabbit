@@ -31,6 +31,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -44,7 +45,7 @@ import org.apache.jackrabbit.core.version.InternalBaseline;
 import org.apache.jackrabbit.core.version.InternalConfiguration;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.JcrVersionManagerImplConfig;
+import org.apache.jackrabbit.core.version.VersionManagerImplConfig;
 import org.apache.jackrabbit.core.version.NodeStateEx;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSet;
@@ -60,17 +61,14 @@ import org.slf4j.LoggerFactory;
  * This class implements the JCR Version Manager interface but most of the
  * operations are performed in the super classes. this is only cosmetic to
  * avoid huge source files.
- * <p/>
- * Note: For a cleaner architecture, we should probably rename the existing classes
- * that implement the internal version manager, and name this VersionManagerImpl.
  */
-public class JcrVersionManagerImpl extends JcrVersionManagerImplConfig
-        implements javax.jcr.version.VersionManager {
+public class VersionManagerImpl extends VersionManagerImplConfig
+        implements VersionManager {
 
     /**
      * default logger
      */
-    private static final Logger log = LoggerFactory.getLogger(JcrVersionManagerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(VersionManagerImpl.class);
 
     /**
      * Creates a new version manager for the given session
@@ -78,7 +76,7 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplConfig
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    public JcrVersionManagerImpl(SessionImpl session,
+    public VersionManagerImpl(SessionImpl session,
                                  UpdatableItemStateManager stateMgr,
                                  HierarchyManager hierMgr) {
         super(session, stateMgr, hierMgr);

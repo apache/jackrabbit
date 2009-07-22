@@ -119,7 +119,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     /**
      * The API Version manager for this workspace
      */
-    protected JcrVersionManagerImpl versionMgr;
+    protected VersionManagerImpl versionMgr;
 
     /**
      * The internal manager used to evaluate effective retention policies and
@@ -248,7 +248,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     public VersionManager getVersionManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (versionMgr == null) {
-            versionMgr = new JcrVersionManagerImpl(session, stateMgr, hierMgr);
+            versionMgr = new VersionManagerImpl(session, stateMgr, hierMgr);
         }
         return versionMgr;
     }

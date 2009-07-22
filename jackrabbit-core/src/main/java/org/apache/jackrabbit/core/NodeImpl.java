@@ -3315,7 +3315,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public void update(String srcWorkspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
-        ((JcrVersionManagerImpl) session.getWorkspace().getVersionManager()).update(this, srcWorkspaceName);
+        ((VersionManagerImpl) session.getWorkspace().getVersionManager()).update(this, srcWorkspaceName);
     }
 
     /**
