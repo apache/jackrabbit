@@ -31,8 +31,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The JCR Version Manager impementation is split in several classes in order to
@@ -43,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * Implementation note: methods starting with "internal" are considered to be
  * executed within a "write operations" block.
  */
-abstract public class JcrVersionManagerImplConfig extends JcrVersionManagerImplMerge {
+abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
 
     /**
      * Creates a new version manager for the given session
@@ -51,7 +49,7 @@ abstract public class JcrVersionManagerImplConfig extends JcrVersionManagerImplM
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    protected JcrVersionManagerImplConfig(SessionImpl session,
+    protected VersionManagerImplConfig(SessionImpl session,
                                         UpdatableItemStateManager stateMgr,
                                         HierarchyManager hierMgr) {
         super(session, stateMgr, hierMgr);

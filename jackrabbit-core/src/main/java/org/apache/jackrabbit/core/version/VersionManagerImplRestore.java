@@ -57,12 +57,12 @@ import org.slf4j.LoggerFactory;
  * Implementation note: methods starting with "internal" are considered to be
  * executed within a "write operations" block.
  */
-abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImplBase {
+abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
 
     /**
      * default logger
      */
-    private static final Logger log = LoggerFactory.getLogger(JcrVersionManagerImplRestore.class);
+    private static final Logger log = LoggerFactory.getLogger(VersionManagerImplRestore.class);
 
     /**
      * Creates a new version manager for the given session
@@ -70,7 +70,7 @@ abstract public class JcrVersionManagerImplRestore extends JcrVersionManagerImpl
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    protected JcrVersionManagerImplRestore(SessionImpl session,
+    protected VersionManagerImplRestore(SessionImpl session,
                                         UpdatableItemStateManager stateMgr,
                                         HierarchyManager hierMgr) {
         super(session, stateMgr, hierMgr);

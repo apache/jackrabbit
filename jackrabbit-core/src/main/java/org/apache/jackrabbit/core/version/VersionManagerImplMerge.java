@@ -53,12 +53,12 @@ import org.slf4j.LoggerFactory;
  * </p>
  * this class provides methods for the merge operations.
  */
-abstract public class JcrVersionManagerImplMerge extends JcrVersionManagerImplRestore {
+abstract public class VersionManagerImplMerge extends VersionManagerImplRestore {
 
     /**
      * default logger
      */
-    private static final Logger log = LoggerFactory.getLogger(JcrVersionManagerImplMerge.class);
+    private static final Logger log = LoggerFactory.getLogger(VersionManagerImplMerge.class);
 
     /**
      * Creates a new version manager for the given session
@@ -66,7 +66,7 @@ abstract public class JcrVersionManagerImplMerge extends JcrVersionManagerImplRe
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    protected JcrVersionManagerImplMerge(SessionImpl session,
+    protected VersionManagerImplMerge(SessionImpl session,
                                         UpdatableItemStateManager stateMgr,
                                         HierarchyManager hierMgr) {
         super(session, stateMgr, hierMgr);

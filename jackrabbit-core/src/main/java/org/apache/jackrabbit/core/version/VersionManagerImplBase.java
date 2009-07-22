@@ -47,12 +47,12 @@ import org.slf4j.Logger;
  * this class provides basic routines for all operations and the methods related
  * to checkin and checkout.
  */
-abstract public class JcrVersionManagerImplBase {
+abstract public class VersionManagerImplBase {
 
     /**
      * default logger
      */
-    private static final Logger log = LoggerFactory.getLogger(JcrVersionManagerImplBase.class);
+    private static final Logger log = LoggerFactory.getLogger(VersionManagerImplBase.class);
 
     /**
      * workspace session
@@ -95,7 +95,7 @@ abstract public class JcrVersionManagerImplBase {
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    protected JcrVersionManagerImplBase(SessionImpl session,
+    protected VersionManagerImplBase(SessionImpl session,
                                         UpdatableItemStateManager stateMgr,
                                         HierarchyManager hierMgr) {
         this.session = session;
