@@ -452,7 +452,8 @@ public class SerializationTest extends AbstractJCRTest {
             throws Exception {
 
         treeComparator.createExampleTree();
-        Node node = testRootNode.addNode("ntBase", ntBase);
+        String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
+        Node node = testRootNode.addNode("ntBase", nodetype);
         session.save();
 
         FileInputStream in = new FileInputStream(file);

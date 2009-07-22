@@ -169,6 +169,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String ntBase;
 
     /**
+     * JCR Name nt:unstructured using the namespace resolver of the current session.
+     */
+    protected String ntUnstructured;
+
+    /**
      * JCR Name nt:version using the namespace resolver of the current session.
      */
     protected String ntVersion;
@@ -356,6 +361,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrMergeFailed = superuser.getNamespacePrefix(NS_JCR_URI) + ":mergeFailed";
         jcrSystem = superuser.getNamespacePrefix(NS_JCR_URI) + ":system";
         ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
+        ntUnstructured = superuser.getNamespacePrefix(NS_NT_URI) + ":unstructured";
         ntVersion = superuser.getNamespacePrefix(NS_NT_URI) + ":version";
         ntVersionHistory = superuser.getNamespacePrefix(NS_NT_URI) + ":versionHistory";
         ntVersionLabels = superuser.getNamespacePrefix(NS_NT_URI) + ":versionLabels";

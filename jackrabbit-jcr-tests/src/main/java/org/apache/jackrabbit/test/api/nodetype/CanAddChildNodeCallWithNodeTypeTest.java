@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * Tests <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
@@ -88,6 +88,10 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
         NodeType nodeType = nodeDef.getDeclaringNodeType();
         String childNodeName = nodeDef.getName();
         String nodeTypeName = nodeDef.getRequiredPrimaryTypes()[0].getName();
+        if (nodeTypeName.equals(ntBase)) {
+            // nt:base is abstract and can never be added, upgrade for check below
+            nodeTypeName = ntUnstructured;
+        }
 
         assertTrue("NodeType.canAddChildNode(String childNodeName, String nodeTypeName) " +
                 "must return true if childNodeName and nodeTypeName match the " +
@@ -221,6 +225,10 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
         }
 
         String type = nodeDef.getRequiredPrimaryTypes()[0].getName();
+        if (type.equals(ntBase)) {
+            // nt:base is abstract and can never be added, upgrade for check below
+            type = ntUnstructured;
+        }
         NodeType nodeType = nodeDef.getDeclaringNodeType();
         String undefinedName = NodeTypeUtil.getUndefinedChildNodeName(nodeType);
 
