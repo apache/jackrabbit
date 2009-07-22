@@ -84,11 +84,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      */
     private static final Path ACTIVITIES_PATH;
 
-    /**
-     * The path to the configurations storage: /jcr:system/jcr:versionStorage/jcr:configurations
-     */
-    private static final Path CONFIGURATIONS_PATH;
-
     static {
         try {
             PathBuilder builder = new PathBuilder();
@@ -104,12 +99,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             builder.addLast(NameConstants.JCR_ACTIVITIES);
             ACTIVITIES_PATH = builder.getPath();
 
-            builder = new PathBuilder();
-            builder.addRoot();
-            builder.addLast(NameConstants.JCR_SYSTEM);
-            builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
-            builder.addLast(NameConstants.JCR_CONFIGURATIONS);
-            CONFIGURATIONS_PATH = builder.getPath();
         } catch (MalformedPathException e) {
             // will not happen. path is always valid
             throw new InternalError("Cannot initialize path");
@@ -158,7 +147,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * @param rootParentId node id of the version storage parent (i.e. jcr:system)
      * @param storageId node id of the version storage (i.e. jcr:versionStorage)
      * @param activitiesId node id of the activities storage (i.e. jcr:activities)
-     * @param configurationsId node if of the configurations storage (i.e. jcr:configurations)
      * @param cacheFactory item state cache factory
      * @param ismLocking workspace item state locking
      * @throws RepositoryException if an error occurs
@@ -169,7 +157,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                               NodeId rootParentId,
                               NodeId storageId,
                               NodeId activitiesId,
-                              NodeId configurationsId,
                               ItemStateCacheFactory cacheFactory,
                               ISMLocking ismLocking) throws RepositoryException {
         super(ntReg);
@@ -224,32 +211,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                 pMgr.store(cl);
             }
 
-            // check for jcr:configurations
-            if (!pMgr.exists(configurationsId)) {
-                NodeState root = pMgr.createNew(configurationsId);
-                root.setParentId(storageId);
-                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_VERSIONSTORAGE).getApplicableChildNodeDef(
-                        NameConstants.JCR_CONFIGURATIONS, NameConstants.REP_CONFIGURATIONS, ntReg).getId());
-                root.setNodeTypeName(NameConstants.REP_CONFIGURATIONS);
-                PropertyState pt = pMgr.createNew(new PropertyId(activitiesId, NameConstants.JCR_PRIMARYTYPE));
-                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_CONFIGURATIONS).getApplicablePropertyDef(
-                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
-                pt.setMultiValued(false);
-                pt.setType(PropertyType.NAME);
-                pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_CONFIGURATIONS)});
-                root.addPropertyName(pt.getName());
-
-                // add activities as child
-                NodeState historyState = pMgr.load(storageId);
-                historyState.addChildNodeEntry(NameConstants.JCR_CONFIGURATIONS, configurationsId);
-
-                ChangeLog cl = new ChangeLog();
-                cl.added(root);
-                cl.added(pt);
-                cl.modified(historyState);
-                pMgr.store(cl);
-            }
-
             sharedStateMgr = createItemStateManager(pMgr, storageId, ntReg, cacheFactory, ismLocking);
 
             stateMgr = LocalItemStateManager.createInstance(sharedStateMgr, escFactory, cacheFactory);
@@ -260,9 +221,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
             nodeState = (NodeState) stateMgr.getItemState(activitiesId);
             activitiesRoot =  new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_ACTIVITIES);
-
-            nodeState = (NodeState) stateMgr.getItemState(configurationsId);
-            configurationsRoot =  new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_CONFIGURATIONS);
 
             // create the virtual item state provider
             versProvider = new VersionItemStateProvider(
@@ -344,35 +302,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             }
         });
         return state.getNodeId();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeId createConfiguration(Session session, final NodeId rootId)
-            throws RepositoryException {
-        NodeStateEx state = (NodeStateEx)
-                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
-            public Object run() throws RepositoryException {
-                return internalCreateConfiguration(rootId);
-            }
-        });
-        return state.getNodeId();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InternalBaseline checkin(Session session,
-                                    final InternalConfiguration config,
-                                    final Set<NodeId> baseVersions)
-            throws RepositoryException {
-        return (InternalBaseline)
-                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
-            public Object run() throws RepositoryException {
-                return internalCheckin((InternalConfigurationImpl) config, baseVersions);
-            }
-        });
     }
 
     /**
@@ -489,7 +418,8 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public InternalVersion checkin(final Session session, final NodeStateEx node)
+    public InternalVersion checkin(final Session session, final NodeStateEx node,
+                                   final Set<NodeId> baseVersions)
             throws RepositoryException {
         return (InternalVersion)
                 escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
@@ -500,11 +430,11 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                     // the property
                     NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
                     vh = getVersionHistory(histId);
-                    return internalCheckin((InternalVersionHistoryImpl) vh, node, false);
+                    return internalCheckin((InternalVersionHistoryImpl) vh, node, false, baseVersions);
                 } else {
                     // in simple versioning the history id needs to be calculated
                     vh = getVersionHistoryOfNode(node.getNodeId());
-                    return internalCheckin((InternalVersionHistoryImpl) vh, node, true);
+                    return internalCheckin((InternalVersionHistoryImpl) vh, node, true, baseVersions);
                 }
             }
         });

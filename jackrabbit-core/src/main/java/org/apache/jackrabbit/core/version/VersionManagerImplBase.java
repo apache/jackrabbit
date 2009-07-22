@@ -16,11 +16,15 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Set;
+import java.util.HashSet;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.core.HierarchyManager;
@@ -158,7 +162,12 @@ abstract public class VersionManagerImplBase {
         try {
             // the 2 cases could be consolidated but is clearer this way
             if (checkin) {
-                InternalVersion v = vMgr.checkin(session, state);
+                // check for configuration
+                Set<NodeId> baseVersions = null;
+                if (state.getEffectiveNodeType().includesNodeType(NameConstants.NT_CONFIGURATION)) {
+                    baseVersions = collectBaseVersions(state);
+                }
+                InternalVersion v = vMgr.checkin(session, state, baseVersions);
                 baseId = v.getId();
                 if (isFull) {
                     state.setPropertyValue(
@@ -194,6 +203,45 @@ abstract public class VersionManagerImplBase {
         }
     }
 
+    /**
+     * Collects the base versions for the workspace configuration referenced by
+     * the given config node.
+     * @param config the config
+     * @return the id of the new base version
+     * @throws RepositoryException if an error occurs
+     */
+    private Set<NodeId> collectBaseVersions(NodeStateEx config) throws RepositoryException {
+        NodeId rootId = config.getPropertyValue(NameConstants.JCR_ROOT).getNodeId();
+        NodeStateEx root = getNodeStateEx(rootId);
+        if (root == null) {
+            throw new ItemNotFoundException("Configuration root node for " + safeGetJCRPath(config) + " not found.");
+        }
+        Set<NodeId> baseVersions = new HashSet<NodeId>();
+        baseVersions.add(root.getPropertyValue(NameConstants.JCR_BASEVERSION).getNodeId());
+        collectBaseVersions(root, baseVersions);
+        return baseVersions;
+    }
+
+    /**
+     * Recursivly collects all base versions of this configuration tree.
+     * @param root node to traverse
+     * @param baseVersions set of base versions to fill
+     * @throws RepositoryException if an error occurs
+     */
+    private void collectBaseVersions(NodeStateEx root, Set<NodeId> baseVersions)
+            throws RepositoryException {
+        for (NodeStateEx child: root.getChildNodes()) {
+            if (child.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+                if (child.hasProperty(NameConstants.JCR_CONFIGURATION)) {
+                    // don't traverse into child nodes that have a jcr:configuration
+                    // property as they belong to a different configuration.
+                    continue;
+                }
+                baseVersions.add(child.getPropertyValue(NameConstants.JCR_BASEVERSION).getNodeId());
+            }
+            collectBaseVersions(child, baseVersions);
+        }
+    }
 
     /**
      * Checks if the underlying node is versionable, i.e. has 'mix:versionable' or a

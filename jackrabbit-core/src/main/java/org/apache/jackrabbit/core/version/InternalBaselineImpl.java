@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.version;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 
 /**
@@ -48,11 +47,4 @@ class InternalBaselineImpl extends InternalVersionImpl
         throw new UnsupportedRepositoryOperationException("InternalBaseline.getBaseversions()");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public InternalConfiguration getConfiguration() throws RepositoryException {
-        NodeId configId = getVersionHistory().getVersionableId();
-        return (InternalConfiguration) vMgr.getItem(configId);
-    }
 }

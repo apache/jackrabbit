@@ -479,7 +479,6 @@ public class RepositoryImpl extends AbstractRepository
                 SYSTEM_ROOT_NODE_ID,
                 VERSION_STORAGE_NODE_ID,
                 ACTIVITIES_NODE_ID,
-                CONFIGURATIONS_NODE_ID,
                 cacheFactory,
                 ismLocking);
     }

@@ -39,15 +39,13 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.InternalActivity;
 import org.apache.jackrabbit.core.version.InternalBaseline;
-import org.apache.jackrabbit.core.version.InternalConfiguration;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.VersionManagerImplConfig;
 import org.apache.jackrabbit.core.version.NodeStateEx;
 import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionManagerImplConfig;
 import org.apache.jackrabbit.core.version.VersionSet;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -89,13 +87,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         NodeStateEx state = getNodeState(absPath,
                 ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
                 Permission.VERSION_MNGMT);
-        NodeId baseId;
-        if (isConfiguration(state)) {
-            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
-            baseId = checkin(config);
-        } else {
-            baseId = checkoutCheckin(state, true, false);
-        }
+        NodeId baseId = checkoutCheckin(state, true, false);
         return (VersionImpl) session.getNodeById(baseId);
     }
 
@@ -106,11 +98,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         NodeStateEx state = getNodeState(absPath,
                 ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
                 Permission.VERSION_MNGMT);
-        if (isConfiguration(state)) {
-            // currently has no effect
-        } else {
-            checkoutCheckin(state, false, true);
-        }
+        checkoutCheckin(state, false, true);
     }
 
     /**
@@ -120,13 +108,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         NodeStateEx state = getNodeState(absPath,
                 ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
                 Permission.VERSION_MNGMT);
-        NodeId baseId;
-        if (isConfiguration(state)) {
-            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
-            baseId = checkin(config);
-        } else {
-            baseId = checkoutCheckin(state, true, true);
-        }
+        NodeId baseId = checkoutCheckin(state, true, true);
         return (VersionImpl) session.getNodeById(baseId);
     }
 
@@ -180,24 +162,12 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         Map<NodeId, InternalVersion> toRestore = new HashMap<NodeId, InternalVersion>();
         for (Version version : versions) {
             InternalVersion v = vMgr.getVersion(((VersionImpl) version).getNodeId());
-            if (v instanceof InternalBaseline) {
-                // do simple explode, ignore restoring of nt:configuration node for now.
-                for (InternalVersion bv: ((InternalBaseline) v).getBaseVersions().versions().values()) {
-                    // check for collision
-                    NodeId historyId = bv.getVersionHistory().getId();
-                    if (toRestore.containsKey(historyId)) {
-                        throw new VersionException("Unable to restore. Two or more versions have same version history.");
-                    }
-                    toRestore.put(historyId, bv);
-                }
-            } else {
-                // check for collision
-                NodeId historyId = v.getVersionHistory().getId();
-                if (toRestore.containsKey(historyId)) {
-                    throw new VersionException("Unable to restore. Two or more versions have same version history.");
-                }
-                toRestore.put(historyId, v);
+            // check for collision
+            NodeId historyId = v.getVersionHistory().getId();
+            if (toRestore.containsKey(historyId)) {
+                throw new VersionException("Unable to restore. Two or more versions have same version history.");
             }
+            toRestore.put(historyId, v);
         }
         WriteOperation ops = startWriteOperation();
         try {
@@ -218,12 +188,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         NodeStateEx state = getNodeState(absPath,
                 ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
                 Permission.NONE);
-        if (isConfiguration(state)) {
-            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
-            restore(config, session.getQName(versionName), removeExisting);
-        } else {
-            restore(state, session.getQName(versionName), removeExisting);
-        }
+        restore(state, session.getQName(versionName), removeExisting);
     }
 
     /**
@@ -237,12 +202,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             NodeStateEx state = getNodeState(absPath,
                     ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
                     Permission.NONE);
-            if (isConfiguration(state)) {
-                InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
-                restore(config, version, removeExisting);
-            } else {
-                restore(state, version, removeExisting);
-            }
+            restore(state, version, removeExisting);
         } else {
             // parent has to exist
             Path path = session.getQPath(absPath);
@@ -265,12 +225,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         NodeStateEx state = getNodeState(absPath,
                 ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
                 Permission.NONE);
-        if (isConfiguration(state)) {
-            InternalConfiguration config = vMgr.getConfiguration(state.getNodeId());
-            restoreByLabel(config, session.getQName(versionLabel), removeExisting);
-        } else {
-            restoreByLabel(state, session.getQName(versionLabel), removeExisting);
-        }
+        restoreByLabel(state, session.getQName(versionLabel), removeExisting);
     }
 
     /**
@@ -390,7 +345,6 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 throw new UnsupportedRepositoryOperationException(
                         "Create configuration to existing nodes only allowed without specifying a basline: " + absPath);
             }
-
             NodeStateEx state = getNodeState(absPath,
                     ItemValidator.CHECK_LOCK | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD,
                     Permission.VERSION_MNGMT);
@@ -402,18 +356,8 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 throw new UnsupportedRepositoryOperationException("Node is already a configuration root: " + absPath);
             }
 
-            WriteOperation ops = startWriteOperation();
-            try {
-                NodeId configId = vMgr.createConfiguration(session, state.getNodeId());
-                state.setPropertyValue(NameConstants.JCR_CONFIGURATION, InternalValue.create(configId));
-                state.store();
-                ops.save();
-                return session.getNodeById(configId);
-            } catch (ItemStateException e) {
-                throw new RepositoryException(e);
-            } finally {
-                ops.close();
-            }
+            NodeId configId = createConfiguration(state);
+            return session.getNodeById(configId);
         } else {
             // check if supplied baseline is valid
             if (baseline == null) {
@@ -436,8 +380,8 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             NodeStateEx state = getNodeState(parent,
                     ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
                     Permission.NONE);
-            InternalConfiguration config = restore(state, name, bl);
-            return session.getNodeById(config.getId());
+            NodeId configId = restore(state, name, bl);
+            return session.getNodeById(configId);
         }
     }
 
@@ -555,19 +499,5 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             throw new RepositoryException(e);
         }
     }
-
-    /**
-     * Checks if the given node state is a nt:configuration. Note that this check
-     * is currently used to either avoid versioning operations on nt:configuration
-     * nodes or to use a differnt strategy for such nodes.
-     *
-     * @param state the state to check
-     * @return <code>true</code> if it is a configuration
-     * @throws RepositoryException if an error occurs
-     */
-    private boolean isConfiguration(NodeStateEx state) throws RepositoryException {
-        return state.getEffectiveNodeType().includesNodeType(NameConstants.NT_CONFIGURATION);
-    }
-
 
 }

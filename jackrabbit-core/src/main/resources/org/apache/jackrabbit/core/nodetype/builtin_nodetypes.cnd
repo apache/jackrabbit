@@ -496,6 +496,7 @@
   orderable
   + jcr:versionStorage (rep:versionStorage) = rep:versionStorage mandatory protected ABORT
   + jcr:nodeTypes (rep:nodeTypes) = rep:nodeTypes mandatory protected ABORT
+  + jcr:configurations (rep:Configurations) = rep:Configurations protected sns ABORT
   + * (nt:base) = nt:unstructured sns IGNORE
 
 // implementation note: currently we keep the activities below the version storage
@@ -506,7 +507,6 @@
   + * (nt:versionHistory) = nt:versionHistory protected sns ABORT
   + * (rep:versionStorage) = rep:versionStorage protected sns ABORT
   + * (rep:Activities) = rep:Activities protected sns ABORT
-  + * (rep:Configurations) = rep:Configurations protected sns ABORT
 
 [rep:Activities]
   + * (nt:activity) = nt:activity protected sns ABORT
