@@ -72,7 +72,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     protected InternalVersionHistory getInternalVersionHistory()
             throws RepositoryException {
         InternalVersionHistory history =
-                session.getVersionManager().getVersionHistory((NodeId) id);
+                session.getInternalVersionManager().getVersionHistory((NodeId) id);
         if (history == null) {
             throw new InvalidItemStateException(id + ": the item does not exist anymore");
         }
@@ -163,7 +163,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            session.getVersionManager().setVersionLabel(
+            session.getInternalVersionManager().setVersionLabel(
                     session, getInternalVersionHistory(), session.getQName(versionName),
                     session.getQName(label), move);
         } catch (NameException e) {
@@ -178,7 +178,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            InternalVersion existing = session.getVersionManager().setVersionLabel(
+            InternalVersion existing = session.getInternalVersionManager().setVersionLabel(
                     session, getInternalVersionHistory(), null, session.getQName(label), true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
@@ -250,7 +250,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            session.getVersionManager().removeVersion(session,
+            session.getInternalVersionManager().removeVersion(session,
                     getInternalVersionHistory(), session.getQName(versionName));
         } catch (NameException e) {
             throw new RepositoryException(e);

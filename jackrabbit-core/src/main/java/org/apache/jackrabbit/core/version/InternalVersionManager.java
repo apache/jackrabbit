@@ -30,7 +30,7 @@ import org.apache.jackrabbit.spi.Name;
  * This interface defines the version manager. It gives access to the underlying
  * persistence layer of the versioning.
  */
-public interface VersionManager {
+public interface InternalVersionManager {
 
     /**
      * returns the virtual item state provider that exposes the internal versions

@@ -475,7 +475,7 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplConfig
      * {@inheritDoc}
      */
     public Node createActivity(String title) throws RepositoryException {
-        NodeId id = session.getVersionManager().createActivity(session, title);
+        NodeId id = vMgr.createActivity(session, title);
         return session.getNodeById(id);
     }
 
@@ -488,7 +488,7 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplConfig
             throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
         }
         NodeId actId = actNode.getNodeId();
-        session.getVersionManager().removeActivity(session, actId);
+        vMgr.removeActivity(session, actId);
         if (actId.equals(currentActivity)) {
             currentActivity = null;
         }
@@ -502,7 +502,7 @@ public class JcrVersionManagerImpl extends JcrVersionManagerImplConfig
         if (!actNode.isNodeType(NameConstants.NT_ACTIVITY)) {
             throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
         }
-        InternalActivity activity = session.getVersionManager().getActivity(actNode.getNodeId());
+        InternalActivity activity = vMgr.getActivity(actNode.getNodeId());
         if (activity == null) {
             throw new UnsupportedRepositoryOperationException("Given activity not found.");
         }

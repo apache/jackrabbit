@@ -33,7 +33,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * Implements a internal representation of an activity node.
- * this is only for the {@link XAVersionManager}.
+ * this is only for the {@link InternalXAVersionManager}.
  */
 class InternalActivityImpl extends InternalVersionItemImpl implements InternalActivity {
 
@@ -43,7 +43,7 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
      * @param node version history node state
      * @throws RepositoryException if an error occurs
      */
-    public InternalActivityImpl(AbstractVersionManager vMgr, NodeStateEx node)
+    public InternalActivityImpl(InternalVersionManagerBase vMgr, NodeStateEx node)
             throws RepositoryException {
         super(vMgr, node);
     }

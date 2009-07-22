@@ -66,13 +66,13 @@ import org.slf4j.LoggerFactory;
 /**
  * This Class implements a VersionManager.
  */
-public class VersionManagerImpl extends AbstractVersionManager
+public class InternalVersionManagerImpl extends InternalVersionManagerBase
         implements ItemStateListener, UpdateEventListener {
 
     /**
      * the default logger
      */
-    private static Logger log = LoggerFactory.getLogger(VersionManager.class);
+    private static Logger log = LoggerFactory.getLogger(InternalVersionManager.class);
 
     /**
      * The path to the version storage: /jcr:system/jcr:versionStorage
@@ -163,7 +163,7 @@ public class VersionManagerImpl extends AbstractVersionManager
      * @param ismLocking workspace item state locking
      * @throws RepositoryException if an error occurs
      */
-    public VersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
+    public InternalVersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
                               NodeTypeRegistry ntReg,
                               DelegatingObservationDispatcher obsMgr,
                               NodeId rootParentId,

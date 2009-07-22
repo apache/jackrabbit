@@ -94,7 +94,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @param parent parent item
      * @throws RepositoryException if an error occurs
      */
-    public InternalFrozenNodeImpl(AbstractVersionManager vMgr, NodeStateEx node,
+    public InternalFrozenNodeImpl(InternalVersionManagerBase vMgr, NodeStateEx node,
                                   InternalVersionItem parent)
             throws RepositoryException {
         super(vMgr, node, parent);

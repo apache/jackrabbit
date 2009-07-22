@@ -31,7 +31,7 @@ import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionHistoryInfo;
-import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -63,7 +63,7 @@ public class WorkspaceImporter implements Importer {
     private final NodeState importTarget;
     private final WorkspaceImpl wsp;
     private final SessionImpl session;
-    private final VersionManager versionManager;
+    private final InternalVersionManager versionManager;
     private final NodeTypeRegistry ntReg;
     private final HierarchyManager hierMgr;
     private final BatchedItemOperations itemOps;
@@ -107,7 +107,7 @@ public class WorkspaceImporter implements Importer {
             VersionException, LockException, RepositoryException {
         this.wsp = wsp;
         this.session = (SessionImpl) wsp.getSession();
-        this.versionManager = session.getVersionManager();
+        this.versionManager = session.getInternalVersionManager();
         this.ntReg = ntReg;
         this.uuidBehavior = uuidBehavior;
 

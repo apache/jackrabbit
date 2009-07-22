@@ -42,17 +42,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base implementation of the {@link VersionManager} interface.
+ * Base implementation of the {@link InternalVersionManager} interface.
  * <p/>
  * All read operations must acquire the read lock before reading, all write
  * operations must acquire the write lock.
  */
-abstract class AbstractVersionManager implements VersionManager {
+abstract class InternalVersionManagerBase implements InternalVersionManager {
 
     /**
      * Logger instance.
      */
-    private static Logger log = LoggerFactory.getLogger(AbstractVersionManager.class);
+    private static Logger log = LoggerFactory.getLogger(InternalVersionManagerBase.class);
 
     /**
      * State manager for the version storage.
@@ -84,11 +84,11 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     private final DefaultISMLocking rwLock = new DefaultISMLocking();
 
-    public AbstractVersionManager(NodeTypeRegistry ntReg) {
+    public InternalVersionManagerBase(NodeTypeRegistry ntReg) {
         this.ntReg = ntReg;
     }
 
-    //-------------------------------------------------------< VersionManager >
+    //-------------------------------------------------------< InternalVersionManager >
 
     /**
      * {@inheritDoc}

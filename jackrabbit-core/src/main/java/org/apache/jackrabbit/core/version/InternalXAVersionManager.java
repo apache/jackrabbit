@@ -51,11 +51,11 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
- * Implementation of a {@link VersionManager} that works in an XA environment.
+ * Implementation of a {@link InternalVersionManager} that works in an XA environment.
  * Works as a filter between a version manager client and the global version
  * manager.
  */
-public class XAVersionManager extends AbstractVersionManager
+public class InternalXAVersionManager extends InternalVersionManagerBase
         implements EventStateCollectionFactory, VirtualItemStateProvider, InternalXAResource {
 
     /**
@@ -71,7 +71,7 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * Repository version manager.
      */
-    private final VersionManagerImpl vMgr;
+    private final InternalVersionManagerImpl vMgr;
 
     /**
      * The session that uses this version manager.
@@ -102,7 +102,7 @@ public class XAVersionManager extends AbstractVersionManager
      * @param cacheFactory cache factory
      * @throws RepositoryException if a an error occurs
      */
-    public XAVersionManager(VersionManagerImpl vMgr, NodeTypeRegistry ntReg,
+    public InternalXAVersionManager(InternalVersionManagerImpl vMgr, NodeTypeRegistry ntReg,
                             SessionImpl session, ItemStateCacheFactory cacheFactory)
             throws RepositoryException {
         super(ntReg);
@@ -130,7 +130,7 @@ public class XAVersionManager extends AbstractVersionManager
         return vMgr.getEscFactory().createEventStateCollection(session);
     }
 
-    //-------------------------------------------------------< VersionManager >
+    //-------------------------------------------------------< InternalVersionManager >
 
     /**
      * {@inheritDoc}
@@ -421,7 +421,7 @@ public class XAVersionManager extends AbstractVersionManager
     public void removeListener(ItemStateListener listener) {
     }
 
-    //-----------------------------------------------< AbstractVersionManager >
+    //-----------------------------------------------< InternalVersionManagerBase >
 
     /**
      * {@inheritDoc}

@@ -24,9 +24,9 @@ import org.apache.jackrabbit.core.lock.XALockManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.core.version.XAVersionManager;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
+import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
+import org.apache.jackrabbit.core.version.InternalXAVersionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +134,7 @@ public class XASessionImpl extends SessionImpl
     private void init() throws RepositoryException {
         XAItemStateManager stateMgr = (XAItemStateManager) wsp.getItemStateManager();
         XALockManager lockMgr = (XALockManager) getLockManager();
-        XAVersionManager versionMgr = (XAVersionManager) getVersionManager();
+        InternalXAVersionManager versionMgr = (InternalXAVersionManager) getInternalVersionManager();
 
         /**
          * Create array that contains all resources that participate in this
@@ -170,11 +170,11 @@ public class XASessionImpl extends SessionImpl
     /**
      * {@inheritDoc}
      */
-    protected VersionManager createVersionManager(RepositoryImpl rep)
+    protected InternalVersionManager createVersionManager(RepositoryImpl rep)
             throws RepositoryException {
 
-        VersionManagerImpl vMgr = (VersionManagerImpl) rep.getVersionManager();
-        return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), this, rep.getItemStateCacheFactory());
+        InternalVersionManagerImpl vMgr = (InternalVersionManagerImpl) rep.getVersionManager();
+        return new InternalXAVersionManager(vMgr, rep.getNodeTypeRegistry(), this, rep.getItemStateCacheFactory());
     }
 
     /**
@@ -410,9 +410,9 @@ public class XASessionImpl extends SessionImpl
         super.logout();
         // dispose the caches
         try {
-            ((XAVersionManager) versionMgr).close();
+            ((InternalXAVersionManager) versionMgr).close();
         } catch (Exception e) {
-            log.warn("error while closing XAVersionManager", e);
+            log.warn("error while closing InternalXAVersionManager", e);
         }
     }
 
