@@ -41,13 +41,21 @@ import javax.jcr.Node;
  */
 public class ElementTest extends AbstractQueryTest {
 
+    private String simpleNodeType;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        simpleNodeType = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
+    }
+
     /**
      * Tests the element test without arguments.
      * @throws NotExecutableException 
      */
     public void testElementTest() throws RepositoryException, NotExecutableException {
+
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        Node n2 = testRootNode.addNode(nodeName2, ntBase);
+        Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -61,7 +69,7 @@ public class ElementTest extends AbstractQueryTest {
      */
     public void testElementTestAnyNode() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        Node n2 = testRootNode.addNode(nodeName2, ntBase);
+        Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -76,7 +84,7 @@ public class ElementTest extends AbstractQueryTest {
      */
     public void testElementTestAnyNodeNtBase() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        Node n2 = testRootNode.addNode(nodeName2, ntBase);
+        Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -91,7 +99,7 @@ public class ElementTest extends AbstractQueryTest {
      */
     public void testElementTestAnyNodeSomeNT() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, ntBase);
+        testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -105,7 +113,7 @@ public class ElementTest extends AbstractQueryTest {
      */
     public void testElementTestNameTest() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, ntBase);
+        testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -120,7 +128,7 @@ public class ElementTest extends AbstractQueryTest {
      */
     public void testElementTestNameTestNtBase() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, ntBase);
+        testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -135,7 +143,7 @@ public class ElementTest extends AbstractQueryTest {
      */
     public void testElementTestNameTestSomeNT() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, ntBase);
+        testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -153,9 +161,9 @@ public class ElementTest extends AbstractQueryTest {
         if (!n1.getDefinition().allowsSameNameSiblings()) {
             throw new NotExecutableException("Node at " + testRoot + " does not allow same name siblings with name " + nodeName1);
         }
-        testRootNode.addNode(nodeName1, ntBase);
+        testRootNode.addNode(nodeName1, simpleNodeType);
         Node n2 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, ntBase);
+        testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 

@@ -110,7 +110,8 @@ public class SQLJoinTest extends AbstractQueryTest {
             throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         ensureMixinType(n1, mixReferenceable);
-        Node n2 = testRootNode.addNode(nodeName2, ntBase);
+        String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
+        Node n2 = testRootNode.addNode(nodeName2, nodetype);
         ensureMixinType(n2, mixReferenceable);
         testRootNode.save();
 

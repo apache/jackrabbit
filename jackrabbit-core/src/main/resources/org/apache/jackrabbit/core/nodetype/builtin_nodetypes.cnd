@@ -31,7 +31,7 @@
  * @since 1.0
  */
 [nt:base]
-  // abstract (currently causes test-case failures, see JCR-2159)
+  abstract
   - jcr:primaryType (NAME) mandatory autocreated protected COMPUTE
   - jcr:mixinTypes (NAME) protected multiple COMPUTE
 
@@ -44,7 +44,7 @@
  * @since 1.0
  */
 [nt:hierarchyNode] > mix:created
-  // abstract (currently causes test-case failures, see JCR-2159)
+  abstract
 
 /**
  * Nodes of this node type may be used to represent files. This node type inherits
