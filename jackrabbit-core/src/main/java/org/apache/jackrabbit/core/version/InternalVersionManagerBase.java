@@ -22,7 +22,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.PropertyType;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.NodeId;
@@ -73,11 +72,6 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * Persistent root node of the activities.
      */
     protected NodeStateEx activitiesRoot;
-
-    /**
-     * Persistent root node of the configurations.
-     */
-    protected NodeStateEx configurationsRoot;
 
     /**
      * the lock on this version manager
@@ -456,90 +450,6 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     }
 
     /**
-     * Creates a new configuration node.
-     * <p/>
-     * The nt:confguration is stored within the nt:configurations storage using
-     * the nodeid of the configuration root (rootId) as path.
-     *
-     * @param rootId the id of the root node of the workspace configuration
-     * @return a node state of the created configuration
-     * @throws RepositoryException if an error occurs
-     */
-    NodeStateEx internalCreateConfiguration(NodeId rootId)
-            throws RepositoryException {
-        WriteOperation ops = startWriteOperation();
-        try {
-            // If the parameter baseline is null, a new version history is created
-            // to store baselines of the new configuration, and the jcr:baseVersion
-            // of the new configuration references the root of the new version history.
-            NodeStateEx configParent = getParentNode(configurationsRoot,
-                    rootId.toString(), NameConstants.REP_CONFIGURATIONS);
-            Name name = getName(rootId.toString());
-
-            NodeId configId = new NodeId();
-            NodeStateEx config = configParent.addNode(name, NameConstants.NT_CONFIGURATION, configId, true);
-            config.setPropertyValue(NameConstants.JCR_ROOT, InternalValue.create(rootId));
-
-            // now create the version history of the baseline
-            NodeStateEx histParent = getParentNode(historyRoot, configId.toString(), NameConstants.REP_VERSIONSTORAGE);
-            Name histName = getName(configId.toString());
-            NodeStateEx history =
-                InternalVersionHistoryImpl.create(this, histParent, histName, config.getState(), null);
-            InternalVersionHistory vh = new InternalVersionHistoryImpl(this, history);
-
-            // and set the base version and history to the config
-            NodeId blId = vh.getRootVersion().getId();
-            config.setPropertyValue(NameConstants.JCR_BASEVERSION, InternalValue.create(blId));
-            config.setPropertyValue(NameConstants.JCR_VERSIONHISTORY, InternalValue.create(vh.getId()));
-            config.setPropertyValue(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
-            InternalValue[] preds = new InternalValue[]{InternalValue.create(blId)};
-            config.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, preds, true);
-            configParent.store();
-            ops.save();
-
-            return config;
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        } finally {
-            ops.close();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InternalConfiguration getConfigurationForNode(NodeId rootId) throws RepositoryException {
-        ReadLock lock = acquireReadLock();
-        try {
-            String uuid = rootId.toString();
-            Name name = getName(uuid);
-
-            NodeStateEx parent = getParentNode(configurationsRoot, uuid, null);
-            if (parent != null && parent.hasNode(name)) {
-                NodeStateEx config = parent.getNode(name, 1);
-                return new InternalConfigurationImpl(this, config);
-            } else {
-                return null;
-            }
-        } finally {
-            lock.release();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InternalConfiguration getConfiguration(NodeId nodeId)
-            throws RepositoryException {
-        // lock handling via getItem()
-        InternalConfiguration config = (InternalConfiguration) getItem(nodeId);
-        if (config == null) {
-            throw new ItemNotFoundException(nodeId.toString());
-        }
-        return config;
-    }
-
-    /**
      * Removes the specified activity
      *
      * @param activity the acitvity to remove
@@ -591,7 +501,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * @param name string name
      * @return A <code>Name</code> object.
      */
-    private Name getName(String name) {
+    protected static Name getName(String name) {
         return NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, name);
     }
 
@@ -609,7 +519,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * @return parent node of the version history, or <code>null</code>
      * @throws RepositoryException if an error occurs
      */
-    private NodeStateEx getParentNode(NodeStateEx parent, String uuid, Name interNT)
+    protected static NodeStateEx getParentNode(NodeStateEx parent, String uuid, Name interNT)
             throws RepositoryException {
         NodeStateEx n = parent;
         for (int i = 0; i < 3; i++) {
@@ -633,18 +543,20 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * @param history the version history
      * @param node node to checkin
      * @param simple flag indicates simple versioning
+     * @param baseVersions in case the node is a nt:configuration
      * @return internal version
      * @throws javax.jcr.RepositoryException if an error occurs
      * @see javax.jcr.Node#checkin()
      */
     protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
-                                      NodeStateEx node, boolean simple)
+                                      NodeStateEx node, boolean simple,
+                                      final Set<NodeId> baseVersions)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
             String versionName = calculateCheckinVersionName(history, node, simple);
             InternalVersionImpl v = history.checkin(
-                    NameFactoryImpl.getInstance().create("", versionName), node, null);
+                    NameFactoryImpl.getInstance().create("", versionName), node, baseVersions);
 
             // check for jcr:activity
             if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
@@ -652,44 +564,6 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
                 InternalActivityImpl act = (InternalActivityImpl) getItem(actId);
                 act.addVersion(v);
             }
-            operation.save();
-            return v;
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        } finally {
-            operation.close();
-        }
-    }
-
-    /**
-     * internally checks in a configuration
-     * @param config the config
-     * @param baseVersions the base versions to record
-     * @return the new baseline
-     * @throws RepositoryException if an error occurs
-     */
-    protected InternalBaseline internalCheckin(InternalConfigurationImpl config,
-                                               Set<NodeId> baseVersions)
-            throws RepositoryException {
-        InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) getVersionHistoryOfNode(config.getId());
-        WriteOperation operation = startWriteOperation();
-        try {
-            NodeStateEx node = config.node;
-            String versionName = calculateCheckinVersionName(vh, node, false);
-            InternalBaseline v = (InternalBaseline) vh.checkin(
-                    NameFactoryImpl.getInstance().create("", versionName),
-                    node, baseVersions);
-            // update properties on 'node' to point to the new base version
-            // but leave it checked out
-            node.setPropertyValue(
-                    NameConstants.JCR_BASEVERSION,
-                    InternalValue.create(v.getId()));
-            node.setPropertyValues(
-                    NameConstants.JCR_PREDECESSORS,
-                    PropertyType.REFERENCE,
-                    new InternalValue[]{InternalValue.create(v.getId())}
-            );
-            node.store();
             operation.save();
             return v;
         } catch (ItemStateException e) {
@@ -879,8 +753,6 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
                     return new InternalVersionHistoryImpl(this, pNode);
                 } else if (ntName.equals(NameConstants.NT_ACTIVITY)) {
                     return new InternalActivityImpl(this, pNode);
-                } else if (ntName.equals(NameConstants.NT_CONFIGURATION)) {
-                    return new InternalConfigurationImpl(this, pNode);
                 } else {
                     return null;
                 }

@@ -16,19 +16,17 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
@@ -61,13 +59,13 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
      * @param parent the parent state
      * @param name the name of the new node (tree)
      * @param baseline the baseline that recorded the versions
-     * @return the configuration
+     * @return the node id of the configuration
      * @throws RepositoryException if an error occurs
      */
-    protected InternalConfiguration restore(NodeStateEx parent, Name name, InternalBaseline baseline)
+    protected NodeId restore(NodeStateEx parent, Name name, InternalBaseline baseline)
             throws RepositoryException {
-        InternalConfiguration config = baseline.getConfiguration();
-        NodeId rootId = config.getRootId();
+        NodeStateEx config = parent.getNode(baseline.getVersionHistory().getVersionableId());
+        NodeId rootId = config.getPropertyValue(NameConstants.JCR_ROOT).getNodeId();
         if (stateMgr.hasItemState(rootId)) {
             NodeStateEx existing = parent.getNode(rootId);
             throw new UnsupportedRepositoryOperationException(
@@ -97,46 +95,11 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
             // now just restore all versions
             internalRestore(versions, true);
             ops.save();
-            return config;
+            return config.getNodeId();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
             ops.close();
-        }
-    }
-
-    /**
-     * Performs a configuration checkin
-     * @param config the config
-     * @return the id of the new base version
-     * @throws RepositoryException if an error occurs
-     */
-    protected NodeId checkin(InternalConfiguration config) throws RepositoryException {
-        NodeStateEx root = getRootNode(config);
-        Set<NodeId> baseVersions = new HashSet<NodeId>();
-        baseVersions.add(root.getPropertyValue(NameConstants.JCR_BASEVERSION).getNodeId());
-        collectBaseVersions(root, baseVersions);
-        return vMgr.checkin(session, config, baseVersions).getId();
-    }
-
-    /**
-     * Recursivly collects all base versions of this configuration tree.
-     * @param root node to traverse
-     * @param baseVersions set of base versions to fill
-     * @throws RepositoryException if an error occurs
-     */
-    private void collectBaseVersions(NodeStateEx root, Set<NodeId> baseVersions)
-            throws RepositoryException {
-        for (NodeStateEx child: root.getChildNodes()) {
-            if (child.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
-                if (child.hasProperty(NameConstants.JCR_CONFIGURATION)) {
-                    // don't traverse into child nodes that have a jcr:configuration
-                    // property as they belong to a different configuration.
-                    continue;
-                }
-                baseVersions.add(child.getPropertyValue(NameConstants.JCR_BASEVERSION).getNodeId());
-            }
-            collectBaseVersions(child, baseVersions);
         }
     }
 
@@ -147,10 +110,10 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
      * @param removeExisting remove existing flag
      * @throws RepositoryException if an error occurs
      */
-    protected void restore(InternalConfiguration config, Name name, boolean removeExisting)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("not implemented, yet");
-    }
+//    protected void restore(InternalConfiguration config, Name name, boolean removeExisting)
+//            throws RepositoryException {
+//        throw new UnsupportedRepositoryOperationException("not implemented, yet");
+//    }
 
     /**
      * Performs a configuration restore
@@ -159,10 +122,10 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
      * @param removeExisting remove existing flag
      * @throws RepositoryException if an error occurs
      */
-    protected void restoreByLabel(InternalConfiguration config, Name name, boolean removeExisting)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("not implemented, yet");
-    }
+//    protected void restoreByLabel(InternalConfiguration config, Name name, boolean removeExisting)
+//            throws RepositoryException {
+//        throw new UnsupportedRepositoryOperationException("not implemented, yet");
+//    }
 
     /**
      * Performs a configuration restore
@@ -171,21 +134,81 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
      * @param removeExisting remove existing flag
      * @throws RepositoryException if an error occurs
      */
-    protected void restore(InternalConfiguration config, Version version, boolean removeExisting)
+//    protected void restore(InternalConfiguration config, Version version, boolean removeExisting)
+//            throws RepositoryException {
+//        throw new UnsupportedRepositoryOperationException("not implemented, yet");
+//    }
+
+    /**
+     * Creates a new configuration node.
+     * <p/>
+     * The nt:confguration is stored within the nt:configurations storage using
+     * the nodeid of the configuration root (rootId) as path.
+     *
+     * @param state the node of the workspace configuration
+     * @return the node id of the created configuration
+     * @throws RepositoryException if an error occurs
+     */
+    protected NodeId createConfiguration(NodeStateEx state)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("not implemented, yet");
+
+        WriteOperation ops = startWriteOperation();
+        try {
+            NodeId rootId = state.getNodeId();
+            NodeStateEx configRoot = internalGetConfigRoot();
+            NodeStateEx configParent = InternalVersionManagerBase.getParentNode(
+                    configRoot,
+                    rootId.toString(),
+                    NameConstants.REP_CONFIGURATIONS);
+            Name name = InternalVersionManagerBase.getName(rootId.toString());
+
+            NodeId configId = new NodeId();
+            NodeStateEx config = configParent.addNode(name, NameConstants.NT_CONFIGURATION, configId, true);
+            config.setPropertyValue(NameConstants.JCR_ROOT, InternalValue.create(rootId));
+
+            // init mix:versionable flags
+            VersionHistoryInfo vh = vMgr.getVersionHistory(session, config.getState(), null);
+
+            // and set the base version and history to the config
+            InternalValue historyId = InternalValue.create(vh.getVersionHistoryId());
+            InternalValue versionId = InternalValue.create(vh.getRootVersionId());
+
+            config.setPropertyValue(NameConstants.JCR_BASEVERSION, versionId);
+            config.setPropertyValue(NameConstants.JCR_VERSIONHISTORY, historyId);
+            config.setPropertyValue(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+            config.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[]{versionId});
+            configParent.store();
+
+            // set configuration reference in state
+            state.setPropertyValue(NameConstants.JCR_CONFIGURATION, InternalValue.create(configId));
+            state.store();
+
+            ops.save();
+
+            return configId;
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } finally {
+            ops.close();
+        }
     }
 
     /**
-     * Returns the configuration root node for the given config.
-     * @param config the config
+     * Returns the root node of the configurations storage located at
+     * "/jcr:system/jcr:configurations"
+     *
      * @return the root node
-     * @throws RepositoryException if an error occurs or the root node does not exist
+     * @throws RepositoryException if an error occurs
      */
-    private NodeStateEx getRootNode(InternalConfiguration config) throws RepositoryException {
-        NodeStateEx root = getNodeStateEx(config.getRootId());
+    private NodeStateEx internalGetConfigRoot() throws RepositoryException {
+        NodeStateEx system = getNodeStateEx(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
+        NodeStateEx root = system.getNode(NameConstants.JCR_CONFIGURATIONS, 1);
         if (root == null) {
-            throw new ItemNotFoundException("Configuration root node for " + config.getId() + " not found.");
+            root = system.addNode(
+                    NameConstants.JCR_CONFIGURATIONS,
+                    NameConstants.REP_CONFIGURATIONS,
+                    RepositoryImpl.CONFIGURATIONS_NODE_ID, false);
+            system.store();
         }
         return root;
     }

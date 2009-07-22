@@ -179,37 +179,6 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
-    public NodeId createConfiguration(Session session, NodeId rootId)
-            throws RepositoryException {
-        if (isInXA()) {
-            NodeStateEx state = internalCreateConfiguration(rootId);
-            InternalConfiguration config = new InternalConfigurationImpl(vMgr, state);
-            xaItems.put(state.getNodeId(), config);
-            return config.getId();
-        } else {
-            return vMgr.createConfiguration(session, rootId);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InternalBaseline checkin(Session session,
-                                    InternalConfiguration config,
-                                    Set<NodeId> baseVersions)
-            throws RepositoryException {
-        if (isInXA()) {
-            InternalBaseline version = internalCheckin((InternalConfigurationImpl) config, baseVersions);
-            xaItems.put(version.getId(), version);
-            return version;
-        } else {
-            return vMgr.checkin(session, config, baseVersions);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void removeActivity(Session session, NodeId nodeId)
             throws RepositoryException {
 
@@ -244,7 +213,8 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
-    public InternalVersion checkin(Session session, NodeStateEx node) throws RepositoryException {
+    public InternalVersion checkin(Session session, NodeStateEx node, Set<NodeId> baseVersions)
+            throws RepositoryException {
         if (isInXA()) {
             InternalVersionHistory vh;
             InternalVersion version;
@@ -253,15 +223,15 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
                 // the property
                 NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
                 vh = getVersionHistory(histId);
-                version = internalCheckin((InternalVersionHistoryImpl) vh, node, false);
+                version = internalCheckin((InternalVersionHistoryImpl) vh, node, false, baseVersions);
             } else {
                 // in simple versioning the history id needs to be calculated
                 vh = getVersionHistoryOfNode(node.getNodeId());
-                version = internalCheckin((InternalVersionHistoryImpl) vh, node, true);
+                version = internalCheckin((InternalVersionHistoryImpl) vh, node, true, baseVersions);
             }
             return version;
         } else {
-            return vMgr.checkin(session, node);
+            return vMgr.checkin(session, node, baseVersions);
         }
     }
 
@@ -474,14 +444,15 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * Before modifying version history given, make a local copy of it.
      */
     protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
-                                      NodeStateEx node, boolean simple)
+                                      NodeStateEx node, boolean simple,
+                                      Set<NodeId> baseVersions)
             throws RepositoryException {
 
         if (history.getVersionManager() != this) {
             history = makeLocalCopy(history);
             xaItems.put(history.getId(), history);
         }
-        InternalVersion version = super.internalCheckin(history, node, simple);
+        InternalVersion version = super.internalCheckin(history, node, simple, baseVersions);
         NodeId frozenNodeId = version.getFrozenNodeId();
         InternalVersionItem frozenNode = createInternalVersionItem(frozenNodeId);
         if (frozenNode != null) {

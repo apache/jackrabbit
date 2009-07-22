@@ -40,12 +40,4 @@ public interface InternalBaseline extends InternalVersion {
      */
     VersionSet getBaseVersions() throws RepositoryException;
 
-    /**
-     * Returns the configuration of this baseline. this is basically the
-     * versionable node.
-     *
-     * @return the configuration
-     * @throws RepositoryException if an error occurs or the configuration does not exist.
-     */
-    InternalConfiguration getConfiguration() throws RepositoryException;
 }
