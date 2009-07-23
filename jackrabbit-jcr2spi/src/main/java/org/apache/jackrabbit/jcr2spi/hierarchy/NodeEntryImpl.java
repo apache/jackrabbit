@@ -116,7 +116,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     private RevertInfo revertInfo;
 
     /**
-     * Information regarding the invalidation status of the underyling {@link ItemState}
+     * Information regarding the invalidation status of the underlying {@link ItemState}
      * of this entry. The semantics depend on the {@link EntryFactory.InvalidationStrategy}.
      */
     private long invalidationStatus;
