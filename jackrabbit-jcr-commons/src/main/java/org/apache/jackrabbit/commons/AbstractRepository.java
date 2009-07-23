@@ -39,17 +39,11 @@ public abstract class AbstractRepository implements Repository {
      */
     private static final Set<String> STANDARD_KEYS = new HashSet<String>() {{
         add(Repository.IDENTIFIER_STABILITY);
-        add(Repository.IDENTIFIER_STABILITY_INDEFINITE_DURATION);
-        add(Repository.IDENTIFIER_STABILITY_METHOD_DURATION);
-        add(Repository.IDENTIFIER_STABILITY_SAVE_DURATION);
-        add(Repository.IDENTIFIER_STABILITY_SESSION_DURATION);
         add(Repository.LEVEL_1_SUPPORTED);
         add(Repository.LEVEL_2_SUPPORTED);
+        add(Repository.OPTION_NODE_TYPE_MANAGEMENT_SUPPORTED);
         add(Repository.NODE_TYPE_MANAGEMENT_AUTOCREATED_DEFINITIONS_SUPPORTED);
         add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE);
-        add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE_MINIMAL);
-        add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE_MULTIPLE);
-        add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE_SINGLE);
         add(Repository.NODE_TYPE_MANAGEMENT_MULTIPLE_BINARY_PROPERTIES_SUPPORTED);
         add(Repository.NODE_TYPE_MANAGEMENT_MULTIVALUED_PROPERTIES_SUPPORTED);
         add(Repository.NODE_TYPE_MANAGEMENT_ORDERABLE_CHILD_NODES_SUPPORTED);
@@ -59,12 +53,13 @@ public abstract class AbstractRepository implements Repository {
         add(Repository.NODE_TYPE_MANAGEMENT_RESIDUAL_DEFINITIONS_SUPPORTED);
         add(Repository.NODE_TYPE_MANAGEMENT_SAME_NAME_SIBLINGS_SUPPORTED);
         add(Repository.NODE_TYPE_MANAGEMENT_VALUE_CONSTRAINTS_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_UPDATE_IN_USE_SUPORTED);
         add(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
         add(Repository.OPTION_JOURNALED_OBSERVATION_SUPPORTED);
         add(Repository.OPTION_LIFECYCLE_SUPPORTED);
         add(Repository.OPTION_LOCKING_SUPPORTED);
-        add(Repository.OPTION_NODE_TYPE_MANAGEMENT_SUPPORTED);
         add(Repository.OPTION_OBSERVATION_SUPPORTED);
+        add(Repository.OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED);
         add(Repository.OPTION_QUERY_SQL_SUPPORTED);
         add(Repository.OPTION_RETENTION_SUPPORTED);
         add(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
@@ -78,13 +73,10 @@ public abstract class AbstractRepository implements Repository {
         add(Repository.OPTION_XML_EXPORT_SUPPORTED);
         add(Repository.OPTION_XML_IMPORT_SUPPORTED);
         add(Repository.OPTION_ACTIVITIES_SUPPORTED);
-        // add(Repository.OPTION_BASELINES_SUPPORTED);
+        add(Repository.OPTION_BASELINES_SUPPORTED);
         
         add(Repository.QUERY_FULL_TEXT_SEARCH_SUPPORTED);
         add(Repository.QUERY_JOINS);
-        add(Repository.QUERY_JOINS_INNER);
-        add(Repository.QUERY_JOINS_INNER_OUTER);
-        add(Repository.QUERY_JOINS_NONE);
         add(Repository.QUERY_LANGUAGES);
         add(Repository.QUERY_STORED_QUERIES_SUPPORTED);
         add(Repository.QUERY_XPATH_DOC_ORDER);
