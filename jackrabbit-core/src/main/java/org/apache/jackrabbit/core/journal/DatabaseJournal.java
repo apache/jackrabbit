@@ -227,6 +227,8 @@ public class DatabaseJournal extends AbstractJournal {
         janitorNextRun.set(Calendar.MILLISECOND, 0);
     }
 
+    private Thread janitorThread;
+
     /**
      * The instance that manages the local revision.
      */
@@ -376,9 +378,9 @@ public class DatabaseJournal extends AbstractJournal {
 
         // Start the clean-up thread if necessary.
         if (janitorEnabled) {
-            Thread t1 = new Thread(new RevisionTableJanitor(), "ClusterRevisionJanitor");
-            t1.setDaemon(true);
-            t1.start();
+            janitorThread = new Thread(new RevisionTableJanitor(), "Jackrabbit-ClusterRevisionJanitor");
+            janitorThread.setDaemon(true);
+            janitorThread.start();
             log.info("Cluster revision janitor thread started; first run scheduled at " + janitorNextRun.getTime());
         } else {
             log.info("Cluster revision janitor thread not started");
@@ -586,6 +588,9 @@ public class DatabaseJournal extends AbstractJournal {
      */
     public void close() {
         close(false);
+        if (janitorThread != null) {
+            janitorThread.interrupt();
+        }
     }
 
     /**
