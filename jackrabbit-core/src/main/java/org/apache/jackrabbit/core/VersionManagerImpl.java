@@ -155,7 +155,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to restore version. Session has pending changes.";
-            log.debug(msg);
+            log.error(msg);
             throw new InvalidItemStateException(msg);
         }
         // add all versions to map of versions to restore
@@ -165,7 +165,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             // check for collision
             NodeId historyId = v.getVersionHistory().getId();
             if (toRestore.containsKey(historyId)) {
-                throw new VersionException("Unable to restore. Two or more versions have same version history.");
+                String msg = "Unable to restore. Two or more versions have same version history.";
+                log.error(msg);
+                throw new VersionException(msg);
             }
             toRestore.put(historyId, v);
         }
@@ -285,7 +287,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         if (!srcWorkspaceName.equals(session.getWorkspace().getName())) {
             // check authorization for specified workspace
             if (!session.getAccessManager().canAccess(srcWorkspaceName)) {
-                throw new AccessDeniedException("not authorized to access " + srcWorkspaceName);
+                String msg = "not authorized to access " + srcWorkspaceName;
+                log.error(msg);
+                throw new AccessDeniedException(msg);
             }
             // get root node of src workspace
             SessionImpl srcSession = null;
@@ -342,8 +346,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         if (session.nodeExists(absPath)) {
             // refuse to create a configuration if a baseline is specified.
             if (baseline != null) {
-                throw new UnsupportedRepositoryOperationException(
-                        "Create configuration to existing nodes only allowed without specifying a basline: " + absPath);
+                String msg = "Create configuration to existing nodes only allowed without specifying a basline: " + absPath;
+                log.error(msg);
+                throw new UnsupportedRepositoryOperationException(msg);
             }
             NodeStateEx state = getNodeState(absPath,
                     ItemValidator.CHECK_LOCK | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD,
@@ -353,7 +358,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 throw new UnsupportedRepositoryOperationException("Node not full versionable: " + absPath);
             }
             if (state.getPropertyValue(NameConstants.JCR_CONFIGURATION) != null) {
-                throw new UnsupportedRepositoryOperationException("Node is already a configuration root: " + absPath);
+                String msg = "Node is already a configuration root: " + absPath;
+                log.error(msg);
+                throw new UnsupportedRepositoryOperationException(msg);
             }
 
             NodeId configId = createConfiguration(state);
@@ -361,14 +368,16 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         } else {
             // check if supplied baseline is valid
             if (baseline == null) {
-                throw new UnsupportedRepositoryOperationException(
-                        "CreateConfiguration on non-existing path must supply a baseline: " + absPath);
+                String msg = "CreateConfiguration on non-existing path must supply a baseline: " + absPath;
+                log.error(msg);
+                throw new UnsupportedRepositoryOperationException(msg);
             }
             VersionImpl v = (VersionImpl) baseline;
             InternalBaseline bl = vMgr.getBaseline(v.getNodeId());
             if (bl == null) {
-                throw new UnsupportedRepositoryOperationException(
-                        "Supplied version is not a baseline: " + v.safeGetJCRPath());
+                String msg = "Supplied version is not a baseline: " + v.safeGetJCRPath();
+                log.error(msg);
+                throw new UnsupportedRepositoryOperationException(msg);
             }
 
             // parent has to exist
@@ -395,7 +404,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         } else {
             NodeImpl actNode = (NodeImpl) activity;
             if (!actNode.isNodeType(NameConstants.NT_ACTIVITY)) {
-                throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
+                String msg = "Given node is not an activity: " + actNode.safeGetJCRPath();
+                log.error(msg);
+                throw new UnsupportedRepositoryOperationException(msg);
             }
             currentActivity = actNode.getNodeId();
         }
@@ -427,7 +438,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     public void removeActivity(Node node) throws RepositoryException {
         NodeImpl actNode = (NodeImpl) node;
         if (!actNode.isNodeType(NameConstants.NT_ACTIVITY)) {
-            throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
+            String msg = "Given node is not an activity: " + actNode.safeGetJCRPath();
+            log.error(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
         }
         NodeId actId = actNode.getNodeId();
         vMgr.removeActivity(session, actId);
@@ -442,11 +455,15 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     public NodeIterator merge(Node activityNode) throws RepositoryException {
         NodeImpl actNode = (NodeImpl) activityNode;
         if (!actNode.isNodeType(NameConstants.NT_ACTIVITY)) {
-            throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
+            String msg = "Given node is not an activity: " + actNode.safeGetJCRPath();
+            log.error(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
         }
         InternalActivity activity = vMgr.getActivity(actNode.getNodeId());
         if (activity == null) {
-            throw new UnsupportedRepositoryOperationException("Given activity not found.");
+            String msg = "Given activity not found in version storage.";
+            log.error(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
         }
         List<ItemId> failedIds = new ArrayList<ItemId>();
         merge(activity, failedIds);

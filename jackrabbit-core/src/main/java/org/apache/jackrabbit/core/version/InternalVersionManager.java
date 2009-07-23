@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Set;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -63,12 +61,10 @@ public interface InternalVersionManager {
      *
      * @param session session that invokes the checkin
      * @param node node to checkin
-     * @param baseVersions set of base versions to record in the baseline if the
-     *        given node is a nt:configuration
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */
-    InternalVersion checkin(Session session, NodeStateEx node, Set<NodeId> baseVersions)
+    InternalVersion checkin(Session session, NodeStateEx node)
             throws RepositoryException;
 
     /**

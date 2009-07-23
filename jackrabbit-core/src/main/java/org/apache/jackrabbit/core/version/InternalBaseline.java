@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.version;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.core.id.NodeId;
+
 /**
  * This interface defines the internal baseline.
  * <p/>
@@ -40,4 +42,19 @@ public interface InternalBaseline extends InternalVersion {
      */
     VersionSet getBaseVersions() throws RepositoryException;
 
+    /**
+     * Returns the id of the nt:configuration node. this is basically the
+     * versionable id of the history.
+     *
+     * @return the configuration node id
+     */
+    NodeId getConfigurationId();
+
+    /**
+     * Returns the id of the root node of a workspace configuration. this is
+     * basically the jcr:root property of the frozen configuration.
+     *
+     * @return the configuration root node id
+     */
+    NodeId getConfigurationRootId();
 }

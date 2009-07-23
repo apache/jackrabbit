@@ -90,7 +90,9 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         InternalVersion v = getVersion(version);
         // check if 'own' version
         if (!v.getVersionHistory().equals(getVersionHistory(state))) {
-            throw new VersionException("Unable to restore version. Not same version history.");
+            String msg = "Unable to restore version. Not same version history.";
+            log.error(msg);
+            throw new VersionException(msg);
         }
         WriteOperation ops = startWriteOperation();
         try {
@@ -140,7 +142,9 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         checkVersionable(state);
         InternalVersion v = getVersionHistory(state).getVersionByLabel(versionLabel);
         if (v == null) {
-            throw new VersionException("No version for label " + versionLabel + " found.");
+            String msg = "No version for label " + versionLabel + " found.";
+            log.error(msg);
+            throw new VersionException(msg);
         }
         WriteOperation ops = startWriteOperation();
         try {
@@ -189,7 +193,9 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                     ops.close();
                 }
             } else {
-                throw new ItemExistsException("Unable to restore version. Versionable node already exists.");
+                String msg = "Unable to restore version. Versionable node already exists.";
+                log.error(msg);
+                throw new ItemExistsException(msg);
             }
         } else {
             // create new node below parent
@@ -230,13 +236,11 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                 }
             }
             if (restored == null) {
-                if (numRestored == 0) {
-                    throw new VersionException("Unable to restore. At least one version needs"
-                            + " existing versionable node in workspace.");
-                } else {
-                    throw new VersionException("Unable to restore. All versions with non"
-                            + " existing versionable nodes need parent.");
-                }
+                String msg = numRestored == 0
+                        ? "Unable to restore. At least one version needs existing versionable node in workspace."
+                        : "Unable to restore. All versions with non existing versionable nodes need parent.";
+                log.error(msg);
+                throw new VersionException(msg);
             }
         }
     }
@@ -261,7 +265,9 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
 
         // fail if root version
         if (version.isRootVersion()) {
-            throw new VersionException("Restore of root version not allowed.");
+            String msg = "Restore of root version not allowed.";
+            log.error(msg);
+            throw new VersionException(msg);
         }
 
         boolean isFull = checkVersionable(state);
@@ -291,11 +297,28 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         } else {
             // with simple versioning, the node is checked in automatically,
             // thus not allowing any branches
-            vMgr.checkin(session, state, null);
+            vMgr.checkin(session, state);
         }
         // 3. N's jcr:isCheckedOut property is set to false.
         state.setPropertyValue(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
         state.store();
+        
+        // check if a baseline is restored
+        if (version instanceof InternalBaseline) {
+            // just restore all base versions
+            InternalBaseline baseline = (InternalBaseline) version;
+            internalRestore(baseline.getBaseVersions(), true);
+
+            // ensure that the restored root node has a jcr:configuration property
+            // since it might not have been recorded by the initial checkin of the
+            // configuration
+            NodeId configId = baseline.getConfigurationId();
+            NodeId rootId = baseline.getConfigurationRootId();
+            NodeStateEx rootNode = state.getNode(rootId);
+            rootNode.setPropertyValue(NameConstants.JCR_CONFIGURATION, InternalValue.create(configId));
+            rootNode.store();
+        }
+
         return restored;
     }
 
@@ -317,14 +340,18 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         // check uuid
         if (state.getEffectiveNodeType().includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
             if (!state.getNodeId().equals(freeze.getFrozenId())) {
-                throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath(state) + ". UUID changed.");
+                String msg = "Unable to restore version of " + safeGetJCRPath(state) + ". UUID changed.";
+                log.error(msg);
+                throw new ItemExistsException(msg);
             }
         }
 
         // check primary type
         if (!freeze.getFrozenPrimaryType().equals(state.getState().getNodeTypeName())) {
             // todo: implement
-            throw new UnsupportedRepositoryOperationException("Unable to restore version of " + safeGetJCRPath(state) + ". PrimaryType change not supported yet.");
+            String msg = "Unable to restore version of " + safeGetJCRPath(state) + ". PrimaryType change not supported yet.";
+            log.error(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
         }
 
         // adjust mixins
@@ -419,10 +446,10 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                         } else {
                             // since we delete the OPV=Copy children beforehand, all
                             // found nodes must be outside of this tree
-                            throw new ItemExistsException(
-                                    "Unable to restore node, item already"
-                                            + " exists outside of restored tree: "
-                                            + existing);
+                            String msg = "Unable to restore node, item already exists " +
+                                    "outside of restored tree: " + safeGetJCRPath(existing);
+                            log.error(msg);
+                            throw new ItemExistsException(msg);
                         }
 
                     }
@@ -455,9 +482,10 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                     } else {
                         // since we delete the OPV=Copy children beforehand, all
                         // found nodes must be outside of this tree
-                        throw new ItemExistsException(
-                                "Unable to restore node, item already exists"
-                                        + " outside of restored tree: " + existing);
+                        String msg = "Unable to restore node, item already exists " +
+                                "outside of restored tree: " + safeGetJCRPath(existing);
+                        log.error(msg);
+                        throw new ItemExistsException(msg);
                     }
                 }
                 // get desired version from version selector
