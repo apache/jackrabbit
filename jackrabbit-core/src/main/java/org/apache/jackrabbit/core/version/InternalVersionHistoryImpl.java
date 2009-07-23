@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.Arrays;
-import java.util.HashSet;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
@@ -229,10 +227,16 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             v.clear();
         } else {
             // check if baseline
-            if (child.getState().getMixinTypeNames().contains(NameConstants.REP_BASELINE)) {
-                v = new InternalBaselineImpl(this, child, child.getName());
-            } else {
-                v = new InternalVersionImpl(this, child, child.getName());
+            try {
+                NodeStateEx frozen = child.getNode(NameConstants.JCR_FROZENNODE, 1);
+                Name frozenType = frozen.getPropertyValue(NameConstants.JCR_FROZENPRIMARYTYPE).getName();
+                if (NameConstants.NT_CONFIGURATION.equals(frozenType)) {
+                    v = new InternalBaselineImpl(this, child, child.getName());
+                } else {
+                    v = new InternalVersionImpl(this, child, child.getName());
+                }
+            } catch (RepositoryException e) {
+                throw new InternalError("Version does not have a jcr:frozenNode: " + child.getNodeId());
             }
         }
         return v;
@@ -492,11 +496,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      *
      * @param name new version name
      * @param src source node to version
-     * @param configuration the set of versions in case a configuration is checked in
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */
-    InternalVersionImpl checkin(Name name, NodeStateEx src, Set<NodeId> configuration)
+    InternalVersionImpl checkin(Name name, NodeStateEx src)
             throws RepositoryException {
 
         // copy predecessors from src node
@@ -535,16 +538,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             InternalValue act = src.getPropertyValue(NameConstants.JCR_ACTIVITY);
             vNode.setPropertyValue(NameConstants.JCR_ACTIVITY, act);
         }
-        // check configuration
-        if (configuration != null) {
-            vNode.setMixins(new HashSet<Name>(Arrays.asList(NameConstants.REP_BASELINE)));
-            InternalValue[] values = new InternalValue[configuration.size()];
-            int i=0;
-            for (NodeId id: configuration) {
-                values[i++] = InternalValue.create(id);
-            }
-            vNode.setPropertyValues(NameConstants.REP_BASEVERSIONS, PropertyType.REFERENCE, values, true);
-        }
 
         // initialize 'created', 'predecessors' and 'successors'
         vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(getCurrentTime()));
@@ -555,9 +548,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         InternalFrozenNodeImpl.checkin(vNode, NameConstants.JCR_FROZENNODE, src);
 
         // update version graph
-        InternalVersionImpl version = configuration == null
-                ? new InternalVersionImpl(this, vNode, name)
-                : new InternalBaselineImpl(this, vNode, name);
+        boolean isConfiguration = src.getEffectiveNodeType().includesNodeType(NameConstants.NT_CONFIGURATION);
+        InternalVersionImpl version = isConfiguration
+                ? new InternalBaselineImpl(this, vNode, name)
+                : new InternalVersionImpl(this, vNode, name);
         version.internalAttach();
 
         // and store
@@ -607,10 +601,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // create root version
         NodeId versionId = new NodeId();
         NodeStateEx vNode = pNode.addNode(NameConstants.JCR_ROOTVERSION, NameConstants.NT_VERSION, versionId, true);
-        if (nodeState.getNodeTypeName().equals(NameConstants.NT_CONFIGURATION)) {
-            // add baseline mixin for configurations
-            vNode.setMixins(new HashSet<Name>(Arrays.asList(NameConstants.REP_BASELINE)));
-        }
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(getCurrentTime()));

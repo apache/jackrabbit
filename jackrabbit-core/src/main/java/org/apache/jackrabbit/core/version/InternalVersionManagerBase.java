@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Set;
-
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
@@ -543,20 +541,18 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * @param history the version history
      * @param node node to checkin
      * @param simple flag indicates simple versioning
-     * @param baseVersions in case the node is a nt:configuration
      * @return internal version
      * @throws javax.jcr.RepositoryException if an error occurs
      * @see javax.jcr.Node#checkin()
      */
     protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
-                                      NodeStateEx node, boolean simple,
-                                      final Set<NodeId> baseVersions)
+                                      NodeStateEx node, boolean simple)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
             String versionName = calculateCheckinVersionName(history, node, simple);
             InternalVersionImpl v = history.checkin(
-                    NameFactoryImpl.getInstance().create("", versionName), node, baseVersions);
+                    NameFactoryImpl.getInstance().create("", versionName), node);
 
             // check for jcr:activity
             if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {

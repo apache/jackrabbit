@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -213,7 +212,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
-    public InternalVersion checkin(Session session, NodeStateEx node, Set<NodeId> baseVersions)
+    public InternalVersion checkin(Session session, NodeStateEx node)
             throws RepositoryException {
         if (isInXA()) {
             InternalVersionHistory vh;
@@ -223,15 +222,15 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
                 // the property
                 NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
                 vh = getVersionHistory(histId);
-                version = internalCheckin((InternalVersionHistoryImpl) vh, node, false, baseVersions);
+                version = internalCheckin((InternalVersionHistoryImpl) vh, node, false);
             } else {
                 // in simple versioning the history id needs to be calculated
                 vh = getVersionHistoryOfNode(node.getNodeId());
-                version = internalCheckin((InternalVersionHistoryImpl) vh, node, true, baseVersions);
+                version = internalCheckin((InternalVersionHistoryImpl) vh, node, true);
             }
             return version;
         } else {
-            return vMgr.checkin(session, node, baseVersions);
+            return vMgr.checkin(session, node);
         }
     }
 
@@ -444,15 +443,14 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * Before modifying version history given, make a local copy of it.
      */
     protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
-                                      NodeStateEx node, boolean simple,
-                                      Set<NodeId> baseVersions)
+                                      NodeStateEx node, boolean simple)
             throws RepositoryException {
 
         if (history.getVersionManager() != this) {
             history = makeLocalCopy(history);
             xaItems.put(history.getId(), history);
         }
-        InternalVersion version = super.internalCheckin(history, node, simple, baseVersions);
+        InternalVersion version = super.internalCheckin(history, node, simple);
         NodeId frozenNodeId = version.getFrozenNodeId();
         InternalVersionItem frozenNode = createInternalVersionItem(frozenNodeId);
         if (frozenNode != null) {

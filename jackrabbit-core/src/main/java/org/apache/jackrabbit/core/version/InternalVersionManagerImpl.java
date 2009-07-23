@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.version;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -418,8 +417,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public InternalVersion checkin(final Session session, final NodeStateEx node,
-                                   final Set<NodeId> baseVersions)
+    public InternalVersion checkin(final Session session, final NodeStateEx node)
             throws RepositoryException {
         return (InternalVersion)
                 escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
@@ -430,11 +428,11 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                     // the property
                     NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
                     vh = getVersionHistory(histId);
-                    return internalCheckin((InternalVersionHistoryImpl) vh, node, false, baseVersions);
+                    return internalCheckin((InternalVersionHistoryImpl) vh, node, false);
                 } else {
                     // in simple versioning the history id needs to be calculated
                     vh = getVersionHistoryOfNode(node.getNodeId());
-                    return internalCheckin((InternalVersionHistoryImpl) vh, node, true, baseVersions);
+                    return internalCheckin((InternalVersionHistoryImpl) vh, node, true);
                 }
             }
         });

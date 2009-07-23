@@ -16,10 +16,15 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * Implements a internal representation of a baseline node.
@@ -44,7 +49,32 @@ class InternalBaselineImpl extends InternalVersionImpl
      * {@inheritDoc}
      */
     public VersionSet getBaseVersions() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("InternalBaseline.getBaseversions()");
+        InternalValue[] vs = ((InternalFrozenNodeImpl) getFrozenNode()).node.
+                getPropertyValues(NameConstants.REP_VERSIONS);
+        Map<NodeId, InternalVersion> versions = new HashMap<NodeId, InternalVersion>();
+        if (vs != null) {
+            for (InternalValue v: vs) {
+                InternalVersion iv = vMgr.getVersion(v.getNodeId());
+                if (iv != null) {
+                    versions.put(iv.getVersionHistory().getId(), iv);
+                }
+            }
+        }
+        return new VersionSet(versions);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId getConfigurationId() {
+        return getVersionHistory().getVersionableId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId getConfigurationRootId() {
+        return ((InternalFrozenNodeImpl) getFrozenNode()).node.getPropertyValue
+                (NameConstants.JCR_ROOT).getNodeId();
+    }
 }

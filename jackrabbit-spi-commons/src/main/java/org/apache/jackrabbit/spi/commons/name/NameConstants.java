@@ -588,11 +588,6 @@ public class NameConstants {
     public static final Name REP_CONFIGURATIONS = FACTORY.create(Name.NS_REP_URI, "Configurations");
 
     /**
-     * rep:Baseline
-     */
-    public static final Name REP_BASELINE = FACTORY.create(Name.NS_REP_URI, "Baseline");
-
-    /**
      * rep:baseVersions
      */
     public static final Name REP_BASEVERSIONS = FACTORY.create(Name.NS_REP_URI, "baseVersions");

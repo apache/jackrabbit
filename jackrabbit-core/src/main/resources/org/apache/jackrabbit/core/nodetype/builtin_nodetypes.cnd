@@ -517,18 +517,13 @@
   + * (rep:Configurations) = rep:Configurations protected sns ABORT
 
 /**
- * mixin for baseline versions
- * @prop rep:baseVersions property that holds all base versions of the
- *                        versioned configuration.
+ * mixin that provides a multi value property for referencing versions.
+ * This is used for recording the baseline versions in the nt:configuration
+ * node, and to setup a bidirectional relationship between activities and
+ * the respective versions
  */
-[rep:Baseline] mixin
-  - rep:baseVersions (REFERENCE) protected multiple ABORT
-
-// implementation note: because node references are not maintained within the
-// version storage, we store a bidirectional relationship between activities and
-// the respective versions
 [rep:VersionReference] mix
-  - rep:versions (REFERENCE) protected multiple ABORT
+  - rep:versions (REFERENCE) protected multiple
   
 // -----------------------------------------------------------------------------
 // J A C K R A B B I T  S E C U R I T Y

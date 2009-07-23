@@ -163,11 +163,18 @@ abstract public class VersionManagerImplBase {
             // the 2 cases could be consolidated but is clearer this way
             if (checkin) {
                 // check for configuration
-                Set<NodeId> baseVersions = null;
                 if (state.getEffectiveNodeType().includesNodeType(NameConstants.NT_CONFIGURATION)) {
-                    baseVersions = collectBaseVersions(state);
+                    // collect the base versions and the the rep:versions property of the configuration
+                    Set<NodeId> baseVersions = collectBaseVersions(state);
+                    InternalValue[] vs = new InternalValue[baseVersions.size()];
+                    int i=0;
+                    for (NodeId id: baseVersions) {
+                        vs[i++] = InternalValue.create(id);
+                    }
+                    state.setPropertyValues(NameConstants.REP_VERSIONS, PropertyType.REFERENCE, vs);
+                    state.store();
                 }
-                InternalVersion v = vMgr.checkin(session, state, baseVersions);
+                InternalVersion v = vMgr.checkin(session, state);
                 baseId = v.getId();
                 if (isFull) {
                     state.setPropertyValue(
@@ -214,10 +221,11 @@ abstract public class VersionManagerImplBase {
         NodeId rootId = config.getPropertyValue(NameConstants.JCR_ROOT).getNodeId();
         NodeStateEx root = getNodeStateEx(rootId);
         if (root == null) {
-            throw new ItemNotFoundException("Configuration root node for " + safeGetJCRPath(config) + " not found.");
+            String msg = "Configuration root node for " + safeGetJCRPath(config) + " not found.";
+            log.error(msg);
+            throw new ItemNotFoundException(msg);
         }
         Set<NodeId> baseVersions = new HashSet<NodeId>();
-        baseVersions.add(root.getPropertyValue(NameConstants.JCR_BASEVERSION).getNodeId());
         collectBaseVersions(root, baseVersions);
         return baseVersions;
     }
@@ -230,15 +238,24 @@ abstract public class VersionManagerImplBase {
      */
     private void collectBaseVersions(NodeStateEx root, Set<NodeId> baseVersions)
             throws RepositoryException {
-        for (NodeStateEx child: root.getChildNodes()) {
-            if (child.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
-                if (child.hasProperty(NameConstants.JCR_CONFIGURATION)) {
-                    // don't traverse into child nodes that have a jcr:configuration
-                    // property as they belong to a different configuration.
-                    continue;
-                }
-                baseVersions.add(child.getPropertyValue(NameConstants.JCR_BASEVERSION).getNodeId());
+        if (!baseVersions.isEmpty()) {
+            // base version of configuration root already recorded
+            if (root.hasProperty(NameConstants.JCR_CONFIGURATION)
+                    && root.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+                // don't traverse into child nodes that have a jcr:configuration
+                // property as they belong to a different configuration.
+                return;
             }
+        }
+        InternalVersion baseVersion = getBaseVersion(root);
+        if (baseVersion.isRootVersion()) {
+            String msg = "Unable to checkin configuration as it has unversioned child node: " + safeGetJCRPath(root);
+            log.error(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
+        }
+        baseVersions.add(baseVersion.getId());
+
+        for (NodeStateEx child: root.getChildNodes()) {
             collectBaseVersions(child, baseVersions);
         }
     }
@@ -260,7 +277,7 @@ abstract public class VersionManagerImplBase {
         } else {
             String msg = "Unable to perform a versioning operation on a " +
                          "non versionable node: " + safeGetJCRPath(state);
-            log.debug(msg);
+            log.error(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
     }
@@ -518,7 +535,8 @@ abstract public class VersionManagerImplBase {
             success = true;
             return new WriteOperation(lock);
         } catch (IllegalStateException e) {
-            throw new RepositoryException("Unable to start edit operation.", e);
+            String msg = "Unable to start edit operation.";
+            throw new RepositoryException(msg, e);
         } finally {
             if (!success) {
                 lock.release();

@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Set;
+import java.util.HashSet;
+
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -29,6 +32,8 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * The JCR Version Manager impementation is split in several classes in order to
@@ -40,6 +45,11 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
  * executed within a "write operations" block.
  */
 abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
+
+    /**
+     * default logger
+     */
+    private static final Logger log = LoggerFactory.getLogger(VersionManagerImplConfig.class);
 
     /**
      * Creates a new version manager for the given session
@@ -64,12 +74,14 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
      */
     protected NodeId restore(NodeStateEx parent, Name name, InternalBaseline baseline)
             throws RepositoryException {
-        NodeStateEx config = parent.getNode(baseline.getVersionHistory().getVersionableId());
-        NodeId rootId = config.getPropertyValue(NameConstants.JCR_ROOT).getNodeId();
+        // check if nt:configuration exists
+        NodeId configId = baseline.getConfigurationId();
+        NodeId rootId = baseline.getConfigurationRootId();
         if (stateMgr.hasItemState(rootId)) {
             NodeStateEx existing = parent.getNode(rootId);
-            throw new UnsupportedRepositoryOperationException(
-                    "Configuration for the given baseline already exists at: " + safeGetJCRPath(existing));
+            String msg = "Configuration for the given baseline already exists at: " + safeGetJCRPath(existing);
+            log.error(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
         }
 
         // find version for configuration root
@@ -82,62 +94,38 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
             }
         }
         if (rootVersion == null) {
-            throw new RepositoryException("Internal error: supplied baseline has no version for its configuration root.");
+            String msg = "Internal error: supplied baseline has no version for its configuration root.";
+            log.error(msg);
+            throw new RepositoryException(msg);
         }
 
         // create new node below parent
         WriteOperation ops = startWriteOperation();
         try {
+            // check if nt:configuration node exists
+            NodeStateEx config = null;
+            if (stateMgr.hasItemState(configId)) {
+                config = parent.getNode(configId);
+            } else {
+                internalCreateConfiguration(rootId, configId, baseline.getId());
+            }
+            // create the root node so that the restore works
             InternalFrozenNode fn = rootVersion.getFrozenNode();
             NodeStateEx state = parent.addNode(name, fn.getFrozenPrimaryType(), fn.getFrozenId());
             state.setMixins(fn.getFrozenMixinTypes());
             parent.store();
-            // now just restore all versions
-            internalRestore(versions, true);
+
+            // and finally restore the config and root
+            internalRestore(config, baseline, null, false);
+
             ops.save();
-            return config.getNodeId();
+            return configId;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
             ops.close();
         }
     }
-
-    /**
-     * Performs a configuration restore
-     * @param config config to restore
-     * @param name name of the baseline version
-     * @param removeExisting remove existing flag
-     * @throws RepositoryException if an error occurs
-     */
-//    protected void restore(InternalConfiguration config, Name name, boolean removeExisting)
-//            throws RepositoryException {
-//        throw new UnsupportedRepositoryOperationException("not implemented, yet");
-//    }
-
-    /**
-     * Performs a configuration restore
-     * @param config config to restore
-     * @param name label of the baseline version
-     * @param removeExisting remove existing flag
-     * @throws RepositoryException if an error occurs
-     */
-//    protected void restoreByLabel(InternalConfiguration config, Name name, boolean removeExisting)
-//            throws RepositoryException {
-//        throw new UnsupportedRepositoryOperationException("not implemented, yet");
-//    }
-
-    /**
-     * Performs a configuration restore
-     * @param config config to restore
-     * @param version baseline version to restore
-     * @param removeExisting remove existing flag
-     * @throws RepositoryException if an error occurs
-     */
-//    protected void restore(InternalConfiguration config, Version version, boolean removeExisting)
-//            throws RepositoryException {
-//        throw new UnsupportedRepositoryOperationException("not implemented, yet");
-//    }
 
     /**
      * Creates a new configuration node.
@@ -154,43 +142,67 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
 
         WriteOperation ops = startWriteOperation();
         try {
-            NodeId rootId = state.getNodeId();
-            NodeStateEx configRoot = internalGetConfigRoot();
-            NodeStateEx configParent = InternalVersionManagerBase.getParentNode(
-                    configRoot,
-                    rootId.toString(),
-                    NameConstants.REP_CONFIGURATIONS);
-            Name name = InternalVersionManagerBase.getName(rootId.toString());
-
-            NodeId configId = new NodeId();
-            NodeStateEx config = configParent.addNode(name, NameConstants.NT_CONFIGURATION, configId, true);
-            config.setPropertyValue(NameConstants.JCR_ROOT, InternalValue.create(rootId));
-
-            // init mix:versionable flags
-            VersionHistoryInfo vh = vMgr.getVersionHistory(session, config.getState(), null);
-
-            // and set the base version and history to the config
-            InternalValue historyId = InternalValue.create(vh.getVersionHistoryId());
-            InternalValue versionId = InternalValue.create(vh.getRootVersionId());
-
-            config.setPropertyValue(NameConstants.JCR_BASEVERSION, versionId);
-            config.setPropertyValue(NameConstants.JCR_VERSIONHISTORY, historyId);
-            config.setPropertyValue(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
-            config.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[]{versionId});
-            configParent.store();
+            NodeId configId = internalCreateConfiguration(state.getNodeId(), null, null);
 
             // set configuration reference in state
             state.setPropertyValue(NameConstants.JCR_CONFIGURATION, InternalValue.create(configId));
             state.store();
-
             ops.save();
-
             return configId;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
             ops.close();
         }
+    }
+
+    /**
+     * Creates a new configuration node.
+     * <p/>
+     * The nt:confguration is stored within the nt:configurations storage using
+     * the nodeid of the configuration root (rootId) as path.
+     *
+     * @param rootId the id of the configuration root node
+     * @param configId the id of the configuration node
+     * @param baseLine id of the baseline version or <code>null</code>
+     * @return the node id of the created configuration
+     * @throws RepositoryException if an error occurs
+     */
+    private NodeId internalCreateConfiguration(NodeId rootId,
+                                              NodeId configId, NodeId baseLine)
+            throws RepositoryException {
+
+        NodeStateEx configRoot = internalGetConfigRoot();
+        NodeStateEx configParent = InternalVersionManagerBase.getParentNode(
+                configRoot,
+                rootId.toString(),
+                NameConstants.REP_CONFIGURATIONS);
+        Name name = InternalVersionManagerBase.getName(rootId.toString());
+
+        if (configId == null) {
+            configId = new NodeId();
+        }
+        NodeStateEx config = configParent.addNode(name, NameConstants.NT_CONFIGURATION, configId, true);
+        Set<Name> mix = new HashSet<Name>();
+        mix.add(NameConstants.REP_VERSION_REFERENCE);
+        config.setMixins(mix);
+        config.setPropertyValue(NameConstants.JCR_ROOT, InternalValue.create(rootId));
+
+        // init mix:versionable flags
+        VersionHistoryInfo vh = vMgr.getVersionHistory(session, config.getState(), null);
+
+        // and set the base version and history to the config
+        InternalValue historyId = InternalValue.create(vh.getVersionHistoryId());
+        InternalValue versionId = InternalValue.create(
+                baseLine == null ? vh.getRootVersionId() : baseLine);
+
+        config.setPropertyValue(NameConstants.JCR_BASEVERSION, versionId);
+        config.setPropertyValue(NameConstants.JCR_VERSIONHISTORY, historyId);
+        config.setPropertyValue(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+        config.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[]{versionId});
+        configParent.store();
+
+        return configId;
     }
 
     /**
