@@ -81,6 +81,7 @@ import org.slf4j.LoggerFactory;
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
  * <li>&lt;param name="{@link #setBlockOnConnectionLoss(String) blockOnConnectionLoss}" value="false"/>
+ * <li>&lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/>
  * </ul>
  */
 public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager {
@@ -179,6 +180,11 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * the name of this persistence manager
      */
     private String name = super.toString();
+
+    /**
+     * Whether the schema check must be done during initialization.
+     */
+    private boolean schemaCheckEnabled = true;
 
 
     /**
@@ -428,6 +434,20 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
+     * @return whether the schema check is enabled
+     */
+    public final boolean isSchemaCheckEnabled() {
+        return schemaCheckEnabled;
+    }
+
+    /**
+     * @param enabled set whether the schema check is enabled
+     */
+    public final void setSchemaCheckEnabled(boolean enabled) {
+        schemaCheckEnabled = enabled;
+    }
+
+    /**
      * Checks if the required schema objects exist and creates them if they
      * don't exist yet.
      *
@@ -581,7 +601,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         prepareSchemaObjectPrefix();
 
         // check if schema objects exist and create them if necessary
-        checkSchema();
+        if (isSchemaCheckEnabled()) {
+            checkSchema();
+        }
 
         // create correct blob store
         blobStore = createBlobStore();

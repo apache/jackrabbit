@@ -64,6 +64,8 @@ import javax.jcr.RepositoryException;
  * which equals 24 hours)</li>
  * <li><code>janitorFirstRunHourOfDay</code>: specifies the hour at which the clean-up
  * thread initiates its first run (default = <code>3</code> which means 3:00 at night)</li>
+ * <li><code>schemaCheckEnabled</code>:  whether the schema check during initialization is enabled
+ * (default = <code>true</code>)</li>
  * <p>
  * JNDI can be used to get the connection. In this case, use the javax.naming.InitialContext as the driver,
  * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
@@ -230,6 +232,11 @@ public class DatabaseJournal extends AbstractJournal {
     private Thread janitorThread;
 
     /**
+     * Whether the schema check must be done during initialization.
+     */
+    private boolean schemaCheckEnabled = true;
+
+    /**
      * The instance that manages the local revision.
      */
     private DatabaseRevision databaseRevision;
@@ -304,9 +311,13 @@ public class DatabaseJournal extends AbstractJournal {
         try {
             connection = getConnection();
             setAutoCommit(connection, true);
-            checkSchema();
+            if (isSchemaCheckEnabled()) {
+                checkSchema();
+            }
             // Make sure that the LOCAL_REVISIONS table exists (see JCR-1087)
-            checkLocalRevisionSchema();
+            if (isSchemaCheckEnabled()) {
+                checkLocalRevisionSchema();
+            }
 
             buildSQLStatements();
             prepareStatements();
@@ -1066,6 +1077,20 @@ public class DatabaseJournal extends AbstractJournal {
         janitorNextRun.set(Calendar.MINUTE, 0);
         janitorNextRun.set(Calendar.SECOND, 0);
         janitorNextRun.set(Calendar.MILLISECOND, 0);
+    }
+
+    /**
+     * @return whether the schema check is enabled
+     */
+    public final boolean isSchemaCheckEnabled() {
+        return schemaCheckEnabled;
+    }
+
+    /**
+     * @param enabled set whether the schema check is enabled
+     */
+    public final void setSchemaCheckEnabled(boolean enabled) {
+        schemaCheckEnabled = enabled;
     }
 
     /**
