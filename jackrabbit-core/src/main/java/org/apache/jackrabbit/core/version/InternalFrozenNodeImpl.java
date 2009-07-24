@@ -42,34 +42,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         implements InternalFrozenNode {
 
     /**
-     * checkin modes
-     */
-    private static enum Mode {
-        /**
-         * checkin mode version.
-         */
-        VERSION,
-        /**
-         * checkin mode copy. specifies, that the items are always copied.
-         */
-        COPY,
-
-        /**
-         * mode flag specifies, that the mode should be recursed. otherwise i
-         * will be redetermined by the opv.
-         */
-        COPY_RECURSE
-    }
-
-    /**
      * the list of frozen properties
      */
     private PropertyState[] frozenProperties;
-
-    /**
-     * the frozen child nodes
-     */
-    private InternalFreeze[] frozenNodes = null;
 
     /**
      * the frozen id of the original node
@@ -168,42 +143,27 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public synchronized InternalFreeze[] getFrozenChildNodes()
+    public List<ChildNodeEntry> getFrozenChildNodes()
             throws VersionException {
-        if (frozenNodes == null) {
-            try {
-                // maybe add iterator?
-                List<ChildNodeEntry> entries =
-                    node.getState().getChildNodeEntries();
-                frozenNodes = new InternalFreeze[entries.size()];
-                int i = 0;
-                for (ChildNodeEntry entry : entries) {
-                    frozenNodes[i++] = (InternalFreeze) vMgr.getItem(entry.getId());
-                }
-            } catch (RepositoryException e) {
-                throw new VersionException("Unable to retrieve frozen child nodes", e);
-            }
-        }
-        return frozenNodes;
+        return node.getState().getChildNodeEntries();
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean hasFrozenHistory(NodeId id) {
-        try {
-            InternalFreeze[] frozen = getFrozenChildNodes();
-            for (InternalFreeze aFrozen : frozen) {
-                if (aFrozen instanceof InternalFrozenVersionHistory
-                        && ((InternalFrozenVersionHistory) aFrozen)
-                        .getVersionHistoryId().equals(id)) {
-                    return true;
-                }
-            }
-        } catch (RepositoryException e) {
-            // ignore
-        }
-        return false;
+    public boolean hasFrozenChildNode(Name name, int idx) {
+        return node.getState().hasChildNodeEntry(name, idx);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalFreeze getFrozenChildNode(Name name, int idx) 
+            throws RepositoryException {
+        ChildNodeEntry e = node.getState().getChildNodeEntry(name, idx);
+        return e == null
+                ? null
+                : (InternalFreeze) vMgr.getItem(e.getId());
     }
 
     /**
@@ -251,7 +211,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                                          NodeStateEx src)
             throws RepositoryException {
         try {
-            return checkin(parent, name, src, Mode.VERSION);
+            return checkin(parent, name, src, false);
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -267,13 +227,13 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @param parent destination parent
      * @param name new node name
      * @param src source node state
-     * @param mode checkin mode
+     * @param forceCopy if <code>true</code> the OPV is ignored and a COPY is performed
      * @return the nde node state
      * @throws RepositoryException if an error occurs
      * @throws ItemStateException if an error during reading the items occurs
      */
     private static NodeStateEx checkin(NodeStateEx parent, Name name,
-                                       NodeStateEx src, Mode mode)
+                                       NodeStateEx src, boolean forceCopy)
             throws RepositoryException, ItemStateException {
 
         // create new node
@@ -292,7 +252,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         // add the properties
         for (PropertyState prop: src.getProperties()) {
             int opv;
-            if (mode != Mode.VERSION) {
+            if (forceCopy) {
                 opv = OnParentVersionAction.COPY;
             } else {
                 opv = src.getDefinition(prop).getOnParentVersion();
@@ -301,7 +261,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             Name propName = prop.getName();
             if (opv == OnParentVersionAction.ABORT) {
                 parent.reload();
-                throw new VersionException("Checkin aborted due to OPV in " + propName);
+                throw new VersionException("Checkin aborted due to OPV abort in " + propName);
             } else if (opv == OnParentVersionAction.VERSION
                     || opv == OnParentVersionAction.COPY) {
                 // ignore frozen properties
@@ -314,9 +274,10 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         }
 
         // add the frozen children and histories
+        boolean isFull = src.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE);
         for (NodeStateEx child: src.getChildNodes()) {
             int opv;
-            if (mode == Mode.COPY_RECURSE) {
+            if (forceCopy) {
                 opv = OnParentVersionAction.COPY;
             } else {
                 opv = child.getDefinition().getOnParentVersion();
@@ -325,7 +286,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             if (opv == OnParentVersionAction.ABORT) {
                 throw new VersionException("Checkin aborted due to OPV in " + child);
             } else if (opv == OnParentVersionAction.VERSION) {
-                if (child.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+                if (isFull && child.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                     // create frozen versionable child
                     NodeId histId = child.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
                     NodeStateEx newChild = node.addNode(child.getName(), NameConstants.NT_VERSIONEDCHILD, null, false);
@@ -333,11 +294,11 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                             NameConstants.JCR_CHILDVERSIONHISTORY,
                             InternalValue.create(histId));
                 } else {
-                    // else copy but do not recurse
-                    checkin(node, child.getName(), child, Mode.COPY);
+                    // else copy
+                    checkin(node, child.getName(), child, true);
                 }
             } else if (opv == OnParentVersionAction.COPY) {
-                checkin(node, child.getName(), child, Mode.COPY_RECURSE);
+                checkin(node, child.getName(), child, true);
             }
         }
         return node;

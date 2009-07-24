@@ -319,14 +319,14 @@
  */
 [mix:versionable] > mix:simpleVersionable, mix:referenceable
   mixin
-  - jcr:versionHistory (REFERENCE) mandatory protected < 'nt:versionHistory'
+  - jcr:versionHistory (REFERENCE) mandatory protected IGNORE < 'nt:versionHistory'
   - jcr:baseVersion (REFERENCE) mandatory protected IGNORE < 'nt:version'
-  - jcr:predecessors (REFERENCE) mandatory protected multiple < 'nt:version'
+  - jcr:predecessors (REFERENCE) mandatory protected multiple IGNORE < 'nt:version'
   - jcr:mergeFailed (REFERENCE) protected multiple ABORT < 'nt:version'
     /** @since 2.0 */
   - jcr:activity (REFERENCE) protected < 'nt:activity'
     /** @since 2.0 */
-  - jcr:configuration (REFERENCE) protected < 'nt:configuration'
+  - jcr:configuration (REFERENCE) protected IGNORE < 'nt:configuration'
 
 /**
  * @since 1.0
