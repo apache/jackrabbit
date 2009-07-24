@@ -47,7 +47,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.Repository;
 import javax.jcr.PropertyType;
-import javax.jcr.ValueFormatException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 import javax.security.auth.Subject;
