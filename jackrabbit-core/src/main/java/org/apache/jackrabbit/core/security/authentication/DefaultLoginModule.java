@@ -112,7 +112,8 @@ public class DefaultLoginModule extends AbstractLoginModule {
     /**
      * Handles the impersonation of given Credentials.<p />
      * Current implementation takes {@link User} for the given Principal and
-     * delegates the check to {@link Impersonation#allows(javax.security.auth.Subject)}
+     * delegates the check to
+     * {@link org.apache.jackrabbit.api.security.user.Impersonation#allows(javax.security.auth.Subject)}
      *
      * @param principal Principal to impersonate.
      * @param credentials Credentials used to create the impersonation subject.
