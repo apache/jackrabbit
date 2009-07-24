@@ -178,20 +178,36 @@ public class BindableRepository extends AbstractRepository
         return repository.getDescriptorKeys();
     }
 
+    /**
+     * Delegated to the underlying repository instance.
+     * {@inheritDoc}
+     */
     public Value getDescriptorValue(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
+        return repository.getDescriptorValue(key);
     }
 
+    /**
+     * Delegated to the underlying repository instance.
+     * {@inheritDoc}
+     */
     public Value[] getDescriptorValues(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
+        return repository.getDescriptorValues(key);
     }
 
+    /**
+     * Delegated to the underlying repository instance.
+     * {@inheritDoc}
+     */
     public boolean isSingleValueDescriptor(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
+        return repository.isSingleValueDescriptor(key);
     }
 
+    /**
+     * Delegated to the underlying repository instance.
+     * {@inheritDoc}
+     */
     public boolean isStandardDescriptor(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
+        return repository.isStandardDescriptor(key);
     }
 
     //--------------------------------------------------------< Referenceable >
