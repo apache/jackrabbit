@@ -138,7 +138,7 @@ public class ReferencesTest extends AbstractJCRTest {
         // reference properties on this node
         ensureCanSetProperty(n2, propertyName1, values);
         ensureCanSetProperty(n2, propertyName2, values);
-        ensureCanSetProperty(n1, propertyName1, values);
+        ensureCanSetProperty(n3, propertyName1, values);
 
         Property p1 = n2.setProperty(propertyName1, values);
         Property p2 = n2.setProperty(propertyName2, values);
