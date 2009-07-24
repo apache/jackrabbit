@@ -539,8 +539,8 @@ public class SessionImpl extends AbstractSession
      */
     public boolean hasCapability(String methodName, Object target, Map arguments)
             throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        // most trivial implementation allowed by the specification.
+        return true;
     }
 
     /**
