@@ -103,7 +103,8 @@ import java.util.Properties;
  * with a Jackrabbit repository &lt; v2.0 will not be found any more.<br>
  * By default this option is disabled.</li>
  * <li>{@link #PARAM_DEFAULT_DEPTH}: Parameter used to change the number of
- * levels that are used by default store authorizable nodes.<br>The default
+ * levels that are used by default store authorizable nodes.<br>The value is
+ * expected to be a positive integer greater than zero. The default
  * number of levels is 2.
  * <p/>
  * <strong>NOTE:</strong> Changing the default depth once users and groups
@@ -126,8 +127,8 @@ import java.util.Properties;
  * on a given level exceeds the maximal allowed {@link #PARAM_AUTO_EXPAND_SIZE size}.
  * <br>By default this option is disabled.</li>
  * <li>{@link #PARAM_AUTO_EXPAND_SIZE}: This parameter only takes effect
- * if {@link #PARAM_AUTO_EXPAND_TREE} is enabled.<br>The default value is
- * 1000.</li>
+ * if {@link #PARAM_AUTO_EXPAND_TREE} is enabled.<br>The value is expected to be
+ * a positive long greater than zero. The default value is 1000.</li>
  * </ul>
  */
 public class UserManagerImpl extends ProtectedItemModifier
@@ -796,21 +797,27 @@ public class UserManagerImpl extends ProtectedItemModifier
      * ->          + aSm         [rep:User]
      * </pre>
      * </li>
+     * <li>Special case: If <code>autoExpandTree</code> is enabled later on
+     * AND any of the existing authorizable nodes collides with an intermediate
+     * folder to be created the auto-expansion is aborted and the new
+     * authorizable is inserted at the last valid level irrespective of
+     * max-size being reached.
+     * </li>
      * </ul>
      *
      * The configuration options:
      * <ul>
      * <li><strong>defaultDepth</strong>:<br>
-     * <code>integer</code> defining the depth of the default structure that is
-     * always created.<br>
+     * A positive <code>integer</code> greater than zero defining the depth of
+     * the default structure that is always created.<br>
      * Default value: 2</li>
      * <li><strong>autoExpandTree</strong>:<br>
      * <code>boolean</code> defining if the tree gets automatically expanded
      * if within a level the maximum number of child nodes is reached.<br>
      * Default value: <code>false</code></li>
      * <li><strong>autoExpandSize</strong>:<br>
-     * <code>long</code> defining the maximum number of child nodes that are
-     * allowed at a given level.<br>
+     * A positive <code>long</code> greater than zero defining the maximum
+     * number of child nodes that are allowed at a given level.<br>
      * Default value: 1000<br>
      * NOTE: that total number of child nodes may still be greater that
      * autoExpandSize.</li>
@@ -838,8 +845,12 @@ public class UserManagerImpl extends ProtectedItemModifier
                 if (config.containsKey(PARAM_DEFAULT_DEPTH)) {
                     try {
                         d = Integer.parseInt(config.get(PARAM_DEFAULT_DEPTH).toString());
+                        if (d <= 0) {
+                           log.warn("Invalid defaultDepth '" + d + "' -> using default.");
+                           d = DEFAULT_DEPTH;
+                        }
                     } catch (NumberFormatException e) {
-                        log.warn("Unable to parse defaultDepth config option", e);
+                        log.warn("Unable to parse defaultDepth config parameter -> using default.", e);
                     }
                 }
                 if (config.containsKey(PARAM_AUTO_EXPAND_TREE)) {
@@ -848,8 +859,12 @@ public class UserManagerImpl extends ProtectedItemModifier
                 if (config.containsKey(PARAM_AUTO_EXPAND_SIZE)) {
                     try {
                         size = Integer.parseInt(config.get(PARAM_AUTO_EXPAND_SIZE).toString());
+                        if (expand && size <= 0) {
+                            log.warn("Invalid autoExpandSize '" + size + "' -> using default.");
+                            size = DEFAULT_SIZE;
+                        }
                     } catch (NumberFormatException e) {
-                        log.warn("Unable to parse autoExpandSize config option", e);
+                        log.warn("Unable to parse autoExpandSize config parameter -> using default.", e);
                     }
                 }
             }
@@ -952,14 +967,13 @@ public class UserManagerImpl extends ProtectedItemModifier
                             ntName = NT_REP_AUTHORIZABLE_FOLDER;
                         }
                         NodeImpl added = addNode(folder, session.getQName(segment), ntName);
-                        folder.save();
                         folder = added;
                     }
                 }
             }
 
             // validation check if authorizable to be create doesn't conflict.
-            checkExists(escapedId, folder);
+            checkAuthorizableNodeExists(escapedId, folder);
             return folder;
         }
 
@@ -999,26 +1013,48 @@ public class UserManagerImpl extends ProtectedItemModifier
 
             while (intermediateFolderNeeded(escapedId, folder)) {
                 String folderName = Text.escapeIllegalJcrChars(id.substring(0, segmLength));
-                // validation check on each intermediate level if authorizable
-                // to be created doesn't conflict.
-                checkExists(folderName, folder);
-
                 if (folder.hasNode(folderName)) {
-                    folder = folder.getNode(folderName);
+                    NodeImpl n = (NodeImpl) folder.getNode(folderName);
+                    // validation check: folder must be of type rep:AuthorizableFolder
+                    // and not an authorizable node.
+                    if (n.isNodeType(NT_REP_AUTHORIZABLE_FOLDER)) {
+                        // expected nodetype -> no violation
+                        folder = n;
+                    } else if (n.isNodeType(NT_REP_AUTHORIZABLE)){
+                        /*
+                         an authorizable node has been created before with the
+                         name of the intermediate folder to be created.
+                         this may only occur if the 'autoExpandTree' option has
+                         been enabled later on.
+                         Resolution:
+                         - abort auto-expanding and create the authorizable
+                           at the current level, ignoring that max-size is reached.
+                         - note, that this behavior has been preferred over tmp.
+                           removing and recreating the colliding authorizable node.
+                        */
+                        log.warn("Auto-expanding aborted. An existing authorizable node '" + n.getName() +"'conflicts with intermediate folder to be created.");
+                        break;
+                    } else {
+                        // should never get here: some other, unexpected node type
+                        String msg = "Failed to create authorizable node: Detected conflict with node of unexpected nodetype '" + n.getPrimaryNodeType().getName() + "'.";
+                        log.error(msg);
+                        throw new RepositoryException(msg);
+                    }
                 } else {
+                    // folder doesn't exist nor does another colliding child node.
                     folder = addNode((NodeImpl) folder, session.getQName(folderName), NT_REP_AUTHORIZABLE_FOLDER);
                 }
                 segmLength++;
             }
 
             // final validation check if authorizable to be created doesn't conflict.
-            checkExists(escapedId, folder);
+            checkAuthorizableNodeExists(escapedId, folder);
             return folder;
         }
 
-        private void checkExists(String nodeName, Node folder) throws RepositoryException {
+        private void checkAuthorizableNodeExists(String nodeName, Node folder) throws AuthorizableExistsException, RepositoryException {
             if (folder.hasNode(nodeName) &&
-                    folder.getNode(nodeName).isNodeType(session.getJCRName(NT_REP_AUTHORIZABLE))) {
+                    ((NodeImpl) folder.getNode(nodeName)).isNodeType(NT_REP_AUTHORIZABLE)) {
                 throw new AuthorizableExistsException("Unable to create Group/User: Collision with existing authorizable.");
             }
         }
