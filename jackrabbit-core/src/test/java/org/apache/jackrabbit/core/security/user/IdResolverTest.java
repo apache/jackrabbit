@@ -108,7 +108,7 @@ public class IdResolverTest extends AbstractUserTest {
      * If auto-expand is false all users must be created on the second level.
      */
     public void testDefault() throws RepositoryException {
-        createUserManager(2, false, 0);
+        createUserManager(2, false, 1);
 
         UserImpl u = (UserImpl) uMgr.createUser("z", "z");
         // remember the z-folder for later removal
@@ -138,7 +138,7 @@ public class IdResolverTest extends AbstractUserTest {
      * @throws RepositoryException
      */
     public void testChangedDefaultLevel() throws RepositoryException {
-        createUserManager(3, false, 0);
+        createUserManager(3, false, 1);
 
         UserImpl u = (UserImpl) uMgr.createUser("z", "z");
         // remember the z-folder for later removal
@@ -159,6 +159,9 @@ public class IdResolverTest extends AbstractUserTest {
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
             assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+
+            Authorizable az = uMgr.getAuthorizable(uid);
+            assertNotNull(az);
         }
     }
 
@@ -187,6 +190,7 @@ public class IdResolverTest extends AbstractUserTest {
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
             assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+
             Authorizable ath = uMgr.getAuthorizable(uid);
             assertNotNull("User with id " + uid + " must exist.", ath);
             assertFalse("User with id " + uid + " must not be a group.", ath.isGroup());
@@ -200,6 +204,7 @@ public class IdResolverTest extends AbstractUserTest {
         assertEquals("z[x]", gr.getID());
         String expectedPath = UserConstants.GROUPS_PATH + "/z/" + Text.escapeIllegalJcrChars("z[") + "/" + Text.escapeIllegalJcrChars("z[x]");
         assertEquals(expectedPath, gr.getNode().getPath());
+
         Authorizable ath = uMgr.getAuthorizable(gr.getID());
         assertNotNull(ath);
         assertTrue(ath.isGroup());
@@ -261,6 +266,49 @@ public class IdResolverTest extends AbstractUserTest {
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
             assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+        }
+    }
+
+    /**
+     * Test special case of turning autoexpandtree option on having colliding
+     * authorizables already present a leve N: In this case auto-expansion must
+     * be aborted at that level and the authorizable will be create at level N
+     * ignoring that max-size has been reached.
+     *  
+     * @throws RepositoryException
+     */
+    public void testConflictUponChangingAutoExpandFlag() throws RepositoryException {
+        createUserManager(2, false, 1);
+
+        UserImpl u = (UserImpl) uMgr.createUser("zzz", "zzz");
+        // remember the z-folder for later removal
+        toRemove.add((NodeImpl) u.getNode().getParent().getParent());
+
+        assertEquals(UserConstants.USERS_PATH + "/z/zz/zzz", u.getNode().getPath());
+
+        // now create a second user manager that has auto-expand-tree enabled
+        createUserManager(2, true, 1);
+
+
+        Map<String, String> m = new ListOrderedMap();
+        // upon creation of any a new user 'zzzA' an additional intermediate
+        // folder would be created if there wasn't the colliding authorizable
+        // 'zzz' -> autoexpansion is aborted.
+        m.put("zzzA", "/z/zz/zzzA");
+        // this is also true for 'zzzzz' and zzzBsl
+        m.put("zzzzz", "/z/zz/zzzzz");
+        m.put("zzzBsl", "/z/zz/zzzBsl");
+
+        // on other levels the expansion must still work as expected.
+        // - zzBsl -> zz is completed -> create zzB -> insert zzBsl user
+        // - zzBslrich -> zz, zzB are completed -> create zzBs -> insert zzBslrich user
+        m.put("zzBsl", "/z/zz/zzB/zzBsl");
+        m.put("zzBslrich", "/z/zz/zzB/zzBs/zzBslrich");
+
+        for (String uid : m.keySet()) {
+            u = (UserImpl) uMgr.createUser(uid, uid);
+            assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+            assertNotNull(uMgr.getAuthorizable(uid));
         }
     }
 
