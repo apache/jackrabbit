@@ -29,6 +29,8 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.Value;
 import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <code>SessionTest</code> contains all test cases for the
@@ -667,4 +669,39 @@ public class SessionTest extends AbstractJCRTest {
         assertFalse("Session should have no pending changes recorded after property has been removed and saved!", superuser.hasPendingChanges());
 
     }
+
+    /**
+     * Checks if {@link javax.jcr.Session#hasCapability(String, Object, java.util.Map)}
+     * works as specified.
+     * <p/>
+     *
+     * @throws RepositoryException
+     */
+    public void testHasCapability() throws RepositoryException {
+        Session roSession = getHelper().getReadOnlySession();
+        try {
+            Node root = roSession.getRootNode();
+            Map args = new HashMap();
+            args.put("relPath", "foo");
+            if (!roSession.hasCapability("addNode",  root, args)) {
+                // if hasCapability() returns false, the actual method call
+                // is expected to fail
+                try {
+                    root.addNode("foo");
+                    fail("Node.addNode() should fail according to Session.hasCapability()");
+                } catch (RepositoryException e) {
+                    // expected 
+                }
+            } else {
+                // hasCapability() returning true doesn't guarantee that the
+                // actual method call succeeds, it's just a best-effort.
+                // therefore nothing to test here...
+            }
+
+        } finally {
+            roSession.logout();
+        }
+
+    }
+
 }
