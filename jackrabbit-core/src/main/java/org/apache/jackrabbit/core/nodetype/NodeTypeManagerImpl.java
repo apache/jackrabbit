@@ -60,6 +60,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
@@ -204,6 +205,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
             }
             return nt;
         }
+    }
+
+    /**
+     * @see org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager#getNamePathResolver() 
+     */
+    public NamePathResolver getNamePathResolver() {
+        return session;
     }
 
     /**

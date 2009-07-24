@@ -17,11 +17,13 @@
 package org.apache.jackrabbit.spi.commons.nodetype;
 
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
  * A <code>PropertyDefinitionTemplateImpl</code> ...
@@ -40,8 +42,11 @@ class PropertyDefinitionTemplateImpl
 
     /**
      * Package private constructor
+     *
+     * @param resolver
      */
-    PropertyDefinitionTemplateImpl() {
+    PropertyDefinitionTemplateImpl(NamePathResolver resolver) {
+        super(resolver);
         type = PropertyType.STRING;
         fullTextSearchable = true;
         queryOrderable = true;
@@ -52,23 +57,29 @@ class PropertyDefinitionTemplateImpl
      * Package private constructor
      *
      * @param def
+     * @param resolver
+     * @throws javax.jcr.nodetype.ConstraintViolationException
      */
-    PropertyDefinitionTemplateImpl(PropertyDefinition def) {
-        super(def);
+    PropertyDefinitionTemplateImpl(PropertyDefinition def, NamePathResolver resolver) throws ConstraintViolationException {
+        super(def, resolver);
         type = def.getRequiredType();
-        constraints = def.getValueConstraints();
         defaultValues = def.getDefaultValues();
         multiple = def.isMultiple();
         fullTextSearchable = def.isFullTextSearchable();
         queryOrderable = def.isQueryOrderable();
         queryOperators = def.getAvailableQueryOperators();
+        setValueConstraints(def.getValueConstraints());
     }
 
     //-------------------------------------------< PropertyDefinitionTemplate >
     /**
      * {@inheritDoc}
+     *
+     * @throws IllegalArgumentException If an invalid type is passed.
      */
     public void setRequiredType(int type) {
+        // validate
+        PropertyType.nameFromValue(type);
         this.type = type;
     }
 
@@ -76,6 +87,7 @@ class PropertyDefinitionTemplateImpl
      * {@inheritDoc}
      */
     public void setValueConstraints(String[] constraints) {
+        // TODO: see https://jsr-283.dev.java.net/issues/show_bug.cgi?id=794
         this.constraints = constraints;
     }
 
@@ -126,6 +138,7 @@ class PropertyDefinitionTemplateImpl
      * {@inheritDoc}
      */
     public String[] getValueConstraints() {
+        // TODO: see https://jsr-283.dev.java.net/issues/show_bug.cgi?id=794
         return constraints;
     }
 

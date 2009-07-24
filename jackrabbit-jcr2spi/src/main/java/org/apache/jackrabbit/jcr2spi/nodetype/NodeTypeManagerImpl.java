@@ -124,19 +124,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         return mgrProvider.getNamespaceResolver();
     }
 
-    private NamePathResolver resolver() {
-        return mgrProvider.getNamePathResolver();
-    }
-
     private EffectiveNodeTypeProvider entProvider() {
         return mgrProvider.getEffectiveNodeTypeProvider();
     }
 
     //--------------------------------------------------------------------------
     /**
-     * @param name
-     * @return
-     * @throws NoSuchNodeTypeException
+     * @see AbstractNodeTypeManager#getNodeType(org.apache.jackrabbit.spi.Name)
      */
     public NodeTypeImpl getNodeType(Name name) throws NoSuchNodeTypeException {
         synchronized (ntCache) {
@@ -149,6 +143,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
             }
             return nt;
         }
+    }
+
+    /**
+     * @see org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager#getNamePathResolver() 
+     */
+    public NamePathResolver getNamePathResolver() {
+        return mgrProvider.getNamePathResolver();
     }
 
     /**
@@ -175,7 +176,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         synchronized (ndCache) {
             NodeDefinition ndi = (NodeDefinition) ndCache.get(def);
             if (ndi == null) {
-                ndi = new NodeDefinitionImpl(def, this, resolver());
+                ndi = new NodeDefinitionImpl(def, this, getNamePathResolver());
                 ndCache.put(def, ndi);
             }
             return ndi;
@@ -193,7 +194,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         synchronized (pdCache) {
             PropertyDefinition pdi = (PropertyDefinition) pdCache.get(def);
             if (pdi == null) {
-                pdi = new PropertyDefinitionImpl(def, this, resolver(), valueFactory);
+                pdi = new PropertyDefinitionImpl(def, this, getNamePathResolver(), valueFactory);
                 pdCache.put(def, pdi);
             }
             return pdi;
@@ -231,7 +232,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = resolver().getJCRName(ntName);
+            String name = getNamePathResolver().getJCRName(ntName);
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -268,7 +269,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = resolver().getJCRName(ntName);
+            String name = getNamePathResolver().getJCRName(ntName);
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -347,7 +348,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            Name qName = resolver().getQName(nodeTypeName);
+            Name qName = getNamePathResolver().getQName(nodeTypeName);
             return getNodeType(qName);
         } catch (NamespaceException e) {
             throw new NoSuchNodeTypeException(nodeTypeName, e);
@@ -361,7 +362,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public boolean hasNodeType(String name) throws RepositoryException {
         try {
-            Name qName = resolver().getQName(name);
+            Name qName = getNamePathResolver().getQName(name);
             return hasNodeType(qName);
         } catch (NamespaceException e) {
             return false;
@@ -377,7 +378,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
             throws RepositoryException {
         List<QNodeTypeDefinition> defs = new ArrayList<QNodeTypeDefinition>(ntds.length);
         for (NodeTypeDefinition definition : ntds) {
-            QNodeTypeDefinition qdef = new QNodeTypeDefinitionImpl(definition, resolver(), mgrProvider.getQValueFactory());
+            QNodeTypeDefinition qdef = new QNodeTypeDefinitionImpl(definition, getNamePathResolver(), mgrProvider.getQValueFactory());
             if (!allowUpdate && hasNodeType(qdef.getName())) {
                 throw new NodeTypeExistsException("NodeType " + definition.getName() + " already exists.");
             }
@@ -400,7 +401,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     public void unregisterNodeTypes(String[] names) throws RepositoryException {
         HashSet ntNames = new HashSet();
         for (String name : names) {
-            ntNames.add(resolver().getQName(name));
+            ntNames.add(getNamePathResolver().getQName(name));
         }
         getNodeTypeRegistry().unregisterNodeTypes(ntNames);
     }

@@ -40,7 +40,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
      */
     private static final Logger log = LoggerFactory.getLogger(NodeTypeDefinitionImpl.class);
 
-    private final QNodeTypeDefinition ntd;
+    protected final QNodeTypeDefinition ntd;
     private final NamePathResolver resolver;
     private final ValueFactory valueFactory;
 
