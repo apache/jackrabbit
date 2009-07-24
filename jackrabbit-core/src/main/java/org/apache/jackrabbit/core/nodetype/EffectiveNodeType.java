@@ -1150,7 +1150,8 @@ public class EffectiveNodeType implements Cloneable {
             clone.namedItemDefs.put(name, new ArrayList<ItemDef>(list));
         }
         clone.unnamedItemDefs.addAll(unnamedItemDefs);
-
+        clone.orderableChildNodes = orderableChildNodes;
+        clone.primaryItemName = primaryItemName;
         return clone;
     }
 }
