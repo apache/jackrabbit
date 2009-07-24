@@ -16,48 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.File;
-import java.io.PrintStream;
-import java.security.AccessControlException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Item;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.LoginException;
-import javax.jcr.NamespaceException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ValueFactory;
-import javax.jcr.Workspace;
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.ObservationManager;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.version.VersionException;
-import javax.security.auth.Subject;
-
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitSession;
@@ -106,6 +64,47 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFactory;
+import javax.jcr.Workspace;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
+import javax.jcr.retention.RetentionManager;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.version.VersionException;
+import javax.security.auth.Subject;
+import java.io.File;
+import java.io.PrintStream;
+import java.security.AccessControlException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -1531,10 +1530,66 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#hasCapability(String, Object, Map)
      * @since JCR 2.0
      */
-    public boolean hasCapability(String methodType, Object target, Map arguments)
+    public boolean hasCapability(String methodName, Object target, Map arguments)
             throws RepositoryException {
-        //TODO
-        throw new UnsupportedRepositoryOperationException("Not yet implemented");
+        // value of this method (as currently spec'ed) to jcr api clients
+        // is rather limited...
+
+        // here's therefore a minimal rather than best effort implementation;
+        // returning true is always fine according to the spec...
+        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
+        if (target instanceof Node) {
+            if (methodName.equals("addNode")
+                    || methodName.equals("addMixin")
+                    || methodName.equals("orderBefore")
+                    || methodName.equals("removeMixin")
+                    || methodName.equals("removeShare")
+                    || methodName.equals("removeSharedSet")
+                    || methodName.equals("setPrimaryType")
+                    || methodName.equals("setProperty")
+                    || methodName.equals("update")) {
+                return getValidator().canModify((ItemImpl) target, options, Permission.NONE);
+            } else if (methodName.equals("remove")) {
+                try {
+                    getValidator().checkRemove((ItemImpl) target, options, Permission.NONE);
+                } catch (RepositoryException e) {
+                    return false;
+                }
+            }
+        } else if (target instanceof Property) {
+            if (methodName.equals("setValue")
+                    || methodName.equals("save")) {
+                return getValidator().canModify((ItemImpl) target, options, Permission.NONE);
+            } else if (methodName.equals("remove")) {
+                try {
+                    getValidator().checkRemove((ItemImpl) target, options, Permission.NONE);
+                } catch (RepositoryException e) {
+                    return false;
+                }
+            }
+        } else if (target instanceof Workspace) {
+            if (methodName.equals("clone")
+                    || methodName.equals("copy")
+                    || methodName.equals("createWorkspace")
+                    || methodName.equals("deleteWorkspace")
+                    || methodName.equals("getImportContentHandler")
+                    || methodName.equals("importXML")
+                    || methodName.equals("move")) {
+                // todo minimal, best effort checks (e.g. permissions for write methods etc)
+            }
+        } else if (target instanceof Session) {
+            if (methodName.equals("clone")
+                    || methodName.equals("removeItem")
+                    || methodName.equals("getImportContentHandler")
+                    || methodName.equals("importXML")
+                    || methodName.equals("save")) {
+                // todo minimal, best effort checks (e.g. permissions for write methods etc)
+            }
+        }
+
+        // we're unable to evaluate capability, return true (staying on the safe side)
+        return true;
     }
 
     /**
