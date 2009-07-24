@@ -153,6 +153,7 @@ public class NodeTypeDefinitionFactory {
         pt.setFullTextSearchable(qPd.isFullTextSearchable());
         pt.setValueConstraints(createValueConstraints(qPd.getRequiredType(), qPd.getValueConstraints()));
         pt.setAvailableQueryOperators(qPd.getAvailableQueryOperators());
+        pt.setQueryOrderable(qPd.isQueryOrderable());
         pt.setDefaultValues(createValues(qPd.getDefaultValues()));
         return pt;
     }
