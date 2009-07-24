@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.List;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
@@ -280,7 +281,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         //    added to, depending on their corresponding copies in V and their
         //    own OnParentVersion attributes (see 7.2.8, below, for details).
         Set<InternalVersion> restored = new HashSet<InternalVersion>();
-        internalRestoreFrozen(state, version.getFrozenNode(), vsel, restored, removeExisting);
+        internalRestoreFrozen(state, version.getFrozenNode(), vsel, restored, removeExisting, false);
         restored.add(version);
 
         if (isFull) {
@@ -290,6 +291,9 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
 
             // 4. N's jcr:predecessor property is set to null
             state.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
+
+            // set version history
+            state.setPropertyValue(NameConstants.JCR_VERSIONHISTORY, InternalValue.create(version.getVersionHistory().getId()));
 
             // also clear mergeFailed
             state.removeProperty(NameConstants.JCR_MERGEFAILED);
@@ -330,11 +334,16 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
      * @param vsel version selector
      * @param restored set of restored versions
      * @param removeExisting remove existing flag
+     * @param copy if <code>true</code> a pure copy is performed
      * @throws RepositoryException if an error occurs
      * @throws ItemStateException if an error occurs
      */
-    protected void internalRestoreFrozen(NodeStateEx state, InternalFrozenNode freeze, VersionSelector vsel,
-                                   Set<InternalVersion> restored, boolean removeExisting)
+    protected void internalRestoreFrozen(NodeStateEx state,
+                                         InternalFrozenNode freeze,
+                                         VersionSelector vsel,
+                                         Set<InternalVersion> restored,
+                                         boolean removeExisting,
+                                         boolean copy)
             throws RepositoryException, ItemStateException {
 
         // check uuid
@@ -357,29 +366,52 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         // adjust mixins
         state.setMixins(freeze.getFrozenMixinTypes());
 
-        // copy frozen properties
+        // For each property P present on F (other than jcr:frozenPrimaryType,
+        // jcr:frozenMixinTypes and jcr:frozenUuid): 
+        // - If P has an OPV of COPY or VERSION then F/P is copied to N/P,
+        //   replacing any existing N/P.
+        // - F will never have a property with an OPV of IGNORE, INITIALIZE, COMPUTE
+        //   or ABORT (see 15.2 Check-In: Creating a Version).
+        Set<Name> propNames = new HashSet<Name>();
         PropertyState[] props = freeze.getFrozenProperties();
-        HashSet<Name> propNames = new HashSet<Name>();
         for (PropertyState prop : props) {
-            // skip properties that should not to be reverted back
-            if (prop.getName().equals(NameConstants.JCR_ACTIVITY)) {
-                continue;
-            }
-            propNames.add(prop.getName());
             state.copyFrom(prop);
+            propNames.add(prop.getName());
         }
+
+        // For each property P present on N but not on F:
+        // - If P has an OPV of COPY, VERSION or ABORT then N/P is removed. Note that
+        //   while a node with a child item of OPV ABORT cannot be versioned, it is
+        //   legal for a previously versioned node to have such a child item added to it
+        //   and then for it to be restored to the state that it had before that item was
+        //   added, as this step indicates.
+        // - If P has an OPV of IGNORE then no change is made to N/P.
+        // - If P has an OPV of INITIALIZE then, if N/P has a default value (either
+        //   defined in the node type of N or implementation-defined) its value is
+        //   changed to that default value. If N/P has no default value then it is left
+        //   unchanged.
+        // - If P has an OPV of COMPUTE then the value of N/P may be changed
+        //   according to an implementation-specific mechanism.
+
         // remove properties that do not exist in the frozen representation
         for (PropertyState prop: state.getProperties()) {
-            // ignore some props that are not well guarded by the OPV
             Name propName = prop.getName();
-            if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
-                // ignore
-            } else if (propName.equals(NameConstants.JCR_PREDECESSORS)) {
-                // ignore
-            } else if (!propNames.contains(propName)) {
+            if (!propNames.contains(propName)) {
                 int opv = state.getDefinition(prop).getOnParentVersion();
-                if (opv == OnParentVersionAction.COPY || opv == OnParentVersionAction.VERSION) {
+                if (opv == OnParentVersionAction.COPY
+                        || opv == OnParentVersionAction.VERSION
+                        || opv == OnParentVersionAction.ABORT) {
                     state.removeProperty(propName);
+                } else if (opv == OnParentVersionAction.INITIALIZE) {
+                    InternalValue[] values = computeAutoValues(state, state.getDefinition(prop), true);
+                    if (values != null) {
+                        state.setPropertyValues(propName, prop.getType(), values, prop.isMultiValued());
+                    }
+                } else if (opv == OnParentVersionAction.COMPUTE) {
+                    InternalValue[] values = computeAutoValues(state, state.getDefinition(prop), false);
+                    if (values != null) {
+                        state.setPropertyValues(propName, prop.getType(), values, prop.isMultiValued());
+                    }
                 }
             }
         }
@@ -387,36 +419,37 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         // add 'auto-create' properties that do not exist yet
         for (PropDef def: state.getEffectiveNodeType().getAutoCreatePropDefs()) {
             if (!state.hasProperty(def.getName())) {
-                // compute system generated values if necessary
-                // todo: use NodeTypeInstanceHandler
-                InternalValue[] values =
-                        BatchedItemOperations.computeSystemGeneratedPropertyValues(state.getState(), def);
-                if (values == null) {
-                    values = def.getDefaultValues();
-                }
+                InternalValue[] values = computeAutoValues(state, def, true);
                 if (values != null) {
                     state.setPropertyValues(def.getName(), def.getRequiredType(), values, def.isMultiple());
                 }
             }
         }
 
-        // first delete some of the child nodes. this is a bit tricky, in case
-        // the child node index changed. mark an sweep
+        // For each child node C present on N but not on F:
+        // - If C has an OPV of COPY, VERSION or ABORT then N/C is removed.
+        //   Note that while a node with a child item of OPV ABORT cannot be
+        //   versioned, it is legal for a previously versioned node to have such
+        //   a child item added to it and then for it to be restored to the state
+        //   that it had before that item was added, as this step indicates.
+        // - If C has an OPV of IGNORE then no change is made to N/C.
+        // - If C has an OPV of INITIALIZE then N/C is re-initialized as if it
+        //   were newly created, as defined in its node type.
+        // - If C has an OPV of COMPUTE then N/C may be re-initialized according
+        //   to an implementation-specific mechanism.
         LinkedList<ChildNodeEntry> toDelete = new LinkedList<ChildNodeEntry>();
         for (ChildNodeEntry entry: state.getState().getChildNodeEntries()) {
-            NodeStateEx child = state.getNode(entry.getName(), entry.getIndex());
-            int opv = child.getDefinition().getOnParentVersion();
-            if (opv == OnParentVersionAction.COPY) {
-                // only remove OPV=Copy nodes
-                toDelete.addFirst(entry);
-            } else if (opv == OnParentVersionAction.VERSION) {
-                // only remove, if node to be restored does not contain child,
-                // or if restored child is not versionable
-                NodeId vhId = child.hasProperty(NameConstants.JCR_VERSIONHISTORY)
-                        ? child.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId()
-                        : null;
-                if (vhId == null || !freeze.hasFrozenHistory(vhId)) {
+            if (!freeze.hasFrozenChildNode(entry.getName(), entry.getIndex())) {
+                NodeStateEx child = state.getNode(entry.getName(), entry.getIndex());
+                int opv = child.getDefinition().getOnParentVersion();
+                if (copy || opv == OnParentVersionAction.COPY
+                        || opv == OnParentVersionAction.VERSION
+                        || opv == OnParentVersionAction.ABORT) {
                     toDelete.addFirst(entry);
+                } else if (opv == OnParentVersionAction.INITIALIZE) {
+                    log.warn("OPV.INITIALIZE not supported yet on restore of existing child nodes: " + safeGetJCRPath(child));
+                } else if (opv == OnParentVersionAction.COMPUTE) {
+                    log.warn("OPV.COMPUTE not supported yet on restore of existing child nodes: " + safeGetJCRPath(child));
                 }
             }
         }
@@ -426,12 +459,29 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         // need to sync with state manager
         state.store();
 
-        // restore the frozen nodes
-        InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
-        for (InternalFreeze child : frozenNodes) {
+        // For each child node C present on F:
+        // - F will never have a child node with an OPV of IGNORE, INITIALIZE,
+        //   COMPUTE or ABORT (see 15.2 Check-In: Creating a Version).
+        for (ChildNodeEntry entry : freeze.getFrozenChildNodes()) {
+            InternalFreeze child = freeze.getFrozenChildNode(entry.getName(), entry.getIndex());
             NodeStateEx restoredChild = null;
             if (child instanceof InternalFrozenNode) {
+                // - If C has an OPV of COPY or VERSION:
+                //   - B is true, then F/C and its subgraph is copied to N/C, replacing
+                //     any existing N/C and its subgraph and any node in the workspace
+                //     with the same identifier as C or a node in the subgraph of C is
+                //     removed.
+                //   - B is false, then F/C and its subgraph is copied to N/C, replacing
+                //     any existing N/C and its subgraph unless there exists a node in the
+                //     workspace with the same identifier as C, or a node in the subgraph
+                //     of C, in which case an ItemExistsException is thrown , all
+                //     changes made by the restore are rolled back leaving N unchanged.
+
                 InternalFrozenNode f = (InternalFrozenNode) child;
+
+                // if node is present, remove it
+                state.removeNode(entry.getName(), entry.getIndex());
+
                 // check for existing
                 if (f.getFrozenId() != null) {
                     if (stateMgr.hasItemState(f.getFrozenId())) {
@@ -443,9 +493,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                         } else if (existing.getState().isShareable()) {
                             // if existing node is shareable, then clone it
                             restoredChild = state.moveFrom(existing, existing.getName(), true);
-                        } else {
-                            // since we delete the OPV=Copy children beforehand, all
-                            // found nodes must be outside of this tree
+                        } else if (!existing.hasAncestor(state.getNodeId())){
                             String msg = "Unable to restore node, item already exists " +
                                     "outside of restored tree: " + safeGetJCRPath(existing);
                             log.error(msg);
@@ -457,42 +505,62 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                 if (restoredChild == null) {
                     restoredChild = state.addNode(f.getName(), f.getFrozenPrimaryType(), f.getFrozenId());
                     restoredChild.setMixins(f.getFrozenMixinTypes());
-                    internalRestoreFrozen(restoredChild, f, vsel, restored, removeExisting);
                 }
+                internalRestoreFrozen(restoredChild, f, vsel, restored, removeExisting, true);
 
             } else if (child instanceof InternalFrozenVersionHistory) {
+                //   Each child node C of N where C has an OPV of VERSION and C is
+                //   mix:versionable, is represented in F not as a copy of N/C but as
+                //   special node containing a reference to the version history of
+                //   C. On restore, the following occurs:
+                //   - If the workspace currently has an already existing node corresponding
+                //     to CÕs version history and the removeExisting flag of the restore is
+                //     set to true, then that instance of C becomes the child of the restored N.
+                //   - If the workspace currently has an already existing node corresponding
+                //     to CÕs version history and the removeExisting flag of the restore is
+                //     set to false then an ItemExistsException is thrown.
+                //   - If the workspace does not have an instance of C then one is restored from
+                //     CÕs version history:
+                //     - If the restore was initiated through a restoreByLabel where L is
+                //       the specified label and there is a version of C with the label L then
+                //       that version is restored.
+                //     - If the version history of C does not contain a version with the label
+                //       L or the restore was initiated by a method call that does not specify
+                //       a label then the workspace in which the restore is being performed
+                //       will determine which particular version of C will be restored. This
+                //       determination depends on the configuration of the workspace and
+                //       is outside the scope of this specification.
                 InternalFrozenVersionHistory fh = (InternalFrozenVersionHistory) child;
                 InternalVersionHistory vh = vMgr.getVersionHistory(fh.getVersionHistoryId());
+                // get desired version from version selector
+                InternalVersion v = vsel.select(vh);
                 Name oldVersion = null;
 
                 // check if representing versionable already exists somewhere
                 NodeId nodeId = vh.getVersionableId();
                 if (stateMgr.hasItemState(nodeId)) {
-                    NodeStateEx existing = state.getNode(nodeId);
-                    if (existing.getParentId() == state.getNodeId()) {
-                        // remove
-                        state.removeNode(existing);
+                    restoredChild = state.getNode(nodeId);
+                    if (restoredChild.getParentId() == state.getNodeId()) {
+                        // if same parent, ignore
                     } else if (removeExisting) {
-                        NodeStateEx parent = existing.getNode(existing.getNodeId());
-                        state.moveFrom(existing, fh.getName(), false);
+                        NodeStateEx parent = restoredChild.getNode(restoredChild.getParentId());
+                        state.moveFrom(restoredChild, fh.getName(), false);
                         parent.store();
 
                         // get old version name
-                        oldVersion = getBaseVersion(existing).getName();
+                        oldVersion = getBaseVersion(restoredChild).getName();
                     } else {
                         // since we delete the OPV=Copy children beforehand, all
                         // found nodes must be outside of this tree
                         String msg = "Unable to restore node, item already exists " +
-                                "outside of restored tree: " + safeGetJCRPath(existing);
+                                "outside of restored tree: " + safeGetJCRPath(restoredChild);
                         log.error(msg);
                         throw new ItemExistsException(msg);
                     }
                 }
-                // get desired version from version selector
-                InternalVersion v = vsel.select(vh);
 
                 // check existing version of item exists
-                if (!stateMgr.hasItemState(nodeId)) {
+                if (restoredChild == null) {
                     if (v == null) {
                         // if version selector was unable to select version,
                         // choose the initial one
@@ -509,7 +577,6 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                     restoredChild = state.addNode(fh.getName(), f.getFrozenPrimaryType(), f.getFrozenId());
                     restoredChild.setMixins(f.getFrozenMixinTypes());
                 } else {
-                    restoredChild = state.getNode(nodeId);
                     if (v == null || oldVersion == null || v.getName().equals(oldVersion)) {
                         v = null;
                     }
@@ -534,8 +601,11 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                     restored.add(v);
                 }
             }
-            // ensure proper ordering (issue JCR-469)
             if (restoredChild != null && state.getEffectiveNodeType().hasOrderableChildNodes()) {
+                //   In a repository that supports orderable child nodes, the relative
+                //   ordering of the set of child nodes C that are copied from F is
+                //   preserved.
+
                 // order at end
                 ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(state.getState().getChildNodeEntries());
                 ChildNodeEntry toReorder = null;
@@ -554,5 +624,29 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                 }
             }
         }
+    }
+
+    /**
+     * Computes the auto generated values and falls back to the default values
+     * specified in the property definition
+     * @param state parent state
+     * @param def property definition
+     * @param useDefaultValues if <code>true</code> the default values are respected
+     * @return the values or <code>null</code>
+     */
+    private static InternalValue[] computeAutoValues(NodeStateEx state, PropDef def,
+                                                     boolean useDefaultValues) {
+        // compute system generated values if necessary
+        // todo: use NodeTypeInstanceHandler
+        InternalValue[] values =
+                BatchedItemOperations.computeSystemGeneratedPropertyValues(state.getState(), def);
+        if (values == null && useDefaultValues) {
+            values = def.getDefaultValues();
+        }
+        // avoid empty value array for single value property
+        if (values != null && values.length == 0 && !def.isMultiple()) {
+            values = null;
+        }
+        return values;
     }
 }

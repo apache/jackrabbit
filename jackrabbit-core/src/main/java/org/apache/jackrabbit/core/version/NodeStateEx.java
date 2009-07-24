@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import java.util.List;
 import java.util.Set;
-import java.util.Arrays;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
@@ -831,4 +830,17 @@ public class NodeStateEx {
         return ntReg.getPropDef(prop.getDefinitionId());
     }
 
+    /**
+     * Checks if this state has the inidcated ancestor
+     * @param nodeId the node id of the ancestor
+     * @return <code>true</code> if it has the inidicated ancestor
+     * @throws RepositoryException if an error occurs
+     */
+    public boolean hasAncestor(NodeId nodeId) throws RepositoryException {
+        if (nodeId.equals(nodeState.getParentId())) {
+            return true;
+        }
+        NodeStateEx parent = getParent();
+        return parent != null && parent.hasAncestor(nodeId);
+    }
 }

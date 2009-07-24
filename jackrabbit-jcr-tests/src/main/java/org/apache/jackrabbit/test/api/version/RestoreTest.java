@@ -973,10 +973,21 @@ public class RestoreTest extends AbstractVersionTest {
         child1 = versionableNode.getNode(nodeName4);
         assertEquals("Node.restore('test') must restore child node version 1.0.", v1Child.getName(), child1.getBaseVersion().getName());
 
+        // JSR283 is more clear about restoring versionable OPV=VERSION nodes
+        // and states that an existing one is not restored when the parent
+        // is restored (see 15.7.5 Chained Versions on Restore)
+
+        // Old JSR170 version:
         // restore V2 via name. child should be 1.1
+        // versionableNode.restore(v2, true);
+        // child1 = versionableNode.getNode(nodeName4);
+        // assertEquals("Node.restore('foo') must restore child node version 1.1.", v11Child.getName(), child1.getBaseVersion().getName());
+
+        // New JSR283 version:
+        // restore V2 via name. child should still be be 1.0
         versionableNode.restore(v2, true);
         child1 = versionableNode.getNode(nodeName4);
-        assertEquals("Node.restore('foo') must restore child node version 1.1.", v11Child.getName(), child1.getBaseVersion().getName());
+        assertEquals("Node.restore('foo') must not restore child node and keep version 1.0.", v1Child.getName(), child1.getBaseVersion().getName());
     }
 
     /**
