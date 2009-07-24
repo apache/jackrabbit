@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.commons.collections.set.ListOrderedSet;
-import javax.jcr.GuestCredentials;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
@@ -26,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
+import javax.jcr.GuestCredentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -47,14 +47,14 @@ import java.util.Set;
  * <code>AbstractLoginModule</code> provides the means for the common
  * authentication tasks within the Repository.
  * <p/>
- * On successfull authentication it associates the credentials to principals
+ * On successful authentication it associates the credentials to principals
  * using the {@link PrincipalProvider} configured for this LoginModule<p />
  * Jackrabbit distinguishes between Login and Impersonation dispatching the
  * the correspoding Repository/Session methods to
  * {@link #authenticate(java.security.Principal, javax.jcr.Credentials)} and
  * {@link #impersonate(java.security.Principal, javax.jcr.Credentials)}, respectively.
  * <br>
- * This LoginModule implements default behaviors for both methods.
+ * This LoginModule implements default behavior for either method.
  *
  * @see LoginModule
  */
@@ -65,23 +65,23 @@ public abstract class AbstractLoginModule implements LoginModule {
     private static final String KEY_CREDENTIALS = "org.apache.jackrabbit.credentials";
     private static final String KEY_LOGIN_NAME = "javax.security.auth.login.name";
 
+    private String principalProviderClassName;
+    private boolean initialized; 
+
     protected String adminId;
     protected String anonymousId;
-    private String principalProviderClassName;
 
-    private CallbackHandler callbackHandler;
-    private boolean initialized;
+    protected CallbackHandler callbackHandler;
 
     protected Principal principal;
     protected SimpleCredentials credentials;
     protected Subject subject;
     protected PrincipalProvider principalProvider;
 
-    private Map sharedState;
+    protected Map sharedState;
 
     /**
-     * Initialize this LoginModule.<br> This abstract implementation, initalizes
-     * the following fields for later use:
+     * Initialize this LoginModule and sets the following fields for later usage:
      * <ul>
      * <li>{@link PrincipalProvider} for user-{@link Principal} resolution.</li>
      * <li>{@link LoginModuleConfig#PARAM_ADMIN_ID} option is evaluated</li>
@@ -171,13 +171,12 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     * Implementations may set-up their own state. E. g. a DataSource if it is
-     * authorized against an external System
+     * Implementations may set-up their own state.
      *
      * @param callbackHandler as passed by {@link javax.security.auth.login.LoginContext}
      * @param session         to security-workspace of Jackrabbit
      * @param options         options from Logini config
-     * @throws LoginException in case initializeaiton failes
+     * @throws LoginException in case initialization failes
      */
     protected abstract void doInit(CallbackHandler callbackHandler,
                                    Session session,
@@ -255,7 +254,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @return true if the authentication succeeded, or false if this
      *         <code>LoginModule</code> should be ignored.
      * @throws LoginException if the authentication fails
-     * @see LoginModule#login()
+     * @see javax.security.auth.spi.LoginModule#login()
      * @see #getCredentials()
      * @see #getUserID(Credentials)
      * @see #getImpersonatorSubject(Credentials)
@@ -266,7 +265,7 @@ public abstract class AbstractLoginModule implements LoginModule {
             return false;
         }
 
-        // check for availability of Credentials;
+        // check the availability of Credentials
         Credentials creds = getCredentials();
         if (creds == null) {
             log.warn("No credentials available -> try default (anonymous) authentication.");
@@ -329,8 +328,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @return true if this method succeeded, or false if this
      *         <code>LoginModule</code> should be ignored.
      * @throws LoginException if the commit fails
-     * @see LoginModule#commit()
-     * @see AbstractLoginModule#login()
+     * @see javax.security.auth.spi.LoginModule#commit()
      */
     public boolean commit() throws LoginException {
         //check login-state
@@ -363,6 +361,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @return true if this method succeeded, or false if this
      *         <code>LoginModule</code> should be ignored.
      * @throws LoginException if the abort fails
+     * @see javax.security.auth.spi.LoginModule#abort()
      */
     public boolean abort() throws LoginException {
         if (!isInitialized()) {
@@ -377,16 +376,10 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     * Method which logs out a <code>Subject</code>.
-     * <p/>
-     * <p>An implementation of this method might remove/destroy a Subject's
-     * Principals and Credentials.
-     * <p/>
-     * <p/>
-     *
-     * @return true if this method succeeded, or false if this
-     *         <code>LoginModule</code> should be ignored.
+     * @return <code>true</code> if this method succeeded,
+     * or <code>false</code> if this <code>LoginModule</code> should be ignored.
      * @throws LoginException if the logout fails
+     * @see javax.security.auth.spi.LoginModule#logout()
      */
     public boolean logout() throws LoginException {
         Set thisPrincipals = subject.getPrincipals();
