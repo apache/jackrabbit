@@ -19,6 +19,7 @@ package org.apache.jackrabbit.spi.commons.nodetype;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeTemplate;
@@ -50,13 +51,22 @@ public abstract class AbstractNodeTypeManager implements NodeTypeManager {
      */
     public abstract NodeType getNodeType(Name ntName) throws NoSuchNodeTypeException;
 
+    /**
+     * Returns the NamePathResolver used to validate JCR names.
+     *
+     * @return the NamePathResolver used to convert JCR names/paths to internal
+     * onces and vice versa. The resolver may also be used to validate names
+     * passed to the various templates.
+     */
+    public abstract NamePathResolver getNamePathResolver();
+
     //----------------------------------------------------< NodeTypeManager >---
     /**
      * @see javax.jcr.nodetype.NodeTypeManager#createNodeTypeTemplate()
      */
     public NodeTypeTemplate createNodeTypeTemplate()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new NodeTypeTemplateImpl();
+        return new NodeTypeTemplateImpl(getNamePathResolver());
     }
 
     /**
@@ -64,7 +74,7 @@ public abstract class AbstractNodeTypeManager implements NodeTypeManager {
      */
     public NodeTypeTemplate createNodeTypeTemplate(NodeTypeDefinition ntd)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new NodeTypeTemplateImpl(ntd);
+        return new NodeTypeTemplateImpl(ntd, getNamePathResolver());
     }
 
     /**
@@ -72,7 +82,7 @@ public abstract class AbstractNodeTypeManager implements NodeTypeManager {
      */
     public NodeDefinitionTemplate createNodeDefinitionTemplate()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new NodeDefinitionTemplateImpl(getNodeType(NodeType.NT_BASE));
+        return new NodeDefinitionTemplateImpl(getNamePathResolver());
     }
 
     /**
@@ -80,7 +90,7 @@ public abstract class AbstractNodeTypeManager implements NodeTypeManager {
      */
     public PropertyDefinitionTemplate createPropertyDefinitionTemplate()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new PropertyDefinitionTemplateImpl();
+        return new PropertyDefinitionTemplateImpl(getNamePathResolver());
     }
 
     /**
