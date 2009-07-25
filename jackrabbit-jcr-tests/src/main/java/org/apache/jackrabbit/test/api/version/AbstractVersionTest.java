@@ -98,7 +98,9 @@ public class AbstractVersionTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         // remove versionable nodes
         try {
-            versionableNode.remove();
+            if (versionableNode != null) {
+                versionableNode.remove();
+            }
             testRootNode.getSession().save();
         } catch (Exception e) {
             log.println("Exception in tearDown: " + e.toString());

@@ -512,9 +512,15 @@
   + * (nt:activity) = nt:activity protected sns ABORT
   + * (rep:Activities) = rep:Activities protected sns ABORT
 
+/**
+ * the intermediate nodes for the configurations storage.
+ * Note: since the versionable node points to the configuration and vice versa,
+ * a configuration could never be removed because no such API exists. therefore
+ * the child node definitions are not protected.
+ */
 [rep:Configurations]
-  + * (nt:configuration) = nt:configuration protected sns ABORT
-  + * (rep:Configurations) = rep:Configurations protected sns ABORT
+  + * (nt:configuration) = nt:configuration sns ABORT
+  + * (rep:Configurations) = rep:Configurations sns ABORT
 
 /**
  * mixin that provides a multi value property for referencing versions.

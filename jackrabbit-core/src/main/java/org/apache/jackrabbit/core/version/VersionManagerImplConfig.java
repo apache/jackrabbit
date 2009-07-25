@@ -102,13 +102,12 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
         // create new node below parent
         WriteOperation ops = startWriteOperation();
         try {
-            // check if nt:configuration node exists
-            NodeStateEx config = null;
-            if (stateMgr.hasItemState(configId)) {
-                config = parent.getNode(configId);
-            } else {
+            if (!stateMgr.hasItemState(configId)) {
+                // create if nt:configuration node is not exists
                 internalCreateConfiguration(rootId, configId, baseline.getId());
             }
+            NodeStateEx config = parent.getNode(configId);
+
             // create the root node so that the restore works
             InternalFrozenNode fn = rootVersion.getFrozenNode();
             NodeStateEx state = parent.addNode(name, fn.getFrozenPrimaryType(), fn.getFrozenId());

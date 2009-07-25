@@ -99,11 +99,14 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      */
     public InternalBaseline getBaseline(NodeId id) throws RepositoryException {
         // lock handling via getItem()
-        InternalBaseline v = (InternalBaseline) getItem(id);
-        if (v == null) {
+        InternalVersionItem item = getItem(id);
+        if (item == null) {
             log.warn("Versioning item not found: " + id);
+        } else if (!(item instanceof InternalBaseline)) {
+            log.warn("Versioning item is not a baseline: " + id);
+            item = null;
         }
-        return v;
+        return (InternalBaseline) item;
     }
 
     /**

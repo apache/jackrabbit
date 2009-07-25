@@ -70,6 +70,7 @@ public class TestAll extends TestCase {
         // JCR 2.0
 
         suite.addTestSuite(ActivitiesTest.class);
+        suite.addTestSuite(ConfigurationsTest.class);
 
         return suite;
     }
