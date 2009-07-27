@@ -167,12 +167,31 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
                                    NamePathResolver resolver,
                                    QValueFactory qValueFactory)
             throws RepositoryException {
-        this(resolver.getQName(def.getName()),
-                getNames(def.getDeclaredSupertypeNames(), resolver), null, def.isMixin(),
-                def.isAbstract(), def.isQueryable(), def.hasOrderableChildNodes(),
+        this(resolver.getQName(def.getName()), def, resolver, qValueFactory);
+    }
+
+    /**
+     * Internal constructor to avoid resolving def.getName() 3 times.
+     * @param name name of the definition
+     * @param def node type definition
+     * @param resolver resolver
+     * @param qValueFactory value factory
+     * @throws RepositoryException if an error occurs
+     */
+    private QNodeTypeDefinitionImpl(Name name, NodeTypeDefinition def,
+                                   NamePathResolver resolver,
+                                   QValueFactory qValueFactory)
+            throws RepositoryException {
+        this(name,
+                getNames(def.getDeclaredSupertypeNames(), resolver),
+                null,
+                def.isMixin(),
+                def.isAbstract(),
+                def.isQueryable(),
+                def.hasOrderableChildNodes(),
                 def.getPrimaryItemName() == null ? null : resolver.getQName(def.getPrimaryItemName()),
-                createQPropertyDefinitions(def.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
-                createQNodeDefinitions(def.getDeclaredChildNodeDefinitions(), resolver));
+                createQPropertyDefinitions(name, def.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
+                createQNodeDefinitions(name, def.getDeclaredChildNodeDefinitions(), resolver));
     }
 
     //------------------------------------------------< QNodeTypeDefinition >---
@@ -351,22 +370,37 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         return names;
     }
 
-    private static QPropertyDefinition[] createQPropertyDefinitions(PropertyDefinition[] pds,
+    private static QPropertyDefinition[] createQPropertyDefinitions(Name declName,
+                                                                    PropertyDefinition[] pds,
                                                                     NamePathResolver resolver,
                                                                     QValueFactory qValueFactory)
             throws RepositoryException {
+        if (pds == null || pds.length == 0) {
+            return QPropertyDefinition.EMPTY_ARRAY;
+        }
         QPropertyDefinition[] declaredPropDefs = new QPropertyDefinition[pds.length];
         for (int i = 0; i < pds.length; i++) {
             PropertyDefinition propDef = pds[i];
             Name name = propDef.getName().equals(QItemDefinitionImpl.ANY_NAME.getLocalName())
                     ? QItemDefinitionImpl.ANY_NAME
                     : resolver.getQName(propDef.getName());
-            Name declName = resolver.getQName(propDef.getDeclaringNodeType().getName());
-            QValue[] defVls = ValueFormat.getQValues(propDef.getDefaultValues(), resolver, qValueFactory);
+            // check if propDef provides declaring node type and if it matches 'this' one.
+            if (propDef.getDeclaringNodeType() != null) {
+                if (!declName.equals(resolver.getQName(propDef.getDeclaringNodeType().getName()))) {
+                    throw new RepositoryException("Property definition specified invalid declaring nodetype: "
+                            + propDef.getDeclaringNodeType().getName() + ", but should be " + declName);
+                }
+            }
+            QValue[] defVls = propDef.getDefaultValues() == null
+                    ? QValue.EMPTY_ARRAY
+                    : ValueFormat.getQValues(propDef.getDefaultValues(), resolver, qValueFactory);
             String[] jcrConstraints = propDef.getValueConstraints();
-            QValueConstraint[] constraints = new QValueConstraint[jcrConstraints.length];
-            for (int j=0; j<constraints.length; j++) {
-                constraints[j] = ValueConstraint.create(propDef.getRequiredType(), jcrConstraints[j], resolver);
+            QValueConstraint[] constraints = QValueConstraint.EMPTY_ARRAY;
+            if (jcrConstraints != null && jcrConstraints.length > 0) {
+                constraints = new QValueConstraint[jcrConstraints.length];
+                for (int j=0; j<constraints.length; j++) {
+                    constraints[j] = ValueConstraint.create(propDef.getRequiredType(), jcrConstraints[j], resolver);
+                }
             }
             declaredPropDefs[i] = new QPropertyDefinitionImpl(
                     name, declName,
@@ -385,14 +419,26 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         return declaredPropDefs;
     }
 
-    private static QNodeDefinition[] createQNodeDefinitions(NodeDefinition[] nds, NamePathResolver resolver) throws RepositoryException {
+    private static QNodeDefinition[] createQNodeDefinitions(Name declName,
+                                                            NodeDefinition[] nds,
+                                                            NamePathResolver resolver)
+            throws RepositoryException {
+        if (nds == null || nds.length == 0) {
+            return QNodeDefinition.EMPTY_ARRAY;
+        }
         QNodeDefinition[] declaredNodeDefs = new QNodeDefinition[nds.length];
         for (int i = 0; i < nds.length; i++) {
             NodeDefinition nodeDef = nds[i];
             Name name = nodeDef.getName().equals(QItemDefinitionImpl.ANY_NAME.getLocalName())
                     ? QItemDefinitionImpl.ANY_NAME
                     : resolver.getQName(nodeDef.getName());
-            Name declName = resolver.getQName(nodeDef.getDeclaringNodeType().getName());
+            // check if propDef provides declaring node type and if it matches 'this' one.
+            if (nodeDef.getDeclaringNodeType() != null) {
+                if (!declName.equals(resolver.getQName(nodeDef.getDeclaringNodeType().getName()))) {
+                    throw new RepositoryException("Childnode definition specified invalid declaring nodetype: "
+                            + nodeDef.getDeclaringNodeType().getName() + ", but should be " + declName);
+                }
+            }
             Name defaultPrimaryType = nodeDef.getDefaultPrimaryTypeName() == null
                     ? null
                     : resolver.getQName(nodeDef.getDefaultPrimaryTypeName());
