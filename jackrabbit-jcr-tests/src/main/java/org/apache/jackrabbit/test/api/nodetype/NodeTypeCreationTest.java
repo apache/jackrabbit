@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api.nodetype;
 
 import java.util.List;
+import java.util.Arrays;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Repository;
@@ -27,6 +28,11 @@ import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
 import javax.jcr.nodetype.NodeDefinitionTemplate;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
@@ -93,6 +99,43 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
         assertTrue(ntt.getPropertyDefinitionTemplates().isEmpty());
     }
     
+    public void testNonEmptyNodeTypeTemplate() throws Exception {
+
+        NodeTypeDefinition ntd = ntm.getNodeType("nt:address");
+        NodeTypeTemplate ntt = ntm.createNodeTypeTemplate(ntm.getNodeType("nt:address"));
+
+        assertEquals(ntt.getName(), ntd.getName());
+        assertEquals(ntt.isMixin(), ntd.isMixin());
+        assertEquals(ntt.isAbstract(), ntd.isAbstract());
+        assertEquals(ntt.hasOrderableChildNodes(), ntd.hasOrderableChildNodes());
+        assertEquals(ntt.isQueryable(), ntd.isQueryable());
+        assertEquals(ntt.getPrimaryItemName(), ntd.getPrimaryItemName());
+        assertTrue(Arrays.equals(ntt.getDeclaredSupertypeNames(), ntd.getDeclaredSupertypeNames()));
+        NodeDefinition[] nda = ntt.getDeclaredChildNodeDefinitions();
+        NodeDefinition[] nda1 = ntd.getDeclaredChildNodeDefinitions();
+        assertEquals(nda.length, nda1.length);
+        for (int i = 0; i < nda.length; i++) {
+            assertEquals(nda[i].getName(), nda1[i].getName());
+            assertEquals(nda[i].allowsSameNameSiblings(), nda1[i].allowsSameNameSiblings());
+            assertTrue(Arrays.equals(nda[i].getRequiredPrimaryTypeNames(), nda1[i].getRequiredPrimaryTypeNames()));
+            assertEquals(nda[i].getDefaultPrimaryTypeName(), nda1[i].getDefaultPrimaryTypeName());
+            assertEquals(nda[i].getRequiredPrimaryTypeNames(), nda1[i].getRequiredPrimaryTypeNames());
+        }
+
+        PropertyDefinition[] pda = ntt.getDeclaredPropertyDefinitions();
+        PropertyDefinition[] pda1 = ntd.getDeclaredPropertyDefinitions();
+        assertEquals(pda.length, pda1.length);
+        for (int i = 0; i < pda.length; i++) {
+            assertEquals(pda[i].getName(), pda1[i].getName());
+            assertEquals(pda[i].getRequiredType(), pda1[i].getRequiredType());
+            assertTrue(Arrays.equals(pda[i].getAvailableQueryOperators(), pda1[i].getAvailableQueryOperators()));
+            assertTrue(Arrays.equals(pda[i].getValueConstraints(), pda1[i].getValueConstraints()));
+            assertEquals(pda[i].isFullTextSearchable(), pda1[i].isFullTextSearchable());
+            assertEquals(pda[i].isMultiple(), pda1[i].isMultiple());
+            assertEquals(pda[i].isQueryOrderable(), pda1[i].isQueryOrderable());
+        }
+    }
+
     public void testNewNodeTypeTemplate() throws Exception {
         
         String expandedName = "{" + NS_MIX_URI + "}" + "littlemixin";
@@ -376,6 +419,95 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
             pdt.setName(invalidName);
             fail("ConstraintViolationException expected. Name is invalid");
         } catch (ConstraintViolationException e) {
+            // success
+        }
+    }
+
+    public void testRegisterNodeType() throws Exception {
+        NodeTypeTemplate ntt = ntm.createNodeTypeTemplate();
+
+        ntt.setName("mix:foo");
+        ntt.setAbstract(false);
+        ntt.setMixin(true);
+        ntt.setOrderableChildNodes(false);
+        ntt.setQueryable(false);
+
+        PropertyDefinitionTemplate pdt = ntm.createPropertyDefinitionTemplate();
+        pdt.setAutoCreated(false);
+        pdt.setName("foo");
+        pdt.setMultiple(false);
+        pdt.setRequiredType(PropertyType.STRING);
+        List pdefs = ntt.getPropertyDefinitionTemplates();
+        pdefs.add(pdt);
+
+        ntm.registerNodeType(ntt, true);
+
+        try {
+            ntm.registerNodeType(ntt, false);
+            fail("NodeTypeExistsException expected.");
+        } catch (NodeTypeExistsException e) {
+            // success
+        }
+    }
+
+    public void testUnregisterNodeType() throws Exception {
+        try {
+            ntm.unregisterNodeType("unknownnodetype");
+            fail("NoSuchNodeTypeException expected.");
+        } catch (NoSuchNodeTypeException e) {
+            // success
+        }
+
+        try {
+            ntm.unregisterNodeType("nt:base");
+            fail("RepositoryException expected.");
+        } catch (RepositoryException e) {
+            // success
+        }
+    }
+
+    public void testUnregisterNodeTypes() throws Exception {
+        try {
+            ntm.unregisterNodeTypes(new String[] {"unknownnodetype1","unknownnodetype2"});
+            fail("NoSuchNodeTypeException expected.");
+        } catch (NoSuchNodeTypeException e) {
+            // success
+        }
+
+        try {
+            ntm.unregisterNodeTypes(new String[] {"nt:base", "nt:address"});
+            fail("RepositoryException expected.");
+        } catch (RepositoryException e) {
+            // success
+        }
+    }
+
+    public void testRegisterNodeTypes() throws Exception {
+        NodeTypeDefinition[] defs = new NodeTypeDefinition[5];
+        for (int i = 0; i < defs.length; i++) {
+            NodeTypeTemplate ntt = ntm.createNodeTypeTemplate();
+            ntt.setName("mix:foo" + i);
+            ntt.setAbstract(false);
+            ntt.setMixin(true);
+            ntt.setOrderableChildNodes(false);
+            ntt.setQueryable(false);
+
+            PropertyDefinitionTemplate pdt = ntm.createPropertyDefinitionTemplate();
+            pdt.setAutoCreated(false);
+            pdt.setName("foo" + i);
+            pdt.setMultiple(false);
+            pdt.setRequiredType(PropertyType.STRING);
+            List pdefs = ntt.getPropertyDefinitionTemplates();
+            pdefs.add(pdt);
+
+            defs[i] = ntt;
+        }
+        ntm.registerNodeTypes(defs, true);
+
+        try {
+            ntm.registerNodeTypes(defs, false);
+            fail("NodeTypeExistsException expected.");
+        } catch (NodeTypeExistsException e) {
             // success
         }
     }
