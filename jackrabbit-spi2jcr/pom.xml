@@ -74,6 +74,8 @@
                 org.apache.jackrabbit.test.api.version.ActivitiesTest
                 org.apache.jackrabbit.test.api.version.ConfigurationsTest
                 org.apache.jackrabbit.test.api.LifecycleTest
+                org.apache.jackrabbit.test.api.RepositoryDescriptorTest#testRequiredDescriptors
+                org.apache.jackrabbit.test.api.RepositoryDescriptorTest#testGetDescriptorValues
               </value>
             </property>
           </systemProperties>
