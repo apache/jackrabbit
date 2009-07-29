@@ -49,7 +49,7 @@ public class BooleanValue extends BaseValue {
      */
     public BooleanValue(boolean bool) {
         super(TYPE);
-        this.bool = Boolean.valueOf(bool);
+        this.bool = bool;
     }
 
     /**
@@ -120,8 +120,6 @@ public class BooleanValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to date failed: inconvertible types");
     }
 
@@ -131,8 +129,6 @@ public class BooleanValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to long failed: inconvertible types");
     }
 
@@ -142,10 +138,8 @@ public class BooleanValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         if (bool != null) {
-            return bool.booleanValue();
+            return bool;
         } else {
             throw new ValueFormatException("empty value");
         }
@@ -157,8 +151,6 @@ public class BooleanValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to double failed: inconvertible types");
     }
 
@@ -168,8 +160,6 @@ public class BooleanValue extends BaseValue {
     public BigDecimal getDecimal()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
     }
 }

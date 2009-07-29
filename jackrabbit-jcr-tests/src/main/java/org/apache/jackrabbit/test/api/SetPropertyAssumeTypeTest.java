@@ -122,9 +122,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
         Property prop;
 
-        // create an extra value for BINARY property to avoid IllegalStateException
-        Value stringValueForBinary = NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING);
-        prop = testNode.setProperty(testPropName, stringValueForBinary, PropertyType.BINARY);
+        prop = testNode.setProperty(testPropName, binaryValue, PropertyType.BINARY);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",
                      PropertyType.BINARY,
@@ -186,10 +184,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
         Property prop;
 
-        // create an extra value for BINARY property to avoid IllegalStateException
-        Value stringValuesForBinary[] =
-            new Value[] {NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING)};
-        prop = testNode.setProperty(testPropName, stringValuesForBinary, PropertyType.BINARY);
+        prop = testNode.setProperty(testPropName, binaryValues, PropertyType.BINARY);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",
                      PropertyType.BINARY,
