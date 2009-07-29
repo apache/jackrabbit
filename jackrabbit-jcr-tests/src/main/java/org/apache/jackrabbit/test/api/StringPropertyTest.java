@@ -193,17 +193,15 @@ public class StringPropertyTest extends AbstractPropertyTest {
         }
         try {
             val.getString();
-            fail("Non stream method call after stream method call " +
-                    "should throw an IllegalStateException.");
         } catch (IllegalStateException ise) {
-            //ok
+            fail("Non stream method call after stream method call " +
+                    "should not throw an IllegalStateException.");
         }
         try {
             otherVal.getStream();
-            fail("Stream method call after a non stream method call " +
-                    "should throw an IllegalStateException.");
         } catch (IllegalStateException ise) {
-            // ok
+            fail("Stream method call after a non stream method call " +
+                    "should not throw an IllegalStateException.");
         }
         in.close();
     }

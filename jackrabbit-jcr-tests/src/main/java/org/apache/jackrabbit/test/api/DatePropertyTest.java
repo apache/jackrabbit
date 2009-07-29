@@ -146,17 +146,15 @@ public class DatePropertyTest extends AbstractPropertyTest {
         }
         try {
             val.getDate();
-            fail("Non stream method call after stream method call " +
-                    "should throw an IllegalStateException.");
         } catch (IllegalStateException ise) {
-            //ok
+            fail("Non stream method call after stream method call " +
+                    "should not throw an IllegalStateException.");
         }
         try {
             ins = otherVal.getStream();
-            fail("Stream method call after a non stream method call " +
-                    "should throw an IllegalStateException.");
         } catch (IllegalStateException ise) {
-            // ok
+            fail("Stream method call after a non stream method call " +
+                    "should not throw an IllegalStateException.");
         } finally {
             if (in != null) {
                 in.close();

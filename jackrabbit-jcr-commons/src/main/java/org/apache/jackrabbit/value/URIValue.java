@@ -126,8 +126,6 @@ public class URIValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to date failed: inconvertible types");
     }
 
@@ -137,8 +135,6 @@ public class URIValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to long failed: inconvertible types");
     }
 
@@ -148,8 +144,6 @@ public class URIValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to boolean failed: inconvertible types");
     }
 
@@ -159,8 +153,6 @@ public class URIValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to double failed: inconvertible types");
     }
 
@@ -170,8 +162,6 @@ public class URIValue extends BaseValue {
     public BigDecimal getDecimal()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
     }
 }

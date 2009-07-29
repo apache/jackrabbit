@@ -152,8 +152,6 @@ public class BinaryValue extends BaseValue {
      */
     public InputStream getStream()
             throws IllegalStateException, RepositoryException {
-        setStreamConsumed();
-
         if (stream == null) {
             if (bin != null) {
                 stream = bin.getStream();

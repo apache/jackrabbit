@@ -117,8 +117,6 @@ public class DecimalValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         if (number != null) {
             // loosing timezone information...
             Calendar cal = Calendar.getInstance();
@@ -135,8 +133,6 @@ public class DecimalValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         if (number != null) {
             return number.longValue();
         } else {
@@ -150,8 +146,6 @@ public class DecimalValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         throw new ValueFormatException("conversion to boolean failed: inconvertible types");
     }
 
@@ -161,8 +155,6 @@ public class DecimalValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         if (number != null) {
             return number.doubleValue();
         } else {
@@ -176,8 +168,6 @@ public class DecimalValue extends BaseValue {
     public BigDecimal getDecimal()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        setValueConsumed();
-
         if (number != null) {
             return number;
         } else {
