@@ -25,6 +25,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -208,7 +210,17 @@ public class WorkspaceImpl extends AbstractWorkspace
             tmpSession = rep.createSession(session.getSubject(), name);
             WorkspaceImpl newWsp = (WorkspaceImpl) tmpSession.getWorkspace();
 
-            newWsp.clone(srcWorkspace, "/", "/", false);
+            // Workspace#clone(String, String, String, booelan) doesn't
+            // allow to clone to "/"...
+            //newWsp.clone(srcWorkspace, "/", "/", false);
+           Node root = session.getRootNode();
+           for (NodeIterator it = root.getNodes(); it.hasNext(); ) {
+               Node child = it.nextNode();
+               // skip nodes that already exist in newly created workspace
+               if (!tmpSession.nodeExists(child.getPath())) {
+                   newWsp.clone(srcWorkspace, child.getPath(), child.getPath(), false);
+               }
+           }
         } finally {
             if (tmpSession != null) {
                 // we don't need the temporary session anymore, logout
