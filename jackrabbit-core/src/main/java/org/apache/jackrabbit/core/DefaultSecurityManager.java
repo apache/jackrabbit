@@ -210,7 +210,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         acProviderFactory = new AccessControlProviderFactoryImpl();
         acProviderFactory.init(securitySession);
 
-        // create the evalutor for workspace access
+        // create the workspace access manager
         SecurityManagerConfig smc = config.getSecurityManagerConfig();
         if (smc != null && smc.getWorkspaceAccessConfig() != null) {
             workspaceAccessManager = (WorkspaceAccessManager) smc.getWorkspaceAccessConfig().newInstance();
