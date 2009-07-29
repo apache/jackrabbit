@@ -200,6 +200,11 @@ public class SessionImpl extends AbstractSession
     protected final InternalVersionManager versionMgr;
 
     /**
+     * node type instance handler
+     */
+    protected final NodeTypeInstanceHandler ntInstanceHandler;
+
+    /**
      * Listeners (weak references)
      */
     protected final Map<SessionListener, SessionListener> listeners =
@@ -284,6 +289,7 @@ public class SessionImpl extends AbstractSession
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(subject, itemStateMgr.getHierarchyMgr());
         versionMgr = createVersionManager(rep);
+        ntInstanceHandler = new NodeTypeInstanceHandler(userId);
     }
 
     /**
@@ -493,6 +499,14 @@ public class SessionImpl extends AbstractSession
      */
     protected RetentionRegistry getRetentionRegistry() throws RepositoryException {
         return wsp.getRetentionRegistry();
+    }
+
+    /**
+     * Returns the node type instance handler for this session
+     * @return the node type instance handler.
+     */
+    public NodeTypeInstanceHandler getNodeTypeInstanceHandler() {
+        return ntInstanceHandler;
     }
 
     /**

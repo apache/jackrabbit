@@ -16,22 +16,23 @@
  */
 package org.apache.jackrabbit.spi.commons.value;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
 import java.util.Calendar;
 import java.util.UUID;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AbstractQValueFactory</code>...
@@ -58,15 +59,16 @@ public abstract class AbstractQValueFactory implements QValueFactory {
      * @see QValueFactory#computeAutoValues(org.apache.jackrabbit.spi.QPropertyDefinition)
      */
     public QValue[] computeAutoValues(QPropertyDefinition propertyDefinition) throws RepositoryException {
-        Name nodeType = propertyDefinition.getDeclaringNodeType();
+        final String userId = "undefined";
+
+        Name declaringNT = propertyDefinition.getDeclaringNodeType();
         Name name = propertyDefinition.getName();
 
-        if ((NameConstants.NT_HIERARCHYNODE.equals(nodeType) || NameConstants.MIX_CREATED.equals(nodeType))&& NameConstants.JCR_CREATED.equals(name)) {
-            return new QValue[] { create(Calendar.getInstance()) };
-        } else if (NameConstants.NT_RESOURCE.equals(nodeType) && NameConstants.JCR_LASTMODIFIED.equals(name)) {
-            return new QValue[] { create(Calendar.getInstance()) };
-        } else if (NameConstants.MIX_REFERENCEABLE.equals(nodeType) && NameConstants.JCR_UUID.equals(name)) {
-            return new QValue[] { create(UUID.randomUUID().toString(), PropertyType.STRING) };
+        if (NameConstants.JCR_UUID.equals(name)
+                && NameConstants.MIX_REFERENCEABLE.equals(declaringNT)) {
+            // jcr:uuid property of a mix:referenceable
+            return new QValue[]{create(UUID.randomUUID().toString(), PropertyType.STRING)};
+
         } else {
             throw new RepositoryException("createFromDefinition not implemented for: " + name);
         }

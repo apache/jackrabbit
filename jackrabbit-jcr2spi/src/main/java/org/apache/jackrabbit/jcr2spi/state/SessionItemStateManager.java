@@ -16,7 +16,28 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
@@ -43,25 +64,6 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.PropertyType;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ValueFormatException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.version.VersionException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 /**
  * <code>SessionItemStateManager</code> ...
  */
@@ -83,7 +85,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
 
     private final QValueFactory qValueFactory;
 
-    private final ManagerProvider mgrProvider;
+    private final SessionImpl mgrProvider;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
@@ -97,7 +99,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
     public SessionItemStateManager(UpdatableItemStateManager workspaceItemStateMgr,
                                    ItemStateValidator validator,
                                    QValueFactory qValueFactory,
-                                   ItemStateFactory isf, ManagerProvider mgrProvider) {
+                                   ItemStateFactory isf, SessionImpl mgrProvider) {
 
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         this.transientStateMgr = new TransientItemStateManager();
@@ -133,7 +135,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         ChangeLog changeLog = transientStateMgr.getChangeLog(state, true);
         if (!changeLog.isEmpty()) {
             // only pass changelog if there are transient modifications available
-            // for the specified item and its decendants.
+            // for the specified item and its descendants.
             workspaceItemStateMgr.execute(changeLog);
             // remove states and operations just processed from the transient ISM
             transientStateMgr.dispose(changeLog);
@@ -559,7 +561,8 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
      * @return the computed values
      */
     private QValue[] computeSystemGeneratedPropertyValues(NodeState parent,
-                                                          QPropertyDefinition def) throws RepositoryException {
+                                                          QPropertyDefinition def)
+            throws RepositoryException {
         QValue[] genValues = null;
         QValue[] qDefaultValues = def.getDefaultValues();
         if (qDefaultValues != null && qDefaultValues.length > 0) {
@@ -570,15 +573,36 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
             Name declaringNT = def.getDeclaringNodeType();
             Name name = def.getName();
 
-            if (NameConstants.NT_BASE.equals(declaringNT) && NameConstants.JCR_PRIMARYTYPE.equals(name)) {
+            if (NameConstants.JCR_PRIMARYTYPE.equals(name)) {
                 // jcr:primaryType property
                 genValues = new QValue[]{qValueFactory.create(parent.getNodeTypeName())};
-            } else if (NameConstants.NT_BASE.equals(declaringNT) && NameConstants.JCR_MIXINTYPES.equals(name)) {
+
+            } else if (NameConstants.JCR_MIXINTYPES.equals(name)) {
                 // jcr:mixinTypes property
                 Name[] mixins = parent.getMixinTypeNames();
                 genValues = getQValues(mixins, qValueFactory);
-            }
-            else {
+
+            } else if (NameConstants.JCR_CREATED.equals(name)
+                    && NameConstants.MIX_CREATED.equals(declaringNT)) {
+                // jcr:created property of a mix:created
+                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
+
+            } else if (NameConstants.JCR_CREATEDBY.equals(name)
+                    && NameConstants.MIX_CREATED.equals(declaringNT)) {
+                // jcr:createdBy property of a mix:created
+                genValues = new QValue[]{qValueFactory.create(mgrProvider.getUserID(), PropertyType.STRING)};
+
+            } else if (NameConstants.JCR_LASTMODIFIED.equals(name)
+                    && NameConstants.MIX_LASTMODIFIED.equals(declaringNT)) {
+                // jcr:lastModified property of a mix:lastModified
+                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
+
+            } else if (NameConstants.JCR_LASTMODIFIEDBY.equals(name)
+                    && NameConstants.MIX_LASTMODIFIED.equals(declaringNT)) {
+                // jcr:lastModifiedBy property of a mix:lastModified
+                genValues = new QValue[]{qValueFactory.create(mgrProvider.getUserID(), PropertyType.STRING)};
+
+            } else {
                 // ask the SPI implementation for advice
                 genValues = qValueFactory.computeAutoValues(def);
             }

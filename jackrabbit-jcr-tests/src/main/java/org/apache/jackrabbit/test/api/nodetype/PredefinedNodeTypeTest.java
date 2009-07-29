@@ -127,6 +127,41 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         testPredefinedNodeType("mix:simpleVersionable");
     }
 
+    /** Test for the predefined mix:created node type. */
+    public void testMixCreated() throws NotExecutableException {
+        testPredefinedNodeType("mix:created");
+    }
+
+    /** Test for the predefined mix:lastModified node type. */
+    public void testMixLastModified() throws NotExecutableException {
+        testPredefinedNodeType("mix:lastModified");
+    }
+
+    /** Test for the predefined mix:etag node type. */
+    public void testMixETag() throws NotExecutableException {
+        testPredefinedNodeType("mix:etag");
+    }
+
+    /** Test for the predefined mix:title node type. */
+    public void testMixTitle() throws NotExecutableException {
+        testPredefinedNodeType("mix:title");
+    }
+
+    /** Test for the predefined mix:language node type. */
+    public void testMixLanguage() throws NotExecutableException {
+        testPredefinedNodeType("mix:language");
+    }
+
+    /** Test for the predefined mix:language node type. */
+    public void testMixMimeType() throws NotExecutableException {
+        testPredefinedNodeType("mix:mimeType");
+    }
+
+    /** Test for the predefined nt:address node type. */
+    public void testNtAddress() throws NotExecutableException {
+        testPredefinedNodeType("nt:address");
+    }
+
     /** Test for the predefined nt:base node type. */
     public void testBase() throws NotExecutableException {
         testPredefinedNodeType("nt:base");

@@ -303,95 +303,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Computes the values of well-known system (i.e. protected) properties.
-     * todo: duplicate code in BatchedItemOperations: consolidate and delegate to NodeTypeInstanceHandler
-     *
-     * @param name
-     * @param def
-     * @return
-     * @throws RepositoryException
-     */
-    protected InternalValue[] computeSystemGeneratedPropertyValues(Name name,
-                                                                   PropertyDefinitionImpl def)
-            throws RepositoryException {
-        InternalValue[] genValues = null;
-
-        /**
-         * todo: need to come up with some callback mechanism for applying system generated values
-         * (e.g. using a NodeTypeInstanceHandler interface)
-         */
-
-        NodeState thisState = data.getNodeState();
-
-        // compute system generated values
-        NodeTypeImpl nt = (NodeTypeImpl) def.getDeclaringNodeType();
-        // TODO JCR-2116: Built-In Node Types; => adapt to JCR 2.0 built-in node types (mix:created, etc)
-        if (nt.getQName().equals(NameConstants.MIX_REFERENCEABLE)) {
-            // mix:referenceable node type
-            if (name.equals(NameConstants.JCR_UUID)) {
-                // jcr:uuid property
-                genValues = new InternalValue[]{
-                        InternalValue.create(thisState.getNodeId().toString())
-                };
-            }
-/*
-       todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
-       } else if (nt.getQName().equals(MIX_VERSIONABLE)) {
-           // mix:versionable node type
-           VersionHistory hist = session.getVersionManager().getOrCreateVersionHistory(this);
-           if (name.equals(JCR_VERSIONHISTORY)) {
-               // jcr:versionHistory property
-               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
-           } else if (name.equals(JCR_BASEVERSION)) {
-               // jcr:baseVersion property
-               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-           } else if (name.equals(JCR_ISCHECKEDOUT)) {
-               // jcr:isCheckedOut property
-               genValues = new InternalValue[]{InternalValue.create(true)};
-           } else if (name.equals(JCR_PREDECESSORS)) {
-               // jcr:predecessors property
-               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-           }
-*/
-        } else if (nt.getQName().equals(NameConstants.NT_HIERARCHYNODE)
-                || nt.getQName().equals(NameConstants.MIX_CREATED)) {
-            // nt:hierarchyNode node type
-            if (name.equals(NameConstants.JCR_CREATED)) {
-                // jcr:created property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (nt.getQName().equals(NameConstants.NT_RESOURCE)) {
-            // nt:resource node type
-            if (name.equals(NameConstants.JCR_LASTMODIFIED)) {
-                // jcr:lastModified property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (nt.getQName().equals(NameConstants.NT_VERSION)) {
-            // nt:version node type
-            if (name.equals(NameConstants.JCR_CREATED)) {
-                // jcr:created property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (nt.getQName().equals(NameConstants.NT_BASE)) {
-            // nt:base node type
-            if (name.equals(NameConstants.JCR_PRIMARYTYPE)) {
-                // jcr:primaryType property
-                genValues = new InternalValue[]{InternalValue.create(thisState.getNodeTypeName())};
-            } else if (name.equals(NameConstants.JCR_MIXINTYPES)) {
-                // jcr:mixinTypes property
-                Set<Name> mixins = thisState.getMixinTypeNames();
-                ArrayList<InternalValue> values = new ArrayList<InternalValue>(mixins.size());
-                for (Name n : mixins) {
-                    values.add(InternalValue.create(n));
-                }
-                genValues = values.toArray(new InternalValue[values.size()]);
-            }
-        }
-
-        return genValues;
-    }
-
-    /**
      * @param name
      * @param type
      * @param multiValued
@@ -489,20 +400,21 @@ public class NodeImpl extends ItemImpl implements Node {
         // create a new property state
         PropertyState propState;
         try {
+            PropDef propDef = def.unwrap();
             propState =
                     stateMgr.createTransientPropertyState(getNodeId(), name,
                             ItemState.STATUS_NEW);
             propState.setType(type);
-            propState.setMultiValued(def.isMultiple());
-            propState.setDefinitionId(def.unwrap().getId());
+            propState.setMultiValued(propDef.isMultiple());
+            propState.setDefinitionId(propDef.getId());
             // compute system generated values if necessary
-            InternalValue[] genValues =
-                    computeSystemGeneratedPropertyValues(name, def);
-            InternalValue[] defValues = def.unwrap().getDefaultValues();
+            InternalValue[] genValues = session.getNodeTypeInstanceHandler()
+                    .computeSystemGeneratedPropertyValues(data.getNodeState(), propDef);
+            if (genValues == null) {
+                genValues = propDef.getDefaultValues();
+            }
             if (genValues != null) {
                 propState.setValues(genValues);
-            } else if (defValues != null) {
-                propState.setValues(defValues);
             }
         } catch (ItemStateException ise) {
             String msg = "failed to add property " + name + " to " + this;

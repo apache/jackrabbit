@@ -114,14 +114,16 @@
  * controlled by the repository, which should set them appropriately upon the
  * initial persist of a node with this mixin type. In cases where this mixin is
  * added to an already existing node the semantics of these properties are
- * implementation specific.
+ * implementation specific. Note that jackrabbit initializes the properties to
+ * the current date and user in this case.
+ *
  *
  * @since 2.0
  */
 [mix:created]
   mixin
   - jcr:created (DATE) autocreated protected
-  - jcr:createdBy (STRING) protected
+  - jcr:createdBy (STRING) autocreated protected
 
 /**
  * This mixin node type can be used to provide standardized modification
@@ -134,13 +136,16 @@
  *  constitutes a significant modification will depend on the semantics of the various
  *  parts of a node's subgraph and is implementation-dependent"
  *
+ * Jackrabbit initializes the properties to the current date and user in the
+ * case they are newly created.
+ *
  * Note that the protected attributes suggested by JSR283 are omitted in this variant.
  * @since 2.0
  */
 [mix:lastModified]
   mixin
-  - jcr:lastModified (DATE)
-  - jcr:lastModifiedBy (STRING)
+  - jcr:lastModified (DATE) autocreated
+  - jcr:lastModifiedBy (STRING) autocreated
 
 /**
  * This mixin node type can be used to provide a standardized property that
