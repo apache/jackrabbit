@@ -39,6 +39,16 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
 
     private static Logger log = LoggerFactory.getLogger(AbstractAccessControlProvider.class);
 
+    /**
+     * Constant for the name of the configuration option "omit-default-permission".
+     * The option is a flag indicating whether default permissions should be
+     * created upon initialization of this provider.<p/>
+     * If this option is present in the configuration no initial ACL content
+     * is created.<br>
+     * If this configuration option is omitted the default permissions are
+     * installed. Note however, that the initialization should not overwrite
+     * previously installed AC content.
+     */
     public static final String PARAM_OMIT_DEFAULT_PERMISSIONS = "omit-default-permission";
 
     /**
