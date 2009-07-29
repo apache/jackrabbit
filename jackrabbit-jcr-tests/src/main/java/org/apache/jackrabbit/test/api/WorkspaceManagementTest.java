@@ -64,6 +64,9 @@ public class WorkspaceManagementTest extends AbstractJCRTest {
         } catch (NoSuchWorkspaceException e) {
             // excepted
         }
+
+        // create pre-initialized workspace, specifying existing src workspace
+        workspace.createWorkspace("tmp" + System.currentTimeMillis(), superuser.getWorkspace().getName());
     }
 
 
