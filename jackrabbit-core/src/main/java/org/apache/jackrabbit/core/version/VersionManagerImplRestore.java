@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
-import java.util.List;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
@@ -31,7 +30,6 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionManager;
 
-import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -634,12 +632,11 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
      * @param useDefaultValues if <code>true</code> the default values are respected
      * @return the values or <code>null</code>
      */
-    private static InternalValue[] computeAutoValues(NodeStateEx state, PropDef def,
+    private InternalValue[] computeAutoValues(NodeStateEx state, PropDef def,
                                                      boolean useDefaultValues) {
         // compute system generated values if necessary
-        // todo: use NodeTypeInstanceHandler
-        InternalValue[] values =
-                BatchedItemOperations.computeSystemGeneratedPropertyValues(state.getState(), def);
+        InternalValue[] values = session.getNodeTypeInstanceHandler().
+                computeSystemGeneratedPropertyValues(state.getState(), def);
         if (values == null && useDefaultValues) {
             values = def.getDefaultValues();
         }

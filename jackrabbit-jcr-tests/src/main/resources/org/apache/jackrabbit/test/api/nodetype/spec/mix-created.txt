@@ -1,0 +1,28 @@
+NodeTypeName
+  mix:created
+Supertypes
+  []
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:created
+  RequiredType DATE
+  DefaultValues null
+  AutoCreated true
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:createdBy
+  RequiredType STRING
+  DefaultValues null
+  AutoCreated true
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  Multiple false

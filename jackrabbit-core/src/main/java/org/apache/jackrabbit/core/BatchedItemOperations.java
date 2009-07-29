@@ -1256,8 +1256,8 @@ public class BatchedItemOperations extends ItemValidator {
         prop.setMultiValued(def.isMultiple());
 
         // compute system generated values if necessary
-        InternalValue[] genValues =
-                computeSystemGeneratedPropertyValues(parent, def);
+        InternalValue[] genValues = session.getNodeTypeInstanceHandler()
+                .computeSystemGeneratedPropertyValues(parent, def);
         if (genValues != null) {
             prop.setValues(genValues);
         } else if (def.getDefaultValues() != null) {
@@ -1500,71 +1500,6 @@ public class BatchedItemOperations extends ItemValidator {
     }
 
     //------------------------------------------------------< private methods >
-    /**
-     * Computes the values of well-known system (i.e. protected) properties.
-     * todo: duplicate code in NodeImpl: consolidate and delegate to NodeTypeInstanceHandler
-     *
-     * @param parent
-     * @param def
-     * @return the computed values
-     */
-    public static InternalValue[] computeSystemGeneratedPropertyValues(NodeState parent,
-                                                                 PropDef def) {
-        InternalValue[] genValues = null;
-
-        /**
-         * todo: need to come up with some callback mechanism for applying system generated values
-         * (e.g. using a NodeTypeInstanceHandler interface)
-         */
-
-        // compute system generated values
-        Name declaringNT = def.getDeclaringNodeType();
-        Name name = def.getName();
-        // TODO JCR-2116: Built-In Node Types; => adapt to JCR 2.0 built-in node types (mix:created, etc)
-        if (NameConstants.MIX_REFERENCEABLE.equals(declaringNT)) {
-            // mix:referenceable node type
-            if (NameConstants.JCR_UUID.equals(name)) {
-                // jcr:uuid property
-                genValues = new InternalValue[]{InternalValue.create(
-                        parent.getNodeId().toString())};
-            }
-        } else if (NameConstants.NT_BASE.equals(declaringNT)) {
-            // nt:base node type
-            if (NameConstants.JCR_PRIMARYTYPE.equals(name)) {
-                // jcr:primaryType property
-                genValues = new InternalValue[]{InternalValue.create(parent.getNodeTypeName())};
-            } else if (NameConstants.JCR_MIXINTYPES.equals(name)) {
-                // jcr:mixinTypes property
-                Set<Name> mixins = parent.getMixinTypeNames();
-                ArrayList<InternalValue> values = new ArrayList<InternalValue>(mixins.size());
-                for (Name n : mixins) {
-                    values.add(InternalValue.create(n));
-                }
-                genValues = values.toArray(new InternalValue[values.size()]);
-            }
-        } else if (NameConstants.NT_HIERARCHYNODE.equals(declaringNT)
-                || NameConstants.MIX_CREATED.equals(declaringNT)) {
-            // nt:hierarchyNode node type
-            if (NameConstants.JCR_CREATED.equals(name)) {
-                // jcr:created property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (NameConstants.NT_RESOURCE.equals(declaringNT)) {
-            // nt:resource node type
-            if (NameConstants.JCR_LASTMODIFIED.equals(name)) {
-                // jcr:lastModified property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (NameConstants.NT_VERSION.equals(declaringNT)) {
-            // nt:version node type
-            if (NameConstants.JCR_CREATED.equals(name)) {
-                // jcr:created property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        }
-
-        return genValues;
-    }
 
     /**
      * Recursively removes the given node state including its properties and
