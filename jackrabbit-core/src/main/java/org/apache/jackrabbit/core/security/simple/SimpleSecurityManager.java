@@ -24,12 +24,15 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.SecurityConfig;
+import org.apache.jackrabbit.core.config.SecurityManagerConfig;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.UserPrincipal;
 import org.apache.jackrabbit.core.security.AnonymousPrincipal;
 import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
@@ -85,12 +88,31 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     private PrincipalProviderRegistry principalProviderRegistry;
 
     /**
+     * The workspace access manager
+     */
+    private WorkspaceAccessManager workspaceAccessManager;
+
+    /**
      * factory for login-context {@see Repository#login())
      */
     private AuthContextProvider authCtxProvider;
 
     private String adminID;
     private String anonymID;
+
+    /**
+     * Always returns <code>null</code>. AccessControlProvider configuration
+     * is ignored with this security manager. Subclasses may overwrite this
+     * lazy behavior that originates from the <code>SimpleAccessManager</code>.
+     *
+     * @param systemSession The system session used to init the security manager.
+     * @param workspaceName The name of the workspace for which the provider
+     * should be retrieved.
+     * @return Always returns <code>null</code>.
+     */
+    protected AccessControlProvider getAccessControlProvider(Session systemSession, String workspaceName) {
+        return null;
+    }
 
     //------------------------------------------< JackrabbitSecurityManager >---
     /**
@@ -151,6 +173,16 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
             principalProviderRegistry.registerProvider(moduleConfig[i]);
         }
 
+        SecurityManagerConfig smc = config.getSecurityManagerConfig();
+        if (smc != null && smc.getWorkspaceAccessConfig() != null) {
+            workspaceAccessManager = (WorkspaceAccessManager) smc.getWorkspaceAccessConfig().newInstance();
+        } else {
+            // fallback -> the default simple implementation
+            log.debug("No WorkspaceAccessManager configured; using default.");
+            workspaceAccessManager = new SimpleWorkspaceAccessManager();
+        }
+        workspaceAccessManager.init(systemSession);
+
         initialized = true;
     }
 
@@ -175,6 +207,9 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     public AccessManager getAccessManager(Session session, AMContext amContext) throws RepositoryException {
         checkInitialized();
         try {
+            String wspName = session.getWorkspace().getName();
+            AccessControlProvider acP = getAccessControlProvider(systemSession, wspName);
+
             AccessManagerConfig amc = config.getAccessManagerConfig();
             AccessManager accessMgr;
             if (amc == null) {
@@ -182,7 +217,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
             } else {
                 accessMgr = (AccessManager) amc.newInstance();
             }
-            accessMgr.init(amContext);
+            accessMgr.init(amContext, acP, workspaceAccessManager);
             return accessMgr;
         } catch (AccessDeniedException ade) {
             // re-throw
