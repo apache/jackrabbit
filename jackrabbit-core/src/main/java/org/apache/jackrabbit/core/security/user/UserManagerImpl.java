@@ -400,26 +400,30 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * Create a new <code>Group</code> with the given <code>groupName</code>.
-     * It will be created below the this UserManager's root Path.<br>
-     * If non-existant elements of the Path will be created as <code>Nodes</code>
-     * of type {@link #NT_REP_AUTHORIZABLE_FOLDER rep:AuthorizableFolder}
-     *
-     * @param principal
-     * @see UserManager#createGroup(Principal);
-     * @inheritDoc
+     * Same as {@link #createGroup(java.security.Principal, String )} where the
+     * intermediate path is <code>null</code>.
+     * @see UserManager#createGroup(Principal)
      */
     public Group createGroup(Principal principal) throws RepositoryException {
         return createGroup(principal, null);
     }
 
     /**
+     * Create a new <code>Group</code> from the given <code>principal</code>.
+     * It will be created below the this {@link #GROUPS_PATH group path}.<br>
+     * Non-existant elements of the Path will be created as nodes
+     * of type {@link #NT_REP_AUTHORIZABLE_FOLDER rep:AuthorizableFolder}.
+     * The group ID will be generated from the principal name. If the name
+     * conflicts with an existing authorizable ID (may happen in cases where
+     * principal name != ID) the principal name is expanded by a suffix;
+     * otherwise the resulting group ID equals the principal name.
      *
      * @param principal
      * @param intermediatePath Is always ignored.
-     * @return
+     * @return A new group.
      * @throws AuthorizableExistsException
      * @throws RepositoryException
+     * @see UserManager#createGroup(java.security.Principal, String)
      */
     public Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
         if (!isValidPrincipal(principal)) {
