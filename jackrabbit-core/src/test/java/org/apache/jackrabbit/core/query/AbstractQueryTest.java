@@ -35,6 +35,7 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -139,6 +140,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeXPathQuery(String xpath, Node[] nodes)
             throws RepositoryException {
+        getSearchIndex().flush();
         QueryResult res = qm.createQuery(xpath, Query.XPATH).execute();
         checkResult(res, nodes);
     }
@@ -153,6 +155,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeSQLQuery(String sql, Node[] nodes)
             throws RepositoryException {
+        getSearchIndex().flush();
         QueryResult res = qm.createQuery(sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
@@ -253,9 +256,11 @@ public class AbstractQueryTest extends AbstractJCRTest {
     }
 
     /**
+     * Returns a reference to the underlying search index.
+     *
      * @return the query handler inside the {@link #qm query manager}.
      */
-    protected QueryHandler getQueryHandler() {
-        return ((QueryManagerImpl) qm).getQueryHandler();
+    protected SearchIndex getSearchIndex() {
+        return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
     }
 }

@@ -58,7 +58,6 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         resource.setProperty("jcr:data", new ByteArrayInputStream(out.toByteArray()));
 
         testRootNode.save();
-        waitUntilQueueEmpty();
 
         executeSQLQuery(sqlDog, new Node[]{file});
 
@@ -68,7 +67,6 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         writer.flush();
         resource.setProperty("jcr:data", new ByteArrayInputStream(out.toByteArray()));
         testRootNode.save();
-        waitUntilQueueEmpty();
 
         executeSQLQuery(sqlCat, new Node[]{file});
 
@@ -95,20 +93,8 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         resource.setProperty("jcr:mimeType", "text/plain");
         resource.setProperty("jcr:data", new ByteArrayInputStream(out.toByteArray()));
         testRootNode.save();
-        waitUntilQueueEmpty();
 
         executeSQLQuery(sqlCat, new Node[]{file});
-    }
-
-    protected void waitUntilQueueEmpty() throws Exception {
-        SearchIndex index = (SearchIndex) getQueryHandler();
-        IndexingQueue queue = index.getIndex().getIndexingQueue();
-        index.getIndex().flush();
-        synchronized (index.getIndex()) {
-            while (queue.getNumPendingDocuments() > 0) {
-                index.getIndex().wait(50);
-            }
-        }
     }
 
     public void testContentLastModified() throws RepositoryException {
