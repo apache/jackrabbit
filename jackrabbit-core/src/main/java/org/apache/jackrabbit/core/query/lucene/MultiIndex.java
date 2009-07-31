@@ -404,7 +404,12 @@ public class MultiIndex {
             throws IOException {
         // make sure a reader is available during long updates
         if (add.size() > handler.getBufferSize()) {
-            getIndexReader().release();
+            try {
+                getIndexReader().release();
+            } catch (IOException e) {
+                // do not fail if an exception is thrown here
+                log.warn("unable to prepare index reader for queries during update", e);
+            }
         }
 
         synchronized (updateMonitor) {
@@ -574,9 +579,18 @@ public class MultiIndex {
                 indexName = indexNames.newName();
             } while (directoryManager.hasDirectory(indexName));
         }
-        PersistentIndex index = new PersistentIndex(indexName,
-                handler.getTextAnalyzer(), handler.getSimilarity(),
-                cache, indexingQueue, directoryManager);
+        PersistentIndex index;
+        try {
+            index = new PersistentIndex(indexName,
+                    handler.getTextAnalyzer(), handler.getSimilarity(),
+                    cache, indexingQueue, directoryManager);
+        } catch (IOException e) {
+            // do some clean up
+            if (!directoryManager.delete(indexName)) {
+                deletable.add(indexName);
+            }
+            throw e;
+        }
         index.setMaxFieldLength(handler.getMaxFieldLength());
         index.setUseCompoundFile(handler.getUseCompoundFile());
         index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
