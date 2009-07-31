@@ -182,12 +182,12 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The path of the root node.
      */
-    private static final Path ROOT_PATH;
+    protected static final Path ROOT_PATH;
 
     /**
      * The path <code>/jcr:system</code>.
      */
-    private static final Path JCR_SYSTEM_PATH;
+    protected static final Path JCR_SYSTEM_PATH;
 
     static {
         ROOT_PATH = PATH_FACTORY.create(NameConstants.ROOT);
@@ -202,7 +202,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The actual index
      */
-    private MultiIndex index;
+    protected MultiIndex index;
 
     /**
      * The analyzer we use for indexing.
@@ -2208,7 +2208,7 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @throws IOException if this <code>SearchIndex</code> had been closed.
      */
-    private void checkOpen() throws IOException {
+    protected void checkOpen() throws IOException {
         if (closed) {
             throw new IOException("query handler closed and cannot be used anymore.");
         }

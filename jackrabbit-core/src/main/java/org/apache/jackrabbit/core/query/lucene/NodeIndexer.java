@@ -175,7 +175,7 @@ public class NodeIndexer {
      * @throws RepositoryException if an error occurs while reading property
      *                             values from the <code>ItemStateProvider</code>.
      */
-    protected Document createDoc() throws RepositoryException {
+    public Document createDoc() throws RepositoryException {
         doNotUseInExcerpt.clear();
         Document doc = new Document();
 
@@ -253,7 +253,7 @@ public class NodeIndexer {
      *
      * @param e the base exception.
      */
-    private void throwRepositoryException(Exception e)
+    protected void throwRepositoryException(Exception e)
             throws RepositoryException {
         String msg = "Error while indexing node: " + node.getNodeId() + " of "
             + "type: " + node.getNodeTypeName();
@@ -267,7 +267,7 @@ public class NodeIndexer {
      * @param doc  the lucene document.
      * @param name the name of the multi-value property.
      */
-    private void addMVPName(Document doc, Name name) {
+    protected void addMVPName(Document doc, Name name) {
         try {
             String propName = resolver.getJCRName(name);
             doc.add(new Field(FieldNames.MVP, propName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
@@ -283,7 +283,7 @@ public class NodeIndexer {
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
      */
-    private void addValue(Document doc, InternalValue value, Name name) throws RepositoryException {
+    protected void addValue(Document doc, InternalValue value, Name name) throws RepositoryException {
         String fieldName = name.getLocalName();
         try {
             fieldName = resolver.getJCRName(name);
@@ -381,7 +381,7 @@ public class NodeIndexer {
      * @param doc  the document.
      * @param name the name of the property.
      */
-    private void addPropertyName(Document doc, Name name) {
+    protected void addPropertyName(Document doc, Name name) {
         String fieldName = name.getLocalName();
         try {
             fieldName = resolver.getJCRName(name);
