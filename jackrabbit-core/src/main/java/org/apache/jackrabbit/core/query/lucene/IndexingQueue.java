@@ -150,6 +150,7 @@ class IndexingQueue {
             queueStore.removeUUID(uuid);
             log.debug("removed node {}. New size of indexing queue: {}",
                     uuid, new Integer(pendingDocuments.size()));
+            notifyIfEmpty();
         }
         return doc;
     }
@@ -189,6 +190,7 @@ class IndexingQueue {
             it.remove();
         }
         queueStore.close();
+        notifyIfEmpty();
     }
 
     /**
@@ -201,14 +203,36 @@ class IndexingQueue {
         }
     }
 
-    //----------------------------< testing only >------------------------------
+    /**
+     * Notifies all threads waiting for this queue to become empty.
+     * The notification is only sent if this queue actually is empty.
+     */
+    private synchronized void notifyIfEmpty() {
+        if (pendingDocuments.isEmpty()) {
+            notifyAll();
+        }
+    }
 
     /**
-     * <b>This method is for testing only!</b>
+     * Waits until this queue is empty.
+     */
+    synchronized void waitUntilEmpty() {
+        while (!pendingDocuments.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                // Interrupted, check again if we're empty
+            }
+        }
+    }
+
+    /**
+     * Returns the number of pending documents.
      *
      * @return the number of the currently pending documents.
      */
     synchronized int getNumPendingDocuments() {
         return pendingDocuments.size();
     }
+
 }
