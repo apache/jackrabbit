@@ -379,16 +379,18 @@ public class DefaultHighlighter {
         int min = excerpt.length();
         char[] buf = new char[maxLength];
         int len = reader.read(buf);
-        excerpt.append(buf, 0, len);
+        StringBuffer tmp = new StringBuffer();
+        tmp.append(buf, 0, len);
         if (len == buf.length) {
-            for (int i = excerpt.length() - 1; i > min; i--) {
-                if (Character.isWhitespace(excerpt.charAt(i))) {
-                    excerpt.delete(i, excerpt.length());
-                    excerpt.append(" ...");
+            for (int i = tmp.length() - 1; i > min; i--) {
+                if (Character.isWhitespace(tmp.charAt(i))) {
+                    tmp.delete(i, tmp.length());
+                    tmp.append(" ...");
                     break;
                 }
             }
         }
+        excerpt.append(Text.encodeIllegalXMLCharacters(tmp.toString()));
         excerpt.append(fragmentEnd).append(excerptEnd);
         return excerpt.toString();
     }
