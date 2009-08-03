@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Calendar;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -61,10 +63,12 @@ public interface InternalVersionManager {
      *
      * @param session session that invokes the checkin
      * @param node node to checkin
+     * @param created create time of the new version,
+     *                or <code>null</code> for the current time
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */
-    InternalVersion checkin(Session session, NodeStateEx node)
+    InternalVersion checkin(Session session, NodeStateEx node, Calendar created)
             throws RepositoryException;
 
     /**
