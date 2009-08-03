@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Calendar;
+
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -61,10 +63,11 @@ public interface VersionManager {
      * newly created version objects.
      *
      * @param node node to checkin
+     * @param cal create time of the new version, or <code>null</code>
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */
-    Version checkin(NodeImpl node) throws RepositoryException;
+    Version checkin(NodeImpl node, Calendar cal) throws RepositoryException;
 
     /**
      * Removes the specified version from the given version history.

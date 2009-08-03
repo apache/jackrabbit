@@ -489,12 +489,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      *
      * @param name new version name
      * @param src source node to version
+     * @param cal create time of the new version, or <code>null</code>
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */
-    InternalVersionImpl checkin(Name name, NodeImpl src)
+    InternalVersionImpl checkin(Name name, NodeImpl src, Calendar cal)
             throws RepositoryException {
-
         // copy predecessors from src node
         InternalValue[] predecessors;
         if (src.hasProperty(NameConstants.JCR_PREDECESSORS)) {
@@ -527,7 +527,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeStateEx vNode = node.addNode(name, NameConstants.NT_VERSION, versionId, true);
 
         // initialize 'created', 'predecessors' and 'successors'
-        vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(getCurrentTime()));
+        if (cal == null) {
+            cal = getCurrentTime();
+        }
+        vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(cal));
         vNode.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, predecessors);
         vNode.setPropertyValues(NameConstants.JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 

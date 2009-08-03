@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Calendar;
+
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -424,17 +426,19 @@ abstract class AbstractVersionManager implements VersionManager {
      * @param history the version history
      * @param node node to checkin
      * @param simple flag indicates simple versioning
+     * @param cal create time of the new version, or <code>null</code>
      * @return internal version
      * @throws javax.jcr.RepositoryException if an error occurs
      * @see javax.jcr.Node#checkin()
      */
     protected InternalVersion checkin(InternalVersionHistoryImpl history,
-                                      NodeImpl node, boolean simple)
+            NodeImpl node, boolean simple, Calendar cal)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
             String versionName = calculateCheckinVersionName(history, node, simple);
-            InternalVersionImpl v = history.checkin(NameFactoryImpl.getInstance().create("", versionName), node);
+            InternalVersionImpl v = history.checkin(
+                NameFactoryImpl.getInstance().create("", versionName), node, cal);
             operation.save();
             return v;
         } catch (ItemStateException e) {

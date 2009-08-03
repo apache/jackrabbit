@@ -18,14 +18,17 @@ package org.apache.jackrabbit.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
@@ -125,4 +128,31 @@ public class NodeImplTest extends AbstractJCRTest {
             changeReadPermission(principal, n, true);
         }
     }
+    
+    public void testAddNodeUuid() throws RepositoryException, NotExecutableException {
+        String uuid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
+        Node n = testRootNode.addNode(nodeName1);
+        Node testNode = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
+        testNode.addMixin(JcrConstants.MIX_REFERENCEABLE);
+        testRootNode.save();
+        assertEquals("Node UUID should be: "+uuid, uuid, testNode.getUUID());
+    }
+    
+    public void testAddNodeUuidCollision() throws RepositoryException, NotExecutableException {
+        String uuid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
+        Node n = testRootNode.addNode(nodeName1);
+        Node testNode1 = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
+        testNode1.addMixin(JcrConstants.MIX_REFERENCEABLE);
+        testRootNode.save();
+        boolean collisionDetected = false;
+        
+        try {
+            Node testNode2 = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
+            testNode1.addMixin(JcrConstants.MIX_REFERENCEABLE);
+            testRootNode.save();
+        } catch (ItemExistsException iee) {
+            collisionDetected = true;
+        }
+        assertTrue("Node collision detected: "+uuid, collisionDetected);
+    }    
 }

@@ -2129,30 +2129,75 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
      * {@inheritDoc}
      */
     public synchronized Node addNode(String relPath)
-            throws ItemExistsException, PathNotFoundException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
+            throws RepositoryException {
+        return addNodeWithUuid(relPath, null, null);
+    }
 
-        return internalAddNode(relPath, null);
+    /**
+     * Same as <code>{@link Node#addNode(String)}</code> except
+     * this method takes an additional <code>uuid</code> argument.
+     * <b>Important Notice:</b> Use this method with caution!
+     * @param relPath      path of the new node
+     * @param uuid         uuid of the new node or <code>null</code>
+     * @return the newly added node
+     * @throws RepositoryException if the node can not be added
+     */
+    public synchronized Node addNodeWithUuid(String relPath, String uuid)
+            throws RepositoryException {
+        return addNodeWithUuid(relPath, null, uuid);
     }
 
     /**
      * {@inheritDoc}
      */
     public synchronized Node addNode(String relPath, String nodeTypeName)
-            throws ItemExistsException, PathNotFoundException,
-            NoSuchNodeTypeException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
+            throws RepositoryException {
+        return addNodeWithUuid(relPath, nodeTypeName, null);
+    }
+
+    /**
+     * Same as <code>{@link Node#addNode(String, String)}</code> except
+     * this method takes an additional <code>uuid</code> argument.
+     * <b>Important Notice:</b> Use this method with caution!
+     * @param relPath      path of the new node
+     * @param nodeTypeName name of the new node's node type or <code>null</code>
+     *                     if it should be determined automatically
+     * @param uuid         uuid of the new node or <code>null</code>
+     * @return the newly added node
+     * @throws RepositoryException if the node can not be added
+     */
+    public synchronized Node addNodeWithUuid(
+            String relPath, String nodeTypeName, String uuid)
+            throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        NodeTypeImpl nt = (NodeTypeImpl) session.getNodeTypeManager().getNodeType(nodeTypeName);
-        if (nt.isMixin()) {
-            throw new RepositoryException(nodeTypeName + ": not a primary node type");
+        NodeId id = null;
+        if (uuid != null) {
+            //if (!isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            //    throw new UnsupportedRepositoryOperationException();
+            //}
+            // Test for existing UUID
+            // @see SessionImporter.startNode(NodeInfo nodeInfo, List propInfos)
+            try {
+                session.getNodeByUUID(uuid);
+                throw new ItemExistsException(
+                    "A node with this UUID already exists: " + uuid);
+            } catch (ItemNotFoundException infe) {
+                id = new NodeId(new UUID(uuid));
+            }
         }
 
-        return internalAddNode(relPath, nt);
+        NodeType nt = null;
+        if (nodeTypeName != null) {
+            nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
+            if (nt.isMixin()) {
+                throw new RepositoryException(
+                    "Not a primary node type: " + nodeTypeName);
+            }
+        }
+
+        return internalAddNode(relPath, (NodeTypeImpl) nt, id);
     }
 
     /**
@@ -3297,9 +3342,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     /**
      * {@inheritDoc}
      */
-    public Version checkin()
-            throws VersionException, UnsupportedRepositoryOperationException,
-            InvalidItemStateException, LockException, RepositoryException {
+    public Version checkin() throws RepositoryException {
+        return checkin(null);
+    }
+
+    public Version checkin(Calendar cal) throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -3317,7 +3364,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
         session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
 
-        Version v = session.getVersionManager().checkin(this);
+        Version v = session.getVersionManager().checkin(this, cal);
         boolean success = false;
         try {
             internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
@@ -4291,7 +4338,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         } else {
             // with simple versioning, the node is checked in automatically,
             // thus not allowing any branches
-            session.getVersionManager().checkin(this);
+            session.getVersionManager().checkin(this, null);
         }
         // 3. N's jcr:isCheckedOut property is set to false.
         internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
