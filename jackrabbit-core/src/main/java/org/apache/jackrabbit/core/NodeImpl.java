@@ -62,6 +62,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
@@ -102,6 +103,7 @@ import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ISCHECKEDOUT;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LIFECYCLE_POLICY;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_CURRENT_LIFECYCLE_STATE;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_LIFECYCLE;
@@ -142,6 +144,15 @@ public class NodeImpl extends ItemImpl implements Node {
                     + state.getNodeTypeName() + "' of " + this);
             data.getNodeState().setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         }
+    }
+
+    /**
+     * Returns the node-state associated with this node.
+     *
+     * @return state associated with this node
+     */
+    NodeState getNodeState() {
+        return data.getNodeState();
     }
 
     /**
@@ -3213,8 +3224,8 @@ public class NodeImpl extends ItemImpl implements Node {
         Path parentPath = parentNode.getPrimaryPath();
         PathBuilder builder = new PathBuilder(parentPath);
 
-        ChildNodeEntry entry = ((NodeState) parentNode.getItemState()).
-                getChildNodeEntry(getNodeId());
+        ChildNodeEntry entry =
+            parentNode.getNodeState().getChildNodeEntry(getNodeId());
         if (entry == null) {
             String msg = "failed to build path of " + id + ": "
                     + parentId + " has no child entry for "
@@ -3236,195 +3247,150 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public void update(String srcWorkspaceName)
-            throws NoSuchWorkspaceException, AccessDeniedException,
-            LockException, InvalidItemStateException, RepositoryException {
-        ((VersionManagerImpl) session.getWorkspace().getVersionManager()).update(this, srcWorkspaceName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public Version checkin()
-            throws VersionException, UnsupportedRepositoryOperationException,
-            InvalidItemStateException, LockException, RepositoryException {
-        return session.getWorkspace().getVersionManager().checkin(getPath());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public void checkout()
-            throws UnsupportedRepositoryOperationException, LockException,
-            RepositoryException {
-        session.getWorkspace().getVersionManager().checkout(getPath());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public NodeIterator merge(String srcWorkspace, boolean bestEffort)
-            throws NoSuchWorkspaceException, AccessDeniedException,
-            VersionException, LockException, InvalidItemStateException,
-            RepositoryException {
-        return session.getWorkspace().getVersionManager().merge(getPath(), srcWorkspace, bestEffort);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public void cancelMerge(Version version)
-            throws VersionException, InvalidItemStateException,
-            UnsupportedRepositoryOperationException, RepositoryException {
-        session.getWorkspace().getVersionManager().cancelMerge(getPath(), version);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public void doneMerge(Version version) throws VersionException,
-            InvalidItemStateException, UnsupportedRepositoryOperationException,
-            RepositoryException {
-        session.getWorkspace().getVersionManager().doneMerge(getPath(), version);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public boolean isCheckedOut() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        return internalIsCheckedOut();
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public void restore(String versionName, boolean removeExisting)
-            throws VersionException, ItemExistsException,
-            UnsupportedRepositoryOperationException, LockException,
-            InvalidItemStateException, RepositoryException {
-
-        // checks
-        sanityCheck();
-        session.getWorkspace().getVersionManager().restore(getPath(), versionName, removeExisting);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public void restore(Version version, boolean removeExisting)
-            throws VersionException, ItemExistsException,
-            UnsupportedRepositoryOperationException, LockException,
-            RepositoryException {
-
-        // do checks
-        sanityCheck();
-        session.getWorkspace().getVersionManager().restore(getPath(), version, removeExisting);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public void restore(Version version, String relPath, boolean removeExisting)
-            throws PathNotFoundException, ItemExistsException, VersionException,
-            ConstraintViolationException, UnsupportedRepositoryOperationException,
-            LockException, InvalidItemStateException, RepositoryException {
-
-        // do checks
-        sanityCheck();
-        String path = getPath() + "/" + relPath;
-        session.getWorkspace().getVersionManager().restore(path, version, removeExisting);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public void restoreByLabel(String versionLabel, boolean removeExisting)
-            throws VersionException, ItemExistsException,
-            UnsupportedRepositoryOperationException, LockException,
-            InvalidItemStateException, RepositoryException {
-
-        // do checks
-        sanityCheck();
-        session.getWorkspace().getVersionManager().restoreByLabel(getPath(), versionLabel, removeExisting);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public VersionHistory getVersionHistory()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        sanityCheck();
-        return session.getWorkspace().getVersionManager().getVersionHistory(getPath());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    public Version getBaseVersion()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-        return session.getWorkspace().getVersionManager().getBaseVersion(getPath());
-    }
-
-    //-----------------------------------< versioning support: implementation >
-    /**
-     * Determines the checked-out status of this node.
-     * <p/>
-     * A node is considered <i>checked-out</i> if it is versionable and
-     * checked-out, or is non-versionable but its nearest versionable ancestor
-     * is checked-out, or is non-versionable and there are no versionable
-     * ancestors.
-     *
-     * @return a boolean
-     * @see Node#isCheckedOut()
-     * @throws RepositoryException if an error occurs
-     */
-    protected boolean internalIsCheckedOut() throws RepositoryException {
-        /**
-         * try shortcut first:
-         * if current node is 'new' we can safely consider it checked-out
-         * since otherwise it would had been impossible to add it in the first
-         * place
-         */
+        // try shortcut first:
+        // if current node is 'new' we can safely consider it checked-out since
+        // otherwise it would had been impossible to add it in the first place
         if (isNew()) {
             return true;
         }
 
         // search nearest ancestor that is versionable
-        /**
-         * FIXME should not only rely on existence of jcr:isCheckedOut property
-         * but also verify that node.isNodeType("mix:versionable")==true;
-         * this would have a negative impact on performance though...
-         */
+        // FIXME should not only rely on existence of jcr:isCheckedOut property
+        // but also verify that node.isNodeType("mix:versionable")==true;
+        // this would have a negative impact on performance though...
         try {
-            NodeState state = (NodeState) getItemState();
-            while (!state.hasPropertyName(NameConstants.JCR_ISCHECKEDOUT)) {
+            NodeState state = getNodeState();
+            while (!state.hasPropertyName(JCR_ISCHECKEDOUT)) {
                 ItemId parentId = state.getParentId();
                 if (parentId == null) {
                     // root reached or out of hierarchy
                     return true;
                 }
-                state = (NodeState) session.getItemStateManager().getItemState(parentId);
+                state = (NodeState)
+                    session.getItemStateManager().getItemState(parentId);
             }
-            PropertyState ps = (PropertyState) session.getItemStateManager().getItemState(new PropertyId(state.getNodeId(), NameConstants.JCR_ISCHECKEDOUT));
+            PropertyId id = new PropertyId(state.getNodeId(), JCR_ISCHECKEDOUT);
+            PropertyState ps =
+                (PropertyState) session.getItemStateManager().getItemState(id);
             return ps.getValues()[0].getBoolean();
         } catch (ItemStateException e) {
-            throw new RepositoryException(e.getMessage());
+            throw new RepositoryException(e);
         }
+    }
+
+    /**
+     * Returns the version manager of this workspace.
+     */
+    private VersionManagerImpl getVersionManagerImpl() {
+        return session.getWorkspaceImpl().getVersionManagerImpl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void update(String srcWorkspaceName) throws RepositoryException {
+        getVersionManagerImpl().update(this, srcWorkspaceName);
+    }
+
+    /**
+     * Use {@link VersionManager#checkin(String)} instead
+     */
+    @Deprecated
+    public Version checkin() throws RepositoryException {
+        return getVersionManagerImpl().checkin(getPath());
+    }
+
+    /**
+     * Use {@link VersionManager#checkout(String)} instead
+     */
+    @Deprecated
+    public void checkout() throws RepositoryException {
+        getVersionManagerImpl().checkout(getPath());
+    }
+
+    /**
+     * Use {@link VersionManager#merge(String, String, boolean)} instead
+     */
+    @Deprecated
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort)
+            throws RepositoryException {
+        return getVersionManagerImpl().merge(
+                getPath(), srcWorkspace, bestEffort);
+    }
+
+    /**
+     * Use {@link VersionManager#cancelMerge(String, Version)} instead
+     */
+    @Deprecated
+    public void cancelMerge(Version version) throws RepositoryException {
+        getVersionManagerImpl().cancelMerge(getPath(), version);
+    }
+
+    /**
+     * Use {@link VersionManager#doneMerge(String, Version)} instead
+     */
+    @Deprecated
+    public void doneMerge(Version version) throws RepositoryException {
+        getVersionManagerImpl().doneMerge(getPath(), version);
+    }
+
+    /**
+     * Use {@link VersionManager#restore(String, String, boolean)} instead
+     */
+    @Deprecated
+    public void restore(String versionName, boolean removeExisting)
+            throws RepositoryException {
+        getVersionManagerImpl().restore(getPath(), versionName, removeExisting);
+    }
+
+    /**
+     * Use {@link VersionManager#restore(String, Version, boolean)} instead
+     */
+    @Deprecated
+    public void restore(Version version, boolean removeExisting)
+            throws RepositoryException {
+        getVersionManagerImpl().restore(getPath(), version, removeExisting);
+    }
+
+    /**
+     * Use {@link VersionManager#restore(String, Version, boolean)} instead
+     */
+    @Deprecated
+    public void restore(Version version, String relPath, boolean removeExisting)
+            throws RepositoryException {
+        getVersionManagerImpl().restore(
+                getPath() + "/" + relPath, version, removeExisting);
+    }
+
+    /**
+     * Use {@link VersionManager#restoreByLabel(String, String, boolean)}
+     * instead
+     */
+    @Deprecated
+    public void restoreByLabel(String versionLabel, boolean removeExisting)
+            throws RepositoryException {
+        getVersionManagerImpl().restoreByLabel(
+                getPath(), versionLabel, removeExisting);
+    }
+
+    /**
+     * Use {@link VersionManager#getVersionHistory(String)} instead
+     */
+    @Deprecated
+    public VersionHistory getVersionHistory() throws RepositoryException {
+        return getVersionManagerImpl().getVersionHistory(getPath());
+    }
+
+    /**
+     * Use {@link VersionManager#getBaseVersion(String)} instead
+     */
+    @Deprecated
+    public Version getBaseVersion() throws RepositoryException {
+        return getVersionManagerImpl().getBaseVersion(getPath());
     }
 
     //------------------------------------------------------< locking support >

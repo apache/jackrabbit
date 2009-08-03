@@ -297,7 +297,7 @@ public class ItemValidator {
         }
         if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
             NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
-            if (!node.internalIsCheckedOut()) {
+            if (!node.isCheckedOut()) {
                 String msg = "Unable to perform operation. Node is checked-in.";
                 log.debug(msg);
                 throw new VersionException(msg);
@@ -345,7 +345,7 @@ public class ItemValidator {
         }
         if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
             NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
-            if (!node.internalIsCheckedOut()) {
+            if (!node.isCheckedOut()) {
                 return false;
             }
         }
