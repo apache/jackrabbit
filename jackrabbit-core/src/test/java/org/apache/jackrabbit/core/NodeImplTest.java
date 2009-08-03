@@ -22,9 +22,11 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
@@ -125,4 +127,30 @@ public class NodeImplTest extends AbstractJCRTest {
             changeReadPermission(principal, n, true);
         }
     }
+
+    public void testAddNodeUuid() throws RepositoryException, NotExecutableException {
+        String uuid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
+        Node n = testRootNode.addNode(nodeName1);
+        Node testNode = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
+        testNode.addMixin(NodeType.MIX_REFERENCEABLE);
+        testRootNode.getSession().save();
+        assertEquals(
+                "Node identifier should be: " + uuid,
+                uuid, testNode.getIdentifier());
+    }
+
+    public void testAddNodeUuidCollision() throws RepositoryException, NotExecutableException {
+        String uuid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
+        Node n = testRootNode.addNode(nodeName1);
+        Node testNode1 = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
+        testNode1.addMixin(NodeType.MIX_REFERENCEABLE);
+        testRootNode.getSession().save();
+
+        try {
+            ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
+            fail("UUID collision not detected by addNodeWithUuid");
+        } catch (ItemExistsException e) {
+        }
+    }
+
 }
