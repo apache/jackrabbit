@@ -74,7 +74,7 @@ public abstract class ProtectedItemModifier {
 
         // check for name collisions
         // TODO: improve. copied from NodeImpl
-        NodeState thisState = (NodeState) parentImpl.getItemState();
+        NodeState thisState = parentImpl.getNodeState();
         ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
         if (cne != null) {
             // there's already a child node entry with that name;

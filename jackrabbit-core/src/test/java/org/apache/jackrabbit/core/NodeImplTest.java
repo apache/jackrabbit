@@ -101,7 +101,7 @@ public class NodeImplTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @throws NotExecutableException
      */
-    public void testInternalIsCheckedOut() throws RepositoryException, NotExecutableException {
+    public void testIsCheckedOut() throws RepositoryException, NotExecutableException {
         Node n = testRootNode.addNode(nodeName1);
         NodeImpl testNode = (NodeImpl) n.addNode(nodeName2);
         testRootNode.save();
@@ -113,13 +113,13 @@ public class NodeImplTest extends AbstractJCRTest {
         Session readOnly = getHelper().getReadOnlySession();
         try {
             NodeImpl tn = (NodeImpl) readOnly.getItem(testNode.getPath());
-            assertTrue(tn.internalIsCheckedOut());
+            assertTrue(tn.isCheckedOut());
 
             n.addMixin(mixVersionable);
             testRootNode.save();
             n.checkin();
 
-            assertFalse(tn.internalIsCheckedOut());
+            assertFalse(tn.isCheckedOut());
         } finally {
             readOnly.logout();
             // reset the denied read-access

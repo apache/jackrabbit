@@ -155,7 +155,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
             // fallback: try finding applicable definition
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
-            NodeState parentState = (NodeState) parent.getItemState();
+            NodeState parentState = parent.getNodeState();
             ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
             def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
             state.setDefinitionId(def.unwrap().getId());

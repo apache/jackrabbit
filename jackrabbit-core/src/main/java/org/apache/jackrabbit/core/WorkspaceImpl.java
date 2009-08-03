@@ -257,8 +257,11 @@ public class WorkspaceImpl extends AbstractWorkspace
     /**
      * @see javax.jcr.Workspace#getVersionManager()
      */
-    public VersionManager getVersionManager()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+    public VersionManager getVersionManager() {
+        return getVersionManagerImpl();
+    }
+
+    VersionManagerImpl getVersionManagerImpl() {
         if (versionMgr == null) {
             versionMgr = new VersionManagerImpl(session, stateMgr, hierMgr);
         }
