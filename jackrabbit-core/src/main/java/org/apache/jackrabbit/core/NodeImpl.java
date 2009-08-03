@@ -622,131 +622,6 @@ public class NodeImpl extends ItemImpl implements Node {
         setRemoved();
     }
 
-    protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType)
-            throws ItemExistsException, PathNotFoundException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
-        return internalAddNode(relPath, nodeType, null);
-    }
-
-    protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType,
-                                       NodeId id)
-            throws ItemExistsException, PathNotFoundException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
-        Path nodePath;
-        Name nodeName;
-        Path parentPath;
-        try {
-            nodePath =
-                PathFactoryImpl.getInstance().create(getPrimaryPath(), session.getQPath(relPath), false)
-                .getCanonicalPath();
-            if (nodePath.getNameElement().getIndex() != 0) {
-                String msg = "illegal subscript specified: " + nodePath;
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-            nodeName = nodePath.getNameElement().getName();
-            parentPath = nodePath.getAncestor(1);
-        } catch (NameException e) {
-            String msg =
-                "failed to resolve path " + relPath + " relative to " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        NodeImpl parentNode;
-        try {
-            Item parent = itemMgr.getItem(parentPath);
-            if (!parent.isNode()) {
-                String msg = "cannot add a node to property " + parentPath;
-                log.debug(msg);
-                throw new ConstraintViolationException(msg);
-            }
-            parentNode = (NodeImpl) parent;
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(relPath);
-        }
-
-        // make sure that parent node is checked-out and not locked
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT;
-        session.getValidator().checkModify(parentNode, options, Permission.NONE);
-
-        // delegate the creation of the child node to the parent node
-        return parentNode.internalAddChildNode(nodeName, nodeType, id);
-    }
-
-    protected NodeImpl internalAddChildNode(Name nodeName,
-                                            NodeTypeImpl nodeType)
-            throws ItemExistsException, ConstraintViolationException,
-            RepositoryException {
-        return internalAddChildNode(nodeName, nodeType, null);
-    }
-
-    protected NodeImpl internalAddChildNode(Name nodeName,
-                                            NodeTypeImpl nodeType, NodeId id)
-            throws ItemExistsException, ConstraintViolationException,
-            RepositoryException {
-        Path nodePath;
-        try {
-            nodePath = PathFactoryImpl.getInstance().create(getPrimaryPath(), nodeName, true);
-        } catch (MalformedPathException e) {
-            // should never happen
-            String msg = "internal error: invalid path " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        Name nodeTypeName = null;
-        if (nodeType != null) {
-            nodeTypeName = nodeType.getQName();
-            if (nodeType.isMixin()) {
-                throw new ConstraintViolationException(session.getJCRName(nodeTypeName) + ": not a primary node type.");
-            }
-            if (nodeType.isAbstract()) {
-                throw new ConstraintViolationException(session.getJCRName(nodeTypeName)  + ": is an abstract node type.");
-            }
-        }
-        NodeDefinitionImpl def;
-        try {
-            def = getApplicableChildNodeDefinition(nodeName, nodeTypeName);
-        } catch (RepositoryException re) {
-            String msg = "no definition found in parent node's node type for new node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg, re);
-        }
-        if (nodeType == null) {
-            // use default node type
-            nodeType = (NodeTypeImpl) def.getDefaultPrimaryType();
-        } else {
-            // adding a node with explicit specifying the node type name
-            // requires the editing session to have nt_management privilege.
-            session.getAccessManager().checkPermission(nodePath, Permission.NODE_TYPE_MNGMT);
-        }
-
-        // check for name collisions
-        NodeState thisState = data.getNodeState();
-        ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
-        if (cne != null) {
-            // there's already a child node entry with that name;
-            // check same-name sibling setting of new node
-            if (!def.allowsSameNameSiblings()) {
-                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
-            }
-            // check same-name sibling setting of existing node
-            NodeId newId = cne.getId();
-            if (!((NodeImpl) itemMgr.getItem(newId)).getDefinition().allowsSameNameSiblings()) {
-                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
-            }
-        }
-
-        // check protected flag of parent (i.e. this) node and retention/hold
-        int options = ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD
-                | ItemValidator.CHECK_RETENTION;
-        session.getValidator().checkModify(this, options, Permission.NONE);
-
-        // now do create the child node
-        return createChildNode(nodeName, def, nodeType, id);
-    }
-
     private void setMixinTypesProperty(Set<Name> mixinNames) throws RepositoryException {
         NodeState thisState = data.getNodeState();
         // get or create jcr:mixinTypes property
@@ -1533,29 +1408,81 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param id           id of the new node or <code>null</code> if a new
      *                     id should be assigned
      * @return the newly added node
-     * @throws ItemExistsException
-     * @throws NoSuchNodeTypeException
-     * @throws VersionException
-     * @throws ConstraintViolationException
-     * @throws LockException
-     * @throws RepositoryException
+     * @throws RepositoryException if the node can not added
      */
-    public synchronized NodeImpl addNode(Name nodeName, Name nodeTypeName,
-                                         NodeId id)
-            throws ItemExistsException, NoSuchNodeTypeException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
+    public synchronized NodeImpl addNode(
+            Name nodeName, Name nodeTypeName, NodeId id)
+            throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out and not locked by another session.
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT;
-        session.getValidator().checkModify(this, options, Permission.NONE);
+        Path nodePath = PathFactoryImpl.getInstance().create(
+                getPrimaryPath(), nodeName, true);
 
+        // Check the explicitly specified node type (if any)
         NodeTypeImpl nt = null;
         if (nodeTypeName != null) {
             nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
+            if (nt.isMixin()) {
+                throw new ConstraintViolationException(
+                        "Unable to add a node with a mixin node type: "
+                        + session.getJCRName(nodeTypeName));
+            } else if (nt.isAbstract()) {
+                throw new ConstraintViolationException(
+                        "Unable to add a node with an abstract node type: "
+                        + session.getJCRName(nodeTypeName));
+            } else {
+                // adding a node with explicit specifying the node type name
+                // requires the editing session to have nt_management privilege.
+                session.getAccessManager().checkPermission(
+                        nodePath, Permission.NODE_TYPE_MNGMT);
+            }
         }
-        return internalAddChildNode(nodeName, nt, id);
+
+        // Get the applicable child node definition for this node.
+        NodeDefinitionImpl def;
+        try {
+            def = getApplicableChildNodeDefinition(nodeName, nodeTypeName);
+        } catch (RepositoryException e) {
+            throw new ConstraintViolationException(
+                    "No child node definition for "
+                    + session.getJCRName(nodeName) + " found in " + this, e);
+        }
+
+        // Use default node type from child node definition if needed
+        if (nt == null) {
+            nt = (NodeTypeImpl) def.getDefaultPrimaryType();
+        }
+
+        // check for name collisions
+        NodeState thisState = data.getNodeState();
+        ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
+        if (cne != null) {
+            // there's already a child node entry with that name;
+            // check same-name sibling setting of new node
+            if (!def.allowsSameNameSiblings()) {
+                throw new ItemExistsException(
+                        "This node already exists: "
+                        + itemMgr.safeGetJCRPath(nodePath));
+            }
+            // check same-name sibling setting of existing node
+            NodeImpl existing = itemMgr.getNode(cne.getId(), getNodeId());
+            if (!existing.getDefinition().allowsSameNameSiblings()) {
+                throw new ItemExistsException(
+                        "Same-name siblings not allowed for " + existing);
+            }
+        }
+
+        // check protected flag of parent (i.e. this) node and retention/hold
+        // make sure this node is checked-out and not locked by another session.
+        int options =
+            ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
+            | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD
+            | ItemValidator.CHECK_RETENTION;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+
+        // now do create the child node
+        return createChildNode(nodeName, def, nt, id);
     }
 
     /**
@@ -2048,31 +1975,116 @@ public class NodeImpl extends ItemImpl implements Node {
         return (Node) itemMgr.getItem(parentId);
     }
 
-    //-----------------------------------------------------------------< Node >
+    //----------------------------------------------------------------< Node >
+
     /**
      * {@inheritDoc}
      */
-    public synchronized Node addNode(String relPath)
-            throws ItemExistsException, PathNotFoundException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        return internalAddNode(relPath, null);
+    public Node addNode(String relPath) throws RepositoryException {
+        return addNodeWithUuid(relPath, null, null);
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized Node addNode(String relPath, String nodeTypeName)
-            throws ItemExistsException, PathNotFoundException,
-            NoSuchNodeTypeException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
+    public Node addNode(String relPath, String nodeTypeName)
+            throws RepositoryException {
+        return addNodeWithUuid(relPath, nodeTypeName, null);
+    }
+
+    /**
+     * Adds a node with the given UUID. You can only add a node with a UUID
+     * that is not already assigned to another node in this workspace.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1972">JCR-1972</a>
+     * @see Node#addNode(String)
+     * @param relPath path of the new node
+     * @param uuid    UUID of the new node,
+     *                or <code>null</code> for a random new UUID
+     * @return the newly added node
+     * @throws RepositoryException if the node can not be added
+     */
+    public Node addNodeWithUuid(String relPath, String uuid)
+            throws RepositoryException {
+        return addNodeWithUuid(relPath, null, uuid);
+    }
+
+    /**
+     * Adds a node with the given node type and UUID. You can only add a node
+     * with a UUID that is not already assigned to another node in this
+     * workspace.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1972">JCR-1972</a>
+     * @see Node#addNode(String, String)
+     * @param relPath      path of the new node
+     * @param nodeTypeName name of the new node's node type,
+     *                     or <code>null</code> for automatic type assignment
+     * @param uuid         UUID of the new node,
+     *                     or <code>null</code> for a random new UUID
+     * @return the newly added node
+     * @throws RepositoryException if the node can not be added
+     */
+    public synchronized Node addNodeWithUuid(
+            String relPath, String nodeTypeName, String uuid)
+            throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        NodeTypeImpl nt = (NodeTypeImpl) session.getNodeTypeManager().getNodeType(nodeTypeName);
-        return internalAddNode(relPath, nt);
+        // Get the canonical path of the new node
+        Path path;
+        try {
+            path = PathFactoryImpl.getInstance().create(
+                    getPrimaryPath(), session.getQPath(relPath), true);
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "Failed to resolve path " + relPath
+                    + " relative to " + this, e);
+        }
+
+        // Get the last path element and check that it's a simple name
+        Path.Element last = path.getNameElement();
+        if (!last.denotesName() || last.getIndex() != 0) {
+            throw new RepositoryException(
+                    "Invalid last path element for adding node "
+                    + relPath + " relative to " + this);
+        }
+
+        // Get the parent node instance
+        NodeImpl parentNode;
+        Path parentPath = path.getAncestor(1);
+        try {
+            parentNode = itemMgr.getNode(parentPath);
+        } catch (PathNotFoundException e) {
+            if (itemMgr.propertyExists(parentPath)) {
+                throw new ConstraintViolationException(
+                        "Unable to add a child node to property "
+                        + session.getJCRPath(parentPath));
+            }
+            throw e;
+        } catch (AccessDeniedException ade) {
+            throw new PathNotFoundException(
+                    "Failed to resolve path " + relPath + " relative to " + this);
+        }
+
+        // Resolve node type name (if any)
+        Name typeName = null;
+        if (nodeTypeName != null) {
+            typeName = session.getQName(nodeTypeName);
+        }
+
+        // Check that the given UUID (if any) does not already exist
+        NodeId id = null;
+        if (uuid != null) {
+            id = new NodeId(uuid);
+            if (itemMgr.itemExists(id)) {
+                throw new ItemExistsException(
+                        "A node with this UUID already exists: " + uuid);
+            }
+        }
+
+        return parentNode.addNode(last.getName(), typeName, id);
     }
 
     /**
