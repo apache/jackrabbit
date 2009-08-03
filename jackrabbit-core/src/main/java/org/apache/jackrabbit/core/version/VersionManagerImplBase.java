@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Calendar;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -119,11 +120,15 @@ abstract public class VersionManagerImplBase {
      * @param state node state
      * @param checkin if <code>true</code> the node is checked in.
      * @param checkout if <code>true</code> the node is checked out.
+     * @param created create time of the new version (if any),
+     *                or <code>null</code> for the current time
      * @return the node id of the base version or <code>null</code> for a pure
      *         checkout.
      * @throws RepositoryException if an error occurs
      */
-    protected NodeId checkoutCheckin(NodeStateEx state, boolean checkin, boolean checkout)
+    protected NodeId checkoutCheckin(
+            NodeStateEx state,
+            boolean checkin, boolean checkout, Calendar created)
             throws RepositoryException {
         assert(checkin || checkout);
 
@@ -174,7 +179,7 @@ abstract public class VersionManagerImplBase {
                     state.setPropertyValues(NameConstants.REP_VERSIONS, PropertyType.REFERENCE, vs);
                     state.store();
                 }
-                InternalVersion v = vMgr.checkin(session, state);
+                InternalVersion v = vMgr.checkin(session, state, created);
                 baseId = v.getId();
                 if (isFull) {
                     state.setPropertyValue(

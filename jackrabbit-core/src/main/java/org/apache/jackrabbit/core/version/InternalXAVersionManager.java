@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -212,25 +213,26 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
-    public InternalVersion checkin(Session session, NodeStateEx node)
+    public InternalVersion checkin(
+            Session session, NodeStateEx node, Calendar created)
             throws RepositoryException {
         if (isInXA()) {
-            InternalVersionHistory vh;
+            InternalVersionHistoryImpl vh;
             InternalVersion version;
             if (node.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                 // in full versioning, the history id can be retrieved via
                 // the property
                 NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
-                vh = getVersionHistory(histId);
-                version = internalCheckin((InternalVersionHistoryImpl) vh, node, false);
+                vh = (InternalVersionHistoryImpl) getVersionHistory(histId);
+                version = internalCheckin(vh, node, false, created);
             } else {
                 // in simple versioning the history id needs to be calculated
-                vh = getVersionHistoryOfNode(node.getNodeId());
-                version = internalCheckin((InternalVersionHistoryImpl) vh, node, true);
+                vh = (InternalVersionHistoryImpl) getVersionHistoryOfNode(node.getNodeId());
+                version = internalCheckin(vh, node, true, created);
             }
             return version;
         } else {
-            return vMgr.checkin(session, node);
+            return vMgr.checkin(session, node, created);
         }
     }
 
@@ -442,15 +444,17 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * <p/>
      * Before modifying version history given, make a local copy of it.
      */
-    protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
-                                      NodeStateEx node, boolean simple)
+    protected InternalVersion internalCheckin(
+            InternalVersionHistoryImpl history,
+            NodeStateEx node, boolean simple, Calendar created)
             throws RepositoryException {
 
         if (history.getVersionManager() != this) {
             history = makeLocalCopy(history);
             xaItems.put(history.getId(), history);
         }
-        InternalVersion version = super.internalCheckin(history, node, simple);
+        InternalVersion version =
+            super.internalCheckin(history, node, simple, created);
         NodeId frozenNodeId = version.getFrozenNodeId();
         InternalVersionItem frozenNode = createInternalVersionItem(frozenNodeId);
         if (frozenNode != null) {

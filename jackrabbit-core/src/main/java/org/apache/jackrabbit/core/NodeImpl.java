@@ -3305,6 +3305,17 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Use {@link VersionManagerImpl#checkin(String, Calendar)} instead
+     *
+     * @since Apache Jackrabbit 1.6
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1972">JCR-1972</a>
+     */
+    @Deprecated
+    public Version checkin(Calendar created) throws RepositoryException {
+        return getVersionManagerImpl().checkin(getPath(), created);
+    }
+
+    /**
      * Use {@link VersionManager#checkout(String)} instead
      */
     @Deprecated

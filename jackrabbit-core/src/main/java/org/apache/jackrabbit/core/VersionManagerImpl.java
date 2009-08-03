@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,10 +85,25 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      * {@inheritDoc}
      */
     public Version checkin(String absPath) throws RepositoryException {
+        return checkin(absPath, null);
+    }
+
+    /**
+     * Creates a new version of the node at the given path.
+     *
+     * @param absPath node path
+     * @param created create time of the new version,
+     *                or <code>null</code> for the current time
+     * @return new version
+     * @throws RepositoryException if the version can not be created
+     */
+    public Version checkin(String absPath, Calendar created)
+            throws RepositoryException {
         NodeStateEx state = getNodeState(absPath,
-                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
+                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD
+                | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
                 Permission.VERSION_MNGMT);
-        NodeId baseId = checkoutCheckin(state, true, false);
+        NodeId baseId = checkoutCheckin(state, true, false, created);
         return (VersionImpl) session.getNodeById(baseId);
     }
 
@@ -98,7 +114,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         NodeStateEx state = getNodeState(absPath,
                 ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
                 Permission.VERSION_MNGMT);
-        checkoutCheckin(state, false, true);
+        checkoutCheckin(state, false, true, null);
     }
 
     /**
@@ -108,7 +124,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         NodeStateEx state = getNodeState(absPath,
                 ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
                 Permission.VERSION_MNGMT);
-        NodeId baseId = checkoutCheckin(state, true, true);
+        NodeId baseId = checkoutCheckin(state, true, true, null);
         return (VersionImpl) session.getNodeById(baseId);
     }
 

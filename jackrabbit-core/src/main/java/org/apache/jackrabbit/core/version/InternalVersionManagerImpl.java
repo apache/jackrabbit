@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -417,22 +418,24 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public InternalVersion checkin(final Session session, final NodeStateEx node)
+    public InternalVersion checkin(
+            final Session session,
+            final NodeStateEx node, final Calendar created)
             throws RepositoryException {
         return (InternalVersion)
                 escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
-                InternalVersionHistory vh;
+                InternalVersionHistoryImpl vh;
                 if (node.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                     // in full versioning, the history id can be retrieved via
                     // the property
                     NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
-                    vh = getVersionHistory(histId);
-                    return internalCheckin((InternalVersionHistoryImpl) vh, node, false);
+                    vh = (InternalVersionHistoryImpl) getVersionHistory(histId);
+                    return internalCheckin(vh, node, false, created);
                 } else {
                     // in simple versioning the history id needs to be calculated
-                    vh = getVersionHistoryOfNode(node.getNodeId());
-                    return internalCheckin((InternalVersionHistoryImpl) vh, node, true);
+                    vh = (InternalVersionHistoryImpl) getVersionHistoryOfNode(node.getNodeId());
+                    return internalCheckin(vh, node, true, created);
                 }
             }
         });

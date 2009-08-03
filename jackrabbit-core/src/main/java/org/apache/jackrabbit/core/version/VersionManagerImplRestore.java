@@ -299,7 +299,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         } else {
             // with simple versioning, the node is checked in automatically,
             // thus not allowing any branches
-            vMgr.checkin(session, state);
+            vMgr.checkin(session, state, null);
         }
         // 3. N's jcr:isCheckedOut property is set to false.
         state.setPropertyValue(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
@@ -512,13 +512,13 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                 //   special node containing a reference to the version history of
                 //   C. On restore, the following occurs:
                 //   - If the workspace currently has an already existing node corresponding
-                //     to CÕs version history and the removeExisting flag of the restore is
+                //     to C's version history and the removeExisting flag of the restore is
                 //     set to true, then that instance of C becomes the child of the restored N.
                 //   - If the workspace currently has an already existing node corresponding
-                //     to CÕs version history and the removeExisting flag of the restore is
+                //     to C's version history and the removeExisting flag of the restore is
                 //     set to false then an ItemExistsException is thrown.
                 //   - If the workspace does not have an instance of C then one is restored from
-                //     CÕs version history:
+                //     C's version history:
                 //     - If the restore was initiated through a restoreByLabel where L is
                 //       the specified label and there is a version of C with the label L then
                 //       that version is restored.
