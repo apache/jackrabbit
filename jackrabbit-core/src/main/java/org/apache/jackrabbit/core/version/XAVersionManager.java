@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -159,7 +160,7 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public Version checkin(NodeImpl node) throws RepositoryException {
+    public Version checkin(NodeImpl node, Calendar cal) throws RepositoryException {
         if (isInXA()) {
             InternalVersionHistory vh;
             InternalVersion version;
@@ -168,15 +169,15 @@ public class XAVersionManager extends AbstractVersionManager
                 // the property
                 String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
                 vh = getVersionHistory(NodeId.valueOf(histUUID));
-                version = checkin((InternalVersionHistoryImpl) vh, node, false);
+                version = checkin((InternalVersionHistoryImpl) vh, node, false, cal);
             } else {
                 // in simple versioning the history id needs to be calculated
                 vh = getVersionHistoryOfNode(node.getNodeId());
-                version = checkin((InternalVersionHistoryImpl) vh, node, true);
+                version = checkin((InternalVersionHistoryImpl) vh, node, true, cal);
             }
             return (Version) ((SessionImpl) node.getSession()).getNodeById(version.getId());
         }
-        return vMgr.checkin(node);
+        return vMgr.checkin(node, cal);
     }
 
     /**
@@ -394,14 +395,14 @@ public class XAVersionManager extends AbstractVersionManager
      * Before modifying version history given, make a local copy of it.
      */
     protected InternalVersion checkin(InternalVersionHistoryImpl history,
-                                      NodeImpl node, boolean simple)
+            NodeImpl node, boolean simple, Calendar cal)
             throws RepositoryException {
 
         if (history.getVersionManager() != this) {
             history = makeLocalCopy(history);
             xaItems.put(history.getId(), history);
         }
-        InternalVersion version = super.checkin(history, node, simple);
+        InternalVersion version = super.checkin(history, node, simple, cal);
         NodeId frozenNodeId = version.getFrozenNodeId();
         InternalVersionItem frozenNode = createInternalVersionItem(frozenNodeId);
         if (frozenNode != null) {

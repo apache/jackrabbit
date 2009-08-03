@@ -53,6 +53,7 @@ import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -276,7 +277,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public Version checkin(final NodeImpl node) throws RepositoryException {
+    public Version checkin(final NodeImpl node, final Calendar cal) throws RepositoryException {
         InternalVersion version = (InternalVersion)
                 escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget() {
             public Object run() throws RepositoryException {
@@ -286,11 +287,11 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                     // the property
                     String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
                     vh = getVersionHistory(NodeId.valueOf(histUUID));
-                    return checkin((InternalVersionHistoryImpl) vh, node, false);
+                    return checkin((InternalVersionHistoryImpl) vh, node, false, cal);
                 } else {
                     // in simple versioning the history id needs to be calculated
                     vh = getVersionHistoryOfNode(node.getNodeId());
-                    return checkin((InternalVersionHistoryImpl) vh, node, true);
+                    return checkin((InternalVersionHistoryImpl) vh, node, true, cal);
                 }
             }
         });
