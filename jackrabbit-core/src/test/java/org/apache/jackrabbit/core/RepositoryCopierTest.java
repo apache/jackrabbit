@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Random;
 
+import javax.jcr.Binary;
 import javax.jcr.Credentials;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
@@ -41,13 +45,19 @@ public class RepositoryCopierTest extends TestCase {
     private static final Credentials CREDENTIALS =
         new SimpleCredentials("admin", "admin".toCharArray());
 
-    private final File BASE = new File("target", "RepositoryCopierTest");
+    private static final File BASE = new File("target", "RepositoryCopierTest");
 
-    private final File SOURCE = new File(BASE, "source");
+    private static final File SOURCE = new File(BASE, "source");
 
-    private final File TARGET = new File(BASE, "target");
+    private static final File TARGET = new File(BASE, "target");
 
-    private final Calendar DATE = Calendar.getInstance();
+    private static final Calendar DATE = Calendar.getInstance();
+
+    private static final byte[] BINARY = new byte[64 * 1024];
+
+    static {
+        new Random().nextBytes(BINARY);
+    }
 
     private String identifier;
 
@@ -93,6 +103,13 @@ public class RepositoryCopierTest extends TestCase {
 
                 Node properties = root.addNode("properties", "test:unstructured");
                 properties.setProperty("boolean", true);
+                Binary binary = session.getValueFactory().createBinary(
+                        new ByteArrayInputStream(BINARY));
+                try {
+                    properties.setProperty("binary", binary);
+                } finally {
+                    binary.dispose();
+                }
                 properties.setProperty("date", DATE);
                 properties.setProperty("decimal", new BigDecimal(123));
                 properties.setProperty("double", Math.PI);
@@ -101,6 +118,21 @@ public class RepositoryCopierTest extends TestCase {
                 properties.setProperty("string", "test");
                 properties.setProperty("multiple", "a,b,c".split(","));
                 session.save();
+
+                binary = properties.getProperty("binary").getBinary();
+                try {
+                    InputStream stream = binary.getStream();
+                    try {
+                        for (int i = 0; i < BINARY.length; i++) {
+                            assertEquals(BINARY[i], (byte) stream.read());
+                        }
+                        assertEquals(-1, stream.read());
+                    } finally {
+                        stream.close();
+                    }
+                } finally {
+                    binary.dispose();
+                }
             } finally {
                 session.logout();
             }
@@ -133,6 +165,23 @@ public class RepositoryCopierTest extends TestCase {
                         properties.getProperty("boolean").getType());
                 assertEquals(
                         true, properties.getProperty("boolean").getBoolean());
+                assertEquals(
+                        PropertyType.BINARY,
+                        properties.getProperty("binary").getType());
+                Binary binary = properties.getProperty("binary").getBinary();
+                try {
+                    InputStream stream = binary.getStream();
+                    try {
+                        for (int i = 0; i < BINARY.length; i++) {
+                            assertEquals(BINARY[i], (byte) stream.read());
+                        }
+                        assertEquals(-1, stream.read());
+                    } finally {
+                        stream.close();
+                    }
+                } finally {
+                    binary.dispose();
+                }
                 assertEquals(
                         PropertyType.DATE,
                         properties.getProperty("date").getType());
