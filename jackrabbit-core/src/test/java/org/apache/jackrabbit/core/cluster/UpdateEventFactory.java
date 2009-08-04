@@ -111,10 +111,39 @@ public class UpdateEventFactory {
         changes.deleted(n3);
 
         List events = new ArrayList();
-        events.add(createEventState(n1, Event.NODE_ADDED, "{}n1"));
-        events.add(createEventState(p1, n1, Event.PROPERTY_ADDED));
-        events.add(createEventState(p2, n2, Event.PROPERTY_REMOVED));
-        events.add(createEventState(n3, Event.NODE_REMOVED, "{}n3"));
+        events.add(createEventState(n1, Event.NODE_ADDED, "{}n1", session));
+        events.add(createEventState(p1, n1, Event.PROPERTY_ADDED, session));
+        events.add(createEventState(p2, n2, Event.PROPERTY_REMOVED, session));
+        events.add(createEventState(n3, Event.NODE_REMOVED, "{}n3", session));
+
+        return new UpdateEvent(changes, events, System.currentTimeMillis(), "user-data");
+    }
+
+    /**
+     * Create an update operation.
+     *
+     * @return update operation
+     */
+    public UpdateEvent createUpdateOperationWithNullUserId() {
+        NodeState n1 = createNodeState();
+        NodeState n2 = createNodeState();
+        NodeState n3 = createNodeState();
+        PropertyState p1 = createPropertyState(n1.getNodeId(), "{}a");
+        PropertyState p2 = createPropertyState(n2.getNodeId(), "{}b");
+
+        ChangeLog changes = new ChangeLog();
+        changes.added(n1);
+        changes.added(p1);
+        changes.deleted(p2);
+        changes.modified(n2);
+        changes.deleted(n3);
+
+        Session s = new ClusterSession(null);
+        List events = new ArrayList();
+        events.add(createEventState(n1, Event.NODE_ADDED, "{}n1", s));
+        events.add(createEventState(p1, n1, Event.PROPERTY_ADDED, s));
+        events.add(createEventState(p2, n2, Event.PROPERTY_REMOVED, s));
+        events.add(createEventState(n3, Event.NODE_REMOVED, "{}n3", s));
 
         return new UpdateEvent(changes, events, System.currentTimeMillis(), "user-data");
     }
@@ -154,9 +183,11 @@ public class UpdateEventFactory {
      * @param n node state
      * @param type <code>Event.NODE_ADDED</code> or <code>Event.NODE_REMOVED</code>
      * @param name node name
+     * @param session the session that produced the event.
      * @return event state
      */
-    protected EventState createEventState(NodeState n, int type, String name) {
+    protected EventState createEventState(NodeState n, int type, String name,
+                                          Session session) {
         Path.Element relPath = pathFactory.createElement(nameFactory.create(name));
 
         switch (type) {
@@ -180,9 +211,11 @@ public class UpdateEventFactory {
      * @param p property state
      * @param parent parent node state
      * @param type <code>Event.NODE_ADDED</code> or <code>Event.NODE_REMOVED</code>
+     * @param session the session that produces the event.
      * @return event state
      */
-    protected EventState createEventState(PropertyState p, NodeState parent, int type) {
+    protected EventState createEventState(PropertyState p, NodeState parent, int type,
+                                          Session session) {
         Path.Element relPath = pathFactory.createElement(p.getName());
 
         switch (type) {
