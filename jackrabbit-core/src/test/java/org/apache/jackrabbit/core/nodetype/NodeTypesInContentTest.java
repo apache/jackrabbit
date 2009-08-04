@@ -41,6 +41,7 @@ public class NodeTypesInContentTest extends AbstractJCRTest {
     private static final String TEST_NODETYPES = "org/apache/jackrabbit/core/nodetype/xml/test_nodetypes.xml";
 
     protected void setUp() throws Exception {
+        isReadOnly = true;
         super.setUp();
         
         InputStream xml = getClass().getClassLoader().getResourceAsStream(TEST_NODETYPES);
