@@ -16,17 +16,21 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.jcr.PropertyType;
+
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 
 /**
@@ -48,6 +52,11 @@ public class PersistenceCopier {
     private final PersistenceManager target;
 
     /**
+     * Target data store, possibly <code>null</code>.
+     */
+    private final DataStore store;
+
+    /**
      * Identifiers of the nodes that have already been copied or that
      * should explicitly not be copied. Used to avoid duplicate copies
      * of shareable nodes and to avoid trying to copy "missing" nodes
@@ -61,11 +70,14 @@ public class PersistenceCopier {
      *
      * @param source source persistence manager
      * @param target target persistence manager
+     * @param store target data store
      */
     public PersistenceCopier(
-            PersistenceManager source, PersistenceManager target) {
+            PersistenceManager source,  PersistenceManager target,
+            DataStore store) {
         this.source = source;
         this.target = target;
+        this.store = store;
     }
 
     /**
@@ -84,9 +96,9 @@ public class PersistenceCopier {
      * are automatically skipped.
      *
      * @param id identifier of the node to be copied
-     * @throws ItemStateException if the copy operation fails
+     * @throws Exception if the copy operation fails
      */
-    public void copy(NodeId id) throws ItemStateException {
+    public void copy(NodeId id) throws Exception {
         if (!exclude.contains(id)) {
             NodeState node = source.load(id);
 
@@ -104,9 +116,9 @@ public class PersistenceCopier {
      * to the target persistence manager.
      *
      * @param sourceNode source node state
-     * @throws ItemStateException if the copy operation fails
+     * @throws Exception if the copy operation fails
      */
-    private void copy(NodeState sourceNode) throws ItemStateException {
+    private void copy(NodeState sourceNode) throws Exception {
         ChangeLog changes = new ChangeLog();
 
         // Copy the node state
@@ -131,8 +143,19 @@ public class PersistenceCopier {
             targetState.setDefinitionId(sourceState.getDefinitionId());
             targetState.setType(sourceState.getType());
             targetState.setMultiValued(sourceState.isMultiValued());
-            // TODO: Copy binaries?
-            targetState.setValues(sourceState.getValues());
+            if (sourceState.getType() != PropertyType.BINARY) {
+                targetState.setValues(sourceState.getValues());
+            } else {
+                InternalValue[] values = sourceState.getValues();
+                for (int i = 0; i < values.length; i++) {
+                    InputStream stream = values[i].getStream();
+                    try {
+                        values[i] = InternalValue.create(stream, store);
+                    } finally {
+                        stream.close();
+                    }
+                }
+            }
             if (target.exists(targetState.getPropertyId())) {
                 changes.modified(targetState);
             } else {

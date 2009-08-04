@@ -323,7 +323,7 @@ public class InternalValue extends AbstractQValue {
      * @return the internal value
      * @throws RepositoryException
      */
-    static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
+    public static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
         return new InternalValue(getBLOBFileValue(store, value, false));
     }
 
