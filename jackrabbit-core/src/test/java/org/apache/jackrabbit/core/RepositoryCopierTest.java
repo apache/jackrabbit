@@ -17,19 +17,23 @@
 package org.apache.jackrabbit.core;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 import javax.jcr.Credentials;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeTemplate;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.jackrabbit.core.RepositoryCopier;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 public class RepositoryCopierTest extends TestCase {
@@ -42,6 +46,10 @@ public class RepositoryCopierTest extends TestCase {
     private final File SOURCE = new File(BASE, "source");
 
     private final File TARGET = new File(BASE, "target");
+
+    private final Calendar DATE = Calendar.getInstance();
+
+    private String identifier;
 
     protected void setUp() {
         BASE.mkdirs();
@@ -63,8 +71,35 @@ public class RepositoryCopierTest extends TestCase {
         try {
             Session session = repository.login(CREDENTIALS);
             try {
-                Node test = session.getRootNode().addNode("test");
-                test.setProperty("foo", "bar");
+                NamespaceRegistry registry =
+                    session.getWorkspace().getNamespaceRegistry();
+                registry.registerNamespace("test", "http://www.example.org/");
+
+                NodeTypeManager manager =
+                    session.getWorkspace().getNodeTypeManager();
+                NodeTypeTemplate template = manager.createNodeTypeTemplate();
+                template.setName("test:unstructured");
+                template.setDeclaredSuperTypeNames(
+                        new String[] { "nt:unstructured" });
+                manager.registerNodeType(template, false);
+
+                Node root = session.getRootNode();
+
+                Node referenceable =
+                    root.addNode("referenceable", "test:unstructured");
+                referenceable.addMixin(NodeType.MIX_REFERENCEABLE);
+                session.save();
+                identifier = referenceable.getIdentifier();
+
+                Node properties = root.addNode("properties", "test:unstructured");
+                properties.setProperty("boolean", true);
+                properties.setProperty("date", DATE);
+                properties.setProperty("decimal", new BigDecimal(123));
+                properties.setProperty("double", Math.PI);
+                properties.setProperty("long", 9876543210L);
+                properties.setProperty("reference", referenceable);
+                properties.setProperty("string", "test");
+                properties.setProperty("multiple", "a,b,c".split(","));
                 session.save();
             } finally {
                 session.logout();
@@ -80,12 +115,68 @@ public class RepositoryCopierTest extends TestCase {
         try {
             Session session = repository.login(CREDENTIALS);
             try {
-                assertTrue(session.nodeExists("/test"));
-                assertTrue(session.propertyExists("/test/foo"));
+                assertEquals(
+                        "http://www.example.org/",
+                        session.getNamespaceURI("test"));
 
-                Property foo = session.getProperty("/test/foo");
-                assertEquals(PropertyType.STRING, foo.getType());
-                assertEquals("bar", foo.getString());
+                NodeTypeManager manager =
+                    session.getWorkspace().getNodeTypeManager();
+                assertTrue(manager.hasNodeType("test:unstructured"));
+                NodeType type = manager.getNodeType("test:unstructured");
+                assertFalse(type.isMixin());
+                assertTrue(type.isNodeType("nt:unstructured"));
+
+                assertTrue(session.nodeExists("/properties"));
+                Node properties = session.getNode("/properties");
+                assertEquals(
+                        PropertyType.BOOLEAN,
+                        properties.getProperty("boolean").getType());
+                assertEquals(
+                        true, properties.getProperty("boolean").getBoolean());
+                assertEquals(
+                        PropertyType.DATE,
+                        properties.getProperty("date").getType());
+                assertEquals(
+                        DATE.getTimeInMillis(),
+                        properties.getProperty("date").getDate().getTimeInMillis());
+                assertEquals(
+                        PropertyType.DECIMAL,
+                        properties.getProperty("decimal").getType());
+                assertEquals(
+                        new BigDecimal(123),
+                        properties.getProperty("decimal").getDecimal());
+                assertEquals(
+                        PropertyType.DOUBLE,
+                        properties.getProperty("double").getType());
+                assertEquals(
+                        Math.PI, properties.getProperty("double").getDouble());
+                assertEquals(
+                        PropertyType.LONG,
+                        properties.getProperty("long").getType());
+                assertEquals(
+                        9876543210L, properties.getProperty("long").getLong());
+                assertEquals(
+                        PropertyType.REFERENCE,
+                        properties.getProperty("reference").getType());
+                assertEquals(
+                        identifier,
+                        properties.getProperty("reference").getString());
+                assertEquals(
+                        "/referenceable",
+                        properties.getProperty("reference").getNode().getPath());
+                assertEquals(
+                        PropertyType.STRING,
+                        properties.getProperty("string").getType());
+                assertEquals(
+                        "test", properties.getProperty("string").getString());
+                assertEquals(
+                        PropertyType.STRING,
+                        properties.getProperty("multiple").getType());
+                Value[] values = properties.getProperty("multiple").getValues();
+                assertEquals(3, values.length);
+                assertEquals("a", values[0].getString());
+                assertEquals("b", values[1].getString());
+                assertEquals("c", values[2].getString());
             } finally {
                 session.logout();
             }
