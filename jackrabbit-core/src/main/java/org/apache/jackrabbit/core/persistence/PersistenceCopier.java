@@ -152,9 +152,9 @@ public class PersistenceCopier {
             InternalValue[] values = sourceState.getValues();
             if (sourceState.getType() == PropertyType.BINARY) {
                 for (int i = 0; i < values.length; i++) {
-                    InputStream stream = values[i].getStream();
+                    InputStream stream = values[i].getBLOBFileValue().getStream();
                     try {
-                        values[i] = InternalValue.create(stream, store);
+                        values[i] = InternalValue.createTemporary(stream, store);
                     } finally {
                         stream.close();
                     }
