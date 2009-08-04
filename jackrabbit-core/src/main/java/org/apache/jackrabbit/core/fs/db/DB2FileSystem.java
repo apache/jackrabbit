@@ -52,10 +52,6 @@ public class DB2FileSystem extends DbFileSystem {
         // preset some attributes to reasonable defaults
         schema = "db2";
         driver = "com.ibm.db2.jcc.DB2Driver";
-        schemaObjectPrefix = "";
-        user = "";
-        password = "";
-        initialized = false;
     }
 
     //-----------------------------------------< DatabaseFileSystem overrides >
