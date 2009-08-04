@@ -174,7 +174,7 @@ public class RepositoryCopier {
     }
 
     private void copyVersionStore(
-            VersionManagerImpl source, VersionManagerImpl target)
+            VersionManagerImpl source, VersionManagerImpl target,
             DataStore store)
             throws Exception {
         logger.info("Copying version histories");
@@ -198,7 +198,7 @@ public class RepositoryCopier {
 
             PersistenceCopier copier = new PersistenceCopier(
                     source.getWorkspaceInfo(names[i]).getPersistenceManager(),
-                    target.getWorkspaceInfo(names[i]).getPersistenceManager());
+                    target.getWorkspaceInfo(names[i]).getPersistenceManager(),
                     target.getDataStore());
             copier.excludeNode(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
             copier.copy(RepositoryImpl.ROOT_NODE_ID);
