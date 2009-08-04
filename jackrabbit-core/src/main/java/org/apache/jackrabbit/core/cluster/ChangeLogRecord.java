@@ -114,7 +114,7 @@ public class ChangeLogRecord extends ClusterRecord {
     /**
      * Last used session for event sources.
      */
-    private Session lastSession;
+    private ClusterSession lastSession;
 
     /**
      * Create a new instance of this class. Used when serializing.
@@ -358,7 +358,7 @@ public class ChangeLogRecord extends ClusterRecord {
      * @return session
      */
     private Session getOrCreateSession(String userId) {
-        if (lastSession == null || !lastSession.getUserID().equals(userId)) {
+        if (lastSession == null || !lastSession.isUserId(userId)) {
             lastSession = new ClusterSession(userId);
         }
         return lastSession;

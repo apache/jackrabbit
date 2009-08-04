@@ -118,6 +118,25 @@ public class ClusterRecordTest extends JUnitTest {
     }
 
     /**
+     * Test producing and consuming an update with a null userId
+     */
+    public void testUpdateOperationWithNullUserId() throws Exception {
+        UpdateEvent update = factory.createUpdateOperationWithNullUserId();
+
+        UpdateEventChannel channel = master.createUpdateChannel(DEFAULT_WORKSPACE);
+        channel.updateCreated(update);
+        channel.updatePrepared(update);
+        channel.updateCommitted(update, null);
+
+        SimpleEventListener listener = new SimpleEventListener();
+        slave.createUpdateChannel(DEFAULT_WORKSPACE).setListener(listener);
+        slave.sync();
+
+        assertEquals(1, listener.getClusterEvents().size());
+        assertEquals(listener.getClusterEvents().get(0), update);
+    }
+
+    /**
      * Test producing and consuming a lock operation.
      * @throws Exception
      */
