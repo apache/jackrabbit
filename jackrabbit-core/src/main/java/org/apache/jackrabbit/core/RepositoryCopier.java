@@ -27,11 +27,11 @@ import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.persistence.PersistenceCopier;
-import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
@@ -119,12 +119,11 @@ public class RepositoryCopier {
                         target.getNodeTypeRegistry());
                 copyVersionStore(
                         source.getVersionManagerImpl(),
-                        target.getVersionManagerImpl());
+                        target.getVersionManagerImpl(),
+                        target.getDataStore());
                 copyWorkspaces(source, target);
-            } catch (InvalidNodeTypeDefException e) {
-                throw new RepositoryException("Failed to copy node types", e);
-            } catch (ItemStateException e) {
-                throw new RepositoryException("Failed to copy item states", e);
+            } catch (Exception e) {
+                throw new RepositoryException("Failed to copy content", e);
             } finally {
                 target.shutdown();
             }
@@ -176,17 +175,18 @@ public class RepositoryCopier {
 
     private void copyVersionStore(
             VersionManagerImpl source, VersionManagerImpl target)
-            throws RepositoryException, ItemStateException {
+            DataStore store)
+            throws Exception {
         logger.info("Copying version histories");
 
         PersistenceCopier copier = new PersistenceCopier(
                 source.getPersistenceManager(),
-                target.getPersistenceManager());
+                target.getPersistenceManager(), store);
         copier.copy(RepositoryImpl.VERSION_STORAGE_NODE_ID);
     }
 
     private void copyWorkspaces(RepositoryImpl source, RepositoryImpl target)
-            throws RepositoryException, ItemStateException {
+            throws Exception {
         Collection existing = Arrays.asList(target.getWorkspaceNames());
         String[] names = source.getWorkspaceNames();
         for (int i = 0; i < names.length; i++) {
@@ -199,6 +199,7 @@ public class RepositoryCopier {
             PersistenceCopier copier = new PersistenceCopier(
                     source.getWorkspaceInfo(names[i]).getPersistenceManager(),
                     target.getWorkspaceInfo(names[i]).getPersistenceManager());
+                    target.getDataStore());
             copier.excludeNode(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
             copier.copy(RepositoryImpl.ROOT_NODE_ID);
         }
