@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("jcr2spi tests");
 
         suite.addTestSuite(AccessByRelativePathTest.class);
+        suite.addTestSuite(GetItemsTest.class);
 
         // get node(s)
         suite.addTestSuite(SNSIndexTest.class);
@@ -85,7 +87,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ReorderNewAndSavedTest.class);
         suite.addTestSuite(ReorderMixedTest.class);
         suite.addTestSuite(ReorderMoveTest.class);
-        
+
         // update
         suite.addTestSuite(UpdateTest.class);
 
@@ -98,7 +100,7 @@ public class TestAll extends TestCase {
 
         // repository
         suite.addTestSuite(LoginTest.class);
-        
+
         return suite;
     }
 }
