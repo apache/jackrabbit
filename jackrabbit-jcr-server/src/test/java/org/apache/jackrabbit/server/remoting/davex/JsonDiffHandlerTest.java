@@ -234,7 +234,7 @@ public class JsonDiffHandlerTest extends TestCase {
             return null;
         }
 
-        public boolean hasCapability(String arg0, Object arg1, Map arg2)
+        public boolean hasCapability(String arg0, Object arg1, Object[] arg2)
                 throws RepositoryException {
             // TODO Auto-generated method stub
             return false;

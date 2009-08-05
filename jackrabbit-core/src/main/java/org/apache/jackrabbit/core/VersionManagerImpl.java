@@ -382,17 +382,6 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     /**
      * {@inheritDoc}
      */
-    public Node createConfiguration(String absPath, Version baseline)
-            throws RepositoryException {
-        if (baseline != null) {
-            throw new UnsupportedRepositoryOperationException("createConfiguration(String, Version) with baseline is no longer supported.");
-        }
-        return createConfiguration(absPath);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
     public Node createConfiguration(String absPath) throws RepositoryException {
         if (session.nodeExists(absPath)) {
             NodeStateEx state = getNodeState(absPath,

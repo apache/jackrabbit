@@ -997,12 +997,13 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public NodeId createConfiguration(SessionInfo sessionInfo, final NodeId nodeId, final NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    public NodeId createConfiguration(SessionInfo sessionInfo, final NodeId nodeId)
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         final VersionManager vMgr = getVersionManager(sInfo);
         Node configuration = (Node) executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                return vMgr.createConfiguration(getNodePath(nodeId, sInfo), (Version) getNode(baselineId, sInfo));
+                return vMgr.createConfiguration(getNodePath(nodeId, sInfo));
             }
         }, getSessionInfoImpl(sessionInfo));
         return idFactory.createNodeId(configuration, sInfo.getNamePathResolver());

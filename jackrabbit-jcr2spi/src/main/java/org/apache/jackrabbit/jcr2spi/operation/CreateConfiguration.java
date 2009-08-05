@@ -31,21 +31,20 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 
 /**
- * <code>Checkout</code>...
+ * <code>CreateConfiguration</code>...
  */
 public class CreateConfiguration extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(CreateConfiguration.class);
 
     private final NodeState nodeState;
-    private final NodeState baselineState;
+
     private final VersionManager mgr;
 
     private NodeId newConfigurationId;
 
-    private CreateConfiguration(NodeState nodeState, NodeState baselineState, VersionManager mgr) {
+    private CreateConfiguration(NodeState nodeState, VersionManager mgr) {
         this.nodeState = nodeState;
-        this.baselineState = baselineState;
         this.mgr = mgr;
         // NOTE: affected-states only needed for transient modifications
     }
@@ -80,10 +79,6 @@ public class CreateConfiguration extends AbstractOperation {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 
-    public NodeId getBaselineId() throws RepositoryException {
-        return baselineState.getNodeEntry().getWorkspaceId();
-    }
-
     public void setNewConfigurationId(NodeId newConfigurationId) {
         this.newConfigurationId = newConfigurationId;
     }
@@ -93,7 +88,7 @@ public class CreateConfiguration extends AbstractOperation {
     }
 
     //------------------------------------------------------------< Factory >---
-    public static CreateConfiguration create(NodeState nodeState, NodeState baselineState, VersionManager mgr) {
-        return new CreateConfiguration(nodeState, baselineState, mgr);
+    public static CreateConfiguration create(NodeState nodeState, VersionManager mgr) {
+        return new CreateConfiguration(nodeState, mgr);
     }
 }

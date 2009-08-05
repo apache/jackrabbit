@@ -200,12 +200,11 @@ public interface VersionManager {
     /**
      *
      * @param nodeState
-     * @param baselineState
      * @return
      * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException
      */
-    public NodeEntry createConfiguration(NodeState nodeState, NodeState baselineState) throws UnsupportedRepositoryOperationException, RepositoryException;
+    public NodeEntry createConfiguration(NodeState nodeState) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      *

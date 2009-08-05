@@ -1548,7 +1548,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#hasCapability(String, Object, Map)
      * @since JCR 2.0
      */
-    public boolean hasCapability(String methodName, Object target, Map arguments)
+    public boolean hasCapability(String methodName, Object target, Object[] arguments)
             throws RepositoryException {
         // value of this method (as currently spec'ed) to jcr api clients
         // is rather limited...

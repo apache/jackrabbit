@@ -29,8 +29,6 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.Value;
 import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * <code>SessionTest</code> contains all test cases for the
@@ -681,8 +679,7 @@ public class SessionTest extends AbstractJCRTest {
         Session roSession = getHelper().getReadOnlySession();
         try {
             Node root = roSession.getRootNode();
-            Map args = new HashMap();
-            args.put("relPath", "foo");
+            Object[] args = new Object[] { "foo" };
             if (!roSession.hasCapability("addNode",  root, args)) {
                 // if hasCapability() returns false, the actual method call
                 // is expected to fail

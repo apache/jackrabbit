@@ -1639,9 +1639,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#createConfiguration(SessionInfo, NodeId, NodeId)
+     * @see RepositoryService#createConfiguration(SessionInfo, NodeId)
      */
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
         // TODO
         throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
     }

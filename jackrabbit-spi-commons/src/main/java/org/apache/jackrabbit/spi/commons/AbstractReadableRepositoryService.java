@@ -677,7 +677,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     /**
      * @throws UnsupportedRepositoryOperationException always.
      */
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
