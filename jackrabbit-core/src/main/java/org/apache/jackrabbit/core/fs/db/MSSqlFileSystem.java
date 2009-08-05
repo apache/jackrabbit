@@ -55,7 +55,7 @@ public class MSSqlFileSystem extends DbFileSystem {
     public static final String TABLE_SPACE_VARIABLE = "${tableSpace}";
 
     /** the MS SQL table space to use */
-    protected String tableSpace;
+    protected String tableSpace = "";
 
     /**
      * Returns the configured MS SQL table space.
@@ -84,11 +84,6 @@ public class MSSqlFileSystem extends DbFileSystem {
         // preset some attributes to reasonable defaults
         schema = "mssql";
         driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-        schemaObjectPrefix = "";
-        user = "";
-        password = "";
-        tableSpace = null;
-        initialized = false;
     }
 
    protected String createSchemaSql(String sql) {
