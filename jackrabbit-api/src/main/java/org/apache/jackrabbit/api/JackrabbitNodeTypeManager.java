@@ -32,6 +32,9 @@ import org.xml.sax.SAXException;
  * <p>
  * Currently Jackrabbit provides a mechanism to register new node types, but
  * it is not possible to modify or remove existing node types.
+ *
+ * @deprecated This interface will be replaced by the standard JCR 2.0 API
+ *             in Apache Jackrabbit 2.0.
  */
 public interface JackrabbitNodeTypeManager extends NodeTypeManager {
 
