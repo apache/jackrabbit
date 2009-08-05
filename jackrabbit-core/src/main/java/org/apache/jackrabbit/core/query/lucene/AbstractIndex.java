@@ -20,6 +20,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -181,16 +182,16 @@ abstract class AbstractIndex {
                 public Object call() throws Exception {
                     long time = System.currentTimeMillis();
                     writer.addDocument(doc);
-                    return new Long(System.currentTimeMillis() - time);
+                    return System.currentTimeMillis() - time;
                 }
             };
         }
         DynamicPooledExecutor.Result[] results = EXECUTOR.executeAndWait(commands);
         invalidateSharedReader();
         IOException ex = null;
-        for (int i = 0; i < results.length; i++) {
-            if (results[i].getException() != null) {
-                Throwable cause = results[i].getException().getCause();
+        for (DynamicPooledExecutor.Result result : results) {
+            if (result.getException() != null) {
+                Throwable cause = result.getException().getCause();
                 if (ex == null) {
                     // only throw the first exception
                     if (cause instanceof IOException) {
@@ -203,7 +204,7 @@ abstract class AbstractIndex {
                     log.warn("Exception while inverting document", cause);
                 }
             } else {
-                log.debug("Inverted document in {} ms", results[i].get());
+                log.debug("Inverted document in {} ms", result.get());
             }
         }
         if (ex != null) {
@@ -238,11 +239,28 @@ abstract class AbstractIndex {
             indexWriter = null;
         }
         if (indexReader == null) {
-            IndexReader reader = IndexReader.open(getDirectory());
+            IndexDeletionPolicy idp = getIndexDeletionPolicy();
+            IndexReader reader;
+            if (idp != null) {
+                reader = IndexReader.open(getDirectory(), idp);
+            } else {
+                reader = IndexReader.open(getDirectory());
+            }
             reader.setTermInfosIndexDivisor(termInfosIndexDivisor);
             indexReader = new CommittableIndexReader(reader);
         }
         return indexReader;
+    }
+
+    /**
+     * Returns the index deletion policy for this index. This implementation
+     * always returns <code>null</code>.
+     *
+     * @return the index deletion policy for this index or <code>null</code> if
+     *          none is present.
+     */
+    protected IndexDeletionPolicy getIndexDeletionPolicy() {
+        return null;
     }
 
     /**

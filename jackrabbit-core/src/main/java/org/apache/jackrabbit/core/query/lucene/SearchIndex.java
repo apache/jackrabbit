@@ -251,6 +251,13 @@ public class SearchIndex extends AbstractQueryHandler {
     private int volatileIdleTime = 3;
 
     /**
+     * The maximum age (in seconds) of the index history. The default value is
+     * zero. Which means, index commits are deleted as soon as they are not used
+     * anymore.
+     */
+    private long maxHistoryAge = 0;
+
+    /**
      * maxMergeDocs config parameter
      */
     private int maxMergeDocs = DEFAULT_MAX_MERGE_DOCS;
@@ -2213,6 +2220,24 @@ public class SearchIndex extends AbstractQueryHandler {
             throw new IllegalArgumentException("must be greater than 0");
         }
         this.indexMergerPoolSize = indexMergerPoolSize;
+    }
+
+    /**
+     * @return the maximum age in seconds for outdated generations of
+     * {@link IndexInfos}.
+     */
+    public long getMaxHistoryAge() {
+        return maxHistoryAge;
+    }
+
+    /**
+     * Sets a new value for the maximum age in seconds for outdated generations
+     * of {@link IndexInfos}.
+     *
+     * @param maxHistoryAge age in seconds.
+     */
+    public void setMaxHistoryAge(long maxHistoryAge) {
+        this.maxHistoryAge = maxHistoryAge;
     }
 
     //----------------------------< internal >----------------------------------

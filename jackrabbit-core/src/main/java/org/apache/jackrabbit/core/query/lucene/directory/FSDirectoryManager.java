@@ -19,6 +19,10 @@ package org.apache.jackrabbit.core.query.lucene.directory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NativeFSLockFactory;
+import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.store.Lock;
+import org.apache.lucene.store.LockFactory;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 
 import java.io.IOException;
@@ -61,7 +65,7 @@ public class FSDirectoryManager implements DirectoryManager {
         } else {
             dir = new File(baseDir, name);
         }
-        return FSDirectory.getDirectory(dir, new NativeFSLockFactory(dir));
+        return new FSDir(dir);
     }
 
     /**
@@ -121,5 +125,100 @@ public class FSDirectoryManager implements DirectoryManager {
      * {@inheritDoc}
      */
     public void dispose() {
+    }
+
+    //-----------------------< internal >---------------------------------------
+
+    private static final class FSDir extends Directory {
+
+        private static final FileFilter FILTER = new FileFilter() {
+            public boolean accept(File pathname) {
+                return pathname.isFile();
+            }
+        };
+
+        private final FSDirectory directory;
+
+        public FSDir(File dir) throws IOException {
+            directory = FSDirectory.getDirectory(dir,
+                    new NativeFSLockFactory(dir));
+        }
+
+        public String[] list() throws IOException {
+            File[] files = directory.getFile().listFiles(FILTER);
+            if (files == null) {
+                return null;
+            }
+            String[] names = new String[files.length];
+            for (int i = 0; i < names.length; i++) {
+                names[i] = files[i].getName();
+            }
+            return names;
+        }
+
+        public boolean fileExists(String name) throws IOException {
+            return directory.fileExists(name);
+        }
+
+        public long fileModified(String name) throws IOException {
+            return directory.fileModified(name);
+        }
+
+        public void touchFile(String name) throws IOException {
+            directory.touchFile(name);
+        }
+
+        public void deleteFile(String name) throws IOException {
+            directory.deleteFile(name);
+        }
+
+        public void renameFile(String from, String to) throws IOException {
+            directory.renameFile(from, to);
+        }
+
+        public long fileLength(String name) throws IOException {
+            return directory.fileLength(name);
+        }
+
+        public IndexOutput createOutput(String name) throws IOException {
+            return directory.createOutput(name);
+        }
+
+        public IndexInput openInput(String name) throws IOException {
+            return directory.openInput(name);
+        }
+
+        public void close() throws IOException {
+            directory.close();
+        }
+
+        public IndexInput openInput(String name, int bufferSize)
+                throws IOException {
+            return directory.openInput(name, bufferSize);
+        }
+
+        public Lock makeLock(String name) {
+            return directory.makeLock(name);
+        }
+
+        public void clearLock(String name) throws IOException {
+            directory.clearLock(name);
+        }
+
+        public void setLockFactory(LockFactory lockFactory) {
+            directory.setLockFactory(lockFactory);
+        }
+
+        public LockFactory getLockFactory() {
+            return directory.getLockFactory();
+        }
+
+        public String getLockID() {
+            return directory.getLockID();
+        }
+
+        public String toString() {
+            return this.getClass().getName() + "@" + directory;
+        }
     }
 }

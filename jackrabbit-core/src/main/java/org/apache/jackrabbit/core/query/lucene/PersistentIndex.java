@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
@@ -43,6 +44,17 @@ class PersistentIndex extends AbstractIndex {
     private IndexListener listener;
 
     /**
+     * The index deletion policy. Old index generations are deleted when they
+     * reach a certain age.
+     */
+    private final IndexDeletionPolicyImpl indexDelPolicy;
+
+    /**
+     * The current generation of this persistent index.
+     */
+    private long generation;
+
+    /**
      * Creates a new <code>PersistentIndex</code>.
      *
      * @param name the name of this index.
@@ -51,17 +63,21 @@ class PersistentIndex extends AbstractIndex {
      * @param cache the document number cache
      * @param indexingQueue the indexing queue.
      * @param directoryManager the directory manager.
+     * @param generationMaxAge age in seconds after which an index generation is
+     *          deleted.
      * @throws IOException if an error occurs while opening / creating the
      *  index.
      */
     PersistentIndex(String name, Analyzer analyzer,
                     Similarity similarity, DocNumberCache cache,
                     IndexingQueue indexingQueue,
-                    DirectoryManager directoryManager)
+                    DirectoryManager directoryManager, long generationMaxAge)
             throws IOException {
         super(analyzer, similarity, directoryManager.getDirectory(name),
                 cache, indexingQueue);
         this.name = name;
+        this.indexDelPolicy = new IndexDeletionPolicyImpl(this,
+                generationMaxAge * 1000);
         if (isExisting()) {
             IndexMigration.migrate(this, directoryManager);
         }
@@ -76,6 +92,13 @@ class PersistentIndex extends AbstractIndex {
             listener.documentDeleted(idTerm);
         }
         return num;
+    }
+
+    /**
+     * @return the index deletion policy of this index.
+     */
+    protected IndexDeletionPolicy getIndexDeletionPolicy() {
+        return indexDelPolicy;
     }
 
     /**
@@ -108,10 +131,10 @@ class PersistentIndex extends AbstractIndex {
         Directory dir = index.getDirectory();
         Directory dest = getDirectory();
         String[] files = dir.list();
-        for (int i = 0; i < files.length; i++) {
-            IndexInput in = dir.openInput(files[i]);
+        for (String file : files) {
+            IndexInput in = dir.openInput(file);
             try {
-                IndexOutput out = dest.createOutput(files[i]);
+                IndexOutput out = dest.createOutput(file);
                 try {
                     long remaining = in.length();
                     while (remaining > 0) {
@@ -127,6 +150,8 @@ class PersistentIndex extends AbstractIndex {
                 in.close();
             }
         }
+        // refresh current generation
+        indexDelPolicy.readCurrentGeneration();
     }
 
     /**
@@ -168,5 +193,22 @@ class PersistentIndex extends AbstractIndex {
      */
     String getName() {
         return name;
+    }
+
+    /**
+     * @return the current generation of this index.
+     */
+    long getCurrentGeneration() {
+        return generation;
+    }
+
+    /**
+     * Sets the current generation of this index. This method should only be
+     * called by {@link IndexDeletionPolicyImpl}.
+     *
+     * @param generation the current generation.
+     */
+    void setCurrentGeneration(long generation) {
+        this.generation = generation;
     }
 }
