@@ -75,9 +75,6 @@ components is:
 
    mvn install
 
-Note that the OCM components require Java 5, and will not be included
-in the build if you use Java 1.4.
-
 For more instructions, please see the documentation at:
 
    http://jackrabbit.apache.org/building-jackrabbit.html
@@ -87,3 +84,4 @@ Credits
 
 See http://jackrabbit.apache.org/jackrabbit-team.html for the list of 
 Jackrabbit committers and main contributors.
+
