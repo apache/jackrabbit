@@ -329,6 +329,9 @@ public class SessionItemStateManager
      * {@inheritDoc}
      */
     public void dispose() {
+        // remove hierarchy manager as listener to avoid
+        // unnecessary work during stateMgr.dispose()
+        removeListener(hierMgr);
         // discard all transient changes
         disposeAllTransientItemStates();
         // dispose our (i.e. 'local') state manager
