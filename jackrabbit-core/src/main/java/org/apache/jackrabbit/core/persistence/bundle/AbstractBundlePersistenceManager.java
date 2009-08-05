@@ -735,7 +735,7 @@ public abstract class AbstractBundlePersistenceManager implements
     private void putBundle(NodePropBundle bundle) throws ItemStateException {
         storeBundle(bundle);
         bundle.markOld();
-        log.debug("stored bundle " + bundle.getId());
+        log.debug("stored bundle {}", bundle.getId());
 
         missing.remove(bundle.getId());
         // only put to cache if already exists. this is to ensure proper overwrite
