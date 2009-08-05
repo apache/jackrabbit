@@ -73,6 +73,11 @@ public class DatabaseFileSystem implements FileSystem {
     protected String schema;
     protected String schemaObjectPrefix;
 
+    /**
+     * Whether the schema check must be done during initialization.
+     */
+    private boolean schemaCheckEnabled = true;
+
     // initial size of buffer used to serialize objects
     protected static final int INITIAL_BUFFER_SIZE = 8192;
 
@@ -132,6 +137,20 @@ public class DatabaseFileSystem implements FileSystem {
         this.schema = schema;
     }
 
+    /**
+     * @return whether the schema check is enabled
+     */
+    public final boolean isSchemaCheckEnabled() {
+        return schemaCheckEnabled;
+    }
+
+    /**
+     * @param enabled set whether the schema check is enabled
+     */
+    public final void setSchemaCheckEnabled(boolean enabled) {
+        schemaCheckEnabled = enabled;
+    }
+
     //-------------------------------------------< java.lang.Object overrides >
     /**
      * {@inheritDoc}
@@ -187,7 +206,9 @@ public class DatabaseFileSystem implements FileSystem {
             prepareSchemaObjectPrefix();
 
             // check if schema objects exist and create them if necessary
-            checkSchema();
+            if (isSchemaCheckEnabled()) {
+                checkSchema();
+            }
 
             // build sql statements
             buildSQLStatements();

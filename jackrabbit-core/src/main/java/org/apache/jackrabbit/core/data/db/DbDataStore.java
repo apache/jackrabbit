@@ -66,6 +66,7 @@ import javax.jcr.RepositoryException;
  *     &lt;param name="{@link #setCopyWhenReading(boolean) copyWhenReading}" value="true"/>
  *     &lt;param name="{@link #setTablePrefix(String) tablePrefix}" value=""/>
  *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
+ *     &lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/>
  * &lt/DataStore>
  * </pre>
  * <p>
@@ -190,6 +191,11 @@ public class DbDataStore implements DataStore {
      * The prefix of the table names. By default it is empty.
      */
     protected String schemaObjectPrefix = "";
+
+    /**
+     * Whether the schema check must be done during initialization.
+     */
+    private boolean schemaCheckEnabled = true;
 
     /**
      * This is the property 'table'
@@ -581,7 +587,7 @@ public class DbDataStore implements DataStore {
             ResultSet rs = meta.getTables(null, null, schemaObjectPrefix + tableSQL, null);
             boolean exists = rs.next();
             rs.close();
-            if (!exists) {
+            if (!exists && isSchemaCheckEnabled()) {
                 // CREATE TABLE DATASTORE(ID VARCHAR(255) PRIMARY KEY, 
                 // LENGTH BIGINT, LAST_MODIFIED BIGINT, DATA BLOB)
                 conn.executeStmt(createTableSQL, null);
@@ -824,6 +830,20 @@ public class DbDataStore implements DataStore {
      */
     public void setUser(String user) {
         this.user = user;
+    }
+
+    /**
+     * @return whether the schema check is enabled
+     */
+    public final boolean isSchemaCheckEnabled() {
+        return schemaCheckEnabled;
+    }
+
+    /**
+     * @param enabled set whether the schema check is enabled
+     */
+    public final void setSchemaCheckEnabled(boolean enabled) {
+        schemaCheckEnabled = enabled;
     }
 
     /**
