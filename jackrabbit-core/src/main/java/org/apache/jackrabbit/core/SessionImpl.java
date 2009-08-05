@@ -318,7 +318,7 @@ public class SessionImpl extends AbstractSession
      * @return session item state manager
      */
     protected SessionItemStateManager createSessionItemStateManager(LocalItemStateManager manager) {
-        return new SessionItemStateManager(
+        return SessionItemStateManager.createInstance(
                 rep.getRootNodeId(), manager, rep.getNodeTypeRegistry());
     }
 
@@ -345,7 +345,7 @@ public class SessionImpl extends AbstractSession
      */
     protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
                                             HierarchyManager hierMgr) {
-        return new ItemManager(itemStateMgr, hierMgr, this,
+        return ItemManager.createInstance(itemStateMgr, hierMgr, this,
                 ntMgr.getRootNodeDefinition(), rep.getRootNodeId());
     }
 
