@@ -29,7 +29,6 @@ import javax.transaction.RollbackException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.XASession;
-import org.apache.jackrabbit.core.state.TimeBomb;
 
 /**
  * Internal {@link javax.transaction.UserTransaction} implementation.
@@ -124,27 +123,20 @@ public class UserTransactionImpl implements UserTransaction {
             status = Status.STATUS_COMMITTING;
             if (distributedThreadAccess) {
                 try {
-                    final Thread t = Thread.currentThread();
-                    final TimeBomb tb = new TimeBomb(100) {
-                        public void explode() {
-                            t.interrupt();
-                        }
-                    };
-                    tb.arm();
                     Thread distributedThread = new Thread() {
                         public void run() {
                             try {
                                 xares.commit(xid, false);
-                                tb.disarm();                
                             } catch (Exception e) {
                                 throw new RuntimeException(e.getMessage());
                             }
                         }
                     };
                     distributedThread.start();
-                    Thread.sleep(200);
+                    distributedThread.join(1000);
                 } catch (InterruptedException e) {
-                    throw new SystemException("commit from different thread but same XID must not block");
+                    throw new SystemException(
+                            "Commit from different thread but same XID must not block");
                 }
             } else {
                 xares.commit(xid, false);
