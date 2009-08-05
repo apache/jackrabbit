@@ -86,6 +86,11 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
     protected boolean externalBLOBs;
 
+    /**
+     * Whether the schema check must be done during initialization.
+     */
+    private boolean schemaCheckEnabled = true;
+
     // initial size of buffer used to serialize objects
     protected static final int INITIAL_BUFFER_SIZE = 1024;
 
@@ -184,6 +189,20 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         this.externalBLOBs = Boolean.valueOf(externalBLOBs).booleanValue();
     }
 
+    /**
+     * @return whether the schema check is enabled
+     */
+    public final boolean isSchemaCheckEnabled() {
+        return schemaCheckEnabled;
+    }
+
+    /**
+     * @param enabled set whether the schema check is enabled
+     */
+    public final void setSchemaCheckEnabled(boolean enabled) {
+        schemaCheckEnabled = enabled;
+    }
+
     //---------------------------------------------------< PersistenceManager >
     /**
      * {@inheritDoc}
@@ -208,7 +227,9 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         prepareSchemaObjectPrefix();
 
         // check if schema objects exist and create them if necessary
-        checkSchema();
+        if (isSchemaCheckEnabled()) {
+            checkSchema();
+        }
 
         // build sql statements
         buildSQLStatements();
