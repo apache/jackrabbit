@@ -999,11 +999,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
             fail("VersionHistory.restore(String,boolean) did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
-        try {
-            versionManager.restore(vHistory.getPath(), version, true);
-            fail("VersionHistory.restore(Version,boolean) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
     }
 
     /**

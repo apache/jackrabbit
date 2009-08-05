@@ -65,6 +65,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MergeNodeIteratorTest.class);
         suite.addTestSuite(MergeNodeTest.class);
         suite.addTestSuite(MergeShallowTest.class);
+        suite.addTestSuite(MergeActivityTest.class);
         suite.addTestSuite(MergeNonVersionableSubNodeTest.class);
         suite.addTestSuite(MergeSubNodeTest.class);
         

@@ -77,16 +77,16 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
 
     /**
      * @param state the state to restore
-     * @param version the version to restore
+     * @param v the version to restore
      * @param removeExisting remove existing flag
      * @throws RepositoryException if an error occurs
      *
      * @see javax.jcr.version.VersionManager#restore(String, Version, boolean)
      */
-    protected void restore(NodeStateEx state, Version version, boolean removeExisting)
+    protected void restore(NodeStateEx state, InternalVersion v, boolean removeExisting)
             throws RepositoryException {
         checkVersionable(state);
-        InternalVersion v = getVersion(version);
+
         // check if 'own' version
         if (!v.getVersionHistory().equals(getVersionHistory(state))) {
             String msg = "Unable to restore version. Not same version history.";
@@ -95,7 +95,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         }
         WriteOperation ops = startWriteOperation();
         try {
-            internalRestore(state, v, new DateVersionSelector(version.getCreated()), removeExisting);
+            internalRestore(state, v, new DateVersionSelector(v.getCreated()), removeExisting);
             ops.save();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
@@ -162,19 +162,19 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
      *
      * @param parent parent node
      * @param name desired name
-     * @param version version to restore
+     * @param v version to restore
      * @param removeExisting remove exiting flag
      * @throws RepositoryException if an error occurs
      */
-    protected void restore(NodeStateEx parent, Name name, Version version, boolean removeExisting)
+    protected void restore(NodeStateEx parent, Name name, InternalVersion v,
+                           boolean removeExisting)
             throws RepositoryException {
         // check if versionable node exists
-        InternalFrozenNode fn = ((VersionImpl) version).getInternalFrozenNode();
+        InternalFrozenNode fn = v.getFrozenNode();
         if (stateMgr.hasItemState(fn.getFrozenId())) {
             if (removeExisting) {
                 NodeStateEx existing = parent.getNode(fn.getFrozenId());
                 checkVersionable(existing);
-                InternalVersion v = getVersion(version);
 
                 // move versionable node below this one using the given "name"
                 WriteOperation ops = startWriteOperation();
@@ -200,7 +200,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
             // create new node below parent
             NodeStateEx state = parent.addNode(name, fn.getFrozenPrimaryType(), fn.getFrozenId());
             state.setMixins(fn.getFrozenMixinTypes());
-            restore(state, version, removeExisting);
+            restore(state, v, removeExisting);
         }
     }
 
@@ -373,8 +373,12 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         Set<Name> propNames = new HashSet<Name>();
         PropertyState[] props = freeze.getFrozenProperties();
         for (PropertyState prop : props) {
-            state.copyFrom(prop);
-            propNames.add(prop.getName());
+            // don't restore jcr:activity
+            Name name = prop.getName();
+            if (!name.equals(NameConstants.JCR_ACTIVITY)) {
+                state.copyFrom(prop);
+                propNames.add(name);
+            }
         }
 
         // For each property P present on N but not on F:

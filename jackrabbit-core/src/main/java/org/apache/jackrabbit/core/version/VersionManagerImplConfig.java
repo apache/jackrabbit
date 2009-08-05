@@ -72,7 +72,8 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
      * @return the node id of the configuration
      * @throws RepositoryException if an error occurs
      */
-    protected NodeId restore(NodeStateEx parent, Name name, InternalBaseline baseline)
+    protected NodeId restore(NodeStateEx parent, Name name,
+                             InternalBaseline baseline)
             throws RepositoryException {
         // check if nt:configuration exists
         NodeId configId = baseline.getConfigurationId();

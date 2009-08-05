@@ -41,13 +41,13 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.version.InternalActivity;
-import org.apache.jackrabbit.core.version.InternalBaseline;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.NodeStateEx;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionManagerImplConfig;
 import org.apache.jackrabbit.core.version.VersionSet;
+import org.apache.jackrabbit.core.version.InternalBaseline;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -216,11 +216,11 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             throws RepositoryException {
         // first check if node exists
         if (session.nodeExists(absPath)) {
-            // normal restore
-            NodeStateEx state = getNodeState(absPath,
-                    ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
-                    Permission.NONE);
-            restore(state, version, removeExisting);
+            String msg = "VersionManager.restore(String, Version, boolean) not " +
+                    "allowed on existing nodes. " +
+                    "use VersionManager.restore(Version, boolean) instead: " + absPath;
+            log.error(msg);
+            throw new VersionException(msg);
         } else {
             // parent has to exist
             Path path = session.getQPath(absPath);
@@ -231,8 +231,33 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             NodeStateEx state = getNodeState(parent,
                     ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
                     Permission.NONE);
-            restore(state, name, version, removeExisting);
+
+            // check if given version is a baseline
+            InternalVersion v = getVersion(version);
+            if (v instanceof InternalBaseline) {
+                restore(state, name, (InternalBaseline) v);
+            } else {
+                restore(state, name, v, removeExisting);
+            }
         }
+    }
+
+    /**
+     * Same as {@link #restore(String, String, boolean)} but to ensure
+     * backward compatibility for Node.restore(Version, boolean).
+     *
+     * @param node the node to restore
+     * @param version the version to restore
+     * @param removeExisting the remove existing flag
+     * @throws RepositoryException if an error occurs
+     */
+    protected void restore(NodeImpl node, Version version, boolean removeExisting)
+            throws RepositoryException {
+        NodeStateEx state = getNodeState(node.getPath(),
+                ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+                Permission.NONE);
+        InternalVersion v = getVersion(version);
+        restore(state, v, removeExisting);
     }
 
     /**
@@ -359,13 +384,17 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      */
     public Node createConfiguration(String absPath, Version baseline)
             throws RepositoryException {
+        if (baseline != null) {
+            throw new UnsupportedRepositoryOperationException("createConfiguration(String, Version) with baseline is no longer supported.");
+        }
+        return createConfiguration(absPath);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Node createConfiguration(String absPath) throws RepositoryException {
         if (session.nodeExists(absPath)) {
-            // refuse to create a configuration if a baseline is specified.
-            if (baseline != null) {
-                String msg = "Create configuration to existing nodes only allowed without specifying a basline: " + absPath;
-                log.error(msg);
-                throw new UnsupportedRepositoryOperationException(msg);
-            }
             NodeStateEx state = getNodeState(absPath,
                     ItemValidator.CHECK_LOCK | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD,
                     Permission.VERSION_MNGMT);
@@ -382,31 +411,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             NodeId configId = createConfiguration(state);
             return session.getNodeById(configId);
         } else {
-            // check if supplied baseline is valid
-            if (baseline == null) {
-                String msg = "CreateConfiguration on non-existing path must supply a baseline: " + absPath;
-                log.error(msg);
-                throw new UnsupportedRepositoryOperationException(msg);
-            }
-            VersionImpl v = (VersionImpl) baseline;
-            InternalBaseline bl = vMgr.getBaseline(v.getNodeId());
-            if (bl == null) {
-                String msg = "Supplied version is not a baseline: " + v.safeGetJCRPath();
-                log.error(msg);
-                throw new UnsupportedRepositoryOperationException(msg);
-            }
-
-            // parent has to exist
-            Path path = session.getQPath(absPath);
-            Path parentPath = path.getAncestor(1);
-            Name name = path.getNameElement().getName();
-            NodeImpl parent = session.getItemManager().getNode(parentPath);
-
-            NodeStateEx state = getNodeState(parent,
-                    ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
-                    Permission.NONE);
-            NodeId configId = restore(state, name, bl);
-            return session.getNodeById(configId);
+            String msg = "Create configuration node must exist: " + absPath;
+            log.error(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
         }
     }
 

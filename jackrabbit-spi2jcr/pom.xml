@@ -72,6 +72,7 @@
                 org.apache.jackrabbit.test.api.ShareableNodeTest
                 org.apache.jackrabbit.test.api.version.simple
                 org.apache.jackrabbit.test.api.version.ActivitiesTest
+                org.apache.jackrabbit.test.api.version.MergeActivityTest
                 org.apache.jackrabbit.test.api.version.ConfigurationsTest
                 org.apache.jackrabbit.test.api.LifecycleTest
                 org.apache.jackrabbit.test.api.RepositoryDescriptorTest#testRequiredDescriptors
