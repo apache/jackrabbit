@@ -121,10 +121,32 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
-        itemStateProvider.addListener(this);
 
         // setup shareable nodes cache
         shareableNodesCache = new ShareableNodesCache();
+    }
+
+    /**
+     * Creates a new per-session instance <code>ItemManager</code> instance.
+     *
+     * @param itemStateProvider the item state provider associated with
+     *                          the new instance
+     * @param hierMgr           the hierarchy manager
+     * @param session           the session associated with the new instance
+     * @param rootNodeDef       the definition of the root node
+     * @param rootNodeId        the id of the root node
+     * @return the item manager instance.
+     */
+    public static ItemManager createInstance(
+            SessionItemStateManager itemStateProvider,
+            HierarchyManager hierMgr,
+            SessionImpl session,
+            NodeDefinition rootNodeDef,
+            NodeId rootNodeId) {
+        ItemManager mgr = new ItemManager(itemStateProvider, hierMgr,
+                session, rootNodeDef, rootNodeId);
+        itemStateProvider.addListener(mgr);
+        return mgr;
     }
 
     /**
