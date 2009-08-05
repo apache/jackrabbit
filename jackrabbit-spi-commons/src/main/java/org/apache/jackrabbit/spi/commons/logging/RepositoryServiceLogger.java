@@ -526,12 +526,12 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "mergeActivity(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), activityId});
     }
 
-    public NodeId createConfiguration(final SessionInfo sessionInfo, final NodeId nodeId, final NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    public NodeId createConfiguration(final SessionInfo sessionInfo, final NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
         return (NodeId) execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.createConfiguration(unwrap(sessionInfo), nodeId, baselineId);
+                return service.createConfiguration(unwrap(sessionInfo), nodeId);
             }
-        }, "createConfiguration(SessionInfo, NodeId, NodeId)", new Object[]{unwrap(sessionInfo), nodeId, baselineId});
+        }, "createConfiguration(SessionInfo, NodeId, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
     public String[] getSupportedQueryLanguages(final SessionInfo sessionInfo) throws RepositoryException {

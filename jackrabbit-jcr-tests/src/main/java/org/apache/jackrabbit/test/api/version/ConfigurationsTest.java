@@ -74,7 +74,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
     }
 
     public void testCreateConfiguration() throws Exception {
-        Node config = vm.createConfiguration(versionableNode.getPath(), null);
+        Node config = vm.createConfiguration(versionableNode.getPath());
         assertNotNull(config);
         NodeType nt = config.getPrimaryNodeType();
         assertTrue("created node must be subtype of nt:configuration", nt.isNodeType(ntConfiguration));
@@ -91,7 +91,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
 
     public void testCreateConfigurationNotVersionableFails() throws Exception {
         try {
-            vm.createConfiguration(nonVersionableNode.getPath(), null);
+            vm.createConfiguration(nonVersionableNode.getPath());
             fail("Create configuration must fail for non-versionable node");
         } catch (UnsupportedRepositoryOperationException e) {
             // ignore
@@ -99,9 +99,9 @@ public class ConfigurationsTest extends AbstractVersionTest {
     }
 
     public void testCreateConfigurationTwiceFails() throws Exception {
-        vm.createConfiguration(versionableNode.getPath(), null);
+        vm.createConfiguration(versionableNode.getPath());
         try {
-            vm.createConfiguration(versionableNode.getPath(), null);
+            vm.createConfiguration(versionableNode.getPath());
             fail("Create configuration must fail if versionable is already a configuration");
         } catch (UnsupportedRepositoryOperationException e) {
             // ignore
@@ -109,7 +109,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
     }
 
     public void testConfigurationsPath() throws Exception {
-        Node config = vm.createConfiguration(versionableNode.getPath(), null);
+        Node config = vm.createConfiguration(versionableNode.getPath());
         assertNotNull(config);
         NodeType nt = config.getPrimaryNodeType();
         assertTrue("created node must be subtype of nt:configuration", nt.isNodeType(ntConfiguration));
@@ -119,7 +119,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
     }
 
     public void testCheckinConfigFailsWithUnversionedChild() throws Exception {
-        Node config = vm.createConfiguration(versionableNode.getPath(), null);
+        Node config = vm.createConfiguration(versionableNode.getPath());
         try {
             vm.checkin(config.getPath());
             fail("Checkin configuration must fail one of the recorded versions is not versioned.");
@@ -130,7 +130,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
 
     public void testCheckinConfig() throws Exception {
         vm.checkin(versionableNode.getPath());
-        Node config = vm.createConfiguration(versionableNode.getPath(), null);
+        Node config = vm.createConfiguration(versionableNode.getPath());
         vm.checkin(config.getPath());
     }
 
@@ -138,7 +138,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
         // create configuration
         String path = versionableNode.getPath();
         Version baseVersion = vm.checkin(path);
-        Node config = vm.createConfiguration(path, null);
+        Node config = vm.createConfiguration(path);
         // record baseline
         Version baseline = vm.checkin(config.getPath());
 
@@ -167,7 +167,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
         // create configuration
         String path = versionableNode.getPath();
         vm.checkin(path);
-        Node config = vm.createConfiguration(path, null);
+        Node config = vm.createConfiguration(path);
         // record baseline
         Version baseline = vm.checkin(config.getPath());
 
@@ -189,7 +189,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
         // create configuration
         String path = versionableNode.getPath();
         vm.checkin(path);
-        Node config = vm.createConfiguration(path, null);
+        Node config = vm.createConfiguration(path);
         // record baseline
         Version baseline = vm.checkin(config.getPath());
 
@@ -205,7 +205,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
         // create configuration
         String path = versionableNode.getPath();
         Version bv1 = vm.checkpoint(path);
-        Node config = vm.createConfiguration(path, null);
+        Node config = vm.createConfiguration(path);
         // record baseline 1 (should contain bv1)
         Version bl1 = vm.checkpoint(config.getPath());
         // create bv2
@@ -228,7 +228,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
         // create configuration
         String path = versionableNode.getPath();
         Version bv1 = vm.checkpoint(path);
-        Node config = vm.createConfiguration(path, null);
+        Node config = vm.createConfiguration(path);
         String configPath = config.getPath();
 
         // record baseline 1 (should contain bv1)

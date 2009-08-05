@@ -537,7 +537,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see Session#hasCapability(String, Object, Map)
      */
-    public boolean hasCapability(String methodName, Object target, Map arguments)
+    public boolean hasCapability(String methodName, Object target, Object[] arguments)
             throws RepositoryException {
         // most trivial implementation allowed by the specification.
         return true;

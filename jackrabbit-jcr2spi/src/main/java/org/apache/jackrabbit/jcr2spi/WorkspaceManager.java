@@ -1106,7 +1106,7 @@ public class WorkspaceManager
          * @see OperationVisitor#visit(CreateConfiguration)
          */
         public void visit(CreateConfiguration operation) throws RepositoryException {
-            NodeId configId = service.createConfiguration(sessionInfo, operation.getNodeId(), operation.getBaselineId());
+            NodeId configId = service.createConfiguration(sessionInfo, operation.getNodeId());
             operation.setNewConfigurationId(configId);
         }
     }

@@ -356,7 +356,7 @@ public final class JCASessionHandle implements XASession {
         return getSession().getRetentionManager();
     }
 
-    public boolean hasCapability(String arg0, Object arg1, Map arg2)
+    public boolean hasCapability(String arg0, Object arg1, Object[] arg2)
             throws RepositoryException {
         return getSession().hasCapability(arg0, arg1, arg2);
     }

@@ -434,10 +434,10 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.mergeActivity(sessionInfo, activityId);
     }
 
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId)
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId)
             throws RepositoryException {
 
-        return repositoryService.createConfiguration(sessionInfo, nodeId, baselineId);
+        return repositoryService.createConfiguration(sessionInfo, nodeId);
     }
 
     //----------------------------------------------------------< Searching >---

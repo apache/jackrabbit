@@ -306,7 +306,7 @@ public class RepositoryFactoryImplTest extends TestCase {
             return null;
         }
 
-        public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
             return null;
         }
 

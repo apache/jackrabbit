@@ -335,7 +335,7 @@ class ClusterSession implements Session {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    public boolean hasCapability(String arg0, Object arg1, Map arg2)
+    public boolean hasCapability(String arg0, Object arg1, Object[] arg2)
             throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }

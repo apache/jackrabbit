@@ -201,8 +201,8 @@ public class VersionManagerImpl implements VersionManager {
         workspaceManager.execute(op);
     }
 
-    public NodeEntry createConfiguration(NodeState nodeState, NodeState baselineState) throws UnsupportedRepositoryOperationException, RepositoryException {
-        CreateConfiguration op = CreateConfiguration.create(nodeState, baselineState, this);
+    public NodeEntry createConfiguration(NodeState nodeState) throws UnsupportedRepositoryOperationException, RepositoryException {
+        CreateConfiguration op = CreateConfiguration.create(nodeState, this);
         workspaceManager.execute(op);
         return workspaceManager.getHierarchyManager().getNodeEntry(op.getNewConfigurationId());
     }

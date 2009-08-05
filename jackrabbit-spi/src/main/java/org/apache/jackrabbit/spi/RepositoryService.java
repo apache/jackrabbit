@@ -845,11 +845,12 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @param nodeId
-     * @param baselineId   @return  @throws UnsupportedRepositoryOperationException
+     * @return
+     * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException
-     * @see javax.jcr.version.VersionManager#createConfiguration(String, Version)
+     * @see javax.jcr.version.VersionManager#createConfiguration(String)
      */
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException;
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     //----------------------------------------------------------< Searching >---
     /**

@@ -201,12 +201,12 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
     }
 
     /**
-     * @see javax.jcr.version.VersionManager#createConfiguration(String, Version)
+     * @see javax.jcr.version.VersionManager#createConfiguration(String)
      */
-    public Node createConfiguration(String absPath, Version baseline) throws UnsupportedRepositoryOperationException, RepositoryException {
+    public Node createConfiguration(String absPath) throws UnsupportedRepositoryOperationException, RepositoryException {
         // TODO: add validation
         NodeImpl n = (NodeImpl) itemManager.getNode(resolver.getQPath(absPath));
-        NodeEntry entry = vMgr.createConfiguration((NodeState) n.getItemState(), (NodeState) ((NodeImpl) baseline).getItemState());
+        NodeEntry entry = vMgr.createConfiguration((NodeState) n.getItemState());
         return (Node) itemManager.getItem(entry);
     }
 
