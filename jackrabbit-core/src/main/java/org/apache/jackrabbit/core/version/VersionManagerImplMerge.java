@@ -317,9 +317,42 @@ abstract public class VersionManagerImplMerge extends VersionManagerImplRestore 
         if (!srcNode.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
             return null;
         }
-        // test versions
+        // test versions. the following code could be simplified but is
+        // intentionally expanded for follow the spec.
         InternalVersion v = getBaseVersion(state);
         InternalVersion vp = getBaseVersion(srcNode);
+        if (!isCheckedOut(state)) {
+            // If N is currently checked-in then:
+            if (vp.isMoreRecent(v)) {
+                // - If V' is an eventual successor of V, then the merge result for N is update.
+                return srcNode;
+            } else if (v.equals(vp) || v.isMoreRecent(vp)) {
+                // - If V' is an eventual predecessor of V or if V and V' are identical (i.e., are
+                // actually the same version), then the merge result for N is leave.
+                return null;
+            } else {
+                // - If V is neither an eventual successor of, eventual predecessor of, nor
+                // identical with V', then the merge result for N is failed. This is the case
+                // where N and N' represent divergent branches of the version graph.
+
+                // failed is covered below
+            }
+        } else {
+            // If N is currently checked-out then:
+            if (v.equals(vp) || v.isMoreRecent(vp)) {
+                // - If V' is an eventual predecessor of V or if V and V' are identical (i.e., are
+                //   actually the same version), then the merge result for
+                //   N is leave.
+                return null;
+            } else {
+                // - If any other relationship holds between V and V', then the merge result
+                //   for N is fail.
+
+                // failed is covered below
+            }
+        }
+
+
         if (vp.isMoreRecent(v) && !isCheckedOut(state)) {
             // I f V' is a successor (to any degree) of V, then the merge result for
             // N is update. This case can be thought of as the case where N' is
