@@ -48,6 +48,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Calendar;
+import java.text.DateFormat;
 
 /**
  * A <code>MultiIndex</code> consists of a {@link VolatileIndex} and multiple
@@ -90,12 +92,18 @@ public class MultiIndex {
     /**
      * Names of active persistent index directories.
      */
-    private final IndexInfos indexNames = new IndexInfos("indexes");
+    private final IndexInfos indexNames;
+
+    /**
+     * The history of the multi index.
+     */
+    private final IndexHistory indexHistory;
 
     /**
      * Names of index directories that can be deleted.
+     * Key = index name (String), Value = time when last in use (Long)
      */
-    private final Set<String> deletable = new HashSet<String>();
+    private final Map<String, Long> deletable = new HashMap<String, Long>();
 
     /**
      * List of open persistent indexes. This list may also contain an open
@@ -182,7 +190,7 @@ public class MultiIndex {
     /**
      * The RedoLog of this <code>MultiIndex</code>.
      */
-    private final RedoLog redoLog;
+    private RedoLog redoLog;
 
     /**
      * The indexing queue with pending text extraction jobs.
@@ -227,16 +235,18 @@ public class MultiIndex {
         this.indexDir = directoryManager.getDirectory(".");
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
-        this.redoLog = new RedoLog(indexDir);
         this.excludedIDs = new HashSet<NodeId>(excludedIDs);
         this.nsMappings = handler.getNamespaceMappings();
 
-        if (indexNames.exists(indexDir)) {
-            indexNames.read(indexDir);
-        }
+        indexNames = new IndexInfos(indexDir, "indexes");
+
+        this.indexHistory = new IndexHistory(indexDir,
+                handler.getMaxHistoryAge() * 1000);
 
         // as of 1.5 deletable file is not used anymore
         removeDeletable();
+
+        this.redoLog = RedoLog.create(indexDir, indexNames.getGeneration());
 
         // initialize IndexMerger
         merger = new IndexMerger(this, handler.getIndexMergerPoolSize());
@@ -250,8 +260,9 @@ public class MultiIndex {
         this.indexingQueue = new IndexingQueue(store);
 
         // open persistent indexes
-        for (int i = 0; i < indexNames.size(); i++) {
-            String name = indexNames.getName(i);
+        for (Iterator it = indexNames.iterator(); it.hasNext(); ) {
+            IndexInfo info = (IndexInfo) it.next();
+            String name = info.getName();
             // only open if it still exists
             // it is possible that indexNames still contains a name for
             // an index that has been deleted, but indexNames has not been
@@ -263,7 +274,8 @@ public class MultiIndex {
             }
             PersistentIndex index = new PersistentIndex(name,
                     handler.getTextAnalyzer(), handler.getSimilarity(),
-                    cache, indexingQueue, directoryManager);
+                    cache, indexingQueue, directoryManager,
+                    handler.getMaxHistoryAge());
             index.setMaxFieldLength(handler.getMaxFieldLength());
             index.setUseCompoundFile(handler.getUseCompoundFile());
             index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
@@ -372,7 +384,7 @@ public class MultiIndex {
                 NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
                 count = createIndex(rootState, rootPath, stateMgr, count);
                 executeAndLog(new Commit(getTransactionId()));
-                log.info("Created initial index for {} nodes", new Long(count));
+                log.info("Created initial index for {} nodes", count);
                 releaseMultiReader();
                 scheduleFlushTask();
             } catch (Exception e) {
@@ -419,7 +431,6 @@ public class MultiIndex {
             long transactionId = nextTransactionId++;
             executeAndLog(new Start(transactionId));
 
-            boolean flush = false;
 
             for (NodeId id : remove) {
                 executeAndLog(new DeleteNode(transactionId, id));
@@ -429,15 +440,10 @@ public class MultiIndex {
                 if (document != null) {
                     executeAndLog(new AddNode(transactionId, document));
                     // commit volatile index if needed
-                    flush |= checkVolatileCommit();
+                    checkVolatileCommit();
                 }
             }
             executeAndLog(new Commit(transactionId));
-
-            // flush whole index when volatile index has been commited.
-            if (flush) {
-                flush();
-            }
         } finally {
             synchronized (updateMonitor) {
                 updateInProgress = false;
@@ -489,8 +495,7 @@ public class MultiIndex {
             if (num > 0) {
                 redoLog.append(new DeleteNode(getTransactionId(), id));
             }
-            for (int i = 0; i < indexes.size(); i++) {
-                PersistentIndex index = (PersistentIndex) indexes.get(i);
+            for (PersistentIndex index : indexes) {
                 // only remove documents from registered indexes
                 if (indexNames.contains(index.getName())) {
                     int removed = index.removeDocument(idTerm);
@@ -583,11 +588,12 @@ public class MultiIndex {
         try {
             index = new PersistentIndex(indexName,
                     handler.getTextAnalyzer(), handler.getSimilarity(),
-                    cache, indexingQueue, directoryManager);
+                    cache, indexingQueue, directoryManager,
+                    handler.getMaxHistoryAge());
         } catch (IOException e) {
             // do some clean up
             if (!directoryManager.delete(indexName)) {
-                deletable.add(indexName);
+                deletable.put(indexName, Long.MIN_VALUE);
             }
             throw e;
         }
@@ -643,7 +649,7 @@ public class MultiIndex {
             long time = System.currentTimeMillis();
             index.getReadOnlyIndexReader(true).release();
             time = System.currentTimeMillis() - time;
-            log.debug("hierarchy cache initialized in {} ms", new Long(time));
+            log.debug("hierarchy cache initialized in {} ms", time);
         }
 
         synchronized (this) {
@@ -735,8 +741,7 @@ public class MultiIndex {
             if (multiReader == null) {
                 List<ReadOnlyIndexReader> readerList =
                     new ArrayList<ReadOnlyIndexReader>();
-                for (int i = 0; i < indexes.size(); i++) {
-                    PersistentIndex pIdx = (PersistentIndex) indexes.get(i);
+                for (PersistentIndex pIdx : indexes) {
                     if (indexNames.contains(pIdx.getName())) {
                         readerList.add(pIdx.getReadOnlyIndexReader(initCache));
                     }
@@ -786,8 +791,8 @@ public class MultiIndex {
                 log.error("Exception while closing search index.", e);
             }
             volatileIndex.close();
-            for (int i = 0; i < indexes.size(); i++) {
-                ((PersistentIndex) indexes.get(i)).close();
+            for (PersistentIndex index : indexes) {
+                index.close();
             }
 
             // close indexing queue
@@ -860,9 +865,9 @@ public class MultiIndex {
     }
 
     /**
-     * Removes the <code>index</code> from the list of active sub indexes. The
-     * Index is not acutally deleted right away, but postponed to the transaction
-     * commit.
+     * Removes the <code>index</code> from the list of active sub indexes.
+     * Depending on the {@link SearchIndex#getMaxHistoryAge()}, the
+     * Index is not deleted right away.
      * <p/>
      * This method does not close the index, but rather expects that the index
      * has already been closed.
@@ -875,7 +880,7 @@ public class MultiIndex {
         indexNames.removeName(index.getName());
         synchronized (deletable) {
             log.debug("Moved " + index.getName() + " to deletable");
-            deletable.add(index.getName());
+            deletable.put(index.getName(), System.currentTimeMillis());
         }
     }
 
@@ -887,33 +892,63 @@ public class MultiIndex {
      */
     void flush() throws IOException {
         synchronized (this) {
-            // commit volatile index
-            executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
-            commitVolatileIndex();
 
+            // only start transaction when there is something to commit
+            boolean transactionStarted = false;
+
+            if (volatileIndex.getNumDocuments() > 0) {
+                // commit volatile index
+                executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
+                transactionStarted = true;
+                commitVolatileIndex();
+            }
+
+            boolean indexesModified = false;
             // commit persistent indexes
             for (int i = indexes.size() - 1; i >= 0; i--) {
-                PersistentIndex index = (PersistentIndex) indexes.get(i);
+                PersistentIndex index = indexes.get(i);
                 // only commit indexes we own
                 // index merger also places PersistentIndex instances in indexes,
                 // but does not make them public by registering the name in indexNames
                 if (indexNames.contains(index.getName())) {
+                    long gen = index.getCurrentGeneration();
                     index.commit();
+                    if (gen != index.getCurrentGeneration()) {
+                        indexesModified = true;
+                        log.debug("Committed revision {} of index {}",
+                                Long.toString(index.getCurrentGeneration(), Character.MAX_RADIX),
+                                index.getName());
+                    }
                     // check if index still contains documents
                     if (index.getNumDocuments() == 0) {
+                        if (!transactionStarted) {
+                            executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
+                            transactionStarted = true;
+                        }
                         executeAndLog(new DeleteIndex(getTransactionId(), index.getName()));
                     }
                 }
             }
-            executeAndLog(new Commit(getTransactionId()));
 
-            indexNames.write(indexDir);
+            if (transactionStarted) {
+                executeAndLog(new Commit(getTransactionId()));
+            }
 
-            // reset redo log
-            redoLog.clear();
+            if (transactionStarted || indexesModified || redoLog.hasEntries()) {
+                indexNames.write();
+
+                indexHistory.addIndexInfos(indexNames);
+
+                // close redo.log and create a new one based
+                // on the new indexNames generation
+                redoLog.close();
+                redoLog = RedoLog.create(indexDir, indexNames.getGeneration());
+            }
 
             lastFlushTime = System.currentTimeMillis();
         }
+
+        indexHistory.pruneOutdated();
 
         // delete obsolete indexes
         attemptDelete();
@@ -952,12 +987,29 @@ public class MultiIndex {
      */
     private void enqueueUnusedSegments() throws IOException {
         // walk through index segments
-        String[] dirNames = directoryManager.getDirectoryNames();
-        for (int i = 0; i < dirNames.length; i++) {
-            if (dirNames[i].startsWith("_") && !indexNames.contains(dirNames[i])) {
-                deletable.add(dirNames[i]);
+        for (String name : directoryManager.getDirectoryNames()) {
+            if (!name.startsWith("_")) {
+                continue;
+            }
+            long lastUse = indexHistory.getLastUseOf(name);
+            if (lastUse != Long.MAX_VALUE) {
+                if (log.isDebugEnabled()) {
+                    String msg = "Segment " + name + " not is use anymore. ";
+                    if (lastUse != Long.MIN_VALUE) {
+                        Calendar cal = Calendar.getInstance();
+                        DateFormat df = DateFormat.getInstance();
+                        cal.setTimeInMillis(lastUse);
+                        msg += "Unused since: " + df.format(cal.getTime());
+                    } else {
+                        msg += "(orphaned)";
+                    }
+                    log.debug(msg);
+                }
+                deletable.put(name, lastUse);
             }
         }
+        // now prune outdated index infos
+        indexHistory.pruneOutdated();
     }
 
     private void scheduleFlushTask() {
@@ -967,6 +1019,8 @@ public class MultiIndex {
 
     /**
      * Resets the volatile index to a new instance.
+     *
+     * @throws IOException if the volatile index cannot be reset.
      */
     private void resetVolatileIndex() throws IOException {
         volatileIndex = new VolatileIndex(handler.getTextAnalyzer(),
@@ -1063,7 +1117,7 @@ public class MultiIndex {
      * <code>node</code>.
      *
      * @param node     the current NodeState.
-     * @param path     the path of the current node.
+     * @param path     the path of the current <code>node</code> state.
      * @param stateMgr the shared item state manager.
      * @param count    the number of nodes already indexed.
      * @return the number of nodes indexed so far.
@@ -1085,7 +1139,7 @@ public class MultiIndex {
         if (++count % 100 == 0) {
             PathResolver resolver = new DefaultNamePathResolver(
                     handler.getContext().getNamespaceRegistry());
-            log.info("indexing... {} ({})", resolver.getJCRPath(path), new Long(count));
+            log.info("indexing... {} ({})", resolver.getJCRPath(path), count);
         }
         if (count % 10 == 0) {
             checkIndexingQueue(true);
@@ -1109,16 +1163,21 @@ public class MultiIndex {
     }
 
     /**
-     * Attempts to delete all files recorded in {@link #deletable}.
+     * Attempts to delete all files that are older than
+     *{@link SearchIndex#getMaxHistoryAge()}.
      */
     private void attemptDelete() {
         synchronized (deletable) {
-            for (Iterator<String> it = deletable.iterator(); it.hasNext(); ) {
-                String indexName = it.next();
-                if (directoryManager.delete(indexName)) {
-                    it.remove();
-                } else {
-                    log.info("Unable to delete obsolete index: " + indexName);
+            for (Iterator<Map.Entry<String, Long>> it = deletable.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<String, Long> entry = it.next();
+                String indexName = entry.getKey();
+                long lastUse = entry.getValue();
+                if (System.currentTimeMillis() - handler.getMaxHistoryAge() * 1000 > lastUse) {
+                    if (directoryManager.delete(indexName)) {
+                        it.remove();
+                    } else {
+                        log.info("Unable to delete obsolete index: " + indexName);
+                    }
                 }
             }
         }
@@ -1204,7 +1263,7 @@ public class MultiIndex {
         // now update index with the remaining ones if there are any
         if (!finished.isEmpty()) {
             log.info("updating index with {} nodes from indexing queue.",
-                    new Long(finished.size()));
+                    finished.size());
 
             // remove documents from the queue
             for (NodeId id : finished.keySet()) {
@@ -1491,7 +1550,7 @@ public class MultiIndex {
         public void execute(MultiIndex index) throws IOException {
             PersistentIndex idx = index.getOrCreateIndex(indexName);
             if (!index.indexNames.contains(indexName)) {
-                index.indexNames.addName(indexName);
+                index.indexNames.addName(indexName, idx.getCurrentGeneration());
                 // now that the index is in the active list let the merger know about it
                 index.merger.indexAdded(indexName, idx.getNumDocuments());
             }
@@ -1856,7 +1915,7 @@ public class MultiIndex {
             if (num == 0) {
                 for (int i = index.indexes.size() - 1; i >= 0; i--) {
                     // only look in registered indexes
-                    PersistentIndex idx = (PersistentIndex) index.indexes.get(i);
+                    PersistentIndex idx = index.indexes.get(i);
                     if (index.indexNames.contains(idx.getName())) {
                         num = idx.removeDocument(idTerm);
                         if (num > 0) {
@@ -1938,6 +1997,8 @@ public class MultiIndex {
          * Creates a new VolatileCommit action.
          *
          * @param transactionId the id of the transaction that executes this action.
+         * @param targetIndex   the name of the index where the volatile index
+         *                      will be committed.
          */
         VolatileCommit(long transactionId, String targetIndex) {
             super(transactionId, Action.TYPE_VOLATILE_COMMIT);
