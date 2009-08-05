@@ -45,18 +45,19 @@ public class TransientFileFactory {
      * Queue where <code>MoribundFileReference</code> instances will be enqueued
      * once the associated target <code>File</code> objects have been gc'ed.
      */
-    private ReferenceQueue phantomRefQueue = new ReferenceQueue();
+    private final ReferenceQueue phantomRefQueue = new ReferenceQueue();
 
     /**
      * Collection of <code>MoribundFileReference</code> instances currently
      * being tracked.
      */
-    private Collection trackedRefs = Collections.synchronizedList(new ArrayList());
+    private final Collection trackedRefs =
+        Collections.synchronizedList(new ArrayList());
 
     /**
      * The reaper thread responsible for removing files awaiting deletion
      */
-    private final Thread reaper;
+    private final ReaperThread reaper;
 
     /**
      * Shutdown hook which removes all files awaiting deletion
@@ -150,8 +151,7 @@ public class TransientFileFactory {
         // @see java.lang.util.Collections.synchronizedList(java.util.List)
         synchronized(trackedRefs) {
             for (Iterator it = trackedRefs.iterator(); it.hasNext();) {
-                MoribundFileReference fileRef = (MoribundFileReference) it.next();
-                fileRef.delete();
+                ((MoribundFileReference) it.next()).delete();
             }
 
         }
@@ -163,7 +163,9 @@ public class TransientFileFactory {
                 // jvm shutdown sequence has already begun,
                 // silently ignore... 
             }
+            shutdownHook = null;
         }
+        reaper.stopWorking();
     }
 
     //--------------------------------------------------------< inner classes >
@@ -171,6 +173,8 @@ public class TransientFileFactory {
      * The reaper thread that will remove the files that are ready for deletion.
      */
     private class ReaperThread extends Thread {
+
+        private volatile boolean stopping = false;
 
         ReaperThread(String name) {
             super(name);
@@ -181,11 +185,15 @@ public class TransientFileFactory {
          * marker objects are reclaimed by the garbage collector.
          */
         public void run() {
-            while (true) {
+            while (!stopping) {
                 MoribundFileReference fileRef = null;
                 try {
                     // wait until a MoribundFileReference is ready for deletion
                     fileRef = (MoribundFileReference) phantomRefQueue.remove();
+                } catch (InterruptedException e) {
+                    if (stopping) {
+                        break;
+                    }
                 } catch (Exception e) {
                     // silently ignore...
                     continue;
@@ -195,6 +203,14 @@ public class TransientFileFactory {
                 fileRef.clear();
                 trackedRefs.remove(fileRef);
             }
+        }
+
+        /**
+         * Stops the reaper thread.
+         */
+        public void stopWorking() {
+            stopping = true;
+            interrupt();
         }
     }
 
@@ -206,7 +222,7 @@ public class TransientFileFactory {
         /**
          * The full path to the file being tracked.
          */
-        private String path;
+        private final String path;
 
         /**
          * Constructs an instance of this class from the supplied parameters.
