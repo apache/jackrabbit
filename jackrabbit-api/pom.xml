@@ -33,7 +33,7 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-api</artifactId>
-  <name>Jackrabbit API</name>
+  <name>Apache Jackrabbit API</name>
   <description>Jacrabbit-specific extensions to the JCR API</description>
   <packaging>bundle</packaging>
 
