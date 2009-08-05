@@ -28,6 +28,8 @@ import java.util.Calendar;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 
+import junit.framework.AssertionFailedError;
+
 /**
  * <code>GQLTest</code> performs tests on {@link GQL}.
  */
@@ -109,8 +111,7 @@ public class GQLTest extends AbstractQueryTest {
         Node file1 = addFile(testRootNode, "file1.txt", SAMPLE_CONTENT);
         superuser.save();
         String stmt = createStatement("\"quick brown\"");
-        RowIterator rows = GQL.execute(stmt, superuser, "jcr:content");
-        checkResult(rows, new Node[]{file1});
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
     }
 
     public void testExcludeTerm() throws RepositoryException {
@@ -146,11 +147,10 @@ public class GQLTest extends AbstractQueryTest {
         superuser.save();
         // only nt:resource
         String stmt = createStatement("quick type:\"nt:resource\"");
-        RowIterator rows = GQL.execute(stmt, superuser);
-        checkResult(rows, new Node[]{file.getNode("jcr:content")});
+        checkResultWithRetries(stmt, null, new Node[]{file.getNode("jcr:content")});
         // only nt:unstructured
         stmt = createStatement("quick type:\"nt:unstructured\"");
-        rows = GQL.execute(stmt, superuser);
+        RowIterator rows = GQL.execute(stmt, superuser);
         checkResult(rows, new Node[]{node});
     }
 
@@ -169,8 +169,7 @@ public class GQLTest extends AbstractQueryTest {
         superuser.save();
         // nt:hierarchyNode and sub types
         String stmt = createStatement("quick type:hierarchyNode");
-        RowIterator rows = GQL.execute(stmt, superuser, "jcr:content");
-        checkResult(rows, new Node[]{file});
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file});
     }
 
     public void testAutoPrefixType() throws RepositoryException {
@@ -180,11 +179,10 @@ public class GQLTest extends AbstractQueryTest {
         superuser.save();
         // only nt:resource
         String stmt = createStatement("quick type:resource");
-        RowIterator rows = GQL.execute(stmt, superuser);
-        checkResult(rows, new Node[]{file.getNode("jcr:content")});
+        checkResultWithRetries(stmt, null, new Node[]{file.getNode("jcr:content")});
         // only nt:unstructured
         stmt = createStatement("quick type:unstructured");
-        rows = GQL.execute(stmt, superuser);
+        RowIterator rows = GQL.execute(stmt, superuser);
         checkResult(rows, new Node[]{node});
     }
 
@@ -192,16 +190,14 @@ public class GQLTest extends AbstractQueryTest {
         Node file1 = addFile(testRootNode, "file1.txt", SAMPLE_CONTENT);
         superuser.save();
         String stmt = createStatement("\"jcr:mimeType\":text/plain");
-        RowIterator rows = GQL.execute(stmt, superuser, "jcr:content");
-        checkResult(rows, new Node[]{file1});
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
     }
 
     public void testAutoPrefix() throws RepositoryException {
         Node file1 = addFile(testRootNode, "file1.txt", SAMPLE_CONTENT);
         superuser.save();
         String stmt = createStatement("mimeType:text/plain");
-        RowIterator rows = GQL.execute(stmt, superuser, "jcr:content");
-        checkResult(rows, new Node[]{file1});
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
     }
 
     public void testCommonPathPrefix() throws RepositoryException {
@@ -210,14 +206,14 @@ public class GQLTest extends AbstractQueryTest {
         Node file3 = addFile(testRootNode, "file3.txt", SAMPLE_CONTENT);
         superuser.save();
         String stmt = createStatement("quick");
-        RowIterator rows = GQL.execute(stmt, superuser, "jcr:content");
-        checkResult(rows, new Node[]{file1, file2, file3});
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1, file2, file3});
     }
 
     public void testExcerpt() throws RepositoryException {
-        addFile(testRootNode, "file1.txt", SAMPLE_CONTENT);
+        Node file = addFile(testRootNode, "file1.txt", SAMPLE_CONTENT);
         superuser.save();
         String stmt = createStatement("quick");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file});
         RowIterator rows = GQL.execute(stmt, superuser, "jcr:content");
         assertTrue("Expected result", rows.hasNext());
         String excerpt = rows.nextRow().getValue("rep:excerpt()").getString();
@@ -309,5 +305,31 @@ public class GQLTest extends AbstractQueryTest {
 
     protected String createStatement(String stmt) {
         return "path:" + testRoot + " " + stmt;
+    }
+
+    /**
+     * Checks if the result contains exactly the <code>nodes</code>. If the
+     * result does not contain the
+     *
+     * @param gql the gql statement.
+     * @param cpp the common path prefix or <code>null</code>.
+     * @param nodes the expected nodes in the result set.
+     * @throws RepositoryException if an error occurs while reading from the result.
+     */
+    protected void checkResultWithRetries(String gql, String cpp, Node[] nodes)
+            throws RepositoryException {
+        for (int i = 0; i < 10; i++) {
+            try {
+                checkResult(GQL.execute(gql, superuser, cpp), nodes);
+                break;
+            } catch (AssertionFailedError e) {
+                try {
+                    // sleep for a second and retry
+                    Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    // ignore
+                }
+            }
+        }
     }
 }
