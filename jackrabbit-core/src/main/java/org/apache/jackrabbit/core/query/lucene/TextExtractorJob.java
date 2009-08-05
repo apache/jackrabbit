@@ -58,7 +58,7 @@ public class TextExtractorJob implements Runnable {
     /**
      * The extracted text. Set when the text extraction task completes.
      */
-    private transient String text = null;
+    private volatile String text = null;
 
     /**
      * Creates a new <code>TextExtractorJob</code> with the given
