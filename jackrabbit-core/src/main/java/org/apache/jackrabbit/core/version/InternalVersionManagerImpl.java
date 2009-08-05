@@ -377,14 +377,17 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             // the checkout.
 
             // we're currently leverage the fact, that only references to "real"
-            // workspaces are recorded.
+            // workspaces are recorded. so check all references if their sources
+            // exist in 'this' workspace
             if (stateMgr.hasNodeReferences(activityId)) {
                 try {
                     NodeReferences refs = stateMgr.getNodeReferences(activityId);
-                    if (refs.hasReferences()) {
-                        throw new ActivityViolationException("Unable to checkout. " +
-                                "Activity is already used for the same node in " +
-                                "another workspace.");
+                    for (PropertyId id: refs.getReferences()) {
+                        if (!state.hasNode(id.getParentId())) {
+                            throw new ActivityViolationException("Unable to checkout. " +
+                                    "Activity is already used for the same node in " +
+                                    "another workspace.");
+                        }
                     }
                 } catch (ItemStateException e) {
                     throw new RepositoryException("Error during checkout.", e);

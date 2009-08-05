@@ -3364,7 +3364,7 @@ public class NodeImpl extends ItemImpl implements Node {
     @Deprecated
     public void restore(Version version, boolean removeExisting)
             throws RepositoryException {
-        getVersionManagerImpl().restore(getPath(), version, removeExisting);
+        getVersionManagerImpl().restore(this, version, removeExisting);
     }
 
     /**
@@ -3373,8 +3373,12 @@ public class NodeImpl extends ItemImpl implements Node {
     @Deprecated
     public void restore(Version version, String relPath, boolean removeExisting)
             throws RepositoryException {
-        getVersionManagerImpl().restore(
+        if (hasNode(relPath)) {
+            getVersionManagerImpl().restore((NodeImpl) getNode(relPath), version, removeExisting);
+        } else {
+            getVersionManagerImpl().restore(
                 getPath() + "/" + relPath, version, removeExisting);
+        }
     }
 
     /**

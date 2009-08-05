@@ -92,7 +92,7 @@ public class ActivitiesTest extends AbstractVersionTest {
         }
     }
 
-    public void testActivitiesPath() throws Exception {
+    public void ignore_testActivitiesPath() throws Exception {
         
         Node an = null;
         
@@ -147,6 +147,6 @@ public class ActivitiesTest extends AbstractVersionTest {
             }
         }
     }
-    
+
 }
 

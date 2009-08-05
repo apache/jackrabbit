@@ -150,7 +150,13 @@ public class RestoreTest extends AbstractVersionTest {
      */
     public void testRestoreOnCheckedInNodeJcr2_2() throws RepositoryException {
         versionManager.checkin(versionableNode.getPath());
-        versionManager.restore(versionableNode.getPath(), version, true);
+        try {
+            versionManager.restore(versionableNode.getPath(), version, true);
+            fail("VersionManager.restore(String, Version, boolean) must fail on existing nodes.");
+        } catch (RepositoryException e) {
+            // ok
+        }
+        versionManager.restore(version, true);
     }
 
     /**
@@ -197,7 +203,13 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testRestoreOnCheckedOutNodeJcr2_2() throws RepositoryException {
-        versionManager.restore(versionableNode.getPath(), version, true);
+        try {
+            versionManager.restore(versionableNode.getPath(), version, true);
+            fail("VersionManager.restore(String, Version, boolean) must fail on existing nodes.");
+        } catch (RepositoryException e) {
+            // ok
+        }
+        versionManager.restore(version, true);
     }
 
     /**
@@ -244,7 +256,13 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testRestoreSetsIsCheckedOutToFalseJcr2_2() throws RepositoryException {
-        versionManager.restore(versionableNode.getPath(), version, true);
+        try {
+            versionManager.restore(versionableNode.getPath(), version, true);
+            fail("VersionManager.restore(String, Version, boolean) must fail on existing nodes.");
+        } catch (RepositoryException e) {
+            // ok
+        }
+        versionManager.restore(version, true);
         assertFalse("Restoring a node sets the jcr:isCheckedOut property to false", versionManager.isCheckedOut(versionableNode.getPath()));
     }
 
@@ -296,7 +314,13 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testRestoreCorrectPropertyJcr2_2() throws RepositoryException {
-        versionManager.restore(versionableNode.getPath(), version, true);
+        try {
+            versionManager.restore(versionableNode.getPath(), version, true);
+            fail("VersionManager.restore(String, Version, boolean) must fail on existing nodes.");
+        } catch (RepositoryException e) {
+            // ok
+        }
+        versionManager.restore(version, true);
         String value = versionableNode.getProperty(propertyName1).getString();
         assertEquals("Restoring a node must set the correct property.", propertyValue1, value);
     }
@@ -366,7 +390,7 @@ public class RestoreTest extends AbstractVersionTest {
         // modify node without calling save()
         try {
             versionableNode.setProperty(propertyName1, propertyValue);
-            versionManager.restore(versionableNode.getPath(), version, true);
+            versionManager.restore(version, true);
 
             fail("InvalidItemStateException must be thrown on attempt to restore a node having any unsaved changes pending.");
         } catch (InvalidItemStateException e) {
@@ -515,21 +539,6 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      * @see Node#restore(String, boolean)
      */
-    public void testRestoreNonVersionableNodeJcr2() throws RepositoryException {
-        try {
-            versionManager.restore(nonVersionableNode.getPath(), version, true);
-            fail("trying to restore on a non versionable node must throw UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException e) {
-            //success
-        }
-    }
-
-    /**
-     * Test restoring on a non-versionable node.
-     *
-     * @throws RepositoryException
-     * @see Node#restore(String, boolean)
-     */
     public void testRestoreNonVersionableNodeJcr2_2() throws RepositoryException {
         try {
             versionManager.restore(nonVersionableNode.getPath(), "foo", true);
@@ -565,21 +574,6 @@ public class RestoreTest extends AbstractVersionTest {
     public void testRestoreNonVersionableNode3() throws RepositoryException {
         try {
             nonVersionableNode.restore(version, true);
-            fail("Node.restore(Version, boolean) on a non versionable node must throw UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException e) {
-            //success
-        }
-    }
-
-    /**
-     * Test restoring on a non-versionable node.
-     *
-     * @throws RepositoryException
-     * @see Node#restore(Version, boolean)
-     */
-    public void testRestoreNonVersionableNode3Jcr2() throws RepositoryException {
-        try {
-            versionManager.restore(nonVersionableNode.getPath(), version, true);
             fail("Node.restore(Version, boolean) on a non versionable node must throw UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException e) {
             //success
@@ -698,7 +692,7 @@ public class RestoreTest extends AbstractVersionTest {
             versionManager.checkout(versionableNode.getPath());
             superuser.move(naa.getPath(), versionableNode2.getPath() + "/" + naa.getName());
             superuser.save();
-            versionManager.restore(versionableNode.getPath(), v, false);
+            versionManager.restore(v, false);
 
             fail("Node.restore( Version, boolean ): An ItemExistsException must be thrown if the node to be restored already exsits and removeExisting was set to false.");
         } catch (ItemExistsException e) {
@@ -803,14 +797,14 @@ public class RestoreTest extends AbstractVersionTest {
         versionManager.checkout(versionableNode.getPath());
         Version v2 = versionManager.checkin(versionableNode.getPath());
 
-        versionManager.restore(versionableNode.getPath(), v1, true);
+        versionManager.restore(v1, true);
         assertTrue("Node.restore('1.2') must not remove child node.", versionableNode.hasNode("child1"));
 
-        versionManager.restore(versionableNode.getPath(), version, true);
+        versionManager.restore(version, true);
         assertFalse("Node.restore('1.0') must remove child node.", versionableNode.hasNode("child1"));
 
         try {
-            versionManager.restore(versionableNode.getPath(), v2, true);
+            versionManager.restore(v2, true);
         } catch (RepositoryException e) {
             fail("Node.restore('1.3') must fail.");
         }
@@ -1074,7 +1068,7 @@ public class RestoreTest extends AbstractVersionTest {
         versionManager.checkout(testRoot.getPath());
 
         // restore version 1.0
-        versionManager.restore(testRoot.getPath(), v1, true);
+        versionManager.restore(v1, true);
 
         // check order
         NodeIterator iter = testRoot.getNodes();
@@ -1279,7 +1273,7 @@ public class RestoreTest extends AbstractVersionTest {
         versionManager.checkin(testRoot.getPath());
 
         // restore version 1.0
-        versionManager.restore(testRoot.getPath(), v1, true);
+        versionManager.restore(v1, true);
 
         // check order
         NodeIterator iter = testRoot.getNodes();
@@ -1320,7 +1314,7 @@ public class RestoreTest extends AbstractVersionTest {
         versionManager.checkin(testRoot.getPath());
 
         // restore version 1.0
-        versionManager.restore(testRoot.getPath(), v1, true);
+        versionManager.restore(v1, true);
 
         // check order
         NodeIterator iter = testRoot.getNodes();
@@ -1438,7 +1432,7 @@ public class RestoreTest extends AbstractVersionTest {
             expected.append(iter.nextVersion().getName()).append(",");
         }
         // restore version
-        versionManager.restore(versionableNode.getPath(), version, true);
+        versionManager.restore(version, true);
         // append new base version
         expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(",");
 

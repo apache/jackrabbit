@@ -118,27 +118,6 @@ public class ConfigurationsTest extends AbstractVersionTest {
                 config.getPath(), config.getPath().startsWith(PREFIX));
     }
 
-    public void testCreateConfigExistingPathWithBaselineFails() throws Exception {
-        Node config = vm.createConfiguration(versionableNode.getPath(), null);
-        Version baseline = vm.getBaseVersion(config.getPath());
-        try {
-            vm.createConfiguration(versionableNode2.getPath(), baseline);
-            fail("Create configuration must fail if baseline is specified and path exists");
-        } catch (UnsupportedRepositoryOperationException e) {
-            // ignore
-        }
-    }
-
-    public void testCreateConfigWithNoBaselineVersionFails() throws Exception {
-        try {
-            Version noBaseline = vm.getBaseVersion(versionableNode.getPath());
-            vm.createConfiguration(testRoot + "/nonExistingNode", noBaseline);
-            fail("Create configuration must fail if baseline is not a baseline");
-        } catch (UnsupportedRepositoryOperationException e) {
-            // ignore
-        }
-    }
-
     public void testCheckinConfigFailsWithUnversionedChild() throws Exception {
         Node config = vm.createConfiguration(versionableNode.getPath(), null);
         try {
@@ -170,16 +149,18 @@ public class ConfigurationsTest extends AbstractVersionTest {
         testRootNode.getSession().save();
 
         // and try to restore it
-        config = vm.createConfiguration(path, baseline);
+        vm.restore(path, baseline, true);
+
+        versionableNode = testRootNode.getSession().getNode(path);
+        Version baseVersion2 = vm.getBaseVersion(versionableNode.getPath());
+        assertTrue("restored node must have former base version.", baseVersion.isSame(baseVersion2));
+
+        config = versionableNode.getProperty("jcr:configuration").getNode();
 
         // base version of config must be baseline
         assertTrue("Baseversion of restored config must be given baseline.",
                 vm.getBaseVersion(config.getPath()).isSame(baseline));
 
-        versionableNode = testRootNode.getSession().getNode(path);
-        Version baseVersion2 = vm.getBaseVersion(versionableNode.getPath());
-
-        assertTrue("restored node must have former base version.", baseVersion.isSame(baseVersion2));
     }
 
     public void testCreateConfigWithNonExistentParentFails() throws Exception {
@@ -197,7 +178,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
         testRootNode.getSession().save();
 
         try {
-            vm.createConfiguration("/non/existent/parent", baseline);
+            vm.restore("/non/existent/parent", baseline, true);
             fail("Create configuration must fail if parent does not exist.");
         } catch (RepositoryException e) {
             // ignore
@@ -213,7 +194,7 @@ public class ConfigurationsTest extends AbstractVersionTest {
         Version baseline = vm.checkin(config.getPath());
 
         try {
-            vm.createConfiguration(testRoot + "/nonExisting", baseline);
+            vm.restore(testRoot + "/nonExisting", baseline, true);
             fail("Create configuration must fail if config recorded in baseline already exists.");
         } catch (RepositoryException e) {
             // ignore

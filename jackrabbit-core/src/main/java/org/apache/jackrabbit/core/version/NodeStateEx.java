@@ -481,6 +481,15 @@ public class NodeStateEx {
     }
 
     /**
+     * Checks if the given property state exists
+     * @param id property id
+     * @return <code>true</code> if the property state exists
+     */
+    public boolean hasProperty(PropertyId id) {
+        return stateMgr.hasItemState(id);
+    }
+
+    /**
      * Adds a new child node with the given name
      *
      * @param nodeName name of the new node
