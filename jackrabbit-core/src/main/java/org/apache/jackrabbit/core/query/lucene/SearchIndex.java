@@ -755,9 +755,6 @@ public class SearchIndex extends AbstractQueryHandler {
         try {
             index.getIndexingQueue().waitUntilEmpty();
             index.flush();
-            // flush may have pushed nodes into the indexing queue
-            // -> wait again
-            index.getIndexingQueue().waitUntilEmpty();
         } catch (IOException e) {
             throw new RepositoryException("Failed to flush the index", e);
         }

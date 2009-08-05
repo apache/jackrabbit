@@ -436,7 +436,7 @@ public class MultiIndex {
 
             // flush whole index when volatile index has been commited.
             if (flush) {
-                internalFlush();
+                flush();
             }
         } finally {
             synchronized (updateMonitor) {
@@ -781,7 +781,7 @@ public class MultiIndex {
                 log.error("Exception while closing search index.", e);
             }
             try {
-                internalFlush();
+                flush();
             } catch (IOException e) {
                 log.error("Exception while closing search index.", e);
             }
@@ -881,33 +881,11 @@ public class MultiIndex {
 
     /**
      * Flushes this <code>MultiIndex</code>. Persists all pending changes and
-     * resets the redo log. When this method returned the {@link #multiReader}
-     * is released and and set to <code>null</code>.
-     *
-     * @throws IOException if the flush fails.
-     */
-    void flush() throws IOException {
-        synchronized (updateMonitor) {
-            updateInProgress = true;
-        }
-        try {
-            internalFlush();
-        } finally {
-            synchronized (updateMonitor) {
-                updateInProgress = false;
-                updateMonitor.notifyAll();
-                releaseMultiReader();
-            }
-        }
-    }
-
-    /**
-     * Flushes this <code>MultiIndex</code>. Persists all pending changes and
      * resets the redo log.
      *
      * @throws IOException if the flush fails.
      */
-    private void internalFlush() throws IOException {
+    void flush() throws IOException {
         synchronized (this) {
             // commit volatile index
             executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
@@ -1176,7 +1154,18 @@ public class MultiIndex {
                 if (redoLog.hasEntries()) {
                     log.debug("Flushing index after being idle for "
                             + idleTime + " ms.");
-                    flush();
+                    synchronized (updateMonitor) {
+                        updateInProgress = true;
+                    }
+                    try {
+                        flush();
+                    } finally {
+                        synchronized (updateMonitor) {
+                            updateInProgress = false;
+                            updateMonitor.notifyAll();
+                            releaseMultiReader();
+                        }
+                    }
                 }
             } catch (IOException e) {
                 log.error("Unable to commit volatile index", e);
