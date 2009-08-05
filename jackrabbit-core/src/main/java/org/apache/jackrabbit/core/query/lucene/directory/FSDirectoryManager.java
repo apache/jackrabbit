@@ -73,11 +73,15 @@ public class FSDirectoryManager implements DirectoryManager {
                 return pathname.isDirectory();
             }
         });
-        String[] names = new String[dirs.length];
-        for (int i = 0; i < dirs.length; i++) {
-            names[i] = dirs[i].getName();
+        if (dirs != null) {
+            String[] names = new String[dirs.length];
+            for (int i = 0; i < dirs.length; i++) {
+                names[i] = dirs[i].getName();
+            }
+            return names;
+        } else {
+            throw new IOException("listFiles for " + baseDir.getPath() + " returned null");
         }
-        return names;
     }
 
     /**
@@ -91,10 +95,14 @@ public class FSDirectoryManager implements DirectoryManager {
         }
         // delete files first
         File[] files = directory.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (!files[i].delete()) {
-                return false;
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                if (!files[i].delete()) {
+                    return false;
+                }
             }
+        } else {
+            return false;
         }
         // now delete directory itself
         return directory.delete();
