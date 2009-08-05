@@ -104,6 +104,21 @@ public class ExcerptTest extends AbstractQueryTest {
                 "apache jackrabbit");
     }
 
+    public void testEncodeIllegalCharsNoHighlights() throws RepositoryException {
+        String text = "bla <strong>bla</strong> bla";
+        String excerpt = createExcerpt("bla &lt;strong&gt;bla&lt;/strong&gt; bla");
+        Node n = testRootNode.addNode(nodeName1);
+        n.setProperty("text", text);
+        n.setProperty("other", "foo");
+        superuser.save();
+
+        String stmt = getStatement("foo");
+        QueryResult result = executeQuery(stmt);
+        RowIterator rows = result.getRows();
+        assertEquals(1, rows.getSize());
+        assertEquals(excerpt, rows.nextRow().getValue("rep:excerpt(text)").getString());
+    }
+
     private void checkExcerpt(String text, String fragmentText, String terms)
             throws RepositoryException {
         String excerpt = createExcerpt(fragmentText);
