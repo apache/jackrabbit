@@ -715,7 +715,7 @@ public class MultiIndex {
      * @return an <code>IndexReader</code>.
      * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
      */
-    public CachingMultiIndexReader getIndexReader(boolean initCache) throws IOException {
+    public synchronized CachingMultiIndexReader getIndexReader(boolean initCache) throws IOException {
         synchronized (updateMonitor) {
             if (multiReader != null) {
                 multiReader.acquire();
