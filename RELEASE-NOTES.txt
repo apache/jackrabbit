@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha5
+Release Notes -- Apache Jackrabbit -- Version 2.0-alpha7
 
 Introduction
 ------------
@@ -52,15 +52,14 @@ the Jackrabbit issue tracker. Most of them have already been partially
 implemented, but the issue will only be marked as resolved once no more
 related work is needed.
 
-Open (6 issues)
+Open (5 issues)
   [JCR-1588] JSR 283: Access Control
   [JCR-1590] JSR 283: Locking
   [JCR-1712] JSR 283: JCR Names
   [JCR-2085] test case (TCK) maintenance for JCR 2.0
-  [JCR-2140] JSR 283: Configuration and Baselines
   [JCR-2208] update tests so that both Query.XPATH and Query:SQL are ...
 
-Resolved (37 issues)
+Resolved (38 issues)
   [JCR-1564] JSR 283 namespace handling
   [JCR-1565] JSR 283 lifecycle management
   [JCR-1589] JSR 283: Retention & Hold Management
@@ -94,6 +93,7 @@ Resolved (37 issues)
   [JCR-2116] JSR 283: Built-In Node Types
   [JCR-2117] JSR 283: adopt CND syntax changes
   [JCR-2137] Use type StaticOperand for fullTextSearchExpression
+  [JCR-2140] JSR 283: Configuration and Baselines
   [JCR-2198] Text.escapeIllegalJCRChars should be adjusted to match the ...
   [JCR-2200] Implement Query.getBindVariableNames()
   [JCR-2201] Implement QueryResult.getSelectorNames()
