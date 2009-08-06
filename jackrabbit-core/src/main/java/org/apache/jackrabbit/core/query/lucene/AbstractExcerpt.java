@@ -235,8 +235,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
         try {
             while ((t = ts.next(t)) != null) {
                 String termText = t.term();
-                TermVectorOffsetInfo[] info =
-                        (TermVectorOffsetInfo[]) termMap.get(termText);
+                TermVectorOffsetInfo[] info = termMap.get(termText);
                 if (info == null) {
                     info = new TermVectorOffsetInfo[1];
                 } else {
@@ -264,7 +263,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             public TermVectorOffsetInfo[] getOffsets(int index) {
                 TermVectorOffsetInfo[] info = TermVectorOffsetInfo.EMPTY_OFFSET_INFO;
                 if (index >= 0 && index < terms.length) {
-                    info = (TermVectorOffsetInfo[]) termMap.get(terms[index]);
+                    info = termMap.get(terms[index]);
                 }
                 return info;
             }
@@ -284,7 +283,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             public int[] getTermFrequencies() {
                 int[] freqs = new int[terms.length];
                 for (int i = 0; i < terms.length; i++) {
-                    freqs[i] = ((TermVectorOffsetInfo[]) termMap.get(terms[i])).length;
+                    freqs[i] = termMap.get(terms[i]).length;
                 }
                 return freqs;
             }

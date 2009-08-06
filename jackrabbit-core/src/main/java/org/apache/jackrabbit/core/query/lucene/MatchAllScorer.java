@@ -135,15 +135,16 @@ class MatchAllScorer extends Scorer {
      * @throws IOException if an error occurs while reading from
      *                     the search index.
      */
+    @SuppressWarnings({"unchecked"})
     private void calculateDocFilter() throws IOException {
         PerQueryCache cache = PerQueryCache.getInstance();
-        Map readerCache = (Map) cache.get(MatchAllScorer.class, reader);
+        Map<String, BitSet> readerCache = (Map<String, BitSet>) cache.get(MatchAllScorer.class, reader);
         if (readerCache == null) {
-            readerCache = new HashMap();
+            readerCache = new HashMap<String, BitSet>();
             cache.put(MatchAllScorer.class, reader, readerCache);
         }
         // get BitSet for field
-        docFilter = (BitSet) readerCache.get(field);
+        docFilter = readerCache.get(field);
 
         if (docFilter != null) {
             // use cached BitSet;

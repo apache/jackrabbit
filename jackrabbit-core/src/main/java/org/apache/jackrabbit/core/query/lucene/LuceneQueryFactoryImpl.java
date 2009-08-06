@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeType;
@@ -126,7 +125,7 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
      * {@inheritDoc}
      */
     public Query create(SelectorImpl selector) throws RepositoryException {
-        List terms = new ArrayList();
+        List<Term> terms = new ArrayList<Term>();
         String mixinTypesField = npResolver.getJCRName(NameConstants.JCR_MIXINTYPES);
         String primaryTypeField = npResolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
 
@@ -177,11 +176,11 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
         }
         Query q;
         if (terms.size() == 1) {
-            q = new JackrabbitTermQuery((Term) terms.get(0));
+            q = new JackrabbitTermQuery(terms.get(0));
         } else {
             BooleanQuery b = new BooleanQuery();
-            for (Iterator it = terms.iterator(); it.hasNext();) {
-                b.add(new JackrabbitTermQuery((Term) it.next()), BooleanClause.Occur.SHOULD);
+            for (Term term : terms) {
+                b.add(new JackrabbitTermQuery(term), BooleanClause.Occur.SHOULD);
             }
             q = b;
         }

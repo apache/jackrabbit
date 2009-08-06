@@ -141,11 +141,10 @@ public class IndexMigration {
             Fieldable[] fields = doc.getFieldables(FieldNames.PROPERTIES);
             if (fields != null) {
                 doc.removeFields(FieldNames.PROPERTIES);
-                for (int i = 0; i < fields.length; i++) {
-                    String value = fields[i].stringValue();
+                for (Fieldable field : fields) {
+                    String value = field.stringValue();
                     value = value.replace('\uFFFF', '[');
-                    doc.add(new Field(FieldNames.PROPERTIES, value,
-                            Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+                    doc.add(new Field(FieldNames.PROPERTIES, value, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
                 }
             }
             return doc;

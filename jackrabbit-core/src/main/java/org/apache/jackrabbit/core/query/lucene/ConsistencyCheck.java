@@ -233,7 +233,7 @@ class ConsistencyCheck {
                 node = parent;
             }
             for (int i = elements.size() - 1; i > -1; i--) {
-                ChildNodeEntry entry = (ChildNodeEntry) elements.get(i);
+                ChildNodeEntry entry = elements.get(i);
                 path.append('/').append(entry.getName().getLocalName());
                 if (entry.getIndex() > 1) {
                     path.append('[').append(entry.getIndex()).append(']');

@@ -107,18 +107,16 @@ public class JackrabbitQueryParser extends QueryParser {
      */
     protected Query getSynonymQuery(String field, String termStr)
             throws ParseException {
-        List synonyms = new ArrayList();
+        List<BooleanClause> synonyms = new ArrayList<BooleanClause>();
         synonyms.add(new BooleanClause(getFieldQuery(field, termStr),
                 BooleanClause.Occur.SHOULD));
         if (synonymProvider != null) {
-            String[] terms = synonymProvider.getSynonyms(termStr);
-            for (int i = 0; i < terms.length; i++) {
-                synonyms.add(new BooleanClause(getFieldQuery(field, terms[i]),
-                        BooleanClause.Occur.SHOULD));
+            for (String term : synonymProvider.getSynonyms(termStr)) {
+                synonyms.add(new BooleanClause(getFieldQuery(field, term), BooleanClause.Occur.SHOULD));
             }
         }
         if (synonyms.size() == 1) {
-            return ((BooleanClause) synonyms.get(0)).getQuery();
+            return synonyms.get(0).getQuery();
         } else {
             return getBooleanQuery(synonyms);
         }

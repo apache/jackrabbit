@@ -162,8 +162,8 @@ public final class CachingMultiIndexReader
      * {@inheritDoc}
      */
     protected synchronized void doClose() throws IOException {
-        for (int i = 0; i < subReaders.length; i++) {
-            subReaders[i].release();
+        for (ReadOnlyIndexReader subReader : subReaders) {
+            subReader.release();
         }
     }
 
@@ -185,12 +185,12 @@ public final class CachingMultiIndexReader
         Term term = new Term(FieldNames.UUID, id.toString());
         int doc;
         long tick;
-        for (int i = 0; i < subReaders.length; i++) {
-            TermDocs docs = subReaders[i].termDocs(term);
+        for (ReadOnlyIndexReader subReader : subReaders) {
+            TermDocs docs = subReader.termDocs(term);
             try {
                 if (docs.next()) {
                     doc = docs.doc();
-                    tick = subReaders[i].getCreationTick();
+                    tick = subReader.getCreationTick();
                     return new ForeignSegmentDocId(doc, tick);
                 }
             } finally {
@@ -204,8 +204,7 @@ public final class CachingMultiIndexReader
      * {@inheritDoc}
      */
     public int getDocumentNumber(ForeignSegmentDocId docId) {
-        OffsetReader r = (OffsetReader) readersByCreationTick.get(
-                new Long(docId.getCreationTick()));
+        OffsetReader r = readersByCreationTick.get(docId.getCreationTick());
         if (r != null && !r.reader.isDeleted(docId.getDocNumber())) {
             return r.offset + docId.getDocNumber();
         }

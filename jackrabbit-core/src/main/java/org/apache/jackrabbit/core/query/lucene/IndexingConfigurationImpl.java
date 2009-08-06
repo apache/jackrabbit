@@ -96,7 +96,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
     /**
      * The {@link IndexingRule}s inside this configuration.
      */
-    private Map configElements = new HashMap();
+    private Map<Name, List<IndexingRule>> configElements = new HashMap<Name, List<IndexingRule>>();
 
     /**
      * The indexing aggregates inside this configuration.
@@ -106,7 +106,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
     /**
      * The configured analyzers for indexing properties.
      */
-    private Map analyzers = new HashMap();
+    private Map<String, Analyzer> analyzers = new HashMap<String, Analyzer>();
 
     /**
      * {@inheritDoc}
@@ -120,7 +120,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
 
         NodeTypeRegistry ntReg = context.getNodeTypeRegistry();
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
-        List idxAggregates = new ArrayList();
+        List<AggregateRule> idxAggregates = new ArrayList<AggregateRule>();
         NodeList indexingConfigs = config.getChildNodes();
         for (int i = 0; i < indexingConfigs.getLength(); i++) {
             Node configNode = indexingConfigs.item(i);
@@ -128,15 +128,15 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                 IndexingRule element = new IndexingRule(configNode);
                 // register under node type and all its sub types
                 log.debug("Found rule '{}' for NodeType '{}'", element, element.getNodeTypeName());
-                for (int n = 0; n < ntNames.length; n++) {
-                    if (ntReg.getEffectiveNodeType(ntNames[n]).includesNodeType(element.getNodeTypeName())) {
-                        List perNtConfig = (List) configElements.get(ntNames[n]);
+                for (Name ntName : ntNames) {
+                    if (ntReg.getEffectiveNodeType(ntName).includesNodeType(element.getNodeTypeName())) {
+                        List<IndexingRule> perNtConfig = configElements.get(ntName);
                         if (perNtConfig == null) {
-                            perNtConfig = new ArrayList();
-                            configElements.put(ntNames[n], perNtConfig);
+                            perNtConfig = new ArrayList<IndexingRule>();
+                            configElements.put(ntName, perNtConfig);
                         }
-                        log.debug("Registering it for name '{}'", ntNames[n]);
-                        perNtConfig.add(new IndexingRule(element, ntNames[n]));
+                        log.debug("Registering it for name '{}'", ntName);
+                        perNtConfig.add(new IndexingRule(element, ntName));
                     }
                 }
             } else if (configNode.getNodeName().equals("aggregate")) {
@@ -187,8 +187,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             }
 
         }
-        aggregateRules = (AggregateRule[]) idxAggregates.toArray(
-                new AggregateRule[idxAggregates.size()]);
+        aggregateRules = idxAggregates.toArray(new AggregateRule[idxAggregates.size()]);
     }
 
     /**
@@ -303,7 +302,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      */
     public Analyzer getPropertyAnalyzer(String fieldName) {
         if (analyzers.containsKey(fieldName)) {
-            return (Analyzer) analyzers.get(fieldName);
+            return analyzers.get(fieldName);
         }
         return null;
     }
@@ -317,30 +316,27 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * @return the indexing rule or <code>null</code> if none applies.
      */
     private IndexingRule getApplicableIndexingRule(NodeState state) {
-        List rules = null;
-        List r = (List) configElements.get(state.getNodeTypeName());
+        List<IndexingRule> rules = null;
+        List<IndexingRule> r = configElements.get(state.getNodeTypeName());
         if (r != null) {
-            rules = new ArrayList();
+            rules = new ArrayList<IndexingRule>();
             rules.addAll(r);
         }
 
-        Iterator it = state.getMixinTypeNames().iterator();
-        while (it.hasNext()) {
-            r = (List) configElements.get(it.next());
+        for (Name name : state.getMixinTypeNames()) {
+            r = configElements.get(name);
             if (r != null) {
                 if (rules == null) {
-                    rules = new ArrayList();
+                    rules = new ArrayList<IndexingRule>();
                 }
                 rules.addAll(r);
             }
         }
 
         if (rules != null) {
-            it = rules.iterator();
-            while (it.hasNext()) {
-                IndexingRule ir = (IndexingRule) it.next();
-                if (ir.appliesTo(state)) {
-                    return ir;
+            for (IndexingRule rule : rules) {
+                if (rule.appliesTo(state)) {
+                    return rule;
                 }
             }
         }
@@ -381,8 +377,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      *                                prefix.
      */
     private void createPropertyConfigs(Node config,
-                                       Map propConfigs,
-                                       List namePatterns)
+                                       Map<Name, PropertyConfig> propConfigs,
+                                       List<NamePattern> namePatterns)
             throws IllegalNameException, NamespaceException {
         NodeList childNodes = config.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
@@ -404,24 +400,21 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                 boolean nodeScopeIndex = true;
                 Node nsIndex = attributes.getNamedItem("nodeScopeIndex");
                 if (nsIndex != null) {
-                    nodeScopeIndex = Boolean.valueOf(
-                            nsIndex.getNodeValue()).booleanValue();
+                    nodeScopeIndex = Boolean.valueOf(nsIndex.getNodeValue());
                 }
 
                 // get isRegexp flag
                 boolean isRegexp = false;
                 Node regexp = attributes.getNamedItem("isRegexp");
                 if (regexp != null) {
-                    isRegexp = Boolean.valueOf(
-                            regexp.getNodeValue()).booleanValue();
+                    isRegexp = Boolean.valueOf(regexp.getNodeValue());
                 }
 
                 // get useInExcerpt flag
                 boolean useInExcerpt = true;
                 Node excerpt = attributes.getNamedItem("useInExcerpt");
                 if (excerpt != null) {
-                    useInExcerpt = Boolean.valueOf(
-                            excerpt.getNodeValue()).booleanValue();
+                    useInExcerpt = Boolean.valueOf(excerpt.getNodeValue());
                 }
 
                 PropertyConfig pc = new PropertyConfig(
@@ -607,12 +600,12 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         /**
          * Map of {@link PropertyConfig}. Key=Name of property.
          */
-        private final Map propConfigs;
+        private final Map<Name, PropertyConfig> propConfigs;
 
         /**
          * List of {@link NamePattern}s.
          */
-        private final List namePatterns;
+        private final List<NamePattern> namePatterns;
 
         /**
          * An expression based on a relative path.
@@ -651,8 +644,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             this.nodeTypeName = getNodeTypeName(config);
             this.condition = getCondition(config);
             this.boost = getNodeBoost(config);
-            this.propConfigs = new HashMap();
-            this.namePatterns = new ArrayList();
+            this.propConfigs = new HashMap<Name, PropertyConfig>();
+            this.namePatterns = new ArrayList<NamePattern>();
             createPropertyConfigs(config, propConfigs, namePatterns);
         }
 
@@ -712,11 +705,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          */
         public boolean isIncludedInNodeScopeIndex(Name propertyName) {
             PropertyConfig config = getConfig(propertyName);
-            if (config != null) {
-                return config.nodeScopeIndex;
-            } else {
-                return false;
-            }
+            return config != null && config.nodeScopeIndex;
         }
 
         /**
@@ -730,11 +719,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          */
         public boolean useInExcerpt(Name propertyName) {
             PropertyConfig config = getConfig(propertyName);
-            if (config != null) {
-                return config.useInExcerpt;
-            } else {
-                return true;
-            }
+            return config == null || config.useInExcerpt;
         }
 
         /**
@@ -749,11 +734,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             if (!nodeTypeName.equals(state.getNodeTypeName())) {
                 return false;
             }
-            if (condition == null) {
-                return true;
-            } else {
-                return condition.evaluate(state);
-            }
+            return condition == null || condition.evaluate(state);
         }
 
         //-------------------------< internal >---------------------------------
@@ -765,14 +746,13 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          *         property.
          */
         private PropertyConfig getConfig(Name propertyName) {
-            PropertyConfig config = (PropertyConfig) propConfigs.get(propertyName);
+            PropertyConfig config = propConfigs.get(propertyName);
             if (config != null) {
                 return config;
             } else if (namePatterns.size() > 0) {
                 Path path = PATH_FACTORY.create(propertyName);
                 // check patterns
-                for (Iterator it = namePatterns.iterator(); it.hasNext(); ) {
-                    NamePattern np = (NamePattern) it.next();
+                for (NamePattern np : namePatterns) {
                     if (np.matches(path)) {
                         return np.getConfig();
                     }
@@ -974,8 +954,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                     PropertyState propState =
                             (PropertyState) ism.getItemState(propId);
                     InternalValue[] values = propState.getValues();
-                    for (int i = 0; i < values.length; i++) {
-                        if (values[i].toString().equals(propertyValue)) {
+                    for (InternalValue value : values) {
+                        if (value.toString().equals(propertyValue)) {
                             return true;
                         }
                     }

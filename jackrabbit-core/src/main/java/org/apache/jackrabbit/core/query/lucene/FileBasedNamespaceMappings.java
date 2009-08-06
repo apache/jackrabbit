@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -58,12 +57,12 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
     /**
      * Map of uris indexed by prefixes
      */
-    private Map prefixToURI = new HashMap();
+    private Map<String, String> prefixToURI = new HashMap<String, String>();
 
     /**
      * Map of prefixes indexed by uris
      */
-    private Map uriToPrefix = new HashMap();
+    private Map<String, String> uriToPrefix = new HashMap<String, String>();
 
     /**
      * Current prefix count.
@@ -95,7 +94,7 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
         if (!prefixToURI.containsKey(prefix)) {
             throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
         }
-        return (String) prefixToURI.get(prefix);
+        return prefixToURI.get(prefix);
     }
 
     /**
@@ -109,7 +108,7 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
      *                            mapping could not be stored.
      */
     public synchronized String getPrefix(String uri) throws NamespaceException {
-        String prefix = (String) uriToPrefix.get(uri);
+        String prefix = uriToPrefix.get(uri);
         if (prefix == null) {
             // make sure prefix is not taken
             while (prefixToURI.get(String.valueOf(prefixCount)) != null) {
@@ -144,9 +143,8 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
                 props.load(in);
 
                 // read mappings from properties
-                Iterator iter = props.keySet().iterator();
-                while (iter.hasNext()) {
-                    String prefix = (String) iter.next();
+                for (Object o : props.keySet()) {
+                    String prefix = (String) o;
                     String uri = props.getProperty(prefix);
                     log.debug(prefix + " -> " + uri);
                     prefixToURI.put(prefix, uri);
@@ -169,12 +167,7 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
         Properties props = new Properties();
 
         // store mappings in properties
-        Iterator iter = prefixToURI.keySet().iterator();
-        while (iter.hasNext()) {
-            String prefix = (String) iter.next();
-            String uri = (String) prefixToURI.get(prefix);
-            props.setProperty(prefix, uri);
-        }
+        props.putAll(prefixToURI);
 
         OutputStream out = new FileOutputStream(storage);
         try {
