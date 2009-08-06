@@ -87,7 +87,8 @@ public class ChildNodesQueryHits extends AbstractQueryHits {
 
     /**
      * Fetches the next {@link #childHits}
-     * @throws IOException
+     *
+     * @throws IOException if an error occurs while reading from the index.
      */
     private void fetchNextChildHits() throws IOException {
         if (childHits != null) {

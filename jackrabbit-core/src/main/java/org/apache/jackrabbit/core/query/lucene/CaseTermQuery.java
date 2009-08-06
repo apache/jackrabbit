@@ -70,12 +70,6 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
 
     private final class CaseTermEnum extends FilteredTermEnum {
 
-        private final int nameLength;
-
-        private final OffsetCharSequence termText;
-
-        private final OffsetCharSequence currentTerm;
-
         CaseTermEnum(IndexReader reader) throws IOException {
             // gather all terms that match
             // keep them in order and remember the doc frequency as value
@@ -88,10 +82,10 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
             // lower case character and another one with an initial upper case
             // character
             List<RangeScan> rangeScans = new ArrayList<RangeScan>(2);
-            nameLength = FieldNames.getNameLength(term.text());
+            int nameLength = FieldNames.getNameLength(term.text());
             String propName = term.text().substring(0, nameLength);
-            this.termText = new OffsetCharSequence(nameLength, term.text());
-            this.currentTerm = new OffsetCharSequence(nameLength, term.text(), transform);
+            OffsetCharSequence termText = new OffsetCharSequence(nameLength, term.text());
+            OffsetCharSequence currentTerm = new OffsetCharSequence(nameLength, term.text(), transform);
 
             try {
                 // start with a term using the lower case character for the first
@@ -175,7 +169,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
 
                 public int docFreq() {
                     Integer docFreq = orderedTerms.get(current);
-                    return docFreq != null ? docFreq.intValue() : 0;
+                    return docFreq != null ? docFreq : 0;
                 }
 
                 public void close() {

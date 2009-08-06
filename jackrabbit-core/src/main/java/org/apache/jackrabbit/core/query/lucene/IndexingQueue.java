@@ -51,7 +51,7 @@ class IndexingQueue {
     /**
      * Maps UUID {@link String}s to {@link Document}s.
      */
-    private final Map pendingDocuments = new HashMap();
+    private final Map<String, Document> pendingDocuments = new HashMap<String, Document>();
 
     /**
      * Flag that indicates whether this indexing queue had been
@@ -95,18 +95,18 @@ class IndexingQueue {
             reader.release();
         }
         String[] uuids = queueStore.getPending();
-        for (int i = 0; i < uuids.length; i++) {
+        for (String uuid : uuids) {
             try {
-                Document doc = index.createDocument(new NodeId(uuids[i]));
-                pendingDocuments.put(uuids[i], doc);
+                Document doc = index.createDocument(new NodeId(uuid));
+                pendingDocuments.put(uuid, doc);
                 log.debug("added node {}. New size of indexing queue: {}",
-                        uuids[i], new Integer(pendingDocuments.size()));
+                        uuid, pendingDocuments.size());
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid UUID in indexing queue store: " + uuids[i]);
+                log.warn("Invalid UUID in indexing queue store: " + uuid);
             } catch (RepositoryException e) {
                 // node does not exist anymore
-                log.debug("Node with uuid {} does not exist anymore", uuids[i]);
-                queueStore.removeUUID(uuids[i]);
+                log.debug("Node with uuid {} does not exist anymore", uuid);
+                queueStore.removeUUID(uuid);
             }
         }
         initialized = true;
@@ -119,7 +119,7 @@ class IndexingQueue {
      */
     public Document[] getFinishedDocuments() {
         checkInitialized();
-        List finished = new ArrayList();
+        List<Document> finished = new ArrayList<Document>();
         synchronized (this) {
             finished.addAll(pendingDocuments.values());
         }
@@ -131,7 +131,7 @@ class IndexingQueue {
                 it.remove();
             }
         }
-        return (Document[]) finished.toArray(new Document[finished.size()]);
+        return finished.toArray(new Document[finished.size()]);
     }
 
     /**
@@ -145,11 +145,11 @@ class IndexingQueue {
      */
     public synchronized Document removeDocument(String uuid) {
         checkInitialized();
-        Document doc = (Document) pendingDocuments.remove(uuid);
+        Document doc = pendingDocuments.remove(uuid);
         if (doc != null) {
             queueStore.removeUUID(uuid);
             log.debug("removed node {}. New size of indexing queue: {}",
-                    uuid, new Integer(pendingDocuments.size()));
+                    uuid, pendingDocuments.size());
             notifyIfEmpty();
         }
         return doc;
@@ -166,9 +166,9 @@ class IndexingQueue {
     public synchronized Document addDocument(Document doc) {
         checkInitialized();
         String uuid = doc.get(FieldNames.UUID);
-        Document existing = (Document) pendingDocuments.put(uuid, doc);
+        Document existing = pendingDocuments.put(uuid, doc);
         log.debug("added node {}. New size of indexing queue: {}",
-                uuid, new Integer(pendingDocuments.size()));
+                uuid, pendingDocuments.size());
         if (existing == null) {
             // document wasn't present, add it to the queue store
             queueStore.addUUID(uuid);
@@ -183,9 +183,9 @@ class IndexingQueue {
     public synchronized void close() {
         checkInitialized();
         // go through pending documents and close readers
-        Iterator it = pendingDocuments.values().iterator();
+        Iterator<Document> it = pendingDocuments.values().iterator();
         while (it.hasNext()) {
-            Document doc = (Document) it.next();
+            Document doc = it.next();
             Util.disposeDocument(doc);
             it.remove();
         }

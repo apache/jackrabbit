@@ -33,7 +33,6 @@ import java.util.BitSet;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -205,7 +204,7 @@ public class RangeQuery extends Query implements Transformable {
          */
         protected Scorer createScorer(IndexReader reader) {
             return new RangeQueryScorer(searcher.getSimilarity(), reader);
-        };
+        }
 
         /**
          * Returns this <code>RangeQuery</code>.
@@ -279,13 +278,14 @@ public class RangeQuery extends Query implements Transformable {
         /**
          * The map to store the results.
          */
-        private final Map resultMap;
+        private final Map<String, BitSet> resultMap;
 
         /**
          * Creates a new RangeQueryScorer.
          * @param similarity the similarity implementation.
          * @param reader the index reader to use.
          */
+        @SuppressWarnings({"unchecked"})
         RangeQueryScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
             this.reader = reader;
@@ -302,14 +302,14 @@ public class RangeQuery extends Query implements Transformable {
             this.cacheKey = key.toString();
             // check cache
             PerQueryCache cache = PerQueryCache.getInstance();
-            Map m = (Map) cache.get(RangeQueryScorer.class, reader);
+            Map<String, BitSet> m = (Map<String, BitSet>) cache.get(RangeQueryScorer.class, reader);
             if (m == null) {
-                m = new HashMap();
+                m = new HashMap<String, BitSet>();
                 cache.put(RangeQueryScorer.class, reader, m);
             }
             resultMap = m;
 
-            BitSet result = (BitSet) resultMap.get(cacheKey);
+            BitSet result = resultMap.get(cacheKey);
             if (result == null) {
                 result = new BitSet(reader.maxDoc());
             } else {
@@ -380,7 +380,7 @@ public class RangeQuery extends Query implements Transformable {
             if (propNameLength > 0) {
                 namePrefix = lowerTerm.text().substring(0, propNameLength);
             }
-            List startTerms = new ArrayList(2);
+            List<Term> startTerms = new ArrayList<Term>(2);
 
             if (transform == TRANSFORM_NONE || lowerTerm.text().length() <= propNameLength) {
                 // use lowerTerm as is
@@ -397,25 +397,20 @@ public class RangeQuery extends Query implements Transformable {
                 startTerms.add(new Term(lowerTerm.field(), termText.toString()));
             }
 
-            Iterator it = startTerms.iterator();
-            while (it.hasNext()) {
-                Term startTerm = (Term) it.next();
-
+            for (Term startTerm : startTerms) {
                 TermEnum terms = reader.terms(startTerm);
                 try {
                     TermDocs docs = reader.termDocs();
                     try {
                         do {
                             Term term = terms.term();
-                            if (term != null
-                                    && term.field() == testField
-                                    && term.text().startsWith(namePrefix)) {
+                            if (term != null && term.field() == testField && term.text().startsWith(namePrefix)) {
                                 if (checkLower) {
                                     int compare = termCompare(term.text(), lowerTerm.text(), propNameLength);
                                     if (compare > 0 || compare == 0 && inclusive) {
                                         // do not check lower term anymore if no
                                         // transformation is done on the term enum
-                                        checkLower = transform == TRANSFORM_NONE ? false : true;
+                                        checkLower = transform != TRANSFORM_NONE;
                                     } else {
                                         // continue with next term
                                         continue;
@@ -452,7 +447,7 @@ public class RangeQuery extends Query implements Transformable {
                             } else {
                                 break;
                             }
-                        } while(terms.next());
+                        } while (terms.next());
                     } finally {
                         docs.close();
                     }

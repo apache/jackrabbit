@@ -344,10 +344,10 @@ abstract class DocId {
         public String toString() {
             StringBuffer sb = new StringBuffer("MultiUUIDDocId(");
             String separator = "";
-            for (int i = 0; i < docIds.length; i++) {
+            for (UUIDDocId docId : docIds) {
                 sb.append(separator);
                 separator = ", ";
-                sb.append(docIds[i].id);
+                sb.append(docId.id);
             }
             sb.append(")");
             return sb.toString();

@@ -56,7 +56,7 @@ public class AncestorNodeJoin extends AbstractCondition {
     /**
      * Reusable list of ancestor document numbers.
      */
-    private final List ancestors = new ArrayList();
+    private final List<Integer> ancestors = new ArrayList<Integer>();
 
     /**
      * Creates a new ancestor node join condition.
@@ -77,11 +77,10 @@ public class AncestorNodeJoin extends AbstractCondition {
         int idx = getIndex(context, contextSelectorName);
         ScoreNode[] nodes;
         while ((nodes = context.nextScoreNodes()) != null) {
-            Integer docNum = new Integer(nodes[idx].getDoc(reader));
+            Integer docNum = nodes[idx].getDoc(reader);
             ancestors.clear();
-            collectAncestors(docNum.intValue());
-            for (int i = 0; i < ancestors.size(); i++) {
-                Integer doc = (Integer) ancestors.get(i);
+            collectAncestors(docNum);
+            for (Integer doc : ancestors) {
                 contextIndex.addScoreNodes(doc, nodes);
             }
         }
@@ -94,7 +93,7 @@ public class AncestorNodeJoin extends AbstractCondition {
      */
     public ScoreNode[][] getMatchingScoreNodes(ScoreNode ancestor)
             throws IOException {
-        Integer doc = new Integer(ancestor.getDoc(reader));
+        Integer doc = ancestor.getDoc(reader);
         return contextIndex.getScoreNodes(doc);
     }
 
@@ -108,14 +107,13 @@ public class AncestorNodeJoin extends AbstractCondition {
     private void collectAncestors(int doc) throws IOException {
         docNums = resolver.getParents(doc, docNums);
         if (docNums.length == 1) {
-            ancestors.add(new Integer(docNums[0]));
+            ancestors.add(docNums[0]);
             collectAncestors(docNums[0]);
         } else if (docNums.length > 1) {
             // clone because recursion uses docNums again
-            int[] tmp = (int[]) docNums.clone();
-            for (int i = 0; i < tmp.length; i++) {
-                ancestors.add(new Integer(tmp[i]));
-                collectAncestors(tmp[i]);
+            for (int docNum : docNums.clone()) {
+                ancestors.add(docNum);
+                collectAncestors(docNum);
             }
         }
     }

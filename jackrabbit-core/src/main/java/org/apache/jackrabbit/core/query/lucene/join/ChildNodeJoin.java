@@ -55,7 +55,7 @@ public class ChildNodeJoin extends AbstractCondition {
     /**
      * Reusable list of score nodes.
      */
-    private List tmpScoreNodes = new ArrayList();
+    private List<ScoreNode[]> tmpScoreNodes = new ArrayList<ScoreNode[]>();
 
     /**
      * Creates a new child node join condition.
@@ -77,7 +77,7 @@ public class ChildNodeJoin extends AbstractCondition {
         int idx = getIndex(parent, condition.getParentSelectorQName());
         ScoreNode[] nodes;
         while ((nodes = parent.nextScoreNodes()) != null) {
-            Integer docNum = new Integer(nodes[idx].getDoc(reader));
+            Integer docNum = nodes[idx].getDoc(reader);
             parentIndex.addScoreNodes(docNum, nodes);
         }
     }
@@ -90,18 +90,18 @@ public class ChildNodeJoin extends AbstractCondition {
     public ScoreNode[][] getMatchingScoreNodes(ScoreNode child) throws IOException {
         docNums = resolver.getParents(child.getDoc(reader), docNums);
         tmpScoreNodes.clear();
-        for (int i = 0; i < docNums.length; i++) {
-            ScoreNode[][] sn = parentIndex.getScoreNodes(new Integer(docNums[i]));
+        for (int docNum : docNums) {
+            ScoreNode[][] sn = parentIndex.getScoreNodes(docNum);
             if (sn != null) {
-                for (int j = 0; j < sn.length; j++) {
-                    tmpScoreNodes.add(sn[j]);
+                for (ScoreNode[] aSn : sn) {
+                    tmpScoreNodes.add(aSn);
                 }
             }
         }
         if (tmpScoreNodes.isEmpty()) {
             return null;
         } else {
-            return (ScoreNode[][]) tmpScoreNodes.toArray(new ScoreNode[tmpScoreNodes.size()][]);
+            return tmpScoreNodes.toArray(new ScoreNode[tmpScoreNodes.size()][]);
         }
     }
 }

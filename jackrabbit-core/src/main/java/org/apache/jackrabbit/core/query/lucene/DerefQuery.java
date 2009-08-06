@@ -31,7 +31,6 @@ import org.apache.jackrabbit.spi.Name;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -238,7 +237,7 @@ class DerefQuery extends Query {
         /**
          * List of UUIDs of selected nodes
          */
-        private List uuids = null;
+        private List<String> uuids = null;
 
         /**
          * The next document id to return
@@ -305,11 +304,13 @@ class DerefQuery extends Query {
          * 3. find reference property UUIDs
          * 4. Use UUIDs to find document number
          * 5. Use the name test to filter the documents
-         * @throws IOException
+         * 
+         * @throws IOException if an exception occurs while reading from the
+         *                     index.
          */
         private void calculateChildren() throws IOException {
             if (uuids == null) {
-                uuids = new ArrayList();
+                uuids = new ArrayList<String>();
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
                         hits.set(doc);
@@ -334,9 +335,9 @@ class DerefQuery extends Query {
                         // no reference properties at all on this node
                         continue;
                     }
-                    for (int v = 0; v < values.length; v++) {
-                        if (values[v].startsWith(prefix)) {
-                            uuids.add(values[v].substring(prefix.length()));
+                    for (String value : values) {
+                        if (value.startsWith(prefix)) {
+                            uuids.add(value.substring(prefix.length()));
                         }
                     }
                 }
@@ -344,8 +345,8 @@ class DerefQuery extends Query {
                 // collect the doc ids of all target nodes. we reuse the existing
                 // bitset.
                 hits.clear();
-                for (Iterator it = uuids.iterator(); it.hasNext();) {
-                    TermDocs node = reader.termDocs(new Term(FieldNames.UUID, (String) it.next()));
+                for (String uuid : uuids) {
+                    TermDocs node = reader.termDocs(new Term(FieldNames.UUID, uuid));
                     try {
                         while (node.next()) {
                             hits.set(node.doc());

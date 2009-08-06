@@ -60,8 +60,7 @@ public class ParentNodeJoin extends AbstractCondition {
         int[] docNums = new int[1];
         while ((nodes = child.nextScoreNodes()) != null) {
             docNums = resolver.getParents(nodes[idx].getDoc(reader), docNums);
-            for (int i = 0; i < docNums.length; i++) {
-                Integer parentId = new Integer(docNums[i]);
+            for (int parentId : docNums) {
                 childIndex.addScoreNodes(parentId, nodes);
             }
         }
@@ -73,6 +72,6 @@ public class ParentNodeJoin extends AbstractCondition {
      */
     public ScoreNode[][] getMatchingScoreNodes(ScoreNode parent)
             throws IOException {
-        return childIndex.getScoreNodes(new Integer(parent.getDoc(reader)));
+        return childIndex.getScoreNodes(parent.getDoc(reader));
     }
 }

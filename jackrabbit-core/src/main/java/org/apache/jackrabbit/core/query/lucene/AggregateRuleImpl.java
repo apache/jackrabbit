@@ -122,18 +122,16 @@ class AggregateRuleImpl implements AggregateRule {
      */
     public NodeState getAggregateRoot(NodeState nodeState)
             throws ItemStateException, RepositoryException {
-        for (int i = 0; i < nodeIncludes.length; i++) {
-            NodeState aggregateRoot = nodeIncludes[i].matches(nodeState);
-            if (aggregateRoot != null
-                    && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
+        for (NodeInclude nodeInclude : nodeIncludes) {
+            NodeState aggregateRoot = nodeInclude.matches(nodeState);
+            if (aggregateRoot != null && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
                 return aggregateRoot;
             }
         }
         // check property includes
-        for (int i = 0; i < propertyIncludes.length; i++) {
-            NodeState aggregateRoot = propertyIncludes[i].matches(nodeState);
-            if (aggregateRoot != null
-                    && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
+        for (PropertyInclude propertyInclude : propertyIncludes) {
+            NodeState aggregateRoot = propertyInclude.matches(nodeState);
+            if (aggregateRoot != null && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
                 return aggregateRoot;
             }
         }
@@ -154,8 +152,8 @@ class AggregateRuleImpl implements AggregateRule {
             throws ItemStateException {
         if (nodeState.getNodeTypeName().equals(nodeTypeName)) {
             List<NodeState> nodeStates = new ArrayList<NodeState>();
-            for (int i = 0; i < nodeIncludes.length; i++) {
-                nodeStates.addAll(Arrays.asList(nodeIncludes[i].resolve(nodeState)));
+            for (NodeInclude nodeInclude : nodeIncludes) {
+                nodeStates.addAll(Arrays.asList(nodeInclude.resolve(nodeState)));
             }
             if (nodeStates.size() > 0) {
                 return nodeStates.toArray(new NodeState[nodeStates.size()]);
@@ -171,9 +169,8 @@ class AggregateRuleImpl implements AggregateRule {
             throws ItemStateException {
         if (nodeState.getNodeTypeName().equals(nodeTypeName)) {
             List<PropertyState> propStates = new ArrayList<PropertyState>();
-            for (int i = 0; i < propertyIncludes.length; i++) {
-                propStates.addAll(Arrays.asList(
-                        propertyIncludes[i].resolvePropertyStates(nodeState)));
+            for (PropertyInclude propertyInclude : propertyIncludes) {
+                propStates.addAll(Arrays.asList(propertyInclude.resolvePropertyStates(nodeState)));
             }
             if (propStates.size() > 0) {
                 return propStates.toArray(new PropertyState[propStates.size()]);

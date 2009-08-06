@@ -68,8 +68,8 @@ public class SimpleExcerptProvider implements ExcerptProvider {
                     text.append(separator);
                     separator = " ... ";
                     InternalValue[] values = propState.getValues();
-                    for (int i = 0; i < values.length; i++) {
-                        text.append(values[i].toString());
+                    for (InternalValue value : values) {
+                        text.append(value.toString());
                     }
                 }
             }

@@ -79,7 +79,6 @@ public class PredicateDerefQuery extends Query {
      * Creates a new <code>DerefQuery</code> based on a <code>context</code>
      * query.
      *
-     * @param context the context for this query.
      * @param subQuery TODO
      * @param refProperty the name of the reference property.
      * @param nameTest a name test or <code>null</code> if any node is

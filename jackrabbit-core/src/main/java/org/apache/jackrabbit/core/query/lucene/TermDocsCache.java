@@ -22,13 +22,12 @@ import java.util.Collections;
 import java.util.BitSet;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.collections.map.LinkedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,13 +60,19 @@ public class TermDocsCache {
     /**
      * Map of {@link Term#text()} that are unknown to the underlying index.
      */
-    private final Map unknownValues = Collections.synchronizedMap(new LRUMap(100));
+    private final Map<String, String> unknownValues = Collections.synchronizedMap(new LinkedHashMap<String, String>() {
+        private static final long serialVersionUID = 1443679637070403838L;
+
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            return size() > 100;
+        }
+    });
 
     /**
      * The cache of the {@link #CACHE_SIZE} most frequently requested TermDocs.
      * Maps term text <code>String</code> to {@link CacheEntry}.
      */
-    private final LinkedMap cache = new LinkedMap();
+    private final Map<String, CacheEntry> cache = new LinkedHashMap<String, CacheEntry>();
 
     /**
      * Creates a new cache for the given <code>reader</code> and
@@ -102,23 +107,23 @@ public class TermDocsCache {
         // maintain cache
         CacheEntry entry;
         synchronized (cache) {
-            entry = (CacheEntry) cache.get(text);
+            entry = cache.get(text);
             if (entry == null) {
                 // check space
                 if (cache.size() >= CACHE_SIZE) {
                     // prune half of them and adjust the rest
-                    CacheEntry[] entries = (CacheEntry[]) cache.values().toArray(
+                    CacheEntry[] entries = cache.values().toArray(
                             new CacheEntry[cache.size()]);
                     Arrays.sort(entries);
                     int threshold = entries[CACHE_SIZE / 2].numAccessed;
-                    for (Iterator it = cache.entrySet().iterator(); it.hasNext(); ) {
-                        Map.Entry e = (Map.Entry) it.next();
-                        if (((CacheEntry) e.getValue()).numAccessed <= threshold) {
+                    for (Iterator<Map.Entry<String, CacheEntry>> it = cache.entrySet().iterator(); it.hasNext(); ) {
+                        Map.Entry<String, CacheEntry> e = it.next();
+                        if (e.getValue().numAccessed <= threshold) {
                             // prune
                             it.remove();
                         } else {
                             // adjust
-                            CacheEntry ce = (CacheEntry) e.getValue();
+                            CacheEntry ce = e.getValue();
                             ce.numAccessed = (int) Math.sqrt(ce.numAccessed);
                         }
                     }
@@ -135,8 +140,7 @@ public class TermDocsCache {
         if (entry.numAccessed < 10) {
             if (log.isDebugEnabled()) {
                 log.debug("#{} TermDocs({},{})",
-                        new Object[]{new Integer(entry.numAccessed),
-                                field, text});
+                        new Object[]{entry.numAccessed, field, text});
             }
             return reader.termDocs(t);
         }
@@ -167,8 +171,7 @@ public class TermDocsCache {
         } else {
             if (log.isDebugEnabled()) {
                 log.debug("CachedTermDocs({},{},{}/{})", new Object[]{
-                        field, text, new Integer(entry.bits.cardinality()),
-                        new Integer(reader.maxDoc())});
+                        field, text, entry.bits.cardinality(), reader.maxDoc()});
             }
             return new CachedTermDocs(entry.bits);
         }

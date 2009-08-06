@@ -220,13 +220,12 @@ class CachingIndexReader extends FilterIndexReader {
     public Document document(int n, FieldSelector fieldSelector)
             throws CorruptIndexException, IOException {
         if (fieldSelector == FieldSelectors.UUID) {
-            Integer docNum = new Integer(n);
             Document doc;
-            NodeId id = docNumber2id.get(docNum);
+            NodeId id = docNumber2id.get(n);
             if (id == null) {
                 doc = super.document(n, fieldSelector);
                 id = new NodeId(doc.get(FieldNames.UUID));
-                docNumber2id.put(docNum, id);
+                docNumber2id.put(n, id);
             } else {
                 doc = new Document();
                 doc.add(new Field(FieldNames.UUID, id.toString(),
@@ -412,8 +411,8 @@ class CachingIndexReader extends FilterIndexReader {
                 public void collect(Term term, TermDocs tDocs) throws IOException {
                     NodeId id = new NodeId(term.text());
                     while (tDocs.next()) {
-                        Integer docId = new Integer(tDocs.doc());
-                        NodeInfo info = (NodeInfo) docs.get(docId);
+                        Integer docId = tDocs.doc();
+                        NodeInfo info = docs.get(docId);
                         if (info == null) {
                             // shareable node, see above
                         } else {
@@ -454,8 +453,8 @@ class CachingIndexReader extends FilterIndexReader {
                 }
                 log.debug("initialized {} DocIds in {} ms, {} foreign parents",
                         new Object[]{
-                            new Integer(parents.length),
-                            new Long(time),
+                            parents.length,
+                            time,
                             nf.format(foreignParents)
                         });
             }

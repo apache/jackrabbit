@@ -143,8 +143,8 @@ final class DocNumberCache {
                 }
                 StringBuffer statistics = new StringBuffer();
                 int inUse = 0;
-                for (int i = 0; i < docNumbers.length; i++) {
-                    inUse += docNumbers[i].size();
+                for (LRUMap docNumber : docNumbers) {
+                    inUse += docNumber.size();
                 }
                 statistics.append("size=").append(inUse);
                 statistics.append("/").append(docNumbers[0].maxSize() * CACHE_SEGMENTS);
