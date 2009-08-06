@@ -102,7 +102,9 @@ class NodeDefinitionTemplateImpl
      */
     public void setDefaultPrimaryTypeName(String defaultPrimaryType) throws ConstraintViolationException {
         try {
-            this.defaultPrimaryTypeName = resolver.getQName(defaultPrimaryType);
+            this.defaultPrimaryTypeName = defaultPrimaryType == null
+                    ? null
+                    : resolver.getQName(defaultPrimaryType);
         } catch (RepositoryException e) {
             throw new ConstraintViolationException(e);
         }

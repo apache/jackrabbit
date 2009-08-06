@@ -336,12 +336,8 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
         ndt.setDefaultPrimaryTypeName(expandedName);
         assertEquals(jcrName, ndt.getDefaultPrimaryTypeName());
 
-        try {
-            ndt.setDefaultPrimaryTypeName(null);
-            fail("null isn't a valid jcr name");
-        } catch (ConstraintViolationException e) {
-            // success
-        }
+        ndt.setDefaultPrimaryTypeName(null);
+        assertEquals("setting null must clear the name.", null, ndt.getDefaultPrimaryTypeName());
 
         ndt.setRequiredPrimaryTypeNames(new String[] {expandedName});
         assertNotNull(ndt.getRequiredPrimaryTypeNames());
