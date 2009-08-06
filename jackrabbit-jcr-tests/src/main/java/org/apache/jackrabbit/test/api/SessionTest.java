@@ -669,7 +669,7 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks if {@link javax.jcr.Session#hasCapability(String, Object, java.util.Map)}
+     * Checks if {@link javax.jcr.Session#hasCapability(String, Object, Object[])}
      * works as specified.
      * <p/>
      *
