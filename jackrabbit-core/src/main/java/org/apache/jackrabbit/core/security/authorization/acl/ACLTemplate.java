@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -54,14 +54,9 @@ import java.util.Map;
  * {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy) reapplied}
  * to the <code>AccessControlManager</code> and the changes are saved.
  */
-class ACLTemplate implements JackrabbitAccessControlList {
+class ACLTemplate extends AbstractACLTemplate {
 
     private static final Logger log = LoggerFactory.getLogger(ACLTemplate.class);
-
-    /**
-     * Path of the node this ACL template has been created for.
-     */
-    private final String path;
 
     /**
      * Map containing the entries of this ACL Template using the principal
@@ -81,11 +76,6 @@ class ACLTemplate implements JackrabbitAccessControlList {
     private final PrivilegeRegistry privilegeRegistry;
 
     /**
-     * The value factory
-     */
-    private final ValueFactory valueFactory;
-
-    /**
      * Construct a new empty {@link ACLTemplate}.
      *
      * @param path
@@ -94,10 +84,10 @@ class ACLTemplate implements JackrabbitAccessControlList {
      */
     ACLTemplate(String path, PrincipalManager principalMgr, 
                 PrivilegeRegistry privilegeRegistry, ValueFactory valueFactory) {
-        this.path = path;
+        super(path, valueFactory);
+
         this.principalMgr = principalMgr;
         this.privilegeRegistry = privilegeRegistry;
-        this.valueFactory = valueFactory;
     }
 
     /**
@@ -109,13 +99,12 @@ class ACLTemplate implements JackrabbitAccessControlList {
      * @throws RepositoryException
      */
     ACLTemplate(NodeImpl aclNode, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
+        super((aclNode != null) ? aclNode.getParent().getPath() : null, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
         if (aclNode == null || !aclNode.isNodeType(AccessControlConstants.NT_REP_ACL)) {
             throw new IllegalArgumentException("Node must be of type 'rep:ACL'");
         }
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
-        path = aclNode.getParent().getPath();
         principalMgr = sImpl.getPrincipalManager();
-        valueFactory = sImpl.getValueFactory();
         
         this.privilegeRegistry = privilegeRegistry;
 
@@ -288,21 +277,20 @@ class ACLTemplate implements JackrabbitAccessControlList {
         }
     }
 
+    //------------------------------------------------< AbstractACLTemplate >---
     /**
-     *
-     * @param principal
-     * @param privileges
-     * @param isAllow
-     * @throws AccessControlException
+     * @see AbstractACLTemplate#checkValidEntry(java.security.Principal, javax.jcr.security.Privilege[], boolean, java.util.Map) 
      */
-    private void checkValidEntry(Principal principal, Privilege[] privileges, boolean isAllow) throws AccessControlException {
+    protected void checkValidEntry(Principal principal, Privilege[] privileges,
+                                 boolean isAllow, Map<String, Value> restrictions)
+            throws AccessControlException {
+        if (restrictions != null && !restrictions.isEmpty()) {
+            throw new AccessControlException("This AccessControlList does not allow for additional restrictions.");
+        }
+
         // validate principal
         if (!principalMgr.hasPrincipal(principal.getName())) {
             throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
-        }
-        // additional validation: a group may not have 'denied' permissions
-        if (!isAllow && principal instanceof Group) {
-            throw new AccessControlException("For group principals permissions can only be added but not denied.");
         }
     }
 
@@ -313,14 +301,6 @@ class ACLTemplate implements JackrabbitAccessControlList {
     public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {
         List l = internalGetEntries();
         return (AccessControlEntry[]) l.toArray(new AccessControlEntry[l.size()]);
-    }
-
-    /**
-     * @see javax.jcr.security.AccessControlList#addAccessControlEntry(Principal, Privilege[])
-     */
-    public boolean addAccessControlEntry(Principal principal, Privilege[] privileges)
-            throws AccessControlException, RepositoryException {
-        return addEntry(principal, privileges, true, Collections.EMPTY_MAP);
     }
 
     /**
@@ -341,14 +321,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
         }
     }
 
-    //-----------------------------------------------------< JackrabbitAccessControlList >---
-    /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getPath()
-     */
-    public String getPath() {
-        return path;
-    }
-
+    //----------------------------------------< JackrabbitAccessControlList >---
     /**
      * Returns an empty String array.
      *
@@ -383,24 +356,12 @@ class ACLTemplate implements JackrabbitAccessControlList {
     }
 
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean)
-     */
-    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow)
-            throws AccessControlException, RepositoryException {
-        return addEntry(principal, privileges, isAllow, null);
-    }
-
-    /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges,
                             boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
-        if (restrictions != null && !restrictions.isEmpty()) {
-            throw new AccessControlException("This AccessControlList does not allow for additional restrictions.");
-        }
-
-        checkValidEntry(principal, privileges, isAllow);
+        checkValidEntry(principal, privileges, isAllow, restrictions);
         Entry ace = new Entry(principal, privileges, isAllow, valueFactory);
         return internalAdd(ace);
     }

@@ -27,7 +27,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
@@ -153,12 +152,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         assertTrue(pt.addAccessControlEntry(grPrincipal, privs));
 
         // adding deny-entry must succeed
-        try {
-            pt.addEntry(grPrincipal, privs, false, null);
-            fail("Adding DENY-ace for a group principal should fail.");
-        } catch (AccessControlException e) {
-            // success
-        }
+        pt.addEntry(grPrincipal, privs, false, null);
     }
 
     public void testRevokeEffect() throws RepositoryException, NotExecutableException {
