@@ -295,7 +295,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             } else if (n.isNodeType(NT_REP_GROUP)) {
                return createGroup(n);
             } else {
-                log.warn("Unexpected user nodetype " + n.getPrimaryNodeType().getName());
+                log.debug("Unexpected user nodetype " + n.getPrimaryNodeType().getName());
             }
         }
         return null;
