@@ -51,7 +51,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
     protected static final long DEFAULT_WAIT_TIMEOUT = 5000;
 
-    private Group testGroup;
+    protected Group testGroup;
 
     protected String path;
     protected String childNPath;
@@ -62,7 +62,6 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
     // TODO: test AC for moved node
     // TODO: test AC for moved AC-controlled node
-    // TODO: test if combination of group and user permissions are properly evaluated
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -794,6 +793,37 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         String actions = javax.jcr.Session.ACTION_SET_PROPERTY;
         assertFalse(getTestSession().hasPermission(path, actions));
         assertFalse(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
+    }
+    
+    public void testInheritanceAndMixedUserGroupPermissions() throws RepositoryException, NotExecutableException {
+        Group testGroup = getTestGroup();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+         precondition:
+         testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+
+        /* give MODIFY_PROPERTIES privilege for testGroup at 'path' */
+        givePrivileges(path, testGroup.getPrincipal(), privileges, getRestrictions(superuser, path));
+
+        /* withdraw MODIFY_PROPERTIES for the user at 'path' */
+        withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+
+        /*
+         since user-permissions overrule the group permissions, testuser must
+         not have set_property action / modify_properties privilege.
+         */
+        assertFalse(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
+
+        /*
+         give MODIFY_PROPERTIES privilege for everyone at 'childNPath'
+         -> user-privileges still overrule group privs
+         */
+        givePrivileges(childNPath, testGroup.getPrincipal(), privileges, getRestrictions(superuser, path));
+        assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
     }
 
     public void testNewNodes() throws RepositoryException, NotExecutableException {

@@ -169,4 +169,48 @@ public class WriteTest extends AbstractWriteTest {
         it = acMgr.getApplicablePolicies(childNPath);
         assertTrue(it.hasNext());
     }
+
+    public void testInheritance2() throws RepositoryException, NotExecutableException {
+        Session testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        // give jcr:write privilege on 'path' and withdraw them on 'childNPath'
+        Privilege[] privileges = privilegesFromNames(new String[] {Privilege.JCR_WRITE});
+        givePrivileges(path, privileges, getRestrictions(superuser, path));
+        withdrawPrivileges(childNPath, privileges, getRestrictions(superuser, path));
+
+        /*
+        since evaluation respects inheritance through the node
+        hierarchy, the jcr:write privilege must not be granted at childNPath
+        */
+        assertFalse(testAcMgr.hasPrivileges(childNPath, privileges));
+
+        /*
+         ... same for permissions at 'childNPath'
+         */
+        String actions = Session.ACTION_SET_PROPERTY + "," + Session.ACTION_REMOVE + "," + Session.ACTION_ADD_NODE;
+
+        String nonExistingItemPath = childNPath + "/anyItem";
+        assertFalse(testSession.hasPermission(nonExistingItemPath, actions));
+
+        // yet another level in the hierarchy
+        Node grandChild = superuser.getNode(childNPath).addNode(nodeName3);
+        superuser.save();
+        String gcPath = grandChild.getPath();
+
+        // grant write privilege again
+        givePrivileges(gcPath, privileges, getRestrictions(superuser, path));
+        assertTrue(testAcMgr.hasPrivileges(gcPath, privileges));
+        assertTrue(testSession.hasPermission(gcPath + "/anyProp", Session.ACTION_SET_PROPERTY));
+        // however: removing the grand-child nodes must not be allowed as
+        // remove_child_node privilege is missing on the direct ancestor.
+        assertFalse(testSession.hasPermission(gcPath, Session.ACTION_REMOVE));
+    }
 }

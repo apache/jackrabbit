@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
+import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
@@ -38,7 +38,6 @@ import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,7 +52,7 @@ import java.util.Set;
  * {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy) reapplied}
  * to the <code>AccessControlManager</code> and the changes are saved.
  */
-class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants {
+class ACLTemplate extends AbstractACLTemplate {
 
     private static Logger log = LoggerFactory.getLogger(ACLTemplate.class);
 
@@ -70,8 +69,6 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
     static final Name P_GLOB = NF.create(Name.NS_REP_URI, "glob");
 
     private final Principal principal;
-    private final String path;
-    private final ValueFactory valueFactory;
 
     private final List entries = new ArrayList();
 
@@ -89,9 +86,9 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
     private ACLTemplate(Principal principal, String path, NodeImpl acNode,
                         NamePathResolver resolver, ValueFactory vf)
             throws RepositoryException {
+        super(path, vf);
+
         this.principal = principal;
-        this.path = path;
-        this.valueFactory = vf;
 
         jcrNodePathName = resolver.getJCRName(P_NODE_PATH);
         jcrGlobName = resolver.getJCRName(P_GLOB);
@@ -134,17 +131,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
 
     AccessControlEntry createEntry(Principal princ, Privilege[] privileges,
                                    boolean allow, Map<String, Value> restrictions) throws RepositoryException {
-        if (!principal.equals(princ)) {
-            throw new AccessControlException("Invalid principal. Expected: " + principal);
-        }
-        if (!allow && principal instanceof Group) {
-            throw new AccessControlException("For group principals permissions can only be added but not denied.");
-        }
-
-        Set rNames = restrictions.keySet();
-        if (!rNames.contains(jcrNodePathName)) {
-            throw new AccessControlException("Missing mandatory restriction: " + jcrNodePathName);
-        }
+        checkValidEntry(princ, privileges, allow, restrictions);
 
         // make sure the nodePath restriction is of type PATH
         Value v = restrictions.get(jcrNodePathName);
@@ -161,14 +148,24 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
         return new Entry(princ, privileges, allow, restrictions);
     }
 
-    //-----------------------------------------------------< JackrabbitAccessControlList >---
+    //------------------------------------------------< AbstractACLTemplate >---
     /**
-     * @see JackrabbitAccessControlList#getPath()
+     * @see AbstractACLTemplate#checkValidEntry(java.security.Principal, javax.jcr.security.Privilege[], boolean, java.util.Map)
      */
-    public String getPath() {
-        return path;
-    }
+    protected void checkValidEntry(Principal principal, Privilege[] privileges,
+                                 boolean isAllow, Map<String, Value> restrictions)
+            throws AccessControlException {
+        if (!this.principal.equals(principal)) {
+            throw new AccessControlException("Invalid principal. Expected: " + principal);
+        }
 
+        Set rNames = restrictions.keySet();
+        if (!rNames.contains(jcrNodePathName)) {
+            throw new AccessControlException("Missing mandatory restriction: " + jcrNodePathName);
+        }
+    }
+    
+    //----------------------------------------< JackrabbitAccessControlList >---
     /**
      * @see JackrabbitAccessControlList#getRestrictionNames()
      */
@@ -201,14 +198,6 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
      */
     public int size() {
         return entries.size();
-    }
-
-    /**
-     * @see JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean)
-     */
-    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow)
-            throws AccessControlException, RepositoryException {
-        return addEntry(principal, privileges, isAllow, null);
     }
 
     /**
@@ -247,15 +236,6 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
     public AccessControlEntry[] getAccessControlEntries()
             throws RepositoryException {
         return (AccessControlEntry[]) entries.toArray(new AccessControlEntry[entries.size()]);
-    }
-
-    /**
-     * @see javax.jcr.security.AccessControlList#addAccessControlEntry(Principal, Privilege[])
-     */
-    public boolean addAccessControlEntry(Principal principal,
-                                         Privilege[] privileges)
-            throws AccessControlException, RepositoryException {
-        return addEntry(principal, privileges, true, Collections.EMPTY_MAP);
     }
 
     /**
