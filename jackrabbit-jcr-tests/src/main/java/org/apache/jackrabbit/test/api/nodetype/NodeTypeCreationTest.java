@@ -80,10 +80,10 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
         assertFalse(ntt.isMixin());
         assertFalse(ntt.isAbstract());
         assertFalse(ntt.hasOrderableChildNodes());
-        // TODO: see https://jsr-283.dev.java.net/issues/show_bug.cgi?id=798
-        assertTrue(ntt.isQueryable());
+        
+        // note: isQueryable cannot be tested as defautl value is defined
+        // by the implementation
 
-        // TODO see https://jsr-283.dev.java.net/issues/show_bug.cgi?id=797        
         assertNotNull(ntt.getDeclaredSupertypeNames());
         assertEquals(0, ntt.getDeclaredSupertypeNames().length);
 
@@ -222,10 +222,11 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
         assertNull(pdt.getValueConstraints());
         assertNull(pdt.getDefaultValues());
 
-        // TODO: add tests for default values of (missing definition in API)
-        // getAvailableQueryOperators
-        // isFullTextSearchable
-        // isQueryOrderable
+        // the following methods cannot be tested as default value is
+        // implementation specific:
+        // - getAvailableQueryOperators
+        // - isFullTextSearchable
+        // - isQueryOrderable
 
     }
 
@@ -273,13 +274,6 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
         assertEquals(1, pdt.getDefaultValues().length);
         assertEquals(24, pdt.getDefaultValues()[0].getLong());
         assertEquals(PropertyType.LONG, pdt.getDefaultValues()[0].getType());
-    }
-
-    public void testSetValueConstraints() throws Exception {
-
-        // TODO: PropertyDefinitionTemplate: test setting value constraints
-        // TODO: PropertyDefinitionTemplate: test setting name/path constraints
-        // see  https://jsr-283.dev.java.net/issues/show_bug.cgi?id=794
     }
 
     public void testEmptyNodeDefinitionTemplate() throws Exception {
