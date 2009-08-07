@@ -167,11 +167,6 @@ public class SearchIndex extends AbstractQueryHandler {
     public static final int DEFAULT_TERM_INFOS_INDEX_DIVISOR = 1;
 
     /**
-     * The default value for {@link #indexMergerPoolSize}.
-     */
-    public static final int DEFAULT_INDEX_MERGER_POOL_SIZE = 2;
-
-    /**
      * The path factory.
      */
     protected static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
@@ -445,11 +440,6 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean initializeHierarchyCache = true;
 
     /**
-     * The number of worker threads for merging index segments.
-     */
-    private int indexMergerPoolSize = DEFAULT_INDEX_MERGER_POOL_SIZE;
-
-    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -708,8 +698,6 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * This method returns the QueryNodeFactory used to parse Queries. This method
      * may be overridden to provide a customized QueryNodeFactory
-     *
-     * @return the query node factory.
      */
     protected DefaultQueryNodeFactory getQueryNodeFactory() {
         return DEFAULT_QUERY_NODE_FACTORY;
@@ -2153,26 +2141,6 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setInitializeHierarchyCache(boolean initializeHierarchyCache) {
         this.initializeHierarchyCache = initializeHierarchyCache;
-    }
-
-    /**
-     * @return the current size of the index merger pool.
-     */
-    public int getIndexMergerPoolSize() {
-        return indexMergerPoolSize;
-    }
-
-    /**
-     * Sets a new value for the index merger pool size.
-     *
-     * @param indexMergerPoolSize the number of worker threads.
-     * @throws IllegalArgumentException if the size is less than or equal 0.
-     */
-    public void setIndexMergerPoolSize(int indexMergerPoolSize) {
-        if (indexMergerPoolSize <= 0) {
-            throw new IllegalArgumentException("must be greater than 0");
-        }
-        this.indexMergerPoolSize = indexMergerPoolSize;
     }
 
     //----------------------------< internal >----------------------------------
