@@ -66,7 +66,7 @@ public class RepositoryCopierTest extends TestCase {
 
     public void testRepositoryCopy() throws Exception {
         createSourceRepository();
-        new RepositoryCopier(SOURCE, TARGET).copy();
+        RepositoryCopier.copy(SOURCE, TARGET);
         verifyTargetRepository();
     }
 
