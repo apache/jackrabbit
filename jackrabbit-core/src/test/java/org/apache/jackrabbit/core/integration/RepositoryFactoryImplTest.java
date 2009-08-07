@@ -28,7 +28,7 @@ import javax.naming.InitialContext;
 import javax.naming.Context;
 import javax.imageio.spi.ServiceRegistry;
 
-import javax.jcr.RepositoryFactory;
+import org.apache.jackrabbit.api.jsr283.RepositoryFactory;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.RepositoryFactoryImpl;
 import org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory;
@@ -148,8 +148,8 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
 
     //-------------------------< internal helper >------------------------------
 
-    private void checkRepository(Repository r) throws RepositoryException {
-        r.login(getHelper().getSuperuserCredentials()).logout();
+    private static void checkRepository(Repository r) throws RepositoryException {
+        r.login(helper.getSuperuserCredentials()).logout();
     }
 
     private static void setProperties() {

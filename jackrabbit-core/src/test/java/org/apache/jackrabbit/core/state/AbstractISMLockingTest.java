@@ -16,16 +16,17 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import junit.framework.TestCase;
-
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
 import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * <code>AbstractISMLockingTest</code> contains test cases for the ISMLocking requirements.
@@ -50,15 +51,15 @@ public abstract class AbstractISMLockingTest extends TestCase {
     /**
      * List of change logs, each with a different modification for {@link #state}.
      */
-    protected List<ChangeLog> logs;
+    protected List logs;
 
     protected void setUp() throws Exception {
         super.setUp();
         locking = createISMLocking();
-        NodeId id = new NodeId();
+        NodeId id = new NodeId(UUID.randomUUID());
         state = new NodeState(id, NameConstants.NT_BASE, null, ItemState.STATUS_EXISTING, true);
-        refs = new NodeReferences(state.getNodeId());
-        logs = new ArrayList<ChangeLog>();
+        refs = new NodeReferences(new NodeReferencesId(state.getNodeId()));
+        logs = new ArrayList();
         ChangeLog log = new ChangeLog();
         log.added(state);
         logs.add(log);
@@ -87,7 +88,8 @@ public abstract class AbstractISMLockingTest extends TestCase {
      */
     public void testReadBlocksWrite() throws InterruptedException {
         ReadLock rLock = locking.acquireReadLock(state.getId());
-        for (ChangeLog changeLog : logs) {
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
             verifyBlocked(startWriterThread(locking, changeLog));
         }
         rLock.release();
@@ -102,7 +104,8 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * @throws InterruptedException on interruption; this will err the test
      */
     public void testWriteBlocksRead() throws InterruptedException {
-        for (ChangeLog changeLog : logs) {
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
             WriteLock wLock = locking.acquireWriteLock(changeLog);
             verifyBlocked(startReaderThread(locking, state.getId()));
             wLock.release();
@@ -110,8 +113,10 @@ public abstract class AbstractISMLockingTest extends TestCase {
     }
 
     public void testWriteBlocksRead_notIfSameThread() throws InterruptedException {
-        for (final ChangeLog changeLog : logs) {
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            final ChangeLog changeLog = (ChangeLog) it.next();
             Thread t = new Thread(new Runnable() {
+
                 public void run() {
                     try {
                         WriteLock wLock = locking.acquireWriteLock(changeLog);
@@ -139,7 +144,8 @@ public abstract class AbstractISMLockingTest extends TestCase {
         ChangeLog cl = new ChangeLog();
         cl.added(state);
         WriteLock wLock = locking.acquireWriteLock(cl);
-        for (ChangeLog changeLog : logs) {
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
             verifyBlocked(startWriterThread(locking, changeLog));
         }
         wLock.release();
@@ -151,7 +157,8 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * @throws InterruptedException on interruption; this will err the test
      */
     public void testDowngrade() throws InterruptedException {
-        for (ChangeLog changeLog : logs) {
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
             WriteLock wLock = locking.acquireWriteLock(changeLog);
             verifyBlocked(startReaderThread(locking, state.getId()));
             ReadLock rLock = wLock.downgrade();

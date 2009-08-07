@@ -16,14 +16,16 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+
+import java.util.Iterator;
 
 /**
  * Implementation <code>PersistenceManager</code> that handles some
@@ -55,32 +57,40 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
      * {@inheritDoc}
      */
     public synchronized void store(ChangeLog changeLog) throws ItemStateException {
-        for (ItemState state : changeLog.deletedStates()) {
+        Iterator iter = changeLog.deletedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
             if (state.isNode()) {
                 destroy((NodeState) state);
             } else {
                 destroy((PropertyState) state);
             }
         }
-        for (ItemState state : changeLog.addedStates()) {
+        iter = changeLog.addedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
             if (state.isNode()) {
                 store((NodeState) state);
             } else {
                 store((PropertyState) state);
             }
         }
-        for (ItemState state : changeLog.modifiedStates()) {
+        iter = changeLog.modifiedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
             if (state.isNode()) {
                 store((NodeState) state);
             } else {
                 store((PropertyState) state);
             }
         }
-        for (NodeReferences refs : changeLog.modifiedRefs()) {
+        iter = changeLog.modifiedRefs();
+        while (iter.hasNext()) {
+            NodeReferences refs = (NodeReferences) iter.next();
             if (refs.hasReferences()) {
                 store(refs);
             } else {
-                if (existsReferencesTo(refs.getTargetId())) {
+                if (exists(refs.getId())) {
                     destroy(refs);
                 }
             }

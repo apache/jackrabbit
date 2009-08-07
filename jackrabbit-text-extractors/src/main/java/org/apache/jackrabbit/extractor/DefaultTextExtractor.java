@@ -16,61 +16,19 @@
  */
 package org.apache.jackrabbit.extractor;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.Set;
-
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.ParsingReader;
-
 /**
- * Default text extractor based on Apache Tika.
+ * Composite text extractor that by default contains the standard
+ * text extractors found in this package.
  */
-public class DefaultTextExtractor implements TextExtractor {
+public class DefaultTextExtractor extends CompositeTextExtractor {
 
     /**
-     * Auto-detecting parser.
+     * Creates the default text extractor by adding instances of the standard
+     * text extractors as components.
      */
-    private static final AutoDetectParser PARSER;
-
-    /**
-     * Supported content types.
-     */
-    private static final String[] TYPES;
-
-    static {
-        InputStream stream =
-            DefaultTextExtractor.class.getResourceAsStream("tika-config.xml");
-        try {
-            try {
-                PARSER = new AutoDetectParser(new TikaConfig(stream));
-
-                Set<String> types = PARSER.getParsers().keySet();
-                TYPES = types.toArray(new String[types.size()]);
-            } finally {
-                stream.close();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Unable to load Tika configuration", e);
-        }
-    }
-
-    public String[] getContentTypes() {
-        return TYPES;
-    }
-
-    public Reader extractText(InputStream stream, String type, String encoding)
-            throws IOException {
-        Metadata metadata = new Metadata();
-        if (type != null && type.trim().length() > 0) {
-            metadata.set(Metadata.CONTENT_TYPE, type.trim());
-        }
-        // TODO: This creates a background thread. Is that a problem?
-        return new ParsingReader(PARSER, stream, metadata);
+    public DefaultTextExtractor() {
+        addTextExtractor(new PlainTextExtractor());
+        addTextExtractor(new XMLTextExtractor());
     }
 
 }

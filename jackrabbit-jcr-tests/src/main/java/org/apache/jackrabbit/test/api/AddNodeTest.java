@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -25,9 +24,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.Session;
 
 /**
@@ -92,49 +88,6 @@ public class AddNodeTest extends AbstractJCRTest {
             fail("Expected NoSuchNodeTypeException.");
         } catch (NoSuchNodeTypeException e) {
             // correct.
-        }
-    }
-
-    /**
-     * Tests if addNode() throws a ConstraintViolationException in case
-     * of an abstract node type.
-     */
-    public void testAbstractNodeType() throws RepositoryException {
-        NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
-        NodeTypeIterator nts = ntMgr.getPrimaryNodeTypes();
-        while (nts.hasNext()) {
-            NodeType nt = nts.nextNodeType();
-            if (nt.isAbstract()) {
-                try {
-                    testRootNode.addNode(nodeName1, nt.getName());
-                    superuser.save();
-                    fail("Expected ConstraintViolationException.");
-                } catch (ConstraintViolationException e) {
-                    // correct.
-                } finally {
-                    superuser.refresh(false);
-                }
-            }
-        }
-    }
-
-    /**
-     * Tests if addNode() throws a ConstraintViolationException in case
-     * of an mixin node type.
-     */
-    public void testMixinNodeType() throws RepositoryException, NotExecutableException {
-        NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
-        NodeTypeIterator nts = ntMgr.getMixinNodeTypes();
-        if (nts.hasNext()) {
-            try {
-                testRootNode.addNode(nodeName1, nts.nextNodeType().getName());
-                superuser.save();
-                fail("Expected ConstraintViolationException.");
-            } catch (ConstraintViolationException e) {
-                // correct.
-            }
-        } else {
-            throw new NotExecutableException("no mixins.");
         }
     }
 
@@ -211,7 +164,7 @@ public class AddNodeTest extends AbstractJCRTest {
         defaultRootNode.save();
 
         // use a different session to verify if the node is there
-        Session session = getHelper().getReadOnlySession();
+        Session session = helper.getReadOnlySession();
         try {
             session.getItem(testNode.getPath());
         } finally {
@@ -235,7 +188,7 @@ public class AddNodeTest extends AbstractJCRTest {
         superuser.save();
 
         // use a different session to verify if the node is there
-        Session session = getHelper().getReadOnlySession();
+        Session session = helper.getReadOnlySession();
         try {
             session.getItem(testNode.getPath());
         } finally {
@@ -246,7 +199,7 @@ public class AddNodeTest extends AbstractJCRTest {
     /**
      * Creates a new node using {@link Node#addNode(String, String)}, then tries
      * to call {@link javax.jcr.Node#save()} on the new node.
-     * <p>
+     * <br/><br/>
      * This should throw an {@link RepositoryException}.
      */
     public void testAddNodeRepositoryExceptionSaveOnNewNode() throws RepositoryException {

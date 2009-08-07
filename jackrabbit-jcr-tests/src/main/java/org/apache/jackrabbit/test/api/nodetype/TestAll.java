@@ -59,10 +59,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(CanAddChildNodeCallWithoutNodeTypeTest.class);
 
         suite.addTestSuite(CanRemoveItemTest.class);
-        
-        // JCR 2.0
-
-        suite.addTestSuite(NodeTypeCreationTest.class);
 
         return suite;
     }

@@ -16,28 +16,29 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.PathNotFoundException;
+import javax.security.auth.Subject;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
-import javax.security.auth.Subject;
-
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.SystemPrincipal;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 
 /**
  * A <code>SystemSession</code> ...
@@ -55,7 +56,7 @@ class SystemSession extends SessionImpl {
     static SystemSession create(RepositoryImpl rep, WorkspaceConfig wspConfig)
             throws RepositoryException {
         // create subject with SystemPrincipal
-        Set<SystemPrincipal> principals = new HashSet<SystemPrincipal>();
+        Set principals = new HashSet();
         principals.add(new SystemPrincipal());
         Subject subject =
                 new Subject(true, principals, Collections.EMPTY_SET,
@@ -105,9 +106,6 @@ class SystemSession extends SessionImpl {
     }
 
     //--------------------------------------------------------< inner classes >
-    /**
-     * An access manager that grants access to everything.
-     */
     private class SystemAccessManager extends AbstractAccessControlManager implements AccessManager {
 
         private final PrivilegeRegistry privilegeRegistry;
@@ -143,6 +141,7 @@ class SystemSession extends SessionImpl {
          * {@inheritDoc}
          *
          * @throws AccessDeniedException is never thrown
+         * @throws ItemNotFoundException is never thrown
          * @throws RepositoryException   is never thrown
          */
         public void checkPermission(ItemId id, int permissions)
@@ -161,6 +160,7 @@ class SystemSession extends SessionImpl {
          * {@inheritDoc}
          *
          * @return always <code>true</code>
+         * @throws ItemNotFoundException is never thrown
          * @throws RepositoryException   is never thrown
          */
         public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
@@ -202,6 +202,7 @@ class SystemSession extends SessionImpl {
          * {@inheritDoc}
          *
          * @return always <code>true</code>
+         * @throws NoSuchWorkspaceException is never thrown
          * @throws RepositoryException      is never thrown
          */
         public boolean canAccess(String workspaceName) throws RepositoryException {
@@ -248,7 +249,7 @@ class SystemSession extends SessionImpl {
 
         //-------------------------------------------< AccessControlManager >---
         /**
-         * @see javax.jcr.security.AccessControlManager#hasPrivileges(String, Privilege[])
+         * @see AccessControlManager#hasPrivileges(String, Privilege[])
          */
         public boolean hasPrivileges(String absPath, Privilege[] privileges)
                 throws PathNotFoundException, RepositoryException {
@@ -258,7 +259,7 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see javax.jcr.security.AccessControlManager#getPrivileges(String)
+         * @see AccessControlManager#getPrivileges(String)
          */
         public Privilege[] getPrivileges(String absPath)
                 throws PathNotFoundException, RepositoryException {
@@ -267,12 +268,12 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see javax.jcr.security.AccessControlManager#getEffectivePolicies(String)
+         * @see AccessControlManager#getEffectivePolicies(String)
          */
         public AccessControlPolicy[] getEffectivePolicies(String absPath) throws
                 PathNotFoundException, AccessDeniedException, RepositoryException {
-            // cannot determine the effective policies for the system session.
-            return new AccessControlPolicy[0];
+            // TODO
+            throw new UnsupportedOperationException();
         }
     }
 }

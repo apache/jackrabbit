@@ -25,7 +25,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.CorruptIndexException;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Collections;
 import java.text.NumberFormat;
 
@@ -83,9 +84,9 @@ class CachingIndexReader extends FilterIndexReader {
     private final DocNumberCache cache;
 
     /**
-     * Maps document number to node id.
+     * Maps document number to node UUID.
      */
-    private final Map<Integer, NodeId> docNumber2id;
+    private final Map docNumber2uuid;
 
     /**
      * A cache of TermDocs that are regularly read from the index.
@@ -103,7 +104,6 @@ class CachingIndexReader extends FilterIndexReader {
      *                  when this index reader is constructed.
      * @throws IOException if an error occurs while reading from the index.
      */
-    @SuppressWarnings("unchecked")
     CachingIndexReader(IndexReader delegatee,
                        DocNumberCache cache,
                        boolean initCache)
@@ -126,8 +126,8 @@ class CachingIndexReader extends FilterIndexReader {
             cacheInitializer.run();
         }
         // limit cache to 1% of maxDoc(), but at least 10.
-        this.docNumber2id = Collections.synchronizedMap(
-                new LRUMap(Math.max(10, delegatee.maxDoc() / 100)));
+        this.docNumber2uuid = Collections.synchronizedMap(new LRUMap(
+                Math.max(10, delegatee.maxDoc() / 100)));
         this.termDocsCache = new TermDocsCache(delegatee, FieldNames.PROPERTIES);
     }
 
@@ -208,7 +208,7 @@ class CachingIndexReader extends FilterIndexReader {
     //--------------------< FilterIndexReader overwrites >----------------------
 
     /**
-     * Uses the {@link #docNumber2id} cache for document lookups that are only
+     * Uses the {@link #docNumber2uuid} cache for document lookups that are only
      * interested in the {@link FieldSelectors#UUID}.
      *
      * @param n the document number.
@@ -220,15 +220,16 @@ class CachingIndexReader extends FilterIndexReader {
     public Document document(int n, FieldSelector fieldSelector)
             throws CorruptIndexException, IOException {
         if (fieldSelector == FieldSelectors.UUID) {
+            Integer docNum = new Integer(n);
             Document doc;
-            NodeId id = docNumber2id.get(n);
-            if (id == null) {
+            UUID uuid = (UUID) docNumber2uuid.get(docNum);
+            if (uuid == null) {
                 doc = super.document(n, fieldSelector);
-                id = new NodeId(doc.get(FieldNames.UUID));
-                docNumber2id.put(n, id);
+                uuid = UUID.fromString(doc.get(FieldNames.UUID));
+                docNumber2uuid.put(docNum, uuid);
             } else {
                 doc = new Document();
-                doc.add(new Field(FieldNames.UUID, id.toString(),
+                doc.add(new Field(FieldNames.UUID, uuid.toString(),
                         Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
             }
             return doc;
@@ -390,17 +391,17 @@ class CachingIndexReader extends FilterIndexReader {
          */
         private void initializeParents(IndexReader reader) throws IOException {
             long time = System.currentTimeMillis();
-            final Map<Object, NodeInfo> docs = new HashMap<Object, NodeInfo>();
+            final Map docs = new HashMap();
             // read UUIDs
             collectTermDocs(reader, new Term(FieldNames.UUID, ""), new TermDocsCollector() {
                 public void collect(Term term, TermDocs tDocs) throws IOException {
-                    NodeId id = new NodeId(term.text());
+                    UUID uuid = UUID.fromString(term.text());
                     while (tDocs.next()) {
                         int doc = tDocs.doc();
                         // skip shareable nodes
                         if (!shareableNodes.get(doc)) {
-                            NodeInfo info = new NodeInfo(doc, id);
-                            docs.put(doc, info);
+                            NodeInfo info = new NodeInfo(doc, uuid);
+                            docs.put(new Integer(doc), info);
                         }
                     }
                 }
@@ -409,16 +410,16 @@ class CachingIndexReader extends FilterIndexReader {
             // read PARENTs
             collectTermDocs(reader, new Term(FieldNames.PARENT, "0"), new TermDocsCollector() {
                 public void collect(Term term, TermDocs tDocs) throws IOException {
-                    NodeId id = new NodeId(term.text());
+                    UUID uuid = UUID.fromString(term.text());
                     while (tDocs.next()) {
-                        Integer docId = tDocs.doc();
-                        NodeInfo info = docs.get(docId);
+                        Integer docId = new Integer(tDocs.doc());
+                        NodeInfo info = (NodeInfo) docs.get(docId);
                         if (info == null) {
                             // shareable node, see above
                         } else {
-                            info.parent = id;
+                            info.parent = uuid;
                             docs.remove(docId);
-                            docs.put(info.id, info);
+                            docs.put(info.uuid, info);
                         }
                     }
                 }
@@ -429,8 +430,10 @@ class CachingIndexReader extends FilterIndexReader {
             }
 
             double foreignParents = 0;
-            for (NodeInfo info : docs.values()) {
-                NodeInfo parent = docs.get(info.parent);
+            Iterator it = docs.values().iterator();
+            while (it.hasNext()) {
+                NodeInfo info = (NodeInfo) it.next();
+                NodeInfo parent = (NodeInfo) docs.get(info.parent);
                 if (parent != null) {
                     parents[info.docId] = DocId.create(parent.docId);
                 } else if (info.parent != null) {
@@ -453,8 +456,8 @@ class CachingIndexReader extends FilterIndexReader {
                 }
                 log.debug("initialized {} DocIds in {} ms, {} foreign parents",
                         new Object[]{
-                            parents.length,
-                            time,
+                            new Integer(parents.length),
+                            new Long(time),
                             nf.format(foreignParents)
                         });
             }
@@ -521,13 +524,13 @@ class CachingIndexReader extends FilterIndexReader {
 
         final int docId;
 
-        final NodeId id;
+        final UUID uuid;
 
-        NodeId parent;
+        UUID parent;
 
-        public NodeInfo(int docId, NodeId id) {
+        public NodeInfo(int docId, UUID uuid) {
             this.docId = docId;
-            this.id = id;
+            this.uuid = uuid;
         }
     }
 }

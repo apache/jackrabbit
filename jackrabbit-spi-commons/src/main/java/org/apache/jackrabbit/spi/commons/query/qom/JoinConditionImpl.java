@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.JoinCondition;
-
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
 
 /**
  * <code>JoinConditionImpl</code>...

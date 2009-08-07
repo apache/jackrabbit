@@ -69,7 +69,7 @@ public class ImpersonationTest extends AbstractUserTest {
     }
 
     public void testImpersonateGroup() throws RepositoryException, NotExecutableException {
-        Session s = getHelper().getReadOnlySession();
+        Session s = helper.getReadOnlySession();
         try {
             Principal group = getTestGroup(s).getPrincipal();
             Subject subject = createSubject(group);
@@ -80,7 +80,7 @@ public class ImpersonationTest extends AbstractUserTest {
     }
 
     public void testGrantImpersonationToGroupPrincipal() throws RepositoryException, NotExecutableException {
-        Session s = getHelper().getReadOnlySession();
+        Session s = helper.getReadOnlySession();
         try {
             Principal group = getTestGroup(s).getPrincipal();
             try {

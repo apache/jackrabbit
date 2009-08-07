@@ -19,14 +19,13 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.ValueFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -38,20 +37,16 @@ class StringValue implements TextValue {
     private final String value;
 
     private final NamePathResolver nsContext;
-    private final ValueFactory valueFactory;
 
     /**
      * Constructs a new <code>StringValue</code> representing the given
      * value.
      *
      * @param value
-     * @param nsContext
-     * @param valueFactory
      */
-    protected StringValue(String value, NamePathResolver nsContext, ValueFactory valueFactory) {
+    protected StringValue(String value, NamePathResolver nsContext) {
         this.value = value;
         this.nsContext = nsContext;
-        this.valueFactory = valueFactory;
     }
 
     //--------------------------------------------------------< TextValue >
@@ -67,13 +62,13 @@ class StringValue implements TextValue {
             // current namespace context of xml document
             InternalValue ival =
                     InternalValue.create(ValueHelper.convert(
-                            value, type, valueFactory), nsContext);
+                            value, type, ValueFactoryImpl.getInstance()), nsContext);
             // convert InternalValue to Value using this
             // session's namespace mappings
-            return ValueFormat.getJCRValue(ival, resolver, valueFactory);
+            return ival.toJCRValue(resolver);
         } else {
             // all other types
-            return ValueHelper.deserialize(value, type, false, valueFactory);
+            return ValueHelper.deserialize(value, type, false, ValueFactoryImpl.getInstance());
         }
     }
 
@@ -90,7 +85,7 @@ class StringValue implements TextValue {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
                 return InternalValue.create(ValueHelper.convert(
-                        value, targetType, valueFactory), nsContext);
+                        value, targetType, ValueFactoryImpl.getInstance()), nsContext);
             }
         } catch (IOException e) {
             throw new RepositoryException("Error decoding Base64 content", e);

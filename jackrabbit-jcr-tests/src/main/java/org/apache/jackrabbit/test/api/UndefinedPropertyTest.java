@@ -55,7 +55,7 @@ public class UndefinedPropertyTest extends AbstractJCRTest {
      * Tests that no actual property with type Undefined exists.
      */
     public void testUndefinedProperty() throws RepositoryException {
-        Session session = getHelper().getReadOnlySession();
+        Session session = helper.getReadOnlySession();
         try {
             Property prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), PropertyType.UNDEFINED, null);
             assertNull("Property with type Undefined found.", prop);

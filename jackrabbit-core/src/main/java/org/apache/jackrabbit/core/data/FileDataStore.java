@@ -104,8 +104,7 @@ public class FileDataStore implements DataStore {
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse = 
-        Collections.synchronizedMap(new WeakHashMap<DataIdentifier, WeakReference<DataIdentifier>>());
+    protected Map inUse = Collections.synchronizedMap(new WeakHashMap());
 
     /**
      * Creates a uninitialized data store.
@@ -166,7 +165,7 @@ public class FileDataStore implements DataStore {
     }
 
     private void usesIdentifier(DataIdentifier identifier) {
-        inUse.put(identifier, new WeakReference<DataIdentifier>(identifier));
+        inUse.put(identifier, new WeakReference(identifier));
     }
 
     /**
@@ -309,10 +308,10 @@ public class FileDataStore implements DataStore {
                 }
             }
         } else if (file.isDirectory()) {
-            for (File f: file.listFiles()) {
-                count += deleteOlderRecursive(f, min);
+            File[] list = file.listFiles();
+            for (int i = 0; i < list.length; i++) {
+                count += deleteOlderRecursive(list[i], min);
             }
-            
             // JCR-1396: FileDataStore Garbage Collector and empty directories
             // Automatic removal of empty directories (but not the root!)
             synchronized (this) {
@@ -324,15 +323,14 @@ public class FileDataStore implements DataStore {
         return count;
     }
 
-    private void listRecursive(List<File> list, File file) {
-        File[] files = file.listFiles();
-        if (files != null) {
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    listRecursive(list, f);
-                } else {
-                    list.add(f);
-                }
+    private void listRecursive(List list, File file) {
+        File[] l = file.listFiles();
+        for (int i = 0; l != null && i < l.length; i++) {
+            File f = l[i];
+            if (f.isDirectory()) {
+                listRecursive(list, f);
+            } else {
+                list.add(f);
             }
         }
     }
@@ -340,11 +338,12 @@ public class FileDataStore implements DataStore {
     /**
      * {@inheritDoc}
      */
-    public Iterator<DataIdentifier> getAllIdentifiers() {
-        ArrayList<File> files = new ArrayList<File>();
+    public Iterator getAllIdentifiers() {
+        ArrayList files = new ArrayList();
         listRecursive(files, directory);
-        ArrayList<DataIdentifier> identifiers = new ArrayList<DataIdentifier>();
-        for (File f: files) {
+        ArrayList identifiers = new ArrayList();
+        for (int i = 0; i < files.size(); i++) {
+            File f = (File) files.get(i);
             String name = f.getName();
             if (!name.startsWith(TMP)) {
                 DataIdentifier id = new DataIdentifier(name);

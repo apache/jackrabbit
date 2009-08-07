@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
-import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
-
 import java.io.Serializable;
 import java.security.Principal;
 

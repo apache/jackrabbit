@@ -60,7 +60,7 @@ public class LockRefresh extends AbstractOperation {
 
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getNodeId() throws RepositoryException {
-        return nodeState.getNodeId();
+        return (NodeId) nodeState.getNodeId();
     }
 
     //------------------------------------------------------------< Factory >---

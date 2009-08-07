@@ -21,8 +21,8 @@ import java.io.InputStream;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.api.JackrabbitValue;
 import org.apache.jackrabbit.core.RepositoryImpl;
@@ -37,13 +37,13 @@ public class TestTwoGetStreams extends AbstractJCRTest {
 
     private static Logger log = LoggerFactory.getLogger(TestTwoGetStreams.class);
 
-    private static final int STREAM_LENGTH = 256 * 1024;
-
+    private static final int STREAM_LENGTH = 1 * 1024 * 1024;
+    
     private boolean isDataStoreEnabled() throws RepositoryException {
         RepositoryImpl rep = (RepositoryImpl) superuser.getRepository();
         return rep.getDataStore() != null;
     }
-
+    
     /**
      * Test the JackrabbitValue.getContentIdentity feature.
      */
@@ -52,16 +52,10 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             log.info("testContentIdentity skipped. Data store is not used.");
             return;
         }
-
+        
         Node root = superuser.getRootNode();
-        ValueFactory vf = superuser.getValueFactory();
-
-        long time = System.currentTimeMillis();
-        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
-        superuser.save();
-        long saveOne = System.currentTimeMillis() - time;
-
-        root.setProperty("p2", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
+        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
+        root.setProperty("p2", new RandomInputStream(1, STREAM_LENGTH));
         superuser.save();
 
         Value v1 = root.getProperty("p1").getValue();
@@ -74,22 +68,21 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             assertNotNull(id1);
             assertEquals(id1, id2);
         }
-
+        
         // copying a value should not stream the content
-        time = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
             Value v = root.getProperty("p1").getValue();
             root.setProperty("p3", v);
         }
         superuser.save();
         time = System.currentTimeMillis() - time;
-        // streaming 1 MB again and again takes about 4.3 seconds
+        // streaming the value again and again takes about 4.3 seconds
         // on my computer; copying the data identifier takes about 16 ms
-        // here we test if copying 100 objects took less than saving 50 new objects
-        assertTrue("time: " + time, time < saveOne * 50);
+        assertTrue(time < 500);
 
     }
-
+    
     /**
      * Test reading from two concurrently opened streams.
      */
@@ -98,15 +91,14 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             log.info("testContentIdentity skipped. Data store is not used.");
             return;
         }
-
+        
         Node root = superuser.getRootNode();
-        ValueFactory vf = superuser.getValueFactory();
-        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
-        root.setProperty("p2", vf.createBinary(new RandomInputStream(2, STREAM_LENGTH)));
+        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
+        root.setProperty("p2", new RandomInputStream(2, STREAM_LENGTH));
         superuser.save();
 
-        InputStream i1 = root.getProperty("p1").getBinary().getStream();
-        InputStream i2 = root.getProperty("p2").getBinary().getStream();
+        InputStream i1 = root.getProperty("p1").getStream();
+        InputStream i2 = root.getProperty("p2").getStream();
         assertEquals("p1", i1, new RandomInputStream(1, STREAM_LENGTH));
         assertEquals("p2", i2, new RandomInputStream(2, STREAM_LENGTH));
         try {
@@ -129,15 +121,14 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             log.info("testContentIdentity skipped. Data store is not used.");
             return;
         }
-
+        
         Node root = superuser.getRootNode();
-        ValueFactory vf = superuser.getValueFactory();
-        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
-        root.setProperty("p2", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
+        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
+        root.setProperty("p2", new RandomInputStream(1, STREAM_LENGTH));
         superuser.save();
 
-        InputStream i1 = root.getProperty("p1").getBinary().getStream();
-        InputStream i2 = root.getProperty("p2").getBinary().getStream();
+        InputStream i1 = root.getProperty("p1").getStream();
+        InputStream i2 = root.getProperty("p2").getStream();
         assertEquals("Streams are different", i1, i2);
         try {
             i1.close();
@@ -160,14 +151,13 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             log.info("testContentIdentity skipped. Data store is not used.");
             return;
         }
-
+        
         Node root = superuser.getRootNode();
-        ValueFactory vf = superuser.getValueFactory();
-        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
+        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
         superuser.save();
 
-        InputStream i1 = root.getProperty("p1").getBinary().getStream();
-        InputStream i2 = root.getProperty("p1").getBinary().getStream();
+        InputStream i1 = root.getProperty("p1").getStream();
+        InputStream i2 = root.getProperty("p1").getStream();
         assertEquals("Streams are different", i1, i2);
         try {
             i1.close();

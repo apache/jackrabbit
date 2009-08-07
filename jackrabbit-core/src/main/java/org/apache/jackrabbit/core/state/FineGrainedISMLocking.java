@@ -16,20 +16,21 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.util.Collections;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.uuid.UUID;
+
+import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.Collections;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-
-import EDU.oswego.cs.dl.util.concurrent.Latch;
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
+import EDU.oswego.cs.dl.util.concurrent.Latch;
 import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
 
 /**
@@ -238,7 +239,7 @@ public class FineGrainedISMLocking implements ISMLocking {
     private static boolean hasDependency(ChangeLog changeLog, ItemId id) {
         try {
             if (changeLog.get(id) == null) {
-                if (!id.denotesNode() || changeLog.getReferencesTo((NodeId) id) == null) {
+                if (!id.denotesNode() || changeLog.get(new NodeReferencesId((NodeId) id)) == null) {
                     // change log does not contain the item
                     return false;
                 }
@@ -383,13 +384,13 @@ public class FineGrainedISMLocking implements ISMLocking {
         }
 
         private static int slotIndex(ItemId id) {
-            NodeId nodeId;
+            UUID uuid;
             if (id.denotesNode()) {
-                nodeId = (NodeId) id;
+                uuid = ((NodeId) id).getUUID();
             } else {
-                nodeId = ((PropertyId) id).getParentId();
+                uuid = ((PropertyId) id).getParentId().getUUID();
             }
-            return ((int) nodeId.getLeastSignificantBits()) & 0xf;
+            return ((int) uuid.getLeastSignificantBits()) & 0xf;
         }
     }
 }

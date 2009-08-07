@@ -22,7 +22,7 @@ import javax.jcr.RepositoryException;
  * Implements a query node that defines an OR operation between arbitrary
  * other {@link QueryNode}s.
  */
-public class OrQueryNode extends NAryQueryNode<QueryNode> {
+public class OrQueryNode extends NAryQueryNode {
 
     /**
      * Creates a new <code>OrQueryNode</code> with a <code>parent</code>

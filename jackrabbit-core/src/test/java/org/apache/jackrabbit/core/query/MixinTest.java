@@ -34,10 +34,10 @@ public class MixinTest extends AbstractQueryTest {
 
         JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
             superuser.getWorkspace().getNodeTypeManager();
-        if (!manager.hasNodeType("test:mimeType")) {
+        if (!manager.hasNodeType("test:referenceable")) {
             String cnd =
                 "<test='http://www.apache.org/jackrabbit/test'>\n"
-                + "[test:mimeType] > mix:mimeType mixin";
+                + "[test:referenceable] > mix:referenceable mixin";
             manager.registerNodeTypes(
                     new ByteArrayInputStream(cnd.getBytes()),
                     JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
@@ -45,7 +45,7 @@ public class MixinTest extends AbstractQueryTest {
     }
 
     public void testBuiltInMixin() throws RepositoryException {
-        // nt:resource is mix:mimeType by its node type definition
+        // nt:resoure is referenceable by its node type definition
         Node n1 = testRootNode.addNode("n1", "nt:resource");
         n1.setProperty("jcr:data", new ByteArrayInputStream("hello world".getBytes()));
         n1.setProperty("jcr:lastModified", Calendar.getInstance());
@@ -53,15 +53,15 @@ public class MixinTest extends AbstractQueryTest {
 
         // assign mix:referenceable to arbitrary node
         Node n2 = testRootNode.addNode("n2");
-        n2.addMixin("mix:mimeType");
+        n2.addMixin("mix:referenceable");
 
-        // make node referenceable using a mixin that extends from mix:mimeType
+        // make node referenceable using a mixin that extends from mix:referenceable
         Node n3 = testRootNode.addNode("n3");
-        n3.addMixin("test:mimeType");
+        n3.addMixin("test:referenceable");
 
         testRootNode.save();
 
-        String query = testPath + "//element(*, mix:mimeType)";
+        String query = testPath + "//element(*, mix:referenceable)";
         executeXPathQuery(query, new Node[]{n1, n2, n3});
     }
 

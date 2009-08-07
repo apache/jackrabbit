@@ -64,7 +64,7 @@ public class DefaultEventType implements EventType {
         if (localName == null || "".equals(localName)) {
             throw new IllegalArgumentException("null and '' are not valid local names of an event type.");
         }
-        String key = DomUtil.getExpandedName(localName, namespace);
+        String key = DomUtil.getQualifiedName(localName, namespace);
         if (eventTypes.containsKey(key)) {
             return (EventType) eventTypes.get(key);
         } else {

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -43,12 +44,12 @@ class NamespaceContext implements NamespaceResolver {
     /**
      * The namespace prefix to namespace URI mapping.
      */
-    private final Map<String, String> prefixToURI;
+    private final Map prefixToURI;
 
     /**
      * The namespace URI to namespace prefix mapping.
      */
-    private final Map<String, String> uriToPrefix;
+    private final Map uriToPrefix;
 
     /**
      * Creates a NamespaceContext instance with the given parent context
@@ -57,12 +58,14 @@ class NamespaceContext implements NamespaceResolver {
      * @param parent parent context
      * @param mappings local namespace mappings (prefix -> URI)
      */
-    public NamespaceContext(NamespaceContext parent, Map<String, String> mappings) {
+    public NamespaceContext(NamespaceContext parent, Map mappings) {
         this.parent = parent;
-        this.prefixToURI = new HashMap<String, String>();
-        this.uriToPrefix = new HashMap<String, String>();
+        this.prefixToURI = new HashMap();
+        this.uriToPrefix = new HashMap();
 
-        for (Map.Entry<String, String> mapping : mappings.entrySet()) {
+        Iterator iterator = mappings.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry mapping = (Map.Entry) iterator.next();
             prefixToURI.put(mapping.getKey(), mapping.getValue());
             uriToPrefix.put(mapping.getValue(), mapping.getKey());
         }

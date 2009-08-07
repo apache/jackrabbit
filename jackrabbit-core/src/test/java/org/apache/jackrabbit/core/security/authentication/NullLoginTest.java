@@ -25,8 +25,8 @@ import javax.jcr.Session;
 public class NullLoginTest extends AbstractJCRTest {
 
     public void testNullLogin() throws RepositoryException {
-        Session s = getHelper().getRepository().login();
-        Session s2 = getHelper().getRepository().login(null, null);
+        Session s = helper.getRepository().login();
+        Session s2 = helper.getRepository().login(null, null);
         try {
             assertNotNull(s.getUserID());
             assertEquals(s.getUserID(), s2.getUserID());

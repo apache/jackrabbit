@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.persistence.obj;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -31,12 +31,15 @@ import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.PropertyType;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -81,7 +84,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
 
     private static String buildNodeFolderPath(NodeId id) {
         StringBuffer sb = new StringBuffer();
-        char[] chars = id.toString().toCharArray();
+        char[] chars = id.getUUID().toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
             if (chars[i] == '-') {
@@ -123,8 +126,8 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
         return buildNodeFolderPath(id) + FileSystem.SEPARATOR + NODEFILENAME;
     }
 
-    private static String buildNodeReferencesFilePath(NodeId id) {
-        return buildNodeFolderPath(id) + FileSystem.SEPARATOR + NODEREFSFILENAME;
+    private static String buildNodeReferencesFilePath(NodeReferencesId id) {
+        return buildNodeFolderPath(id.getTargetId()) + FileSystem.SEPARATOR + NODEREFSFILENAME;
     }
 
     //---------------------------------------------------< PersistenceManager >
@@ -204,7 +207,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 Serializer.deserialize(state, in);
                 return state;
             } catch (Exception e) {
-                String msg = "failed to read node state: " + id;
+                String msg = "failed to read node state: " + id.getUUID();
                 log.debug(msg);
                 throw new ItemStateException(msg, e);
             } finally {
@@ -258,7 +261,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences loadReferencesTo(NodeId id)
+    public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -354,7 +357,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
+        String refsFilePath = buildNodeReferencesFilePath(refs.getId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             refsFile.makeParentDirs();
@@ -365,7 +368,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 out.close();
             }
         } catch (Exception e) {
-            String msg = "failed to store " + refs;
+            String msg = "failed to store references: " + refs.getId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -407,7 +410,11 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
                 if (val != null) {
-                    val.deleteBinaryResource();
+                    if (val.getType() == PropertyType.BINARY) {
+                        BLOBFileValue blobVal = val.getBLOBFileValue();
+                        // delete blob file and prune empty parent folders
+                        blobVal.delete(true);
+                    }
                 }
             }
         }
@@ -434,7 +441,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
+        String refsFilePath = buildNodeReferencesFilePath(refs.getId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             if (refsFile.exists()) {
@@ -442,7 +449,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete " + refs;
+            String msg = "failed to delete node references: " + refs.getId();
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -489,7 +496,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean existsReferencesTo(NodeId id)
+    public synchronized boolean exists(NodeReferencesId id)
             throws ItemStateException {
 
         if (!initialized) {

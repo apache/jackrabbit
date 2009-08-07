@@ -19,25 +19,24 @@ package org.apache.jackrabbit.core;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import junit.framework.TestCase;
-
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.uuid.UUID;
+
+import junit.framework.TestCase;
 
 public class CachingHierarchyManagerTest extends TestCase {
 
@@ -340,7 +339,7 @@ public class CachingHierarchyManagerTest extends TestCase {
          * Create a new instance of this class.
          */
         public StaticItemStateManager() {
-            rootNodeId = nextNodeId();
+            rootNodeId = new NodeId(nextUUID());
         }
 
         /**
@@ -385,7 +384,7 @@ public class CachingHierarchyManagerTest extends TestCase {
          * @return new node
          */
         public NodeState addNode(NodeState parent, String name) {
-            NodeId id = nextNodeId();
+            NodeId id = new NodeId(nextUUID());
             NodeState child = new NodeState(id, NameConstants.NT_UNSTRUCTURED,
                     parent.getNodeId(), NodeState.STATUS_EXISTING, false);
             if (listener != null) {
@@ -517,13 +516,13 @@ public class CachingHierarchyManagerTest extends TestCase {
         }
 
         /**
-         * Return the next available node id. Simply increments the last UUID
+         * Return the next available UUID. Simply increments the last UUID
          * returned by <code>1</code>.
          *
          * @return next UUID
          */
-        private NodeId nextNodeId() {
-            return new NodeId(0, lsbGenerator++);
+        private UUID nextUUID() {
+            return new UUID(0, lsbGenerator++);
         }
 
         //----------------------------------------------------- ItemStateManager
@@ -557,7 +556,7 @@ public class CachingHierarchyManagerTest extends TestCase {
         /**
          * {@inheritDoc}
          */
-        public NodeReferences getNodeReferences(NodeId id)
+        public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {
             return null;
         }
@@ -565,7 +564,7 @@ public class CachingHierarchyManagerTest extends TestCase {
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeId id) {
+        public boolean hasNodeReferences(NodeReferencesId id) {
             return false;
         }
     }

@@ -30,34 +30,34 @@ import java.io.BufferedInputStream;
  * conversions to other Properties (except Name and Path property). If no String
  * property is found or only a multivalue String property with an empty array, a
  * NotExecutableException is thrown on setUp. More precisely, the tests are:
- * <p>
+ * <p/>
  * - Value.getString() should return a string equals to Property.getString(),
  * and in case of a multivalue property the failure of Property.getString() is
  * checked.
- * <p>
+ * <p/>
  * - Value.getBoolean() Conversion to Boolean property.
- * <p>
+ * <p/>
  * - Value.getDate() Conversion to Date property is only valid when the String
  * follows the required Date pattern (6.2.5.1 of jsr170 specification).
- * <p>
+ * <p/>
  * - Value.getDouble() Conversion to Double are only valid when the String
  * follows the correct patterns as required by the according Java classes.
- * <p>
+ * <p/>
  * - Value.getLong() Conversion to Double are only valid when the String follows
  * the correct patterns as required by the according Java classes.
- * <p>
+ * <p/>
  * - Value.getStream() Conversion to a Binary property follows the rules of
  * Value.getStream() as explained in chapter 6.2.7 of the jsr170 specification.
  * The required encoding is utf-8.
- * <p>
+ * <p/>
  * - Property.getNode() Conversion to a Reference property is tested with
  * Property.getNode. The String should match the UUID pattern but this doesn't
  * guarantee to be a reference (which especially requires integrity).
- * <p>
+ * <p/>
  * - Property.getLength() .
- * <p>
+ * <p/>
  * - Property.getLengths() .
- * <p>
+ * <p/>
  * - Property.getType() is compared to Value.getType() .
  *
  * @test
@@ -193,45 +193,30 @@ public class StringPropertyTest extends AbstractPropertyTest {
         }
         try {
             val.getString();
-        } catch (IllegalStateException ise) {
             fail("Non stream method call after stream method call " +
-                    "should not throw an IllegalStateException.");
+                    "should throw an IllegalStateException.");
+        } catch (IllegalStateException ise) {
+            //ok
         }
         try {
             otherVal.getStream();
-        } catch (IllegalStateException ise) {
             fail("Stream method call after a non stream method call " +
-                    "should not throw an IllegalStateException.");
+                    "should throw an IllegalStateException.");
+        } catch (IllegalStateException ise) {
+            // ok
         }
         in.close();
     }
 
     /**
-     * Tests conversion from String type to Reference or Path type.
+     * Tests conversion from String type to Reference type.
      */
-    public void testGetNode() throws RepositoryException, NotExecutableException {
+    public void testAsReference() throws RepositoryException, NotExecutableException {
         if (!multiple) {
             // not testable since format of ID is implementation specific
         } else {
             try {
                 prop.getNode();
-                fail("Property.getNode() called on a multivalue property " +
-                        "should throw a ValueFormatException.");
-            } catch (ValueFormatException vfe) {
-                // ok
-            }
-        }
-    }
-
-    /**
-     * Tests conversion from String type to Reference or Path type.
-     */
-    public void testGetProperty() throws RepositoryException, NotExecutableException {
-        if (!multiple) {
-            // not testable as a STRING may or may not be convertable to Path or Reference
-        } else {
-            try {
-                prop.getProperty();
                 fail("Property.getNode() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {

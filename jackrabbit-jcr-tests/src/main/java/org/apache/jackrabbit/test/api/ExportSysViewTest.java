@@ -58,7 +58,7 @@ public class ExportSysViewTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         isReadOnly = true;
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         file = File.createTempFile("SysViewExportTest", ".xml");
 
         super.setUp();

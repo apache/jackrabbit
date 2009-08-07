@@ -18,36 +18,22 @@ package org.apache.jackrabbit.spi.commons.conversion;
 
 import junit.framework.TestCase;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
 
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.Path;
 
-import java.util.List;
-import java.util.Iterator;
-
 /**
  * Test cases for the {@link ParsingPathResolver} class.
  */
 public class ParsingPathResolverTest extends TestCase {
 
-    private static NameResolver nameResolver = new ParsingNameResolver(NameFactoryImpl.getInstance(), new DummyNamespaceResolver());
-    private DummyIdentifierResolver idResolver;
-
     /**
      * Path resolver being tested.
      */
-    private PathResolver resolver = new ParsingPathResolver(PathFactoryImpl.getInstance(), nameResolver);
-    private PathResolver resolverV2;
-
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        idResolver = new DummyIdentifierResolver();
-        resolverV2 = new ParsingPathResolver(PathFactoryImpl.getInstance(), nameResolver, idResolver);
-    }
+    private PathResolver resolver = new ParsingPathResolver(PathFactoryImpl.getInstance(),
+            new ParsingNameResolver(NameFactoryImpl.getInstance(), new DummyNamespaceResolver()));
 
     /**
      * Checks that the given path resolves properly.
@@ -55,21 +41,12 @@ public class ParsingPathResolverTest extends TestCase {
      * @param path JCR path
      */
     private void assertValidPath(String path) {
-        assertValidPath(path, path);
-    }
-
-    private void assertValidPath(String path, String expectedResult) {
         try {
             Path qpath = resolver.getQPath(path);
-            assertEquals(path, expectedResult, resolver.getJCRPath(qpath));
-        } catch (RepositoryException e) {
+            assertEquals(path, path, resolver.getJCRPath(qpath));
+        } catch (NameException e) {
             fail(path);
-        }
-
-        try {
-            Path qpath = resolverV2.getQPath(path);
-            assertEquals(path, expectedResult, resolver.getJCRPath(qpath));
-        } catch (RepositoryException e) {
+        } catch (NamespaceException e) {
             fail(path);
         }
     }
@@ -83,14 +60,8 @@ public class ParsingPathResolverTest extends TestCase {
         try {
             resolver.getQPath(path);
             fail(path);
-        } catch (RepositoryException e) {
-            // success
-        }
-        try {
-            resolverV2.getQPath(path);
-            fail(path);
-        } catch (RepositoryException e) {
-            // success
+        } catch (NameException e) {
+        } catch (NamespaceException e) {
         }
     }
 
@@ -116,12 +87,6 @@ public class ParsingPathResolverTest extends TestCase {
         assertValidPath("name[2]/name[2]");
         assertValidPath("prefix:name[2]/prefix:name[2]");
 
-        // trailing slash is valid
-        assertValidPath("a/", "a");
-        assertValidPath("prefix:name/", "prefix:name");
-        assertValidPath("/prefix:name[1]/", "/prefix:name");
-        assertValidPath("/a/../b/", "/a/../b");
-
         assertValidPath("/a/../b");
         assertValidPath("./../.");
         assertValidPath("/a/./b");
@@ -138,9 +103,12 @@ public class ParsingPathResolverTest extends TestCase {
     public void testInvalidPaths() {
         assertInvalidPath("");
         assertInvalidPath("//");
+        //assertInvalidPath("x/");  // TODO: was valid with jcr-commons-path but not with pathresolver? check again
         assertInvalidPath("x:");
         assertInvalidPath("x:/");
         assertInvalidPath("x[]");
+        //assertInvalidPath("x:y/"); // TODO: was valid with jcr-commons-path but not with pathresolver? check again
+        //assertInvalidPath("x:y[1]/"); // TODO: was valid with jcr-commons-path but not with pathresolver? check again
         assertInvalidPath("x:y[");
         assertInvalidPath("x:y[]");
         assertInvalidPath("x:y[1");
@@ -161,38 +129,4 @@ public class ParsingPathResolverTest extends TestCase {
         assertInvalidPath("prefix:name[2]foo/prefix:name[2]");
     }
 
-    public void testValidIdentifierPaths() throws MalformedPathException, IllegalNameException, NamespaceException {
-        for (Iterator it = idResolver.getValidIdentifiers().iterator(); it.hasNext();) {
-            String jcrPath = "[" + it.next().toString() + "]";
-
-            Path p = resolverV2.getQPath(jcrPath, true);
-            assertFalse(p.denotesIdentifier());
-            assertTrue(p.isAbsolute());
-            assertTrue(p.isNormalized());
-            assertTrue(p.isCanonical());
-            assertEquals(DummyIdentifierResolver.JCR_PATH, resolverV2.getJCRPath(p));
-
-            p = resolverV2.getQPath(jcrPath, false);
-            assertTrue(p.denotesIdentifier());
-            assertEquals(1, p.getLength());
-            assertTrue(p.isAbsolute());
-            assertFalse(p.isNormalized());
-            assertFalse(p.isCanonical());
-            assertEquals(jcrPath, resolverV2.getJCRPath(p));
-        }
-    }
-
-    public void testInvalidIdentifierPaths() throws MalformedPathException, IllegalNameException, NamespaceException {
-        List l = idResolver.getInvalidIdentifierPaths();
-
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            String path = it.next().toString();
-            try {
-                resolverV2.getQPath(path);
-                fail(path);
-            } catch (MalformedPathException e) {
-                // success
-            }
-        }
-    }
 }

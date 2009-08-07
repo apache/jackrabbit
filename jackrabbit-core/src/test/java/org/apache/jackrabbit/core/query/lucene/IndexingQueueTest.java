@@ -50,7 +50,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
 
     public void testQueue() throws Exception {
         Extractor.sleepTime = 200;
-        SearchIndex index = getSearchIndex();
+        SearchIndex index = (SearchIndex) getQueryHandler();
         IndexingQueue queue = index.getIndex().getIndexingQueue();
 
         assertEquals(0, queue.getNumPendingDocuments());
@@ -70,8 +70,11 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         NodeIterator nodes = q.execute().getNodes();
         assertFalse(nodes.hasNext());
 
-        index.flush();
-        assertEquals(0, queue.getNumPendingDocuments());
+        synchronized (index.getIndex()) {
+            while (queue.getNumPendingDocuments() > 0) {
+                index.getIndex().wait(50);
+            }
+        }
 
         q = qm.createQuery(testPath + "/*[jcr:contains(., 'fox')]", Query.XPATH);
         nodes = q.execute().getNodes();
@@ -80,7 +83,8 @@ public class IndexingQueueTest extends AbstractIndexingTest {
 
     public void testInitialIndex() throws Exception {
         Extractor.sleepTime = 200;
-        File indexDir = new File(getSearchIndex().getPath());
+        SearchIndex index = (SearchIndex) getQueryHandler();
+        File indexDir = new File(index.getPath());
 
         // fill workspace
         Node testFolder = testRootNode.addNode("folder", "nt:folder");
@@ -109,7 +113,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
-                    session = getHelper().getSuperuserSession(WORKSPACE_NAME);
+                    session = helper.getSuperuserSession(WORKSPACE_NAME);
                 } catch (RepositoryException e) {
                     throw new RuntimeException(e);
                 }
@@ -129,9 +133,21 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         }
 
         qm = session.getWorkspace().getQueryManager();
-        getSearchIndex().flush();
+        index = (SearchIndex) getQueryHandler();
+        IndexingQueue queue = index.getIndex().getIndexingQueue();
 
-        String stmt = testPath + "//element(*, nt:resource)[jcr:contains(., 'fox')] order by @jcr:score descending";
+        // flush index to make sure any documents in the buffer are written
+        // to the index. this is to make sure all nodes are pushed either to
+        // the index or to the indexing queue
+        index.getIndex().flush();
+
+        synchronized (index.getIndex()) {
+            while (queue.getNumPendingDocuments() > 0) {
+                index.getIndex().wait(50);
+            }
+        }
+
+        String stmt = testPath + "//element(*, nt:resource)[jcr:contains(., 'fox')]";
         Query q = qm.createQuery(stmt, Query.XPATH);
         assertEquals(num, q.execute().getNodes().getSize());
     }
@@ -141,7 +157,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
      */
     public void testReaderUpToDate() throws Exception {
         Extractor.sleepTime = 10;
-        SearchIndex index = getSearchIndex();
+        SearchIndex index = (SearchIndex) getQueryHandler();
         File indexDir = new File(index.getPath());
 
         // shutdown workspace
@@ -160,7 +176,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         }
 
         // start workspace again by getting a session
-        session = getHelper().getSuperuserSession(WORKSPACE_NAME);
+        session = helper.getSuperuserSession(WORKSPACE_NAME);
 
         qm = session.getWorkspace().getQueryManager();
 

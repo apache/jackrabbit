@@ -265,7 +265,7 @@ public class WildcardQuery extends Query implements Transformable {
         /**
          * The map to store the results.
          */
-        private final Map<String, BitSet> resultMap;
+        private final Map resultMap;
 
         /**
          * Creates a new WildcardQueryScorer.
@@ -273,21 +273,20 @@ public class WildcardQuery extends Query implements Transformable {
          * @param similarity the similarity implementation.
          * @param reader     the index reader to use.
          */
-        @SuppressWarnings({"unchecked"})
         WildcardQueryScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
             this.reader = reader;
             this.cacheKey = field + '\uFFFF' + propName + '\uFFFF' + transform + '\uFFFF' + pattern;
             // check cache
             PerQueryCache cache = PerQueryCache.getInstance();
-            Map<String, BitSet> m = (Map<String, BitSet>) cache.get(WildcardQueryScorer.class, reader);
+            Map m = (Map) cache.get(WildcardQueryScorer.class, reader);
             if (m == null) {
-                m = new HashMap<String, BitSet>();
+                m = new HashMap();
                 cache.put(WildcardQueryScorer.class, reader, m);
             }
             resultMap = m;
 
-            BitSet result = resultMap.get(cacheKey);
+            BitSet result = (BitSet) resultMap.get(cacheKey);
             if (result == null) {
                 result = new BitSet(reader.maxDoc());
             } else {

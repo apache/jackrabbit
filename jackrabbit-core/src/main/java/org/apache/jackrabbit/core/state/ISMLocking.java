@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 
 /**
  * <code>ISMLocking</code> defines an interface for a locking strategy of an

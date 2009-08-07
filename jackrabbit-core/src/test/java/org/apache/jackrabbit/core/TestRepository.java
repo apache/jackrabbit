@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -25,8 +26,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.collections.BeanMap;
-import org.apache.jackrabbit.commons.repository.ProxyRepository;
-import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
@@ -95,6 +94,9 @@ public class TestRepository {
         } catch (ConfigurationException e) {
             throw new RepositoryException(
                     "Error in test repository configuration", e);
+        } catch (IOException e) {
+            throw new RepositoryException(
+                    "Error in test repository initialization", e);
         }
     }
 
@@ -122,13 +124,25 @@ public class TestRepository {
             (Repository) helper.get("repository");
         final Credentials superuser =
             (Credentials) helper.get("superuserCredentials");
-        return new ProxyRepository(new RepositoryFactory() {
+        return new Repository() {
 
-            public Repository getRepository() throws RepositoryException {
-                return repository;
+            public String[] getDescriptorKeys() {
+                return repository.getDescriptorKeys();
             }
 
-        }) {
+            public String getDescriptor(String key) {
+                return repository.getDescriptor(key);
+            }
+
+            public Session login(Credentials credentials, String workspace)
+                    throws RepositoryException {
+                return repository.login(credentials, workspace);
+            }
+
+            public Session login(Credentials credentials)
+                    throws RepositoryException {
+                return repository.login(credentials);
+            }
 
             public Session login(String workspace) throws RepositoryException {
                 return repository.login(superuser, workspace);

@@ -19,25 +19,21 @@ package org.apache.jackrabbit.test.api;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
+import javax.jcr.Property;
+import javax.jcr.Value;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
-import javax.jcr.Binary;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-
 /**
  * Tests the various {@link Property#setValue(Value)} methods.
- * <p>
- * Configuration requirements:
- * <p>
- * The node at {@link #testRoot} must allow a
+ * <p/>
+ * Configuration requirements:<br/> The node at {@link #testRoot} must allow a
  * child node of type {@link #testNodeType} with name {@link #nodeName1}. The
  * node type {@link #testNodeType} must define a single value binary property
- * with name {@link #propertyName1}. As a special case, if the specified node
+ * with name {@link #propertyName1}. <br>As a special case, if the specified node
  * type automatically adds a jcr:content child node of type nt:resource, and
  * <code>propertyName1</code> is specified as "jcr:data", that binary property
  * is used instead.
@@ -115,26 +111,6 @@ public class SetValueBinaryTest extends AbstractJCRTest {
     }
 
     /**
-     * Test the persistence of a property modified with an BinaryValue parameter
-     * and saved from the Session
-     */
-    public void testBinarySessionJcr2() throws RepositoryException, IOException {
-        property1.setValue(value);
-        superuser.save();
-        Binary bin = property1.getValue().getBinary();
-        try {
-            InputStream in = bin.getStream();
-            try {
-                compareStream(data, in);
-            } finally {
-                in.close();
-            }
-        } finally {
-            bin.dispose();
-        }
-    }
-
-    /**
      * Test the persistence of a property modified with an input stream
      * parameter and saved from the parent Node
      */
@@ -151,27 +127,6 @@ public class SetValueBinaryTest extends AbstractJCRTest {
             compareStream(data, in);
         } finally {
             in.close();
-        }
-    }
-
-    /**
-     * Test the persistence of a property modified with an input stream
-     * parameter and saved from the parent Node
-     */
-    public void testBinaryParentJcr2() throws RepositoryException, IOException {
-        Binary bin = value.getBinary();
-        try {
-            property1.setValue(bin);
-            node.save();
-            bin = property1.getValue().getBinary();
-            InputStream in = bin.getStream();
-            try {
-                compareStream(data, in);
-            } finally {
-                in.close();
-            }
-        } finally {
-            bin.dispose();
         }
     }
 

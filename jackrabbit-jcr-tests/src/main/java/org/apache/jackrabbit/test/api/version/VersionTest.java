@@ -19,7 +19,6 @@ package org.apache.jackrabbit.test.api.version;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -30,7 +29,6 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.lock.LockException;
-import javax.jcr.lock.LockManager;
 
 import java.util.GregorianCalendar;
 import java.util.Calendar;
@@ -50,7 +48,6 @@ import java.io.ByteArrayInputStream;
  */
 public class VersionTest extends AbstractVersionTest {
 
-    private VersionManager versionManager;
     private Version version;
     private Version version2;
 
@@ -76,17 +73,15 @@ public class VersionTest extends AbstractVersionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-
         // create two versions
-        version = versionManager.checkin(versionableNode.getPath());
-        versionManager.checkout(versionableNode.getPath());
-        version2 = versionManager.checkin(versionableNode.getPath());
+        version = versionableNode.checkin();
+        versionableNode.checkout();
+        version2 = versionableNode.checkin();
     }
 
     protected void tearDown() throws Exception {
         // check the node out, so that it can be removed
-        versionManager.checkout(versionableNode.getPath());
+        versionableNode.checkout();
         version = null;
         version2 = null;
         super.tearDown();
@@ -121,13 +116,13 @@ public class VersionTest extends AbstractVersionTest {
     public void testAddNode() throws Exception {
         try {
             version.addNode(nodeName4);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.addNode(String) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.addNode(nodeName4, ntBase);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.addNode(String,String) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -154,36 +149,12 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.cancelMerge(Version)</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testCancelMergeJcr2() throws Exception {
-        try {
-            versionManager.cancelMerge(version.getPath(), version2);
-            fail("Version.cancelMerge(Version) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
      * Tests if <code>Version.checkin()</code> throws an {@link
      * javax.jcr.UnsupportedRepositoryOperationException}
      */
     public void testCheckin() throws Exception {
         try {
             version.checkin();
-            fail("Version.checkin() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>Version.checkin()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testCheckinJcr2() throws Exception {
-        try {
-            versionManager.checkin(version.getPath());
             fail("Version.checkin() did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -202,36 +173,12 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.checkout()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testCheckoutJcr2() throws Exception {
-        try {
-            versionManager.checkout(version.getPath());
-            fail("Version.checkout() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
      * Tests if <code>Version.doneMerge(Version)</code> throws an {@link
      * javax.jcr.UnsupportedRepositoryOperationException}
      */
     public void testDoneMerge() throws Exception {
         try {
             version.doneMerge(version2);
-            fail("Version should not be versionable: Version.doneMerge(Version) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>Version.doneMerge(Version)</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testDoneMergeJcr2() throws Exception {
-        try {
-            versionManager.doneMerge(version.getPath(), version2);
             fail("Version should not be versionable: Version.doneMerge(Version) did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -252,18 +199,6 @@ public class VersionTest extends AbstractVersionTest {
     public void testGetBaseVersion() throws Exception {
         try {
             version.getBaseVersion();
-            fail("Version.getBaseVersion() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>Version.getBaseVersion()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testGetBaseVersionJcr2() throws Exception {
-        try {
-            versionManager.getBaseVersion(version.getPath());
             fail("Version.getBaseVersion() did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -298,18 +233,6 @@ public class VersionTest extends AbstractVersionTest {
     public void testGetLock() throws Exception {
         try {
             version.getLock();
-            fail("Version should not be lockable: Version.getLock() did not throw a LockException");
-        } catch (LockException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>Version.getLock()</code> throws a {@link
-     * javax.jcr.lock.LockException}
-     */
-    public void testGetLockJcr2() throws Exception {
-        try {
-            version.getSession().getWorkspace().getLockManager().getLock(version.getPath());
             fail("Version should not be lockable: Version.getLock() did not throw a LockException");
         } catch (LockException success) {
         }
@@ -433,18 +356,6 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.getVersionHistory()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testGetVersionHistoryJcr2() throws Exception {
-        try {
-            versionManager.getVersionHistory(version.getPath());
-            fail("Version.getVersionHistory() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
      * Tests if <code>Version.getUUID()</code> returns the right UUID
      */
     public void testGetUUID() throws Exception {
@@ -490,13 +401,6 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.holdsLock()</code> returns <code>false</code>
-     */
-    public void testHoldsLockJcr2() throws Exception {
-        assertFalse("Version.holdsLock() did not return false", version.getSession().getWorkspace().getLockManager().holdsLock(version.getPath()));
-    }
-
-    /**
      * Tests if <code>Version.isCheckedOut()</code> returns <code>true</code>
      */
     public void testIsCheckedOut() throws Exception {
@@ -504,24 +408,10 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.isCheckedOut()</code> returns <code>true</code>
-     */
-    public void testIsCheckedOutJcr2() throws Exception {
-        assertTrue("Version.isCheckedOut() did not return true", versionManager.isCheckedOut(version.getPath()));
-    }
-
-    /**
      * Tests if <code>Version.isLocked()</code> returns <code>false</code>
      */
     public void testIsLocked() throws Exception {
         assertFalse("Version.isLocked() did not return false", version.isLocked());
-    }
-
-    /**
-     * Tests if <code>Version.isLocked()</code> returns <code>false</code>
-     */
-    public void testIsLockedJcr2() throws Exception {
-        assertFalse("Version.isLocked() did not return false", version.getSession().getWorkspace().getLockManager().isLocked(version.getPath()));
     }
 
     /**
@@ -562,14 +452,6 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.isSame()</code> returns the right
-     * <code>boolean</code> value
-     */
-    public void testIsSameJcr2() throws Exception {
-        assertTrue("Version.isSame(Item) did not return true", version2.isSame(versionManager.getBaseVersion(versionableNode.getPath())));
-    }
-
-    /**
      * Tests if <code>Version.lock(boolean, boolean)</code> throws a {@link
      * LockException}
      */
@@ -597,35 +479,6 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.lock(boolean, boolean)</code> throws a {@link
-     * LockException}
-     */
-    public void testLockJcr2() throws Exception {
-        LockManager lockManager = version.getSession().getWorkspace().getLockManager();
-        String path = version.getPath();
-        try {
-            lockManager.lock(path, true, true, 60, "");
-            fail("Version should not be lockable: Version.lock(true,true) did not throw a LockException");
-        } catch (LockException success) {
-        }
-        try {
-            lockManager.lock(path, true, false, 60, "");
-            fail("Version should not be lockable: Version.lock(true,false) did not throw a LockException");
-        } catch (LockException success) {
-        }
-        try {
-            lockManager.lock(path, false, true, 60, "");
-            fail("Version should not be lockable: Version.lock(false,true) did not throw a LockException");
-        } catch (LockException success) {
-        }
-        try {
-            lockManager.lock(path, false, false, 60, "");
-            fail("Version should not be lockable: Version.lock(false,false) did not throw a LockException");
-        } catch (LockException success) {
-        }
-    }
-
-    /**
      * Tests if <code>Version.merge(String)</code> throws an
      * {@link javax.jcr.nodetype.ConstraintViolationException}
      */
@@ -642,25 +495,6 @@ public class VersionTest extends AbstractVersionTest {
         }
     }
 
-    /**
-     * Tests if <code>Version.merge(String)</code> throws an
-     * {@link javax.jcr.nodetype.ConstraintViolationException}
-     */
-/*
-    TODO: check why this fails
-    public void testMergeJcr2() throws Exception {
-        try {
-            versionManager.merge(version.getPath(), workspaceName, true);
-            fail("Version.merge(String, true) did not throw an ConstraintViolationException");
-        } catch (ConstraintViolationException success) {
-        }
-        try {
-            versionManager.merge(version.getPath(),workspaceName, false);
-            fail("Version.merge(String, false) did not throw an ConstraintViolationException");
-        } catch (ConstraintViolationException success) {
-        }
-    }
-*/
     /**
      * Tests if <code>Version.orderBefore(String, String)</code> throws an
      * {@link javax.jcr.UnsupportedRepositoryOperationException}
@@ -691,7 +525,7 @@ public class VersionTest extends AbstractVersionTest {
     public void testRemove() throws Exception {
         try {
             version.remove();
-            versionableNode.getSession().save();
+            versionableNode.getVersionHistory().save();
             fail("Version should be read-only: Version.remove() did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -735,39 +569,12 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.restore(String, boolean)</code> and
-     * <code>Version.restore(Version, boolean)</code> throw an
-     * {@link UnsupportedRepositoryOperationException} and
-     * <code>Version.restore(Version, String, boolean)</code> throws a
-     * {@link ConstraintViolationException}.
-     */
-    public void testRestoreJcr2() throws Exception {
-        try {
-            versionManager.restore(version.getPath(), "abc", true);
-            fail("Version.restore(String,boolean) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
      * Tests if <code>Version.restoreByLabel(String, boolean)</code> throws an
      * {@link javax.jcr.UnsupportedRepositoryOperationException}
      */
     public void testRestoreByLabel() throws Exception {
         try {
             version.restoreByLabel("abc", true);
-            fail("Version.restoreByLabel(String,boolean) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>Version.restoreByLabel(String, boolean)</code> throws an
-     * {@link javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testRestoreByLabelJcr2() throws Exception {
-        try {
-            versionManager.restoreByLabel(version.getPath(), "abc", true);
             fail("Version.restoreByLabel(String,boolean) did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -803,37 +610,37 @@ public class VersionTest extends AbstractVersionTest {
 
         try {
             version.setProperty(propertyName1, s);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,String[]) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, s, PropertyType.STRING);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,String[],int) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, vArray);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,Value[]) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, vArray, PropertyType.STRING);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,Value[],int]) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, true);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,boolean) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, 123);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,double) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -841,39 +648,39 @@ public class VersionTest extends AbstractVersionTest {
             byte[] bytes = {73, 26, 32, -36, 40, -43, -124};
             InputStream inpStream = new ByteArrayInputStream(bytes);
             version.setProperty(propertyName1, inpStream);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,InputStream) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, "abc");
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,String) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             Calendar c = new GregorianCalendar(1945, 1, 6, 16, 20, 0);
             version.setProperty(propertyName1, c);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,Calendar) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, testRootNode);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,Node) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             Value v = superuser.getValueFactory().createValue("abc");
             version.setProperty(propertyName1, v);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,Value) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             version.setProperty(propertyName1, -2147483650L);
-            version.getSession().save();
+            version.save();
             fail("Version should be read-only: Version.setProperty(String,long) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -886,18 +693,6 @@ public class VersionTest extends AbstractVersionTest {
     public void testUnlock() throws Exception {
         try {
             version.unlock();
-            fail("Version should not be lockable: Version.unlock() did not throw a LockException");
-        } catch (LockException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>Version.unlock()</code> throws a {@link
-     * javax.jcr.lock.LockException}
-     */
-    public void testUnlockJcr2() throws Exception {
-        try {
-            version.getSession().getWorkspace().getLockManager().unlock(version.getPath());
             fail("Version should not be lockable: Version.unlock() did not throw a LockException");
         } catch (LockException success) {
         }

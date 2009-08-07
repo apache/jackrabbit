@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.DynamicOperand;
-import javax.jcr.query.qom.Ordering;
-import javax.jcr.query.qom.QueryObjectModelConstants;
-
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
 
 /**
  * <code>OrderingImpl</code>...
@@ -40,14 +39,14 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
     /**
      * The order.
      */
-    private final Order order;
+    private final int order;
 
     OrderingImpl(NamePathResolver resolver,
                  DynamicOperandImpl operand,
-                 String order) {
+                 int order) {
         super(resolver);
         this.operand = operand;
-        this.order = Order.getOrderByName(order);
+        this.order = order;
     }
 
     /**
@@ -62,21 +61,14 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
     /**
      * Gets the order.
      *
-     * @return either <ul> <li>{@link QueryObjectModelConstants#JCR_ORDER_ASCENDING}
-     *         or</li> <li>{@link QueryObjectModelConstants#JCR_ORDER_DESCENDING}</li>
+     * @return either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#ORDER_ASCENDING}
+     *         or</li> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#ORDER_DESCENDING}</li>
      *         </ul>
      */
-    public String getOrder() {
-        return order.getName();
+    public int getOrder() {
+        return order;
     }
 
-    /**
-     * @return <code>true</code> if this ordering is ascending. Returns
-     *         <code>false</code> if ordering is descending.
-     */
-    public boolean isAscending() {
-        return order == Order.ASCENDING;
-    }
 
     //------------------------< AbstractQOMNode >-------------------------------
 

@@ -45,7 +45,7 @@ public final class ReferencesTest extends AbstractJCRTest {
         a.addMixin("mix:referenceable");
         b.addMixin("mix:referenceable");
         getTestRootNode(session).addNode("C");
-        saveAndlogout(session);
+        saveAndLogout(session);
     }
 
     /**
@@ -62,7 +62,7 @@ public final class ReferencesTest extends AbstractJCRTest {
         Node bses2 = getTestRootNode(session2).getNode("A").getNode("B");
         getTestRootNode(session2).getNode("C").setProperty("ref to B", bses2);
 
-        saveAndlogout(session1, session2);
+        saveAndLogout(session1, session2);
         assertRemoveTestNodes();
     }
 
@@ -79,7 +79,7 @@ public final class ReferencesTest extends AbstractJCRTest {
         Session session3 = createSession();
         getTestRootNode(session3).getNode("C").setProperty("ref to B", new Value[]{});
 
-        saveAndlogout(session2, session3);
+        saveAndLogout(session2, session3);
         assertRemoveTestNodes();
     }
 
@@ -98,7 +98,7 @@ public final class ReferencesTest extends AbstractJCRTest {
         Node ases3 = getTestRootNode(session3).getNode("A");
         getTestRootNode(session3).getNode("C").setProperty("ref", ases3);
 
-        saveAndlogout(session2, session3);
+        saveAndLogout(session2, session3);
         assertRemoveTestNodes();
     }
 
@@ -120,7 +120,7 @@ public final class ReferencesTest extends AbstractJCRTest {
         getTestRootNode(session3).getNode("C").setProperty("ref to B",
             new Value[]{valFac3.createValue(bses3), valFac3.createValue(bses3)});
 
-        saveAndlogout(session2, session3);
+        saveAndLogout(session2, session3);
         assertRemoveTestNodes();
     }
 
@@ -141,7 +141,7 @@ public final class ReferencesTest extends AbstractJCRTest {
         Node bses3 = getTestRootNode(session3).getNode("A").getNode("B");
         getTestRootNode(session3).getNode("C").setProperty("ref", new Value[]{valFac3.createValue(bses3)});
 
-        saveAndlogout(session2, session3);
+        saveAndLogout(session2, session3);
         assertRemoveTestNodes();
     }
 
@@ -162,7 +162,7 @@ public final class ReferencesTest extends AbstractJCRTest {
             new Value[]{valFac2.createValue(bses2), valFac2.createValue(bses2)});
         getTestRootNode(session2).getNode("C").setProperty("another ref to B", bses2);
 
-        saveAndlogout(session1, session2);
+        saveAndLogout(session1, session2);
         assertRemoveTestNodes();
     }
 
@@ -189,16 +189,19 @@ public final class ReferencesTest extends AbstractJCRTest {
      * @throws RepositoryException on error
      */
     private Session createSession() throws RepositoryException {
-        return getHelper().getSuperuserSession();
+        return helper.getSuperuserSession();
     }
 
-    private void saveAndlogout(Session... sessions) throws RepositoryException {
-        if (sessions != null) {
-            for (Session session : sessions) {
-                session.save();
-                session.logout();
-            }
+    private void saveAndLogout(Session session) throws RepositoryException {
+        if (session != null) {
+            session.save();
+            session.logout();
         }
+    }
+
+    private void saveAndLogout(Session a, Session b) throws RepositoryException {
+        saveAndLogout(a);
+        saveAndLogout(b);
     }
 
     /**

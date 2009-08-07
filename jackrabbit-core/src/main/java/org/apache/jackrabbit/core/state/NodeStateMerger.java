@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Internal utility class used for merging concurrent changes that occurred
@@ -97,10 +98,13 @@ class NodeStateMerger {
                 // child node entries
                 if (!state.getChildNodeEntries().equals(
                         overlayedState.getChildNodeEntries())) {
-                    ArrayList<ChildNodeEntry> added = new ArrayList<ChildNodeEntry>();
-                    ArrayList<ChildNodeEntry> removed = new ArrayList<ChildNodeEntry>();
+                    ArrayList added = new ArrayList();
+                    ArrayList removed = new ArrayList();
 
-                    for (ChildNodeEntry cne : state.getAddedChildNodeEntries()) {
+                    for (Iterator iter = state.getAddedChildNodeEntries().iterator();
+                         iter.hasNext();) {
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
 
                         if (context.isAdded(cne.getId()) || context.isModified(cne.getId())) {
                             // a new child node entry has been added to this state;
@@ -122,7 +126,10 @@ class NodeStateMerger {
                         }
                     }
 
-                    for (ChildNodeEntry cne : state.getRemovedChildNodeEntries()) {
+                    for (Iterator iter = state.getRemovedChildNodeEntries().iterator();
+                         iter.hasNext();) {
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
                         if (context.isDeleted(cne.getId()) || context.isModified(cne.getId())) {
                             // a child node entry has been removed from this node state
                             removed.add(cne);
@@ -134,10 +141,14 @@ class NodeStateMerger {
                     // copy child node antries from other state and
                     // re-apply changes made on this state
                     state.setChildNodeEntries(overlayedState.getChildNodeEntries());
-                    for (ChildNodeEntry cne : added) {
+                    for (Iterator iter = added.iterator(); iter.hasNext();) {
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
                         state.addChildNodeEntry(cne.getName(), cne.getId());
                     }
-                    for (ChildNodeEntry cne : removed) {
+                    for (Iterator iter = removed.iterator(); iter.hasNext();) {
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
                         state.removeChildNodeEntry(cne.getId());
                     }
                 }
@@ -145,17 +156,21 @@ class NodeStateMerger {
                 // property names
                 if (!state.getPropertyNames().equals(
                         overlayedState.getPropertyNames())) {
-                    HashSet<Name> added = new HashSet<Name>();
-                    HashSet<Name> removed = new HashSet<Name>();
+                    HashSet added = new HashSet();
+                    HashSet removed = new HashSet();
 
-                    for (Name name : state.getAddedPropertyNames()) {
+                    for (Iterator iter = state.getAddedPropertyNames().iterator();
+                         iter.hasNext();) {
+                        Name name = (Name) iter.next();
                         PropertyId propId =
                                 new PropertyId(state.getNodeId(), name);
                         if (context.isAdded(propId)) {
                             added.add(name);
                         }
                     }
-                    for (Name name : state.getRemovedPropertyNames()) {
+                    for (Iterator iter = state.getRemovedPropertyNames().iterator();
+                         iter.hasNext();) {
+                        Name name = (Name) iter.next();
                         PropertyId propId =
                                 new PropertyId(state.getNodeId(), name);
                         if (context.isDeleted(propId)) {
@@ -167,10 +182,12 @@ class NodeStateMerger {
                     // copy property names from other and
                     // re-apply changes made on this state
                     state.setPropertyNames(overlayedState.getPropertyNames());
-                    for (Name name : added) {
+                    for (Iterator iter = added.iterator(); iter.hasNext();) {
+                        Name name = (Name) iter.next();
                         state.addPropertyName(name);
                     }
-                    for (Name name : removed) {
+                    for (Iterator iter = removed.iterator(); iter.hasNext();) {
+                        Name name = (Name) iter.next();
                         state.removePropertyName(name);
                     }
                 }
@@ -185,9 +202,6 @@ class NodeStateMerger {
 
     //-----------------------------------------------------< inner interfaces >
 
-    /**
-     * The context of a modification.
-     */
     static interface MergeContext {
         boolean isAdded(ItemId id);
         boolean isDeleted(ItemId id);

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 /**
  * <code>ChildNodeEntry</code> specifies the name, index (in the case of
@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.id.NodeId;
  */
 public final class ChildNodeEntry {
 
-    private int hash;
+    private int hash = 0;
 
     private final Name name;
     private final int index; // 1-based index for same-name siblings

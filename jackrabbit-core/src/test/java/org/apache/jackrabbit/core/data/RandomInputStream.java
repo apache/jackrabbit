@@ -20,9 +20,6 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * An input stream that returns pseudo-random bytes.
- */
 public class RandomInputStream extends InputStream {
 
     private static final long MUL = 0x5DEECE66DL;

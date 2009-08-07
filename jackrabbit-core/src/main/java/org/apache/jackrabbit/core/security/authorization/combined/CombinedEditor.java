@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlPolicy;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  * <code>CombinedEditor</code>...
@@ -48,35 +48,21 @@ class CombinedEditor implements AccessControlEditor {
      * @see AccessControlEditor#getPolicies(String)
      */
     public AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
-        List<AccessControlPolicy> templates = new ArrayList<AccessControlPolicy>();
+        List templates = new ArrayList(editors.length);
         for (int i = 0; i < editors.length; i++) {
             AccessControlPolicy[] ts = editors[i].getPolicies(nodePath);
-            if (ts != null && ts.length > 0) {
+            if (ts.length > 0) {
                 templates.addAll(Arrays.asList(ts));
             }
         }
-        return templates.toArray(new AccessControlPolicy[templates.size()]);
-    }
-
-    /**
-     * @see AccessControlEditor#getPolicies(Principal)
-     */
-    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException {
-        List<JackrabbitAccessControlPolicy> templates = new ArrayList<JackrabbitAccessControlPolicy>();
-        for (int i = 0; i < editors.length; i++) {
-            JackrabbitAccessControlPolicy[] ts = editors[i].getPolicies(principal);
-            if (ts != null && ts.length > 0) {
-                templates.addAll(Arrays.asList(ts));
-            }
-        }
-        return templates.toArray(new JackrabbitAccessControlPolicy[templates.size()]);
+        return (AccessControlPolicy[]) templates.toArray(new AccessControlPolicy[templates.size()]);
     }
 
     /**
      * @see AccessControlEditor#editAccessControlPolicies(String)
      */
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
-        List<AccessControlPolicy> templates = new ArrayList<AccessControlPolicy>();
+        List templates = new ArrayList(editors.length);
         for (int i = 0; i < editors.length; i++) {
             try {
                 templates.addAll(Arrays.asList(editors[i].editAccessControlPolicies(nodePath)));
@@ -85,14 +71,14 @@ class CombinedEditor implements AccessControlEditor {
                 // ignore.
             }
         }
-        return templates.toArray(new AccessControlPolicy[templates.size()]);
+        return (AccessControlPolicy[]) templates.toArray(new AccessControlPolicy[templates.size()]);
     }
 
     /**
      * @see AccessControlEditor#editAccessControlPolicies(Principal)
      */
     public JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws RepositoryException {
-        List<JackrabbitAccessControlPolicy> templates = new ArrayList<JackrabbitAccessControlPolicy>();
+        List templates = new ArrayList();
         for (int i = 0; i < editors.length; i++) {
             try {
                 templates.addAll(Arrays.asList(editors[i].editAccessControlPolicies(principal)));
@@ -101,7 +87,7 @@ class CombinedEditor implements AccessControlEditor {
                 // ignore.
             }
         }
-        return templates.toArray(new JackrabbitAccessControlPolicy[templates.size()]);
+        return (JackrabbitAccessControlPolicy[]) templates.toArray(new JackrabbitAccessControlPolicy[templates.size()]);
     }
 
     /**

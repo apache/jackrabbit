@@ -56,7 +56,7 @@ public interface LockManager {
      * @return the lock.
      * @throws LockException if this node already is locked, or some descendant
      *         node is locked and <code>isDeep</code> is <code>true</code>
-     * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
      * @throws RepositoryException
      */
     Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
@@ -102,6 +102,20 @@ public interface LockManager {
     boolean holdsLock(NodeImpl node) throws RepositoryException;
 
     /**
+     * Returns <code>true</code> if the specified session holds a lock on the
+     * given node; otherwise returns <code>false</code>.
+     * <p/>
+     * Note that <code>isLockHolder(session, node)==true</code> implies
+     * <code>holdsLock(node)==true</code>.
+     * @param session session
+     * @param node node
+     * @return if the specified session holds a lock on the given node;
+     *         otherwise returns <code>false</code>
+     * @throws javax.jcr.RepositoryException If an exception occurs.
+     */
+    boolean isLockHolder(Session session, NodeImpl node) throws RepositoryException;
+
+    /**
      * Returns <code>true</code> if this node is locked either as a result
      * of a lock held by this node or by a deep lock on a node above this
      * node; otherwise returns <code>false</code>
@@ -140,27 +154,14 @@ public interface LockManager {
             throws LockException, RepositoryException;
 
     /**
-     * Returns <code>true</code> if the specified session is allowed to unlock
-     * the node; otherwise returns <code>false</code>.
-     * @param session session
-     * @param node node
-     * @return <code>true</code> if the session is allowed access to the node;
-     *         <code>false</code> otherwise
-     * @throws LockException if write access to the specified path is not allowed
-     * @throws RepositoryException if some other error occurs
-     */
-    void checkUnlock(Session session, NodeImpl node) throws LockException,
-            RepositoryException;
-
-    /**
      * Invoked by a session to inform that a lock token has been added.
-     *
+     * 
      * @param session session that has a added lock token
      * @param lt added lock token
      * @throws LockException
      * @throws RepositoryException
      */
-    void addLockToken(SessionImpl session, String lt) throws LockException, RepositoryException;
+    void lockTokenAdded(SessionImpl session, String lt) throws LockException, RepositoryException;
 
     /**
      * Invoked by a session to inform that a lock token has been removed.
@@ -170,5 +171,5 @@ public interface LockManager {
      * @throws LockException
      * @throws RepositoryException
      */
-    void removeLockToken(SessionImpl session, String lt) throws LockException, RepositoryException;
+    void lockTokenRemoved(SessionImpl session, String lt) throws LockException, RepositoryException;
 }

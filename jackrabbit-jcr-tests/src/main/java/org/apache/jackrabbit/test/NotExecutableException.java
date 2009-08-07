@@ -22,8 +22,7 @@ package org.apache.jackrabbit.test;
  * a feature is optional.
  * <p>
  * A test method may simply declare this exception in its signature and throw
- * this exception at any point in the method.
- * <p>
+ * this exception at any point in the method.<br/>
  * The TCK framework will take care that a test method throwing this exception
  * is not considered to be in error, but that the repository is unable to
  * execute this test.

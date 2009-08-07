@@ -88,7 +88,7 @@ public class Checkin extends AbstractOperation {
     
     /**
      *
-     * @return The <code>NodeId</code> of the nodeState to be checked in.
+     * @return The nodeState to be checked in.
      */
     public NodeId getNodeId() throws RepositoryException {
         return nodeState.getNodeEntry().getWorkspaceId();

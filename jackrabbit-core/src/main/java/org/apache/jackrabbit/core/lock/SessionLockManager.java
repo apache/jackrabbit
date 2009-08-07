@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import javax.jcr.lock.Lock;
+import org.apache.jackrabbit.api.jsr283.lock.Lock;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemValidator;
@@ -35,21 +35,21 @@ import java.util.Set;
 
 /**
  * <code>SessionLockManager</code> implements the
- * {@link javax.jcr.lock.LockManager}. In contrast
+ * {@link org.apache.jackrabbit.api.jsr283.lock.LockManager}. In contrast
  * to the internal {@link LockManager} interface that is created once
  * for each <code>WorkspaceInfo</code>, the JSR 283 <code>LockManager</code>
  * is associated with a single <code>Session</code> and its
  * <code>Workspace</code>.
  *
- * @see javax.jcr.Workspace#getLockManager()
+ * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
  */
-public class SessionLockManager implements javax.jcr.lock.LockManager {
+public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock.LockManager {
 
     private static Logger log = LoggerFactory.getLogger(SessionLockManager.class);
 
     private final SessionImpl session;
     private final LockManager systemLockMgr;
-    private final Set<String> lockTokens = new HashSet<String>();
+    private final Set lockTokens = new HashSet();
 
     public SessionLockManager(SessionImpl session, LockManager systemLockMgr) throws RepositoryException {
         this.session = session;
@@ -57,7 +57,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#getLockTokens()
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#getLockTokens()
      */
     public String[] getLockTokens() throws RepositoryException {
         synchronized (lockTokens) {
@@ -68,29 +68,29 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#addLockToken(String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#addLockToken(String)
      */
     public void addLockToken(String lockToken) throws LockException, RepositoryException {
         if (!lockTokens.contains(lockToken)) {
-            systemLockMgr.addLockToken(session, lockToken);
+            systemLockMgr.lockTokenAdded(session, lockToken);
         } else {
             log.debug("Lock token already present with session -> no effect.");
         }
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#removeLockToken(String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#removeLockToken(String)
      */
     public void removeLockToken(String lockToken) throws LockException, RepositoryException {
         if (lockTokens.contains(lockToken)) {
-            systemLockMgr.removeLockToken(session, lockToken);
+            systemLockMgr.lockTokenRemoved(session, lockToken);
         } else {
             throw new LockException("Lock token " + lockToken + " not present with session.");
         }
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#isLocked(String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#isLocked(String)
      */
     public boolean isLocked(String absPath) throws RepositoryException {
         NodeImpl node = (NodeImpl) session.getNode(absPath);
@@ -110,7 +110,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#getLock(String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#getLock(String)
      */
     public Lock getLock(String absPath) throws
             UnsupportedRepositoryOperationException, LockException,
@@ -120,19 +120,19 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
             while (node.isNew()) {
                 node = (NodeImpl) node.getParent();
             }
-            Lock l = systemLockMgr.getLock(node);
+            Lock l = (Lock) systemLockMgr.getLock(node);
             if (l.isDeep()) {
                 return l;
             } else {
                 throw new LockException("Node not locked: " + node);
             }
         } else {
-            return systemLockMgr.getLock(node);
+            return (Lock) systemLockMgr.getLock(node);
         }
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#holdsLock(String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#holdsLock(String)
      */
     public boolean holdsLock(String absPath) throws RepositoryException {
         NodeImpl node = (NodeImpl) session.getNode(absPath);
@@ -146,7 +146,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
      */
     public Lock lock(String absPath, boolean isDeep, boolean isSessionScoped,
                      long timeoutHint, String ownerInfo) throws RepositoryException {
@@ -157,12 +157,12 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
         checkLockable(node);
 
         synchronized (systemLockMgr) {
-            return systemLockMgr.lock(node, isDeep, isSessionScoped, timeoutHint, ownerInfo);
+            return (Lock) systemLockMgr.lock(node, isDeep, isSessionScoped, timeoutHint, ownerInfo);
         }
     }
 
     /**
-     * @see javax.jcr.lock.LockManager#unlock(String)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#unlock(String)
      */
     public void unlock(String absPath) throws
             UnsupportedRepositoryOperationException, LockException,
@@ -179,7 +179,9 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
             if (!systemLockMgr.holdsLock(node)) {
                 throw new LockException("Node not locked: " + node);
             }
-            systemLockMgr.checkUnlock(session, node);
+            if (!systemLockMgr.isLockHolder(session, node)) {
+                throw new LockException("Node not locked by session: " + node);
+            }
             systemLockMgr.unlock(node);
         }
     }

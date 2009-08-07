@@ -52,7 +52,7 @@ public class PropertyTypeTest extends AbstractJCRTest {
      * the workspace starting at {@link #testRoot}.
      */
     public void testType() throws RepositoryException {
-        Session session = getHelper().getReadOnlySession();
+        Session session = helper.getReadOnlySession();
         try {
             Node root = session.getRootNode().getNode(testPath);
             typeCheckChildren(root);

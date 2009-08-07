@@ -44,8 +44,7 @@ public class WorkspaceCopyReferenceableTest extends AbstractWorkspaceReferenceab
      * Copies of referenceable nodes (nodes with UUIDs) are automatically given
      * new UUIDs.
      */
-    public void testCopyNodesNewUUID() throws RepositoryException,
-            NotExecutableException {
+    public void testCopyNodesNewUUID() throws RepositoryException {
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
 

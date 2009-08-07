@@ -40,9 +40,6 @@ public class ParseException extends Exception {
     /**
      * Constructs a new instance of this class with <code>null</code> as its
      * detail message.
-     * @param lineNumber line number
-     * @param colNumber columns number
-     * @param systemId system id
      */
     public ParseException(int lineNumber, int colNumber, String systemId) {
         super();
@@ -57,9 +54,6 @@ public class ParseException extends Exception {
      *
      * @param message the detail message. The detail message is saved for
      *                later retrieval by the {@link #getMessage()} method.
-     * @param lineNumber line number
-     * @param colNumber columns number
-     * @param systemId system id
      */
     public ParseException(String message, int lineNumber, int colNumber, String systemId) {
         super(message);
@@ -74,9 +68,6 @@ public class ParseException extends Exception {
      *
      * @param message   the detail message. The detail message is saved for
      *                  later retrieval by the {@link #getMessage()} method.
-     * @param lineNumber line number
-     * @param colNumber columns number
-     * @param systemId system id
      * @param rootCause root failure cause
      */
     public ParseException(String message, Throwable rootCause, int lineNumber, int colNumber, String systemId) {
@@ -89,9 +80,6 @@ public class ParseException extends Exception {
     /**
      * Constructs a new instance of this class with the specified root cause.
      *
-     * @param lineNumber line number
-     * @param colNumber columns number
-     * @param systemId system id
      * @param rootCause root failure cause
      */
     public ParseException(Throwable rootCause, int lineNumber, int colNumber, String systemId) {

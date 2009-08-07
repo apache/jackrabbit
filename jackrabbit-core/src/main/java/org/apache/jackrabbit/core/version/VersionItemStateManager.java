@@ -16,13 +16,12 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
 
 import javax.jcr.ReferentialIntegrityException;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -31,6 +30,7 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,12 +61,11 @@ public class VersionItemStateManager extends SharedItemStateManager {
         this.pMgr = persistMgr;
     }
 
-    @Override
-    public NodeReferences getNodeReferences(NodeId id)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
         // check persistence manager
         try {
-            return pMgr.loadReferencesTo(id);
+            return pMgr.load(id);
         } catch (NoSuchItemStateException e) {
             // ignore
         }
@@ -74,11 +73,10 @@ public class VersionItemStateManager extends SharedItemStateManager {
         throw new NoSuchItemStateException(id.toString());
     }
 
-    @Override
-    public boolean hasNodeReferences(NodeId id) {
+    public boolean hasNodeReferences(NodeReferencesId id) {
         // check persistence manager
         try {
-            if (pMgr.existsReferencesTo(id)) {
+            if (pMgr.exists(id)) {
                 return true;
             }
         } catch (ItemStateException e) {
@@ -96,10 +94,14 @@ public class VersionItemStateManager extends SharedItemStateManager {
         try {
             ChangeLog log = new ChangeLog();
 
-            for (NodeReferences source : references.modifiedRefs()) {
+            Iterator iterator = references.modifiedRefs();
+            while (iterator.hasNext()) {
                 // filter out version storage intern ones
-                NodeReferences target = new NodeReferences(source.getTargetId());
-                for (PropertyId id : source.getReferences()) {
+                NodeReferences source = (NodeReferences) iterator.next();
+                NodeReferences target = new NodeReferences(source.getId());
+                Iterator iter = source.getReferences().iterator();
+                while (iter.hasNext()) {
+                    PropertyId id = (PropertyId) iter.next();
                     if (!hasNonVirtualItemState(id.getParentId())) {
                         target.addReference(id);
                     }
@@ -122,19 +124,16 @@ public class VersionItemStateManager extends SharedItemStateManager {
         // only store VV-type references and NV-type references
 
         // check whether targets of modified node references exist
-        Set<NodeId> remove = new HashSet<NodeId>();
-        for (NodeReferences refs : changes.modifiedRefs()) {
+        for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
+            NodeReferences refs = (NodeReferences) iter.next();
+            NodeId id = refs.getTargetId();
             // no need to check existence of target if there are no references
             if (refs.hasReferences()) {
-                NodeId id = refs.getTargetId();
                 if (!changes.has(id) && !hasNonVirtualItemState(id)) {
-                    remove.add(refs.getTargetId());
+                    // remove references
+                    iter.remove();
                 }
             }
-        }
-        // remove references
-        for (NodeId id : remove) {
-            changes.removeReferencesEntry(id);
         }
     }
 }

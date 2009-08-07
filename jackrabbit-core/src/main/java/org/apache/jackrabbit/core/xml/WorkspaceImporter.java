@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
@@ -31,11 +31,12 @@ import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionHistoryInfo;
-import org.apache.jackrabbit.core.version.InternalVersionManager;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class WorkspaceImporter implements Importer {
     private final NodeState importTarget;
     private final WorkspaceImpl wsp;
     private final SessionImpl session;
-    private final InternalVersionManager versionManager;
+    private final VersionManager versionManager;
     private final NodeTypeRegistry ntReg;
     private final HierarchyManager hierMgr;
     private final BatchedItemOperations itemOps;
@@ -71,7 +72,7 @@ public class WorkspaceImporter implements Importer {
     private final int uuidBehavior;
 
     private boolean aborted;
-    private Stack<NodeState> parents;
+    private Stack parents;
 
     /**
      * helper object that keeps track of remapped uuid's and imported reference
@@ -107,7 +108,7 @@ public class WorkspaceImporter implements Importer {
             VersionException, LockException, RepositoryException {
         this.wsp = wsp;
         this.session = (SessionImpl) wsp.getSession();
-        this.versionManager = session.getInternalVersionManager();
+        this.versionManager = session.getVersionManager();
         this.ntReg = ntReg;
         this.uuidBehavior = uuidBehavior;
 
@@ -124,7 +125,7 @@ public class WorkspaceImporter implements Importer {
 
         refTracker = new ReferenceChangeTracker();
 
-        parents = new Stack<NodeState>();
+        parents = new Stack();
         parents.push(importTarget);
     }
 
@@ -155,7 +156,7 @@ public class WorkspaceImporter implements Importer {
             // remember uuid mapping
             EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
             if (ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                refTracker.mappedId(nodeInfo.getId(), node.getNodeId());
+                refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
             // if existing node is shareable, then instead of failing, create
@@ -190,7 +191,7 @@ public class WorkspaceImporter implements Importer {
             itemOps.checkRemoveNode(conflicting,
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
-                    | BatchedItemOperations.CHECK_CHECKED_OUT
+                    | BatchedItemOperations.CHECK_VERSIONING
                     | BatchedItemOperations.CHECK_CONSTRAINTS
                     | BatchedItemOperations.CHECK_HOLD
                     | BatchedItemOperations.CHECK_RETENTION);
@@ -231,7 +232,7 @@ public class WorkspaceImporter implements Importer {
             itemOps.checkRemoveNode(conflicting,
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
-                    | BatchedItemOperations.CHECK_CHECKED_OUT
+                    | BatchedItemOperations.CHECK_VERSIONING
                     | BatchedItemOperations.CHECK_CONSTRAINTS
                     | BatchedItemOperations.CHECK_HOLD
                     | BatchedItemOperations.CHECK_RETENTION);
@@ -242,7 +243,7 @@ public class WorkspaceImporter implements Importer {
             // => backup list of child node entries beforehand in order
             // to restore it afterwards
             ChildNodeEntry cneConflicting = parent.getChildNodeEntry(nodeInfo.getId());
-            List<ChildNodeEntry> cneList = new ArrayList<ChildNodeEntry>(parent.getChildNodeEntries());
+            List cneList = new ArrayList(parent.getChildNodeEntries());
             // do remove conflicting (recursive)
             itemOps.removeNodeState(conflicting);
             // create new with given uuid at same location as conflicting:
@@ -253,7 +254,7 @@ public class WorkspaceImporter implements Importer {
                     nodeInfo.getNodeTypeName(),
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
-                    | BatchedItemOperations.CHECK_CHECKED_OUT
+                    | BatchedItemOperations.CHECK_VERSIONING
                     | BatchedItemOperations.CHECK_CONSTRAINTS
                     | BatchedItemOperations.CHECK_HOLD
                     | BatchedItemOperations.CHECK_RETENTION);
@@ -269,7 +270,8 @@ public class WorkspaceImporter implements Importer {
                 // replace child node entry with different name
                 // but preserving original position
                 parent.removeAllChildNodeEntries();
-                for (ChildNodeEntry cne : cneList) {
+                for (Iterator iter = cneList.iterator(); iter.hasNext();) {
+                    ChildNodeEntry cne = (ChildNodeEntry) iter.next();
                     if (cne.getId().equals(nodeInfo.getId())) {
                         // replace entry with different name
                         parent.addChildNodeEntry(nodeInfo.getName(), nodeInfo.getId());
@@ -313,11 +315,11 @@ public class WorkspaceImporter implements Importer {
              * otherwise create a new version history
              */
             VersionHistoryInfo history =
-                versionManager.getVersionHistory(session, node, null);
+                versionManager.getVersionHistory(session, node);
             InternalValue historyId = InternalValue.create(
-                    history.getVersionHistoryId());
+                    history.getVersionHistoryId().getUUID());
             InternalValue versionId = InternalValue.create(
-                    history.getRootVersionId());
+                    history.getRootVersionId().getUUID());
 
             // jcr:isCheckedOut
             conditionalAddProperty(
@@ -387,7 +389,7 @@ public class WorkspaceImporter implements Importer {
     /**
      * {@inheritDoc}
      */
-    public void startNode(NodeInfo nodeInfo, List<PropInfo> propInfos)
+    public void startNode(NodeInfo nodeInfo, List propInfos)
             throws RepositoryException {
         if (aborted) {
             // the import has been aborted, get outta here...
@@ -515,7 +517,9 @@ public class WorkspaceImporter implements Importer {
             }
 
             // process properties
-            for (PropInfo pi : propInfos) {
+            Iterator iter = propInfos.iterator();
+            while (iter.hasNext()) {
+                PropInfo pi = (PropInfo) iter.next();
                 pi.apply(node, itemOps, ntReg, refTracker);
             }
 
@@ -594,24 +598,22 @@ public class WorkspaceImporter implements Importer {
             while (iter.hasNext()) {
                 PropertyState prop = (PropertyState) iter.next();
                 // being paranoid...
-                if (prop.getType() != PropertyType.REFERENCE
-                    && prop.getType() != PropertyType.WEAKREFERENCE) {
+                if (prop.getType() != PropertyType.REFERENCE) {
                     continue;
                 }
                 boolean modified = false;
                 InternalValue[] values = prop.getValues();
                 InternalValue[] newVals = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {
-                    NodeId adjusted =
-                        refTracker.getMappedId(values[i].getNodeId());
+                    InternalValue val = values[i];
+                    UUID original = val.getUUID();
+                    UUID adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
-                        newVals[i] = InternalValue.create(
-                                adjusted,
-                                prop.getType() != PropertyType.REFERENCE);
+                        newVals[i] = InternalValue.create(adjusted);
                         modified = true;
                     } else {
                         // reference doesn't need adjusting, just copy old value
-                        newVals[i] = values[i];
+                        newVals[i] = val;
                     }
                 }
                 if (modified) {

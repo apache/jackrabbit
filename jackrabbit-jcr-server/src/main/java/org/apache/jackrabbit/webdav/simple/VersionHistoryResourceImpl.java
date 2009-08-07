@@ -31,6 +31,8 @@ import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.slf4j.Logger;
@@ -148,6 +150,15 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
      * @see DavResource#removeProperty(DavPropertyName)
      */
     public void removeProperty(DavPropertyName propertyName) throws DavException {
+        throw new DavException(DavServletResponse.SC_FORBIDDEN);
+    }
+
+    /**
+     * Version storage is read-only -> fails with 403.
+     *
+     * @see DavResource#alterProperties(DavPropertySet, DavPropertyNameSet)
+     */
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,7 @@ class DocOrderScoreNodeIterator implements ScoreNodeIterator {
     private ScoreNodeIterator orderedNodes;
 
     /** Unordered list of {@link ScoreNode}[]s. */
-    private final List<ScoreNode[]> scoreNodes;
+    private final List scoreNodes;
 
     /** ItemManager to turn UUIDs into Node instances */
     protected final ItemManager itemMgr;
@@ -65,8 +64,8 @@ class DocOrderScoreNodeIterator implements ScoreNodeIterator {
      *                      selectorIndex.
      */
     DocOrderScoreNodeIterator(ItemManager itemMgr,
-                              List<ScoreNode[]> scoreNodes,
-                              int selectorIndex) {
+                             List scoreNodes,
+                             int selectorIndex) {
         this.itemMgr = itemMgr;
         this.scoreNodes = scoreNodes;
         this.selectorIndex = selectorIndex;
@@ -148,29 +147,29 @@ class DocOrderScoreNodeIterator implements ScoreNodeIterator {
             return;
         }
         long time = System.currentTimeMillis();
-        ScoreNode[][] nodes = scoreNodes.toArray(new ScoreNode[scoreNodes.size()][]);
+        ScoreNode[][] nodes = (ScoreNode[][]) scoreNodes.toArray(new ScoreNode[scoreNodes.size()][]);
 
-        final List<NodeId> invalidIDs = new ArrayList<NodeId>(2);
+        final List invalidIDs = new ArrayList(2);
 
         do {
             if (invalidIDs.size() > 0) {
                 // previous sort run was not successful -> remove failed uuids
-                List<ScoreNode[]> tmp = new ArrayList<ScoreNode[]>();
-                for (ScoreNode[] node : nodes) {
-                    if (!invalidIDs.contains(node[selectorIndex].getNodeId())) {
-                        tmp.add(node);
+                List tmp = new ArrayList();
+                for (int i = 0; i < nodes.length; i++) {
+                    if (!invalidIDs.contains(nodes[i][selectorIndex].getNodeId())) {
+                        tmp.add(nodes[i]);
                     }
                 }
-                nodes = tmp.toArray(new ScoreNode[tmp.size()][]);
+                nodes = (ScoreNode[][]) tmp.toArray(new ScoreNode[tmp.size()][]);
                 invalidIDs.clear();
             }
 
             try {
                 // sort the uuids
-                Arrays.sort(nodes, new Comparator<ScoreNode[]>() {
-                    public int compare(ScoreNode[] o1, ScoreNode[] o2) {
-                        ScoreNode n1 = o1[selectorIndex];
-                        ScoreNode n2 = o2[selectorIndex];
+                Arrays.sort(nodes, new Comparator() {
+                    public int compare(Object o1, Object o2) {
+                        ScoreNode n1 = ((ScoreNode[]) o1)[selectorIndex];
+                        ScoreNode n2 = ((ScoreNode[]) o2)[selectorIndex];
                         // handle null values
                         // null is considered less than any value
                         if (n1 == n2) {

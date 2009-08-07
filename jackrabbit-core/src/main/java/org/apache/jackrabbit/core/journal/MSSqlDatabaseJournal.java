@@ -35,7 +35,7 @@ public class MSSqlDatabaseJournal extends DatabaseJournal {
      */
     public MSSqlDatabaseJournal() {
         setDriver("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        setDatabaseType("mssql");
+        setSchema("mssql");
     }
 
     /**

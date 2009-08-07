@@ -16,12 +16,37 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.VersionHistoryInfo;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.uuid.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
@@ -34,39 +59,12 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
-
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.version.VersionHistoryInfo;
-import org.apache.jackrabbit.core.version.InternalVersionManager;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <code>BatchedItemOperations</code> is an <i>internal</i> helper class that
@@ -269,7 +267,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check access rights, lock status, node type constraints, etc.
         checkAddNode(destParentState, destName,
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
+                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. verify that source has mixin mix:shareable
         if (!isShareable(srcState)) {
@@ -286,8 +284,8 @@ public class BatchedItemOperations extends ItemValidator {
         NodeId destParentId = destParentState.getNodeId();
         if (destParentId.equals(srcId) || hierMgr.isAncestor(srcId, destParentId)) {
             String msg =
-                "Cloning Node with id " + srcId
-                + " to parent with id " + destParentId
+                "Cloning Node with id " + srcId.getUUID()
+                + " to parent with id " + destParentId.getUUID()
                 + " would create a share cycle.";
             log.debug(msg);
             throw new RepositoryException(msg);
@@ -297,7 +295,7 @@ public class BatchedItemOperations extends ItemValidator {
         if (!srcState.addShare(destParentState.getNodeId())) {
             String msg =
                 "Adding a shareable node with id ("
-                + destParentState.getNodeId()
+                + destParentState.getNodeId().getUUID()
                 + ") twice to the same parent is not supported.";
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
@@ -403,7 +401,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         checkAddNode(destParentState, destName.getName(),
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
+                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
         // check read access right on source node using source access manager
         try {
             if (!srcAccessMgr.isGranted(srcPath, Permission.READ)) {
@@ -436,25 +434,26 @@ public class BatchedItemOperations extends ItemValidator {
 
         // adjust references that refer to uuid's which have been mapped to
         // newly generated uuid's on copy/clone
-        Iterator<Object> iter = refTracker.getProcessedReferences();
+        Iterator iter = refTracker.getProcessedReferences();
         while (iter.hasNext()) {
             PropertyState prop = (PropertyState) iter.next();
             // being paranoid...
-            if (prop.getType() != PropertyType.REFERENCE
-                    && prop.getType() != PropertyType.WEAKREFERENCE) {
+            if (prop.getType() != PropertyType.REFERENCE) {
                 continue;
             }
             boolean modified = false;
             InternalValue[] values = prop.getValues();
             InternalValue[] newVals = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
-                NodeId adjusted = refTracker.getMappedId(values[i].getNodeId());
+                InternalValue val = values[i];
+                UUID original = val.getUUID();
+                UUID adjusted = refTracker.getMappedUUID(original);
                 if (adjusted != null) {
                     newVals[i] = InternalValue.create(adjusted);
                     modified = true;
                 } else {
                     // reference doesn't need adjusting, just copy old value
-                    newVals[i] = values[i];
+                    newVals[i] = val;
                 }
             }
             if (modified) {
@@ -547,11 +546,11 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check if target state can be removed from old/added to new parent
 
         checkRemoveNode(target, srcParent.getNodeId(),
-                CHECK_ACCESS | CHECK_LOCK | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS
-                | CHECK_HOLD | CHECK_RETENTION);
+                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS |
+                        CHECK_HOLD | CHECK_RETENTION);
         checkAddNode(destParent, destName.getName(),
                 target.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
+                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. do move operation (modify and store affected states)
         boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
@@ -637,7 +636,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. check if target state can be removed from parent
         checkRemoveNode(target, parentId,
-                CHECK_ACCESS | CHECK_LOCK | CHECK_CHECKED_OUT
+                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING
                 | CHECK_CONSTRAINTS | CHECK_REFERENCES | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. do remove operation
@@ -661,7 +660,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                     parent node</li>
      *                     <li><code>{@link #CHECK_LOCK}</code>: make sure
      *                     there's no foreign lock on parent node</li>
-     *                     <li><code>{@link #CHECK_CHECKED_OUT}</code>: make sure
+     *                     <li><code>{@link #CHECK_VERSIONING}</code>: make sure
      *                     parent node is checked-out</li>
      *                     <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                     make sure no node type constraints would be violated</li>
@@ -693,7 +692,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. versioning status
 
-        if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
+        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
             // make sure parent node is checked-out
             verifyCheckedOut(parentPath);
         }
@@ -789,7 +788,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                    and remove privilege on target node</li>
      *                    <li><code>{@link #CHECK_LOCK}</code>: make sure
      *                    there's no foreign lock on parent node</li>
-     *                    <li><code>{@link #CHECK_CHECKED_OUT}</code>: make sure
+     *                    <li><code>{@link #CHECK_VERSIONING}</code>: make sure
      *                    parent node is checked-out</li>
      *                    <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                    make sure no node type constraints would be violated</li>
@@ -827,7 +826,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                    and remove privilege on target node</li>
      *                    <li><code>{@link #CHECK_LOCK}</code>: make sure
      *                    there's no foreign lock on parent node</li>
-     *                    <li><code>{@link #CHECK_CHECKED_OUT}</code>: make sure
+     *                    <li><code>{@link #CHECK_VERSIONING}</code>: make sure
      *                    parent node is checked-out</li>
      *                    <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                    make sure no node type constraints would be violated</li>
@@ -867,7 +866,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. versioning status
 
-        if ((options & CHECK_CHECKED_OUT) == CHECK_CHECKED_OUT) {
+        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
             // make sure parent node is checked-out
             verifyCheckedOut(parentPath);
         }
@@ -917,10 +916,10 @@ public class BatchedItemOperations extends ItemValidator {
         if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
             EffectiveNodeType ent = getEffectiveNodeType(targetState);
             if (ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                NodeId targetId = targetState.getNodeId();
-                if (stateMgr.hasNodeReferences(targetId)) {
+                NodeReferencesId refsId = new NodeReferencesId(targetState.getNodeId());
+                if (stateMgr.hasNodeReferences(refsId)) {
                     try {
-                        NodeReferences refs = stateMgr.getNodeReferences(targetId);
+                        NodeReferences refs = stateMgr.getNodeReferences(refsId);
                         if (refs.hasReferences()) {
                             throw new ReferentialIntegrityException(safeGetJCRPath(targetPath)
                                     + ": cannot remove node with references");
@@ -1106,7 +1105,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
         if (id == null) {
             // create new id
-            id = new NodeId();
+            id = new NodeId(UUID.randomUUID());
         }
         if (nodeTypeName == null) {
             // no primary node type specified,
@@ -1122,7 +1121,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
         NodeState node = stateMgr.createNew(id, nodeTypeName, parent.getNodeId());
         if (mixinNames != null && mixinNames.length > 0) {
-            node.setMixinTypeNames(new HashSet<Name>(Arrays.asList(mixinNames)));
+            node.setMixinTypeNames(new HashSet(Arrays.asList(mixinNames)));
         }
         node.setDefinitionId(def.getId());
 
@@ -1144,12 +1143,16 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         // add 'auto-create' properties defined in node type
-        for (PropDef pd : ent.getAutoCreatePropDefs()) {
+        PropDef[] pda = ent.getAutoCreatePropDefs();
+        for (int i = 0; i < pda.length; i++) {
+            PropDef pd = pda[i];
             createPropertyState(node, pd.getName(), pd.getRequiredType(), pd);
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        for (NodeDef nd : ent.getAutoCreateNodeDefs()) {
+        NodeDef[] nda = ent.getAutoCreateNodeDefs();
+        for (int i = 0; i < nda.length; i++) {
+            NodeDef nd = nda[i];
             createNodeState(node, nd.getName(), nd.getDefaultPrimaryType(),
                     null, null, nd);
         }
@@ -1256,8 +1259,8 @@ public class BatchedItemOperations extends ItemValidator {
         prop.setMultiValued(def.isMultiple());
 
         // compute system generated values if necessary
-        InternalValue[] genValues = session.getNodeTypeInstanceHandler()
-                .computeSystemGeneratedPropertyValues(parent, def);
+        InternalValue[] genValues =
+                computeSystemGeneratedPropertyValues(parent, def);
         if (genValues != null) {
             prop.setValues(genValues);
         } else if (def.getDefaultValues() != null) {
@@ -1500,6 +1503,71 @@ public class BatchedItemOperations extends ItemValidator {
     }
 
     //------------------------------------------------------< private methods >
+    /**
+     * Computes the values of well-known system (i.e. protected) properties.
+     * todo: duplicate code in NodeImpl: consolidate and delegate to NodeTypeInstanceHandler
+     *
+     * @param parent
+     * @param def
+     * @return the computed values
+     */
+    private InternalValue[] computeSystemGeneratedPropertyValues(NodeState parent,
+                                                                 PropDef def) {
+        InternalValue[] genValues = null;
+
+        /**
+         * todo: need to come up with some callback mechanism for applying system generated values
+         * (e.g. using a NodeTypeInstanceHandler interface)
+         */
+
+        // compute system generated values
+        Name declaringNT = def.getDeclaringNodeType();
+        Name name = def.getName();
+        // TODO JCR-2116: Built-In Node Types; => adapt to JCR 2.0 built-in node types (mix:created, etc)
+        if (NameConstants.MIX_REFERENCEABLE.equals(declaringNT)) {
+            // mix:referenceable node type
+            if (NameConstants.JCR_UUID.equals(name)) {
+                // jcr:uuid property
+                genValues = new InternalValue[]{InternalValue.create(
+                        parent.getNodeId().getUUID().toString())};
+            }
+        } else if (NameConstants.NT_BASE.equals(declaringNT)) {
+            // nt:base node type
+            if (NameConstants.JCR_PRIMARYTYPE.equals(name)) {
+                // jcr:primaryType property
+                genValues = new InternalValue[]{InternalValue.create(parent.getNodeTypeName())};
+            } else if (NameConstants.JCR_MIXINTYPES.equals(name)) {
+                // jcr:mixinTypes property
+                Set mixins = parent.getMixinTypeNames();
+                ArrayList values = new ArrayList(mixins.size());
+                Iterator iter = mixins.iterator();
+                while (iter.hasNext()) {
+                    values.add(InternalValue.create((Name) iter.next()));
+                }
+                genValues = (InternalValue[]) values.toArray(new InternalValue[values.size()]);
+            }
+        } else if (NameConstants.NT_HIERARCHYNODE.equals(declaringNT)) {
+            // nt:hierarchyNode node type
+            if (NameConstants.JCR_CREATED.equals(name)) {
+                // jcr:created property
+                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
+            }
+        } else if (NameConstants.NT_RESOURCE.equals(declaringNT)) {
+            // nt:resource node type
+            if (NameConstants.JCR_LASTMODIFIED.equals(name)) {
+                // jcr:lastModified property
+                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
+            }
+        } else if (NameConstants.NT_VERSION.equals(declaringNT)) {
+            // nt:version node type
+            if (NameConstants.JCR_CREATED.equals(name)) {
+                // jcr:created property
+                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
+            }
+        }
+
+        return genValues;
+    }
 
     /**
      * Recursively removes the given node state including its properties and
@@ -1522,10 +1590,10 @@ public class BatchedItemOperations extends ItemValidator {
         if (targetState.hasChildNodeEntries()) {
             // remove child nodes
             // use temp array to avoid ConcurrentModificationException
-            ArrayList<ChildNodeEntry> tmp = new ArrayList<ChildNodeEntry>(targetState.getChildNodeEntries());
+            ArrayList tmp = new ArrayList(targetState.getChildNodeEntries());
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
-                ChildNodeEntry entry = tmp.get(i);
+                ChildNodeEntry entry = (ChildNodeEntry) tmp.get(i);
                 NodeId nodeId = entry.getId();
                 try {
                     NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
@@ -1537,7 +1605,7 @@ public class BatchedItemOperations extends ItemValidator {
                     checkRemoveNode(nodeState, targetState.getNodeId(),
                             CHECK_ACCESS
                             | CHECK_LOCK
-                            | CHECK_CHECKED_OUT
+                            | CHECK_VERSIONING
                             | CHECK_HOLD
                             | CHECK_RETENTION
                     );
@@ -1556,8 +1624,9 @@ public class BatchedItemOperations extends ItemValidator {
 
         // remove properties
         // use temp set to avoid ConcurrentModificationException
-        HashSet<Name> tmp = new HashSet<Name>(targetState.getPropertyNames());
-        for (Name propName : tmp) {
+        HashSet tmp = new HashSet(targetState.getPropertyNames());
+        for (Iterator iter = tmp.iterator(); iter.hasNext();) {
+            Name propName = (Name) iter.next();
             PropertyId propId =
                     new PropertyId(targetState.getNodeId(), propName);
             try {
@@ -1621,16 +1690,16 @@ public class BatchedItemOperations extends ItemValidator {
             switch (flag) {
                 case COPY:
                     // always create new uuid
-                    id = new NodeId();
+                    id = new NodeId(UUID.randomUUID());
                     if (referenceable) {
                         // remember uuid mapping
-                        refTracker.mappedId(srcState.getNodeId(), id);
+                        refTracker.mappedUUID(srcState.getNodeId().getUUID(), id.getUUID());
                     }
                     break;
                 case CLONE:
                     if (!referenceable) {
                         // non-referenceable node: always create new uuid
-                        id = new NodeId();
+                        id = new NodeId(UUID.randomUUID());
                         break;
                     }
                     // use same uuid as source node
@@ -1643,7 +1712,7 @@ public class BatchedItemOperations extends ItemValidator {
                 case CLONE_REMOVE_EXISTING:
                     if (!referenceable) {
                         // non-referenceable node: always create new uuid
-                        id = new NodeId();
+                        id = new NodeId(UUID.randomUUID());
                         break;
                     }
                     // use same uuid as source node
@@ -1667,7 +1736,7 @@ public class BatchedItemOperations extends ItemValidator {
                         checkRemoveNode(existingState,
                                 CHECK_ACCESS
                                 | CHECK_LOCK
-                                | CHECK_CHECKED_OUT
+                                | CHECK_VERSIONING
                                 | CHECK_CONSTRAINTS
                                 | CHECK_HOLD
                                 | CHECK_RETENTION);
@@ -1688,7 +1757,9 @@ public class BatchedItemOperations extends ItemValidator {
                 newState.addShare(destParentId);
             }
             // copy child nodes
-            for (ChildNodeEntry entry : srcState.getChildNodeEntries()) {
+            Iterator iter = srcState.getChildNodeEntries().iterator();
+            while (iter.hasNext()) {
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                 Path srcChildPath = PathFactoryImpl.getInstance().create(srcPath, entry.getName(), true);
                 if (!srcAccessMgr.isGranted(srcChildPath, Permission.READ)) {
                     continue;
@@ -1709,8 +1780,9 @@ public class BatchedItemOperations extends ItemValidator {
                  * UUID instead of copying the whole subtree.
                  */
                 if (srcChildState.isShareable()) {
-                    NodeId mappedId = refTracker.getMappedId(srcChildState.getNodeId());
-                    if (mappedId != null) {
+                    UUID uuid = refTracker.getMappedUUID(srcChildState.getNodeId().getUUID());
+                    if (uuid != null) {
+                        NodeId mappedId = new NodeId(uuid);
                         if (stateMgr.hasItemState(mappedId)) {
                             NodeState destState = (NodeState) stateMgr.getItemState(mappedId);
                             if (!destState.isShareable()) {
@@ -1738,22 +1810,10 @@ public class BatchedItemOperations extends ItemValidator {
                 // add new child node entry to new node
                 newState.addChildNodeEntry(entry.getName(), newChildState.getNodeId());
             }
-            // init version history if needed
-            VersionHistoryInfo history = null;
-            if (versionable && flag == COPY) {
-                NodeId copiedFrom = null;
-                if (fullVersionable) {
-                    // base version of copied versionable node is reference value of
-                    // the histories jcr:copiedFrom property
-                    PropertyId propId = new PropertyId(srcState.getNodeId(), NameConstants.JCR_BASEVERSION);
-                    PropertyState prop = (PropertyState) srcStateMgr.getItemState(propId);
-                    copiedFrom = prop.getValues()[0].getNodeId();
-                }
-                InternalVersionManager manager = session.getInternalVersionManager();
-                history = manager.getVersionHistory(session, newState, copiedFrom);
-            }
             // copy properties
-            for (Name propName : srcState.getPropertyNames()) {
+            iter = srcState.getPropertyNames().iterator();
+            while (iter.hasNext()) {
+                Name propName = (Name) iter.next();
                 Path propPath = PathFactoryImpl.getInstance().create(srcPath, propName, true);
                 if (!srcAccessMgr.canRead(propPath)) {
                     continue;
@@ -1779,18 +1839,28 @@ public class BatchedItemOperations extends ItemValidator {
                 PropertyState newChildState =
                         copyPropertyState(srcChildState, id, propName);
 
-                if (history != null) {
+                if (versionable && flag == COPY) {
+                    /**
+                     * a versionable node is being copied:
+                     * copied properties declared by mix:versionable need to be
+                     * adjusted accordingly.
+                     */
+                    VersionManager manager = session.getVersionManager();
                     if (fullVersionable) {
                         if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
                             // jcr:versionHistory
+                            VersionHistoryInfo history =
+                                manager.getVersionHistory(session, newState);
                             InternalValue value = InternalValue.create(
-                                    history.getVersionHistoryId());
+                                    history.getVersionHistoryId().getUUID());
                             newChildState.setValues(new InternalValue[] { value });
                         } else if (propName.equals(NameConstants.JCR_BASEVERSION)
                                 || propName.equals(NameConstants.JCR_PREDECESSORS)) {
                             // jcr:baseVersion or jcr:predecessors
+                            VersionHistoryInfo history =
+                                manager.getVersionHistory(session, newState);
                             InternalValue value = InternalValue.create(
-                                    history.getRootVersionId());
+                                    history.getRootVersionId().getUUID());
                             newChildState.setValues(new InternalValue[] { value });
                         } else if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
                             // jcr:isCheckedOut
@@ -1802,12 +1872,12 @@ public class BatchedItemOperations extends ItemValidator {
                         if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
                             // jcr:isCheckedOut
                             newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
+                            manager.getVersionHistory(session, newState);
                         }
                     }
                 }
 
-                if (newChildState.getType() == PropertyType.REFERENCE
-                        || newChildState.getType() == PropertyType.WEAKREFERENCE) {
+                if (newChildState.getType() == PropertyType.REFERENCE) {
                     refTracker.processedReference(newChildState);
                 }
                 // store new property
@@ -1857,7 +1927,7 @@ public class BatchedItemOperations extends ItemValidator {
             if (def.getDeclaringNodeType().equals(NameConstants.MIX_REFERENCEABLE)
                     && propName.equals(NameConstants.JCR_UUID)) {
                 // set correct value of jcr:uuid property
-                newState.setValues(new InternalValue[]{InternalValue.create(parentId.toString())});
+                newState.setValues(new InternalValue[]{InternalValue.create(parentId.getUUID().toString())});
             } else {
                 InternalValue[] newValues = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {
@@ -1892,7 +1962,7 @@ public class BatchedItemOperations extends ItemValidator {
     private boolean isShareable(NodeState state) throws RepositoryException {
         // shortcut: check some wellknown built-in types first
         Name primary = state.getNodeTypeName();
-        Set<Name> mixins = state.getMixinTypeNames();
+        Set mixins = state.getMixinTypeNames();
         if (mixins.contains(NameConstants.MIX_SHAREABLE)) {
             return true;
         }

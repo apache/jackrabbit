@@ -16,29 +16,28 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import org.apache.jackrabbit.api.jsr283.retention.AbstractRetentionTest;
+import org.apache.jackrabbit.api.jsr283.retention.Hold;
+import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.mem.MemoryFileSystem;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryStub;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.retention.Hold;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.fs.mem.MemoryFileSystem;
-import org.apache.jackrabbit.core.retention.AbstractRetentionTest;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
-import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.RepositoryStub;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.IOException;
 
 /**
  * <code>RetentionEvaluatorImplTest</code>...
@@ -133,7 +132,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testReadRetentionFromFile() throws RepositoryException {
-        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
+        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
         RetentionRegistryImpl re = new RetentionRegistryImpl(s, createFileSystem());
         try {
             assertTrue(re.hasEffectiveRetention(s.getQPath(childNPath), false));
@@ -223,7 +222,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testRemoveHold() throws RepositoryException {
-        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
+        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             Hold[] holds = retentionMgr.getHolds(childNPath);
@@ -242,7 +241,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testRemoveRetentionPolicy() throws RepositoryException {
-        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
+        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.removeRetentionPolicy(childNPath);
@@ -259,7 +258,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testAddHold() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
+        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         Hold h = null;
         try {
@@ -281,7 +280,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testAddMultipleHold() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
+        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.addHold(childN2.getPath(), getHoldName(), false);
@@ -310,7 +309,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testSetRetentionPolicy() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
+        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.setRetentionPolicy(childN2.getPath(), getApplicableRetentionPolicy("test2"));
@@ -329,7 +328,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testChangeRetentionPolicy() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
+        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.setRetentionPolicy(childN2.getPath(), getApplicableRetentionPolicy("test2"));

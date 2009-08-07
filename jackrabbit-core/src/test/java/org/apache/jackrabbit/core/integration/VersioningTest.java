@@ -37,12 +37,12 @@ public class VersioningTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        Session s1 = getHelper().getSuperuserSession();
+        Session s1 = helper.getSuperuserSession();
         n1 = s1.getRootNode().addNode("VersioningTest");
         n1.addMixin(mixVersionable);
         n1.getSession().save();
 
-        Session s2 = getHelper().getSuperuserSession(workspaceName);
+        Session s2 = helper.getSuperuserSession(workspaceName);
         s2.getWorkspace().clone(
                 s1.getWorkspace().getName(), n1.getPath(),
                 "/VersioningTest", true);

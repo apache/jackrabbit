@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
@@ -32,6 +32,7 @@ import java.io.FileInputStream;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Properties;
 
 /**
@@ -52,9 +53,9 @@ public class SimpleJBossAccessManager implements AccessManager {
     private static Logger log =
         LoggerFactory.getLogger(SimpleJBossAccessManager.class);
 
-    protected boolean system;
+    protected boolean system = false;
 
-    protected boolean anonymous;
+    protected boolean anonymous = false;
 
     //--------------------------------------------------------< AccessManager >
 
@@ -74,13 +75,15 @@ public class SimpleJBossAccessManager implements AccessManager {
             rolefs.close();
         }
 
-        for (Principal principal : context.getSubject().getPrincipals()) {
+        Iterator iterator = context.getSubject().getPrincipals().iterator();
+        while (iterator.hasNext()) {
+            Principal principal = (Principal) iterator.next();
             if (principal instanceof Group
                     && principal.getName().equalsIgnoreCase("Roles")) {
                 Group group = (Group) principal;
-                Enumeration< ? extends Principal> members = group.members();
+                Enumeration members = group.members();
                 while (members.hasMoreElements()) {
-                    Principal member = members.nextElement();
+                    Principal member = (Principal) members.nextElement();
                     String role = rolemaps.getProperty(member.getName());
                     system = system || "full".equalsIgnoreCase(role);
                     anonymous = anonymous || "read".equalsIgnoreCase(role);

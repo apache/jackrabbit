@@ -22,9 +22,9 @@ import javax.jcr.observation.Event;
 
 /**
  * Tests if workspace operations trigger the appropriate observation events.
- * <p>
- * Configuration requirements:
- * <p>
+ *
+ * <p/>
+ * Configuration requirements are:<br/>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child nodes that are created will be named {@link #nodeName1},
  * {@link #nodeName2}, {@link #nodeName3} and {@link #nodeName4}. Furthermore

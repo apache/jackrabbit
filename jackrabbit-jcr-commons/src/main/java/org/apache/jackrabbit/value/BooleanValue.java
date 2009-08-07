@@ -20,7 +20,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
-import java.math.BigDecimal;
 
 /**
  * A <code>BooleanValue</code> provides an implementation
@@ -49,7 +48,7 @@ public class BooleanValue extends BaseValue {
      */
     public BooleanValue(boolean bool) {
         super(TYPE);
-        this.bool = bool;
+        this.bool = Boolean.valueOf(bool);
     }
 
     /**
@@ -120,6 +119,8 @@ public class BooleanValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to date failed: inconvertible types");
     }
 
@@ -129,6 +130,8 @@ public class BooleanValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to long failed: inconvertible types");
     }
 
@@ -138,8 +141,10 @@ public class BooleanValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (bool != null) {
-            return bool;
+            return bool.booleanValue();
         } else {
             throw new ValueFormatException("empty value");
         }
@@ -151,15 +156,8 @@ public class BooleanValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        throw new ValueFormatException("conversion to double failed: inconvertible types");
-    }
+        setValueConsumed();
 
-    /**
-     * {@inheritDoc}
-     */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
+        throw new ValueFormatException("conversion to double failed: inconvertible types");
     }
 }

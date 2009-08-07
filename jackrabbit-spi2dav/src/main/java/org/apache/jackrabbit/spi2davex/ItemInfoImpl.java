@@ -40,7 +40,8 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
     private final boolean isNode;
 
     /**
-     * Creates a new <code>ItemInfo</code>.
+     * Creates a new serializable item info for the given qualified
+     * <code>item</code> info.
      *
      * @param path     the path to this item.
      * @param isNode   if this item is a node.

@@ -16,24 +16,18 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
+import org.xml.sax.ContentHandler;
+
+import javax.jcr.Session;
+import javax.jcr.Repository;
+import javax.jcr.Workspace;
+import javax.jcr.Credentials;
+import javax.jcr.Node;
+import javax.jcr.Item;
+import javax.jcr.ValueFactory;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
-
-import javax.jcr.Credentials;
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ValueFactory;
-import javax.jcr.Workspace;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.security.AccessControlManager;
-
-import org.xml.sax.ContentHandler;
 
 /**
  * Represents the session that has made some changes on another node in the
@@ -311,50 +305,4 @@ class ClusterSession implements Session {
     public int hashCode() {
         return userId.hashCode();
     }
-
-    public AccessControlManager getAccessControlManager()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public Node getNode(String path) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public Node getNodeByIdentifier(String identifier)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public Property getProperty(String arg0) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public RetentionManager getRetentionManager()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public boolean hasCapability(String arg0, Object arg1, Object[] arg2)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public boolean hasPermission(String arg0, String arg1)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public boolean nodeExists(String path) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public boolean propertyExists(String path) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
-    public void removeItem(String path) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
-    }
-
 }

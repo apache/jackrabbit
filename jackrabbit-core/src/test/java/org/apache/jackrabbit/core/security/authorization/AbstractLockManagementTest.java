@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;

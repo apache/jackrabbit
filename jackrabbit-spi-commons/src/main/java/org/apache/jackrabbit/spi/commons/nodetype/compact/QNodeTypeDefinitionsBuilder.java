@@ -18,9 +18,6 @@ package org.apache.jackrabbit.spi.commons.nodetype.compact;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.nodetype.ItemDefinition;
-import javax.jcr.nodetype.NodeTypeDefinition;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QItemDefinition;
@@ -28,10 +25,8 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 /**
  * A builder for {@link QNodeTypeDefinition}s
@@ -49,12 +44,10 @@ public abstract class QNodeTypeDefinitionsBuilder {
      *
      * @param namespaceURI namespace uri
      * @param localName local part
-     * @return the created name
      * @throws IllegalArgumentException if <code>namespaceURI</code> or
      * <code>localName</code> is invalid.
      */
-    public abstract Name createName(String namespaceURI, String localName)
-            throws IllegalArgumentException;
+    public abstract Name createName(String namespaceURI, String localName) throws IllegalArgumentException;
 
     /**
      * A builder for a {@link QNodeTypeDefinition}
@@ -67,22 +60,17 @@ public abstract class QNodeTypeDefinitionsBuilder {
         private Name primaryItemName;
         private QPropertyDefinition[] propertyDefinitions;
         private QNodeDefinition[] childNodeDefinitions;
-        private boolean isAbstract;
-        private boolean isQueryable = true;
 
         /**
          * Set the name of the node type definition being built
-         * @param name the name
-         * @see NodeTypeDefinition#getName()
+         * @param name
          */
         public void setName(Name name) {
             this.name = name;
         }
 
         /**
-         * @return the name of the node type definition being built or
-         * <code>null</code> if not set.
-         * @see NodeTypeDefinition#getName()
+         * @return the name of the node type definition being built or <code>null</code> if not set.
          */
         public Name getName() {
             return name;
@@ -90,64 +78,53 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * Specifies the supertypes of the node type definition being built
-         * @param supertypes the supertypes
-         * @see NodeTypeDefinition#getDeclaredSupertypeNames()
+         * @param supertypes
          */
         public void setSupertypes(Name[] supertypes) {
             this.supertypes = supertypes;
         }
 
         /**
-         * Returns an array containing the names of the supertypes of the node
-         * type definition being built.
+         * Returns an array containing the names of the supertypes of the node type definition being
+         * built.
          *
          * @return an array of supertype names
-         * @see NodeTypeDefinition#getDeclaredSupertypeNames()
          */
         public Name[] getSuperTypes() {
             return supertypes;
         }
 
         /**
-         * @param isMixin <code>true</code> if building a mixin node type
-         * definition; <code>false</code> otherwise.
-         * @see NodeTypeDefinition#isMixin()
+         * @param isMixin true if building a mixin node type definition; false otherwise.
          */
         public void setMixin(boolean isMixin) {
             this.isMixin = isMixin;
         }
 
         /**
-         * @return <code>true</code> if building a mixin node type definition;
-         * <code>false</code> otherwise.
-         * @see NodeTypeDefinition#isMixin()
+         * @return true if building a mixin node type definition; false otherwise.
          */
         public boolean getMixin() {
             return isMixin;
         }
 
         /**
-         * @param isOrderable <code>true</code> if building a node type having
-         * orderable child nodes; <code>false</code> otherwise.
-         * @see NodeTypeDefinition#hasOrderableChildNodes()
+         * @param isOrderable true if building a node type having orderable child nodes; false
+         *                otherwise.
          */
         public void setOrderableChildNodes(boolean isOrderable) {
             this.isOrderable = isOrderable;
         }
 
         /**
-         * @return <code>true</code> if building a node type having orderable
-         * child nodes; <code>false</code> otherwise.
-         * @see NodeTypeDefinition#hasOrderableChildNodes()
+         * @return true if building a node type having orderable child nodes; false otherwise.
          */
         public boolean getOrderableChildNodes() {
             return isOrderable;
         }
 
         /**
-         * @param primaryItemName the name of the primary item or
-         * <code>null</code> if not set.
-         * @see NodeTypeDefinition#getPrimaryItemName()
+         * @param primaryItemName  the name of the primary item or <code>null</code> if not set.
          */
         public void setPrimaryItemName(Name primaryItemName) {
             this.primaryItemName = primaryItemName;
@@ -155,48 +132,14 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @return the name of the primary item or <code>null</code> if not set.
-         * @see NodeTypeDefinition#getPrimaryItemName()
          */
         public Name getPrimaryItemName() {
             return primaryItemName;
         }
 
         /**
-         * @return <code>true</code> if the node type is abstract.
-         * @see NodeTypeDefinition#isAbstract()
-         */
-        public boolean getAbstract() {
-            return isAbstract;
-        }
-
-        /**
-         * @param isAbstract <code>true</code> if building a node type that is abstract.
-         * @see NodeTypeDefinition#isAbstract()
-         */
-        public void setAbstract(boolean isAbstract) {
-            this.isAbstract = isAbstract;
-        }
-
-        /**
-         * @return <code>true</code> if the node type is queryable
-         * @see NodeTypeDefinition#isQueryable()
-         */
-        public boolean getQueryable() {
-            return isQueryable;
-        }
-
-        /**
-         * @param queryable <code>true</code> if building a node type that is queryable
-         * @see NodeTypeDefinition#isQueryable()
-         */
-        public void setQueryable(boolean queryable) {
-            isQueryable = queryable;
-        }
-
-        /**
          * @param propDefs an array containing the property definitions of the node type definition
          *                being built.
-         * @see NodeTypeDefinition#getDeclaredPropertyDefinitions()
          */
         public void setPropertyDefs(QPropertyDefinition[] propDefs) {
             propertyDefinitions = propDefs;
@@ -205,7 +148,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
         /**
          * @return an array containing the property definitions of the node type definition being
          *         built or <code>null</code> if not set.
-         * @see NodeTypeDefinition#getDeclaredPropertyDefinitions()
          */
         public QPropertyDefinition[] getPropertyDefs() {
             return propertyDefinitions;
@@ -214,7 +156,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
         /**
          * @param childDefs an array containing the child node definitions of the node type
          *                definition being.
-         * @see NodeTypeDefinition#getDeclaredChildNodeDefinitions()
          */
         public void setChildNodeDefs(QNodeDefinition[] childDefs) {
             childNodeDefinitions = childDefs;
@@ -223,7 +164,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
         /**
          * @return an array containing the child node definitions of the node type definition being
          *         built or <code>null</code> if not set.
-         * @see NodeTypeDefinition#getDeclaredChildNodeDefinitions()
          */
         public QNodeDefinition[] getChildNodeDefs() {
             return childNodeDefinitions;
@@ -262,7 +202,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @param name  the name of the child item definition being build
-         * @see ItemDefinition#getName()
          */
         public void setName(Name name) {
             this.name = name;
@@ -270,7 +209,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @return the name of the child item definition being build.
-         * @see ItemDefinition#getName()
          */
         public Name getName() {
             return name;
@@ -278,7 +216,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @param type  the name of the declaring node type.
-         * @see ItemDefinition#getDeclaringNodeType()
          */
         public void setDeclaringNodeType(Name type) {
             declaringType = type;
@@ -286,25 +223,20 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @return the name of the declaring node type.
-         * @see ItemDefinition#getDeclaringNodeType()
          */
         public Name getDeclaringNodeType() {
             return declaringType;
         }
 
         /**
-         * @param autocreate <code>true</code> if building a 'autocreate' child item 
-         * definition, false otherwise.
-         * @see ItemDefinition#isAutoCreated()
+         * @param autocreate  true if building a 'autocreate' child item definition, false otherwise.
          */
         public void setAutoCreated(boolean autocreate) {
             isAutocreated = autocreate;
         }
 
         /**
-         * @return <code>true</code> if building a 'autocreate' child item
-         * definition, false otherwise.
-         * @see ItemDefinition#isAutoCreated()
+         * @return true if building a 'autocreate' child item definition, false otherwise.
          */
         public boolean getAutoCreated() {
             return isAutocreated;
@@ -312,7 +244,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @param onParent the 'onParentVersion' attribute of the child item definition being built
-         * @see ItemDefinition#getOnParentVersion()
          */
         public void setOnParentVersion(int onParent) {
             onParentVersion = onParent;
@@ -320,43 +251,34 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @return the 'onParentVersion' attribute of the child item definition being built
-         * @see ItemDefinition#getOnParentVersion()
          */
         public int getOnParentVersion() {
             return onParentVersion;
         }
 
         /**
-         * @param isProtected <code>true</code> if building a 'protected' child
-         * item definition, false otherwise.
-         * @see ItemDefinition#isProtected()
+         * @param isProtected true if building a 'protected' child item definition, false otherwise.
          */
         public void setProtected(boolean isProtected) {
             this.isProtected = isProtected;
         }
 
         /**
-         * @return <code>true</code> if building a 'protected' child item
-         * definition, false otherwise.
-         * @see ItemDefinition#isProtected()
+         * @return  true if building a 'protected' child item definition, false otherwise.
          */
         public boolean getProtected() {
             return isProtected;
         }
 
         /**
-         * @param isMandatory <code>true</code> if building a 'mandatory' child
-         * item definition, false otherwise.
-         * @see ItemDefinition#isMandatory()
+         * @param isMandatory true if building a 'mandatory' child item definition, false otherwise.
          */
         public void setMandatory(boolean isMandatory) {
             this.isMandatory = isMandatory;
         }
 
         /**
-         * @return <code>true</code> if building a 'mandatory' child item
-         * definition, false otherwise.
-         * @see ItemDefinition#isMandatory()
+         * @return  true if building a 'mandatory' child item definition, false otherwise.
          */
         public boolean getMandatory() {
             return isMandatory;
@@ -364,22 +286,16 @@ public abstract class QNodeTypeDefinitionsBuilder {
     }
 
     /**
-     * A builder for a {@link QPropertyDefinition}
-     * @see PropertyDefinition
+     * A builder for a {@link QNodeDefinition}
      */
     public abstract class QPropertyDefinitionBuilder extends QItemDefinitionBuilder {
-
         private int requiredType;
-        private QValueConstraint[] valueConstraints;
+        private String[] valueConstraints;
         private QValue[] defaultValues;
         private boolean isMultiple;
-        private boolean fullTextSearchable = true;
-        private boolean queryOrderable = true;
-        private String[] queryOperators = Operator.getAllQueryOperators();
 
         /**
          * @param type the required type of the property definition being built.
-         * @see PropertyDefinition#getRequiredType()
          */
         public void setRequiredType(int type) {
             requiredType = type;
@@ -387,7 +303,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @return the required type of the property definition being built.
-         * @see PropertyDefinition#getRequiredType()
          */
         public int getRequiredType() {
             return requiredType;
@@ -395,23 +310,20 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @param constraints array of value constraints of the property definition being built.
-         * @see PropertyDefinition#getValueConstraints()
          */
-        public void setValueConstraints(QValueConstraint[] constraints) {
+        public void setValueConstraints(String[] constraints) {
             valueConstraints = constraints;
         }
 
         /**
          * @return array of value constraints of the property definition being built.
-         * @see PropertyDefinition#getValueConstraints()
          */
-        public QValueConstraint[] getValueConstraints() {
+        public String[] getValueConstraints() {
             return valueConstraints;
         }
 
         /**
          * @param values array of default values of the property definition being built.
-         * @see PropertyDefinition#getDefaultValues()
          */
         public void setDefaultValues(QValue[] values) {
             defaultValues = values;
@@ -420,7 +332,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
         /**
          * @return array of default values of the property definition being built or
          *         <code>null</code> if no default values are defined.
-         * @see PropertyDefinition#getDefaultValues()
          */
         public QValue[] getDefaultValues() {
             return defaultValues;
@@ -428,7 +339,6 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @param isMultiple true if building a 'multiple' property definition.
-         * @see PropertyDefinition#isMultiple()
          */
         public void setMultiple(boolean isMultiple) {
             this.isMultiple = isMultiple;
@@ -436,81 +346,30 @@ public abstract class QNodeTypeDefinitionsBuilder {
 
         /**
          * @return true if building a 'multiple' property definition.
-         * @see PropertyDefinition#isMultiple()
          */
         public boolean getMultiple() {
             return isMultiple;
         }
 
         /**
-         * @return <code>true</code> if the property is fulltext searchable
-         * @see PropertyDefinition#isFullTextSearchable()
-         */
-        public boolean getFullTextSearchable() {
-            return fullTextSearchable;
-        }
-
-        /**
-         * @param fullTextSearchable <code>true</code> if building a
-         * 'fulltext searchable' property definition
-         * @see PropertyDefinition#isFullTextSearchable()
-         */
-        public void setFullTextSearchable(boolean fullTextSearchable) {
-            this.fullTextSearchable = fullTextSearchable;
-        }
-
-        /**
-         * @return <code>true</code> if the property is orderable in a query
-         * @see PropertyDefinition#isQueryOrderable()
-         */
-        public boolean getQueryOrderable() {
-            return queryOrderable;
-        }
-
-        /**
-         * @param queryOrderable <code>true</code> if the property is orderable
-         *        in a query
-         * @see PropertyDefinition#isQueryOrderable()
-         */
-        public void setQueryOrderable(boolean queryOrderable) {
-            this.queryOrderable = queryOrderable;
-        }
-
-        /**
-         * @return the query operators of the property
-         * @see PropertyDefinition#getAvailableQueryOperators()
-         */
-        public String[] getAvailableQueryOperators() {
-            return queryOperators;
-        }
-
-        /**
-         * @param queryOperators the query operators of the property
-         * @see PropertyDefinition#getAvailableQueryOperators()
-         */
-        public void setAvailableQueryOperators(String[] queryOperators) {
-            this.queryOperators = queryOperators;
-        }
-
-        /**
          * Validate the given <code>constraint</code> and resolve any prefixes.
          *
-         * @param constraint the contraint
-         * @param resolver the resolver
-         * @return A syntactically valid value constrained which refers to
-         * internal names and paths representations only.
-         * @throws InvalidConstraintException if <code>constraint</code> cannot
-         * be converted to a valid value constrained.
+         * @param constraint
+         * @param resolver
+         * @return A syntactically valid value constrained which refers to fully qualified names and
+         *         paths only.
+         * @throws InvalidConstraintException if <code>constraint</code> cannot be converted to a
+         *                 valid value constrained.
          */
-        public abstract QValueConstraint createValueConstraint(String constraint, NamePathResolver resolver)
+        public abstract String createValueConstraint(String constraint, NamePathResolver resolver)
                 throws InvalidConstraintException;
 
         /**
          * Create a new <code>QValue</code> for <code>value</code> of the type this instance
          * represents using the given <code>resolver</code>.
          *
-         * @param value the value
-         * @param resolver the resolver
+         * @param value
+         * @param resolver
          * @return a new <code>QValue</code>.
          * @throws ValueFormatException If the given <code>value</code> cannot be converted to the
          *                 specified <code>type</code>.

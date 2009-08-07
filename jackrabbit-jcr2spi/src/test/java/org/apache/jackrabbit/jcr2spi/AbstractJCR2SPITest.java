@@ -16,34 +16,22 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.io.BufferedInputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Credentials;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import junit.framework.TestCase;
 
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.Batch;
-import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -54,28 +42,23 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.commons.AbstractReadableRepositoryService;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 
 /**
  * Abstract base class for jcr2spi tests. This class implements {@link RepositoryService}
- * by delegation to {@link AbstractReadableRepositoryService}. Implementors can override
- * individual methods as needed.
+ * by delegation to {@link AbstractRepositoryService}. Implementors can overrid individual
+ * methods as needed.
  */
 public abstract class AbstractJCR2SPITest extends TestCase implements RepositoryService {
     protected RepositoryService repositoryService;
     protected RepositoryConfig config;
     protected Repository repository;
 
-    @Override
     public void setUp() throws Exception {
         super.setUp();
         repositoryService = getRepositoryService();
@@ -83,90 +66,26 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repository = getRepository();
     }
 
-    protected RepositoryService getRepositoryService() throws RepositoryException, ParseException {
-        return new AbstractReadableRepositoryService(getDescriptors(), getNameSpaces(), getCndReader(),
-                getWspNames()) {
-
-            @Override
-            protected void checkCredentials(Credentials credentials, String workspaceName)
-                    throws LoginException {
-
-                AbstractJCR2SPITest.this.checkCredentials(credentials, workspaceName);
-            }
-
-            @Override
-            protected QNodeDefinition createRootNodeDefinition() throws RepositoryException {
-                return AbstractJCR2SPITest.this.createRootNodeDefinition();
-            }
-
-            @Override
-            public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId)
-                    throws ItemNotFoundException, RepositoryException {
-
-                return AbstractJCR2SPITest.this.getItemInfos(sessionInfo, nodeId);
-            }
-
-            public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId)
-                    throws ItemNotFoundException, RepositoryException {
+    protected RepositoryService getRepositoryService() throws RepositoryException {
+        return new AbstractRepositoryService() {
+            public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId)
+                    throws RepositoryException {
 
                 return AbstractJCR2SPITest.this.getChildInfos(sessionInfo, parentId);
             }
 
-            public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException,
-                    RepositoryException {
+            public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+                return AbstractJCR2SPITest.this.getItemInfos(sessionInfo, nodeId);
+            }
 
+            public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
                 return AbstractJCR2SPITest.this.getNodeInfo(sessionInfo, nodeId);
             }
 
-            public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId)
-                    throws ItemNotFoundException, RepositoryException {
-
+            public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) {
                 return AbstractJCR2SPITest.this.getPropertyInfo(sessionInfo, propertyId);
             }
-
-            public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId,
-                    Name propertyName, boolean weakReferences) throws ItemNotFoundException,
-                    RepositoryException {
-
-                return AbstractJCR2SPITest.this.getReferences(sessionInfo, nodeId, propertyName, weakReferences);
-            }
-
         };
-    }
-
-    protected Reader getCndReader() throws RepositoryException {
-        String resourceName = "default-nodetypes.cnd";
-        InputStream is = AbstractJCR2SPITest.class.getResourceAsStream(resourceName);
-        if (is == null) {
-            throw new RepositoryException(("Resource not found: " + resourceName));
-        }
-
-        return new InputStreamReader(new BufferedInputStream(is));
-    }
-
-    protected Map<String, String> getNameSpaces() {
-        return Collections.emptyMap();
-    }
-
-    protected Map<String, String> getDescriptors() {
-        Map<String, String> descriptorKeys = new HashMap<String, String>();
-
-        descriptorKeys.put(Repository.OPTION_LOCKING_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.OPTION_OBSERVATION_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.OPTION_TRANSACTIONS_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.OPTION_VERSIONING_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.REP_NAME_DESC, "Mock Repository");
-        descriptorKeys.put(Repository.REP_VENDOR_DESC, "Apache Software Foundation");
-        descriptorKeys.put(Repository.REP_VENDOR_URL_DESC, "http://www.apache.org/");
-        descriptorKeys.put(Repository.REP_VERSION_DESC, "1.0");
-        descriptorKeys.put(Repository.SPEC_NAME_DESC, "Content Repository API for Java(TM) Technology Specification");
-        descriptorKeys.put(Repository.SPEC_VERSION_DESC, "1.0");
-
-        return descriptorKeys;
-    }
-
-    protected List<String> getWspNames() {
-        return Collections.singletonList("default");
     }
 
     protected RepositoryConfig getRepositoryConfig() {
@@ -179,10 +98,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     protected Repository getRepository() throws RepositoryException {
         return RepositoryImpl.create(config);
-    }
-
-    protected void checkCredentials(Credentials credentials, String workspaceName) {
-        // empty -> all credentials are valid by default
     }
 
     // -----------------------------------------------------< RepositoryService >---
@@ -203,7 +118,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.getQValueFactory();
     }
 
-    public Map<String, String> getRepositoryDescriptors() throws RepositoryException {
+    public Map getRepositoryDescriptors() throws RepositoryException {
         return repositoryService.getRepositoryDescriptors();
     }
 
@@ -253,24 +168,16 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     public QPropertyDefinition getPropertyDefinition(SessionInfo sessionInfo, PropertyId propertyId)
             throws RepositoryException {
 
-        return repositoryService.getPropertyDefinition(sessionInfo, propertyId);
+        return getPropertyDefinition(sessionInfo, propertyId);
     }
-
-    protected abstract QNodeDefinition createRootNodeDefinition();
 
     public abstract NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
 
-    public abstract Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+    public abstract Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
 
-    public abstract Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
+    public abstract Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws RepositoryException;
 
     public abstract PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId);
-
-    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName,
-            boolean weakReferences) throws RepositoryException {
-
-        return repositoryService.getReferences(sessionInfo, nodeId, propertyName, weakReferences);
-    }
 
     //-----------------------------------------------< general modification >---
 
@@ -334,10 +241,13 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.lock(sessionInfo, nodeId, deep, sessionScoped);
     }
 
-    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped,
-            long timeoutHint, String ownerHint) throws RepositoryException {
-
-        return repositoryService.lock(sessionInfo, nodeId, deep, sessionScoped, timeoutHint, ownerHint);
+    public LockInfo lock(
+            SessionInfo sessionInfo, NodeId nodeId,
+            boolean deep, boolean sessionScoped,
+            long timeoutHint, String ownerHint)
+            throws RepositoryException {
+        return repositoryService.lock(
+            sessionInfo, nodeId, deep, sessionScoped, timeoutHint, ownerHint);
     }
 
     public void refreshLock(SessionInfo sessionInfo, NodeId nodeId)
@@ -352,6 +262,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.unlock(sessionInfo, nodeId);
     }
 
+
     //---------------------------------------------------------< Versioning >---
 
     public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
@@ -360,12 +271,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         repositoryService.checkout(sessionInfo, nodeId);
-    }
-
-    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId)
-            throws RepositoryException {
-
-        return repositoryService.checkpoint(sessionInfo, nodeId);
     }
 
     public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId)
@@ -386,16 +291,10 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.restore(sessionInfo, nodeId, versionId, removeExisting);
     }
 
-    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName,
-            boolean bestEffort) throws RepositoryException {
+    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort)
+            throws RepositoryException {
 
         return repositoryService.merge(sessionInfo, nodeId, srcWorkspaceName, bestEffort);
-    }
-
-    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName,
-            boolean bestEffort, boolean isShallow) throws RepositoryException {
-
-        return repositoryService.merge(sessionInfo, nodeId, srcWorkspaceName, bestEffort, isShallow);
     }
 
     public void resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds,
@@ -407,7 +306,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId,
             Name label, boolean moveLabel) throws RepositoryException {
 
-        repositoryService.addVersionLabel(sessionInfo, versionHistoryId, versionId, label, moveLabel);
+        addVersionLabel(sessionInfo, versionHistoryId, versionId, label, moveLabel);
     }
 
     public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId,
@@ -416,29 +315,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.removeVersionLabel(sessionInfo, versionHistoryId, versionId, label);
     }
 
-    public NodeId createActivity(SessionInfo sessionInfo, String title)
-            throws RepositoryException {
-
-        return repositoryService.createActivity(sessionInfo, title);
-    }
-
-    public void removeActivity(SessionInfo sessionInfo, NodeId activityId)
-            throws RepositoryException {
-
-        repositoryService.removeActivity(sessionInfo, activityId);
-    }
-
-    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId)
-            throws RepositoryException {
-
-        return repositoryService.mergeActivity(sessionInfo, activityId);
-    }
-
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId)
-            throws RepositoryException {
-
-        return repositoryService.createConfiguration(sessionInfo, nodeId);
-    }
 
     //----------------------------------------------------------< Searching >---
 
@@ -447,18 +323,16 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     }
 
 
-    public String[] checkQueryStatement(SessionInfo sessionInfo, String statement, String language,
-            Map<String, String> namespaces) throws RepositoryException {
+    public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language,
+            Map namespaces) throws RepositoryException {
 
-        return repositoryService.checkQueryStatement(sessionInfo, statement, language, namespaces);
+        repositoryService.checkQueryStatement(sessionInfo, statement, language, namespaces);
     }
 
     public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language,
-            Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values)
-            throws RepositoryException {
+            Map namespaces) throws RepositoryException {
 
-        return repositoryService.executeQuery(sessionInfo, statement, language, namespaces, limit, offset,
-                values);
+        return repositoryService.executeQuery(sessionInfo, statement, language, namespaces);
     }
 
 
@@ -488,12 +362,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.getEvents(subscription, timeout);
     }
 
-    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after)
-            throws RepositoryException {
-
-        return repositoryService.getEvents(sessionInfo, filter, after);
-    }
-
     public void dispose(Subscription subscription) throws RepositoryException {
         repositoryService.dispose(subscription);
     }
@@ -501,7 +369,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     //---------------------------------------------------------< Namespaces >---
 
-    public Map<String, String> getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
+    public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
         return repositoryService.getRegisteredNamespaces(sessionInfo);
     }
 
@@ -530,43 +398,14 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     //----------------------------------------------------------< NodeTypes >---
 
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo)
-            throws RepositoryException {
-
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         return repositoryService.getQNodeTypeDefinitions(sessionInfo);
     }
 
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodeTypeNames)
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodeTypeNames)
             throws RepositoryException {
 
         return repositoryService.getQNodeTypeDefinitions(sessionInfo, nodeTypeNames);
     }
 
-    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions,
-            boolean allowUpdate) throws RepositoryException {
-
-        repositoryService.registerNodeTypes(sessionInfo, nodeTypeDefinitions, allowUpdate);
-    }
-
-    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames)
-            throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
-
-        repositoryService.unregisterNodeTypes(sessionInfo, nodeTypeNames);
-    }
-
-    //-----------------------------------------------< Workspace Management >---
-
-    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName)
-            throws RepositoryException {
-
-        repositoryService.createWorkspace(sessionInfo, name, srcWorkspaceName);
-    }
-
-    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws RepositoryException {
-        repositoryService.deleteWorkspace(sessionInfo, name);
-    }
 }
-
-
-
-

@@ -178,7 +178,7 @@ public class VersionEventsTest extends AbstractObservationTest {
         n1.addMixin(mixVersionable);
         testRootNode.save();
 
-        Session s = getHelper().getReadOnlySession(workspaceName);
+        Session s = helper.getReadOnlySession(workspaceName);
         try {
             EventResult listener = new EventResult(log);
             ObservationManager obsMgr = s.getWorkspace().getObservationManager();

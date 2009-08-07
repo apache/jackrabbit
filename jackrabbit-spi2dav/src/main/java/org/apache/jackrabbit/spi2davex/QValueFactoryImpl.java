@@ -17,21 +17,26 @@
 package org.apache.jackrabbit.spi2davex;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.DavException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -40,8 +45,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.Binary;
-import javax.jcr.ValueFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
@@ -60,25 +63,26 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * <code>ValueFactoryImpl</code>...
  */
-class QValueFactoryImpl extends AbstractQValueFactory {
+class QValueFactoryImpl implements QValueFactory {
 
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
+    private static final String DEFAULT_ENCODING = "UTF-8";
+
+    private final NamePathResolver resolver;
     private final ValueLoader loader;
-    private final ValueFactory vf;
 
     public QValueFactoryImpl() {
         this(null, null);
     }
 
     QValueFactoryImpl(NamePathResolver resolver, ValueLoader loader) {
+        this.resolver = resolver;
         this.loader = loader;
-        vf = new ValueFactoryQImpl(this, resolver);
     }
 
     /**
@@ -139,14 +143,9 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                     return new QValueImpl(NAME_FACTORY.create(value));
                 case PropertyType.STRING:
                 case PropertyType.REFERENCE:
-                case PropertyType.WEAKREFERENCE:
                     return new QValueImpl(value, type);
                 case PropertyType.BINARY:
                     return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
-                case PropertyType.DECIMAL:
-                    return new QValueImpl(new BigDecimal(value));
-                case PropertyType.URI:
-                    return new QValueImpl(URI.create(value));
             }
         } catch (IllegalArgumentException ex) {
             // given String value cannot be converted to Long/Double/Path/Name
@@ -174,14 +173,14 @@ class QValueFactoryImpl extends AbstractQValueFactory {
      * @see QValueFactory#create(double)
      */
     public QValue create(double value) {
-        return new QValueImpl(Double.valueOf(value));
+        return new QValueImpl(new Double(value));
     }
 
     /**
      * @see QValueFactory#create(long)
      */
     public QValue create(long value) {
-        return new QValueImpl(Long.valueOf(value));
+        return new QValueImpl(new Long(value));
     }
 
     /**
@@ -192,23 +191,12 @@ class QValueFactoryImpl extends AbstractQValueFactory {
     }
 
     /**
-     * @see QValueFactory#create(URI)
-     */
-    public QValue create(URI value) {
-        return new QValueImpl(value);
-    }
-
-    /**
-     * @see QValueFactory#create(URI)
-     */
-    public QValue create(BigDecimal value) {
-        return new QValueImpl(value);
-    }
-
-    /**
      * @see QValueFactory#create(Name)
      */
     public QValue create(Name value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValueImpl(value);
     }
 
@@ -216,6 +204,9 @@ class QValueFactoryImpl extends AbstractQValueFactory {
      * @see QValueFactory#create(Path)
      */
     public QValue create(Path value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValueImpl(value);
     }
 
@@ -249,54 +240,91 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         return new BinaryQValue(value);
     }
 
+    /**
+     * @see QValueFactory#computeAutoValues(QPropertyDefinition)
+     */
+    public QValue[] computeAutoValues(QPropertyDefinition propertyDefinition) throws RepositoryException {
+        Name nodeType = propertyDefinition.getDeclaringNodeType();
+        Name name = propertyDefinition.getName();
+
+        if (NameConstants.NT_HIERARCHYNODE.equals(nodeType) && NameConstants.JCR_CREATED.equals(name)) {
+            return new QValue[] { create(Calendar.getInstance()) };
+        } else if (NameConstants.NT_RESOURCE.equals(nodeType) && NameConstants.JCR_LASTMODIFIED.equals(name)) {
+            return new QValue[] { create(Calendar.getInstance()) };
+        } else if (NameConstants.MIX_REFERENCEABLE.equals(nodeType) && NameConstants.JCR_UUID.equals(name)) {
+            return new QValue[] { create(UUID.randomUUID().toString(), PropertyType.STRING) };
+        } else {
+            throw new RepositoryException("createFromDefinition not implemented for: " + name);
+        }
+    }
+
     //--------------------------------------------------------< Inner Class >---
     /**
      * <code>QValue</code> implementation for all valid <code>PropertyType</code>s
      * except for BINARY.
      * @see QValueFactoryImpl.BinaryQValue
      */
-    private static class QValueImpl extends AbstractQValue implements Serializable {
+    private static class QValueImpl implements QValue, Serializable {
 
         private static final QValue TRUE = new QValueImpl(Boolean.TRUE);
         private static final QValue FALSE = new QValueImpl(Boolean.FALSE);
 
+        private final Object val;
+        private final int type;
+
         private QValueImpl(String value, int type) {
-            super(value, type);
+            val = value;
+            this.type = type;
         }
 
         private QValueImpl(Long value) {
-            super(value);
+            val = value;
+            type = PropertyType.LONG;
         }
 
         private QValueImpl(Double value) {
-            super(value);
+            val = value;
+            type = PropertyType.DOUBLE;
         }
 
         private QValueImpl(Boolean value) {
-            super(value);
+            val = value;
+            type = PropertyType.BOOLEAN;
         }
 
         private QValueImpl(Calendar value) {
-            super(value);
+            val = value;
+            this.type = PropertyType.DATE;
         }
 
         private QValueImpl(Name value) {
-            super(value);
+            val = value;
+            type = PropertyType.NAME;
         }
 
         private QValueImpl(Path value) {
-            super(value);
+            val = value;
+            type = PropertyType.PATH;
         }
 
-        protected QValueImpl(BigDecimal value) {
-            super(value);
+        protected String getQString(int type) throws RepositoryException {
+            return getString();
         }
-
-        protected QValueImpl(URI value) {
-            super(value);
-        }
-
         //---------------------------------------------------------< QValue >---
+        /**
+         * @see QValue#getType()
+         */
+        public int getType() {
+            return type;
+        }
+
+        /**
+         * @see QValue#getLength()
+         */
+        public long getLength() throws RepositoryException {
+            return getString().length();
+        }
+
         /**
          * @see QValue#getString()
          */
@@ -310,30 +338,9 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         public InputStream getStream() throws RepositoryException {
             try {
                 // convert via string
-                return new ByteArrayInputStream(getString().getBytes(DEFAULT_ENCODING));
+                return new ByteArrayInputStream(getString().getBytes(QValueFactoryImpl.DEFAULT_ENCODING));
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException(QValueFactoryImpl.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
-            }
-        }
-
-        /**
-         * @see org.apache.jackrabbit.spi.QValue#getDecimal()
-         */
-        public BigDecimal getDecimal() throws RepositoryException {
-            if (val instanceof BigDecimal) {
-                return (BigDecimal) val;
-            } else if (val instanceof Double) {
-                return new BigDecimal((Double) val);
-            } else if (val instanceof Long) {
-                return new BigDecimal((Long) val);
-            } else if (val instanceof Calendar) {
-                return new BigDecimal(((Calendar) val).getTimeInMillis());
-            } else {
-                try {
-                    return new BigDecimal(getString());
-                } catch (NumberFormatException e) {
-                    throw new ValueFormatException("not a valid decimal string: " + getString(), e);
-                }
             }
         }
 
@@ -350,10 +357,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
             } else if (val instanceof Long) {
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
                 cal.setTimeInMillis(((Long) val).longValue());
-                return cal;
-            } else if (val instanceof BigDecimal) {
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
-                cal.setTimeInMillis(((BigDecimal) val).longValue());
                 return cal;
             } else {
                 String str = getString();
@@ -380,8 +383,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         public double getDouble() throws RepositoryException {
             if (val instanceof Double) {
                 return ((Double) val).doubleValue();
-            } else if (val instanceof BigDecimal) {
-                return ((BigDecimal) val).doubleValue();
             } else if (val instanceof Calendar) {
                 return ((Calendar) val).getTimeInMillis();
             } else {
@@ -408,8 +409,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 return ((Long) val).longValue();
             } else if (val instanceof Double) {
                 return ((Double) val).longValue();
-            } else if (val instanceof BigDecimal) {
-                return ((BigDecimal) val).longValue();
             } else if (val instanceof Calendar) {
                 return ((Calendar) val).getTimeInMillis();
             } else {
@@ -431,36 +430,91 @@ class QValueFactoryImpl extends AbstractQValueFactory {
             }
         }
 
-        /**
-         * @see QValue#getBinary()
-         */
-        public Binary getBinary() throws RepositoryException {
-            // TODO FIXME consolidate Binary implementations
-            return new Binary() {
-                public InputStream getStream() throws RepositoryException {
-                    return QValueImpl.this.getStream();
-                }
-
-                public int read(byte[] b, long position) throws IOException, RepositoryException {
-                    InputStream in = getStream();
-                    try {
-                        in.skip(position);
-                        return in.read(b);
-                    } finally {
-                        in.close();
-                    }
-                }
-
-                public long getSize() throws RepositoryException {
-                    return getLength();
-                }
-
-                public void dispose() {
-                }
-
-            };
+        public boolean getBoolean() throws RepositoryException {
+            if (val instanceof Boolean) {
+                return ((Boolean) val).booleanValue();
+            } else {
+                return new Boolean(getString()).booleanValue();
+            }
         }
 
+        /**
+         * @see QValue#getName()
+         */
+        public Name getName() throws RepositoryException {
+            if (val instanceof Name) {
+                return (Name) val;
+            } else {
+                try {
+                    return NAME_FACTORY.create(getString());
+                } catch (IllegalArgumentException e) {
+                    throw new ValueFormatException("not a valid Name value: " + getString(), e);
+                }
+            }
+        }
+
+        /**
+         * @see QValue#getPath()
+         */
+        public Path getPath() throws RepositoryException {
+            if (val instanceof Path) {
+                return (Path) val;
+            } else {
+                try {
+                    return PATH_FACTORY.create(getString());
+                } catch (IllegalArgumentException e) {
+                    throw new ValueFormatException("not a valid Path value: " + getString(), e);
+                }
+            }
+        }
+
+        /**
+         * @see QValue#discard()
+         */
+        public void discard() {
+            // nothing to do
+        }
+
+        //---------------------------------------------------------< Object >---
+        /**
+         * Returns the string representation of this internal value.
+         *
+         * @return string representation of this internal value.
+         * @see Object#toString() 
+         */
+        public String toString() {
+            return val.toString();
+        }
+
+        /**
+         * @see Object#equals(Object)
+         */
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof QValueImpl) {
+                QValueImpl other = (QValueImpl) obj;
+                if (type == other.type && type != PropertyType.UNDEFINED) {
+                    return getString().equals(other.getString());
+                }
+                try {
+                    int type = getType();
+                    return type == other.getType() && getQString(type).equals(other.getQString(type));
+                } catch (RepositoryException e) {
+                    // should never get here. return false.
+                }
+            }
+            return false;
+        }
+
+        /**
+         * @return the hashCode of the internal value object.
+         * @see Object#hashCode()
+         */
+        public int hashCode() {
+            return val.hashCode();
+        }
     }
 
     //--------------------------------------------------------< Inner Class >---
@@ -501,7 +555,8 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 return formattedStr.equals(other.formattedStr);
             } else if (obj instanceof QValueImpl) {
                 QValueImpl other = (QValueImpl) obj;
-                return other.getType() == PropertyType.DATE && formattedStr.equals(other.getString());
+                return formattedStr.equals(other.getString()) &&
+                       other.getType() == PropertyType.DATE;
             }
             return false;
         }
@@ -831,59 +886,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         /**
-         * @see QValue#getDecimal()
-         */
-        public BigDecimal getDecimal() throws RepositoryException {
-            try {
-                return new BigDecimal(getString());
-            } catch (NumberFormatException ex) {
-                throw new ValueFormatException(ex);
-            }
-        }
-
-        /**
-         * @see QValue#getURI()
-         */
-        public URI getURI() throws RepositoryException {
-            try {
-                return new URI(getString());
-            } catch (URISyntaxException ex) {
-                throw new ValueFormatException(ex);
-            }
-        }
-
-        /**
-         * @see QValue#getBinary()
-         */
-        public Binary getBinary() throws RepositoryException {
-            // TODO FIXME consolidate Binary implementations
-            // TODO optimize
-            return new Binary() {
-                public InputStream getStream() throws RepositoryException {
-                    return BinaryQValue.this.getStream();
-                }
-
-                public int read(byte[] b, long position) throws IOException, RepositoryException {
-                    InputStream in = getStream();
-                    try {
-                        in.skip(position);
-                        return in.read(b);
-                    } finally {
-                        in.close();
-                    }
-                }
-
-                public long getSize() throws RepositoryException {
-                    return getLength();
-                }
-
-                public void dispose() {
-                }
-
-            };
-        }
-
-        /**
          * Frees temporarily allocated resources such as temporary file, buffer, etc.
          * If this <code>BinaryQValue</code> is backed by a persistent resource
          * calling this method will have no effect.
@@ -1081,7 +1083,7 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                     Document doc = db.parse(in);
                     Element prop = DomUtil.getChildElement(doc, ItemResourceConstants.JCR_VALUES.getName(), ItemResourceConstants.JCR_VALUES.getNamespace());
                     DavProperty p = DefaultDavProperty.createFromXml(prop);
-                    ValuesProperty vp = new ValuesProperty(p, PropertyType.BINARY, vf);
+                    ValuesProperty vp = new ValuesProperty(p, PropertyType.BINARY, ValueFactoryImpl.getInstance());
 
                     Value[] jcrVs = vp.getJcrValues();
                     init(jcrVs[index].getStream(), true);

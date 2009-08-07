@@ -41,57 +41,57 @@ abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeCons
     private final int onParentVersion;
 
     ItemDefinitionImpl(ItemDefinition definition) {
-        if (definition == null) {
+	if (definition == null) {
             throw new IllegalArgumentException("PropDef argument can not be null");
         }
         name = definition.getName();
-        declaringNodeType = definition.getDeclaringNodeType();
-        isAutoCreated = definition.isAutoCreated();
-        isMandatory = definition.isMandatory();
-        isProtected = definition.isProtected();
-        onParentVersion = definition.getOnParentVersion();
+	declaringNodeType = definition.getDeclaringNodeType();
+	isAutoCreated = definition.isAutoCreated();
+	isMandatory = definition.isMandatory();
+	isProtected = definition.isProtected();
+	onParentVersion = definition.getOnParentVersion();
     }
 
     /**
      * @see ItemDefinition#getDeclaringNodeType()
      */
     public NodeType getDeclaringNodeType() {
-        return declaringNodeType;
+	return declaringNodeType;
     }
 
     /**
      * @see ItemDefinition#getName()
      */
     public String getName() {
-        return name;
+	return name;
     }
 
     /**
      * @see ItemDefinition#isAutoCreated()
      */
     public boolean isAutoCreated() {
-        return isAutoCreated;
+	return isAutoCreated;
     }
 
     /**
      * @see ItemDefinition#isMandatory()
      */
     public boolean isMandatory() {
-        return isMandatory;
+	return isMandatory;
     }
 
     /**
      * @see ItemDefinition#getOnParentVersion()
      */
     public int getOnParentVersion() {
-        return onParentVersion;
+	return onParentVersion;
     }
 
     /**
      * @see ItemDefinition#isProtected()
      */
     public boolean isProtected() {
-        return isProtected;
+	return isProtected;
     }
 
     //------------------------------------------< XmlSerializable interface >---

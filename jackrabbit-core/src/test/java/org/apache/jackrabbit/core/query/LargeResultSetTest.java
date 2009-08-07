@@ -34,7 +34,7 @@ public class LargeResultSetTest extends AbstractQueryTest {
         createNodes(testRootNode, 10, 5, 0);
         superuser.save();
 
-        SearchIndex index = getSearchIndex();
+        SearchIndex index = (SearchIndex) getQueryHandler();
         int resultFetchSize = index.getResultFetchSize();
         try {
             String stmt = testPath + "//*[@" + jcrPrimaryType + "] order by @jcr:score descending";

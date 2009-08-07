@@ -23,8 +23,8 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * <code>MultiColumnQueryResult</code> implements a query result that executes
@@ -37,11 +37,6 @@ public class MultiColumnQueryResult extends QueryResultImpl {
      */
     private final MultiColumnQuery query;
 
-    /**
-     * The order specifier for each of the order properties.
-     */
-    protected final Ordering[] orderings;
-
     public MultiColumnQueryResult(SearchIndex index,
                                   ItemManager itemMgr,
                                   SessionImpl session,
@@ -49,15 +44,15 @@ public class MultiColumnQueryResult extends QueryResultImpl {
                                   AbstractQueryImpl queryImpl,
                                   MultiColumnQuery query,
                                   SpellSuggestion spellSuggestion,
-                                  ColumnImpl[] columns,
-                                  OrderingImpl[] orderings,
+                                  Name[] selectProps,
+                                  Path[] orderProps,
+                                  boolean[] orderSpecs,
                                   boolean documentOrder,
                                   long offset,
                                   long limit) throws RepositoryException {
         super(index, itemMgr, session, accessMgr, queryImpl, spellSuggestion,
-                columns, documentOrder, offset, limit);
+                selectProps, orderProps, orderSpecs, documentOrder, offset, limit);
         this.query = query;
-        this.orderings = index.createOrderings(orderings);
         // if document order is requested get all results right away
         getResults(docOrder ? Integer.MAX_VALUE : index.getResultFetchSize());
     }
@@ -67,7 +62,8 @@ public class MultiColumnQueryResult extends QueryResultImpl {
      */
     protected MultiColumnQueryHits executeQuery(long resultFetchHint)
             throws IOException {
-        return index.executeQuery(session, query, orderings, resultFetchHint);
+        return index.executeQuery(session, query, orderProps,
+                orderSpecs, resultFetchHint);
     }
 
     /**

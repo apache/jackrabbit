@@ -62,8 +62,7 @@ public abstract class AbstractOnParentVersionTest extends AbstractVersionTest {
      * Add a child node to the versionable node created in the setup with the
      * name and nodetype name defined in the corresponding configuration. After
      * creation of the child node, an assertion is made for the proper onParentVersion
-     * behaviour.
-     * <p>
+     * behaviour.<p/>
      * NOTE: the child node is removed together with the versionable node after
      * each test.
      *

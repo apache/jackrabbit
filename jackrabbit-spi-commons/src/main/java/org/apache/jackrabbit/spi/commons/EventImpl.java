@@ -21,14 +21,8 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.QValue;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import java.io.Serializable;
-import java.util.Map;
-import java.util.Collections;
-import java.util.HashMap;
 
 /**
  * <code>EventImpl</code> implements a serializable SPI
@@ -72,27 +66,12 @@ public class EventImpl implements Event, Serializable {
      */
     private final String userId;
 
-    private final String userData;
-    private final long timestamp;
-    private final Map<Name, QValue> info;
-
     /**
      * Creates a new serializable event.
-     * @deprecated
      */
     public EventImpl(int type, Path path, ItemId itemId, NodeId parentId,
                      Name primaryNodeTypeName, Name[] mixinTypeNames,
                      String userId) {
-        this(type, path, itemId, parentId, primaryNodeTypeName, mixinTypeNames, userId, null, Long.MIN_VALUE, Collections.EMPTY_MAP);
-    }
-
-    /**
-     * Creates a new serializable event.
-     */
-    public EventImpl(int type, Path path, ItemId itemId, NodeId parentId,
-                     Name primaryNodeTypeName, Name[] mixinTypeNames,
-                     String userId, String userData, long timestamp,
-                     Map<Name, QValue> info) {
         this.type = type;
         this.path = path;
         this.itemId = itemId;
@@ -100,10 +79,6 @@ public class EventImpl implements Event, Serializable {
         this.primaryNodeTypeName = primaryNodeTypeName;
         this.mixinTypeNames = mixinTypeNames;
         this.userId = userId;
-
-        this.userData = userData;
-        this.info = new HashMap<Name, QValue>(info);
-        this.timestamp = timestamp;
     }
 
     /**
@@ -155,31 +130,6 @@ public class EventImpl implements Event, Serializable {
      */
     public String getUserID() {
         return userId;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Map<Name, QValue> getInfo() throws RepositoryException {
-        return info;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getUserData() {
-        return userData;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public long getDate() throws RepositoryException {
-        if (timestamp == Long.MIN_VALUE) {
-            throw new UnsupportedRepositoryOperationException("Event.getDate() not supported");
-        } else {
-            return timestamp;
-        }
     }
     
     public String toString() {

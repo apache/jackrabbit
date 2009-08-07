@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -39,12 +39,12 @@ public class LRUNodeIdCache {
     /**
      * the number of cache hits
      */
-    private long hits;
+    private long hits = 0;
 
     /**
      * the number of cache misses
      */
-    private long misses;
+    private long misses = 0;
 
     /**
      * the map of cached ids

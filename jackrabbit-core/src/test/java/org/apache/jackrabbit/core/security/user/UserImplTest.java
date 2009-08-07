@@ -54,7 +54,7 @@ public class UserImplTest extends AbstractUserTest {
         creds = new SimpleCredentials(p.getName(), pw.toCharArray());
         User u = userMgr.createUser(p.getName(), pw);
         uID = u.getID();
-        uSession = getHelper().getRepository().login(creds);
+        uSession = helper.getRepository().login(creds);
         uMgr = getUserManager(uSession);
     }
 
@@ -95,7 +95,7 @@ public class UserImplTest extends AbstractUserTest {
     }
 
     public void testChangePassword() throws RepositoryException, NotExecutableException, NoSuchAlgorithmException, UnsupportedEncodingException {
-        String oldPw = getHelper().getProperty("javax.jcr.tck.superuser.pwd");
+        String oldPw = helper.getProperty("javax.jcr.tck.superuser.pwd");
         if (oldPw == null) {
             // missing property
             throw new NotExecutableException();

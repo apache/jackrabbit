@@ -27,10 +27,8 @@ import javax.jcr.PathNotFoundException;
 
 /**
  * Tests the various {@link Property#setValue(Value)} methods.
- * <p>
- * Configuration requirements:
- * <p>
- * The node at {@link #testRoot} must allow a
+ * <p/>
+ * Configuration requirements:<br/> The node at {@link #testRoot} must allow a
  * child node of type {@link #testNodeType} with name {@link #nodeName1}. The
  * node type {@link #testNodeType} must define a single value reference property
  * with name {@link #propertyName1}. The node type {@link #testNodeType} must
@@ -152,7 +150,15 @@ public class SetValueReferenceTest extends AbstractJCRTest {
      *                                referenceable nodes.
      */
     private void ensureReferenceable(Node n) throws RepositoryException, NotExecutableException {
-        ensureMixinType(n, mixReferenceable);
-        n.getSession().save();
+        if (n.isNodeType(mixReferenceable)) {
+            return;
+        }
+        if (n.canAddMixin(mixReferenceable)) {
+            n.addMixin(mixReferenceable);
+            // some implementations may require a save after addMixin()
+            n.getSession().save();
+        } else {
+            throw new NotExecutableException("Node is not referenceable: " + n.getPath());
+        }
     }
 }

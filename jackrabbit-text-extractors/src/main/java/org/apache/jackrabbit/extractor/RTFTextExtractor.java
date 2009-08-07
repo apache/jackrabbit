@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.rtf.RTFEditorKit;
 

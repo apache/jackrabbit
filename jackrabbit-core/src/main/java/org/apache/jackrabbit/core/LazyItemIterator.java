@@ -16,23 +16,20 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.AccessDeniedException;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.ArrayList;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
@@ -48,7 +45,7 @@ import org.slf4j.LoggerFactory;
  *
  * @see #getSize()
  */
-public class LazyItemIterator implements NodeIterator, PropertyIterator {
+class LazyItemIterator implements NodeIterator, PropertyIterator {
 
     /** Logger instance for this class */
     private static Logger log = LoggerFactory.getLogger(LazyItemIterator.class);
@@ -57,7 +54,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
     private final ItemManager itemMgr;
 
     /** the list of item ids */
-    private final List<ItemId> idList;
+    private final List idList;
 
     /** parent node id (when returning children nodes) or <code>null</code> */
     private final NodeId parentId;
@@ -74,7 +71,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param itemMgr item manager
      * @param idList  list of item id's
      */
-    public LazyItemIterator(ItemManager itemMgr, List< ? extends ItemId> idList) {
+    public LazyItemIterator(ItemManager itemMgr, List idList) {
         this(itemMgr, idList, null);
     }
 
@@ -87,9 +84,9 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param idList  list of item id's
      * @param parentId parent id.
      */
-    public LazyItemIterator(ItemManager itemMgr, List< ? extends ItemId> idList, NodeId parentId) {
+    public LazyItemIterator(ItemManager itemMgr, List idList, NodeId parentId) {
         this.itemMgr = itemMgr;
-        this.idList = new ArrayList<ItemId>(idList);
+        this.idList = new ArrayList(idList);
         this.parentId = parentId;
         // prefetch first item
         pos = 0;
@@ -106,7 +103,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
         // reset
         next = null;
         while (next == null && pos < idList.size()) {
-            ItemId id = idList.get(pos);
+            ItemId id = (ItemId) idList.get(pos);
             try {
                 if (parentId != null) {
                     next = itemMgr.getNode((NodeId) id, parentId);
@@ -193,7 +190,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
                 // skipped past last item
                 throw new NoSuchElementException();
             }
-            ItemId id = idList.get(pos);
+            ItemId id = (ItemId) idList.get(pos);
             // eliminate invalid items from this iterator
             while (!itemMgr.itemExists(id)) {
                 log.debug("ignoring nonexistent item " + id);
@@ -203,7 +200,9 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
                     // skipped past last item
                     throw new NoSuchElementException();
                 }
-                id = idList.get(pos);
+                id = (ItemId) idList.get(pos);
+                // try next
+                continue;
             }
         }
         // prefetch final item (the one to be returned on next())

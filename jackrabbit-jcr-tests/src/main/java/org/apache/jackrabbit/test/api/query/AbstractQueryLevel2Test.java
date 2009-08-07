@@ -69,7 +69,7 @@ public abstract class AbstractQueryLevel2Test extends AbstractQueryTest {
      * the node type must allow a String property with name {@link
      * #propertyName1} and a multi valued String property with name {@link
      * #propertyName2}.
-     * <p>
+     * <p/>
      * If the node type does not support multi values for {@link #propertyName2}
      * a {@link org.apache.jackrabbit.test.NotExecutableException} is thrown.
      */

@@ -22,7 +22,6 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.OnParentVersionAction;
-import javax.jcr.version.VersionManager;
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -58,13 +57,11 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        version = versionManager.checkin(path);
-        versionManager.checkout(path);
-        version2 = versionManager.checkin(path);
-        versionManager.checkout(path);
-        rootVersion = versionManager.getVersionHistory(path).getRootVersion();
+        version = versionableNode.checkin();
+        versionableNode.checkout();
+        version2 = versionableNode.checkin();
+        versionableNode.checkout();
+        rootVersion = versionableNode.getVersionHistory().getRootVersion();
 
         // build a second versionable node below the testroot
         try {
@@ -73,7 +70,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
             fail("Failed to create a second versionable node: " + e.getMessage());
         }
         try {
-            wSuperuser = getHelper().getSuperuserSession(workspaceName);
+            wSuperuser = helper.getSuperuserSession(workspaceName);
         } catch (RepositoryException e) {
             fail("Failed to retrieve superuser session for second workspace '" + workspaceName + "': " + e.getMessage());
         }
@@ -105,11 +102,11 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
             // and check versionable nodes out.
             wTestRoot = (Node) wSuperuser.getItem(testRootNode.getPath());
 
-            wVersionableNode = wSuperuser.getNodeByIdentifier(versionableNode.getIdentifier());
-            wVersionableNode.getSession().getWorkspace().getVersionManager().checkout(wVersionableNode.getPath());
+            wVersionableNode = wSuperuser.getNodeByUUID(versionableNode.getUUID());
+            wVersionableNode.checkout();
 
-            wVersionableNode2 = wSuperuser.getNodeByIdentifier(versionableNode2.getIdentifier());
-            wVersionableNode2.getSession().getWorkspace().getVersionManager().checkout(wVersionableNode2.getPath());
+            wVersionableNode2 = wSuperuser.getNodeByUUID(versionableNode2.getUUID());
+            wVersionableNode2.checkout();
 
         } catch (RepositoryException e) {
             fail("Failed to setup test environment in workspace: " + e.toString());
@@ -124,11 +121,9 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
         }
 
         // create a version of the versionable child node
-        VersionManager wVersionManager = wVersionableChildNode.getSession().getWorkspace().getVersionManager();
-        String wPath = wVersionableChildNode.getPath();
-        wVersionManager.checkout(wPath);
-        wChildVersion = wVersionManager.checkin(wPath);
-        wVersionManager.checkout(wPath);
+        wVersionableChildNode.checkout();
+        wChildVersion = wVersionableChildNode.checkin();
+        wVersionableChildNode.checkout();
     }
 
 
@@ -179,46 +174,12 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if InvalidItemStateException is thrown if the session affected by
-     * VersionManager.restore(Version[], boolean) has pending changes.
-     */
-    public void testWorkspaceRestoreWithPendingChangesJcr2() throws RepositoryException {
-        versionableNode.getSession().getWorkspace().getVersionManager().checkout(versionableNode.getPath());
-        try {
-            // modify node without calling save()
-            versionableNode.setProperty(propertyName1, propertyValue);
-
-            // create version in second workspace
-            Version v = wVersionableNode.getSession().getWorkspace().getVersionManager().checkin(wVersionableNode.getPath());
-            // try to restore that version
-            superuser.getWorkspace().getVersionManager().restore(new Version[]{v}, false);
-
-            fail("InvalidItemStateException must be thrown on attempt to call Workspace.restore(Version[], boolean) in a session having any unsaved changes pending.");
-        } catch (InvalidItemStateException e) {
-            // success
-        }
-    }
-
-    /**
      * Test if VersionException is thrown if the specified version array does
      * not contain a version that has a corresponding node in this workspace.
      */
     public void testWorkspaceRestoreHasCorrespondingNode() throws RepositoryException {
         try {
             superuser.getWorkspace().restore(new Version[]{wChildVersion}, false);
-            fail("Workspace.restore(Version[], boolean) must throw VersionException if non of the specified versions has a corresponding node in the workspace.");
-        } catch (VersionException e) {
-            // success
-        }
-    }
-
-    /**
-     * Test if VersionException is thrown if the specified version array does
-     * not contain a version that has a corresponding node in this workspace.
-     */
-    public void testWorkspaceRestoreHasCorrespondingNodeJcr2() throws RepositoryException {
-        try {
-            superuser.getWorkspace().getVersionManager().restore(new Version[]{wChildVersion}, false);
             fail("Workspace.restore(Version[], boolean) must throw VersionException if non of the specified versions has a corresponding node in the workspace.");
         } catch (VersionException e) {
             // success
@@ -245,25 +206,6 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if VersionManager.restore(Version[], boolean) succeeds if the following two
-     * preconditions are fulfilled:<ul>
-     * <li>For every version V in S that corresponds to a missing node in the workspace,
-     * there must also be a parent of V in S.</li>
-     * <li>S must contain at least one version that corresponds to an existing
-     * node in the workspace.</li>
-     * </ul>
-     */
-    public void testWorkspaceRestoreWithParentJcr2() throws RepositoryException {
-
-        try {
-            Version parentV = wVersionableNode.getSession().getWorkspace().getVersionManager().checkin(wVersionableNode.getPath());
-            superuser.getWorkspace().getVersionManager().restore(new Version[]{parentV, wChildVersion}, false);
-        } catch (RepositoryException e) {
-            fail("Workspace.restore(Version[], boolean) with a version that has no corresponding node must succeed if a version of a parent with correspondance is present in the version array.");
-        }
-    }
-
-    /**
      * Test if the removeExisting-flag removes an existing node in case of uuid conflict.
      */
     public void testWorkspaceRestoreWithRemoveExisting() throws NotExecutableException, RepositoryException {
@@ -279,27 +221,6 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
         // restore the parent with removeExisting == true >> moved child node
         // must be removed.
         wSuperuser.getWorkspace().restore(new Version[]{parentV}, true);
-        if (wSuperuser.itemExists(newChildPath)) {
-            fail("Workspace.restore(Version[], boolean) with the boolean flag set to true, must remove the existing node in case of Uuid conflict.");
-        }
-    }
-
-    /**
-     * Test if the removeExisting-flag removes an existing node in case of uuid conflict.
-     */
-    public void testWorkspaceRestoreWithRemoveExistingJcr2() throws NotExecutableException, RepositoryException {
-        // create version for parentNode of childNode
-        superuser.getWorkspace().clone(workspaceName, wVersionableChildNode.getPath(), wVersionableChildNode.getPath(), false);
-        Version parentV = versionableNode.getSession().getWorkspace().getVersionManager().checkin(versionableNode.getPath());
-
-        // move child node in order to produce the uuid conflict
-        String newChildPath = wVersionableNode2.getPath() + "/" + wVersionableChildNode.getName();
-        wSuperuser.move(wVersionableChildNode.getPath(), newChildPath);
-        wSuperuser.save();
-
-        // restore the parent with removeExisting == true >> moved child node
-        // must be removed.
-        wSuperuser.getWorkspace().getVersionManager().restore(new Version[]{parentV}, true);
         if (wSuperuser.itemExists(newChildPath)) {
             fail("Workspace.restore(Version[], boolean) with the boolean flag set to true, must remove the existing node in case of Uuid conflict.");
         }
@@ -329,32 +250,6 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
         }
     }
 
-    /**
-     * Tests if restoring the <code>Version</code> of an existing node throws an
-     * <code>ItemExistsException</code> if removeExisting is set to FALSE.
-     */
-    public void testWorkspaceRestoreWithUUIDConflictJcr2() throws RepositoryException, NotExecutableException {
-        try {
-            // Verify that nodes used for the test are indeed versionable
-            NodeDefinition nd = wVersionableNode.getDefinition();
-            if (nd.getOnParentVersion() != OnParentVersionAction.COPY && nd.getOnParentVersion() != OnParentVersionAction.VERSION) {
-                throw new NotExecutableException("Nodes must be versionable in order to run this test.");
-            }
-
-            VersionManager versionManager = wVersionableNode.getSession().getWorkspace().getVersionManager();
-            String path = wVersionableNode.getPath();
-            Version v = versionManager.checkin(path);
-            versionManager.checkout(path);
-            wSuperuser.move(wVersionableChildNode.getPath(), wVersionableNode2.getPath() + "/" + wVersionableChildNode.getName());
-            wSuperuser.save();
-            wSuperuser.getWorkspace().getVersionManager().restore(new Version[]{v}, false);
-
-            fail("Node.restore( Version, boolean ): An ItemExistsException must be thrown if the node to be restored already exsits and removeExisting was set to false.");
-        } catch (ItemExistsException e) {
-            // success
-        }
-    }
-
 
     /**
      * Test if workspace-restoring a node works on checked-in node.
@@ -367,18 +262,6 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if workspace-restoring a node works on checked-in node.
-     */
-    public void testWorkspaceRestoreOnCheckedInNodeJcr2() throws RepositoryException {
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        if (versionManager.isCheckedOut(path)) {
-            versionManager.checkin(path);
-        }
-        superuser.getWorkspace().getVersionManager().restore(new Version[]{version}, true);
-    }
-
-    /**
      * Test if workspace-restoring a node works on checked-out node.
      */
     public void testWorkspaceRestoreOnCheckedOutNode() throws RepositoryException {
@@ -388,15 +271,4 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
         superuser.getWorkspace().restore(new Version[]{version}, true);
     }
 
-    /**
-     * Test if workspace-restoring a node works on checked-out node.
-     */
-    public void testWorkspaceRestoreOnCheckedOutNodeJcr2() throws RepositoryException {
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        if (!versionManager.isCheckedOut(path)) {
-            versionManager.checkout(path);
-        }
-        superuser.getWorkspace().getVersionManager().restore(new Version[]{version}, true);
-    }
 }

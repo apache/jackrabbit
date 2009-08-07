@@ -19,14 +19,15 @@ package org.apache.jackrabbit.core.version;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -87,7 +88,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
                                                     Name name, int type,
                                                     boolean multiValued)
             throws RepositoryException {
-        throw new IllegalStateException("InternalVersionManager should never create a VirtualPropertyState");
+        throw new IllegalStateException("VersionManager should never create a VirtualPropertyState");
     }
 
     /**
@@ -96,7 +97,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     public VirtualNodeState createNodeState(VirtualNodeState parent, Name name,
                                             NodeId id, Name nodeTypeName)
             throws RepositoryException {
-        throw new IllegalStateException("InternalVersionManager should never create a VirtualNodeState");
+        throw new IllegalStateException("VersionManager should never create a VirtualNodeState");
     }
 
     /**
@@ -129,7 +130,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * @inheritDoc
      */
-    public NodeReferences getNodeReferences(NodeId id)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
         return stateMgr.getNodeReferences(id);
     }
@@ -137,7 +138,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * @inheritDoc
      */
-    public boolean hasNodeReferences(NodeId id) {
+    public boolean hasNodeReferences(NodeReferencesId id) {
         return stateMgr.hasNodeReferences(id);
     }
 

@@ -19,11 +19,15 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.extractor.CompositeTextExtractor;
 import org.apache.jackrabbit.extractor.DelegatingTextExtractor;
 import org.apache.jackrabbit.extractor.EmptyTextExtractor;
@@ -36,8 +40,8 @@ import org.slf4j.LoggerFactory;
  * implements the following functionality:
  * <ul>
  *   <li>
- *     Parses the configured {@link TextExtractor} class names and
- *     instantiates the configured classes.
+ *     Parses the configured {@link TextExtractor} and {@link TextFilter}
+ *     class names and instantiates the configured classes.
  *   </li>
  *   <li>
  *     Acts as the delegate extractor for any configured
@@ -73,10 +77,10 @@ public class JackrabbitTextExtractor implements TextExtractor {
      * Set of content types that are known to be supported by the
      * composite extractor.
      */
-    private final Set<String> types = new HashSet<String>();
+    private final Set types = new HashSet();
 
     /**
-     * Composite extractor used to for all text extraction tasks. Contains
+     * Composite extractor used to for all text extration tasks. Contains
      * all the {@link TextExtractor} instances for directly supported content
      * types, the {@link TextFilterExtractor} adapters for backwards
      * compatibility with configured {@link TextFilter} instances that have
@@ -85,6 +89,13 @@ public class JackrabbitTextExtractor implements TextExtractor {
      */
     private final CompositeTextExtractor extractor =
         new CompositeTextExtractor();
+
+    /**
+     * Configured {@link TextFilter} instances. Used for backwards
+     * compatibility with existing configuration files and {@link TextFilter}
+     * implementations.
+     */
+    private final Collection filters = new ArrayList();
 
     /**
      * Creates a Jackrabbit text extractor containing the configured component
@@ -106,6 +117,8 @@ public class JackrabbitTextExtractor implements TextExtractor {
                 }
                 if (object instanceof TextExtractor) {
                     extractor.addTextExtractor((TextExtractor) object);
+                } else if (object instanceof TextFilter) {
+                    filters.add(object);
                 } else {
                     logger.warn("Unknown text extractor class: {}", name);
                 }
@@ -160,6 +173,18 @@ public class JackrabbitTextExtractor implements TextExtractor {
     public Reader extractText(InputStream stream, String type, String encoding)
             throws IOException {
         logger.debug("extractText(stream, {}, {})", type, encoding);
+        if (!types.contains(type)) {
+            Iterator iterator = filters.iterator();
+            while (iterator.hasNext()) {
+                TextFilter filter = (TextFilter) iterator.next();
+                if (filter.canFilter(type)) {
+                    types.add(type);
+                    extractor.addTextExtractor(
+                            new TextFilterExtractor(type, filter));
+                    break;
+                }
+            }
+        }
 
         if (!types.contains(type)) {
             logger.debug("Full text indexing of {} is not supported", type);

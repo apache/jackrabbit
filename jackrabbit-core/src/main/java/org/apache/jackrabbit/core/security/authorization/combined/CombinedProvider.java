@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.security.authorization.principalbased.ACLProvi
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import javax.jcr.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

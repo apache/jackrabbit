@@ -26,14 +26,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 
 import javax.jcr.RepositoryException;
 
 /**
  * Represents binary data which is stored in a temporary file.
  */
-class BLOBInTempFile extends BLOBFileValue {
+public class BLOBInTempFile extends BLOBFileValue {
 
     /**
      * the prefix of the string representation of this value
@@ -49,8 +48,7 @@ class BLOBInTempFile extends BLOBFileValue {
      * The input stream is always closed by this method.
      *
      * @param in the input stream
-     * @param temp
-     * @throws RepositoryException
+     * @throws IOException
      */
     private BLOBInTempFile(InputStream in, boolean temp) throws RepositoryException {
         this.temp = temp;
@@ -105,27 +103,42 @@ class BLOBInTempFile extends BLOBFileValue {
         return new BLOBInTempFile(file, temp);
     }
 
-    void delete(boolean pruneEmptyParentDirs) {
+    /**
+     * {@inheritDoc}
+     */
+    public void delete(boolean pruneEmptyParentDirs) {
         file.delete();
         length = -1;
         file = null;
     }
 
-    void discard() {
+    /**
+     * {@inheritDoc}
+     */
+    public void discard() {
         if (temp) {
             delete(true);
         }
     }
 
-    boolean isImmutable() {
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isImmutable() {
         // discard and delete can modify the state.
         return false;
     }
 
-    public long getSize() {
+    /**
+     * {@inheritDoc}
+     */
+    public long getLength() {
         return length;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public InputStream getStream() throws IllegalStateException, RepositoryException {
         try {
             return new LazyFileInputStream(file);
@@ -134,10 +147,16 @@ class BLOBInTempFile extends BLOBFileValue {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return PREFIX + file.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -160,13 +179,11 @@ class BLOBInTempFile extends BLOBFileValue {
         return 0;
     }
 
-    public int read(byte[] b, long position) throws IOException, RepositoryException {
-        RandomAccessFile raf = new RandomAccessFile(file, "r");
-        try {
-            raf.seek(position);
-            return raf.read(b);
-        } finally {
-            raf.close();
-        }
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isSmall() {
+        return false;
     }
+
 }

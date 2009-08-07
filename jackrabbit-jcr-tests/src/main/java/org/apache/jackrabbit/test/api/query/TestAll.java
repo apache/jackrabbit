@@ -57,7 +57,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GetPersistentQueryPathTest.class);
         suite.addTestSuite(GetStatementTest.class);
         suite.addTestSuite(GetSupportedQueryLanguagesTest.class);
-        suite.addTestSuite(CreateQueryTest.class);
 
         suite.addTestSuite(QueryResultNodeIteratorTest.class);
         suite.addTestSuite(GetPropertyNamesTest.class);
@@ -69,15 +68,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(OrderByLongTest.class);
         suite.addTestSuite(OrderByMultiTypeTest.class);
         suite.addTestSuite(OrderByStringTest.class);
-        suite.addTestSuite(OrderByLengthTest.class);
-        suite.addTestSuite(OrderByLocalNameTest.class);
-        suite.addTestSuite(OrderByNameTest.class);
-        suite.addTestSuite(OrderByLowerCaseTest.class);
-        suite.addTestSuite(OrderByUpperCaseTest.class);
-        suite.addTestSuite(OrderByDecimalTest.class);
-        suite.addTestSuite(OrderByURITest.class);
-        suite.addTestSuite(SetLimitTest.class);
-        suite.addTestSuite(SetOffsetTest.class);
 
         return suite;
     }

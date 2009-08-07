@@ -67,9 +67,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ExportSysViewTest.class);
         suite.addTestSuite(ExportDocViewTest.class);
 
-        suite.addTestSuite(NameTest.class);
-        suite.addTestSuite(PathTest.class);
-
         // level 2 tests
         suite.addTestSuite(AddNodeTest.class);
         suite.addTestSuite(NamespaceRegistryTest.class);
@@ -84,7 +81,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetValueBinaryTest.class);
         suite.addTestSuite(SetValueBooleanTest.class);
         suite.addTestSuite(SetValueDateTest.class);
-        suite.addTestSuite(SetValueDecimalTest.class);
         suite.addTestSuite(SetValueDoubleTest.class);
         suite.addTestSuite(SetValueLongTest.class);
         suite.addTestSuite(SetValueReferenceTest.class);
@@ -95,7 +91,6 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(SetPropertyBooleanTest.class);
         suite.addTestSuite(SetPropertyCalendarTest.class);
-        suite.addTestSuite(SetPropertyDecimalTest.class);
         suite.addTestSuite(SetPropertyDoubleTest.class);
         suite.addTestSuite(SetPropertyInputStreamTest.class);
         suite.addTestSuite(SetPropertyLongTest.class);
@@ -113,8 +108,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeAddMixinTest.class);
         suite.addTestSuite(NodeCanAddMixinTest.class);
         suite.addTestSuite(NodeRemoveMixinTest.class);
-
-        suite.addTestSuite(NodeSetPrimaryTypeTest.class);
 
         suite.addTestSuite(WorkspaceCloneReferenceableTest.class);
         suite.addTestSuite(WorkspaceCloneSameNameSibsTest.class);
@@ -141,27 +134,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SerializationTest.class);
 
         suite.addTestSuite(ValueFactoryTest.class);
-
-        // JCR 2.0
-
-        //// new node types
-        suite.addTestSuite(GetWeakReferencesTest.class);
-
-        //// new Session features
-        suite.addTestSuite(SessionRemoveItemTest.class);
-        suite.addTestSuite(HasPermissionTest.class);
-
-        //// new Workspace features
-        suite.addTestSuite(WorkspaceTest.class);
-
-        //// shareable nodes
-        suite.addTestSuite(ShareableNodeTest.class);
-
-        //// repository factory
-        suite.addTestSuite(RepositoryFactoryTest.class);
-
-        //// lifecycle management
-        suite.addTestSuite(LifecycleTest.class);
 
         return suite;
     }

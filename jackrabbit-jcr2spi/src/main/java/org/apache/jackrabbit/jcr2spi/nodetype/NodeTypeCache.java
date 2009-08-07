@@ -143,16 +143,21 @@ public class NodeTypeCache {
     }
 
     public void registerNodeTypes(NodeTypeStorage storage,
-                                  QNodeTypeDefinition[] nodeTypeDefs,
-                                  boolean allowUpdate)
-            throws RepositoryException {
-        storage.registerNodeTypes(nodeTypeDefs, allowUpdate);
+                                  QNodeTypeDefinition[] nodeTypeDefs)
+            throws NoSuchNodeTypeException, RepositoryException {
+        throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
+    }
+
+    public void reregisterNodeTypes(NodeTypeStorage storage,
+                                    QNodeTypeDefinition[] nodeTypeDefs)
+            throws NoSuchNodeTypeException, RepositoryException {
+        throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
     }
 
     public void unregisterNodeTypes(NodeTypeStorage storage,
                                     Name[] nodeTypeNames)
             throws NoSuchNodeTypeException, RepositoryException {
-        storage.unregisterNodeTypes(nodeTypeNames);
+        throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
     }
 
     /**
@@ -172,9 +177,13 @@ public class NodeTypeCache {
                     throws NoSuchNodeTypeException, RepositoryException {
                 return NodeTypeCache.this.getDefinitions(storage, nodeTypeNames);
             }
-            public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs, boolean allowUpdate)
-                    throws RepositoryException {
-                NodeTypeCache.this.registerNodeTypes(storage, nodeTypeDefs, allowUpdate);
+            public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs)
+                    throws NoSuchNodeTypeException, RepositoryException {
+                NodeTypeCache.this.registerNodeTypes(storage, nodeTypeDefs);
+            }
+            public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs)
+                    throws NoSuchNodeTypeException, RepositoryException {
+                NodeTypeCache.this.reregisterNodeTypes(storage, nodeTypeDefs);
             }
             public void unregisterNodeTypes(Name[] nodeTypeNames)
                     throws NoSuchNodeTypeException, RepositoryException {

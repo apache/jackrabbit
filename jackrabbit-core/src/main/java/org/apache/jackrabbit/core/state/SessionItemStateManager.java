@@ -16,31 +16,30 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
-
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Item state manager that handles both transient and persistent items.
@@ -222,7 +221,7 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeReferences getNodeReferences(NodeId id)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         return stateMgr.getNodeReferences(id);
@@ -231,7 +230,7 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public boolean hasNodeReferences(NodeId id) {
+    public boolean hasNodeReferences(NodeReferencesId id) {
         return stateMgr.hasNodeReferences(id);
     }
 
@@ -399,11 +398,10 @@ public class SessionItemStateManager
      *                                   deleted externally
      * @throws RepositoryException       if another error occurs
      */
-    public Iterator<ItemState> getDescendantTransientItemStates(NodeId parentId)
+    public Iterator getDescendantTransientItemStates(NodeId parentId)
             throws InvalidItemStateException, RepositoryException {
         if (transientStore.isEmpty()) {
-            List<ItemState> empty = Collections.emptyList();
-            return empty.iterator();
+            return Collections.EMPTY_LIST.iterator();
         }
 
         // build ordered collection of descendant transient states
@@ -477,8 +475,7 @@ public class SessionItemStateManager
          * situation
          */
         if (resultIter.getIterators().isEmpty()) {
-            List<ItemState> empty = Collections.emptyList();
-            return empty.iterator();
+            return Collections.EMPTY_LIST.iterator();
         }
         return resultIter;
     }
@@ -491,10 +488,9 @@ public class SessionItemStateManager
      *                 instances to be returned.
      * @return an iterator over descendant transient item state instances in the attic
      */
-    public Iterator<ItemState> getDescendantTransientItemStatesInAttic(NodeId parentId) {
+    public Iterator getDescendantTransientItemStatesInAttic(NodeId parentId) {
         if (atticStore.isEmpty()) {
-            List<ItemState> empty = Collections.emptyList();
-            return empty.iterator();
+            return Collections.EMPTY_LIST.iterator();
         }
 
         // build ordered collection of descendant transient states in attic
@@ -508,7 +504,9 @@ public class SessionItemStateManager
         // the depth is used as array index
         List[] la = new List[10];
         try {
-            for (ItemState state : atticStore.values()) {
+            Iterator iter = atticStore.values().iterator();
+            while (iter.hasNext()) {
+                ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
                 //int depth = zombieHierMgr.getRelativeDepth(parentId, state.getId());
                 int depth = zombieHierMgr.getShareRelativeDepth(parentId, state.getId());
@@ -551,8 +549,7 @@ public class SessionItemStateManager
          * situation
          */
         if (resultIter.getIterators().isEmpty()) {
-            List<ItemState> empty = Collections.emptyList();
-            return empty.iterator();
+            return Collections.EMPTY_LIST.iterator();
         }
         return resultIter;
     }
@@ -747,12 +744,16 @@ public class SessionItemStateManager
     public void disposeAllTransientItemStates() {
         // dispose item states in transient map & attic
         // (use temp collection to avoid ConcurrentModificationException)
-        Collection<ItemState> tmp = new ArrayList<ItemState>(transientStore.values());
-        for (ItemState state : tmp) {
+        Collection tmp = new ArrayList(transientStore.values());
+        Iterator iter = tmp.iterator();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
             disposeTransientItemState(state);
         }
-        tmp = new ArrayList<ItemState>(atticStore.values());
-        for (ItemState state : tmp) {
+        tmp = new ArrayList(atticStore.values());
+        iter = tmp.iterator();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
             disposeTransientItemStateInAttic(state);
         }
     }
@@ -1016,7 +1017,7 @@ public class SessionItemStateManager
         /**
          * {@inheritDoc}
          */
-        public NodeReferences getNodeReferences(NodeId id)
+        public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {
             // n/a
             throw new ItemStateException("getNodeReferences() not implemented");
@@ -1025,7 +1026,7 @@ public class SessionItemStateManager
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeId id) {
+        public boolean hasNodeReferences(NodeReferencesId id) {
             // n/a
             return false;
         }

@@ -67,7 +67,7 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
     }
 
@@ -97,11 +97,6 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         }
     }
 
-    /** Test for the predefined mix:lifecycle node type. */
-    public void testLifecycle() throws NotExecutableException {
-        testPredefinedNodeType("mix:lifecycle");
-    }
-
     /** Test for the predefined mix:lockable node type. */
     public void testLockable() throws NotExecutableException {
         testPredefinedNodeType("mix:lockable");
@@ -125,41 +120,6 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
     /** Test for the predefined mix:simpleVersionable node type. */
     public void testSimpleVersionable() throws NotExecutableException {
         testPredefinedNodeType("mix:simpleVersionable");
-    }
-
-    /** Test for the predefined mix:created node type. */
-    public void testMixCreated() throws NotExecutableException {
-        testPredefinedNodeType("mix:created");
-    }
-
-    /** Test for the predefined mix:lastModified node type. */
-    public void testMixLastModified() throws NotExecutableException {
-        testPredefinedNodeType("mix:lastModified");
-    }
-
-    /** Test for the predefined mix:etag node type. */
-    public void testMixETag() throws NotExecutableException {
-        testPredefinedNodeType("mix:etag");
-    }
-
-    /** Test for the predefined mix:title node type. */
-    public void testMixTitle() throws NotExecutableException {
-        testPredefinedNodeType("mix:title");
-    }
-
-    /** Test for the predefined mix:language node type. */
-    public void testMixLanguage() throws NotExecutableException {
-        testPredefinedNodeType("mix:language");
-    }
-
-    /** Test for the predefined mix:language node type. */
-    public void testMixMimeType() throws NotExecutableException {
-        testPredefinedNodeType("mix:mimeType");
-    }
-
-    /** Test for the predefined nt:address node type. */
-    public void testNtAddress() throws NotExecutableException {
-        testPredefinedNodeType("nt:address");
     }
 
     /** Test for the predefined nt:base node type. */
@@ -329,9 +289,6 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
             String name = supertypes[i].getName();
             if (name.startsWith("nt:") ||
                     name.equals("mix:simpleVersionable") ||
-                    name.equals("mix:created") ||
-                    name.equals("mix:mimeType") ||
-                    name.equals("mix:lastModified") ||
                     (name.equals("mix:referenceable") &&
                         (typeName.equals("mix:versionable") ||
                             typeName.equals("mix:shareable") ||

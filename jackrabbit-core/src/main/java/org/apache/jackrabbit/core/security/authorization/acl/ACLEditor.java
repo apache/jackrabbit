@@ -16,16 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
-import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
@@ -35,18 +40,12 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
-import javax.jcr.NodeIterator;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 
 /**
@@ -94,6 +93,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     //------------------------------------------------< AccessControlEditor >---
     /**
      * @see AccessControlEditor#getPolicies(String)
+     * @param nodePath
      */
     public AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
@@ -107,20 +107,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     }
 
     /**
-     * Always returns an empty array as no applicable policies are exposed.
-     * 
-     * @see AccessControlEditor#getPolicies(Principal)
-     */
-    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException {
-        if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
-            throw new AccessControlException("Unknown principal.");
-        }
-        // TODO: impl. missing
-        return new JackrabbitAccessControlPolicy[0];
-    }
-
-    /**
      * @see AccessControlEditor#editAccessControlPolicies(String)
+     * @param nodePath
      */
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
@@ -159,17 +147,17 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         checkValidPolicy(nodePath, policy);
 
         NodeImpl aclNode = getAclNode(nodePath);
+        /* in order to assert that the parent (ac-controlled node) gets modified
+           an existing ACL node is removed first and the recreated.
+           this also asserts that all ACEs are cleared without having to
+           access and removed the explicitely
+         */
         if (aclNode != null) {
-            // remove all existing aces
-            for (NodeIterator aceNodes = aclNode.getNodes(); aceNodes.hasNext();) {
-                NodeImpl aceNode = (NodeImpl) aceNodes.nextNode();
-                removeItem(aceNode);
-            }
-        } else {
-            // create the acl node
-            aclNode = createAclNode(nodePath);
+            removeItem(aclNode);
         }
-        
+        // now (re) create it
+        aclNode = createAclNode(nodePath);
+
         AccessControlEntry[] entries = ((ACLTemplate) policy).getAccessControlEntries();
         for (int i = 0; i < entries.length; i++) {
             JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) entries[i];
@@ -190,9 +178,6 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             Value[] names = getPrivilegeNames(pvlgs, vf);
             setProperty(aceNode, P_PRIVILEGES, names);
         }
-
-        // mark the parent modified.
-        markModified(((NodeImpl)aclNode.getParent()));
     }
 
     /**
@@ -320,7 +305,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 log.debug("Invalid path name for Permission: " + name + ".");
             }
         }
-        int i = 0;
+        int i=0;
         String check = name;
         while (node.hasNode(check)) {
             check = name + i;

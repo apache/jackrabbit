@@ -18,12 +18,12 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 
+import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortComparatorSource;
 import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.query.lucene.join.Join;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 
 /**
  * <code>JoinQuery</code> implements a query that performs a join.
@@ -43,7 +43,7 @@ public class JoinQuery implements MultiColumnQuery {
     /**
      * The join type.
      */
-    private final JoinType joinType;
+    private final int joinType;
 
     /**
      * The QOM join condition.
@@ -72,7 +72,7 @@ public class JoinQuery implements MultiColumnQuery {
      */
     public JoinQuery(MultiColumnQuery left,
                      MultiColumnQuery right,
-                     JoinType joinType,
+                     int joinType,
                      JoinConditionImpl joinCondition,
                      SortComparatorSource scs,
                      HierarchyManager hmgr) {
@@ -88,13 +88,13 @@ public class JoinQuery implements MultiColumnQuery {
      * {@inheritDoc}
      */
     public MultiColumnQueryHits execute(JackrabbitIndexSearcher searcher,
-                                        Ordering[] orderings,
+                                        Sort sort,
                                         long resultFetchHint)
             throws IOException {
         IndexReader reader = searcher.getIndexReader();
         HierarchyResolver resolver = (HierarchyResolver) reader;
-        return Join.create(left.execute(searcher, orderings, resultFetchHint),
-                right.execute(searcher, orderings, resultFetchHint),
+        return Join.create(left.execute(searcher, sort, resultFetchHint),
+                right.execute(searcher, sort, resultFetchHint),
                 joinType, joinCondition, reader, resolver, scs, hmgr);
     }
 }

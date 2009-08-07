@@ -139,7 +139,7 @@ public class PathFactoryImpl implements PathFactory {
     }
 
     /**
-     * @see PathFactory#create(org.apache.jackrabbit.spi.Path.Element[])
+     * @see PathFactory#create(Path.Element[])
      */
     public Path create(Path.Element[] elements) throws IllegalArgumentException {
         return new Builder(elements).getPath();
@@ -159,11 +159,11 @@ public class PathFactoryImpl implements PathFactory {
         while (lastPos >= 0) {
             Path.Element elem;
             if (pos >= 0) {
-                elem = createElementFromString(pathString.substring(lastPos, pos));
+                elem = createElement(pathString.substring(lastPos, pos));
                 lastPos = pos + 1;
                 pos = pathString.indexOf(Path.DELIMITER, lastPos);
             } else {
-                elem = createElementFromString(pathString.substring(lastPos));
+                elem = createElement(pathString.substring(lastPos));
                 lastPos = -1;
             }
             list.add(elem);
@@ -208,18 +208,10 @@ public class PathFactoryImpl implements PathFactory {
         }
     }
 
-    public Path.Element createElement(String identifier) throws IllegalArgumentException {
-        if (identifier == null) {
-            throw new IllegalArgumentException("The id must not be null.");
-        } else {
-            return new IdentifierElement(identifier);
-        }
-    }
-
     /**
      * Create an element from the element string
      */
-    private Path.Element createElementFromString(String elementString) {
+    private Path.Element createElement(String elementString) {
         if (elementString == null) {
             throw new IllegalArgumentException("null PathElement literal");
         }
@@ -229,8 +221,6 @@ public class PathFactoryImpl implements PathFactory {
             return CURRENT_ELEMENT;
         } else if (elementString.equals(PARENT_LITERAL)) {
             return PARENT_ELEMENT;
-        } else if (elementString.startsWith("[") && elementString.endsWith("]") && elementString.length() > 2) {
-            return new IdentifierElement(elementString.substring(1, elementString.length()-1));
         }
 
         int pos = elementString.indexOf('[');
@@ -315,7 +305,7 @@ public class PathFactoryImpl implements PathFactory {
                 throw new IllegalArgumentException("Empty paths are not allowed");
             }
             this.elements = elements;
-            this.absolute = elements[0].denotesRoot() || elements[0].denotesIdentifier();
+            this.absolute = elements[0].denotesRoot();
             this.normalized = isNormalized;
         }
 
@@ -323,14 +313,7 @@ public class PathFactoryImpl implements PathFactory {
          * @see Path#denotesRoot()
          */
         public boolean denotesRoot() {
-            return absolute && elements.length == 1 && elements[0].denotesRoot();
-        }
-
-        /**
-         * @see Path#denotesIdentifier()
-         */
-        public boolean denotesIdentifier() {
-            return elements.length == 1 && elements[0].denotesIdentifier();
+            return absolute && elements.length == 1;
         }
 
         /**
@@ -357,13 +340,9 @@ public class PathFactoryImpl implements PathFactory {
         /**
          * @see Path#getNormalizedPath()
          */
-        public Path getNormalizedPath() throws RepositoryException {
+        public Path getNormalizedPath() {
             if (isNormalized()) {
                 return this;
-            }
-            if (denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Identifier-based path cannot be normalized: " + this);
             }
             LinkedList queue = new LinkedList();
             Path.Element last = PARENT_ELEMENT;
@@ -399,10 +378,6 @@ public class PathFactoryImpl implements PathFactory {
                 throw new RepositoryException(
                         "Only an absolute path can be canonicalized: "  + this);
             }
-            if (denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Identifier-based path cannot be canonicalized: " + this);
-            }
             return getNormalizedPath();
         }
 
@@ -414,15 +389,10 @@ public class PathFactoryImpl implements PathFactory {
                 throw new IllegalArgumentException("null argument");
             }
 
-            // make sure both paths are absolute and not id-based
+            // make sure both paths are absolute
             if (!isAbsolute() || !other.isAbsolute()) {
                 throw new RepositoryException(
                         "Cannot compute relative path from relative paths: "
-                        + this + " vs. " + other);
-            }
-            if (denotesIdentifier() || other.denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Cannot compute relative path from identifier-based paths: "
                         + this + " vs. " + other);
             }
 
@@ -467,12 +437,12 @@ public class PathFactoryImpl implements PathFactory {
         /**
          * @see Path#getAncestor(int)
          */
-        public Path getAncestor(int degree) throws IllegalArgumentException, PathNotFoundException, RepositoryException {
+        public Path getAncestor(int degree) throws IllegalArgumentException, PathNotFoundException {
             if (degree < 0) {
                 throw new IllegalArgumentException(
                         "degree must be >= 0: " + this);
             } else if (degree == 0) {
-                return getNormalizedPath();
+                return this.getNormalizedPath();
             }
 
             if (isAbsolute()) {
@@ -500,12 +470,7 @@ public class PathFactoryImpl implements PathFactory {
          * @see Path#getAncestorCount()
          */
         public int getAncestorCount() {
-            try {
-                return (isAbsolute() && !denotesIdentifier()) ? getDepth() : -1;
-            } catch (RepositoryException e) {
-                // never gets here.
-                return -1;
-            }
+            return (isAbsolute()) ? getDepth() : -1;
         }
 
         /**
@@ -518,11 +483,7 @@ public class PathFactoryImpl implements PathFactory {
         /**
          * @see Path#getDepth()
          */
-        public int getDepth() throws RepositoryException {
-            if (denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Cannot determine depth of an identifier based path: " + this);
-            }
+        public int getDepth() {
             int depth = ROOT_DEPTH;
             for (int i = 0; i < elements.length; i++) {
                 if (elements[i].denotesParent()) {
@@ -722,7 +683,7 @@ public class PathFactoryImpl implements PathFactory {
     private static class Element implements Path.Element {
 
         /**
-         * Name of the path element.
+         * Qualified name of the path element.
          */
         private final Name name;
 
@@ -734,11 +695,11 @@ public class PathFactoryImpl implements PathFactory {
 
         /**
          * Private constructor for creating a path element with the given
-         * name and index. Instead of using this constructor directly
+         * qualified name and index. Instead of using this constructor directly
          * the factory methods {@link PathFactory#createElement(Name)} and
          * {@link PathFactory#create(Name, int)} should be used.
          *
-         * @param name A <code>Name</code> object.
+         * @param name  qualified name
          * @param index index
          */
         private Element(Name name, int index) {
@@ -801,14 +762,6 @@ public class PathFactoryImpl implements PathFactory {
          */
         public boolean denotesName() {
             return true;
-        }
-
-        /**
-         * @return always returns false.
-         * @see Path.Element#denotesIdentifier()
-         */
-        public boolean denotesIdentifier() {
-            return false;
         }
 
         /**
@@ -933,86 +886,6 @@ public class PathFactoryImpl implements PathFactory {
     }
 
     /**
-     * 
-     */
-    private static final class IdentifierElement extends Element {
-
-        private final String identifier;
-        /**
-         * 
-         * @param identifier
-         */
-        private IdentifierElement(String identifier) {
-            super(null, Path.INDEX_UNDEFINED);
-            this.identifier = identifier;
-        }
-
-        /**
-         * @return Always returns true.
-         * @see Path.Element#denotesIdentifier()
-         */
-        public boolean denotesIdentifier() {
-            return true;
-        }
-
-        /**
-         * @return Always returns false.
-         * @see Path.Element#denotesName()
-         */
-        public boolean denotesName() {
-            return false;
-        }
-
-        /**
-         * Returns a string representation of this path element. Note that
-         * the path element name is expressed using the <code>{uri}name</code>
-         * syntax.
-         *
-         * @return string representation of the path element
-         * @see Object#toString()
-         */
-        public String toString() {
-            StringBuffer sb = new StringBuffer();
-            sb.append('[');
-            sb.append(identifier);
-            sb.append(']');
-            return sb.toString();
-        }
-
-        /**
-         * Computes a hash code for this path element.
-         *
-         * @return hash code
-         * @see Object#hashCode()
-         */
-        public int hashCode() {
-            int h = 37 * 17 + identifier.hashCode();
-            return h;
-        }
-
-        /**
-         * Check for path element equality. Returns true if the given
-         * object is a PathElement and contains the same name and index
-         * as this one.
-         *
-         * @param obj the object to compare with
-         * @return <code>true</code> if the path elements are equal
-         * @see Object#equals(Object)
-         */
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof IdentifierElement) {
-                return identifier.equals(((IdentifierElement) obj).identifier);
-            } if (obj instanceof Path.Element) {
-                Path.Element other = (Path.Element) obj;
-                return other.denotesIdentifier() && getString().equals(other.getString());
-            }
-            return false;
-        }
-    }
-    /**
      * Builder internal class
      */
     private static final class Builder {
@@ -1054,7 +927,7 @@ public class PathFactoryImpl implements PathFactory {
 
             this.elements = elements;
             if (elements.length == 1) {
-                isNormalized = !elements[0].denotesIdentifier();
+                isNormalized = true;
             } else {
                 boolean absolute = elements[0].denotesRoot();
                 isNormalized = true;
@@ -1068,8 +941,6 @@ public class PathFactoryImpl implements PathFactory {
                         if (i > 0) {
                             throw new IllegalArgumentException("Invalid path: The root element may only occur at the beginning.");
                         }
-                    } else if (elem.denotesIdentifier()) {
-                        throw new IllegalArgumentException("Invalid path: The identifier element may only occur at the beginning of a single element path.");
                     } else  if (elem.denotesParent()) {
                         parents++;
                         if (absolute || named > 0) {

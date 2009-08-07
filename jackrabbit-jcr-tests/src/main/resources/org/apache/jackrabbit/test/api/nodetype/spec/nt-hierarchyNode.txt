@@ -2,10 +2,18 @@ NodeTypeName
   nt:hierarchyNode
 Supertypes
   nt:base
-  mix:created
 IsMixin
   false
 HasOrderableChildNodes
   false
 PrimaryItemName
   null
+PropertyDefinition
+  Name jcr:created
+  RequiredType DATE
+  DefaultValues null
+  AutoCreated true
+  Mandatory false
+  OnParentVersion INITIALIZE
+  Protected true
+  Multiple false

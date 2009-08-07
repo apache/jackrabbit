@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
 
@@ -74,7 +74,7 @@ public class NodeState extends ItemState {
      * Shared set, consisting of the parent ids of this shareable node. This
      * entry is {@link Collections#EMPTY_SET} if this node is not shareable.
      */
-    private Set<NodeId> sharedSet = Collections.emptySet();
+    private Set sharedSet = Collections.EMPTY_SET;
 
     /**
      * Flag indicating whether we are using a read-write shared set.
@@ -197,7 +197,7 @@ public class NodeState extends ItemState {
      *
      * @return a set of the names of this node's mixin types.
      */
-    public synchronized Set<Name> getMixinTypeNames() {
+    public synchronized Set getMixinTypeNames() {
         return mixinTypeNames;
     }
 
@@ -206,7 +206,7 @@ public class NodeState extends ItemState {
      *
      * @param names set of names of mixin types
      */
-    public synchronized void setMixinTypeNames(Set<Name> names) {
+    public synchronized void setMixinTypeNames(Set names) {
         mixinTypeNames.replaceAll(names);
     }
 
@@ -322,7 +322,7 @@ public class NodeState extends ItemState {
      * @see #addChildNodeEntry
      * @see #removeChildNodeEntry
      */
-    public synchronized List<ChildNodeEntry> getChildNodeEntries() {
+    public synchronized List getChildNodeEntries() {
         return childNodeEntries;
     }
 
@@ -334,7 +334,7 @@ public class NodeState extends ItemState {
      * @see #addChildNodeEntry
      * @see #removeChildNodeEntry
      */
-    public synchronized List<ChildNodeEntry> getChildNodeEntries(Name nodeName) {
+    public synchronized List getChildNodeEntries(Name nodeName) {
         return childNodeEntries.get(nodeName);
     }
 
@@ -419,7 +419,7 @@ public class NodeState extends ItemState {
      * @param nodeEntries list of {@link ChildNodeEntry} or
      * a {@link ChildNodeEntries} list.
      */
-    public synchronized void setChildNodeEntries(List<ChildNodeEntry> nodeEntries) {
+    public synchronized void setChildNodeEntries(List nodeEntries) {
         if (nodeEntries instanceof ChildNodeEntries) {
             // optimization
             ChildNodeEntries entries = (ChildNodeEntries) nodeEntries;
@@ -440,7 +440,7 @@ public class NodeState extends ItemState {
      * @see #addPropertyName
      * @see #removePropertyName
      */
-    public synchronized Set<Name> getPropertyNames() {
+    public synchronized Set getPropertyNames() {
         return propertyNames;
     }
 
@@ -476,7 +476,7 @@ public class NodeState extends ItemState {
      * properties of this node.
      * @param propNames set of {@link Name}s.
      */
-    public synchronized void setPropertyNames(Set<Name> propNames) {
+    public synchronized void setPropertyNames(Set propNames) {
         propertyNames.replaceAll(propNames);
     }
 
@@ -512,7 +512,7 @@ public class NodeState extends ItemState {
             return false;
         }
         if (!sharedSetRW) {
-            sharedSet = new LinkedHashSet<NodeId>(sharedSet);
+            sharedSet = new LinkedHashSet(sharedSet);
             sharedSetRW = true;
         }
         return sharedSet.add(parentId);
@@ -534,11 +534,11 @@ public class NodeState extends ItemState {
      *
      * @return unmodifiable collection
      */
-    public Set<NodeId> getSharedSet() {
+    public Set getSharedSet() {
         if (sharedSet != Collections.EMPTY_SET) {
             return Collections.unmodifiableSet(sharedSet);
         }
-        return Collections.emptySet();
+        return Collections.EMPTY_SET;
     }
 
     /**
@@ -547,12 +547,12 @@ public class NodeState extends ItemState {
      *
      * @param set shared set
      */
-    public synchronized void setSharedSet(Set<NodeId> set) {
+    public synchronized void setSharedSet(Set set) {
         if (set != Collections.EMPTY_SET) {
-            sharedSet = new LinkedHashSet<NodeId>(set);
+            sharedSet = new LinkedHashSet(set);
             sharedSetRW = true;
         } else {
-            sharedSet = Collections.emptySet();
+            sharedSet = Collections.EMPTY_SET;
             sharedSetRW = false;
         }
     }
@@ -570,13 +570,13 @@ public class NodeState extends ItemState {
         // check first before making changes
         if (sharedSet.contains(parentId)) {
             if (!sharedSetRW) {
-                sharedSet = new LinkedHashSet<NodeId>(sharedSet);
+                sharedSet = new LinkedHashSet(sharedSet);
                 sharedSetRW = true;
             }
             sharedSet.remove(parentId);
             if (parentId.equals(this.parentId)) {
                 if (!sharedSet.isEmpty()) {
-                    this.parentId = sharedSet.iterator().next();
+                    this.parentId = (NodeId) sharedSet.iterator().next();
                 } else {
                     this.parentId = null;
                 }
@@ -594,13 +594,13 @@ public class NodeState extends ItemState {
      * @return set of <code>Name</code>s denoting the properties that have
      *         been added.
      */
-    public synchronized Set<Name> getAddedPropertyNames() {
+    public synchronized Set getAddedPropertyNames() {
         if (!hasOverlayedState()) {
             return propertyNames;
         }
 
         NodeState other = (NodeState) getOverlayedState();
-        HashSet<Name> set = new HashSet<Name>(propertyNames);
+        HashSet set = new HashSet(propertyNames);
         set.removeAll(other.propertyNames);
         return set;
     }
@@ -611,7 +611,7 @@ public class NodeState extends ItemState {
      *
      * @return list of added child node entries
      */
-    public synchronized List<ChildNodeEntry> getAddedChildNodeEntries() {
+    public synchronized List getAddedChildNodeEntries() {
         if (!hasOverlayedState()) {
             return childNodeEntries;
         }
@@ -628,13 +628,13 @@ public class NodeState extends ItemState {
      * @return set of <code>Name</code>s denoting the properties that have
      *         been removed.
      */
-    public synchronized Set<Name> getRemovedPropertyNames() {
+    public synchronized Set getRemovedPropertyNames() {
         if (!hasOverlayedState()) {
-            return Collections.emptySet();
+            return Collections.EMPTY_SET;
         }
 
         NodeState other = (NodeState) getOverlayedState();
-        HashSet<Name> set = new HashSet<Name>(other.propertyNames);
+        HashSet set = new HashSet(other.propertyNames);
         set.removeAll(propertyNames);
         return set;
     }
@@ -645,9 +645,9 @@ public class NodeState extends ItemState {
      *
      * @return list of removed child node entries
      */
-    public synchronized List<ChildNodeEntry> getRemovedChildNodeEntries() {
+    public synchronized List getRemovedChildNodeEntries() {
         if (!hasOverlayedState()) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
 
         NodeState other = (NodeState) getOverlayedState();
@@ -660,32 +660,32 @@ public class NodeState extends ItemState {
      *
      * @return list of renamed child node entries
      */
-    public synchronized List<ChildNodeEntry> getRenamedChildNodeEntries() {
+    public synchronized List getRenamedChildNodeEntries() {
         if (!hasOverlayedState()) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
 
         ChildNodeEntries otherChildNodeEntries =
                 ((NodeState) overlayedState).childNodeEntries;
 
         // do a lazy init
-        List<ChildNodeEntry> renamed = null;
+        List renamed = null;
 
-        for (Iterator<ChildNodeEntry> iter = childNodeEntries.iterator(); iter.hasNext();) {
-            ChildNodeEntry cne = iter.next();
+        for (Iterator iter = childNodeEntries.iterator(); iter.hasNext();) {
+            ChildNodeEntry cne = (ChildNodeEntry) iter.next();
             ChildNodeEntry cneOther = otherChildNodeEntries.get(cne.getId());
             if (cneOther != null && !cne.getName().equals(cneOther.getName())) {
                 // child node entry with same id but different name exists in
                 // overlayed and this state => renamed entry detected
                 if (renamed == null) {
-                    renamed = new ArrayList<ChildNodeEntry>();
+                    renamed = new ArrayList();
                 }
                 renamed.add(cne);
             }
         }
 
         if (renamed == null) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         } else {
             return renamed;
         }
@@ -719,9 +719,9 @@ public class NodeState extends ItemState {
      *
      * @return list of reordered child node enties.
      */
-    public synchronized List<ChildNodeEntry> getReorderedChildNodeEntries() {
+    public synchronized List getReorderedChildNodeEntries() {
         if (!hasOverlayedState()) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
 
         ChildNodeEntries otherChildNodeEntries =
@@ -729,16 +729,16 @@ public class NodeState extends ItemState {
 
         if (childNodeEntries.isEmpty()
                 || otherChildNodeEntries.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
 
         // build intersections of both collections,
         // each preserving their relative order
-        List<ChildNodeEntry> ours = childNodeEntries.retainAll(otherChildNodeEntries);
-        List<ChildNodeEntry> others = otherChildNodeEntries.retainAll(childNodeEntries);
+        List ours = childNodeEntries.retainAll(otherChildNodeEntries);
+        List others = otherChildNodeEntries.retainAll(childNodeEntries);
 
         // do a lazy init
-        List<ChildNodeEntry> reordered = null;
+        List reordered = null;
         // both entry lists now contain the set of nodes that have not
         // been removed or added, but they may have changed their position.
         for (int i = 0; i < ours.size();) {
@@ -750,7 +750,7 @@ public class NodeState extends ItemState {
             } else {
                 // reordered entry detected
                 if (reordered == null) {
-                    reordered = new ArrayList<ChildNodeEntry>();
+                    reordered = new ArrayList();
                 }
                 // Note that this check will not necessarily find the
                 // minimal reorder operations required to convert the overlayed
@@ -791,7 +791,7 @@ public class NodeState extends ItemState {
             }
         }
         if (reordered == null) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         } else {
             return reordered;
         }
@@ -802,12 +802,12 @@ public class NodeState extends ItemState {
      *
      * @return the set of shares that were added. Set of {@link NodeId}s.
      */
-    public synchronized Set<NodeId> getAddedShares() {
+    public synchronized Set getAddedShares() {
         if (!hasOverlayedState() || !isShareable()) {
-            return Collections.emptySet();
+            return Collections.EMPTY_SET;
         }
         NodeState other = (NodeState) getOverlayedState();
-        HashSet<NodeId> set = new HashSet<NodeId>(sharedSet);
+        HashSet set = new HashSet(sharedSet);
         set.removeAll(other.sharedSet);
         return set;
     }
@@ -817,12 +817,12 @@ public class NodeState extends ItemState {
      *
      * @return the set of shares that were removed. Set of {@link NodeId}s.
      */
-    public synchronized Set<NodeId> getRemovedShares() {
+    public synchronized Set getRemovedShares() {
         if (!hasOverlayedState() || !isShareable()) {
-            return Collections.emptySet();
+            return Collections.EMPTY_SET;
         }
         NodeState other = (NodeState) getOverlayedState();
-        HashSet<NodeId> set = new HashSet<NodeId>(other.sharedSet);
+        HashSet set = new HashSet(other.sharedSet);
         set.removeAll(sharedSet);
         return set;
     }

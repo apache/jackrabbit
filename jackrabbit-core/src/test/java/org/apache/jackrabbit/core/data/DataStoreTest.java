@@ -138,8 +138,8 @@ public class DataStoreTest extends JUnitTest {
     }
     
     private void doTest(DataStore ds, int offset) throws Exception {
-        ArrayList<DataRecord> list = new ArrayList<DataRecord>();
-        HashMap<DataRecord, Integer> map = new HashMap<DataRecord, Integer>();
+        ArrayList list = new ArrayList();
+        HashMap map = new HashMap();
         for (int i = 0; i < 100; i++) {
             int size = 100 + i * 10;
             RandomInputStream in = new RandomInputStream(size + offset, size);
@@ -150,8 +150,8 @@ public class DataStoreTest extends JUnitTest {
         Random random = new Random(1);
         for (int i = 0; i < list.size(); i++) {
             int pos = random.nextInt(list.size());
-            DataRecord rec = list.get(pos);
-            int size = map.get(rec);
+            DataRecord rec = (DataRecord) list.get(pos);
+            int size = ((Integer) map.get(rec)).intValue();
             rec = ds.getRecord(rec.getIdentifier());
             assertEquals(size, rec.getLength());
             InputStream in = rec.getStream();

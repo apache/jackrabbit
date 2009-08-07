@@ -16,13 +16,15 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ReferenceValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +91,8 @@ public class SessionImporter implements Importer {
         NodeImpl node;
 
         // add node
-        node = parent.addNode(nodeName, nodeTypeName, id);
+        UUID uuid = (id == null) ? null : id.getUUID();
+        node = parent.addNode(nodeName, nodeTypeName, uuid);
         // add mixins
         if (mixinNames != null) {
             for (int i = 0; i < mixinNames.length; i++) {
@@ -110,7 +113,7 @@ public class SessionImporter implements Importer {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
             if (node.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                refTracker.mappedId(nodeInfo.getId(), node.getNodeId());
+                refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
             // if conflicting node is shareable, then clone it
@@ -279,8 +282,7 @@ public class SessionImporter implements Importer {
         while (iter.hasNext()) {
             Property prop = (Property) iter.next();
             // being paranoid...
-            if (prop.getType() != PropertyType.REFERENCE
-                    && prop.getType() != PropertyType.WEAKREFERENCE) {
+            if (prop.getType() != PropertyType.REFERENCE) {
                 continue;
             }
             if (prop.getDefinition().isMultiple()) {
@@ -288,12 +290,10 @@ public class SessionImporter implements Importer {
                 Value[] newVals = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {
                     Value val = values[i];
-                    NodeId original = new NodeId(val.getString());
-                    NodeId adjusted = refTracker.getMappedId(original);
+                    UUID original = UUID.fromString(val.getString());
+                    UUID adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
-                        newVals[i] = session.getValueFactory().createValue(
-                                session.getNodeById(adjusted),
-                                prop.getType() != PropertyType.REFERENCE);
+                        newVals[i] = new ReferenceValue(session.getNodeByUUID(adjusted));
                     } else {
                         // reference doesn't need adjusting, just copy old value
                         newVals[i] = val;
@@ -302,10 +302,10 @@ public class SessionImporter implements Importer {
                 prop.setValue(newVals);
             } else {
                 Value val = prop.getValue();
-                NodeId original = new NodeId(val.getString());
-                NodeId adjusted = refTracker.getMappedId(original);
+                UUID original = UUID.fromString(val.getString());
+                UUID adjusted = refTracker.getMappedUUID(original);
                 if (adjusted != null) {
-                    prop.setValue(session.getNodeById(adjusted).getUUID());
+                    prop.setValue(session.getNodeByUUID(adjusted));
                 }
             }
         }

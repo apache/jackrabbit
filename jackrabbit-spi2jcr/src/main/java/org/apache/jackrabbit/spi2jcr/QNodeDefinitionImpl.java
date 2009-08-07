@@ -31,7 +31,7 @@ class QNodeDefinitionImpl
         extends org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl {
 
     /**
-     * Creates a new node definition based on a JCR <code>NodeDefinition</code>.
+     * Creates a new qualified node definition based on a JCR NodeDefinition.
      *
      * @param nodeDef    the node definition.
      * @param resolver
@@ -54,12 +54,12 @@ class QNodeDefinitionImpl
     }
 
     /**
-     * Returns the names of the passed node types using the namespace
+     * Returns the qualified names of the passed node types using the namespace
      * resolver to parse the names.
      *
      * @param nt         the node types
      * @param resolver
-     * @return the names of the node types.
+     * @return the qualified names of the node types.
      * @throws NameException   if a node type returns an illegal name.
      * @throws NamespaceException if the name of a node type contains a
      *                            prefix that is not known to <code>resolver</code>.

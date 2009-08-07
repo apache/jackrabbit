@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,6 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.Privilege;
 import javax.jcr.version.Version;
 
 /** <code>AbstractVersionAccessTest</code>... */

@@ -29,6 +29,7 @@ import org.apache.jackrabbit.spi.commons.identifier.AbstractIdFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Property;
 
 /**
@@ -60,8 +61,39 @@ class IdFactoryImpl extends AbstractIdFactory {
             throws RepositoryException {
         PathBuilder builder = new PathBuilder();
         int pathElements = 0;
-        String uniqueId = node.getIdentifier();
-        return createNodeId(uniqueId);
+        String uniqueId = null;
+        while (uniqueId == null) {
+            try {
+                uniqueId = node.getUUID();
+            } catch (UnsupportedRepositoryOperationException e) {
+                // not referenceable
+                pathElements++;
+                String jcrName = node.getName();
+                if (jcrName.equals("")) {
+                    // root node
+                    builder.addRoot();
+                    break;
+                } else {
+                    Name name;
+                    try {
+                        name = resolver.getQName(node.getName());
+                    } catch (NameException ex) {
+                       throw new RepositoryException(ex.getMessage(), ex);
+                    }
+                    if (node.getIndex() == 1) {
+                        builder.addFirst(name);
+                    } else {
+                        builder.addFirst(name, node.getIndex());
+                    }
+                }
+                node = node.getParent();
+            }
+        }
+        if (pathElements > 0) {
+            return createNodeId(uniqueId, builder.getPath());
+        } else {
+            return createNodeId(uniqueId);
+        }
     }
 
     /**

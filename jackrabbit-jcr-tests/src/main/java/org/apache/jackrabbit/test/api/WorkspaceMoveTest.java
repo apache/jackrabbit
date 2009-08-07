@@ -24,8 +24,6 @@ import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 /**
  * <code>WorkspaceMoveTest</code> contains tests for copying nodes in one
  * workspace.
@@ -93,7 +91,7 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
      * sufficient access permissions to complete the operation.
      */
     public void testMoveNodesAccessDenied() throws RepositoryException {
-        Session readOnlySuperuser = getHelper().getReadOnlySession();
+        Session readOnlySuperuser = helper.getReadOnlySession();
         try {
             String dstAbsPath = node2.getPath() + "/" + node1.getName();
             try {
@@ -139,21 +137,22 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
     /**
      * A LockException is thrown if a lock prevents the copy.
      */
-    public void testMoveNodesLocked() throws RepositoryException,
-            NotExecutableException {
+    public void testMoveNodesLocked() throws RepositoryException {
         // we assume repository supports locking
         String dstAbsPath = node2.getPath() + "/" + node1.getName();
 
         // get other session
-        Session otherSession = getHelper().getReadWriteSession();
+        Session otherSession = helper.getReadWriteSession();
 
         try {
             // get lock target node in destination wsp through other session
             Node lockTarget = (Node) otherSession.getItem(node2.getPath());
 
             // add mixin "lockable" to be able to lock the node
-            ensureMixinType(lockTarget, mixLockable);
-            lockTarget.getParent().save();
+            if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
+                lockTarget.addMixin(mixLockable);
+                lockTarget.getParent().save();
+            }
 
             // lock dst parent node using other session
             lockTarget.lock(true, true);

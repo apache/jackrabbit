@@ -16,14 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
-import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
 
@@ -74,15 +72,6 @@ public interface AccessControlProvider {
     void close();
 
     /**
-     * Returns <code>true</code>, if this provider is still alive and able to
-     * evaluate permissions; <code>false</code> otherwise.
-     *
-     * @return <code>true</code>, if this provider is still alive and able to
-     * evaluate permissions; <code>false</code> otherwise.
-     */
-    boolean isLive();
-
-    /**
      * Returns the effective policies for the node at the given absPath.
      *
      * @param absPath an absolute path.
@@ -92,7 +81,7 @@ public interface AccessControlProvider {
      * @throws ItemNotFoundException If no Node with the specified
      * <code>absPath</code> exists.
      * @throws RepositoryException If another error occurs.
-     * @see javax.jcr.security.AccessControlManager#getEffectivePolicies(String)
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlManager#getEffectivePolicies(String)
      */
     AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException;
 
@@ -118,7 +107,7 @@ public interface AccessControlProvider {
      * specified set of principals.
      * @throws RepositoryException If an error occurs.
      */
-    CompiledPermissions compilePermissions(Set<Principal> principals) throws RepositoryException;
+    CompiledPermissions compilePermissions(Set principals) throws RepositoryException;
 
     /**
      * Returns <code>true</code> if the given set of principals can access the
@@ -132,5 +121,5 @@ public interface AccessControlProvider {
      * <code>false</code> otherwise.
      * @throws RepositoryException If an error occurs.
      */
-    boolean canAccessRoot(Set<Principal> principals) throws RepositoryException;
+    boolean canAccessRoot(Set principals) throws RepositoryException;
 }

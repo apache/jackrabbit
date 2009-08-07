@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

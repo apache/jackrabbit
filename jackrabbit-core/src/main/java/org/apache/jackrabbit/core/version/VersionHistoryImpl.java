@@ -18,16 +18,14 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.commons.iterator.FrozenNodeIteratorAdapter;
-
-import javax.jcr.version.VersionHistory;
-import javax.jcr.version.Version;
+import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
+import org.apache.jackrabbit.api.jsr283.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +70,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     protected InternalVersionHistory getInternalVersionHistory()
             throws RepositoryException {
         InternalVersionHistory history =
-                session.getInternalVersionManager().getVersionHistory((NodeId) id);
+                session.getVersionManager().getVersionHistory((NodeId) id);
         if (history == null) {
             throw new InvalidItemStateException(id + ": the item does not exist anymore");
         }
@@ -108,7 +106,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public VersionIterator getAllLinearVersions() throws RepositoryException {
         // get base version. this can certainly be optimized
         InternalVersionHistory vh = getInternalVersionHistory();
-        Node vn = session.getNodeById(vh.getVersionableId());
+        NodeId id = new NodeId(vh.getVersionableUUID());
+        Node vn = session.getNodeById(id);
         InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
 
         return new VersionIteratorImpl(session, vh.getRootVersion(), base);
@@ -163,8 +162,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            session.getInternalVersionManager().setVersionLabel(
-                    session, getInternalVersionHistory(), session.getQName(versionName),
+            session.getVersionManager().setVersionLabel(
+                    this, session.getQName(versionName),
                     session.getQName(label), move);
         } catch (NameException e) {
             throw new VersionException(e);
@@ -178,8 +177,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            InternalVersion existing = session.getInternalVersionManager().setVersionLabel(
-                    session, getInternalVersionHistory(), null, session.getQName(label), true);
+            javax.jcr.version.Version existing = session.getVersionManager().setVersionLabel(this, null, session.getQName(label), true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
@@ -206,7 +204,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public String[] getVersionLabels(javax.jcr.version.Version version)
             throws VersionException, RepositoryException {
-        checkOwnVersion(version);
+        checkOwnVersion((Version) version);
         Name[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
         String[] ret = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
@@ -232,7 +230,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public boolean hasVersionLabel(javax.jcr.version.Version version, String label)
             throws VersionException, RepositoryException {
-        checkOwnVersion(version);
+        checkOwnVersion((Version)version);
         try {
             Name qLabel = session.getQName(label);
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
@@ -250,8 +248,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            session.getInternalVersionManager().removeVersion(session,
-                    getInternalVersionHistory(), session.getQName(versionName));
+            session.getVersionManager().removeVersion(this, session.getQName(versionName));
         } catch (NameException e) {
             throw new RepositoryException(e);
         }
@@ -285,7 +282,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * {@inheritDoc}
      */
     public String getVersionableIdentifier() throws RepositoryException {
-        return getInternalVersionHistory().getVersionableId().toString();
+        return getInternalVersionHistory().getVersionableUUID().toString();
     }
 
     /**

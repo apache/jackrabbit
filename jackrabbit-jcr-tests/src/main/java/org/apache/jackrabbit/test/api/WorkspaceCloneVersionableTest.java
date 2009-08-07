@@ -19,8 +19,6 @@ package org.apache.jackrabbit.test.api;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 
 /**
  * <code>WorkspaceCloneVersionableTest</code> contains tests for cloning
@@ -38,8 +36,7 @@ public class WorkspaceCloneVersionableTest extends AbstractWorkspaceVersionableT
      * versionable and checked-in, or is non-versionable but its nearest
      * versionable ancestor is checked-in.
      */
-    public void testCloneNodesVersionableAndCheckedIn() throws RepositoryException,
-            NotExecutableException {
+    public void testCloneNodesVersionableAndCheckedIn() throws RepositoryException {
         // prepare the test data
         // create a non-versionable node below a versionable node
         // required for having a nearest versionable ancestor to a nonversionable sub node

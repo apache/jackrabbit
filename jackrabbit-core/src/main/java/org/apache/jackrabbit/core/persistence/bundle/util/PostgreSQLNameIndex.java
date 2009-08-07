@@ -65,7 +65,7 @@ public class PostgreSQLNameIndex extends DbNameIndex {
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException("Unable to insert index for string: " + string);
             ise.initCause(e);
-            throw ise;
+            throw ise ;
         }
     }
 

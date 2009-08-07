@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.util;
 
+import org.apache.jackrabbit.name.QName;
 import junit.framework.TestCase;
 
 /**
@@ -60,4 +61,37 @@ public class ISO9075Test extends TestCase {
         assertEquals("year/_x0032_007", ISO9075.encodePath("year/2007"));
         assertEquals("year/_x0032_007[2]", ISO9075.encodePath("year/2007[2]"));
     }
+
+    /**
+     * This is a disabled brute force test. It tests permutations of characters:
+     * <code>' ', '_', 'x', '0', '2', 'a', 'b', '{'</code>, encodes and decodes
+     * the sequences and test whether the initial sequence equals the resulting
+     * sequence that went through the encoding / decoding process.
+     * </p>
+     * The test takes about 30 seconds on my 1.2G P3.
+     * </p>
+     * To enable the test remove the 'disabled_' refix from the method name.
+     */
+    public void disabled_testBrute() {
+        char[] chars = new char[] {' ', '_', 'x', '0', '2', 'a', 'b', '{'};
+        long start = Long.parseLong("1000000", 8);
+        long end = Long.parseLong("7777777", 8);
+        for (long i = start; i < end; i++) {
+            String s = Long.toString(i, chars.length);
+            StringBuffer b = new StringBuffer(s.length());
+            for (int j = 0; j < s.length(); j++) {
+                b.append(chars[s.charAt(j) - '0']);
+            }
+            // encode and decode
+            QName initial = new QName("", b.toString());
+            if ((i % 100000) == 0) {
+                System.out.println(initial);
+            }
+            QName encoded = ISO9075.encode(initial);
+            assertTrue(XMLChar.isValidName(encoded.getLocalName()));
+            QName decoded = ISO9075.decode(encoded);
+            assertEquals(initial, decoded);
+        }
+    }
+
 }

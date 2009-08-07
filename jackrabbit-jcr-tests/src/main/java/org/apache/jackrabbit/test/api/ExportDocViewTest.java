@@ -121,7 +121,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         isReadOnly = true;
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         workspace = session.getWorkspace();
         nsr = workspace.getNamespaceRegistry();
         file = File.createTempFile("docViewExportTest", ".xml");
@@ -339,10 +339,10 @@ public class ExportDocViewTest extends AbstractJCRTest {
     /**
      * Compares the child tree of a given node against the child elements of a
      * given element. (chapter 6.4.2.1 points 2,3,4 of the JCR specification).
-     * <p>
+     * <p/>
      * Considered are the export constraints regarding nodes named jcr:xmldata
      * (chapter 6.4.2.3 of the JCR specification).
-     * <p>
+     * <p/>
      * Also the numbers of exported child elements is compared with the number
      * of child nodes.
      *

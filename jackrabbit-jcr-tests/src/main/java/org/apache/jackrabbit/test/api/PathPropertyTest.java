@@ -20,9 +20,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 
 /**
  * Tests a path property. If the workspace does not contain a node with a path
@@ -130,89 +127,20 @@ public class PathPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Since JCR 2.0 a path property can be dereferenced if it points to a
-     * Node.
-     * TODO: create several tests out of this one
+     * Tests failure of conversion from Path type to Reference type.
      */
-    public void testGetNode() throws RepositoryException {
+    public void testAsReference() throws RepositoryException {
         if (!multiple) {
-            String nodePath = prop.getParent().getPath();
-            String propName = prop.getName();
-
-            // absolute nodes path
-            prop.getParent().setProperty(propName, nodePath, PropertyType.PATH);
-            String value = prop.getString();
-            Node n = prop.getNode();
-            assertEquals("The path of the dereferenced property must be equal to the value", n.getPath(), value);
-            assertTrue("The property value must be resolved to the correct node.", prop.getParent().isSame(n));
-
-            // relative node path
-            prop.getParent().setProperty(propName, ".", PropertyType.PATH);
-            value = prop.getString();
-            n = prop.getNode();
-            assertEquals("The path of the dereferenced property must be equal to the value", ".", value);
-            assertTrue("The property value must be resolved to the correct node.", prop.getParent().isSame(n));
-
-            // non-existing property path
-            while (session.nodeExists(nodePath)) {
-                nodePath += "x";
-            }
-            prop.getParent().setProperty(propName, nodePath, PropertyType.PATH);
             try {
-                prop.getProperty();
-                fail("Calling Property.getNode() for a PATH value that doesn't have a corresponding Node, PathNotFoundException is expected");
-            } catch (PathNotFoundException e) {
+                prop.getNode();
+                fail("Conversion from a Path value to a Reference value " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException vfe) {
                 //ok
             }
         } else {
             try {
                 prop.getNode();
-                fail("Property.getNode() called on a multivalue property " +
-                        "should throw a ValueFormatException.");
-            } catch (ValueFormatException vfe) {
-                //ok
-            }
-        }
-    }
-
-    /**
-     * Since JCR 2.0 a path property can be dereferenced if it points to a
-     * Property.
-     * TODO: create several tests out of this one
-     */
-    public void testGetProperty() throws RepositoryException {
-        if (!multiple) {
-            String propPath = prop.getPath();
-            String propName = prop.getName();
-
-            // absolute property path
-            prop.getParent().setProperty(propName, propPath, PropertyType.PATH);
-            String path = prop.getString();
-            Property p = prop.getProperty();
-            assertEquals("The path of the dereferenced property must be equal to the value", path, p.getPath());
-            assertTrue("The property value must be resolved to the correct property.", prop.isSame(p));
-
-            // relative property path
-            prop.getParent().setProperty(propName, propName, PropertyType.PATH);
-            path = prop.getString();
-            p = prop.getProperty();
-            assertEquals("The path of the dereferenced property must be equal to the value", path, p.getName());
-            assertTrue("The property value must be resolved to the correct property.", prop.isSame(p));
-
-            // non-existing property path
-            while (session.propertyExists(propPath)) {
-                propPath += "x";
-            }
-            prop.getParent().setProperty(propName, propPath, PropertyType.PATH);
-            try {
-                prop.getProperty();
-                fail("Calling Property.getNode() for a PATH value that doesn't have a corresponding Property, PathNotFoundException is expected");
-            } catch (PathNotFoundException e) {
-                //ok
-            }
-        } else {
-            try {
-                prop.getProperty();
                 fail("Property.getNode() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {

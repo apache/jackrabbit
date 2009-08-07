@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.lucene.search.Query;

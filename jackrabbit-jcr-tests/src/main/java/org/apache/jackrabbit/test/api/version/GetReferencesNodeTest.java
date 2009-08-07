@@ -99,11 +99,12 @@ public class GetReferencesNodeTest extends AbstractJCRTest {
         assertFalse(nodeToBeReferencedIsReference);
     }
 
-    private void initTestNodes() throws RepositoryException,
-            NotExecutableException {
+    private void initTestNodes() throws RepositoryException {
         // create a versionable node with reference property
         testNode = testRootNode.addNode(nodeName1, versionableNodeType);
-        ensureMixinType(testNode, mixVersionable);
+        if (needsMixin(testNode, mixVersionable)) {
+          testNode.addMixin(mixVersionable);
+        }
 
         // node to be referenced, does not have to be versionable
         nodeToBeReferenced = testRootNode.addNode(nodeName2, versionableNodeType);

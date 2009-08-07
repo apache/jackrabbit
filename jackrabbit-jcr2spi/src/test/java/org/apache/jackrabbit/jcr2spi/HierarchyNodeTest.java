@@ -16,26 +16,30 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+
+import javax.jcr.Node;
+import javax.jcr.PropertyIterator;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Property;
+import javax.jcr.Session;
+import java.util.Calendar;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * <code>HierarchyNodeTest</code>...
  */
 public class HierarchyNodeTest extends AbstractJCRTest {
 
-    private Set<String> hierarchyNodeProps = new HashSet<String>();
-    private Set<String> resourceProps = new HashSet<String>();
+    private static Logger log = LoggerFactory.getLogger(HierarchyNodeTest.class);
+
+    private Set hierarchyNodeProps = new HashSet();
+    private Set resourceProps = new HashSet();
 
     private String ntFolder;
     private String ntFile;
@@ -55,19 +59,19 @@ public class HierarchyNodeTest extends AbstractJCRTest {
 
         hierarchyNodeProps.add(jcrPrefix+":primaryType");
         hierarchyNodeProps.add(jcrPrefix+":created");
-        hierarchyNodeProps.add(jcrPrefix+":createdBy");
 
         resourceProps.add(jcrPrefix+":primaryType");
         resourceProps.add(jcrPrefix+":lastModified");
-        resourceProps.add(jcrPrefix+":lastModifiedBy");
         resourceProps.add(jcrPrefix+":mimeType");
         resourceProps.add(jcrPrefix+":data");
+        resourceProps.add(jcrPrefix+":uuid");
 
         try {
             Node folder = testRootNode.addNode("folder", ntFolder);
             fileNode = folder.addNode("file", ntFile);
 
             Node content = fileNode.addNode(jcrPrefix + ":content", ntResource);
+            content.setProperty(jcrPrefix + ":lastModified", Calendar.getInstance());
             content.setProperty(jcrPrefix + ":mimeType", "text/plain");
             content.setProperty(jcrPrefix + ":data", "some plain text");
 
@@ -83,7 +87,7 @@ public class HierarchyNodeTest extends AbstractJCRTest {
     }
 
     public void testGetProperties() throws RepositoryException {
-        Session readSession = getHelper().getReadOnlySession();
+        Session readSession = helper.getReadOnlySession();
         try {
             dump((Node) readSession.getItem(fileNode.getPath()));
         } finally {
@@ -96,7 +100,7 @@ public class HierarchyNodeTest extends AbstractJCRTest {
 
         // Then output the properties
         PropertyIterator properties = node.getProperties();
-        Set<String> set = new HashSet<String>();
+        Set set = new HashSet();
         while (properties.hasNext()) {
             Property property = properties.nextProperty();
             set.add(property.getName());

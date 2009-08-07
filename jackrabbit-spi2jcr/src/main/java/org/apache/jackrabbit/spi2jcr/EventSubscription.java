@@ -19,17 +19,29 @@ package org.apache.jackrabbit.spi2jcr;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.commons.EventImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
+import javax.jcr.Session;
+import javax.jcr.Node;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
@@ -54,18 +66,23 @@ class EventSubscription implements Subscription, EventListener {
             | javax.jcr.observation.Event.NODE_REMOVED
             | javax.jcr.observation.Event.PROPERTY_ADDED
             | javax.jcr.observation.Event.PROPERTY_CHANGED
-            | javax.jcr.observation.Event.PROPERTY_REMOVED
-            | javax.jcr.observation.Event.NODE_MOVED
-            | javax.jcr.observation.Event.PERSIST;
+            | javax.jcr.observation.Event.PROPERTY_REMOVED;
 
-    private final List<EventBundle> eventBundles = new ArrayList<EventBundle>();
+    private final List eventBundles = new ArrayList();
+
+    private final IdFactory idFactory;
 
     private final SessionInfoImpl sessionInfo;
 
     /**
      * Current list of filters. Copy on write is performed on this list.
      */
-    private volatile List<EventFilter> filters;
+    private volatile List filters;
+
+    /**
+     * The resolver of the underlying session.
+     */
+    private final NamePathResolver resolver;
 
     /**
      * Set to <code>true</code> if this subscription has been disposed.
@@ -73,31 +90,25 @@ class EventSubscription implements Subscription, EventListener {
     private volatile boolean disposed = false;
 
     /**
-     * The event factory.
-     */
-    private final EventFactory eventFactory;
-
-    /**
      * Creates a new subscription for the passed session.
      *
-     * @param idFactory     the id factory.
-     * @param qValueFactory the QValueFactory.
-     * @param sessionInfo   the session info.
-     * @param filters       the filters that should be applied to the generated
-     *                      events.
+     * @param idFactory   the id factory.
+     * @param sessionInfo the session info.
+     * @param filters     the filters that should be applied to the generated
+     *                    events.
      * @throws RepositoryException if an error occurs while an event listener is
      *                             registered with the session.
      */
     EventSubscription(IdFactory idFactory,
-                      QValueFactory qValueFactory,
                       SessionInfoImpl sessionInfo,
                       EventFilter[] filters) throws RepositoryException {
+        this.idFactory = idFactory;
         this.sessionInfo = sessionInfo;
-        this.eventFactory = new EventFactory(sessionInfo.getSession(),
-                sessionInfo.getNamePathResolver(), idFactory, qValueFactory);
+        this.resolver = sessionInfo.getNamePathResolver();
         setFilters(filters);
         ObservationManager obsMgr = sessionInfo.getSession().getWorkspace().getObservationManager();
-        obsMgr.addEventListener(this, EventSubscription.ALL_EVENTS, "/", true, null, null, true);
+        obsMgr.addEventListener(this, EventSubscription.ALL_EVENTS,
+                "/", true, null, null, true);
     }
 
     /**
@@ -116,12 +127,12 @@ class EventSubscription implements Subscription, EventListener {
      */
     void setFilters(EventFilter[] filters) throws RepositoryException {
         // check type
-        for (EventFilter filter : filters) {
-            if (!(filter instanceof EventFilterImpl)) {
+        for (int i = 0; i < filters.length; i++) {
+            if (!(filters[i] instanceof EventFilterImpl)) {
                 throw new RepositoryException("Unknown filter implementation");
             }
         }
-        List<EventFilter> tmp = new ArrayList<EventFilter>(Arrays.asList(filters));
+        List tmp = new ArrayList(Arrays.asList(filters));
         this.filters = Collections.unmodifiableList(tmp);
 
     }
@@ -210,10 +221,43 @@ class EventSubscription implements Subscription, EventListener {
         if (disposed) {
             return;
         }
-        List<Event> spiEvents = new ArrayList<Event>();
+        List spiEvents = new ArrayList();
         while (events.hasNext()) {
             try {
-                Event spiEvent = eventFactory.fromJCREvent(events.nextEvent());
+                Session session = sessionInfo.getSession();
+                javax.jcr.observation.Event e = events.nextEvent();
+                Path p = resolver.getQPath(e.getPath());
+                Path parent = p.getAncestor(1);
+                NodeId parentId = idFactory.createNodeId((String) null, parent);
+                ItemId itemId = null;
+                Node node = null;
+                switch (e.getType()) {
+                    case Event.NODE_ADDED:
+                        node = session.getItem(e.getPath()).getParent();
+                    case Event.NODE_REMOVED:
+                        itemId = idFactory.createNodeId((String) null, p);
+                        break;
+                    case Event.PROPERTY_ADDED:
+                    case Event.PROPERTY_CHANGED:
+                        node = session.getItem(e.getPath()).getParent();
+                    case Event.PROPERTY_REMOVED:
+                        itemId = idFactory.createPropertyId(parentId,
+                                p.getNameElement().getName());
+                        break;
+                }
+                Name nodeTypeName = null;
+                Name[] mixinTypes = new Name[0];
+                if (node != null) {
+                    try {
+                        parentId = idFactory.createNodeId(node.getUUID(), null);
+                    } catch (UnsupportedRepositoryOperationException ex) {
+                        // not referenceable
+                    }
+                    nodeTypeName = resolver.getQName(node.getPrimaryNodeType().getName());
+                    mixinTypes = getNodeTypeNames(node.getMixinNodeTypes(), resolver);
+                }
+                Event spiEvent = new EventImpl(e.getType(), p, itemId, parentId,
+                        nodeTypeName, mixinTypes, e.getUserID());
                 spiEvents.add(spiEvent);
             } catch (Exception ex) {
                 log.warn("Unable to create SPI Event: " + ex);
@@ -224,5 +268,26 @@ class EventSubscription implements Subscription, EventListener {
             eventBundles.add(bundle);
             eventBundles.notify();
         }
+    }
+
+    /**
+     * Returns the qualified names of the passed node types using the namespace
+     * resolver to parse the names.
+     *
+     * @param nt         the node types
+     * @param resolver
+     * @return the qualified names of the node types.
+     * @throws NameException if a node type returns an illegal name.
+     * @throws NamespaceException if the name of a node type contains a
+     * prefix that is not known to <code>resolver</code>.
+     */
+    private static Name[] getNodeTypeNames(NodeType[] nt, NameResolver resolver)
+            throws NameException, NamespaceException {
+        Name[] names = new Name[nt.length];
+        for (int i = 0; i < nt.length; i++) {
+            Name ntName = resolver.getQName(nt[i].getName());
+            names[i] = ntName;
+        }
+        return names;
     }
 }

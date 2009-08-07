@@ -15,7 +15,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:defaultPrimaryType
@@ -24,7 +24,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory false
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:mandatory
@@ -33,7 +33,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:name
@@ -42,7 +42,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory false
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:onParentVersion
@@ -51,7 +51,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:protected
@@ -60,7 +60,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:requiredPrimaryTypes
@@ -69,7 +69,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple true
 PropertyDefinition
   Name jcr:sameNameSiblings
@@ -78,5 +78,5 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false

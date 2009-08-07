@@ -17,27 +17,27 @@
 package org.apache.jackrabbit.core.nodetype.xml;
 
 import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.core.TestRepository;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -48,7 +48,7 @@ import java.util.Arrays;
 /**
  * Test cases for reading and writing node type definition files.
  */
-public class TestAll extends AbstractJCRTest {
+public class TestAll extends TestCase {
 
     /** The dummy test namespace. */
     private static final String TEST_NAMESPACE = "http://www.apache.org/jackrabbit/test";
@@ -79,7 +79,6 @@ public class TestAll extends AbstractJCRTest {
      * @throws Exception on initialization errors
      */
     protected void setUp() throws Exception {
-        super.setUp();
         InputStream xml =
             getClass().getClassLoader().getResourceAsStream(TEST_NODETYPES);
 
@@ -118,7 +117,7 @@ public class TestAll extends AbstractJCRTest {
      * @param propertyName property name, or <code>null</code>
      * @return property definition
      */
-    private PropDef getPropDef(String typeName, String propertyName) {
+    private PropDef getProperty(String typeName, String propertyName) {
         Name name;
         if (propertyName != null) {
             name = FACTORY.create(TEST_NAMESPACE, propertyName);
@@ -150,8 +149,7 @@ public class TestAll extends AbstractJCRTest {
             InternalValue[] values = def.getDefaultValues();
             NamespaceResolver nsResolver = new AdditionalNamespaceResolver(registry);
             NamePathResolver resolver = new DefaultNamePathResolver(nsResolver);
-            ValueFactoryQImpl factory = new ValueFactoryQImpl(InternalValueFactory.getInstance(), resolver);
-            return factory.createValue(values[index]).getString();
+            return values[index].toJCRValue(resolver).getString();
         } catch (RepositoryException e) {
             throw new AssertionFailedError(e.getMessage());
         }
@@ -228,52 +226,58 @@ public class TestAll extends AbstractJCRTest {
                 def.getPrimaryItemName());
         assertEquals("itemNodeType propertyDefs",
                 10, def.getPropertyDefs().length);
-        PropDef pdef = getPropDef("itemNodeType", null);
+        PropDef pdef = getProperty("itemNodeType", null);
         assertTrue("itemNodeType wildcard property", pdef.definesResidual());
     }
 
     /** Test for namespace registration on node type import. */
     public void testImportXMLNodeTypes() throws Exception {
+        Session session = TestRepository.getInstance().login();
         try {
-            superuser.getNamespacePrefix("test-namespace2");
+            session.getNamespacePrefix("test-namespace2");
             // Ignore test case, node type and namespace already registered
         } catch (NamespaceException e1) {
             // Namespace testns2 not yet registered
             JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
-                superuser.getWorkspace().getNodeTypeManager();
+                session.getWorkspace().getNodeTypeManager();
             ntm.registerNodeTypes(
                     TestAll.class.getResourceAsStream(TEST_NS_XML_NODETYPES),
                     JackrabbitNodeTypeManager.TEXT_XML);
             try {
-                superuser.getNamespacePrefix("test-namespace2");
+                session.getNamespacePrefix("test-namespace2");
             } catch (NamespaceException e2) {
                 fail("xml test2 namespace not registered");
             }
+        } finally {
+            session.logout();
         }
     }
 
     /** Test for namespace registration on node type import. */
     public void testImportCNDNodeTypes() throws Exception {
+        Session session = TestRepository.getInstance().login();
         try {
-            superuser.getNamespacePrefix("test-namespace3");
+            session.getNamespacePrefix("test-namespace3");
             // Ignore test case, node type and namespace already registered
         } catch (NamespaceException e1) {
             JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
-                superuser.getWorkspace().getNodeTypeManager();
+                session.getWorkspace().getNodeTypeManager();
             ntm.registerNodeTypes(
                     TestAll.class.getResourceAsStream(TEST_NS_CND_NODETYPES),
                     JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
             try {
-                superuser.getNamespacePrefix("test-namespace3");
+                session.getNamespacePrefix("test-namespace3");
             } catch (NamespaceException e2) {
                 fail("cnd test3 namespace not registered");
             }
+        } finally {
+            session.logout();
         }
     }
 
     /** Test for the empty item definition. */
     public void testEmptyItem() {
-        PropDef def = getPropDef("itemNodeType", "emptyItem");
+        PropDef def = getProperty("itemNodeType", "emptyItem");
         assertEquals("emptyItem autoCreate",
                 false, def.isAutoCreated());
         assertEquals("emptyItem mandatory",
@@ -286,56 +290,56 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>autoCreated</code> item definition attribute. */
     public void testAutoCreateItem() {
-        PropDef def = getPropDef("itemNodeType", "autoCreatedItem");
+        PropDef def = getProperty("itemNodeType", "autoCreatedItem");
         assertEquals("autoCreatedItem autoCreated",
                 true, def.isAutoCreated());
     }
 
     /** Test for the <code>mandatory</code> item definition attribute. */
     public void testMandatoryItem() {
-        PropDef def = getPropDef("itemNodeType", "mandatoryItem");
+        PropDef def = getProperty("itemNodeType", "mandatoryItem");
         assertEquals("mandatoryItem mandatory",
                 true, def.isMandatory());
     }
 
     /** Test for the <code>copy</code> parent version action. */
     public void testCopyItem() {
-        PropDef def = getPropDef("itemNodeType", "copyItem");
+        PropDef def = getProperty("itemNodeType", "copyItem");
         assertEquals("copyItem onParentVersion",
                 OnParentVersionAction.COPY, def.getOnParentVersion());
     }
 
     /** Test for the <code>version</code> parent version action. */
     public void testVersionItem() {
-        PropDef def = getPropDef("itemNodeType", "versionItem");
+        PropDef def = getProperty("itemNodeType", "versionItem");
         assertEquals("versionItem onParentVersion",
                 OnParentVersionAction.VERSION, def.getOnParentVersion());
     }
 
     /** Test for the <code>initialize</code> parent version action. */
     public void testInitializeItem() {
-        PropDef def = getPropDef("itemNodeType", "initializeItem");
+        PropDef def = getProperty("itemNodeType", "initializeItem");
         assertEquals("initializeItem onParentVersion",
                 OnParentVersionAction.INITIALIZE, def.getOnParentVersion());
     }
 
     /** Test for the <code>compute</code> parent version action. */
     public void testComputeItem() {
-        PropDef def = getPropDef("itemNodeType", "computeItem");
+        PropDef def = getProperty("itemNodeType", "computeItem");
         assertEquals("computeItem onParentVersion",
                 OnParentVersionAction.COMPUTE, def.getOnParentVersion());
     }
 
     /** Test for the <code>abort</code> parent version action. */
     public void testAbortItem() {
-        PropDef def = getPropDef("itemNodeType", "abortItem");
+        PropDef def = getProperty("itemNodeType", "abortItem");
         assertEquals("abortItem onParentVersion",
                 OnParentVersionAction.ABORT, def.getOnParentVersion());
     }
 
     /** Test for the <code>protected</code> item definition attribute. */
     public void testProtectedItem() {
-        PropDef def = getPropDef("itemNodeType", "protectedItem");
+        PropDef def = getProperty("itemNodeType", "protectedItem");
         assertEquals("protectedItem protected",
                 true, def.isProtected());
     }
@@ -344,12 +348,12 @@ public class TestAll extends AbstractJCRTest {
     public void testPropertyNodeType() {
         NodeTypeDef def = getNodeType("propertyNodeType");
         assertEquals("propertyNodeType propertyDefs",
-                13, def.getPropertyDefs().length);
+                11, def.getPropertyDefs().length);
     }
 
     /** Test for the empty property definition. */
     public void testEmptyProperty() {
-        PropDef def = getPropDef("propertyNodeType", "emptyProperty");
+        PropDef def = getProperty("propertyNodeType", "emptyProperty");
         assertEquals("emptyProperty requiredType",
                 PropertyType.UNDEFINED, def.getRequiredType());
         assertEquals("emptyProperty multiple",
@@ -362,28 +366,28 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>binary</code> property definition type. */
     public void testBinaryProperty() {
-        PropDef def = getPropDef("propertyNodeType", "binaryProperty");
+        PropDef def = getProperty("propertyNodeType", "binaryProperty");
         assertEquals("binaryProperty requiredType",
                 PropertyType.BINARY, def.getRequiredType());
         assertEquals("binaryProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("binaryProperty valueConstraints[0]",
-                "[0,)", (def.getValueConstraints())[0].getString());
+                "[0,)", (def.getValueConstraints())[0].getDefinition());
         assertEquals("binaryProperty defaultValues",
                 0, def.getDefaultValues().length);
     }
 
     /** Test for the <code>boolean</code> property definition type. */
     public void testBooleanProperty() {
-        PropDef def = getPropDef("propertyNodeType", "booleanProperty");
+        PropDef def = getProperty("propertyNodeType", "booleanProperty");
         assertEquals("booleanProperty requiredType",
                 PropertyType.BOOLEAN, def.getRequiredType());
         assertEquals("booleanProperty valueConstraints",
                 2, def.getValueConstraints().length);
         assertEquals("booleanProperty valueConstraints[0]",
-                "true", (def.getValueConstraints())[0].getString());
+                "true", (def.getValueConstraints())[0].getDefinition());
         assertEquals("booleanProperty valueConstraints[1]",
-                "false", (def.getValueConstraints())[1].getString());
+                "false", (def.getValueConstraints())[1].getDefinition());
         assertEquals("booleanProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("booleanProperty defaultValues[0]",
@@ -392,14 +396,14 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>date</code> property definition type. */
     public void testDateProperty() {
-        PropDef def = getPropDef("propertyNodeType", "dateProperty");
+        PropDef def = getProperty("propertyNodeType", "dateProperty");
         assertEquals("dateProperty requiredType",
                 PropertyType.DATE, def.getRequiredType());
         assertEquals("dateProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("dateProperty valueConstraints[0]",
                 "[2005-01-01T00:00:00.000Z,2006-01-01T00:00:00.000Z)",
-                (def.getValueConstraints())[0].getString());
+                (def.getValueConstraints())[0].getDefinition());
         assertEquals("dateProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("dateProperty defaultValues[0]",
@@ -408,17 +412,17 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>double</code> property definition type. */
     public void testDoubleProperty() {
-        PropDef def = getPropDef("propertyNodeType", "doubleProperty");
+        PropDef def = getProperty("propertyNodeType", "doubleProperty");
         assertEquals("doubleProperty requiredType",
                 PropertyType.DOUBLE, def.getRequiredType());
         assertEquals("doubleProperty valueConstraints",
                 3, def.getValueConstraints().length);
         assertEquals("doubleProperty valueConstraints[0]",
-                "[,0.0)", (def.getValueConstraints())[0].getString());
+                "[,0.0)", (def.getValueConstraints())[0].getDefinition());
         assertEquals("doubleProperty valueConstraints[1]",
-                "(1.0,2.0)", (def.getValueConstraints())[1].getString());
+                "(1.0,2.0)", (def.getValueConstraints())[1].getDefinition());
         assertEquals("doubleProperty valueConstraints[2]",
-                "(3.0,]", (def.getValueConstraints())[2].getString());
+                "(3.0,]", (def.getValueConstraints())[2].getDefinition());
         assertEquals("doubleProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("doubleProperty defaultValues[0]",
@@ -427,17 +431,17 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>long</code> property definition type. */
     public void testLongProperty() {
-        PropDef def = getPropDef("propertyNodeType", "longProperty");
+        PropDef def = getProperty("propertyNodeType", "longProperty");
         assertEquals("longProperty requiredType",
                 PropertyType.LONG, def.getRequiredType());
         assertEquals("longProperty valueConstraints",
                 3, def.getValueConstraints().length);
         assertEquals("longProperty valueConstraints[0]",
-                "(-10,0]", (def.getValueConstraints())[0].getString());
+                "(-10,0]", (def.getValueConstraints())[0].getDefinition());
         assertEquals("longProperty valueConstraints[1]",
-                "[1,2]", (def.getValueConstraints())[1].getString());
+                "[1,2]", (def.getValueConstraints())[1].getDefinition());
         assertEquals("longProperty valueConstraints[2]",
-                "[10,100)", (def.getValueConstraints())[2].getString());
+                "[10,100)", (def.getValueConstraints())[2].getDefinition());
         assertEquals("longProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("longProperty defaultValues[0]",
@@ -446,14 +450,14 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>name</code> property definition type. */
     public void testNameProperty() {
-        PropDef def = getPropDef("propertyNodeType", "nameProperty");
+        PropDef def = getProperty("propertyNodeType", "nameProperty");
         assertEquals("nameProperty requiredType",
                 PropertyType.NAME, def.getRequiredType());
         assertEquals("nameProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("nameProperty valueConstraints[0]",
-                "{http://www.apache.org/jackrabbit/test}testName",
-                (def.getValueConstraints())[0].getString());
+                "test:testName",
+                (def.getValueConstraints())[0].getDefinition());
         assertEquals("nameProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("nameProperty defaultValues[0]",
@@ -462,70 +466,42 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>path</code> property definition type. */
     public void testPathProperty() {
-        PropDef def = getPropDef("propertyNodeType", "pathProperty");
+        PropDef def = getProperty("propertyNodeType", "pathProperty");
         assertEquals("pathProperty requiredType",
                 PropertyType.PATH, def.getRequiredType());
         assertEquals("pathProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("pathProperty valueConstraints[0]",
-                "{}\t{http://www.apache.org/jackrabbit/test}testPath",
-                (def.getValueConstraints())[0].getString());
-        assertEquals("pathProperty defaultValues",
-                0, def.getDefaultValues().length);
-    }
-
-    /** Test for the <code>path</code> property definition type. */
-    public void testPathProperty1() {
-        PropDef def = getPropDef("propertyNodeType", "pathProperty1");
-        assertEquals("pathProperty requiredType",
-                PropertyType.PATH, def.getRequiredType());
-        assertEquals("pathProperty valueConstraints",
-                1, def.getValueConstraints().length);
-        assertEquals("pathProperty valueConstraints[0]",
-                "{}\t{http://www.apache.org/jackrabbit/test}testPath\t{}*",
-                (def.getValueConstraints())[0].getString());
-        assertEquals("pathProperty defaultValues",
-                0, def.getDefaultValues().length);
-    }
-
-    /** Test for the <code>path</code> property definition type. */
-    public void testPathProperty2() {
-        PropDef def = getPropDef("propertyNodeType", "pathProperty2");
-        assertEquals("pathProperty requiredType",
-                PropertyType.PATH, def.getRequiredType());
-        assertEquals("pathProperty valueConstraints",
-                1, def.getValueConstraints().length);
-        assertEquals("pathProperty valueConstraints[0]",
-                "{http://www.apache.org/jackrabbit/test}testPath\t{}*",
-                (def.getValueConstraints())[0].getString());
+                "/test:testPath",
+                (def.getValueConstraints())[0].getDefinition());
         assertEquals("pathProperty defaultValues",
                 0, def.getDefaultValues().length);
     }
 
     /** Test for the <code>reference</code> property definition type. */
     public void testReferenceProperty() {
-        PropDef def = getPropDef("propertyNodeType", "referenceProperty");
+        PropDef def = getProperty("propertyNodeType", "referenceProperty");
         assertEquals("referenceProperty requiredType",
                 PropertyType.REFERENCE, def.getRequiredType());
         assertEquals("referenceProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("referenceProperty valueConstraints[0]",
-                "{http://www.jcp.org/jcr/nt/1.0}base",
-                (def.getValueConstraints())[0].getString());
+                "nt:base",
+                (def.getValueConstraints())[0].getDefinition());
         assertEquals("referenceProperty defaultValues",
                 0, def.getDefaultValues().length);
     }
 
     /** Test for the <code>string</code> property definition type. */
     public void testStringProperty() {
-        PropDef def = getPropDef("propertyNodeType", "stringProperty");
+        PropDef def = getProperty("propertyNodeType", "stringProperty");
         assertEquals("stringProperty requiredType",
                 PropertyType.STRING, def.getRequiredType());
         assertEquals("stringProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("stringProperty valueConstraints[0]",
                 "bananas?",
-                (def.getValueConstraints())[0].getString());
+                (def.getValueConstraints())[0].getDefinition());
         assertEquals("stringProperty defaultValues",
                 2, def.getDefaultValues().length);
         assertEquals("stringProperty defaultValues[0]",
@@ -536,7 +512,7 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>multiple</code> property definition attribute. */
     public void testMultipleProperty() {
-        PropDef def = getPropDef("propertyNodeType", "multipleProperty");
+        PropDef def = getProperty("propertyNodeType", "multipleProperty");
         assertEquals("multipleProperty multiple",
                 true, def.isMultiple());
     }

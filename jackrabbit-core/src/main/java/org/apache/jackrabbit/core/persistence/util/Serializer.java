@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.persistence.util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
@@ -26,8 +26,10 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import javax.jcr.PropertyType;
@@ -79,14 +81,14 @@ public final class Serializer {
         if (state.getParentId() == null) {
             out.write(NULL_UUID_PLACEHOLDER_BYTES);
         } else {
-            out.write(state.getParentId().getRawBytes());
+            out.write(state.getParentId().getUUID().getRawBytes());
         }
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
         // mixin types
-        Collection<Name> c = state.getMixinTypeNames();
+        Collection c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count
-        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
             out.writeUTF(iter.next().toString());   // name
         }
         // modCount
@@ -94,17 +96,17 @@ public final class Serializer {
         // properties (names)
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
-        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
-            Name propName = iter.next();
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            Name propName = (Name) iter.next();
             out.writeUTF(propName.toString());   // name
         }
         // child nodes (list of name/uuid pairs)
-        Collection<ChildNodeEntry> collChildren = state.getChildNodeEntries();
-        out.writeInt(collChildren.size()); // count
-        for (Iterator<ChildNodeEntry> iter = collChildren.iterator(); iter.hasNext();) {
-            ChildNodeEntry entry = iter.next();
+        c = state.getChildNodeEntries();
+        out.writeInt(c.size()); // count
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             out.writeUTF(entry.getName().toString());   // name
-            out.write(entry.getId().getRawBytes());    // uuid
+            out.write(entry.getId().getUUID().getRawBytes());    // uuid
         }
     }
 
@@ -125,19 +127,19 @@ public final class Serializer {
         String s = in.readUTF();
         state.setNodeTypeName(NameFactoryImpl.getInstance().create(s));
         // parentUUID (may be null)
-        byte[] uuidBytes = new byte[NodeId.UUID_BYTE_LENGTH];
+        byte[] uuidBytes = new byte[UUID.UUID_BYTE_LENGTH];
         in.readFully(uuidBytes);
         if (!Arrays.equals(uuidBytes, NULL_UUID_PLACEHOLDER_BYTES)) {
-            state.setParentId(new NodeId(uuidBytes));
+            state.setParentId(new NodeId(new UUID(uuidBytes)));
         }
         // definitionId
         s = in.readUTF();
         state.setDefinitionId(NodeDefId.valueOf(s));
         // mixin types
         int count = in.readInt();   // count
-        Set<Name> set = new HashSet<Name>(count);
+        Set set = new HashSet(count);
         for (int i = 0; i < count; i++) {
-            set.add(NameFactoryImpl.getInstance().create(in.readUTF()));
+            set.add(NameFactoryImpl.getInstance().create(in.readUTF())); // name
         }
         if (set.size() > 0) {
             state.setMixinTypeNames(set);
@@ -156,7 +158,7 @@ public final class Serializer {
             Name name = NameFactoryImpl.getInstance().create(in.readUTF());    // name
             // uuid
             in.readFully(uuidBytes);
-            state.addChildNodeEntry(name, new NodeId(uuidBytes));
+            state.addChildNodeEntry(name, new NodeId(new UUID(uuidBytes)));
         }
     }
 
@@ -194,10 +196,11 @@ public final class Serializer {
             if (state.getType() == PropertyType.BINARY) {
                 // special handling required for binary value:
                 // put binary value in BLOB store
-                InputStream in = val.getStream();
+                BLOBFileValue blobVal = val.getBLOBFileValue();
+                InputStream in = blobVal.getStream();
                 String blobId = blobStore.createId(state.getPropertyId(), i);
                 try {
-                    blobStore.put(blobId, in, val.getLength());
+                    blobStore.put(blobId, in, blobVal.getLength());
                 } finally {
                     IOUtils.closeQuietly(in);
                 }
@@ -220,7 +223,7 @@ public final class Serializer {
                         IOUtils.closeQuietly(in);
                     }
                 }
-                val.discard();
+                blobVal.discard();
             } else {
                 /**
                  * because writeUTF(String) has a size limit of 65k,
@@ -324,10 +327,10 @@ public final class Serializer {
         DataOutputStream out = new DataOutputStream(stream);
 
         // references
-        Collection<PropertyId> c = refs.getReferences();
+        Collection c = refs.getReferences();
         out.writeInt(c.size()); // count
-        for (Iterator<PropertyId> iter = c.iterator(); iter.hasNext();) {
-            PropertyId propId = iter.next();
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            PropertyId propId = (PropertyId) iter.next();
             out.writeUTF(propId.toString());   // propertyId
         }
     }

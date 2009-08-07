@@ -24,12 +24,13 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -37,8 +38,8 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * This Class implements a virtual item state provider that exposes the
@@ -155,7 +156,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     private VirtualNodeState createNodeTypeState(VirtualNodeState parent,
                                                  NodeTypeDef ntDef)
             throws RepositoryException {
-        NodeId id = calculateStableId(ntDef.getName().toString());
+        NodeId id = new NodeId(calculateStableUUID(ntDef.getName().toString()));
         VirtualNodeState ntState = createNodeState(parent, ntDef.getName(), id, NameConstants.NT_NODETYPE);
 
         // add properties
@@ -200,8 +201,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                                                     PropDef propDef,
                                                     NodeTypeDef ntDef, int n)
             throws RepositoryException {
-        NodeId id = calculateStableId(
-                ntDef.getName().toString() + "/" + NameConstants.JCR_PROPERTYDEFINITION.toString() + "/" + n);
+        NodeId id = new NodeId(calculateStableUUID(
+                ntDef.getName().toString() + "/" + NameConstants.JCR_PROPERTYDEFINITION.toString() + "/" + n));
         VirtualNodeState pState = createNodeState(
                 parent, NameConstants.JCR_PROPERTYDEFINITION, id,
                 NameConstants.NT_PROPERTYDEFINITION);
@@ -228,10 +229,10 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
             defValsType = defVals[0].getType();
         }
         pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, defValsType, defVals);
-        QValueConstraint[] vc = propDef.getValueConstraints();
+        ValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
         for (int i = 0; i < vc.length; i++) {
-            vals[i] = InternalValue.create(vc[i].getString());
+            vals[i] = InternalValue.create(vc[i].getDefinition());
         }
         pState.setPropertyValues(NameConstants.JCR_VALUECONSTRAINTS, PropertyType.STRING, vals);
         return pState;
@@ -249,8 +250,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                                                      NodeDef cnDef,
                                                      NodeTypeDef ntDef, int n)
             throws RepositoryException {
-        NodeId id = calculateStableId(
-                ntDef.getName().toString() + "/" + NameConstants.JCR_CHILDNODEDEFINITION.toString() + "/" + n);
+        NodeId id = new NodeId(calculateStableUUID(
+                ntDef.getName().toString() + "/" + NameConstants.JCR_CHILDNODEDEFINITION.toString() + "/" + n));
         VirtualNodeState pState = createNodeState(
                 parent, NameConstants.JCR_CHILDNODEDEFINITION, id, NameConstants.NT_CHILDNODEDEFINITION);
         // add properties
@@ -272,18 +273,18 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     }
 
     /**
-     * Calculates a stable identifier out of the given string. The algorithm
-     * does a MD5 digest from the string an converts it into the UUID format.
+     * Calclulates a stable uuid out of the given string. The alogrith does a
+     * MD5 digest from the string an converts it into the uuid format.
      *
      * @param name
      * @return
      * @throws RepositoryException
      */
-    private static NodeId calculateStableId(String name) throws RepositoryException {
+    private static UUID calculateStableUUID(String name) throws RepositoryException {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] digest = md.digest(name.getBytes("utf-8"));
-            return new NodeId(digest);
+            return new UUID(digest);
         } catch (NoSuchAlgorithmException e) {
             throw new RepositoryException(e);
         } catch (UnsupportedEncodingException e) {

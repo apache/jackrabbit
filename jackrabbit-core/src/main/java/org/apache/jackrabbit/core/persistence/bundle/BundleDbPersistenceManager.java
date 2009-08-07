@@ -35,13 +35,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
@@ -59,7 +62,9 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +105,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     public static final int SM_LONGLONG_KEYS = 2;
 
     /** flag indicating if this manager was initialized */
-    protected boolean initialized;
+    protected boolean initialized = false;
 
     /** the jdbc driver name */
     protected String driver;
@@ -121,10 +126,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected String schemaObjectPrefix;
 
     /** flag indicating if a consistency check should be issued during startup */
-    protected boolean consistencyCheck;
+    protected boolean consistencyCheck = false;
 
     /** flag indicating if the consistency check should attempt to fix issues */
-    protected boolean consistencyFix;
+    protected boolean consistencyFix = false;
 
     /** initial size of buffer used to serialize objects */
     protected static final int INITIAL_BUFFER_SIZE = 1024;
@@ -133,7 +138,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected boolean externalBLOBs;
 
     /** indicates whether to block if the database connection is lost */
-    protected boolean blockOnConnectionLoss;
+    protected boolean blockOnConnectionLoss = false;
 
     /**
      * The class that manages statement execution and recovery from connection loss.
@@ -729,7 +734,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * {@linkplain NodePropBundle bundles} here
      */
     protected void checkBundleConsistency(NodeId id, NodePropBundle bundle,
-                                          boolean fix, Collection<NodePropBundle> modifications) {
+                                          boolean fix, Collection modifications) {
         //log.info(name + ": checking bundle '" + id + "'");
 
         // skip all system nodes except root node
@@ -739,8 +744,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
 
         // look at the node's children
-        Collection<NodePropBundle.ChildNodeEntry> missingChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
-        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
+        Collection missingChildren = new ArrayList();
+        Iterator iter = bundle.getChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
 
             // skip check for system nodes (root, system root, version storage, node types)
             if (entry.getId().toString().endsWith("babecafebabe")) {
@@ -770,8 +777,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
         // remove child node entry (if fixing is enabled)
         if (fix && !missingChildren.isEmpty()) {
-            for (NodePropBundle.ChildNodeEntry entry : missingChildren) {
-                bundle.getChildNodeEntries().remove(entry);
+            Iterator iterator = missingChildren.iterator();
+            while (iterator.hasNext()) {
+                bundle.getChildNodeEntries().remove(iterator.next());
             }
             modifications.add(bundle);
         }
@@ -798,7 +806,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
         int count = 0;
         int total = 0;
-        Collection<NodePropBundle> modifications = new ArrayList<NodePropBundle>();
+        Collection modifications = new ArrayList();
 
         if (uuids == null) {
             // get all node bundles in the database with a single sql statement,
@@ -829,16 +837,16 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 while (rs.next()) {
                     NodeId id;
                     if (getStorageModel() == SM_BINARY_KEYS) {
-                        id = new NodeId(rs.getBytes(1));
+                        id = new NodeId(new UUID(rs.getBytes(1)));
                     } else {
-                        id = new NodeId(rs.getLong(1), rs.getLong(2));
+                        id = new NodeId(new UUID(rs.getLong(1), rs.getLong(2)));
                     }
 
                     // issuing 2nd statement to circumvent issue JCR-1474
                     ResultSet bRs = null;
                     byte[] data = null;
                     try {
-                        Statement bSmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id));
+                        Statement bSmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
                         bRs = bSmt.getResultSet();
                         if (!bRs.next()) {
                             throw new SQLException("bundle cannot be retrieved?");
@@ -885,52 +893,57 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             //     b) check bundle, store any bundle-to-be-modified in collection
             //     c) if recursive, add child uuids to list of uuids
 
-            List<NodeId> idList = new ArrayList<NodeId>(uuids.length);
+            List uuidList = new ArrayList(uuids.length);
             // convert uuid string array to list of UUID objects
             for (int i = 0; i < uuids.length; i++) {
                 try {
-                    idList.add(new NodeId(uuids[i]));
+                    uuidList.add(new UUID(uuids[i]));
                 } catch (IllegalArgumentException e) {
                     log.error("Invalid uuid for consistency check, skipping: '" + uuids[i] + "': " + e);
                 }
             }
 
             // iterate over UUIDs (including ones that are newly added inside the loop!)
-            for (int i = 0; i < idList.size(); i++) {
-                NodeId id = idList.get(i);
+            for (int i = 0; i < uuidList.size(); i++) {
+                final UUID uuid = (UUID) uuidList.get(i);
                 try {
                     // load the node from the database
+                    NodeId id = new NodeId(uuid);
                     NodePropBundle bundle = loadBundle(id, true);
 
                     if (bundle == null) {
-                        log.error("No bundle found for uuid '" + id + "'");
+                        log.error("No bundle found for uuid '" + uuid + "'");
                         continue;
                     }
 
                     checkBundleConsistency(id, bundle, fix, modifications);
 
                     if (recursive) {
-                        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
-                            idList.add(entry.getId());
+                        Iterator iter = bundle.getChildNodeEntries().iterator();
+                        while (iter.hasNext()) {
+                            NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
+                            uuidList.add(entry.getId().getUUID());
                         }
                     }
 
                     count++;
                     if (count % 1000 == 0) {
-                        log.info(name + ": checked " + count + "/" + idList.size() + " bundles...");
+                        log.info(name + ": checked " + count + "/" + uuidList.size() + " bundles...");
                     }
                 } catch (ItemStateException e) {
                     // problem already logged (loadBundle called with logDetailedErrors=true)
                 }
             }
 
-            total = idList.size();
+            total = uuidList.size();
         }
 
         // repair collected broken bundles
         if (fix && !modifications.isEmpty()) {
             log.info(name + ": Fixing " + modifications.size() + " inconsistent bundle(s)...");
-            for (NodePropBundle bundle : modifications) {
+            Iterator iterator = modifications.iterator();
+            while (iterator.hasNext()) {
+                NodePropBundle bundle = (NodePropBundle) iterator.next();
                 try {
                     log.info(name + ": Fixing bundle '" + bundle.getId() + "'");
                     bundle.markOld(); // use UPDATE instead of INSERT
@@ -997,43 +1010,64 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Constructs a parameter list for a PreparedStatement
-     * for the given node identifier.
+     * Sets the key parameters to the prepared statement, starting at
+     * <code>pos</code> and returns the number of key parameters + pos.
      *
-     * @param id the node id
+     * @param stmt the statement
+     * @param uuid the uuid of the key
+     * @param pos the position of the key parameter
+     * @return the number of key parameters + <code>pos</code>
+     * @throws SQLException if an SQL error occurs.
+     */
+    protected int setKey(PreparedStatement stmt, UUID uuid, int pos)
+            throws SQLException {
+        if (getStorageModel() == SM_BINARY_KEYS) {
+            stmt.setBytes(pos++, uuid.getRawBytes());
+        } else {
+            stmt.setLong(pos++, uuid.getMostSignificantBits());
+            stmt.setLong(pos++, uuid.getLeastSignificantBits());
+        }
+        return pos;
+    }
+
+    /**
+     * Constructs a parameter list for a PreparedStatement
+     * for the given UUID.
+     *
+     * @param uuid the uuid
      * @return a list of Objects
      */
-    protected Object[] getKey(NodeId id) {
+    protected Object[] getKey(UUID uuid) {
         if (getStorageModel() == SM_BINARY_KEYS) {
-            return new Object[] { id.getRawBytes() };
+            return new Object[]{uuid.getRawBytes()};
         } else {
-            return new Object[] {
-                    id.getMostSignificantBits(), id.getLeastSignificantBits() };
+            return new Object[]{new Long(uuid.getMostSignificantBits()),
+                    new Long(uuid.getLeastSignificantBits())};
         }
     }
 
     /**
      * Creates a parameter array for an SQL statement that needs
-     * (i) a node identifier, and (2) another parameter.
+     * (i) a UUID, and (2) another parameter.
      *
-     * @param id the node id
+     * @param uuid the UUID
      * @param p the other parameter
      * @param before whether the other parameter should be before the uuid parameter
      * @return an Object array that represents the parameters
      */
-    protected Object[] createParams(NodeId id, Object p, boolean before) {
+    protected Object[] createParams(UUID uuid, Object p, boolean before) {
 
         // Create the key
-        List<Object> key = new ArrayList<Object>();
+        List key = new ArrayList();
         if (getStorageModel() == SM_BINARY_KEYS) {
-            key.add(id.getRawBytes());
+            key.add(uuid.getRawBytes());
         } else {
-            key.add(id.getMostSignificantBits());
-            key.add(id.getLeastSignificantBits());
+            key.add(new Long(uuid.getMostSignificantBits()));
+            key.add(new Long(uuid.getLeastSignificantBits()));
         }
 
         // Create the parameters
-        List<Object> params = new ArrayList<Object>();
+        List params = new ArrayList();
         if (before) {
             params.add(p);
             params.addAll(key);
@@ -1048,17 +1082,21 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized Iterable<NodeId> getAllNodeIds(NodeId bigger, int maxCount)
+    public synchronized NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
             throws ItemStateException, RepositoryException {
         ResultSet rs = null;
         try {
-            String sql = bundleSelectAllIdsSQL;
-            NodeId lowId = null;
-            Object[] keys = new Object[0];
-            if (bigger != null) {
+            UUID lowUuid;
+            Object[] keys;
+            String sql;
+            if (bigger == null) {
+                sql = bundleSelectAllIdsSQL;
+                lowUuid = null;
+                keys = new Object[0];
+            } else {
                 sql = bundleSelectAllIdsFromSQL;
-                lowId = bigger;
-                keys = getKey(bigger);
+                lowUuid = bigger.getUUID();
+                keys = getKey(lowUuid);
             }
             if (maxCount > 0) {
                 // get some more rows, in case the first row is smaller
@@ -1069,25 +1107,25 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             Statement stmt = connectionManager.executeStmt(sql, keys, false, maxCount);
             rs = stmt.getResultSet();
-            ArrayList<NodeId> result = new ArrayList<NodeId>();
+            ArrayList result = new ArrayList();
             while ((maxCount == 0 || result.size() < maxCount) && rs.next()) {
-                NodeId current;
+                UUID current;
                 if (getStorageModel() == SM_BINARY_KEYS) {
-                    current = new NodeId(rs.getBytes(1));
+                    current = new UUID(rs.getBytes(1));
                 } else {
                     long high = rs.getLong(1);
                     long low = rs.getLong(2);
-                    current = new NodeId(high, low);
+                    current = new UUID(high, low);
                 }
-                if (lowId != null) {
+                if (lowUuid != null) {
                     // skip the keys that are smaller or equal (see above, maxCount += 10)
-                    if (current.compareTo(lowId) <= 0) {
+                    if (current.compareTo(lowUuid) <= 0) {
                         continue;
                     }
                 }
                 result.add(current);
             }
-            return result;
+            return new ListNodeIdIterator(result);
         } catch (SQLException e) {
             String msg = "getAllNodeIds failed.";
             log.error(msg, e);
@@ -1144,7 +1182,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throws ItemStateException {
         ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id));
+            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
             rs = stmt.getResultSet();
             if (!rs.next()) {
                 return null;
@@ -1181,7 +1219,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected synchronized boolean existsBundle(NodeId id) throws ItemStateException {
         ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id));
+            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
             rs = stmt.getResultSet();
             // a bundle exists, if the result has at least one entry
             return rs.next();
@@ -1205,7 +1243,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             dout.close();
 
             String sql = bundle.isNew() ? bundleInsertSQL : bundleUpdateSQL;
-            Object[] params = createParams(bundle.getId(), out.toByteArray(), true);
+            Object[] params = createParams(bundle.getId().getUUID(), out.toByteArray(), true);
             connectionManager.executeStmt(sql, params);
         } catch (Exception e) {
             String msg = "failed to write bundle: " + bundle.getId();
@@ -1219,7 +1257,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      */
     protected synchronized void destroyBundle(NodePropBundle bundle) throws ItemStateException {
         try {
-            connectionManager.executeStmt(bundleDeleteSQL, getKey(bundle.getId()));
+            connectionManager.executeStmt(bundleDeleteSQL, getKey(bundle.getId().getUUID()));
         } catch (Exception e) {
             if (e instanceof NoSuchItemStateException) {
                 throw (NoSuchItemStateException) e;
@@ -1233,7 +1271,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences loadReferencesTo(NodeId targetId)
+    public synchronized NodeReferences load(NodeReferencesId targetId)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -1243,7 +1281,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         InputStream in = null;
         try {
             Statement stmt = connectionManager.executeStmt(
-                    nodeReferenceSelectSQL, getKey(targetId));
+                    nodeReferenceSelectSQL, getKey(targetId.getTargetId().getUUID()));
             rs = stmt.getResultSet();
             if (!rs.next()) {
                 throw new NoSuchItemStateException(targetId.toString());
@@ -1282,7 +1320,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
 
         // check if insert or update
-        boolean update = existsReferencesTo(refs.getTargetId());
+        boolean update = exists(refs.getId());
         String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
         try {
@@ -1291,13 +1329,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // serialize references
             Serializer.serialize(refs, out);
 
-            Object[] params = createParams(refs.getTargetId(), out.toByteArray(), true);
+            Object[] params = createParams(refs.getTargetId().getUUID(), out.toByteArray(), true);
             connectionManager.executeStmt(sql, params);
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write " + refs;
+            String msg = "failed to write node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -1313,12 +1351,12 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
         try {
             connectionManager.executeStmt(nodeReferenceDeleteSQL,
-                    getKey(refs.getTargetId()));
+                    getKey(refs.getTargetId().getUUID()));
         } catch (Exception e) {
             if (e instanceof NoSuchItemStateException) {
                 throw (NoSuchItemStateException) e;
             }
-            String msg = "failed to delete " + refs;
+            String msg = "failed to delete references: " + refs.getTargetId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -1327,15 +1365,15 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean existsReferencesTo(NodeId targetId) throws ItemStateException {
+    public synchronized boolean exists(NodeReferencesId targetId) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(
-                    nodeReferenceSelectSQL, getKey(targetId));
+            Statement stmt = connectionManager.executeStmt(nodeReferenceSelectSQL,
+                    getKey(targetId.getTargetId().getUUID()));
             rs = stmt.getResultSet();
 
             // a reference exists if the result has at least one entry
@@ -1588,6 +1626,40 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // closing the database resources of this blobstore is left to the
             // owning BundleDbPersistenceManager
         }
+    }
+
+    /**
+     * Iterator over an in-memory list of node ids.
+     * This helper class is used by {@link BundleDbPersistenceManager#getAllNodeIds}.
+     */
+    private class ListNodeIdIterator implements NodeIdIterator {
+
+        private final ArrayList list;
+        private int pos;
+
+        ListNodeIdIterator(ArrayList list) {
+            this.list = list;
+        }
+
+        public NodeId nextNodeId() throws NoSuchElementException {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return new NodeId((UUID) list.get(pos++));
+        }
+
+        public boolean hasNext() {
+            return pos < list.size();
+        }
+
+        public Object next() {
+            return nextNodeId();
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
 }

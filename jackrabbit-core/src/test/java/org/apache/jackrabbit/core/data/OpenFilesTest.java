@@ -21,7 +21,6 @@ import java.io.ByteArrayInputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -34,11 +33,10 @@ public class OpenFilesTest extends AbstractJCRTest {
      * Test opening a large number of streams.
      */
     public void testStreams() throws RepositoryException {
-        Session session = getHelper().getReadWriteSession();
+        Session session = helper.getReadWriteSession();
         try {
             Node test = session.getRootNode().addNode("test");
-            ValueFactory vf = session.getValueFactory();
-            test.setProperty("data", vf.createBinary(new ByteArrayInputStream(new byte[10 * 1024])));
+            test.setProperty("data", new ByteArrayInputStream(new byte[10 * 1024]));
             session.save();
             for (int i = 0; i < 10000; i++) {
                 test.getProperty("data").getValue();

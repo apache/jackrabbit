@@ -24,7 +24,6 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionManager;
 
 /**
  * <code>VersionLabelTest</code> covers methods related to version label such as
@@ -62,7 +61,7 @@ public class VersionLabelTest extends AbstractVersionTest {
 
         jcrVersionLabels = superuser.getNamespacePrefix(NS_JCR_URI) + ":versionLabels";
 
-        vHistory = versionableNode.getSession().getWorkspace().getVersionManager().getVersionHistory(versionableNode.getPath());
+        vHistory = versionableNode.getVersionHistory();
         rootVersion = vHistory.getRootVersion();
 
         if (vHistory.hasVersionLabel(versionLabel)) {
@@ -142,24 +141,6 @@ public class VersionLabelTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if the a label added with VersionHistory.addVersionLabel(String,
-     * String, boolean) corresponds to adding a reference property to the
-     * jcr:versionLabels node of this history node, with the label as name of
-     * the property, and the reference targeting the version.
-     *
-     * @see VersionHistory#addVersionLabel(String, String, boolean)
-     */
-    public void testAddVersionCheckVersionLabelsNodeJcr2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
-
-        // get jcr:versionLabels node
-        vHistory = versionableNode.getSession().getWorkspace().getVersionManager().getVersionHistory(versionableNode.getPath());
-        Node versionLabelNode = vHistory.getNode(jcrVersionLabels);
-
-        assertTrue("The version label that has been successfully added must be present in the node '" + jcrVersionLabels + "'.", versionLabelNode.getProperty(versionLabel).getString().equals(rootVersion.getUUID()));
-    }
-
-    /**
      * Test if VersionHistory.hasVersionLabel(String) returns true, if the label
      * has beed successfully added before.
      *
@@ -217,27 +198,6 @@ public class VersionLabelTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if VersionHistory.addVersionLabel(versionName, label, moveLabel)
-     * throws VersionException the label already exists and if moveLabel is false)
-     *
-     * @throws RepositoryException
-     */
-    public void testAddDuplicateVersionLabelJcr2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
-        try {
-            VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-            String path = versionableNode.getPath();
-            versionManager.checkout(path);
-            Version v = versionManager.checkin(path);
-            vHistory.addVersionLabel(v.getName(), versionLabel, false);
-
-            fail("Adding a version label that already exist in the version history must throw a VersionException.");
-        } catch (VersionException e) {
-            //success
-        }
-    }
-
-    /**
      * Test if the 'moveLabel' flag moves an existing version label.
      *
      * @throws RepositoryException
@@ -248,30 +208,6 @@ public class VersionLabelTest extends AbstractVersionTest {
         try {
             versionableNode.checkout();
             Version v = versionableNode.checkin();
-            vHistory.addVersionLabel(v.getName(), versionLabel, true);
-
-            if (!vHistory.hasVersionLabel(v, versionLabel)) {
-                fail("If 'moveLabel' is true, an existing version label must be moved to the indicated version.");
-            }
-
-        } catch (VersionException e) {
-            fail("If 'moveLabel' is true, an existing version label must be moved to the indicated version.");
-        }
-    }
-
-    /**
-     * Test if the 'moveLabel' flag moves an existing version label.
-     *
-     * @throws RepositoryException
-     * @see VersionHistory#addVersionLabel(String, String, boolean)  with boolan flag equals true.
-     */
-    public void testMoveLabelJcr2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
-        try {
-            VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-            String path = versionableNode.getPath();
-            versionManager.checkout(path);
-            Version v = versionManager.checkin(path);
             vHistory.addVersionLabel(v.getName(), versionLabel, true);
 
             if (!vHistory.hasVersionLabel(v, versionLabel)) {
@@ -359,38 +295,6 @@ public class VersionLabelTest extends AbstractVersionTest {
     }
 
     /**
-     * Test VersionHistory.getVersionLabels() returns all labels present on the version history.
-     *
-     * @throws RepositoryException
-     * @see javax.jcr.version.VersionHistory#getVersionLabels()
-     */
-    public void testGetVersionLabelsJcr2() throws RepositoryException {
-
-        HashSet testLabels = new HashSet(Arrays.asList(vHistory.getVersionLabels()));
-
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkout(path);
-        Version v = versionManager.checkin(path);
-
-        vHistory.addVersionLabel(v.getName(), versionLabel, false);
-        testLabels.add(versionLabel);
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel2, false);
-        testLabels.add(versionLabel2);
-
-        String[] labels = vHistory.getVersionLabels();
-        for (int i = 0; i < labels.length; i++) {
-            String l = labels[i];
-            if (!testLabels.contains(l)) {
-                fail("VersionHistory.getVersionLabels() must only return labels, that have been added to the history.");
-            }
-            testLabels.remove(l);
-        }
-
-        assertTrue("VersionHistory.getVersionLabels() must return all labels, that have been added to the history.", testLabels.isEmpty());
-    }
-
-    /**
      * Test VersionHistory.getVersionLabels(Version) only returns all labels present
      * for the specified version.
      *
@@ -422,39 +326,6 @@ public class VersionLabelTest extends AbstractVersionTest {
     }
 
     /**
-     * Test VersionHistory.getVersionLabels(Version) only returns all labels present
-     * for the specified version.
-     *
-     * @throws RepositoryException
-     * @see VersionHistory#getVersionLabels(javax.jcr.version.Version)
-     */
-    public void testGetVersionLabelsForVersionJcr2() throws RepositoryException {
-
-        HashSet testLabels = new HashSet(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
-
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
-        testLabels.add(versionLabel);
-
-        // add a version label to another version (not added to the testLabel set)
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkout(path);
-        Version v = versionManager.checkin(path);
-        vHistory.addVersionLabel(v.getName(), versionLabel2, false);
-
-        String[] labels = vHistory.getVersionLabels(rootVersion);
-        for (int i = 0; i < labels.length; i++) {
-            String l = labels[i];
-            if (!testLabels.contains(l)) {
-                fail("VersionHistory.getVersionLabels(Version) must only return labels, that have been added for this version.");
-            }
-            testLabels.remove(l);
-        }
-
-        assertTrue("VersionHistory.getVersionLabels(Version)  must return all labels, that have been added for this version.", testLabels.isEmpty());
-    }
-
-    /**
      * Test calling Node.restoreByLabel(String, boolean) on a non-versionable node.
      *
      * @throws javax.jcr.RepositoryException
@@ -463,21 +334,6 @@ public class VersionLabelTest extends AbstractVersionTest {
     public void testRestoreByLabelNonVersionableNode() throws RepositoryException {
         try {
             nonVersionableNode.restoreByLabel(versionLabel, true);
-            fail("Node.restoreByLabel(String, boolean) on a non versionable node must throw UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException e) {
-            //success
-        }
-    }
-
-    /**
-     * Test calling Node.restoreByLabel(String, boolean) on a non-versionable node.
-     *
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.Node#restoreByLabel(String, boolean)
-     */
-    public void testRestoreByLabelNonVersionableNodeJcr2() throws RepositoryException {
-        try {
-            nonVersionableNode.getSession().getWorkspace().getVersionManager().restoreByLabel(nonVersionableNode.getPath(), versionLabel, true);
             fail("Node.restoreByLabel(String, boolean) on a non versionable node must throw UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException e) {
             //success

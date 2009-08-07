@@ -31,7 +31,6 @@ import javax.jcr.LoginException;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -41,8 +40,6 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import javax.transaction.xa.XAResource;
 
@@ -50,7 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.AccessControlException;
-import java.util.Map;
 
 /**
  * This class implements the JCA implementation of session.
@@ -332,50 +328,6 @@ public final class JCASessionHandle implements XASession {
      */
     public void removeLockToken(String arg0) {
         getSession().removeLockToken(arg0);
-    }
-
-    public AccessControlManager getAccessControlManager()
-            throws RepositoryException {
-        return getSession().getAccessControlManager();
-    }
-
-    public Node getNode(String arg0) throws RepositoryException {
-        return getSession().getNode(arg0);
-    }
-
-    public Node getNodeByIdentifier(String arg0) throws RepositoryException {
-        return getSession().getNodeByIdentifier(arg0);
-    }
-
-    public Property getProperty(String arg0) throws RepositoryException {
-        return getSession().getProperty(arg0);
-    }
-
-    public RetentionManager getRetentionManager()
-            throws RepositoryException {
-        return getSession().getRetentionManager();
-    }
-
-    public boolean hasCapability(String arg0, Object arg1, Object[] arg2)
-            throws RepositoryException {
-        return getSession().hasCapability(arg0, arg1, arg2);
-    }
-
-    public boolean hasPermission(String arg0, String arg1)
-            throws RepositoryException {
-        return getSession().hasPermission(arg0, arg1);
-    }
-
-    public boolean nodeExists(String path) throws RepositoryException {
-        return getSession().nodeExists(path);
-    }
-
-    public boolean propertyExists(String path) throws RepositoryException {
-        return getSession().propertyExists(path);
-    }
-
-    public void removeItem(String path) throws RepositoryException {
-        getSession().removeItem(path);
     }
 
     //---------------------------------------------------------< XASession >--

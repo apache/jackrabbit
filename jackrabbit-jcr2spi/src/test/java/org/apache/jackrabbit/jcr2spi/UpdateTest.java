@@ -67,7 +67,7 @@ public class UpdateTest extends AbstractJCRTest {
         testRootNode.save();
 
         String srcWorkspace = null;
-        String wspName = getHelper().getProperty("org.apache.jackrabbit.jcr2spi.workspace2.name");
+        String wspName = helper.getProperty("org.apache.jackrabbit.jcr2spi.workspace2.name");
         if (wspName == null) {
             throw new NotExecutableException("Cannot run update. Missing config param.");
         }
@@ -153,7 +153,7 @@ public class UpdateTest extends AbstractJCRTest {
 
         String srcWorkspace = getAnotherWorkspace();
         // get the root node in the second workspace
-        Session session2 = getHelper().getSuperuserSession(srcWorkspace);
+        Session session2 = helper.getSuperuserSession(srcWorkspace);
         try {
             // make sure the source-session has the corresponding node.
             Node testRootW2 = (Node) session2.getItem(testRootNode.getCorrespondingNodePath(srcWorkspace));
@@ -178,7 +178,7 @@ public class UpdateTest extends AbstractJCRTest {
     public void testUpdateAddsMissingSubtree() throws RepositoryException, NotExecutableException {
         String srcWorkspace = getAnotherWorkspace();
         // get the root node in the second workspace
-        Session session2 = getHelper().getSuperuserSession(srcWorkspace);
+        Session session2 = helper.getSuperuserSession(srcWorkspace);
         try {
             // make sure the source-session has the corresponding node.
             Node testRootW2 = (Node) session2.getItem(testRootNode.getCorrespondingNodePath(srcWorkspace));
@@ -209,7 +209,7 @@ public class UpdateTest extends AbstractJCRTest {
     }
 
     private String getAnotherWorkspace() throws NotExecutableException, RepositoryException {
-        String srcWorkspace = getHelper().getProperty("org.apache.jackrabbit.jcr2spi.workspace2.name");;
+        String srcWorkspace = helper.getProperty("org.apache.jackrabbit.jcr2spi.workspace2.name");;
         if (srcWorkspace == null || srcWorkspace.equals(currentWorkspace)) {
             throw new NotExecutableException("no alternative workspace configured");
         }

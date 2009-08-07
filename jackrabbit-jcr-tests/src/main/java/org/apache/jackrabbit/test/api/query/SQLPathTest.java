@@ -21,9 +21,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 import javax.jcr.util.TraversingItemVisitor;
-
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +41,7 @@ public class SQLPathTest extends AbstractQueryTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         // check precondition for this test
         if (testRootNode.hasNodes()) {
             for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
@@ -69,9 +66,8 @@ public class SQLPathTest extends AbstractQueryTest {
 
     /**
      * Tests if &lt;somepath>/% returns the descendants of &lt;somepath>.
-     * @throws NotExecutableException 
      */
-    public void testDescendantTestRoot() throws RepositoryException, NotExecutableException {
+    public void testDescendantTestRoot() throws RepositoryException {
         String sql = getStatement(testRoot + "/%");
         executeSqlQuery(session, sql, getDescendants(testRootNode));
     }
@@ -79,9 +75,8 @@ public class SQLPathTest extends AbstractQueryTest {
     /**
      * Tests if &lt;somepath>/% returns no nodes if node at &lt;somepath>
      * is a leaf.
-     * @throws NotExecutableException 
      */
-    public void testDescendantLeaf() throws RepositoryException, NotExecutableException {
+    public void testDescendantLeaf() throws RepositoryException {
         // find leaf
         Node leaf = testRootNode;
         while (leaf.hasNodes()) {
@@ -95,9 +90,8 @@ public class SQLPathTest extends AbstractQueryTest {
      * Tests if &lt;somepath>/%/&lt;nodename> OR &lt;somepath>/&lt;nodename>
      * returns nodes with name &lt;nodename> which are descendants of
      * node at <code>testroot</code>.
-     * @throws NotExecutableException 
      */
-    public void testDescendantSelfTestRoot() throws RepositoryException, NotExecutableException {
+    public void testDescendantSelfTestRoot() throws RepositoryException {
         // get first node which is two levels deeper than node at testroot
         Node n = null;
         for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
@@ -124,9 +118,8 @@ public class SQLPathTest extends AbstractQueryTest {
 
     /**
      * Tests if /% AND NOT /%/% returns the child nodes of the root node.
-     * @throws NotExecutableException 
      */
-    public void testChildAxisRoot() throws RepositoryException, NotExecutableException {
+    public void testChildAxisRoot() throws RepositoryException {
         String sql = getStatement("/%");
         sql += " AND NOT " + jcrPath + " LIKE '/%/%'";
         Node[] nodes = toArray(session.getRootNode().getNodes());
@@ -136,9 +129,8 @@ public class SQLPathTest extends AbstractQueryTest {
     /**
      * Tests if &lt;somepath>/% AND NOT &lt;somepath>/%/% returns the child
      * nodes of node at &lt;somepath>.
-     * @throws NotExecutableException 
      */
-    public void testChildAxisTestRoot() throws RepositoryException, NotExecutableException {
+    public void testChildAxisTestRoot() throws RepositoryException {
         String sql = getStatement(testRoot + "/%");
         sql += " AND NOT " + jcrPath + " LIKE '" + testRoot + "/%/%'";
         Node[] nodes = toArray(testRootNode.getNodes());
@@ -148,9 +140,8 @@ public class SQLPathTest extends AbstractQueryTest {
     /**
      * Tests if &lt;somepath>/% AND NOT &lt;somepath>/%/% returns no nodes
      * if the node at &lt;somepath> is a leaf.
-     * @throws NotExecutableException 
      */
-    public void testChildAxisLeaf() throws RepositoryException, NotExecutableException {
+    public void testChildAxisLeaf() throws RepositoryException {
         // find leaf
         Node leaf = testRootNode;
         while (leaf.hasNodes()) {

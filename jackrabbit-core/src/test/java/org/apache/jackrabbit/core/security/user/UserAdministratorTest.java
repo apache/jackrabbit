@@ -24,6 +24,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -58,11 +59,11 @@ public class UserAdministratorTest extends AbstractUserTest {
         UserImpl u = (UserImpl) userMgr.createUser(p.getName(), buildPassword(p));
         uID = u.getID();
 
-        // create a second user
+        // create a second user 'below' the first user.
         p = getTestPrincipal();
         String pw = buildPassword(p);
         Credentials otherCreds = buildCredentials(p.getName(), pw);
-        User other = userMgr.createUser(p.getName(), pw);
+        User other = userMgr.createUser(p.getName(), pw, p, u.getNode().getPath());
         otherUID = other.getID();
         otherPath = ((UserImpl) other).getNode().getPath();
 
@@ -75,7 +76,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         uAdministrators.addMember(other);
 
         // create a session for the other user.
-        otherSession = getHelper().getRepository().login(otherCreds);
+        otherSession = helper.getRepository().login(otherCreds);
     }
 
     protected void tearDown() throws Exception {
@@ -122,10 +123,11 @@ public class UserAdministratorTest extends AbstractUserTest {
     public void testCreateUser() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
         UserImpl u = null;
-        // create a new user -> must succeed.
+        // create a new user -> must succeed and user must be create below 'other'
         try {
             Principal p = getTestPrincipal();
             u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p));
+            assertTrue(Text.isDescendant(otherPath, u.getNode().getPath()));
         } finally {
             if (u != null) {
                 u.remove();
@@ -137,12 +139,12 @@ public class UserAdministratorTest extends AbstractUserTest {
         UserManager umgr = getUserManager(otherSession);
         UserImpl u = null;
         // create a new user with intermediate-path
-        // -> must succeed and user must be created
-        // -> intermediate path must be ignored.
+        // -> must succeed and user must be create below 'other'
         try {
             Principal p = getTestPrincipal();
             u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p), p, "/some/intermediate/path");
-            assertEquals(-1, u.getNode().getPath().indexOf("/some/intermediate/path"));
+            assertTrue(Text.isDescendant(otherPath, u.getNode().getPath()));
+            assertTrue(Text.isDescendant(otherPath + "/some/intermediate/path", u.getNode().getPath()));
         } finally {
             if (u != null) {
                 u.remove();
@@ -162,25 +164,24 @@ public class UserAdministratorTest extends AbstractUserTest {
         }
     }
 
-    /**
-     * A member of 'usermanagers' must be able to remove another user.
-     * 
-     * @throws RepositoryException
-     * @throws NotExecutableException
-     */
-    public void testRemoveAnotherUser() throws RepositoryException, NotExecutableException {
+    public void testRemoveParentUser() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
 
-        Authorizable user = umgr.getAuthorizable(uID);
-        user.remove();
+        Authorizable parentuser = umgr.getAuthorizable(uID);
+        try {
+            parentuser.remove();
+            fail("A UserAdministrator should not be allowed to remove a 'parent' user.");
+        } catch (AccessDeniedException e) {
+            // success
+        }
     }
 
-    public void testModifyImpersonationOfUser() throws RepositoryException, NotExecutableException {
+    public void testModifyImpersonationOfChildUser() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
         Principal otherP = umgr.getAuthorizable(otherUID).getPrincipal();
 
-        // modify impersonation of new user
         User u = null;
+        // create a new user -> must succeed and user must be create below 'other'
         try {
             Principal p = getTestPrincipal();
             u = umgr.createUser(p.getName(), buildPassword(p));
@@ -195,15 +196,25 @@ public class UserAdministratorTest extends AbstractUserTest {
                 u.remove();
             }
         }
+    }
 
-        // modify impersonation of another user
-        u = (User) umgr.getAuthorizable(uID);
+    public void testModifyImpersonationOfParentUser() throws RepositoryException, NotExecutableException {
+        UserManager umgr = getUserManager(otherSession);
+        User u = (User) umgr.getAuthorizable(uID);
         Impersonation uImpl = u.getImpersonation();
+
+        Principal otherP = umgr.getAuthorizable(otherUID).getPrincipal();
+
         if (!uImpl.allows(buildSubject(otherP))) {
-            // ... trying to modify 'impersonators of another user must succeed
-            assertTrue(uImpl.grantImpersonation(otherP));
-            assertTrue(uImpl.allows(buildSubject(otherP)));
-            uImpl.revokeImpersonation(otherP);
+            // ... trying to modify 'impersonators of 'uid' must not succeed.
+            try {
+                assertFalse(uImpl.grantImpersonation(otherP));
+            } catch (AccessDeniedException e) {
+                // success
+            } finally {
+                assertFalse(uImpl.allows(buildSubject(otherP)));
+                uImpl.revokeImpersonation(otherP);
+            }
         } else {
             throw new NotExecutableException("Cannot execute test. OtherP can already impersonate UID-user.");
         }
@@ -221,7 +232,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         }
     }
 
-    public void testModifyGroup() throws RepositoryException, NotExecutableException {
+    public void testModifyGroupForParentUser() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
 
         User parentUser = (User) umgr.getAuthorizable(uID);
@@ -230,19 +241,22 @@ public class UserAdministratorTest extends AbstractUserTest {
         } else {
             Group gr = getGroupAdminGroup(umgr);
             try {
-                assertFalse("A UserAdmin must not be allowed to modify group memberships", gr.addMember(parentUser));
+                assertFalse(gr.addMember(parentUser));
             } catch (RepositoryException e) {
                 // success
             }
         }
+    }
 
+    public void testModifyGroupForChildUser() throws RepositoryException, NotExecutableException {
+        UserManager umgr = getUserManager(otherSession);
         Principal cp = getTestPrincipal();
         User childU = null;
         try {
             childU = umgr.createUser(cp.getName(), buildPassword(cp));
             Group gr = getGroupAdminGroup(umgr);
             try {
-                assertFalse("A UserAdmin must not be allowed to modify group memberships", gr.addMember(childU));
+                assertFalse(gr.addMember(childU));
             } catch (RepositoryException e) {
                 // success
             }
@@ -275,22 +289,6 @@ public class UserAdministratorTest extends AbstractUserTest {
         }
     }
 
-    public void testRemoveGroup() throws NotExecutableException, RepositoryException {
-        UserManager umgr = getUserManager(otherSession);
-        Group g = null;
-        try {
-            g = userMgr.createGroup(getTestPrincipal());
-            umgr.getAuthorizable(g.getID()).remove();
-            fail("UserAdmin should not be allowed to remove a Group.");
-        } catch (RepositoryException e) {
-            // success.
-        } finally {
-            if (g != null) {
-                g.remove();
-            }
-        }
-    }
-
     public void testAddToGroup() throws NotExecutableException, RepositoryException {
         UserManager umgr = getUserManager(otherSession);
         Group gr = getGroupAdminGroup(umgr);
@@ -316,24 +314,6 @@ public class UserAdministratorTest extends AbstractUserTest {
             assertFalse(gr.addMember(auth));
         } catch (AccessDeniedException e) {
             // success
-        }
-    }
-
-    public void testPersisted() throws NotExecutableException, RepositoryException {
-        UserManager umgr = getUserManager(otherSession);
-        UserImpl u = null;
-        // create a new user -> must succeed.
-        try {
-            Principal p = getTestPrincipal();
-            u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p));
-
-            Authorizable az = userMgr.getAuthorizable(u.getID());
-            assertNotNull(az);
-            assertEquals(u.getID(), az.getID());
-        } finally {
-            if (u != null) {
-                u.remove();
-            }
         }
     }
 }

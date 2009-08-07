@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.journal;
 
 /**
- *
+ * 
  */
 public interface InstanceRevision {
 
@@ -27,7 +27,7 @@ public interface InstanceRevision {
      * @return instance revision
      * @throws JournalException if some error occurs
      */
-    long get() throws JournalException;
+    public long get() throws JournalException;
 
     /**
      * Set current instance revision.
@@ -35,10 +35,10 @@ public interface InstanceRevision {
      * @param value new instance revision
      * @throws JournalException if some error occurs
      */
-    void set(long value) throws JournalException;
-
+    public void set(long value) throws JournalException;
+    
     /**
      * Closes the instance revision.
      */
-    void close();
+    public void close();
 }

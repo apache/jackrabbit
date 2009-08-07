@@ -16,39 +16,39 @@
  */
 package org.apache.jackrabbit.core.value;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Calendar;
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.BooleanValue;
+import org.apache.jackrabbit.value.DateValue;
+import org.apache.jackrabbit.value.DoubleValue;
+import org.apache.jackrabbit.value.LongValue;
+import org.apache.jackrabbit.value.NameValue;
+import org.apache.jackrabbit.value.PathValue;
+import org.apache.jackrabbit.value.ReferenceValue;
+import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
-import javax.jcr.Binary;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
-import org.apache.jackrabbit.core.data.DataIdentifier;
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
-import org.apache.jackrabbit.spi.commons.value.QValueValue;
-import org.apache.jackrabbit.util.ISO8601;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.util.Calendar;
 
 /**
  * <code>InternalValue</code> represents the internal format of a property value.
@@ -64,14 +64,12 @@ import org.apache.jackrabbit.util.ISO8601;
  * <tr>BOOLEAN<td></td><td>Boolean</td></tr>
  * <tr>NAME<td></td><td>Name</td></tr>
  * <tr>PATH<td></td><td>Path</td></tr>
- * <tr>URI<td></td><td>URI</td></tr>
- * <tr>DECIMAL<td></td><td>BigDecimal</td></tr>
  * <tr>BINARY<td></td><td>BLOBFileValue</td></tr>
- * <tr>REFERENCE<td></td><td>{@link NodeId}</td></tr>
+ * <tr>REFERENCE<td></td><td>UUID</td></tr>
  * </table>
  * </pre>
  */
-public class InternalValue extends AbstractQValue {
+public class InternalValue {
 
     public static final InternalValue[] EMPTY_ARRAY = new InternalValue[0];
 
@@ -80,9 +78,18 @@ public class InternalValue extends AbstractQValue {
     private static final InternalValue BOOLEAN_FALSE = new InternalValue(false);
 
     /**
+     * If set to 'true', the data store is used when configured in repository.xml
+     */
+    public static final boolean USE_DATA_STORE =
+        Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "true")).booleanValue();
+
+    /**
      * Temporary binary values smaller or equal this size are kept in memory
      */
     private static final int MIN_BLOB_FILE_SIZE = 1024;
+
+    private Object val;
+    private final int type;
 
     //------------------------------------------------------< factory methods >
     /**
@@ -92,8 +99,6 @@ public class InternalValue extends AbstractQValue {
      * @param value the JCR value
      * @param resolver
      * @return the created internal value
-     * @throws RepositoryException
-     * @throws ValueFormatException
      */
     public static InternalValue create(Value value, NamePathResolver resolver)
             throws ValueFormatException, RepositoryException {
@@ -108,32 +113,44 @@ public class InternalValue extends AbstractQValue {
      * @param resolver
      * @param store the data store
      * @return the created internal value
-     * @throws RepositoryException
-     * @throws ValueFormatException
      */
     public static InternalValue create(Value value, NamePathResolver resolver, DataStore store)
             throws ValueFormatException, RepositoryException {
+        if (value == null) {
+            throw new IllegalArgumentException("null value");
+        }
         switch (value.getType()) {
             case PropertyType.BINARY:
                 InternalValue result;
-                BLOBFileValue blob = null;
-                if (value instanceof BinaryValueImpl) {
-                    BinaryValueImpl bin = (BinaryValueImpl) value;
-                    DataIdentifier identifier = bin.getDataIdentifier();
-                    if (identifier != null) {
-                        // access the record to ensure it is not garbage collected
-                        if (store.getRecordIfStored(identifier) != null) {
-                            // it exists - so we don't need to stream it again
-                            // but we need to create a new object because the original
-                            // one might be in a different data store (repository)
-                            blob = BLOBInDataStore.getInstance(store, identifier);
+                if (USE_DATA_STORE) {
+                    BLOBFileValue blob = null;
+                    if (value instanceof BinaryValueImpl) {
+                        BinaryValueImpl bin = (BinaryValueImpl) value;
+                        DataIdentifier identifier = bin.getDataIdentifier();
+                        if (identifier != null) {
+                            // access the record to ensure it is not garbage collected
+                            if (store.getRecordIfStored(identifier) != null) {
+                                // it exists - so we don't need to stream it again
+                                // but we need to create a new object because the original
+                                // one might be in a different data store (repository)
+                                blob = BLOBInDataStore.getInstance(store, identifier);
+                            }
                         }
                     }
+                    if (blob == null) {
+                        blob = getBLOBFileValue(store, value.getStream(), true);
+                    }
+                    result = new InternalValue(blob);
+                } else if (value instanceof BLOBFileValue) {
+                    result = new InternalValue((BLOBFileValue) value);
+                } else {
+                    InputStream stream = value.getStream();
+                    try {
+                        result = createTemporary(stream);
+                    } finally {
+                        IOUtils.closeQuietly(stream);
+                    }
                 }
-                if (blob == null) {
-                    blob = getBLOBFileValue(store, value.getBinary().getStream(), true);
-                }
-                result = new InternalValue(blob);
                 return result;
             case PropertyType.BOOLEAN:
                 return create(value.getBoolean());
@@ -141,47 +158,19 @@ public class InternalValue extends AbstractQValue {
                 return create(value.getDate());
             case PropertyType.DOUBLE:
                 return create(value.getDouble());
-            case PropertyType.DECIMAL:
-                return create(value.getDecimal());
             case PropertyType.LONG:
                 return create(value.getLong());
             case PropertyType.REFERENCE:
-                return create(new NodeId(value.getString()));
-            case PropertyType.WEAKREFERENCE:
-                return create(new NodeId(value.getString()), true);
-            case PropertyType.URI:
-                try {
-                    return create(new URI(value.getString()));
-                } catch (URISyntaxException e) {
-                    throw new ValueFormatException(e.getMessage());
-                }
+                return create(new UUID(value.getString()));
             case PropertyType.NAME:
                 try {
-                    if (value instanceof QValueValue) {
-                        QValue qv = ((QValueValue) value).getQValue();
-                        if (qv instanceof InternalValue) {
-                            return (InternalValue) qv;
-                        } else {
-                            return create(qv.getName());
-                        }
-                    } else {
-                        return create(resolver.getQName(value.getString()));
-                    }
+                    return create(resolver.getQName(value.getString()));
                 } catch (NameException e) {
                     throw new ValueFormatException(e.getMessage());
                 }
             case PropertyType.PATH:
                 try {
-                    if (value instanceof QValueValue) {
-                        QValue qv = ((QValueValue) value).getQValue();
-                        if (qv instanceof InternalValue) {
-                            return (InternalValue) qv;
-                        } else {
-                            return create(qv.getPath());
-                        }
-                    } else {
-                        return create(resolver.getQPath(value.getString(), false));
-                    }
+                    return create(resolver.getQPath(value.getString()));
                 } catch (MalformedPathException mpe) {
                     throw new ValueFormatException(mpe.getMessage());
                 }
@@ -190,54 +179,6 @@ public class InternalValue extends AbstractQValue {
             default:
                 throw new IllegalArgumentException("illegal value");
         }
-    }
-
-    public static InternalValue create(QValue value)
-            throws RepositoryException {
-        switch (value.getType()) {
-            case PropertyType.BINARY:
-                try {
-                    return create(value.getString().getBytes(AbstractQValueFactory.DEFAULT_ENCODING));
-                } catch (UnsupportedEncodingException e) {
-                    throw new InternalError(AbstractQValueFactory.DEFAULT_ENCODING + " not supported");
-                }
-            case PropertyType.BOOLEAN:
-                return new InternalValue(value.getBoolean());
-            case PropertyType.DATE:
-                return new InternalValue(value.getCalendar());
-            case PropertyType.DOUBLE:
-                return new InternalValue(value.getDouble());
-            case PropertyType.DECIMAL:
-                return new InternalValue(value.getDecimal());
-            case PropertyType.LONG:
-                return new InternalValue(value.getLong());
-            case PropertyType.REFERENCE:
-                return create(new NodeId(value.getString()));
-            case PropertyType.WEAKREFERENCE:
-                return create(new NodeId(value.getString()), true);
-            case PropertyType.URI:
-                return new InternalValue(value.getURI());
-            case PropertyType.NAME:
-                return new InternalValue(value.getName());
-            case PropertyType.PATH:
-                return new InternalValue(value.getPath());
-            case PropertyType.STRING:
-                return new InternalValue(value.getString());
-            default:
-                throw new IllegalArgumentException("illegal value");
-        }
-    }
-
-    static InternalValue getInternalValue(DataIdentifier identifier, DataStore store) throws DataStoreException {
-        // access the record to ensure it is not garbage collected
-        if (store.getRecordIfStored(identifier) != null) {
-            // it exists - so we don't need to stream it again
-            // but we need to create a new object because the original
-            // one might be in a different data store (repository)
-            BLOBFileValue blob = BLOBInDataStore.getInstance(store, identifier);
-            return new InternalValue(blob);
-        }
-        return null;
     }
 
     /**
@@ -276,22 +217,6 @@ public class InternalValue extends AbstractQValue {
      * @param value
      * @return the created value
      */
-    public static InternalValue create(BigDecimal value) {
-        return new InternalValue(value);
-    }
-
-    /**
-     * @param value
-     * @return the created value
-     */
-    static InternalValue create(URI value) {
-        return new InternalValue(value);
-    }
-
-    /**
-     * @param value
-     * @return the created value
-     */
     public static InternalValue create(boolean value) {
         return value ? BOOLEAN_TRUE : BOOLEAN_FALSE;
     }
@@ -301,7 +226,10 @@ public class InternalValue extends AbstractQValue {
      * @return the created value
      */
     public static InternalValue create(byte[] value) {
-        return new InternalValue(BLOBInMemory.getInstance(value));
+        if (USE_DATA_STORE) {
+            return new InternalValue(BLOBInMemory.getInstance(value));
+        }
+        return new InternalValue(new BLOBValue(value));
     }
 
     /**
@@ -309,32 +237,52 @@ public class InternalValue extends AbstractQValue {
      *
      * @param value the stream
      * @return the internal value
-     * @throws RepositoryException
      */
     public static InternalValue createTemporary(InputStream value) throws RepositoryException {
-        return new InternalValue(getBLOBFileValue(null, value, true));
+        if (USE_DATA_STORE) {
+            return new InternalValue(getBLOBFileValue(null, value, true));
+        }
+        try {
+            return new InternalValue(new BLOBValue(value, true));
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating temporary file", e);
+        }
     }
 
     /**
-     * Create an internal value that is stored in the data store (if enabled).
+     * Create an internal value that is backed by a temporary file
+     * (if data store usage is disabled or the store is null)
+     * or in the data store if it is not null and enabled.
      *
-     * @param value the input stream
-     * @param store
+     * @param value the stream
+     * @param store the data store or null to use a temporary file
      * @return the internal value
-     * @throws RepositoryException
      */
-    public static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
-        return new InternalValue(getBLOBFileValue(store, value, false));
+    public static InternalValue createTemporary(InputStream value, DataStore store) throws RepositoryException {
+        if (USE_DATA_STORE) {
+            return new InternalValue(getBLOBFileValue(store, value, true));
+        }
+        try {
+            return new InternalValue(new BLOBValue(value, true));
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating temporary file", e);
+        }
     }
 
     /**
      * @param value
      * @return
      * @throws IOException
-     * @throws RepositoryException
      */
     public static InternalValue create(InputStream value) throws RepositoryException {
-        return new InternalValue(getBLOBFileValue(null, value, false));
+        if (USE_DATA_STORE) {
+            return new InternalValue(getBLOBFileValue(null, value, false));
+        }
+        try {
+            return new InternalValue(new BLOBValue(value, false));
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating file", e);
+        }
     }
 
     /**
@@ -343,7 +291,20 @@ public class InternalValue extends AbstractQValue {
      * @throws IOException
      */
     public static InternalValue create(FileSystemResource value) throws IOException {
-        return new InternalValue(BLOBInResource.getInstance(value));
+        if (USE_DATA_STORE) {
+            return new InternalValue(BLOBInResource.getInstance(value));
+        }
+        return new InternalValue(new BLOBValue(value));
+    }
+
+    /**
+     * @param value
+     * @return
+     * @throws IOException
+     */
+    public static InternalValue create(File value) throws IOException {
+        assert !USE_DATA_STORE;
+        return new InternalValue(new BLOBValue(value));
     }
 
     /**
@@ -354,6 +315,7 @@ public class InternalValue extends AbstractQValue {
      * @return the value
      */
     public static InternalValue create(DataStore store, String id) {
+        assert USE_DATA_STORE && store != null;
         return new InternalValue(getBLOBFileValue(store, id));
     }
 
@@ -378,6 +340,18 @@ public class InternalValue extends AbstractQValue {
     }
 
     /**
+     * @param values
+     * @return the created value
+     */
+    public static InternalValue[] create(String[] values) {
+        InternalValue[] ret = new InternalValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = new InternalValue(values[i]);
+        }
+        return ret;
+    }
+
+    /**
      * @param value
      * @return the created value
      */
@@ -389,34 +363,102 @@ public class InternalValue extends AbstractQValue {
      * @param value
      * @return the created value
      */
-    public static InternalValue create(NodeId value) {
-        return create(value, false);
-    }
-
-    /**
-     * @param value
-     * @param weak
-     * @return the created value
-     */
-    public static InternalValue create(NodeId value, boolean weak) {
-        return new InternalValue(value, weak);
+    public static InternalValue create(UUID value) {
+        return new InternalValue(value);
     }
 
     //----------------------------------------------------< conversions, etc. >
+    /**
+     * @param resolver
+     * @return
+     * @throws RepositoryException
+     */
+    public Value toJCRValue(NamePathResolver resolver)
+            throws RepositoryException {
+        switch (type) {
+            case PropertyType.BINARY:
+                return new BinaryValueImpl((BLOBFileValue) val);
+            case PropertyType.BOOLEAN:
+                return new BooleanValue(((Boolean) val));
+            case PropertyType.DATE:
+                return new DateValue((Calendar) val);
+            case PropertyType.DOUBLE:
+                return new DoubleValue((Double) val);
+            case PropertyType.LONG:
+                return new LongValue((Long) val);
+            case PropertyType.REFERENCE:
+                return ReferenceValue.valueOf(val.toString());
+            case PropertyType.PATH:
+                return PathValue.valueOf(resolver.getJCRPath((Path) val));
+            case PropertyType.NAME:
+                return NameValue.valueOf(resolver.getJCRName((Name) val), false);
+            case PropertyType.STRING:
+                return new StringValue((String) val);
+            default:
+                throw new RepositoryException("illegal internal value type");
+        }
+    }
 
-    BLOBFileValue getBLOBFileValue() {
+    /**
+     * @deprecated
+     * @return the internal object
+     */
+    public Object internalValue() {
+        return val;
+    }
+
+    public BLOBFileValue getBLOBFileValue() {
         assert val != null && type == PropertyType.BINARY;
         return (BLOBFileValue) val;
     }
 
-    public NodeId getNodeId() {
-        assert val != null && (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE);
-        return (NodeId) val;
+    public UUID getUUID() {
+        assert val != null && type == PropertyType.REFERENCE;
+        return (UUID) val;
+    }
+
+    public boolean getBoolean() {
+        assert val != null && type == PropertyType.BOOLEAN;
+        return ((Boolean) val).booleanValue();
+    }
+
+    public Name getQName() {
+        assert val != null && type == PropertyType.NAME;
+        return (Name) val;
+    }
+
+    public Path getPath() {
+        assert val != null && type == PropertyType.PATH;
+        return (Path) val;
+    }
+
+    public long getLong() {
+        assert val != null && type == PropertyType.LONG;
+        return ((Long) val).longValue();
+    }
+
+    public double getDouble() {
+        assert val != null && type == PropertyType.DOUBLE;
+        return ((Double) val).doubleValue();
     }
 
     public Calendar getDate() {
         assert val != null && type == PropertyType.DATE;
         return (Calendar) val;
+    }
+
+    public String getString() {
+        assert val != null && type == PropertyType.STRING;
+        return (String) val;
+    }
+
+    /**
+     * Get the type of this value.
+     *
+     * @return the type
+     */
+    public int getType() {
+        return type;
     }
 
     /**
@@ -433,8 +475,10 @@ public class InternalValue extends AbstractQValue {
             return this;
         }
         BLOBFileValue v = (BLOBFileValue) val;
-        if (v.isImmutable()) {
-            return this;
+        if (USE_DATA_STORE) {
+            if (v.isImmutable()) {
+                return this;
+            }
         }
         // return a copy since the wrapped BLOBFileValue instance is mutable
         InputStream stream = v.getStream();
@@ -466,25 +510,19 @@ public class InternalValue extends AbstractQValue {
     public static InternalValue valueOf(String s, int type) {
         switch (type) {
             case PropertyType.BOOLEAN:
-                return create(Boolean.valueOf(s));
+                return create(Boolean.valueOf(s).booleanValue());
             case PropertyType.DATE:
                 return create(ISO8601.parse(s));
             case PropertyType.DOUBLE:
                 return create(Double.parseDouble(s));
             case PropertyType.LONG:
                 return create(Long.parseLong(s));
-            case PropertyType.DECIMAL:
-                return create(new BigDecimal(s));
             case PropertyType.REFERENCE:
-                return create(new NodeId(s));
-            case PropertyType.WEAKREFERENCE:
-                return create(new NodeId(s), true);
+                return create(new UUID(s));
             case PropertyType.PATH:
                 return create(PathFactoryImpl.getInstance().create(s));
             case PropertyType.NAME:
                 return create(NameFactoryImpl.getInstance().create(s));
-            case PropertyType.URI:
-                return create(URI.create(s));
             case PropertyType.STRING:
                 return create(s);
 
@@ -510,50 +548,71 @@ public class InternalValue extends AbstractQValue {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof InternalValue) {
+            InternalValue other = (InternalValue) obj;
+            return val.equals(other.val);
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return val.hashCode();
+    }
 
     //-------------------------------------------------------< implementation >
     private InternalValue(String value) {
-        super(value, PropertyType.STRING);
+        val = value;
+        type = PropertyType.STRING;
     }
 
     private InternalValue(Name value) {
-        super(value);
+        val = value;
+        type = PropertyType.NAME;
     }
 
     private InternalValue(long value) {
-        super(value);
+        val = new Long(value);
+        type = PropertyType.LONG;
     }
 
     private InternalValue(double value) {
-        super(value);
+        val = new Double(value);
+        type = PropertyType.DOUBLE;
     }
 
     private InternalValue(Calendar value) {
-        super(value, PropertyType.DATE);
+        val = value;
+        type = PropertyType.DATE;
     }
 
     private InternalValue(boolean value) {
-        super(value);
-    }
-
-    private InternalValue(URI value) {
-        super(value);
-    }
-
-    private InternalValue(BigDecimal value) {
-        super(value);
+        val = Boolean.valueOf(value);
+        type = PropertyType.BOOLEAN;
     }
 
     private InternalValue(BLOBFileValue value) {
-        super(value, PropertyType.BINARY);
+        val = value;
+        type = PropertyType.BINARY;
     }
 
     private InternalValue(Path value) {
-        super(value);
+        val = value;
+        type = PropertyType.PATH;
     }
 
-    private InternalValue(NodeId value, boolean weak) {
-        super(value, weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE);
+    private InternalValue(UUID value) {
+        val = value;
+        type = PropertyType.REFERENCE;
     }
 
     /**
@@ -564,7 +623,6 @@ public class InternalValue extends AbstractQValue {
      * @param in the input stream
      * @param temporary if the file should be deleted when discard is called (ignored if a data store is used)
      * @return the value
-     * @throws RepositoryException
      */
     private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in, boolean temporary) throws RepositoryException {
         int maxMemorySize;
@@ -621,97 +679,22 @@ public class InternalValue extends AbstractQValue {
      * @param dataStore the data store
      * @throws RepositoryException
      */
-    public void store(DataStore dataStore) throws RepositoryException {
+    public void store(DataStore dataStore) throws RepositoryException, IOException {
+        assert USE_DATA_STORE;
         assert dataStore != null;
         assert type == PropertyType.BINARY;
         BLOBFileValue v = (BLOBFileValue) val;
         if (v instanceof BLOBInDataStore) {
             // already in the data store, OK
             return;
-        }
-        // store it in the data store
-        val = BLOBInDataStore.getInstance(dataStore, getStream());
-    }
-
-    //-------------------------------------------------------------< QValue >---
-    /**
-     * @see org.apache.jackrabbit.spi.QValue#getLength()
-     */
-    public long getLength() throws RepositoryException {
-        if (PropertyType.BINARY == type) {
-            return ((BLOBFileValue) val).getSize();
-        } else {
-            return super.getLength();
-        }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.spi.QValue#getString()
-     */
-    public String getString() throws RepositoryException {
-        if (type == PropertyType.BINARY) {
-            return ((BLOBFileValue) val).getString();
-        } else if (type == PropertyType.DATE) {
-            return ISO8601.format(((Calendar) val));
-        } else {
-            return toString();
-        }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.spi.QValue#getStream()
-     */
-    public InputStream getStream() throws RepositoryException {
-        if (type == PropertyType.BINARY) {
-            return ((BLOBFileValue) val).getStream();
-        } else {
-            try {
-                // convert via string
-                return new ByteArrayInputStream(getString().getBytes(InternalValueFactory.DEFAULT_ENCODING));
-            } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(InternalValueFactory.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
+        } else if (v instanceof BLOBInMemory) {
+            if (v.getLength() < dataStore.getMinRecordLength()) {
+                // in memory and does not make sense to store, OK
+                return;
             }
         }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.spi.QValue#getBinary()
-     */
-    public Binary getBinary() throws RepositoryException {
-        if (type == PropertyType.BINARY) {
-            return (BLOBFileValue) val;
-        } else {
-            try {
-                // convert via string
-                byte[] data = getString().getBytes(InternalValueFactory.DEFAULT_ENCODING);
-                return BLOBInMemory.getInstance(data);
-            } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(InternalValueFactory.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
-            }
-        }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.spi.QValue#discard()
-     */
-    public void discard() {
-        if (type == PropertyType.BINARY) {
-            BLOBFileValue bfv = (BLOBFileValue) val;
-            bfv.discard();
-        } else {
-            super.discard();
-        }
-    }
-
-    /**
-     * Delete persistent binary objects. This method does not delete objects in
-     * the data store.
-     */
-    public void deleteBinaryResource() {
-        if (type == PropertyType.BINARY) {
-            BLOBFileValue bfv = (BLOBFileValue) val;
-            bfv.delete(true);
-        }
+        // store the temp file to the data store, or (theoretically) load it in memory
+        val = getBLOBFileValue(dataStore, v.getStream(), false);
     }
 
 }

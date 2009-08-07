@@ -18,12 +18,11 @@ package org.apache.jackrabbit.core.query.lucene.constraint;
 
 import java.util.regex.Matcher;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.query.lucene.Util;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
+import org.apache.jackrabbit.core.query.lucene.Util;
 
 /**
  * <code>LikeConstraint</code> implements a like constraint.
@@ -47,7 +46,7 @@ public class LikeConstraint extends ComparisonConstraint {
     public LikeConstraint(DynamicOperand operand1,
                           Value operand2,
                           SelectorImpl selector) throws RepositoryException {
-        super(operand1, Operator.LIKE, operand2, selector);
+        super(operand1, OPERATOR_LIKE, operand2, selector);
         this.matcher = Util.createRegexp(operand2.getString()).matcher("");
     }
 

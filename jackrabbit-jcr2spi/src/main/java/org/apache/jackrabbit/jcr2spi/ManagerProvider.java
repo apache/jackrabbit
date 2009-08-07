@@ -19,11 +19,10 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
-import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
+import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeDefinitionProvider;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
@@ -49,13 +48,13 @@ public interface ManagerProvider {
     public AccessManager getAccessManager();
 
     /**
-     * Returns the <code>LockStateManager</code> associated with this
+     * Returns the <code>AccessManager</code> associated with this
      * <code>ManagerProvider</code>.
      *
-     * @return the <code>LockStateManager</code> associated with this
+     * @return the <code>AccessManager</code> associated with this
      * <code>ManagerProvider</code>
      */
-    public LockStateManager getLockStateManager();
+    public LockManager getLockManager();
 
     /**
      * Returns the <code>VersionManager</code> associated with this
@@ -64,11 +63,9 @@ public interface ManagerProvider {
      * @return the <code>VersionManager</code> associated with this
      * <code>ManagerProvider</code>
      */
-    public VersionManager getVersionStateManager();
+    public VersionManager getVersionManager();
 
     public ItemDefinitionProvider getItemDefinitionProvider();
-
-    public NodeTypeDefinitionProvider getNodeTypeDefinitionProvider();
 
     public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider();
 

@@ -137,7 +137,7 @@ public class ReportInfo implements XmlSerializable {
      * @return Name of the report type
      */
     public String getReportName() {
-        return DomUtil.getExpandedName(typeLocalName, typeNamespace);
+        return DomUtil.getQualifiedName(typeLocalName, typeNamespace);
     }
 
     /**

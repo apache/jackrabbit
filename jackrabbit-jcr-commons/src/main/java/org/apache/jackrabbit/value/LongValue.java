@@ -21,7 +21,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
 import java.util.Date;
-import java.math.BigDecimal;
 
 /**
  * A <code>LongValue</code> provides an implementation
@@ -50,7 +49,7 @@ public class LongValue extends BaseValue {
      */
     public LongValue(long l) {
         super(TYPE);
-        this.lNumber = l;
+        this.lNumber = new Long(l);
     }
 
     /**
@@ -127,10 +126,12 @@ public class LongValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (lNumber != null) {
             // loosing timezone information...
             Calendar cal = Calendar.getInstance();
-            cal.setTime(new Date(lNumber));
+            cal.setTime(new Date(lNumber.longValue()));
             return cal;
         } else {
             throw new ValueFormatException("empty value");
@@ -143,8 +144,10 @@ public class LongValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (lNumber != null) {
-            return lNumber;
+            return lNumber.longValue();
         } else {
             throw new ValueFormatException("empty value");
         }
@@ -156,6 +159,8 @@ public class LongValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to boolean failed: inconvertible types");
     }
 
@@ -165,21 +170,10 @@ public class LongValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (lNumber != null) {
             return lNumber.doubleValue();
-        } else {
-            throw new ValueFormatException("empty value");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        if (lNumber != null) {
-            return new BigDecimal(lNumber);
         } else {
             throw new ValueFormatException("empty value");
         }

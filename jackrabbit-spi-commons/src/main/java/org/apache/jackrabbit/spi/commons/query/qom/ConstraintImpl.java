@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.Constraint;
-
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
 
 /**
  * <code>ConstraintImpl</code> is the common basis for classes that implement
- * the {@link Constraint} interface.
+ * the {@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint} interface.
  */
 public abstract class ConstraintImpl
         extends AbstractQOMNode

@@ -103,65 +103,11 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         }
     }
 
-    /**
-     * Test if adding the same mixin twice works as expected.
-     * 
-     * @throws RepositoryException
-     * @throws NotExecutableException
-     * @since JCR 2.0
-     */
-    public void testAddMixinTwice() throws RepositoryException, NotExecutableException {
-        Session session = testRootNode.getSession();
-        Node node = testRootNode.addNode(nodeName1, testNodeType);
-        String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
-
-        if (mixinName == null) {
-            throw new NotExecutableException("No testable mixin node type found");
-        }
-
-        node.addMixin(mixinName);
-        // adding again must succeed
-        node.addMixin(mixinName);
-
-        session.save();
-        
-        node.addMixin(mixinName);
-        assertFalse(node.isModified());
-    }
-
-    /**
-     * Test if adding an inherited mixin type has no effect.
-     * 
-     * @throws RepositoryException
-     * @since JCR 2.0
-     */
-    public void testAddInheritedMixin() throws RepositoryException, NotExecutableException {
-        Session session = testRootNode.getSession();
-        Node node = testRootNode.addNode(nodeName1, testNodeType);
-        session.save();
-
-        String inheritedMixin = null;
-
-        NodeType nt = node.getPrimaryNodeType();
-        NodeType[] superTypes = nt.getSupertypes();
-        for (int i = 0; i < superTypes.length && inheritedMixin == null; i++) {
-            if (superTypes[i].isMixin()) {
-                inheritedMixin = superTypes[i].getName();
-            }
-        }
-
-        if (inheritedMixin != null) {
-            node.addMixin(inheritedMixin);
-            assertFalse(node.isModified());
-        } else {
-            throw new NotExecutableException("Primary node type does not have a mixin supertype");
-        }
-    }
 
     /**
      * Tests if <code>Node.addMixin(String mixinName)</code> throws a
      * <code>LockException</code> if <code>Node</code> is locked
-     * <p>
+     * <p/>
      * The test creates a node <code>nodeName1</code> of type
      * <code>testNodeType</code> under <code>testRoot</code> and locks the node
      * with the superuser session. Then the test tries to add a mixin to
@@ -179,7 +125,14 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         // create a node that is lockable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        ensureMixinType(node, mixLockable);
+        if (!node.isNodeType(mixLockable)) {
+            if (node.canAddMixin(mixLockable)) {
+                node.addMixin(mixLockable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
+                        "allow to add mix:lockable");
+            }
+        }
         testRootNode.save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
@@ -191,7 +144,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         String pathRelToRoot = node.getPath().substring(1);
 
         // access node through another session to lock it
-        Session session2 = getHelper().getSuperuserSession();
+        Session session2 = helper.getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);
@@ -217,7 +170,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
     /**
      * Tests if <code>Node.addMixin(String mixinName)</code> throws a
      * <code>VersionException</code> if <code>Node</code> is checked-in.
-     * <p>
+     * <p/>
      * The test creates a node <code>nodeName1</code> of type
      * <code>testNodeType</code> under <code>testRoot</code> and checks it in.
      * Then the test tries to add a mixin to <code>nodeName1</code>.
@@ -234,7 +187,14 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         // create a node that is versionable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
-        ensureMixinType(node, mixVersionable);
+        if (!node.isNodeType(mixVersionable)) {
+            if (node.canAddMixin(mixVersionable)) {
+                node.addMixin(mixVersionable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not versionable and does not " +
+                        "allow to add mix:versionable");
+            }
+        }
         testRootNode.save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
@@ -265,7 +225,9 @@ public class NodeAddMixinTest extends AbstractJCRTest {
 
         // get session an create default node
         Node node = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(node, mixReferenceable);
+        if (needsMixin(node, mixReferenceable)) {
+            node.addMixin(mixReferenceable);
+        }
         // implementation specific: mixin may take effect only upon save
         testRootNode.save();
 

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 
 import java.util.Set;
 import java.util.Collection;
@@ -93,7 +93,7 @@ public interface ItemStateStore {
      *
      * @return a set view of the keys contained in this store.
      */
-    Set<ItemId> keySet();
+    Set keySet();
 
     /**
      * Returns an unmodifiable collection view of the values (i.e.
@@ -101,5 +101,5 @@ public interface ItemStateStore {
      *
      * @return a collection view of the values contained in this store.
      */
-    Collection<ItemState> values();
+    Collection values();
 }

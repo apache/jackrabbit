@@ -21,7 +21,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopFieldDocCollector;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -79,7 +80,7 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     /**
      * The score nodes.
      */
-    private final List<ScoreNode> scoreNodes = new ArrayList<ScoreNode>();
+    private final List scoreNodes = new ArrayList();
 
     /**
      * The total number of hits.
@@ -135,7 +136,7 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
             this.numHits = Math.max(this.numHits, hitIndex * 2);
             getHits();
         }
-        return scoreNodes.get(hitIndex);
+        return (ScoreNode) scoreNodes.get(hitIndex);
     }
 
     /**
@@ -157,10 +158,10 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
         ScoreDoc[] docs = collector.topDocs().scoreDocs;
         for (int i = scoreNodes.size(); i < docs.length; i++) {
             String uuid = reader.document(docs[i].doc).get(FieldNames.UUID);
-            NodeId id = new NodeId(uuid);
+            NodeId id = new NodeId(UUID.fromString(uuid));
             scoreNodes.add(new ScoreNode(id, docs[i].score, docs[i].doc));
         }
-        log.debug("getHits() {}/{}", scoreNodes.size(), numHits);
+        log.debug("getHits() {}/{}", new Integer(scoreNodes.size()), new Integer(numHits));
         // double hits for next round
         numHits *= 2;
     }

@@ -27,7 +27,7 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

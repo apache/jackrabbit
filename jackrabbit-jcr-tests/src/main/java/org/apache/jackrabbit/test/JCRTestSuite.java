@@ -16,24 +16,22 @@
  */
 package org.apache.jackrabbit.test;
 
+import junit.framework.TestSuite;
+
 /**
  * Test suite that includes all the JCR API tests
  */
-public class JCRTestSuite extends ConcurrentTestSuite {
+public class JCRTestSuite extends TestSuite {
 
     public JCRTestSuite() {
         super("JCR API tests");
         addTest(org.apache.jackrabbit.test.api.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.query.TestAll.suite());
-        addTest(org.apache.jackrabbit.test.api.query.qom.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.nodetype.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.util.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.lock.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.version.TestAll.suite());
-        addTest(org.apache.jackrabbit.test.api.version.simple.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.observation.TestAll.suite());
-        addTest(org.apache.jackrabbit.test.api.retention.TestAll.suite());
-        addTest(org.apache.jackrabbit.test.api.security.TestAll.suite());
     }
 
 }

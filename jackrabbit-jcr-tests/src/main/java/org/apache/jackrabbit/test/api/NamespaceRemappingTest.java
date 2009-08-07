@@ -16,23 +16,20 @@
  */
 package org.apache.jackrabbit.test.api;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.nodetype.NodeType;
-
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
+import javax.jcr.Session;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
+import javax.jcr.Property;
+import javax.jcr.nodetype.NodeType;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
+
 /**
- * Test cases for JSR 283 sections 3.5.2 Session-Local Mappings and
- * 5.11 Namespace Mapping and the related namespace mapping methods
- * in {@link Session}.
+ * <code>NamespaceRemappingTest</code> tests transient namespace remapping.
  *
  * @test
  * @sources NamespaceRemappingTest.java
@@ -57,7 +54,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         nsr = session.getWorkspace().getNamespaceRegistry();
     }
 
@@ -102,211 +99,55 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
     }
 
     /**
-     * Test case for the automatic generation of a new local prefix for a
-     * registered namespace URI that doesn't have a local mapping, as specified
-     * in section 3.5.2 Session-Local Mappings:
-     *
-     * <blockquote>
-     * If a JCR method returns a name from the repository with a namespace URI
-     * for which no local mapping exists, a prefix is created automatically
-     * and a mapping between that prefix and the namespace URI in question is
-     * added to the set of local mappings. The new prefix must differ from
-     * those already present among the set of local mappings.
-     * </blockquote>
+     * Tests if the remapping is cleared in a new session object
      */
-    public void testAutomaticNewLocalPrefix() throws RepositoryException {
-        Set prefixes =
-            new HashSet(Arrays.asList(session.getNamespacePrefixes()));
-        prefixes.remove(session.getNamespacePrefix(NS_JCR_URI));
-        prefixes.remove(session.getNamespacePrefix(NS_NT_URI));
+    public void testRemapClearing() throws RepositoryException {
+        // find an unused prefix
+        String testPrefix = getUnusedPrefix();
+        // remap jcr prefix
+        session.setNamespacePrefix(testPrefix, NS_JCR_URI);
+        session.logout();
 
-        // Remove the local mapping of NS_JCR_URI
-        // NOTE: JCR 1.0 repositories will throw an exception on this
-        String before = session.getNamespacePrefix(NS_JCR_URI);
-        session.setNamespacePrefix(before, NS_NT_URI);
-
-        // Have the repository come up with a new prefix for this namespace
-        String name =
-            session.getProperty("/{" + NS_JCR_URI + "}primaryType").getName();
-        int colon = name.indexOf(':');
-        String after = name.substring(0, colon);
-
-        assertFalse(
-                "Automatically created new local prefix of a namespace"
-                + " must be different from the prefix that removed the mapping",
-                after.equals(before));
-
-        assertFalse(
-                "Automatically created new local prefix of a namespace"
-                + " must be different from those already present",
-                prefixes.contains(after));
-
+        session = helper.getReadOnlySession();
         try {
-            assertEquals(
-                    "The local namespace mappings must match the"
-                    + " automatically created new prefix of a namespace",
-                    after, session.getNamespacePrefix(NS_JCR_URI));
-        } catch (NamespaceException e) {
-            fail("Automatically created new prefix must be included in"
-                    + " the set of local namespace mappings");
+            session.getNamespaceURI(testPrefix);
+            fail("Must throw a NamespaceException on unknown prefix.");
+        } catch (NamespaceException nse) {
+            // correct
         }
     }
 
     /**
-     * Test case for the unknown prefix behaviour specified in
-     * section 3.5.2 Session-Local Mappings:
-     * 
-     * <blockquote>
-     * If a JCR method is passed a name or path containing a prefix which
-     * does not exist in the local mapping an exception is thrown.
-     * </blockquote>
+     * Tests if a remapping to "xml" fails correctly
      */
-    public void testExceptionOnUnknownPrefix() throws RepositoryException {
-        // Change the local prefix of of NS_JCR_URI
-        // NOTE: JCR 1.0 repositories will throw an exception on this
-        String before = session.getNamespacePrefix(NS_JCR_URI);
-        String after = before + "-changed";
-        session.setNamespacePrefix(after, NS_JCR_URI);
-
-        // Try to use the changed prefix
+    public void testXmlRemapping() throws RepositoryException {
         try {
-            session.propertyExists("/" + before + ":primaryType");
-            fail("A path with an unknown prefix must cause"
-                    + " an exception to be thrown");
-        } catch (RepositoryException expected) {
+            session.setNamespacePrefix("xml", NS_JCR_URI);
+            fail("Remapping a namespace uri to 'xml' must not be possible");
+        } catch (NamespaceException nse) {
+            // correct
+        }
+        try {
+            session.setNamespacePrefix("xmlfoo", NS_JCR_URI);
+            fail("Remapping a namespace uri to 'xmlfoo' must not be possible");
+        } catch (NamespaceException nse) {
+            // correct
         }
     }
 
     /**
-     * Test case for the initial set of local namespace mappings as specified
-     * in section 3.5.2 Session-Local Mappings:
-     *
-     * <blockquote> 
-     * When a new session is acquired, the mappings present in the persistent
-     * namespace registry are copied to the local namespace mappings of that
-     * session.
-     * </blockquote>
+     * tests that when a prefix which is mapped to a URI yet globally registered
+     * this prefix cannot be remapped to another URI with
+     * session.setNamespacePrefix()
      */
-    public void testInitialLocalNamespaceMappings() throws RepositoryException {
-        String[] uris = nsr.getURIs();
-        for (int i = 0; i < uris.length; i++) {
-            assertEquals(
-                    "The initial local namespace prefix of \""
-                    + uris[i] + "\" must match the persistent registry mapping",
-                    nsr.getPrefix(uris[i]),
-                    session.getNamespacePrefix(uris[i]));
-            
-        }
-    }
-
-    /**
-     * Test case for the scope of the local namespace mappings as specified
-     * in section 3.5.2 Session-Local Mappings:
-     *
-     * <blockquote> 
-     * The resulting mapping table applies only within the scope of that session
-     * </blockquote>
-     *
-     * <p>
-     * Also specified in the javadoc of
-     * {@link Session#setNamespacePrefix(String, String)}:
-     *
-     * <blockquote>
-     * The remapping only affects operations done through this
-     * <code>Session</code>. To clear all remappings, the client must
-     * acquire a new <code>Session</code>.
-     * </blockquote>
-     */
-    public void testScopeOfLocalNamepaceMappings() throws RepositoryException {
-        String before = session.getNamespacePrefix(NS_JCR_URI);
-        String after = before + "-changed";
-
-        // Change the prefix of a well-known namespace
-        session.setNamespacePrefix(after, NS_JCR_URI);
-        assertEquals(after, session.getNamespacePrefix(NS_JCR_URI));
-
-        // Check whether the mapping affects another session
-        Session another = getHelper().getReadOnlySession();
+    public void testNamespaceException() throws RepositoryException {
+        String testURI = getUnusedURI();
+        String prefix = session.getNamespacePrefix(NS_JCR_URI);
         try {
-            assertEquals(
-                    "Local namespace changes must not affect other sessions",
-                    before, another.getNamespacePrefix(NS_JCR_URI));
-        } finally {
-            another.logout();
-        }
-    }
-
-    /**
-     * Test case for the exception clauses of section 5.11 Namespace Mapping:
-     *
-     * <blockquote>
-     * However, the method will throw an exception if
-     * <ul>
-     * <li>the specified prefix begins with the characters “xml”
-     *     (in any combination of case) or,</li>
-     * <li>the specified prefix is the empty string or,</li>
-     * <li>the specified namespace URI is the empty string.</li>
-     * </blockquote>
-     *
-     * <p>
-     * Also specified in the javadoc for throwing a {@link NamespaceException}
-     * from {@link Session#setNamespacePrefix(String, String)}:
-     *
-     * <blockquote>
-     * if an attempt is made to map a namespace URI to a prefix beginning
-     * with the characters "<code>xml</code>" (in any combination of case)
-     * or if an attempt is made to map either the empty prefix or the empty
-     * namespace (i.e., if either <code>prefix</code> or  <code>uri</code>
-     * are the empty string).
-     * </blockquote>
-     *
-     * <p>
-     * Section 3.2 Names also contains extra constraints on the prefix and
-     * namespace URI syntax:
-     *
-     * <blockquote><pre>
-     * Namespace   ::= EmptyString | Uri
-     * EmptyString ::= The empty string
-     * Uri         ::= A URI, as defined in Section 3 in
-     *                 http://tools.ietf.org/html/rfc3986#section-3
-     * Prefix      ::= Any string that matches the NCName production in
-     *                 http://www.w3.org/TR/REC-xml-names
-     * </blockquote>
-     *
-     * <p>
-     * It is unspecified whether an implementation should actually enforce
-     * these constraints, so for now this test case <em>does not</em>
-     * check this behaviour.
-     */
-    public void testExceptionsFromRemapping() throws RepositoryException {
-        // Remapping to "xml..." in any combination of case must fail
-        assertSetNamespacePrefixFails("xml",    NS_JCR_URI);
-        assertSetNamespacePrefixFails("xmlfoo", NS_JCR_URI);
-        assertSetNamespacePrefixFails("XML",    NS_JCR_URI);
-        assertSetNamespacePrefixFails("XMLFOO", NS_JCR_URI);
-        assertSetNamespacePrefixFails("Xml",    NS_JCR_URI);
-        assertSetNamespacePrefixFails("XmlFoo", NS_JCR_URI);
-
-        // Remapping the empty prefix or empty URI must fail
-        assertSetNamespacePrefixFails("", NS_JCR_URI);
-        assertSetNamespacePrefixFails("prefix", "");
-    }
-
-    /**
-     * Checks that a {@link Session#setNamespacePrefix(String, String)}
-     * call with the given arguments throws a {@link NamespaceException}.
-     *
-     * @param prefix namespace prefix
-     * @param uri namespace URI
-     * @throws RepositoryException if another error occurs
-     */
-    private void assertSetNamespacePrefixFails(String prefix, String uri)
-            throws RepositoryException {
-        try {
-            session.setNamespacePrefix(prefix, uri);
-            fail("Setting a local namespace mapping from \""
-                    + prefix + "\" to \"" + uri + "\" must fail");
-        } catch (NamespaceException expected) {
+            session.setNamespacePrefix(prefix, testURI);
+            fail("NamespaceRegistry must not register a URI with an already assign prefix");
+        } catch (NamespaceException nse) {
+            // ok
         }
     }
 
@@ -384,4 +225,19 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
         return prefix + count;
     }
 
+    /**
+     * Returns a namespace uri that is not in use.
+     *
+     * @return a namespace uri that is not in use.
+     */
+    private String getUnusedURI() throws RepositoryException {
+        Set uris = new HashSet();
+        uris.addAll(Arrays.asList(nsr.getURIs()));
+        String uri = "http://www.unknown-company.com/namespace";
+        int count = 0;
+        while (uris.contains(uri + count)) {
+            count++;
+        }
+        return uri + count;
+    }
 }

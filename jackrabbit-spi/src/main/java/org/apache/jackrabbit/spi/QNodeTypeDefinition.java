@@ -19,8 +19,8 @@ package org.apache.jackrabbit.spi;
 import java.util.Collection;
 
 /**
- * <code>QNodeTypeDefinition</code> is the SPI representation of a
- * {@link javax.jcr.nodetype.NodeType node type}. It refers to <code>Name</code>s
+ * <code>QNodeTypeDefinition</code> is the qualified SPI representation of a
+ * {@link javax.jcr.nodetype.NodeType node type}. It refers to qualified names
  * only and is therefore independant of session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.NodeType
@@ -66,22 +66,6 @@ public interface QNodeTypeDefinition {
     public boolean isMixin();
 
     /**
-     * Returns <code>true</code> if the definition is abstract; <code>false</code> otherwise.
-     *
-     * @return <code>true</code> if the definition is abstract; <code>false</code> otherwise.
-     * @since JCR 2.0
-     */
-    public boolean isAbstract();
-
-    /**
-     * Returns <code>true</code> if the definition is queryable; <code>false</code> otherwise.
-     *
-     * @return <code>true</code> if the definition is queryable; <code>false</code> otherwise.
-     * @since JCR 2.0
-     */
-    public boolean isQueryable();
-
-    /**
      * Returns the value of the orderableChildNodes flag.
      *
      * @return true if nodes of this node type can have orderable child nodes; false otherwise.
@@ -122,5 +106,5 @@ public interface QNodeTypeDefinition {
      *
      * @return a collection of node type <code>Name</code>s
      */
-    public Collection<Name> getDependencies();
+    public Collection getDependencies();
 }

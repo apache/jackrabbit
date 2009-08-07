@@ -55,12 +55,12 @@ public class DescendantNodeJoin extends AbstractCondition {
     /**
      * Reusable list of document number.
      */
-    private final List<Integer> ancestors = new ArrayList<Integer>();
+    private final List ancestors = new ArrayList();
 
     /**
      * Reusable list of score nodes.
      */
-    private final List<ScoreNode[]> scoreNodes = new ArrayList<ScoreNode[]>();
+    private final List scoreNodes = new ArrayList();
 
     /**
      * Creates a new descendant node join condition.
@@ -81,7 +81,7 @@ public class DescendantNodeJoin extends AbstractCondition {
         int idx = getIndex(context, contextSelectorName);
         ScoreNode[] nodes;
         while ((nodes = context.nextScoreNodes()) != null) {
-            Integer docNum = nodes[idx].getDoc(reader);
+            Integer docNum = new Integer(nodes[idx].getDoc(reader));
             contextIndex.addScoreNodes(docNum, nodes);
         }
     }
@@ -96,18 +96,19 @@ public class DescendantNodeJoin extends AbstractCondition {
         ancestors.clear();
         collectAncestors(descendant.getDoc(reader));
         scoreNodes.clear();
-        for (Integer ancestor : ancestors) {
+        for (int i = 0; i < ancestors.size(); i++) {
+            Integer ancestor = (Integer) ancestors.get(i);
             ScoreNode[][] sn = contextIndex.getScoreNodes(ancestor);
             if (sn != null) {
-                for (ScoreNode[] aSn : sn) {
-                    scoreNodes.add(aSn);
+                for (int j = 0; j < sn.length; j++) {
+                    scoreNodes.add(sn[j]);
                 }
             }
         }
         if (scoreNodes.isEmpty()) {
             return null;
         } else {
-            return scoreNodes.toArray(new ScoreNode[scoreNodes.size()][]);
+            return (ScoreNode[][]) scoreNodes.toArray(new ScoreNode[scoreNodes.size()][]);
         }
     }
 
@@ -121,13 +122,14 @@ public class DescendantNodeJoin extends AbstractCondition {
     private void collectAncestors(int doc) throws IOException {
         docNums = resolver.getParents(doc, docNums);
         if (docNums.length == 1) {
-            ancestors.add(docNums[0]);
+            ancestors.add(new Integer(docNums[0]));
             collectAncestors(docNums[0]);
         } else if (docNums.length > 1) {
             // clone because recursion uses docNums again
-            for (int docNum : docNums.clone()) {
-                ancestors.add(docNum);
-                collectAncestors(docNum);
+            int[] tmp = (int[]) docNums.clone();
+            for (int i = 0; i < tmp.length; i++) {
+                ancestors.add(new Integer(tmp[i]));
+                collectAncestors(tmp[i]);
             }
         }
     }

@@ -15,17 +15,8 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
-PropertyDefinition
-  Name jcr:availableQueryOperators
-  RequiredType NAME
-  DefaultValues null
-  AutoCreated false
-  Mandatory true
-  OnParentVersion COPY
-  Protected true
-  Multiple true
 PropertyDefinition
   Name jcr:defaultValues
   RequiredType UNDEFINED
@@ -33,26 +24,8 @@ PropertyDefinition
   AutoCreated false
   Mandatory false
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple true
-PropertyDefinition
-  Name jcr:isFullTextSearchable
-  RequiredType BOOLEAN
-  DefaultValues null
-  AutoCreated false
-  Mandatory true
-  OnParentVersion COPY
-  Protected true
-  Multiple false
-PropertyDefinition
-  Name jcr:isQueryOrderable
-  RequiredType BOOLEAN
-  DefaultValues null
-  AutoCreated false
-  Mandatory true
-  OnParentVersion COPY
-  Protected true
-  Multiple false
 PropertyDefinition
   Name jcr:mandatory
   RequiredType BOOLEAN
@@ -60,7 +33,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:multiple
@@ -69,7 +42,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:name
@@ -78,7 +51,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory false
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:onParentVersion
@@ -87,7 +60,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:protected
@@ -96,7 +69,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:requiredType
@@ -105,7 +78,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:valueConstraints
@@ -114,5 +87,5 @@ PropertyDefinition
   AutoCreated false
   Mandatory false
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple true

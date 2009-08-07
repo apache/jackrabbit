@@ -20,7 +20,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 
 /**
  * <code>OnParentVersionCopyTest</code> tests the OnParentVersion {@link OnParentVersionAction#COPY COPY}
@@ -70,37 +69,6 @@ public class OnParentVersionCopyTest extends AbstractOnParentVersionTest {
         nodeParent.save();
 
         nodeParent.restore(v, false);
-
-        if (!superuser.itemExists(initialNodePath)) {
-            fail("On restore of a OnParentVersion-COPY child node, the node needs to be restored, replacing the current node in the workspace.");
-        }
-        // todo: add proper comparison of restored node. equals does not work
-        // assertEquals("On restore of a OnParentVersion-COPY child node, the node needs to be restored, replacing the current node in the workspace.", childNode, superuser.getItem(initialNodePath));
-    }
-
-    /**
-     * Test the restore of a OnParentVersion-COPY node
-     *
-     * @throws javax.jcr.RepositoryException
-     */
-    public void testRestoreNodeJcr2() throws RepositoryException {
-        // prepare for node test
-        Node childNode = addChildNode(OPVAction);
-        Node nodeParent = childNode.getParent();
-        // todo: added next line. correct? -> angela
-        nodeParent.getSession().save();
-
-        VersionManager versionManager = nodeParent.getSession().getWorkspace().getVersionManager();
-        String path = nodeParent.getPath();
-        versionManager.checkout(path);
-        Version v = versionManager.checkin(path);
-
-        initialNodePath = childNode.getPath();
-        versionManager.checkout(path);
-        childNode.remove();
-        nodeParent.getSession().save();
-
-        versionManager.restore(v, false);
 
         if (!superuser.itemExists(initialNodePath)) {
             fail("On restore of a OnParentVersion-COPY child node, the node needs to be restored, replacing the current node in the workspace.");

@@ -59,12 +59,12 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
     }
 
     /**
-     * Returns the names of the passed node types using the namespace
+     * Returns the qualified names of the passed node types using the namespace
      * resolver to parse the names.
      *
-     * @param nt the node types from which the names should be retrieved.
-     * @param resolver The name and path resolver.
-     * @return the names of the node types.
+     * @param nt         the node types
+     * @param resolver
+     * @return the qualified names of the node types.
      * @throws NameException   if a node type returns an illegal name.
      * @throws NamespaceException if the name of a node type contains a
      *                            prefix that is not known to <code>resolver</code>.

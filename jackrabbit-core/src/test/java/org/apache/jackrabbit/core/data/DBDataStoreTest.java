@@ -26,9 +26,6 @@ import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.data.db.DbDataStore;
 
-/**
- * Test the Database Data Store.
- */
 public class DBDataStoreTest extends TestCase {
 
     private DbDataStore store = new DbDataStore();

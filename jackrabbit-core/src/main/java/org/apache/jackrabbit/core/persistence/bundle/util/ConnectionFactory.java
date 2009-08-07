@@ -58,7 +58,7 @@ public class ConnectionFactory {
             SQLException {
         if (driver != null && driver.length() > 0) {
             try {
-                Class< ? > d = Class.forName(driver);
+                Class d = Class.forName(driver);
                 if (javax.naming.Context.class.isAssignableFrom(d)) {
                     // JNDI context
                     Context context = (Context) d.newInstance();

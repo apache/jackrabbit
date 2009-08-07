@@ -35,7 +35,7 @@ public class CryptedSimpleCredentials implements Credentials {
     private final String algorithm;
     private final String cryptedPassword;
     private final String userId;
-    private final Map<String, Object> attributes;
+    private final Map attributes;
 
     /**
      * Take {@link javax.jcr.SimpleCredentials SimpleCredentials} and
@@ -68,7 +68,7 @@ public class CryptedSimpleCredentials implements Credentials {
         }
 
         String[] attNames = credentials.getAttributeNames();
-        attributes = new HashMap<String, Object>(attNames.length);
+        attributes = new HashMap(attNames.length);
         for (int i = 0; i < attNames.length; i++) {
             attributes.put(attNames[i], credentials.getAttribute(attNames[i]));
         }
@@ -101,7 +101,7 @@ public class CryptedSimpleCredentials implements Credentials {
     }
 
     public String[] getAttributeNames() {
-        return attributes.keySet().toArray(new String[attributes.size()]);
+        return (String[]) attributes.keySet().toArray(new String[attributes.size()]);
     }
 
     public String getAlgorithm() {
@@ -156,8 +156,8 @@ public class CryptedSimpleCredentials implements Credentials {
 
     private static String getAlgorithm(String password) {
         int end = password.indexOf("}");
-        if (password.startsWith("{") && end > 0) {
-            return password.substring(1, end);
+        if (password.startsWith("{") && end>0) {
+            return password.substring(1,end);
         } else {
             return null;
         }

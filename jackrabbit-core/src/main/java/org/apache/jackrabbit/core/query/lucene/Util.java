@@ -25,10 +25,9 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
@@ -52,8 +51,8 @@ public class Util {
      * @param old the document to dispose.
      */
     public static void disposeDocument(Document old) {
-        for (Object o : old.getFields()) {
-            Fieldable f = (Fieldable) o;
+        for (Iterator it = old.getFields().iterator(); it.hasNext(); ) {
+            Fieldable f = (Fieldable) it.next();
             try {
                 if (f.readerValue() != null) {
                     f.readerValue().close();
@@ -76,8 +75,8 @@ public class Util {
      *         otherwise.
      */
     public static boolean isDocumentReady(Document doc) {
-        for (Object o : doc.getFields()) {
-            Fieldable f = (Fieldable) o;
+        for (Iterator it = doc.getFields().iterator(); it.hasNext(); ) {
+            Fieldable f = (Fieldable) it.next();
             if (f instanceof LazyTextExtractorField) {
                 LazyTextExtractorField field = (LazyTextExtractorField) f;
                 if (!field.isExtractorFinished()) {
@@ -139,31 +138,27 @@ public class Util {
      *
      * @param value an internal value.
      * @return a comparable for the given <code>value</code>.
-     * @throws RepositoryException if retrieving the <code>Comparable</code> fails.
      */
-    public static Comparable getComparable(InternalValue value) throws RepositoryException {
+    public static Comparable getComparable(InternalValue value) {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 return null;
             case PropertyType.BOOLEAN:
-                return value.getBoolean();
+                return ComparableBoolean.valueOf(value.getBoolean());
             case PropertyType.DATE:
-                return value.getDate().getTimeInMillis();
+                return new Long(value.getDate().getTimeInMillis());
             case PropertyType.DOUBLE:
-                return value.getDouble();
+                return new Double(value.getDouble());
             case PropertyType.LONG:
-                return value.getLong();
-            case PropertyType.DECIMAL:
-                return value.getDecimal();
+                return new Long(value.getLong());
             case PropertyType.NAME:
-                return value.getName().toString();
+                return value.getQName().toString();
             case PropertyType.PATH:
                 return value.getPath().toString();
-            case PropertyType.URI:
-            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
             case PropertyType.STRING:
                 return value.getString();
+            // TODO: JSR 283 now node types
             default:
                 return null;
         }
@@ -184,22 +179,19 @@ public class Util {
             throws ValueFormatException, RepositoryException {
         switch (value.getType()) {
             case PropertyType.BOOLEAN:
-                return value.getBoolean();
+                return ComparableBoolean.valueOf(value.getBoolean());
             case PropertyType.DATE:
-                return value.getDate().getTimeInMillis();
+                return new Long(value.getDate().getTimeInMillis());
             case PropertyType.DOUBLE:
-                return value.getDouble();
+                return new Double(value.getDouble());
             case PropertyType.LONG:
-                return value.getLong();
-            case PropertyType.DECIMAL:
-                return value.getDecimal();
+                return new Long(value.getLong());
             case PropertyType.NAME:
             case PropertyType.PATH:
-            case PropertyType.URI:
-            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
             case PropertyType.STRING:
                 return value.getString();
+                // TODO: JSR 283 now node types
             default:
                 throw new RepositoryException("Unsupported type: "
                         + PropertyType.nameFromValue(value.getType()));
@@ -259,43 +251,24 @@ public class Util {
         Comparable c2;
         switch (v1.getType()) {
             case PropertyType.BOOLEAN:
-                c2 = v2.getBoolean();
+                c2 = ComparableBoolean.valueOf(v2.getBoolean());
                 break;
             case PropertyType.DATE:
-                c2 = v2.getDate().getTimeInMillis();
+                c2 = new Long(v2.getDate().getTimeInMillis());
                 break;
             case PropertyType.DOUBLE:
-                c2 = v2.getDouble();
+                c2 = new Double(v2.getDouble());
                 break;
             case PropertyType.LONG:
-                c2 = v2.getLong();
-                break;
-            case PropertyType.DECIMAL:
-                c2 = v2.getDecimal();
+                c2 = new Long(v2.getLong());
                 break;
             case PropertyType.NAME:
-                if (v2.getType() == PropertyType.URI) {
-                    String s = v2.getString();
-                    if (s.startsWith("./")) {
-                        s = s.substring(2);
-                    }
-                    // need to decode
-                    try {
-                        c2 = URLDecoder.decode(s, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        throw new RepositoryException(e);
-                    }
-                } else {
-                    c2 = v2.getString();
-                }
-                break;
             case PropertyType.PATH:
             case PropertyType.REFERENCE:
-            case PropertyType.WEAKREFERENCE:
-            case PropertyType.URI:
             case PropertyType.STRING:
                 c2 = v2.getString();
                 break;
+                // TODO: JSR 283 now node types
             default:
                 throw new RepositoryException("Unsupported type: "
                         + PropertyType.nameFromValue(v2.getType()));
@@ -361,16 +334,15 @@ public class Util {
      *         cannot be determined.
      */
     public static long getLength(InternalValue value) {
+        // TODO: support new JSR 283 property types
+        if (value.getType() == PropertyType.BINARY) {
+            return value.getBLOBFileValue().getLength();
+        } else
         if (value.getType() == PropertyType.NAME
                 || value.getType() == PropertyType.PATH) {
             return -1;
         } else {
-            try {
-                return value.getLength();
-            } catch (RepositoryException e) {
-                log.warn("Unable to determine length of value.", e.getMessage());
-                return -1;
-            }
+            return value.toString().length();
         }
     }
 }

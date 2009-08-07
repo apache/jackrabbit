@@ -42,16 +42,14 @@ public class Merge extends AbstractOperation {
     private final NodeState nodeState;
     private final String srcWorkspaceName;
     private final boolean bestEffort;
-    private final boolean isShallow;
     private final VersionManager mgr;
 
     private Iterator failedIds = null;
 
-    private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, boolean isShallow, VersionManager mgr) {
+    private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, VersionManager mgr) {
         this.nodeState = nodeState;
         this.srcWorkspaceName = srcWorkspaceName;
         this.bestEffort = bestEffort;
-        this.isShallow = isShallow;
         this.mgr = mgr;
 
         // NOTE: affected-states only needed for transient modifications
@@ -74,19 +72,15 @@ public class Merge extends AbstractOperation {
     public void persisted() {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
-        if (isActivityMerge()) {
-            // TODO invalidate
-        } else {
-            try {
-                NodeEntry vhe = mgr.getVersionHistoryEntry(nodeState);
-                if (vhe != null) {
-                    vhe.invalidate(true);
-                }
-            } catch (RepositoryException e) {
-                log.warn("Error while retrieving VersionHistory entry:", e.getMessage());
+        try {
+            NodeEntry vhe = mgr.getVersionHistoryEntry(nodeState);
+            if (vhe != null) {
+                vhe.invalidate(true);
             }
-            nodeState.getHierarchyEntry().invalidate(true);
+        } catch (RepositoryException e) {
+            log.warn("Error while retrieving VersionHistory entry:", e.getMessage());
         }
+        nodeState.getHierarchyEntry().invalidate(true);
     }
 
     //----------------------------------------< Access Operation Parameters >---
@@ -100,14 +94,6 @@ public class Merge extends AbstractOperation {
 
     public boolean bestEffort() {
         return bestEffort;
-    }
-
-    public boolean isShallow() {
-        return isShallow;
-    }
-
-    public boolean isActivityMerge() {
-        return srcWorkspaceName == null;
     }
 
     public void setFailedIds(Iterator failedIds) {
@@ -133,7 +119,7 @@ public class Merge extends AbstractOperation {
      * @param srcWorkspaceName
      * @return
      */
-    public static Merge create(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, boolean isShallow, VersionManager mgr) {
-        return new Merge(nodeState, srcWorkspaceName, bestEffort, isShallow, mgr);
+    public static Merge create(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, VersionManager mgr) {
+        return new Merge(nodeState, srcWorkspaceName, bestEffort, mgr);
     }
 }

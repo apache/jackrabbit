@@ -37,15 +37,8 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("javax.jcr.lock tests");
 
         suite.addTestSuite(LockTest.class);
-        suite.addTestSuite(SetValueLockExceptionTest.class);
+	suite.addTestSuite(SetValueLockExceptionTest.class);
 
-        // JCR 2.0 tests
-        
-        suite.addTestSuite(DeepLockTest.class);
-        suite.addTestSuite(LockManagerTest.class);
-        suite.addTestSuite(OpenScopedLockTest.class);
-        suite.addTestSuite(SessionScopedLockTest.class);
-        
         return suite;
     }
 }

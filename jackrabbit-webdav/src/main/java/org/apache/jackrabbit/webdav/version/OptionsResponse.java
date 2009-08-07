@@ -68,7 +68,7 @@ public class OptionsResponse implements DeltaVConstants, XmlSerializable {
      */
     public void addEntry(String localName, Namespace namespace, String[] hrefs) {
         Entry entry = new Entry(localName, namespace, hrefs);
-        entries.put(DomUtil.getExpandedName(localName, namespace), entry);
+        entries.put(DomUtil.getQualifiedName(localName, namespace), entry);
     }
 
     /**
@@ -78,7 +78,7 @@ public class OptionsResponse implements DeltaVConstants, XmlSerializable {
      * @return
      */
     public String[] getHrefs(String localName, Namespace namespace) {
-        String key = DomUtil.getExpandedName(localName, namespace);
+        String key = DomUtil.getQualifiedName(localName, namespace);
         if (entries.containsKey(key)) {
             return ((Entry)entries.get(key)).hrefs;
         } else {

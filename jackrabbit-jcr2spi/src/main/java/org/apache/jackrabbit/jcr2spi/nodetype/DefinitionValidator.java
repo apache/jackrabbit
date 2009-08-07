@@ -21,8 +21,8 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,6 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 
 import java.util.Stack;
 import java.util.Map;
@@ -64,11 +63,11 @@ class DefinitionValidator {
      * @param ntDefs
      * @param validatedDefs
      * @return Map mapping the definition to the resulting effective nodetype
-     * @throws InvalidNodeTypeDefinitionException
+     * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
     public Map validateNodeTypeDefs(Collection ntDefs, Map validatedDefs)
-        throws InvalidNodeTypeDefinitionException, RepositoryException {
+        throws InvalidNodeTypeDefException, RepositoryException {
         // tmp. map containing names/defs of validated nodetypes
         Map tmpMap = new HashMap(validatedDefs);
         for (Iterator it = ntDefs.iterator(); it.hasNext();) {
@@ -111,7 +110,7 @@ class DefinitionValidator {
                 msg.append(" ");
             }
             log.error(msg.toString());
-            throw new InvalidNodeTypeDefinitionException(msg.toString());
+            throw new InvalidNodeTypeDefException(msg.toString());
         }
         return ntMap;
     }
@@ -119,15 +118,15 @@ class DefinitionValidator {
     /**
      *
      * @param ntDef
-     * @param validatedDefs Map of nodetype names and nodetype definitions
+     * @param validatedDefs Map of qualified nodetype names and nodetype definitions
      * that are known to be valid or are already registered. This map is used to
      * validated dependencies and check for circular inheritance
      * @return
-     * @throws InvalidNodeTypeDefinitionException
+     * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
     public EffectiveNodeType validateNodeTypeDef(QNodeTypeDefinition ntDef, Map validatedDefs)
-            throws InvalidNodeTypeDefinitionException, RepositoryException {
+            throws InvalidNodeTypeDefException, RepositoryException {
         /**
          * the effective (i.e. merged and resolved) node type resulting from
          * the specified node type definition;
@@ -142,7 +141,7 @@ class DefinitionValidator {
         if (name == null) {
             String msg = "no name specified";
             log.debug(msg);
-            throw new InvalidNodeTypeDefinitionException(msg);
+            throw new InvalidNodeTypeDefException(msg);
         }
         checkNamespace(name);
 
@@ -159,13 +158,13 @@ class DefinitionValidator {
                     String msg = "[" + name + "] invalid supertype: "
                             + supertypes[i] + " (infinite recursion))";
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefinitionException(msg);
+                    throw new InvalidNodeTypeDefException(msg);
                 }
                 /* compare to given nt-name set and not to registered nodetypes */
                 if (!validatedDefs.containsKey(supertypes[i])) {
                     String msg = "[" + name + "] invalid supertype: " + supertypes[i];
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefinitionException(msg);
+                    throw new InvalidNodeTypeDefException(msg);
                 }
             }
 
@@ -198,16 +197,16 @@ class DefinitionValidator {
                     String msg = "[" + name + "] all primary node types except"
                         + " nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefinitionException(msg);
+                    throw new InvalidNodeTypeDefException(msg);
                 }
             } catch (ConstraintViolationException e) {
                 String msg = "[" + name + "] failed to validate supertypes";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg, e);
+                throw new InvalidNodeTypeDefException(msg, e);
             } catch (NoSuchNodeTypeException e) {
                 String msg = "[" + name + "] failed to validate supertypes";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg, e);
+                throw new InvalidNodeTypeDefException(msg, e);
             }
         } else {
             // no supertypes specified: has to be either a mixin type or nt:base
@@ -215,7 +214,7 @@ class DefinitionValidator {
                 String msg = "[" + name
                         + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg);
+                throw new InvalidNodeTypeDefException(msg);
             }
         }
 
@@ -232,20 +231,20 @@ class DefinitionValidator {
             if (!name.equals(pd.getDeclaringNodeType())) {
                 String msg = "[" + name + "#" + pd.getName() + "] invalid declaring node type specified";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg);
+                throw new InvalidNodeTypeDefException(msg);
             }
             checkNamespace(pd.getName());
             // check that auto-created properties specify a name
             if (pd.definesResidual() && pd.isAutoCreated()) {
                 String msg = "[" + name + "#" + pd.getName() + "] auto-created properties must specify a name";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg);
+                throw new InvalidNodeTypeDefException(msg);
             }
             // check that auto-created properties specify a type
             if (pd.getRequiredType() == PropertyType.UNDEFINED && pd.isAutoCreated()) {
                 String msg = "[" + name + "#" + pd.getName() + "] auto-created properties must specify a type";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg);
+                throw new InvalidNodeTypeDefException(msg);
             }
             /* check default values:
              * make sure type of value is consistent with required property type
@@ -264,20 +263,20 @@ class DefinitionValidator {
              * the specified node type must be registered, with one notable
              * exception: the node type just being registered
              */
-            QValueConstraint[] constraints = pd.getValueConstraints();
+            String[] constraints = pd.getValueConstraints();
             if (constraints != null && constraints.length > 0) {
 
                 if (pd.getRequiredType() == PropertyType.REFERENCE) {
-                    for (QValueConstraint constraint : constraints) {
+                    for (int j = 0; j < constraints.length; j++) {
                         // TODO improve. don't rely on a specific factory impl
-                        Name ntName = NameFactoryImpl.getInstance().create(constraint.getString());
+                        Name ntName = NameFactoryImpl.getInstance().create(constraints[j]);
                         /* compare to given ntd map and not registered nts only */
                         if (!name.equals(ntName) && !validatedDefs.containsKey(ntName)) {
                             String msg = "[" + name + "#" + pd.getName()
                                     + "] invalid REFERENCE value constraint '"
                                     + ntName + "' (unknown node type)";
                             log.debug(msg);
-                            throw new InvalidNodeTypeDefinitionException(msg);
+                            throw new InvalidNodeTypeDefException(msg);
                         }
                     }
                 }
@@ -293,7 +292,7 @@ class DefinitionValidator {
                 String msg = "[" + name + "#" + cnd.getName()
                         + "] invalid declaring node type specified";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg);
+                throw new InvalidNodeTypeDefException(msg);
             }
             checkNamespace(cnd.getName());
             // check that auto-created child-nodes specify a name
@@ -301,7 +300,7 @@ class DefinitionValidator {
                 String msg = "[" + name + "#" + cnd.getName()
                         + "] auto-created child-nodes must specify a name";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg);
+                throw new InvalidNodeTypeDefException(msg);
             }
             // check that auto-created child-nodes specify a default primary type
             if (cnd.getDefaultPrimaryType() == null
@@ -309,7 +308,7 @@ class DefinitionValidator {
                 String msg = "[" + name + "#" + cnd.getName()
                         + "] auto-created child-nodes must specify a default primary type";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg);
+                throw new InvalidNodeTypeDefException(msg);
             }
             // check default primary type
             Name dpt = cnd.getDefaultPrimaryType();
@@ -329,7 +328,7 @@ class DefinitionValidator {
                     String msg = "[" + name + "#" + cnd.getName()
                             + "] invalid default primary type '" + dpt + "'";
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefinitionException(msg);
+                    throw new InvalidNodeTypeDefException(msg);
                 }
                 /**
                  * build effective (i.e. merged and resolved) node type from
@@ -361,12 +360,12 @@ class DefinitionValidator {
                     String msg = "[" + name + "#" + cnd.getName()
                             + "] failed to validate default primary type";
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefinitionException(msg, e);
+                    throw new InvalidNodeTypeDefException(msg, e);
                 } catch (NoSuchNodeTypeException e) {
                     String msg = "[" + name + "#" + cnd.getName()
                             + "] failed to validate default primary type";
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefinitionException(msg, e);
+                    throw new InvalidNodeTypeDefException(msg, e);
                 }
             }
 
@@ -392,7 +391,7 @@ class DefinitionValidator {
                         String msg = "[" + name + "#" + cnd.getName()
                                 + "] invalid required primary type: " + rpt;
                         log.debug(msg);
-                        throw new InvalidNodeTypeDefinitionException(msg);
+                        throw new InvalidNodeTypeDefException(msg);
                     }
                     /**
                      * check if default primary type satisfies the required
@@ -403,7 +402,7 @@ class DefinitionValidator {
                                 + "] default primary type does not satisfy required primary type constraint "
                                 + rpt;
                         log.debug(msg);
-                        throw new InvalidNodeTypeDefinitionException(msg);
+                        throw new InvalidNodeTypeDefException(msg);
                     }
                     /**
                      * build effective (i.e. merged and resolved) node type from
@@ -426,12 +425,12 @@ class DefinitionValidator {
                         String msg = "[" + name + "#" + cnd.getName()
                                 + "] failed to validate required primary type constraint";
                         log.debug(msg);
-                        throw new InvalidNodeTypeDefinitionException(msg, e);
+                        throw new InvalidNodeTypeDefException(msg, e);
                     } catch (NoSuchNodeTypeException e) {
                         String msg = "[" + name + "#" + cnd.getName()
                                 + "] failed to validate required primary type constraint";
                         log.debug(msg);
-                        throw new InvalidNodeTypeDefinitionException(msg, e);
+                        throw new InvalidNodeTypeDefException(msg, e);
                     }
                 }
             }
@@ -448,11 +447,11 @@ class DefinitionValidator {
             } catch (ConstraintViolationException e) {
                 String msg = "[" + name + "] failed to resolve node type definition";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg, e);
+                throw new InvalidNodeTypeDefException(msg, e);
             } catch (NoSuchNodeTypeException e) {
                 String msg = "[" + name + "] failed to resolve node type definition";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg, e);
+                throw new InvalidNodeTypeDefException(msg, e);
             }
         }
         return ent;
@@ -463,11 +462,11 @@ class DefinitionValidator {
      * @param supertypes
      * @param inheritanceChain
      * @param ntdMap
-     * @throws InvalidNodeTypeDefinitionException
+     * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
     private void checkForCircularInheritance(Name[] supertypes, Stack inheritanceChain, Map ntdMap)
-        throws InvalidNodeTypeDefinitionException, RepositoryException {
+        throws InvalidNodeTypeDefException, RepositoryException {
         for (int i = 0; i < supertypes.length; i++) {
             Name stName = supertypes[i];
             int pos = inheritanceChain.lastIndexOf(stName);
@@ -482,7 +481,7 @@ class DefinitionValidator {
                 }
                 buf.append("--> ");
                 buf.append(stName);
-                throw new InvalidNodeTypeDefinitionException("circular inheritance detected: " + buf.toString());
+                throw new InvalidNodeTypeDefException("circular inheritance detected: " + buf.toString());
             }
 
             if (ntdMap.containsKey(stName)) {
@@ -494,7 +493,7 @@ class DefinitionValidator {
                     inheritanceChain.pop();
                 }
             } else {
-                throw new InvalidNodeTypeDefinitionException("Unknown supertype: " + stName);
+                throw new InvalidNodeTypeDefException("Unknown supertype: " + stName);
             }
         }
     }
@@ -504,11 +503,11 @@ class DefinitionValidator {
      * @param childNodeENT
      * @param definingParentNTs
      * @param ntdMap
-     * @throws InvalidNodeTypeDefinitionException
+     * @throws InvalidNodeTypeDefException
      */
     private void checkForCircularNodeAutoCreation(EffectiveNodeType childNodeENT,
                                                   Stack definingParentNTs, Map ntdMap)
-        throws InvalidNodeTypeDefinitionException {
+        throws InvalidNodeTypeDefException {
         // check for circularity through default node types of auto-created child nodes
         // (node type 'a' defines auto-created child node with default node type 'a')
         Name[] childNodeNTs = childNodeENT.getAllNodeTypes();
@@ -528,7 +527,7 @@ class DefinitionValidator {
                 buf.append("--> ");
                 buf.append("node type ");
                 buf.append(nt);
-                throw new InvalidNodeTypeDefinitionException("circular node auto-creation detected: "
+                throw new InvalidNodeTypeDefException("circular node auto-creation detected: "
                     + buf.toString());
             }
         }
@@ -548,11 +547,11 @@ class DefinitionValidator {
             } catch (NoSuchNodeTypeException e) {
                 String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg, e);
+                throw new InvalidNodeTypeDefException(msg, e);
             } catch (ConstraintViolationException e) {
                 String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
-                throw new InvalidNodeTypeDefinitionException(msg, e);
+                throw new InvalidNodeTypeDefException(msg, e);
             }
         }
     }

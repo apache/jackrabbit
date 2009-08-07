@@ -16,19 +16,18 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.uuid.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
  * Represents binary data which is backed by a byte[] (in memory).
  */
-class BLOBInMemory extends BLOBFileValue {
+public class BLOBInMemory extends BLOBFileValue {
 
     /**
      * Logger instance for this class
@@ -116,49 +115,63 @@ class BLOBInMemory extends BLOBFileValue {
         return BLOBInMemory.getInstance(data);
     }
 
-    void delete(boolean pruneEmptyParentDirs) {
+    /**
+     * {@inheritDoc}
+     */
+    public void delete(boolean pruneEmptyParentDirs) {
         // do nothing
         // this object could still be referenced
         // the data will be garbage collected
     }
 
-    void discard() {
+    /**
+     * {@inheritDoc}
+     */
+    public void discard() {
         // do nothing
         // this object could still be referenced
         // the data will be garbage collected
     }
 
-    boolean isImmutable() {
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isImmutable() {
         return true;
     }
 
-    public long getSize() {
+    /**
+     * {@inheritDoc}
+     */
+    public long getLength() {
         return data.length;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public InputStream getStream() {
         return new ByteArrayInputStream(data);
     }
 
-    String getString() throws RepositoryException {
-        try {
-            return new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("UTF-8 not supported on this platform", e);
-        }
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
-        StringBuilder buff = new StringBuilder(PREFIX.length() + 2 * data.length);
+        StringBuffer buff = new StringBuffer(PREFIX.length() + 2 * data.length);
         buff.append(PREFIX);
+        char[] hex = Constants.hexDigits;
         for (int i = 0; i < data.length; i++) {
             int c = data[i] & 0xff;
-            buff.append(Integer.toHexString(c >> 4));
-            buff.append(Integer.toHexString(c & 0xf));
+            buff.append(hex[c >> 4]);
+            buff.append(hex[c & 0xf]);
         }
         return buff.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -179,6 +192,10 @@ class BLOBInMemory extends BLOBFileValue {
      */
     public int hashCode() {
         return 0;
+    }
+
+    public boolean isSmall() {
+        return true;
     }
 
 }

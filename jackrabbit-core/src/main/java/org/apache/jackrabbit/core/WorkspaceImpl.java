@@ -16,17 +16,48 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
+import org.apache.jackrabbit.api.jsr283.version.VersionManager;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.lock.SessionLockManager;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.observation.EventJournalImpl;
+import org.apache.jackrabbit.core.observation.EventFilter;
+import org.apache.jackrabbit.core.query.QueryManagerImpl;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.version.JcrVersionManagerImpl;
+import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.Importer;
+import org.apache.jackrabbit.core.xml.WorkspaceImporter;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
+import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.commons.AbstractWorkspace;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -34,37 +65,17 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionManager;
+import javax.jcr.version.VersionHistory;
+import javax.security.auth.Subject;
 
-import org.apache.jackrabbit.api.JackrabbitWorkspace;
-import org.apache.jackrabbit.commons.AbstractWorkspace;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.lock.SessionLockManager;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
-import org.apache.jackrabbit.core.query.QueryManagerImpl;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.Importer;
-import org.apache.jackrabbit.core.xml.WorkspaceImporter;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * A <code>WorkspaceImpl</code> ...
  */
 public class WorkspaceImpl extends AbstractWorkspace
-        implements JackrabbitWorkspace, javax.jcr.Workspace,
+        implements JackrabbitWorkspace, org.apache.jackrabbit.api.jsr283.Workspace,
         EventStateCollectionFactory {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
@@ -116,12 +127,12 @@ public class WorkspaceImpl extends AbstractWorkspace
      * The API LockManager for this workspace, used to create and release
      * locks and determine the lock status.
      */
-    private javax.jcr.lock.LockManager jcr283LockManager;
+    private org.apache.jackrabbit.api.jsr283.lock.LockManager jcr283LockManager;
 
     /**
      * The API Version manager for this workspace
      */
-    protected VersionManagerImpl versionMgr;
+    protected JcrVersionManagerImpl versionMgr;
 
     /**
      * The internal manager used to evaluate effective retention policies and
@@ -194,7 +205,35 @@ public class WorkspaceImpl extends AbstractWorkspace
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * {@inheritDoc}
+     * Creates a new <code>Workspace</code> with the specified <code>name</code>
+     * initialized with a <code>clone</code> of the content of the workspace
+     * <code>srcWorkspace</code>. Semantically, this method is equivalent to
+     * creating a new workspace and manually cloning <code>srcWorkspace</code>
+     * to it; however, this method may assist some implementations in optimizing
+     * subsequent <code>Node.update</code> and <code>Node.merge</code> calls
+     * between the new workspace and its source.
+     * <p/>
+     * The new workspace can be accessed through a <code>login</code>
+     * specifying its name.
+     * <p/>
+     * Throws an <code>AccessDeniedException</code> if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to create the new workspace.
+     * <p/>
+     * Throws an <code>UnsupportedRepositoryOperationException</code> if the repository does
+     * not support the creation of workspaces.
+     * <p/>
+     * A <code>RepositoryException</code> is thrown if another error occurs.
+     *
+     * @param name A <code>String</code>, the name of the new workspace.
+     * @param srcWorkspace The name of the workspace from which the new workspace is to be cloned.
+     * @throws AccessDeniedException if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to create the new workspace.
+     * @throws UnsupportedRepositoryOperationException if the repository does
+     * not support the creation of workspaces.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
      */
     public void createWorkspace(String name, String srcWorkspace)
             throws AccessDeniedException, UnsupportedRepositoryOperationException,
@@ -210,17 +249,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             tmpSession = rep.createSession(session.getSubject(), name);
             WorkspaceImpl newWsp = (WorkspaceImpl) tmpSession.getWorkspace();
 
-            // Workspace#clone(String, String, String, booelan) doesn't
-            // allow to clone to "/"...
-            //newWsp.clone(srcWorkspace, "/", "/", false);
-           Node root = session.getRootNode();
-           for (NodeIterator it = root.getNodes(); it.hasNext(); ) {
-               Node child = it.nextNode();
-               // skip nodes that already exist in newly created workspace
-               if (!tmpSession.nodeExists(child.getPath())) {
-                   newWsp.clone(srcWorkspace, child.getPath(), child.getPath(), false);
-               }
-           }
+            newWsp.clone(srcWorkspace, "/", "/", false);
         } finally {
             if (tmpSession != null) {
                 // we don't need the temporary session anymore, logout
@@ -230,10 +259,24 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * {@inheritDoc}
+     * Deletes the workspace with the specified <code>name</code> from the
+     * repository, deleting all content within it.
      * <p/>
-     * Always throws <code>UnsupportedRepositoryOperationException</code> since
-     * removal of workspaces is currently not supported.
+     * Throws an <code>AccessDeniedException</code> if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to remove the workspace.
+     * <p/>
+     * Throws an <code>UnsupportedRepositoryOperationException</code> if the
+     * repository does not support the removal of workspaces.
+     *
+     * @param name A <code>String</code>, the name of the workspace to be deleted.
+     * @throws AccessDeniedException if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to remove the workspace.
+     * @throws UnsupportedRepositoryOperationException if the
+     * repository does not support the removal of workspaces.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
      */
     public void deleteWorkspace(String name) throws AccessDeniedException,
             UnsupportedRepositoryOperationException, RepositoryException {
@@ -244,10 +287,10 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * @see javax.jcr.Workspace#getLockManager()
-     * @see javax.jcr.lock.LockManager
+     * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager
      */
-    public javax.jcr.lock.LockManager getLockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
+    public org.apache.jackrabbit.api.jsr283.lock.LockManager getLockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
         if (jcr283LockManager == null) {
             jcr283LockManager = new SessionLockManager(session, session.getLockManager());
         }
@@ -255,15 +298,12 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * @see javax.jcr.Workspace#getVersionManager()
+     * @see org.apache.jackrabbit.api.jsr283.Workspace#getVersionManager()
      */
-    public VersionManager getVersionManager() {
-        return getVersionManagerImpl();
-    }
-
-    VersionManagerImpl getVersionManagerImpl() {
+    public VersionManager getVersionManager()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         if (versionMgr == null) {
-            versionMgr = new VersionManagerImpl(session, stateMgr, hierMgr);
+            versionMgr = new JcrVersionManagerImpl(session);
         }
         return versionMgr;
     }
@@ -747,9 +787,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             try {
                 obsMgr = new ObservationManagerImpl(
                         rep.getObservationDispatcher(wspConfig.getName()),
-                        session,
-                        session.getItemManager(),
-                        rep.getClusterNode());
+                        session, session.getItemManager());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";
@@ -758,6 +796,43 @@ public class WorkspaceImpl extends AbstractWorkspace
             }
         }
         return obsMgr;
+    }
+
+    /**
+     * Returns the event journal for this workspace. The events are filtered
+     * according to the passed criteria.
+     *
+     * @param eventTypes A combination of one or more event type constants encoded as a bitmask.
+     * @param absPath an absolute path.
+     * @param isDeep a <code>boolean</code>.
+     * @param uuid array of UUIDs.
+     * @param nodeTypeName array of node type names.
+     * @return the event journal for this repository.
+     * @throws UnsupportedRepositoryOperationException if this repository does
+     *          not support an event journal (cluster journal disabled).
+     * @throws RepositoryException if another error occurs.
+     */
+    public EventJournal getEventJournal(int eventTypes,
+                                        String absPath,
+                                        boolean isDeep,
+                                        String[] uuid,
+                                        String[] nodeTypeName)
+            throws RepositoryException {
+        Subject subject = ((SessionImpl) getSession()).getSubject();
+        if (subject.getPrincipals(AdminPrincipal.class).isEmpty()) {
+            throw new RepositoryException("Only administrator session may " +
+                    "access EventJournal");
+        }
+        ClusterNode clusterNode = rep.getClusterNode();
+        if (clusterNode == null) {
+            throw new UnsupportedRepositoryOperationException();
+        }
+
+        ObservationManagerImpl obsMgr = (ObservationManagerImpl) session.getWorkspace().getObservationManager();
+        EventFilter filter = obsMgr.createEventFilter(eventTypes, absPath,
+                isDeep, uuid, nodeTypeName, false);
+        return new EventJournalImpl(filter, clusterNode.getJournal(),
+                clusterNode.getId());
     }
 
     /**
@@ -791,14 +866,93 @@ public class WorkspaceImpl extends AbstractWorkspace
     /**
      * {@inheritDoc}
      */
-    @Deprecated
     public void restore(Version[] versions, boolean removeExisting)
             throws ItemExistsException, UnsupportedRepositoryOperationException,
             VersionException, LockException, InvalidItemStateException,
             RepositoryException {
+
+        // todo: perform restore operations direct on the node states
+
         // check state of this instance
         sanityCheck();
-        getVersionManager().restore(versions, removeExisting);
+
+        // add all versions to map of versions to restore
+        final HashMap toRestore = new HashMap();
+        for (int i = 0; i < versions.length; i++) {
+            VersionImpl v = (VersionImpl) versions[i];
+            VersionHistory vh = v.getContainingHistory();
+            // check for collision
+            if (toRestore.containsKey(vh.getUUID())) {
+                throw new VersionException("Unable to restore. Two or more versions have same version history.");
+            }
+            toRestore.put(vh.getUUID(), v);
+        }
+
+        // create a version selector to the set of versions
+        VersionSelector vsel = new VersionSelector() {
+            public Version select(VersionHistory versionHistory) throws RepositoryException {
+                // try to select version as specified
+                Version v = (Version) toRestore.get(versionHistory.getUUID());
+                if (v == null) {
+                    // select latest one
+                    v = DateVersionSelector.selectByDate(versionHistory, null);
+                }
+                return v;
+            }
+        };
+
+        // check for pending changes
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to restore version. Session has pending changes.";
+            log.debug(msg);
+            throw new InvalidItemStateException(msg);
+        }
+        // TODO: add checks for lock/hold...
+        boolean success = false;
+        try {
+            // now restore all versions that have a node in the ws
+            int numRestored = 0;
+            while (toRestore.size() > 0) {
+                Version[] restored = null;
+                Iterator iter = toRestore.values().iterator();
+                while (iter.hasNext()) {
+                    VersionImpl v = (VersionImpl) iter.next();
+                    try {
+                        NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getInternalFrozenNode().getFrozenUUID());
+                        restored = node.internalRestore(v, vsel, removeExisting);
+                        // remove restored versions from set
+                        for (int i = 0; i < restored.length; i++) {
+                            toRestore.remove(restored[i].getContainingHistory().getUUID());
+                        }
+                        numRestored += restored.length;
+                        break;
+                    } catch (ItemNotFoundException e) {
+                        // ignore
+                    }
+                }
+                if (restored == null) {
+                    if (numRestored == 0) {
+                        throw new VersionException("Unable to restore. At least one version needs"
+                                + " existing versionable node in workspace.");
+                    } else {
+                        throw new VersionException("Unable to restore. All versions with non"
+                                + " existing versionable nodes need parent.");
+                    }
+                }
+            }
+            session.save();
+            success = true;
+        } finally {
+            if (!success) {
+                // revert session
+                try {
+                    log.debug("reverting changes applied during restore...");
+                    session.refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while reverting changes applied during restore.", e);
+                }
+            }
+        }
     }
 
     /**

@@ -59,7 +59,7 @@ import javax.naming.Referenceable;
  * needed.
  */
 public class BindableRepository extends AbstractRepository
-        implements javax.jcr.Repository, JackrabbitRepository, Referenceable, Serializable {
+        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, Referenceable, Serializable {
 
     /**
      * The serialization UID of this class.
@@ -178,36 +178,20 @@ public class BindableRepository extends AbstractRepository
         return repository.getDescriptorKeys();
     }
 
-    /**
-     * Delegated to the underlying repository instance.
-     * {@inheritDoc}
-     */
     public Value getDescriptorValue(String key) {
-        return repository.getDescriptorValue(key);
+        throw new RuntimeException("not implemented yet - see JCR-2062");
     }
 
-    /**
-     * Delegated to the underlying repository instance.
-     * {@inheritDoc}
-     */
     public Value[] getDescriptorValues(String key) {
-        return repository.getDescriptorValues(key);
+        throw new RuntimeException("not implemented yet - see JCR-2062");
     }
 
-    /**
-     * Delegated to the underlying repository instance.
-     * {@inheritDoc}
-     */
     public boolean isSingleValueDescriptor(String key) {
-        return repository.isSingleValueDescriptor(key);
+        throw new RuntimeException("not implemented yet - see JCR-2062");
     }
 
-    /**
-     * Delegated to the underlying repository instance.
-     * {@inheritDoc}
-     */
     public boolean isStandardDescriptor(String key) {
-        return repository.isStandardDescriptor(key);
+        throw new RuntimeException("not implemented yet - see JCR-2062");
     }
 
     //--------------------------------------------------------< Referenceable >

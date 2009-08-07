@@ -42,7 +42,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(VersionLabelTest.class);
         suite.addTestSuite(CheckoutTest.class);
         suite.addTestSuite(CheckinTest.class);
-        suite.addTestSuite(CopyTest.class);
         suite.addTestSuite(VersionGraphTest.class);
         suite.addTestSuite(RemoveVersionTest.class);
         suite.addTestSuite(RestoreTest.class);
@@ -64,15 +63,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MergeDoneMergeTest.class);
         suite.addTestSuite(MergeNodeIteratorTest.class);
         suite.addTestSuite(MergeNodeTest.class);
-        suite.addTestSuite(MergeShallowTest.class);
-        suite.addTestSuite(MergeActivityTest.class);
         suite.addTestSuite(MergeNonVersionableSubNodeTest.class);
         suite.addTestSuite(MergeSubNodeTest.class);
-        
-        // JCR 2.0
-
-        suite.addTestSuite(ActivitiesTest.class);
-        suite.addTestSuite(ConfigurationsTest.class);
 
         return suite;
     }

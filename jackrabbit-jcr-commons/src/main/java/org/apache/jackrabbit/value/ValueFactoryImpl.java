@@ -16,16 +16,21 @@
  */
 package org.apache.jackrabbit.value;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.PropertyType;
+import java.io.InputStream;
+import java.util.Calendar;
 
 /**
- * Simple extension of the <code>AbstractValueFactory</code> that omits any
- * validation checks for path and name values.
+ * This class implements the <code>ValueFactory</code> interface.
  *
  * @see javax.jcr.Session#getValueFactory()
  */
-public class ValueFactoryImpl extends AbstractValueFactory {
+public class ValueFactoryImpl implements ValueFactory {
 
     private static final ValueFactory valueFactory = new ValueFactoryImpl();
 
@@ -35,6 +40,7 @@ public class ValueFactoryImpl extends AbstractValueFactory {
     protected ValueFactoryImpl() {
     }
 
+    //--------------------------------------------------------------------------
     /**
      *
      */
@@ -42,17 +48,93 @@ public class ValueFactoryImpl extends AbstractValueFactory {
         return valueFactory;
     }
 
+    //---------------------------------------------------------< ValueFactory >
     /**
-     * @see AbstractValueFactory#checkPathFormat(String)
+     * {@inheritDoc}
      */
-    protected void checkPathFormat(String pathValue) throws ValueFormatException {
-        // ignore
+    public Value createValue(boolean value) {
+        return new BooleanValue(value);
     }
 
     /**
-     * @see AbstractValueFactory#checkNameFormat(String)
+     * {@inheritDoc}
      */
-    protected void checkNameFormat(String nameValue) throws ValueFormatException {
-        // ignore
+    public Value createValue(Calendar value) {
+        return new DateValue(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value createValue(double value) {
+        return new DoubleValue(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value createValue(InputStream value) {
+        return new BinaryValue(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value createValue(long value) {
+        return new LongValue(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value createValue(Node value) throws RepositoryException {
+        return new ReferenceValue(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value createValue(String value) {
+        return new StringValue(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value createValue(String value, int type)
+            throws ValueFormatException {
+        Value val;
+        switch (type) {
+            case PropertyType.STRING:
+                val = new StringValue(value);
+                break;
+            case PropertyType.BOOLEAN:
+                val = BooleanValue.valueOf(value);
+                break;
+            case PropertyType.DOUBLE:
+                val = DoubleValue.valueOf(value);
+                break;
+            case PropertyType.LONG:
+                val = LongValue.valueOf(value);
+                break;
+            case PropertyType.DATE:
+                val = DateValue.valueOf(value);
+                break;
+            case PropertyType.NAME:
+                val = NameValue.valueOf(value);
+                break;
+            case PropertyType.PATH:
+                val = PathValue.valueOf(value);
+                break;
+            case PropertyType.REFERENCE:
+                val = ReferenceValue.valueOf(value);
+                break;
+            case PropertyType.BINARY:
+                val = new BinaryValue(value);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid type constant: " + type);
+        }
+        return val;
     }
 }

@@ -36,12 +36,12 @@ public class QValueFactoryTest extends AbstractSPITest {
 
     private static Logger log = LoggerFactory.getLogger(QValueFactoryTest.class);
 
-    protected QValueFactory factory;
+    private QValueFactory factory;
 
     private final Calendar calendar = Calendar.getInstance();
-    protected Path rootPath;
-    protected Name testName;
-    protected String reference;
+    private Path rootPath;
+    private Name testName;
+    private String reference;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -203,13 +203,13 @@ public class QValueFactoryTest extends AbstractSPITest {
     public void testDateValueEquality() throws RepositoryException {
         QValue v = factory.create(calendar);
         QValue otherV = factory.create(calendar);
-        assertEquals("Equality of date value must be calculated based on their String representation.", v, otherV);
+        assertEquals("Equality of qualified date value must be calculated based on their String representation.", v, otherV);
     }
 
     public void testDateValueEquality2() throws RepositoryException {
         QValue v = factory.create(calendar);
         QValue otherV = factory.create(v.getString(), PropertyType.DATE);
-        assertEquals("Equality of date value must be calculated based on their String representation.", v, otherV);
+        assertEquals("Equality of qualified date value must be calculated based on their String representation.", v, otherV);
     }
 
     //----------------------------------------------------------< REFERENCE >---
@@ -238,7 +238,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         if (reference != null) {
             QValue v = factory.create(reference, PropertyType.REFERENCE);
             QValue otherV = factory.create(reference, PropertyType.REFERENCE);
-            assertEquals("Reference values created from the same string must be equal.", v, otherV);
+            assertEquals("Qualified ref values created from the same string must be equal.", v, otherV);
         } else {
             log.warn("Configuration entry 'QValueFactoryTest.reference' is missing -> skip test 'testReferenceValueEquality'.");
         }

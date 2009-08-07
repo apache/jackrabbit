@@ -159,8 +159,8 @@ public class RepositoryCopier {
         FileUtils.deleteQuietly(new File(repoDir, "index"));
         File[] workspaces = new File(targetDir, "workspaces").listFiles();
         if (workspaces != null) {
-            for (File workspace : workspaces) {
-                FileUtils.deleteQuietly(new File(workspace, "index"));
+            for (int i = 0; i < workspaces.length; i++) {
+                FileUtils.deleteQuietly(new File(workspaces[i], "index"));
             }
         }
     }
@@ -212,12 +212,14 @@ public class RepositoryCopier {
         NamespaceRegistry targetRegistry = target.getNamespaceRegistry();
 
         logger.info("Copying registered namespaces");
-        Collection<String> existing = Arrays.asList(targetRegistry.getURIs());
-        for (String uri : sourceRegistry.getURIs()) {
-            if (!existing.contains(uri)) {
+
+        Collection existing = Arrays.asList(targetRegistry.getURIs());
+        String[] uris = sourceRegistry.getURIs();
+        for (int i = 0; i < uris.length; i++) {
+            if (!existing.contains(uris[i])) {
                 // TODO: what if the prefix is already taken?
                 targetRegistry.registerNamespace(
-                        sourceRegistry.getPrefix(uri), uri);
+                        sourceRegistry.getPrefix(uris[i]), uris[i]);
             }
         }
     }
@@ -227,13 +229,14 @@ public class RepositoryCopier {
         NodeTypeRegistry targetRegistry = target.getNodeTypeRegistry();
 
         logger.info("Copying registered node types");
-        Collection<Name> existing =
+        Collection existing =
             Arrays.asList(targetRegistry.getRegisteredNodeTypes());
-        Collection<NodeTypeDef> register = new ArrayList<NodeTypeDef>();
-        for (Name name : sourceRegistry.getRegisteredNodeTypes()) {
+        Collection register = new ArrayList();
+        Name[] names = sourceRegistry.getRegisteredNodeTypes();
+        for (int i = 0; i < names.length; i++) {
             // TODO: what about modified node types?
-            if (!existing.contains(name)) {
-                register.add(sourceRegistry.getNodeTypeDef(name));
+            if (!existing.contains(names[i])) {
+                register.add(sourceRegistry.getNodeTypeDef(names[i]));
             }
         }
         try {
@@ -253,17 +256,18 @@ public class RepositoryCopier {
     }
 
     private void copyWorkspaces() throws RepositoryException {
-        Collection<String> existing = Arrays.asList(target.getWorkspaceNames());
-        for (String name : source.getWorkspaceNames()) {
-            logger.info("Copying workspace {}" , name);
+        Collection existing = Arrays.asList(target.getWorkspaceNames());
+        String[] names = source.getWorkspaceNames();
+        for (int i = 0; i < names.length; i++) {
+            logger.info("Copying workspace {}" , names[i]);
 
-            if (!existing.contains(name)) {
-                target.createWorkspace(name);
+            if (!existing.contains(names[i])) {
+                target.createWorkspace(names[i]);
             }
 
             PersistenceCopier copier = new PersistenceCopier(
-                    source.getWorkspaceInfo(name).getPersistenceManager(),
-                    target.getWorkspaceInfo(name).getPersistenceManager(),
+                    source.getWorkspaceInfo(names[i]).getPersistenceManager(),
+                    target.getWorkspaceInfo(names[i]).getPersistenceManager(),
                     target.getDataStore());
             copier.excludeNode(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
             copier.copy(RepositoryImpl.ROOT_NODE_ID);

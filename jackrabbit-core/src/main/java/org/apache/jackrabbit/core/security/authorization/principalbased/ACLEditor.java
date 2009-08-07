@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -45,7 +45,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.PropertyType;
-import javax.jcr.NodeIterator;
 import java.security.Principal;
 
 /**
@@ -106,21 +105,6 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     }
 
     /**
-     * @see AccessControlEditor#getPolicies(Principal)
-     */
-    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException {
-        if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
-            throw new AccessControlException("Cannot edit access control: " + principal.getName() +" isn't a known principal.");
-        }
-        JackrabbitAccessControlPolicy acl = getACL(principal);
-        if (acl == null) {
-            return new JackrabbitAccessControlPolicy[0];
-        } else {
-            return new JackrabbitAccessControlPolicy[] {acl};
-        }
-    }
-
-    /**
      * @see AccessControlEditor#editAccessControlPolicies(String)
      */
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
@@ -135,9 +119,6 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                     throw new AccessControlException("Access control modification not allowed at " + nodePath);
                 }
                 acNode = createAcNode(nodePath);
-            }
-
-            if (!isAccessControlled(acNode)) {
                 return new AccessControlPolicy[] {createTemplate(acNode)};
             } // else: acl has already been set before -> use getPolicies instead
         }
@@ -161,15 +142,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         } else {
             acNode = (NodeImpl) session.getNode(nPath);
         }
-        if (!isAccessControlled(acNode)) {
-            return new JackrabbitAccessControlPolicy[] {createTemplate(acNode)};
-        } else {
-            // policy child node has already been created -> set policy has
-            // been called before for this principal and getPolicy is used
-            // to retrieve the ACL template.
-            // no additional applicable policies present.
-            return new JackrabbitAccessControlPolicy[0];
-        }
+        return new JackrabbitAccessControlPolicy[] {createTemplate(acNode)};
     }
 
     /**
@@ -184,22 +157,22 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         if (acNode == null) {
             throw new PathNotFoundException("No such node " + nodePath);
         }
-
         // write the entries to the node
+        /*
+         in order to assert that the parent (ac-controlled node) gets
+         modified an existing ACL node is removed first and the recreated.
+         this also asserts that all ACEs are cleared without having to
+         access and removed the explicitely
+        */
         NodeImpl aclNode;
         if (acNode.hasNode(N_POLICY)) {
             aclNode = acNode.getNode(N_POLICY);
-            // remove all existing aces
-            for (NodeIterator aceNodes = aclNode.getNodes(); aceNodes.hasNext();) {
-                NodeImpl aceNode = (NodeImpl) aceNodes.nextNode();
-                removeItem(aceNode);
-            }
-        } else {
-            /* doesn't exist yet -> create */
-            aclNode = addNode(acNode, N_POLICY, NT_REP_ACL);
+            removeItem(aclNode);
         }
+        /* now (re) create it */
+        aclNode = addNode(acNode, N_POLICY, NT_REP_ACL);
 
-        /* add all new entries defined on the template */
+        /* add all entries defined on the template */
         AccessControlEntry[] aces = acl.getAccessControlEntries();
         for (int i = 0; i < aces.length; i++) {
             JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) aces[i];
@@ -228,9 +201,6 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 setProperty(aceNode, pName, value);
             }
         }
-
-        // mark the parent modified.
-        markModified((NodeImpl) aclNode.getParent());
     }
 
     /**
@@ -273,19 +243,10 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     private NodeImpl createAcNode(String acPath) throws RepositoryException {
         String[] segms = Text.explode(acPath, '/', false);
-        StringBuilder currentPath = new StringBuilder();
         NodeImpl node = (NodeImpl) session.getRootNode();
         for (int i = 0; i < segms.length; i++) {
-            if (i > 0) {
-                currentPath.append('/').append(segms[i]);
-            }
             Name nName = session.getQName(segms[i]);
-            Name ntName;
-            if (denotesPrincipalPath(currentPath.toString())) {
-                ntName = NT_REP_PRINCIPAL_ACCESS_CONTROL;
-            } else {
-                ntName = (i < segms.length - 1) ? NT_REP_ACCESS_CONTROL : NT_REP_PRINCIPAL_ACCESS_CONTROL;
-            }
+            Name ntName = (i < segms.length-1) ? NT_REP_ACCESS_CONTROL : NT_REP_PRINCIPAL_ACCESS_CONTROL;
             if (node.hasNode(nName)) {
                 NodeImpl n = node.getNode(nName);
                 if (!n.isNodeType(ntName)) {
@@ -298,25 +259,6 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             }
         }
         return node;
-    }
-
-    private boolean denotesPrincipalPath(final String path) {
-        if (path == null || path.length() == 0) {
-            return false;
-        }
-        ItemBasedPrincipal princ = new ItemBasedPrincipal() {
-            public String getPath() throws RepositoryException {
-                return path;
-            }
-            public String getName() {
-                return Text.getName(path);
-            }
-        };
-        try {
-            return session.getUserManager().getAuthorizable(princ) != null;
-        } catch (RepositoryException e) {
-            return false;
-        }
     }
 
     /**
@@ -439,7 +381,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 log.debug("Invalid path name for Permission: " + name + ".");
             }
         }
-        int i = 0;
+        int i=0;
         String check = name;
         while (node.hasNode(check)) {
             check = name + i;

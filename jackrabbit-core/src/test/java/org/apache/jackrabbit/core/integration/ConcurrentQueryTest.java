@@ -51,7 +51,7 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         for (int i = 0; i < NUM_READERS; i++) {
-            readSessions.add(getHelper().getReadOnlySession());
+            readSessions.add(helper.getReadOnlySession());
         }
     }
 

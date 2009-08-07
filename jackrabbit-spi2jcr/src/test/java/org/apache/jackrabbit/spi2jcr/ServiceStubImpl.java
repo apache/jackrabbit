@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import java.util.Properties;
-import java.util.Collections;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
@@ -26,8 +25,7 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.RepositoryServiceStub;
-import org.apache.jackrabbit.test.RepositoryStubException;
-import org.apache.jackrabbit.test.RepositoryStub;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /** <code>ServiceStubImpl</code>... */
 public class ServiceStubImpl extends RepositoryServiceStub {
@@ -47,12 +45,7 @@ public class ServiceStubImpl extends RepositoryServiceStub {
 
     public RepositoryService getRepositoryService() throws RepositoryException {
         if (service == null) {
-            Repository repository;
-            try {
-                repository = RepositoryStub.getInstance(Collections.EMPTY_MAP).getRepository();
-            } catch (RepositoryStubException e) {
-                throw new RepositoryException(e);
-            }
+            Repository repository = AbstractJCRTest.helper.getRepository();
             service = new RepositoryServiceImpl(repository, new BatchReadConfig());
         }
         return service;

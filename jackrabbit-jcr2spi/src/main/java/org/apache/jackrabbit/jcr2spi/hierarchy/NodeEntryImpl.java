@@ -16,22 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
@@ -41,7 +25,6 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -63,6 +46,21 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>NodeEntryImpl</code> implements common functionality for child
@@ -116,12 +114,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     private RevertInfo revertInfo;
 
     /**
-     * Information regarding the invalidation status of the underlying {@link ItemState}
-     * of this entry. The semantics depend on the {@link EntryFactory.InvalidationStrategy}.
-     */
-    private long invalidationStatus;
-
-    /**
      * Creates a new <code>NodeEntryImpl</code>
      *
      * @param parent    the <code>NodeEntry</code> that owns this child item
@@ -172,18 +164,31 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         return true;
     }
 
+    /**
+     * @inheritDoc
+     * @see HierarchyEntry#invalidate(boolean)
+     */
     public void invalidate(boolean recursive) {
-        getInvalidationStrategy().invalidate(this, recursive);
-    }
-
-    public void calculateStatus() {
-        getInvalidationStrategy().applyPending(this);
+        if (recursive) {
+            // invalidate all child entries including properties present in the
+            // attic (removed props shadowed by a new property with the same name).
+            for (Iterator it = getAllChildEntries(true); it.hasNext();) {
+                HierarchyEntry ce = (HierarchyEntry) it.next();
+                ce.invalidate(recursive);
+            }
+        }
+        // invalidate 'childNodeEntries'
+        if (getStatus() != Status.NEW) {
+            childNodeEntries.invalidate();
+        }
+        // ... and invalidate the resolved state (if available)
+        super.invalidate(recursive);
     }
 
     /**
      * If 'recursive' is true, the complete hierarchy below this entry is
      * traversed and reloaded. Otherwise only this entry and the direct
-     * descendants are reloaded.
+     * decendants are reloaded.
      *
      * @see HierarchyEntry#reload(boolean)
      */
@@ -194,7 +199,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         // reload all children unless 'recursive' is false and the reload above
         // did not cause this entry to be removed -> therefore check status.
         if (recursive && !Status.isTerminal(getStatus())) {
-            // recursively reload all entries including props that are in the attic.
+            // recursivly reload all entries including props that are in the attic.
             for (Iterator it = getAllChildEntries(true); it.hasNext();) {
                 HierarchyEntry ce = (HierarchyEntry) it.next();
                 ce.reload(recursive);
@@ -279,8 +284,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             complete((AddProperty) operation);
         } else if (operation instanceof SetMixin) {
             complete((SetMixin) operation);
-        } else if (operation instanceof SetPrimaryType) {
-            complete((SetPrimaryType) operation);
         } else if (operation instanceof Remove) {
             complete((Remove) operation);
         } else if (operation instanceof ReorderNodes) {
@@ -297,11 +300,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#getId()
      */
     public NodeId getId() throws InvalidItemStateException, RepositoryException {
-        IdFactory idFactory = getIdFactory();
+        IdFactory idFactory = factory.getIdFactory();
         if (uniqueID != null) {
             return idFactory.createNodeId(uniqueID);
         } else {
-            PathFactory pf = getPathFactory();
+            PathFactory pf = factory.getPathFactory();
             if (parent == null) {
                 // root node
                 return idFactory.createNodeId((String) null, pf.getRootPath());
@@ -316,15 +319,14 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#getWorkspaceId()
      */
     public NodeId getWorkspaceId() throws InvalidItemStateException, RepositoryException {
+        IdFactory idFactory = factory.getIdFactory();
         if (uniqueID != null || parent == null) {
             // uniqueID and root-node -> internal id is always the same as getId().
             return getId();
         } else {
-            NodeId parentId = (revertInfo != null)
-                ? revertInfo.oldParent.getWorkspaceId()
-                : parent.getWorkspaceId();
-            return getIdFactory().createNodeId(parentId,
-                    getPathFactory().create(getName(true), getIndex(true)));
+            PathFactory pf = factory.getPathFactory();
+            NodeId parentId = (revertInfo != null) ? revertInfo.oldParent.getWorkspaceId() : parent.getWorkspaceId();
+            return idFactory.createNodeId(parentId, pf.create(getName(true), getIndex(true)));
         }
     }
 
@@ -373,7 +375,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         NodeEntryImpl entry = this;
         Path.Element[] elems = path.getElements();
         for (int i = 0; i < elems.length; i++) {
-            Path.Element elem = elems[i];
+            Path.Element elem = (Path.Element) elems[i];
             // check for root element
             if (elem.denotesRoot()) {
                 if (entry.getParent() != null) {
@@ -419,7 +421,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 * 2) if the NameElement does not have SNS-index => try Property
                 * 3) else throw
                 */
-                PathBuilder pb = new PathBuilder(getPathFactory());
+                PathBuilder pb = new PathBuilder(factory.getPathFactory());
                 for (int j = i; j < elems.length; j++) {
                     pb.addLast(elems[j]);
                 }
@@ -448,7 +450,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         Path.Element[] elems = path.getElements();
         int i = 0;
         for (; i < elems.length-1; i++) {
-            Path.Element elem = elems[i];
+            Path.Element elem = (Path.Element) elems[i];
             if (elems[i].denotesRoot()) {
                 if (entry.getParent() != null) {
                     throw new RepositoryException("NodeEntry out of 'hierarchy' " + path.toString());
@@ -497,13 +499,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             * PropertyState (including building the itermediate entries. If that
             * fails ItemNotFoundException is thrown.
             */
-            PathBuilder pb = new PathBuilder(getPathFactory());
+            PathBuilder pb = new PathBuilder(factory.getPathFactory());
             for (int j = i; j < elems.length; j++) {
                 pb.addLast(elems[j]);
             }
             Path remainingPath = pb.getPath();
 
-            IdFactory idFactory = getIdFactory();
+            IdFactory idFactory = factory.getIdFactory();
             NodeId parentId = entry.getWorkspaceId();
             parentId = (remainingPath.getLength() == 1) ? parentId : idFactory.createNodeId(parentId, remainingPath.getAncestor(1));
             PropertyId propId = idFactory.createPropertyId(parentId, remainingPath.getNameElement().getName());
@@ -604,9 +606,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         if (cne == null && loadIfNotFound
                 && !containsAtticChild(entries, nodeName, index)
                 && !childNodeEntries.isComplete()) {
-
-            NodeId cId = getIdFactory().createNodeId(getWorkspaceId(),
-                    getPathFactory().create(nodeName, index));
+            PathFactory pf = factory.getPathFactory();
+            NodeId cId = factory.getIdFactory().createNodeId(getWorkspaceId(), pf.create(nodeName, index));
             cne = loadNodeEntry(cId);
         }
         return cne;
@@ -686,7 +687,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     public NodeEntry addNewNodeEntry(Name nodeName, String uniqueID,
                                      Name primaryNodeType, QNodeDefinition definition) throws RepositoryException {
         NodeEntry entry = internalAddNodeEntry(nodeName, uniqueID, Path.INDEX_UNDEFINED);
-        NodeState state = getItemStateFactory().createNewNodeState(entry, primaryNodeType, definition);
+        NodeState state = factory.getItemStateFactory().createNewNodeState(entry, primaryNodeType, definition);
         entry.setItemState(state);
         return entry;
     }
@@ -825,8 +826,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             }
         }
 
+        // add the property entry
         PropertyEntry entry = factory.createPropertyEntry(this, propName);
-        PropertyState state = getItemStateFactory().createNewPropertyState(entry, definition, values, propertyType);
+        PropertyState state = factory.getItemStateFactory().createNewPropertyState(entry, definition, values, propertyType);
         entry.setItemState(state);
 
         // add the property entry if creating the new state was successful
@@ -970,13 +972,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     }
                 } // else: existing entry but state not yet built -> ignore event
                 break;
-            case Event.NODE_MOVED:
-                // TODO: implementation missing
-                throw new UnsupportedOperationException("Implementation missing");
-                //break;
-            case Event.PERSIST:
-                // TODO: implementation missing
-                throw new UnsupportedOperationException("Implementation missing");
             default:
                 // ILLEGAL
                 throw new IllegalArgumentException("Illegal event type " + childEvent.getType() + " for NodeState.");
@@ -989,14 +984,14 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * Returns a <code>NodeState</code>.
      */
     ItemState doResolve() throws ItemNotFoundException, RepositoryException {
-        return getItemStateFactory().createNodeState(getWorkspaceId(), this);
+        return factory.getItemStateFactory().createNodeState(getWorkspaceId(), this);
     }
 
     /**
      * @see HierarchyEntryImpl#buildPath(boolean)
      */
     Path buildPath(boolean wspPath) throws RepositoryException {
-        PathFactory pf = getPathFactory();
+        PathFactory pf = factory.getPathFactory();
         // shortcut for root state
         if (parent == null) {
             return pf.getRootPath();
@@ -1089,27 +1084,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
     }
 
-    private EntryFactory.InvalidationStrategy getInvalidationStrategy() {
-        return factory.getInvalidationStrategy();
-    }
-
-    /**
-     * Invalidates the underlying {@link ItemState}. If <code>recursive</code> is
-     * true also invalidates the underlying item states of all child entries.
-     * @param recursive
-     */
-    private void invalidateInternal(boolean recursive) {
-        if (recursive) {
-            // invalidate all child entries including properties present in the
-            // attic (removed props shadowed by a new property with the same name).
-            for (Iterator it = getAllChildEntries(true); it.hasNext();) {
-                HierarchyEntry ce = (HierarchyEntry) it.next();
-                ce.invalidate(true);
-            }
-        }
-        super.invalidate(true);
-    }
-
     /**
      * @param oldName
      * @param oldIndex
@@ -1169,7 +1143,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     private NodeEntry loadNodeEntry(NodeId childId) throws RepositoryException {
         try {
-            NodeState state = getItemStateFactory().createDeepNodeState(childId, this);
+            NodeState state = factory.getItemStateFactory().createDeepNodeState(childId, this);
             return state.getNodeEntry();
         } catch (ItemNotFoundException e) {
             return null;
@@ -1185,7 +1159,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     private PropertyEntry loadPropertyEntry(PropertyId childId) throws RepositoryException {
         try {
-            PropertyState state = getItemStateFactory().createDeepPropertyState(childId, this);
+            PropertyState state = factory.getItemStateFactory().createDeepPropertyState(childId, this);
             return (PropertyEntry) state.getHierarchyEntry();
         } catch (ItemNotFoundException e) {
             return null;
@@ -1499,13 +1473,12 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 break;
             case Operation.STATUS_UNDO:
                 if (!rmEntry.denotesNode()) {
-                    Name propName = rmEntry.getName();
+                    Name propName = ((PropertyEntry) rmEntry).getName();
                     if (propertiesInAttic.containsKey(propName)) {
                         properties.add((PropertyEntry) propertiesInAttic.remove(propName));
                     } // else: propEntry has never been moved to the attic (see 'addPropertyEntry')
                 }
                 rmEntry.revert();
-                break;
             default: // ignore
         }
 
@@ -1522,30 +1495,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 case Operation.STATUS_PERSISTED:
                     Name[] mixins = StateUtility.getMixinNames(pState);
                     getNodeState().setMixinTypeNames(mixins);
-                    if (pState.getStatus() == Status.NEW || pState.getStatus() == Status.EXISTING_MODIFIED) {
-                        pState.setStatus(Status.EXISTING);
-                    }
-                    break;
-                case Operation.STATUS_UNDO:
-                    pe.revert();
-                    break;
-                default: // ignore
-            }
-        } // else: no such prop-Entry (should not occur)
-    }
-
-    private void complete(SetPrimaryType operation) throws RepositoryException {
-        if (operation.getNodeState().getHierarchyEntry() != this) {
-            throw new IllegalArgumentException();
-        }
-        PropertyEntry pe = getPropertyEntry(NameConstants.JCR_PRIMARYTYPE);
-        if (pe != null) {
-            PropertyState pState = pe.getPropertyState();
-            switch (operation.getStatus()) {
-                case Operation.STATUS_PERSISTED:
-                    // NOTE: invalidation of this node entry is performed by
-                    // ChangeLog.persisted...
-                    // TODO: check if correct
                     if (pState.getStatus() == Status.NEW || pState.getStatus() == Status.EXISTING_MODIFIED) {
                         pState.setStatus(Status.EXISTING);
                     }
@@ -1669,136 +1618,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 }
             }
             revertInfo = null;
-        }
-    }
-
-    // ----------------------------------------------< InvalidationStrategy >---
-    /**
-     * An implementation of <code>InvalidationStrategy</code> which lazily invalidates
-     * the underlying {@link ItemState}s.
-     */
-    static class LazyInvalidation implements EntryFactory.InvalidationStrategy {
-
-        /**
-         * Marker for entries with a pending recursive invalidation.
-         */
-        private static long INVALIDATION_PENDING = -1;
-
-        /**
-         * Time stamp of the last time a recursive invalidation occurred.
-         */
-        private long lastInvalidation;
-
-        /**
-         * A recursive invalidation is being processed if <code>true</code>.
-         * This flag is for preventing re-entrance.
-         */
-        private boolean invalidating;
-
-        /**
-         * Actual time stamp
-         */
-        private long timeStamp;
-
-        /**
-         * @return  time stamp used to mark entries
-         */
-        private long getTimeStamp() {
-            return timeStamp++;
-        }
-
-        /**
-         * Records a pending recursive {@link ItemState#invalidate() invalidation} for
-         * <code>entry</code> if <code>recursive</code> is <code>true</code>. Otherwise
-         * invalidates the entry right away.
-         * {@inheritDoc}
-         */
-        public void invalidate(NodeEntry entry, boolean recursive) {
-            if (recursive) {
-                ((NodeEntryImpl)entry).invalidationStatus = INVALIDATION_PENDING;
-                if (!invalidating) {
-                    lastInvalidation = getTimeStamp();
-                }
-            } else {
-                ((NodeEntryImpl)entry).invalidateInternal(false);
-            }
-        }
-
-        /**
-         * Checks whether <code>entry</code> itself has a invalidation pending.
-         * If so, the <code>entry</code> is invalidated. Otherwise check
-         * whether an invalidation occurred after the entry has last been
-         * invalidated. If so, search the path to the root for an originator of
-         * the pending invalidation.
-         * If such an originator is found, invalidate each entry on the path.
-         * Otherwise this method does nothing.
-         * {@inheritDoc}
-         */
-        public void applyPending(NodeEntry entry) {
-            if (!invalidating) {
-                invalidating = true;
-                try {
-                    NodeEntryImpl ne = (NodeEntryImpl) entry;
-                    if (ne.invalidationStatus == INVALIDATION_PENDING) {
-                        ne.invalidateInternal(true);
-                        ne.invalidationStatus = getTimeStamp();
-                    } else if (ne.invalidationStatus <= lastInvalidation) {
-                        resolvePendingInvalidation(ne);
-                    }
-                } finally {
-                    invalidating = false;
-                }
-            }
-        }
-
-        /**
-         * Search the path to the root for an originator of a pending invalidation of
-         * this <code>entry</code>. If such an originator is found, invalidate each
-         * entry on the path. Otherwise do nothing.
-         *
-         * @param entry
-         */
-        private void resolvePendingInvalidation(NodeEntryImpl entry) {
-            if (entry != null) {
-
-                // First recursively travel up to the first parent node
-                // which has invalidation pending or to the root node if
-                // no such node exists.
-                if (entry.invalidationStatus != INVALIDATION_PENDING) {
-                    resolvePendingInvalidation(entry.parent);
-                }
-
-                // Then travel the path backwards invalidating as required
-                if (entry.invalidationStatus == INVALIDATION_PENDING) {
-                    entry.invalidateInternal(true);
-                }
-                entry.invalidationStatus = getTimeStamp();
-            }
-        }
-    }
-
-    /**
-     * An implementation of <code>InvalidationStrategy</code> which eagerly invalidates
-     * the underlying {@link ItemState}s.
-     */
-    static class EagerInvalidation implements EntryFactory.InvalidationStrategy {
-
-        /**
-         * Calls {@link ItemState#invalidate()} for the underlying item state of this
-         * <code>entry</code> and - if <code>recursive</code> is <code>true</code> -
-         * recursively for all item states of all child entries
-         * {@inheritDoc}
-         */
-        public void invalidate(NodeEntry entry, boolean recursive) {
-            ((NodeEntryImpl) entry).invalidateInternal(recursive);
-        }
-
-        /**
-         * Does nothing since invalidation has occurred already.
-         * {@inheritDoc}
-         */
-        public void applyPending(NodeEntry entry) {
-            // Empty
         }
     }
 }

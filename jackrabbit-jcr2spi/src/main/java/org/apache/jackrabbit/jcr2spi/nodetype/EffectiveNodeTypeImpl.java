@@ -20,7 +20,6 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -407,19 +406,13 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     /**
      * @inheritDoc
-     * @see EffectiveNodeType#checkAddNodeConstraints(org.apache.jackrabbit.spi.Name,QNodeTypeDefinition, ItemDefinitionProvider)
+     * @see EffectiveNodeType#checkAddNodeConstraints(Name, ItemDefinitionProvider)
      */
-    public void checkAddNodeConstraints(Name name, QNodeTypeDefinition nodeTypeDefinition, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, Name nodeTypeName, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        if (nodeTypeDefinition.isAbstract()) {
-            throw new ConstraintViolationException(name + " is abstract  be used as primary node type.");
-        }
-        if (nodeTypeDefinition.isMixin()) {
-            throw new ConstraintViolationException(name + " is abstract and cannot be used as primary node type.");
-        }
-        QNodeDefinition nd = definitionProvider.getQNodeDefinition(this, name, nodeTypeDefinition.getName());
+        QNodeDefinition nd = definitionProvider.getQNodeDefinition(this, name, nodeTypeName);
         if (nd.isProtected()) {
-            throw new ConstraintViolationException(name + " is protected.");
+            throw new ConstraintViolationException(name + " is protected");
         }
         if (nd.isAutoCreated()) {
             throw new ConstraintViolationException(name + " is auto-created and can not be manually added");
@@ -436,55 +429,19 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
          * don't know which one is applicable, we check all of them
          */
         QItemDefinition[] defs = getNamedItemDefs(name);
-        if (hasRemoveConstaint(defs)) {
-            throw new ConstraintViolationException("can't remove mandatory or protected item");
-        }
-    }
-
-    /**
-     * @inheritDoc
-     * @see EffectiveNodeType#hasRemoveNodeConstraint(Name)
-     */
-    public boolean hasRemoveNodeConstraint(Name nodeName) {
-        QNodeDefinition[] defs = getNamedQNodeDefinitions(nodeName);
-        return hasRemoveConstaint(defs);
-    }
-
-    /**
-     * @inheritDoc
-     * @see EffectiveNodeType#hasRemovePropertyConstraint(Name)
-     */
-    public boolean hasRemovePropertyConstraint(Name propertyName) {
-        QPropertyDefinition[] defs = getNamedQPropertyDefinitions(propertyName);
-        return hasRemoveConstaint(defs);
-    }
-
-    //---------------------------------------------< impl. specific methods >---
-    /**
-     * Loop over the specified definitions and return <code>true</code> as soon
-     * as the first mandatory or protected definition is encountered.
-     *
-     * @param defs
-     * @return <code>true</code> if a mandatory or protected definition is present.
-     */
-    private static boolean hasRemoveConstaint(QItemDefinition[] defs) {
-        /**
-         * as there might be multiple definitions with the same name that may be
-         * applicable, return true as soon as the first mandatory or protected
-         * definition is encountered.
-         */
         if (defs != null) {
             for (int i = 0; i < defs.length; i++) {
                 if (defs[i].isMandatory()) {
-                    return true;
+                    throw new ConstraintViolationException("can't remove mandatory item");
                 }
                 if (defs[i].isProtected()) {
-                    return true;
+                    throw new ConstraintViolationException("can't remove protected item");
                 }
             }
         }
-        return false;
     }
+
+    //---------------------------------------------< impl. specific methods >---
 
     private QItemDefinition[] getNamedItemDefs() {
         if (namedItemDefs.size() == 0) {

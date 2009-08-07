@@ -53,7 +53,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
     private final NodeTypeRegistry registry;
 
     /** Property Name to TypeMapping[] mapping */
-    private final Map<Name, TypeMapping[]> typeMapping = new HashMap<Name, TypeMapping[]>();
+    private final Map typeMapping = new HashMap();
 
     /**
      * Creates a new <code>PropertyTypeRegistry</code> instance. This instance
@@ -75,7 +75,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
      */
     public TypeMapping[] getPropertyTypes(Name propName) {
         synchronized (typeMapping) {
-            TypeMapping[] types = typeMapping.get(propName);
+            TypeMapping[] types = (TypeMapping[]) typeMapping.get(propName);
             if (types != null) {
                 return types;
             } else {
@@ -89,12 +89,12 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
             NodeTypeDef def = registry.getNodeTypeDef(ntName);
             PropDef[] propDefs = def.getPropertyDefs();
             synchronized (typeMapping) {
-                for (PropDef propDef : propDefs) {
-                    int type = propDef.getRequiredType();
-                    if (!propDef.definesResidual() && type != PropertyType.UNDEFINED) {
-                        Name name = propDef.getName();
+                for (int i = 0; i < propDefs.length; i++) {
+                    int type = propDefs[i].getRequiredType();
+                    if (!propDefs[i].definesResidual() && type != PropertyType.UNDEFINED) {
+                        Name name = propDefs[i].getName();
                         // only remember defined property types
-                        TypeMapping[] types = typeMapping.get(name);
+                        TypeMapping[] types = (TypeMapping[]) typeMapping.get(name);
                         if (types == null) {
                             types = new TypeMapping[1];
                         } else {
@@ -102,7 +102,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                             System.arraycopy(types, 0, tmp, 0, types.length);
                             types = tmp;
                         }
-                        types[types.length - 1] = new TypeMapping(ntName, type, propDef.isMultiple());
+                        types[types.length - 1] = new TypeMapping(ntName, type, propDefs[i].isMultiple());
                         typeMapping.put(name, types);
                     }
                 }
@@ -120,18 +120,18 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
     public void nodeTypeUnregistered(Name ntName) {
         // remove all TypeMapping instances refering to this ntName
         synchronized (typeMapping) {
-            Map<Name, TypeMapping[]> modified = new HashMap<Name, TypeMapping[]>();
+            Map modified = new HashMap();
             for (Iterator it = typeMapping.keySet().iterator(); it.hasNext();) {
                 Name propName = (Name) it.next();
-                TypeMapping[] mapping = typeMapping.get(propName);
-                List<TypeMapping> remove = null;
-                for (TypeMapping tm : mapping) {
-                    if (tm.ntName.equals(ntName)) {
+                TypeMapping[] mapping = (TypeMapping[]) typeMapping.get(propName);
+                List remove = null;
+                for (int i = 0; i < mapping.length; i++) {
+                    if (mapping[i].ntName.equals(ntName)) {
                         if (remove == null) {
                             // not yet created
-                            remove = new ArrayList<TypeMapping>(mapping.length);
+                            remove = new ArrayList(mapping.length);
                         }
-                        remove.add(tm);
+                        remove.add(mapping[i]);
                     }
                 }
                 if (remove != null) {
@@ -140,7 +140,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                         // all removed -> done
                     } else {
                         // only some removed
-                        List<TypeMapping> remaining = new ArrayList<TypeMapping>(Arrays.asList(mapping));
+                        List remaining = new ArrayList(Arrays.asList(mapping));
                         remaining.removeAll(remove);
                         modified.put(propName, remaining.toArray(new TypeMapping[remaining.size()]));
                     }
@@ -156,8 +156,9 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
      * from the {@link org.apache.jackrabbit.core.nodetype.NodeTypeRegistry}.
      */
     private void fillCache() {
-        for (Name ntName : registry.getRegisteredNodeTypes()) {
-            nodeTypeRegistered(ntName);
+        Name[] ntNames = registry.getRegisteredNodeTypes();
+        for (int i = 0; i < ntNames.length; i++) {
+            nodeTypeRegistered(ntNames[i]);
         }
     }
 

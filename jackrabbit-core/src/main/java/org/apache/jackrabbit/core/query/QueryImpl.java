@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +35,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 import javax.jcr.version.VersionException;
 import java.text.NumberFormat;
@@ -49,6 +49,22 @@ public class QueryImpl extends AbstractQueryImpl {
      * The logger instance for this class
      */
     private static final Logger log = LoggerFactory.getLogger(QueryImpl.class);
+
+    /**
+     * A string constant representing the JCR-SQL2 query language.
+     *
+     * @since JCR 2.0
+     * TODO: REMOVE WHEN JSR 283 IS FINAL!!
+     */
+    public static final String JCR_SQL2 = "JCR-SQL2";
+
+    /**
+     * A string constant representing the JCR-JQOM query language.
+     *
+     * @since JCR 2.0
+     * TODO: REMOVE WHEN JSR 283 IS FINAL!!
+     */
+    public static final String JCR_JQOM = "JCR-JQOM";
 
     /**
      * The session of the user executing this query
@@ -89,7 +105,7 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * The maximum result size
      */
-    private long limit = -1;
+    private long limit;
 
     /**
      * The offset in the total result set
@@ -103,16 +119,50 @@ public class QueryImpl extends AbstractQueryImpl {
                      ItemManager itemMgr,
                      QueryHandler handler,
                      String statement,
-                     String language,
-                     Node node) throws InvalidQueryException {
+                     String language) throws InvalidQueryException {
         checkNotInitialized();
         this.session = session;
         this.statement = statement;
         this.language = language;
         this.handler = handler;
-        this.node = node;
         this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
         setInitialized();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void init(SessionImpl session,
+                     ItemManager itemMgr,
+                     QueryHandler handler,
+                     Node node)
+            throws InvalidQueryException, RepositoryException {
+        checkNotInitialized();
+        this.session = session;
+        this.node = node;
+        this.handler = handler;
+
+        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
+            throw new InvalidQueryException("node is not of type nt:query");
+        }
+        statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
+        language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
+        query = handler.createExecutableQuery(session, itemMgr, statement, language);
+        setInitialized();
+    }
+
+    /**
+     * @inheritDoc
+     * <p/>
+     * Throws an {@link UnsupportedOperationException}.
+     */
+    public void init(SessionImpl session,
+                     ItemManager itemMgr,
+                     QueryHandler handler,
+                     QueryObjectModelTree qomTree,
+                     String language)
+            throws InvalidQueryException, RepositoryException {
+        throw new UnsupportedOperationException("not a prepared query");
     }
 
     /**
@@ -197,18 +247,6 @@ public class QueryImpl extends AbstractQueryImpl {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public String[] getBindVariableNames() throws RepositoryException {
-        Name[] names = query.getBindVariableNames();
-        String[] strNames = new String[names.length];
-        for (int i = 0; i < names.length; i++) {
-            strNames[i] = session.getJCRName(names[i]);
-        }
-        return strNames;
-    }
-
-    /**
      * Binds the given <code>value</code> to the variable named
      * <code>varName</code>.
      *
@@ -234,9 +272,6 @@ public class QueryImpl extends AbstractQueryImpl {
      * @param limit new maximum size of the result set
      */
     public void setLimit(long limit) {
-        if (limit < 0) {
-            throw new IllegalArgumentException("limit must not be negativ");
-        }
         this.limit = limit;
     }
 
@@ -246,9 +281,6 @@ public class QueryImpl extends AbstractQueryImpl {
      * @param offset new start offset of the result set
      */
     public void setOffset(long offset) {
-        if (offset < 0) {
-            throw new IllegalArgumentException("offset must not be negativ");
-        }
         this.offset = offset;
     }
 
@@ -280,5 +312,5 @@ public class QueryImpl extends AbstractQueryImpl {
             throw new IllegalStateException("not initialized");
         }
     }
-
 }
+

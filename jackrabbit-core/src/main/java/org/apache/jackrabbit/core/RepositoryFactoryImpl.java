@@ -18,11 +18,12 @@ package org.apache.jackrabbit.core;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.io.IOException;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
-import javax.jcr.RepositoryFactory;
+import org.apache.jackrabbit.api.jsr283.RepositoryFactory;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 
 /**
@@ -47,7 +48,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
      * Map of repository instances. Key = repository home, value = repository
      * instance.
      */
-    private static final Map<String, JackrabbitRepository> REPOSITORY_INSTANCES = new HashMap<String, JackrabbitRepository>();
+    private static final Map REPOSITORY_INSTANCES = new HashMap();
 
     public Repository getRepository(Map parameters) throws RepositoryException {
         JackrabbitRepository repo;
@@ -80,18 +81,18 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
     private JackrabbitRepository getOrCreateRepository(String conf,
                                                        String home)
             throws RepositoryException {
-        JackrabbitRepository repo = REPOSITORY_INSTANCES.get(home);
-        if (repo == null) {
-            TransientRepository tr;
-            if (home == null) {
-                tr = new TransientRepository();
-                // also remember this instance as the default repository
-                REPOSITORY_INSTANCES.put(null, tr);
-            } else {
-                tr = new TransientRepository(conf, home);
+        JackrabbitRepository repo = (JackrabbitRepository) REPOSITORY_INSTANCES.get(home);
+        try {
+            if (repo == null) {
+                if (home == null) {
+                    repo = new TransientRepository();
+                } else {
+                    repo = new TransientRepository(conf, home);
+                }
+                REPOSITORY_INSTANCES.put(home, repo);
             }
-            REPOSITORY_INSTANCES.put(tr.getHomeDir(), tr);
-            repo = tr;
+        } catch (IOException e) {
+            throw new RepositoryException(e);
         }
         return repo;
     }

@@ -63,7 +63,7 @@ public class VersionStorageTest extends AbstractVersionTest {
      */
     public void testVersionStorageIdenticalAcrossAllWorkspaces() throws RepositoryException {
         // The superuser session for the second workspace
-        Session superuserW2 = getHelper().getSuperuserSession(workspaceName);
+        Session superuserW2 = helper.getSuperuserSession(workspaceName);
 
         try {
             // check path to version storage

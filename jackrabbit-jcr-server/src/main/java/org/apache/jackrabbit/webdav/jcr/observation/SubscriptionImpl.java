@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.observation;
 
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -33,7 +34,6 @@ import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.DefaultEventType;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -48,8 +48,6 @@ import javax.jcr.observation.ObservationManager;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * The <code>Subscription</code> class encapsulates a single subscription with
@@ -93,18 +91,6 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * @see javax.jcr.observation.Event#PROPERTY_CHANGED
      */
     private static final String EVENT_PROPERTYCHANGED = "propertychanged";
-
-    /**
-     * Element representing the 'nodemoved' event type.
-     * @see javax.jcr.observation.Event#NODE_MOVED
-     */
-    private static final String EVENT_NODEMOVED = "nodemoved";
-
-    /**
-     * Element representing the 'persist' event type.
-     * @see javax.jcr.observation.Event#PERSIST
-     */
-    private static final String EVENT_PERSIST = "persist";
 
     private SubscriptionInfo info;
     private long expirationTime;
@@ -397,8 +383,6 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * <li>{@link Event#PROPERTY_ADDED}</li>
      * <li>{@link Event#PROPERTY_REMOVED}</li>
      * <li>{@link Event#PROPERTY_CHANGED}</li>
-     * <li>{@link Event#NODE_MOVED}</li>
-     * <li>{@link Event#PERSIST}</li>
      * </ul>
      */
     public static EventType getEventType(int jcrEventType) {
@@ -418,12 +402,6 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 break;
             case Event.PROPERTY_REMOVED:
                 localName = EVENT_PROPERTYREMOVED;
-                break;
-            case Event.NODE_MOVED:
-                localName = EVENT_NODEMOVED;
-                break;
-            case Event.PERSIST:
-                localName = EVENT_PERSIST;
                 break;
             default: // no default
                 throw new IllegalArgumentException("Invalid JCR event type: " + jcrEventType);
@@ -445,8 +423,6 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * <li>{@link Event#PROPERTY_ADDED}</li>
      * <li>{@link Event#PROPERTY_REMOVED}</li>
      * <li>{@link Event#PROPERTY_CHANGED}</li>
-     * <li>{@link Event#NODE_MOVED}</li>
-     * <li>{@link Event#PERSIST}</li>
      * </ul>
      * @throws DavException if the given event type does not define a valid
      * JCR event type, such as returned by {@link #getEventType(int)}.
@@ -467,10 +443,6 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
             eType = Event.PROPERTY_CHANGED;
         } else if (EVENT_PROPERTYREMOVED.equals(eventName)) {
             eType = Event.PROPERTY_REMOVED;
-        } else if (EVENT_NODEMOVED.equals(eventName)) {
-            eType = Event.NODE_MOVED;
-        } else if (EVENT_PERSIST.equals(eventName)) {
-            eType = Event.PERSIST;
         } else {
             throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Invalid event type: "+eventName);
         }
@@ -523,42 +495,6 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 eType.appendChild(getEventType(event.getType()).toXml(document));
                 // user id
                 DomUtil.addChildElement(eventElem, XML_EVENTUSERID, NAMESPACE, event.getUserID());
-
-                // Additional JCR 2.0 event information
-                // userdata
-                try {
-                    DomUtil.addChildElement(eventElem, XML_EVENTUSERDATA, NAMESPACE, event.getUserData());
-                } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event user data.", e.getMessage());
-                }
-                // timestamp
-                try {
-                    DomUtil.addChildElement(eventElem, XML_EVENTDATE, NAMESPACE, String.valueOf(event.getDate()));
-                } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event date.", e.getMessage());
-                }
-                // identifier
-                try {
-                    DomUtil.addChildElement(eventElem, XML_EVENTIDENTIFIER, NAMESPACE, event.getIdentifier());
-                } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event identifier.", e.getMessage());
-                }
-                // info
-                Element info = DomUtil.addChildElement(eventElem, XML_EVENTINFO, NAMESPACE);
-                try {
-                    Map m = event.getInfo();
-                    for (Iterator it = m.keySet().iterator(); it.hasNext();) {
-                        String key = it.next().toString();
-                        Object value = m.get(key);
-                        if (value != null) {
-                            DomUtil.addChildElement(info, key, Namespace.EMPTY_NAMESPACE, value.toString());
-                        } else {
-                            DomUtil.addChildElement(info, key, Namespace.EMPTY_NAMESPACE);
-                        }
-                    }
-                } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event info.", e.getMessage());
-                }
             }
             return bundle;
         }

@@ -16,14 +16,12 @@
  */
 package org.apache.jackrabbit.test;
 
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Credentials;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Utility class to get access to {@link javax.jcr.Session} instances.
@@ -139,7 +137,7 @@ public class RepositoryHelper {
      * Returns the value of the configuration property with specified
      * <code>name</code>. If the property does not exist <code>null</code> is
      * returned.
-     * <p>
+     * <p/>
      * Configuration properties are defined in the file:
      * <code>repositoryStubImpl.properties</code>.
      *
@@ -187,21 +185,5 @@ public class RepositoryHelper {
      */
     public Credentials getSuperuserCredentials() {
         return repoStub.getSuperuserCredentials();
-    }
-    
-    /**
-     * Returns a {@link Principal} identifiying a known user.
-     * @param session
-     */
-    public Principal getKnownPrincipal(Session session) throws RepositoryException {
-        return repoStub.getKnownPrincipal(session);
-    }
-    
-    /**
-     * Returns a {@link Principal} identifiying an unknown user.
-     * @param session
-     */
-    public Principal getUnknownPrincipal(Session session) throws NotExecutableException, RepositoryException {
-        return repoStub.getUnknownPrincipal(session);
     }
 }

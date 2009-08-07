@@ -30,7 +30,7 @@ class PerQueryCache {
     /**
      * The internal map of this <code>PerQueryCache</code>.
      */
-    private final Map<Key, Object> map = new HashMap<Key, Object>();
+    private final Map map = new HashMap();
 
     /**
      * Private constructor.
@@ -41,13 +41,13 @@ class PerQueryCache {
     /**
      * The per thread cache instance.
      */
-    private static final ThreadLocal<PerQueryCache> CACHE = new ThreadLocal<PerQueryCache>();
+    private static final ThreadLocal CACHE = new ThreadLocal();
 
     /**
      * @return <code>PerQueryCache</code> for the current thread.
      */
     static PerQueryCache getInstance() {
-        PerQueryCache cache = CACHE.get();
+        PerQueryCache cache = (PerQueryCache) CACHE.get();
         if (cache == null) {
             cache = new PerQueryCache();
             CACHE.set(cache);

@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
 
 /**
  * <code>NodeReferences</code> represents the references (i.e. properties of
@@ -36,9 +36,9 @@ public class NodeReferences implements Serializable {
     static final long serialVersionUID = 7007727035982680717L;
 
     /**
-     * Identifier of the target node.
+     * identifier of this <code>NodeReferences</code> instance.
      */
-    protected NodeId id;
+    protected NodeReferencesId id;
 
     /**
      * list of PropertyId's (i.e. the id's of the properties that refer to
@@ -48,10 +48,24 @@ public class NodeReferences implements Serializable {
      * REFERENCE property can contain multiple references (if it's multi-valued)
      * to potentially the same target node.
      */
-    protected ArrayList<PropertyId> references = new ArrayList<PropertyId>();
+    protected ArrayList references = new ArrayList();
 
-    public NodeReferences(NodeId id) {
+    /**
+     * Package private constructor
+     *
+     * @param id
+     */
+    public NodeReferences(NodeReferencesId id) {
         this.id = id;
+    }
+
+    /**
+     * Returns the identifier of this node references object.
+     *
+     * @return the id of this node references object.
+     */
+    public NodeReferencesId getId() {
+        return id;
     }
 
     /**
@@ -60,7 +74,7 @@ public class NodeReferences implements Serializable {
      * @return the id of the target node
      */
     public NodeId getTargetId() {
-        return id;
+        return id.getTargetId();
     }
 
     /**
@@ -76,7 +90,7 @@ public class NodeReferences implements Serializable {
     /**
      * @return the list of references
      */
-    public List<PropertyId> getReferences() {
+    public List getReferences() {
         return Collections.unmodifiableList(references);
     }
 
@@ -90,7 +104,7 @@ public class NodeReferences implements Serializable {
     /**
      * @param references
      */
-    public void addAllReferences(List<PropertyId> references) {
+    public void addAllReferences(List references) {
         this.references.addAll(references);
     }
 
@@ -109,11 +123,4 @@ public class NodeReferences implements Serializable {
     public void clearAllReferences() {
         references.clear();
     }
-
-    //--------------------------------------------------------------< Object >
-
-    public String toString() {
-        return "references to " + id;
-    }
-
 }

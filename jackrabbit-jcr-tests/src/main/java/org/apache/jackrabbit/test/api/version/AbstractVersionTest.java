@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.test.api.version;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -84,7 +83,7 @@ public class AbstractVersionTest extends AbstractJCRTest {
         }
         try {
             nonVersionableNode = testRootNode.addNode(nodeName3, nonVersionableNodeType.getName());
-            testRootNode.getSession().save();
+            testRootNode.save();
         } catch (RepositoryException e) {
             fail("Failed to create non-versionable test node." + e.getMessage());
         }
@@ -98,10 +97,8 @@ public class AbstractVersionTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         // remove versionable nodes
         try {
-            if (versionableNode != null) {
-                versionableNode.remove();
-            }
-            testRootNode.getSession().save();
+            versionableNode.remove();
+            testRootNode.save();
         } catch (Exception e) {
             log.println("Exception in tearDown: " + e.toString());
         } finally {
@@ -135,10 +132,11 @@ public class AbstractVersionTest extends AbstractJCRTest {
      * @return versionable node.
      * @throws RepositoryException
      */
-    protected Node createVersionableNode(Node parent, String name, NodeType nodetype)
-            throws RepositoryException, NotExecutableException {
+    protected Node createVersionableNode(Node parent, String name, NodeType nodetype) throws RepositoryException {
         Node versionableNode = parent.addNode(name, nodetype.getName());
-        ensureMixinType(versionableNode, mixVersionable);
+        if (!nodetype.isNodeType(mixVersionable)) {
+            versionableNode.addMixin(mixVersionable);
+        }
         parent.save();
 
         return versionableNode;

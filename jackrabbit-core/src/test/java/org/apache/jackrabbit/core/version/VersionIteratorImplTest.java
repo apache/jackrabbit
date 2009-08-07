@@ -20,8 +20,9 @@ import java.util.Calendar;
 
 import junit.framework.TestCase;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 
 public class VersionIteratorImplTest extends TestCase {
 
@@ -62,9 +63,9 @@ public class VersionIteratorImplTest extends TestCase {
 
     public void testVersionIterator() throws Exception {
 
-        InternalVersion version = new DummyInternalVersion(new InternalVersion[] {}, new NodeId());
+        InternalVersion version = new DummyInternalVersion(new InternalVersion[] {}, new NodeId(UUID.randomUUID()));
         for (int i = 1; i < VERSION_COUNT; i++) {
-            version = new DummyInternalVersion(new InternalVersion[] {version}, new NodeId());
+            version = new DummyInternalVersion(new InternalVersion[] {version}, new NodeId(UUID.randomUUID()));
         }
 
         try {

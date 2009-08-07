@@ -33,7 +33,7 @@ public class AbstractIndexingTest extends AbstractQueryTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        session = getHelper().getSuperuserSession(WORKSPACE_NAME);
+        session = helper.getSuperuserSession(WORKSPACE_NAME);
         testRootNode = cleanUpTestRoot(session);
         // overwrite query manager
         qm = session.getWorkspace().getQueryManager();

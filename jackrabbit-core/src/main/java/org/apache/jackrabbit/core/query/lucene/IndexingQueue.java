@@ -23,7 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -51,7 +52,7 @@ class IndexingQueue {
     /**
      * Maps UUID {@link String}s to {@link Document}s.
      */
-    private final Map<String, Document> pendingDocuments = new HashMap<String, Document>();
+    private final Map pendingDocuments = new HashMap();
 
     /**
      * Flag that indicates whether this indexing queue had been
@@ -95,18 +96,19 @@ class IndexingQueue {
             reader.release();
         }
         String[] uuids = queueStore.getPending();
-        for (String uuid : uuids) {
+        for (int i = 0; i < uuids.length; i++) {
             try {
+                UUID uuid = UUID.fromString(uuids[i]);
                 Document doc = index.createDocument(new NodeId(uuid));
-                pendingDocuments.put(uuid, doc);
+                pendingDocuments.put(uuids[i], doc);
                 log.debug("added node {}. New size of indexing queue: {}",
-                        uuid, pendingDocuments.size());
+                        uuid, new Integer(pendingDocuments.size()));
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid UUID in indexing queue store: " + uuid);
+                log.warn("Invalid UUID in indexing queue store: " + uuids[i]);
             } catch (RepositoryException e) {
                 // node does not exist anymore
-                log.debug("Node with uuid {} does not exist anymore", uuid);
-                queueStore.removeUUID(uuid);
+                log.debug("Node with uuid {} does not exist anymore", uuids[i]);
+                queueStore.removeUUID(uuids[i]);
             }
         }
         initialized = true;
@@ -119,7 +121,7 @@ class IndexingQueue {
      */
     public Document[] getFinishedDocuments() {
         checkInitialized();
-        List<Document> finished = new ArrayList<Document>();
+        List finished = new ArrayList();
         synchronized (this) {
             finished.addAll(pendingDocuments.values());
         }
@@ -131,7 +133,7 @@ class IndexingQueue {
                 it.remove();
             }
         }
-        return finished.toArray(new Document[finished.size()]);
+        return (Document[]) finished.toArray(new Document[finished.size()]);
     }
 
     /**
@@ -145,12 +147,11 @@ class IndexingQueue {
      */
     public synchronized Document removeDocument(String uuid) {
         checkInitialized();
-        Document doc = pendingDocuments.remove(uuid);
+        Document doc = (Document) pendingDocuments.remove(uuid);
         if (doc != null) {
             queueStore.removeUUID(uuid);
             log.debug("removed node {}. New size of indexing queue: {}",
-                    uuid, pendingDocuments.size());
-            notifyIfEmpty();
+                    uuid, new Integer(pendingDocuments.size()));
         }
         return doc;
     }
@@ -166,9 +167,9 @@ class IndexingQueue {
     public synchronized Document addDocument(Document doc) {
         checkInitialized();
         String uuid = doc.get(FieldNames.UUID);
-        Document existing = pendingDocuments.put(uuid, doc);
+        Document existing = (Document) pendingDocuments.put(uuid, doc);
         log.debug("added node {}. New size of indexing queue: {}",
-                uuid, pendingDocuments.size());
+                uuid, new Integer(pendingDocuments.size()));
         if (existing == null) {
             // document wasn't present, add it to the queue store
             queueStore.addUUID(uuid);
@@ -183,14 +184,13 @@ class IndexingQueue {
     public synchronized void close() {
         checkInitialized();
         // go through pending documents and close readers
-        Iterator<Document> it = pendingDocuments.values().iterator();
+        Iterator it = pendingDocuments.values().iterator();
         while (it.hasNext()) {
-            Document doc = it.next();
+            Document doc = (Document) it.next();
             Util.disposeDocument(doc);
             it.remove();
         }
         queueStore.close();
-        notifyIfEmpty();
     }
 
     /**
@@ -203,36 +203,14 @@ class IndexingQueue {
         }
     }
 
-    /**
-     * Notifies all threads waiting for this queue to become empty.
-     * The notification is only sent if this queue actually is empty.
-     */
-    private synchronized void notifyIfEmpty() {
-        if (pendingDocuments.isEmpty()) {
-            notifyAll();
-        }
-    }
+    //----------------------------< testing only >------------------------------
 
     /**
-     * Waits until this queue is empty.
-     */
-    synchronized void waitUntilEmpty() {
-        while (!pendingDocuments.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                // Interrupted, check again if we're empty
-            }
-        }
-    }
-
-    /**
-     * Returns the number of pending documents.
+     * <b>This method is for testing only!</b>
      *
      * @return the number of the currently pending documents.
      */
     synchronized int getNumPendingDocuments() {
         return pendingDocuments.size();
     }
-
 }

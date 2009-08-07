@@ -62,19 +62,9 @@ public class NameConstants {
     public static final Name JCR_CREATED = FACTORY.create(Name.NS_JCR_URI, "created");
 
     /**
-     * jcr:createdBy
-     */
-    public static final Name JCR_CREATEDBY = FACTORY.create(Name.NS_JCR_URI, "createdBy");
-
-    /**
      * jcr:lastModified
      */
     public static final Name JCR_LASTMODIFIED = FACTORY.create(Name.NS_JCR_URI, "lastModified");
-
-    /**
-     * jcr:lastModifiedBy
-     */
-    public static final Name JCR_LASTMODIFIEDBY = FACTORY.create(Name.NS_JCR_URI, "lastModifiedBy");
 
     /**
      * jcr:encoding
@@ -95,41 +85,6 @@ public class NameConstants {
      * jcr:content
      */
     public static final Name JCR_CONTENT = FACTORY.create(Name.NS_JCR_URI, "content");
-
-    /**
-     * jcr:etag
-     */
-    public static final Name JCR_ETAG = FACTORY.create(Name.NS_JCR_URI, "etag");
-
-    /**
-     * jcr:protocol
-     */
-    public static final Name JCR_PROTOCOL = FACTORY.create(Name.NS_JCR_URI, "protocol");
-
-    /**
-     * jcr:host
-     */
-    public static final Name JCR_HOST = FACTORY.create(Name.NS_JCR_URI, "host");
-
-    /**
-     * jcr:port
-     */
-    public static final Name JCR_PORT = FACTORY.create(Name.NS_JCR_URI, "port");
-
-    /**
-     * jcr:repository
-     */
-    public static final Name JCR_REPOSITORY = FACTORY.create(Name.NS_JCR_URI, "repository");
-
-    /**
-     * jcr:workspace
-     */
-    public static final Name JCR_WORKSPACE = FACTORY.create(Name.NS_JCR_URI, "workspace");
-
-    /**
-     * jcr:id
-     */
-    public static final Name JCR_ID = FACTORY.create(Name.NS_JCR_URI, "id");
 
     //--------------------------------------< xml related item name constants >
 
@@ -258,43 +213,6 @@ public class NameConstants {
      * jcr:versionableUuid
      */
     public static final Name JCR_VERSIONABLEUUID = FACTORY.create(Name.NS_JCR_URI, "versionableUuid");
-
-    /**
-     * jcr:copiedFrom
-     * @since 2.0
-     */
-    public static final Name JCR_COPIEDFROM = FACTORY.create(Name.NS_JCR_URI, "copiedFrom");
-
-    /**
-     * jcr:activities
-     * @since 2.0
-     */
-    public static final Name JCR_ACTIVITIES = FACTORY.create(Name.NS_JCR_URI, "activities");
-
-    /**
-     * jcr:activity
-     * @since 2.0
-     */
-    public static final Name JCR_ACTIVITY = FACTORY.create(Name.NS_JCR_URI, "activity");
-
-    /**
-     * jcr:activityTitle
-     * @since 2.0
-     */
-    public static final Name JCR_ACTIVITY_TITLE = FACTORY.create(Name.NS_JCR_URI, "activityTitle");
-
-    /**
-     * jcr:configurations
-     * @since 2.0
-     */
-    public static final Name JCR_CONFIGURATIONS = FACTORY.create(Name.NS_JCR_URI, "configurations");
-
-    /**
-     * jcr:configuration
-     * @since 2.0
-     */
-    public static final Name JCR_CONFIGURATION = FACTORY.create(Name.NS_JCR_URI, "configuration");
-
 
     //--------------------------------< node type related item name constants >
 
@@ -444,41 +362,6 @@ public class NameConstants {
     public static final Name NT_FOLDER = FACTORY.create(Name.NS_NT_URI, "folder");
 
     /**
-     * mix:created
-     */
-    public static final Name MIX_CREATED = FACTORY.create(Name.NS_MIX_URI, "created");
-
-    /**
-     * mix:lastModified
-     */
-    public static final Name MIX_LASTMODIFIED = FACTORY.create(Name.NS_MIX_URI, "lastModified");
-
-    /**
-     * mix:title
-     */
-    public static final Name MIX_TITLE = FACTORY.create(Name.NS_MIX_URI, "title");
-
-    /**
-     * mix:language
-     */
-    public static final Name MIX_LANGUAGE = FACTORY.create(Name.NS_MIX_URI, "language");
-
-    /**
-     * mix:mimeType
-     */
-    public static final Name MIX_MIMETYPE = FACTORY.create(Name.NS_MIX_URI, "mimeType");
-
-    /**
-     * mix:etag
-     */
-    public static final Name MIX_ETAG = FACTORY.create(Name.NS_MIX_URI, "etag");
-
-    /**
-     * nt:address
-     */
-    public static final Name NT_ADDRESS = FACTORY.create(Name.NS_NT_URI, "address");
-
-    /**
      * nt:query
      */
     public static final Name NT_QUERY = FACTORY.create(Name.NS_NT_URI, "query");
@@ -549,18 +432,6 @@ public class NameConstants {
     public static final Name MIX_LIFECYCLE =
         FACTORY.create(Name.NS_MIX_URI, "lifecycle");
 
-    /**
-     * nt:activity
-     * @since 2.0
-     */
-    public static final Name NT_ACTIVITY = FACTORY.create(Name.NS_NT_URI, "activity");
-
-    /**
-     * nt:configuration
-     * @since 2.0
-     */
-    public static final Name NT_CONFIGURATION = FACTORY.create(Name.NS_NT_URI, "configuration");
-
     //--------------------------------------------------------------------------
     /**
      * rep:root
@@ -577,31 +448,6 @@ public class NameConstants {
      */
     public static final Name REP_VERSIONSTORAGE = FACTORY.create(Name.NS_REP_URI, "versionStorage");
 
-    /**
-     * rep:Activities
-     */
-    public static final Name REP_ACTIVITIES = FACTORY.create(Name.NS_REP_URI, "Activities");
-
-    /**
-     * rep:Configurations
-     */
-    public static final Name REP_CONFIGURATIONS = FACTORY.create(Name.NS_REP_URI, "Configurations");
-
-    /**
-     * rep:baseVersions
-     */
-    public static final Name REP_BASEVERSIONS = FACTORY.create(Name.NS_REP_URI, "baseVersions");
-
-    /**
-     * rep:VersionReference
-     */
-    public static final Name REP_VERSION_REFERENCE = FACTORY.create(Name.NS_REP_URI, "VersionReference");
-
-    /**
-     * rep:versions
-     */
-    public static final Name REP_VERSIONS = FACTORY.create(Name.NS_REP_URI, "versions");
-    
     /**
      * rep:nodeTypes
      */

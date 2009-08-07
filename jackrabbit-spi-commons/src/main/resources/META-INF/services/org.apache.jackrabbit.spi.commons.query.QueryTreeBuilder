@@ -15,7 +15,7 @@
 
 #
 # This file lists all available query language implementations that are shipped
-# with Jackrabbit and are based on the proprietary QueryTree.
+# with Jackrabbit.
 #
 
 org.apache.jackrabbit.spi.commons.query.xpath.QueryBuilder

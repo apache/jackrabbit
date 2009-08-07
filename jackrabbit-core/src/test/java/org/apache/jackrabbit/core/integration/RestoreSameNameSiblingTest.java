@@ -31,7 +31,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 public class RestoreSameNameSiblingTest extends AbstractJCRTest {
 
     public void testRestoreSNS() throws RepositoryException {
-        Session session = getHelper().getSuperuserSession();
+        Session session = helper.getSuperuserSession();
 
         // - Create a node 'a' with nodetype nt:unstructured
         // (defining it's childnodes to show OPV Version behaviour)

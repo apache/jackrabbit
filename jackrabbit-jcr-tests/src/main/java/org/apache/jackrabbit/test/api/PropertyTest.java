@@ -46,8 +46,6 @@ public class PropertyTest extends AbstractJCRTest {
      * two <code>Property</code> objects representing the same actual repository
      * item have been retrieved through two different sessions and one has been
      * modified.
-     * 
-     * @since JCR 2.0
      */
     public void testIsSameMustNotCompareStates()
             throws RepositoryException {
@@ -58,9 +56,9 @@ public class PropertyTest extends AbstractJCRTest {
         testRootNode.save();
 
         // accuire the same property through a different session
-        Session session = getHelper().getSuperuserSession();
+        Session session = helper.getSuperuserSession();
         try {
-            Property prop2 = session.getProperty(prop1.getPath());
+            Property prop2 = (Property) session.getItem(prop1.getPath());
 
             // change the value of prop2
             prop2.setValue("value2");

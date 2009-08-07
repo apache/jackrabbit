@@ -19,8 +19,10 @@ package org.apache.jackrabbit.spi2jcr;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorDecorator;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +32,6 @@ import javax.jcr.query.Row;
 import javax.jcr.RepositoryException;
 import javax.jcr.RangeIterator;
 import java.util.NoSuchElementException;
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * <code>QueryInfoImpl</code> implements a <code>QueryInfo</code> based on a
@@ -67,19 +67,24 @@ class QueryInfoImpl implements QueryInfo {
     /**
      * The names of the columns in the query result.
      */
-    private final String[] columnNames;
+    private final Name[] columnNames;
 
     /**
-     * The names of the selectors in the query result.
+     * The resolved name of the jcr:score column.
      */
-    private final Name[] selectorNames;
+    private final String scoreName;
+
+    /**
+     * The resolved name of the jcr:path column.
+     */
+    private final String pathName;
 
     /**
      * Creates a new query info based on a given <code>result</code>.
      *
      * @param result        the JCR query result.
      * @param idFactory     the id factory.
-     * @param resolver      the name path resolver.
+     * @param resolver
      * @param qValueFactory the QValue factory.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>result</code>.
@@ -93,8 +98,17 @@ class QueryInfoImpl implements QueryInfo {
         this.idFactory = idFactory;
         this.resolver = resolver;
         this.qValueFactory = qValueFactory;
-        this.columnNames = result.getColumnNames();
-        this.selectorNames = getSelectorNames(result, resolver);
+        String[] jcrNames = result.getColumnNames();
+        this.columnNames = new Name[jcrNames.length];
+        try {
+            for (int i = 0; i < jcrNames.length; i++) {
+                columnNames[i] = resolver.getQName(jcrNames[i]);
+            }
+            this.scoreName = resolver.getJCRName(NameConstants.JCR_SCORE);
+            this.pathName = resolver.getJCRName(NameConstants.JCR_PATH);
+        } catch (NameException e) {
+            throw new RepositoryException(e.getMessage(), e);
+        }
     }
 
     /**
@@ -102,12 +116,13 @@ class QueryInfoImpl implements QueryInfo {
      */
     public RangeIterator getRows() {
         try {
+            final String[] columnJcrNames = result.getColumnNames();
             return new RangeIteratorDecorator(result.getRows()) {
                 public Object next() {
                     try {
                         return new QueryResultRowImpl(
-                                (Row) super.next(), columnNames, selectorNames,
-                                idFactory, resolver, qValueFactory);
+                                (Row) super.next(), columnJcrNames, scoreName,
+                                pathName, idFactory, resolver, qValueFactory);
                     } catch (RepositoryException e) {
                         log.warn("Exception when creating QueryResultRowImpl: " +
                                 e.getMessage(), e);
@@ -123,29 +138,9 @@ class QueryInfoImpl implements QueryInfo {
     /**
      * {@inheritDoc}
      */
-    public String[] getColumnNames() {
-        String[] names = new String[columnNames.length];
+    public Name[] getColumnNames() {
+        Name[] names = new Name[columnNames.length];
         System.arraycopy(columnNames, 0, names, 0, columnNames.length);
         return names;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Name[] getSelectorNames() {
-        Name[] names = new Name[selectorNames.length];
-        System.arraycopy(selectorNames, 0, names, 0, selectorNames.length);
-        return names;
-    }
-
-    private static Name[] getSelectorNames(QueryResult result,
-                                           NamePathResolver resolver)
-            throws RepositoryException {
-        List<String> sn = Arrays.asList(result.getSelectorNames());
-        Name[] selectorNames = new Name[sn.size()];
-        for (int i = 0; i < sn.size(); i++) {
-            selectorNames[i] = resolver.getQName(sn.get(i));
-        }
-        return selectorNames;
     }
 }

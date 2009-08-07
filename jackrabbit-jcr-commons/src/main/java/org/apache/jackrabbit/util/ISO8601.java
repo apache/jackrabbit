@@ -197,10 +197,6 @@ public final class ISO8601 {
              * if any of the set values are illegal or out of range
              */
             cal.getTime();
-            /**
-             * in addition check the validity of the year
-             */
-            getYear(cal);
         } catch (IllegalArgumentException e) {
             return null;
         }

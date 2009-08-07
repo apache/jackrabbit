@@ -18,27 +18,20 @@ package org.apache.jackrabbit.test.api.query;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.api.util.ISO9075;
 
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
-import javax.jcr.ValueFactory;
-
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Abstract base class for query test cases.
@@ -71,29 +64,6 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected String jcrDeref;
 
     /**
-     * The string /${jcrRoot}${testRoot} with all components of the test path
-     * properly escaped for XPath.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-714">JCR-714</a>
-     */
-    protected String xpathRoot;
-
-    /**
-     * The query object model factory for {@link #superuser}.
-     */
-    protected QueryObjectModelFactory qf;
-
-    /**
-     * The value factory for creating literals for the query object model.
-     */
-    protected ValueFactory vf;
-
-    /**
-     * The query manager for {@link #superuser}
-     */
-    protected QueryManager qm;
-
-    /**
      * Set-up the configuration values used for the test. Per default retrieves
      * a session, configures testRoot, and nodetype and checks if the query
      * language for the current language is available.<br>
@@ -105,17 +75,6 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         jcrRoot = superuser.getNamespacePrefix(NS_JCR_URI) + ":root";
         jcrContains = superuser.getNamespacePrefix(NS_JCR_URI) + ":contains";
         jcrDeref = superuser.getNamespacePrefix(NS_JCR_URI) + ":deref";
-        xpathRoot = "/" + jcrRoot + ISO9075.encodePath(testRoot);
-        qm = superuser.getWorkspace().getQueryManager();
-        qf = qm.getQOMFactory();
-        vf = superuser.getValueFactory();
-    }
-
-    protected void tearDown() throws Exception {
-        qm = null;
-        qf = null;
-        vf = null;
-        super.tearDown();
     }
 
     /**
@@ -127,40 +86,24 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @see #createQuery(String, String)
      */
-    protected Query createQuery(Statement statement)
-        throws RepositoryException, NotExecutableException {
+    protected Query createQuery(Statement statement) throws RepositoryException {
         return createQuery(statement.getStatement(), statement.getLanguage());
     }
 
     /**
      * Creates a {@link Query} for the given statement in the requested
-     * language, treating optional languages gracefully
+     * language
+     *
+     * @param statement the query should be created for
+     * @param language  query language to be used for Query creation
+     * @return
+     *
      * @throws RepositoryException
      */
-    protected Query createQuery(String statement, String language) throws RepositoryException, NotExecutableException {
-        return createQuery(superuser, statement, language);
-    }
-
-    /**
-     * Creates a {@link Query} for the given statement in the requested
-     * language, treating optional languages gracefully
-     * @throws RepositoryException
-     */
-    protected Query createQuery(Session session, String statement, String language) throws RepositoryException, NotExecutableException {
+    protected Query createQuery(String statement, String language) throws RepositoryException {
         log.println("Creating query: " + statement);
-        try {
-            return session.getWorkspace().getQueryManager().createQuery(statement, language);
-        } catch (InvalidQueryException ex) {
-
-            // if language is optional and not reported as "supported" ->
-            // demote to NotExecutableException
-
-            if (!isSupportedLanguage(language) && !Query.JCR_SQL2.equals(language)) {
-                throw new NotExecutableException("Repository does not support " + language + " query syntax");
-            } else {
-                throw ex;
-            }
-        }
+        return superuser.getWorkspace().getQueryManager().createQuery(statement,
+                language);
     }
 
     /**
@@ -172,8 +115,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @see #execute(String, String)
      */
-    protected QueryResult execute(Statement statement)
-        throws RepositoryException, NotExecutableException {
+    protected QueryResult execute(Statement statement) throws RepositoryException {
         return execute(statement.getStatement(), statement.getLanguage());
     }
 
@@ -188,7 +130,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     protected QueryResult execute(String statement, String language)
-            throws RepositoryException, NotExecutableException {
+            throws RepositoryException {
         Query query = createQuery(statement, language);
         return query.execute();
     }
@@ -303,11 +245,10 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @param session the session to use for the query.
      * @param xpath the xpath query.
      * @param nodes the expected result nodes.
-     * @throws NotExecutableException 
      */
     protected void executeXPathQuery(Session session, String xpath, Node[] nodes)
-            throws RepositoryException, NotExecutableException {
-        QueryResult res = createQuery(session, xpath, Query.XPATH).execute();
+            throws RepositoryException {
+        QueryResult res = session.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH).execute();
         checkResult(res, nodes);
     }
 
@@ -317,11 +258,10 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @param session the session to use for the query.
      * @param sql the sql query.
      * @param nodes the expected result nodes.
-     * @throws NotExecutableException 
      */
     protected void executeSqlQuery(Session session, String sql, Node[] nodes)
-            throws RepositoryException, NotExecutableException {
-        QueryResult res = createQuery(session, sql, Query.SQL).execute();
+            throws RepositoryException {
+        QueryResult res = session.getWorkspace().getQueryManager().createQuery(sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
 
@@ -380,16 +320,5 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         else {
             return '"' + identifier + '"';
         }
-    }
-
-    /**
-     * @param language a query language.
-     * @return <code>true</code> if <code>language</code> is supported;
-     *         <code>false</code> otherwise.
-     * @throws RepositoryException if an error occurs.
-     */
-    protected boolean isSupportedLanguage(String language)
-            throws RepositoryException {
-        return Arrays.asList(qm.getSupportedQueryLanguages()).contains(language);
     }
 }

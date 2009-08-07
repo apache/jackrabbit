@@ -46,6 +46,16 @@ public final class PathBuilder {
     private final LinkedList queue;
 
     /**
+     * flag indicating if the current path is normalized
+     */
+    boolean isNormalized = true;
+
+    /**
+     * flag indicating if the current path has leading parent '..' elements
+     */
+    boolean leadingParent = true;
+
+    /**
      * Creates a new PathBuilder to create a Path using the
      * {@link PathFactoryImpl default PathFactory}. See
      * {@link PathBuilder#PathBuilder(PathFactory)} for a constructor explicitely
@@ -111,6 +121,13 @@ public final class PathBuilder {
      * @param elem
      */
     public void addFirst(Path.Element elem) {
+        if (queue.isEmpty()) {
+            isNormalized &= !elem.denotesCurrent();
+            leadingParent = elem.denotesParent();
+        } else {
+            isNormalized &= !elem.denotesCurrent() && (!leadingParent || elem.denotesParent());
+            leadingParent |= elem.denotesParent();
+        }
         queue.addFirst(elem);
     }
 
@@ -140,6 +157,8 @@ public final class PathBuilder {
      */
     public void addLast(Path.Element elem) {
         queue.addLast(elem);
+        leadingParent &= elem.denotesParent();
+        isNormalized &= !elem.denotesCurrent() && (leadingParent || !elem.denotesParent());
     }
 
     /**

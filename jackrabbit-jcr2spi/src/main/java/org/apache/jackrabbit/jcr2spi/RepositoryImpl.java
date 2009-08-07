@@ -26,7 +26,6 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.NamingException;
@@ -74,38 +73,6 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
      */
     public String getDescriptor(String descriptorKey) {
         return (String) descriptors.get(descriptorKey);
-    }
-
-    /**
-     * @see Repository#getDescriptorValue(String)
-     */
-    public Value getDescriptorValue(String key) {
-        String value = getDescriptor(key);
-        if (value != null) {
-            // TODO implementation missing
-            throw new UnsupportedOperationException("not implemented yet - see JCR-2062");
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * @see Repository#getDescriptorValues(String)
-     */
-    public Value[] getDescriptorValues(String key) {
-        Value value = getDescriptorValue(key);
-        if (value != null) {
-            return new Value[] { value };
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * @see Repository#isSingleValueDescriptor(String)
-     */
-    public boolean isSingleValueDescriptor(String key) {
-        return descriptors.containsKey(key);
     }
 
     /**
@@ -240,5 +207,4 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
             return res;
         }
     }
-
 }

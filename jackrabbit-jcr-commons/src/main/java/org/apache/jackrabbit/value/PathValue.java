@@ -16,11 +16,13 @@
  */
 package org.apache.jackrabbit.value;
 
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.PathFormat;
+
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
-import java.math.BigDecimal;
 
 /**
  * A <code>PathValue</code> provides an implementation
@@ -48,6 +50,11 @@ public class PathValue extends BaseValue {
      */
     public static PathValue valueOf(String s) throws ValueFormatException {
         if (s != null) {
+            try {
+                PathFormat.checkFormat(s);
+            } catch (MalformedPathException mpe) {
+                throw new ValueFormatException(mpe.getMessage());
+            }
             return new PathValue(s);
         } else {
             throw new ValueFormatException("not a valid path format: " + s);
@@ -122,6 +129,8 @@ public class PathValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to date failed: inconvertible types");
     }
 
@@ -131,6 +140,8 @@ public class PathValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to long failed: inconvertible types");
     }
 
@@ -140,6 +151,8 @@ public class PathValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to boolean failed: inconvertible types");
     }
 
@@ -149,15 +162,8 @@ public class PathValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        throw new ValueFormatException("conversion to double failed: inconvertible types");
-    }
+        setValueConsumed();
 
-    /**
-     * {@inheritDoc}
-     */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
+        throw new ValueFormatException("conversion to double failed: inconvertible types");
     }
 }

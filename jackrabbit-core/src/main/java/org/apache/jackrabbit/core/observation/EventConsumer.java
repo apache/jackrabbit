@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.spi.Path;
@@ -74,7 +74,7 @@ class EventConsumer {
      * <code>ItemId</code>s of denied <code>ItemState</code>s. The map uses the
      * <code>EventStateCollection</code> as the key to reference a deny Set.
      */
-    private final Map<EventStateCollection, Set<ItemId>> accessDenied = Collections.synchronizedMap(new WeakHashMap<EventStateCollection, Set<ItemId>>());
+    private final Map accessDenied = Collections.synchronizedMap(new WeakHashMap());
 
     /**
      * cached hash code value
@@ -137,10 +137,10 @@ class EventConsumer {
      * @param events the collection of {@link EventState}s.
      */
     void prepareEvents(EventStateCollection events) {
-        Iterator<EventState> it = events.iterator();
-        Set<ItemId> denied = null;
+        Iterator it = events.iterator();
+        Set denied = null;
         while (it.hasNext()) {
-            EventState state = it.next();
+            EventState state = (EventState) it.next();
             if (state.getType() == Event.NODE_REMOVED
                     || state.getType() == Event.PROPERTY_REMOVED) {
 
@@ -160,7 +160,7 @@ class EventConsumer {
                 }
                 if (!granted) {
                     if (denied == null) {
-                        denied = new HashSet<ItemId>();
+                        denied = new HashSet();
                     }
                     denied.add(targetId);
                 }
@@ -178,15 +178,15 @@ class EventConsumer {
      * @param events       the collection of {@link EventState}s.
      * @param deletedItems Iterator of deleted <code>ItemState</code>s.
      */
-    void prepareDeleted(EventStateCollection events, Iterable<ItemState> deletedItems) {
-        Set<ItemId> denied = null;
-        Set<ItemId> deletedIds = new HashSet<ItemId>();
-        for (ItemState state : deletedItems) {
-            deletedIds.add(state.getId());
+    void prepareDeleted(EventStateCollection events, Iterator deletedItems) {
+        Set denied = null;
+        Set deletedIds = new HashSet();
+        while (deletedItems.hasNext()) {
+            deletedIds.add(((ItemState) deletedItems.next()).getId());
         }
 
-        for (Iterator<EventState> it = events.iterator(); it.hasNext();) {
-            EventState evState = it.next();
+        for (Iterator it = events.iterator(); it.hasNext();) {
+            EventState evState = (EventState) it.next();
             ItemId targetId = evState.getTargetId();
             if (deletedIds.contains(targetId)) {
                 // check read permission
@@ -198,7 +198,7 @@ class EventConsumer {
                 }
                 if (!granted) {
                     if (denied == null) {
-                        denied = new HashSet<ItemId>();
+                        denied = new HashSet();
                     }
                     denied.add(targetId);
                 }
@@ -217,17 +217,17 @@ class EventConsumer {
      */
     void consumeEvents(EventStateCollection events) throws RepositoryException {
         // Set of ItemIds of denied ItemStates
-        Set<ItemId> denied = accessDenied.remove(events);
+        Set denied = (Set) accessDenied.remove(events);
         // check permissions
-        for (Iterator<EventState> it = events.iterator(); it.hasNext() && session.isLive();) {
-            EventState state = it.next();
+        for (Iterator it = events.iterator(); it.hasNext() && session.isLive();) {
+            EventState state = (EventState) it.next();
             if (state.getType() == Event.NODE_ADDED
                     || state.getType() == Event.PROPERTY_ADDED
                     || state.getType() == Event.PROPERTY_CHANGED) {
                 ItemId targetId = state.getTargetId();
                 if (!canRead(state)) {
                     if (denied == null) {
-                        denied = new HashSet<ItemId>();
+                        denied = new HashSet();
                     }
                     denied.add(targetId);
                 }

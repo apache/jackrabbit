@@ -17,10 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -29,37 +26,46 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>1.6.0</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-standalone</artifactId>
-  <packaging>bundle</packaging>
   <name>Jackrabbit Standalone</name>
   <description>Runnable jar packaging of Apache Jackrabbit</description>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
+        <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <instructions>
-            <Export-Package>
-              org.apache.jackrabbit.standalone
-            </Export-Package>
-            <Embed-Dependency>
-              *;inline=
-              *.txt|*.html|*.jsp|*.xml|*.jar|*.properties|
-              remoting/**|bootstrap/**|javax/**|repackage/**|images/**|
-              com/**|Resources/**|css/**|schema*/**|EDU/**|error/**|org/**|
-              META-INF/*.tld|META-INF/maven/**|META-INF/services/**|
-              WEB-INF/config.xml|WEB-INF/*.properties|WEB-INF/templates/**
-            </Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>
-            <Main-Class>org.apache.jackrabbit.standalone.Main</Main-Class>
-          </instructions>
+          <archive>
+            <manifest>
+              <mainClass>org.apache.jackrabbit.standalone.Main</mainClass>
+            </manifest>
+          </archive>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack-dependencies</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <excludes>
+                LICENSE*, NOTICE*, META-INF/LICENSE*, META-INF/NOTICE*,
+                license, license/**/*, test, test/**/*,
+                WEB-INF/web.xml, WEB-INF/log4j.*,
+                WEB-INF/lib, WEB-INF/lib/**/*,
+                WEB-INF/classes, WEB-INF/classes/**/*
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -68,18 +74,19 @@
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
+      <version>1.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webapp</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>1.6.0</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webapp</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>1.6.0</version>
       <type>jar</type>
     </dependency>
     <dependency>

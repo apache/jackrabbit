@@ -96,8 +96,8 @@ public class Restore extends AbstractOperation {
     }
 
     /**
-     * Relative path to the non-existing restore target or <code>null</code>
-     * if the state identified by {@link #getNodeId()} is the target.
+     * Relative qualified path to the non-existing restore target or <code>null</code>
+     * if the state returned by {@link #getNodeState()} is the target.
      *
      * @return
      * @see javax.jcr.Node#restore(Version, String, boolean)

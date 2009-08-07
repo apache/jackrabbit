@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.Join;
-import javax.jcr.query.qom.JoinCondition;
-import javax.jcr.query.qom.Source;
-
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Join;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
 
 /**
  * <code>JoinImpl</code>...
@@ -40,7 +40,7 @@ public class JoinImpl extends SourceImpl implements Join {
     /**
      * The join type.
      */
-    private final JoinType joinType;
+    private final int joinType;
 
     /**
      * The join condition.
@@ -50,17 +50,13 @@ public class JoinImpl extends SourceImpl implements Join {
     JoinImpl(NamePathResolver resolver,
              SourceImpl left,
              SourceImpl right,
-             JoinType joinType,
+             int joinType,
              JoinConditionImpl joinCondition) {
         super(resolver);
         this.left = left;
         this.right = right;
         this.joinType = joinType;
         this.joinCondition = joinCondition;
-    }
-
-    public JoinType getJoinTypeInstance() {
-        return joinType;
     }
 
     /**
@@ -89,8 +85,8 @@ public class JoinImpl extends SourceImpl implements Join {
      *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
      *         </ul>
      */
-    public String getJoinType() {
-        return joinType.toString();
+    public int getJoinType() {
+        return joinType;
     }
 
     /**

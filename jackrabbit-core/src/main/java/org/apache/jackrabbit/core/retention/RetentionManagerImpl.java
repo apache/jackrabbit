@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.retention;
 
-import javax.jcr.retention.Hold;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.retention.RetentionPolicy;
+import org.apache.jackrabbit.api.jsr283.retention.Hold;
+import org.apache.jackrabbit.api.jsr283.retention.RetentionManager;
+import org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
@@ -133,7 +133,7 @@ public class RetentionManagerImpl extends ProtectedItemModifier implements Reten
             PropertyImpl p = n.getProperty(REP_HOLD);
             Value[] vls = p.getValues();
 
-            List<Value> newValues = new ArrayList<Value>(vls.length - 1);
+            List newValues = new ArrayList(vls.length - 1);
             for (int i = 0; i < vls.length; i++) {
                 if (!hold.equals(HoldImpl.createFromValue(vls[i], n.getNodeId(), session))) {
                     newValues.add(vls[i]);
@@ -143,7 +143,7 @@ public class RetentionManagerImpl extends ProtectedItemModifier implements Reten
                 if (newValues.size() == 0) {
                     removeItem(p);
                 } else {
-                    setProperty(n, REP_HOLD, newValues.toArray(new Value[newValues.size()]));
+                    setProperty(n, REP_HOLD, (Value[]) newValues.toArray(new Value[newValues.size()]));
                 }
             } else {
                 // no matching hold.

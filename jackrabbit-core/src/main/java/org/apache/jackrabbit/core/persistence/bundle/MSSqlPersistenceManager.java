@@ -43,7 +43,7 @@ public class MSSqlPersistenceManager extends BundleDbPersistenceManager {
 
     public MSSqlPersistenceManager() {
         setDriver("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        setDatabaseType("mssql");
+        setSchema("mssql");
     }
 
     protected String createSchemaSQL(String sql) {

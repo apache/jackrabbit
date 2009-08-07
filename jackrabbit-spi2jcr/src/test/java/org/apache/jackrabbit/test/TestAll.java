@@ -18,11 +18,25 @@ package org.apache.jackrabbit.test;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
-import org.apache.jackrabbit.test.JCRTestSuite;
+import junit.framework.TestSuite;
 
 public class TestAll extends TestCase {
 
     public static Test suite() {
         return new JCRTestSuite();
+    }
+
+    private static class JCRTestSuite extends TestSuite {
+
+        private JCRTestSuite() {
+            super("JCR API tests");
+            addTest(org.apache.jackrabbit.test.api.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.query.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.nodetype.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.util.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.lock.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.version.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.observation.TestAll.suite());
+        }
     }
 }

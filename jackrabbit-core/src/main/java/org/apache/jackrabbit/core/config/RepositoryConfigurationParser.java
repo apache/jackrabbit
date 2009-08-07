@@ -83,12 +83,6 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      */
     private static final String WORKSPACE_ACCESS_ELEMENT = "WorkspaceAccessManager";
 
-    /**
-     * Name of the optional UserManagerConfig element that defines the
-     * configuration options for the user manager.
-     */
-    private static final String USER_MANAGER_ELEMENT = "UserManager";
-
     /** Name of the general workspace configuration element. */
     public static final String WORKSPACES_ELEMENT = "Workspaces";
 
@@ -111,7 +105,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     public static final String DATA_STORE_ELEMENT = "DataStore";
 
     /** Name of the repository lock mechanism configuration element. */
-    public static final String REPOSITORY_LOCK_MECHANISM_ELEMENT =
+    public static final String REPOSITORY_LOCK_MECHANISM_ELEMENT = 
         "RepositoryLockMechanism";
 
     /** Name of the persistence manager configuration element. */
@@ -269,7 +263,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         // Optional data store factory
         DataStoreFactory dsf = getDataStoreFactory(root, home);
-
+        
         RepositoryLockMechanismFactory rlf = getRepositoryLockMechanismFactory(root);
 
         return new RepositoryConfig(home, securityConfig, fsf,
@@ -330,13 +324,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             if (element != null) {
                 wac = parseBeanConfig(smElement, WORKSPACE_ACCESS_ELEMENT);
             }
-
-            BeanConfig umc = null;
-            element = getElement(smElement, USER_MANAGER_ELEMENT, false);
-            if (element != null) {
-                umc = parseBeanConfig(smElement, USER_MANAGER_ELEMENT);
-            }
-            return new SecurityManagerConfig(bc, wspAttr, wac, umc);
+            return new SecurityManagerConfig(bc, wspAttr, wac);
         } else {
             return null;
         }
@@ -431,20 +419,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      */
     public WorkspaceConfig parseWorkspaceConfig(InputSource xml)
             throws ConfigurationException {
-
         Element root = parseXML(xml);
-        return parseWorkspaceConfig(root);
-    }
-
-    /**
-     * Parse workspace config.
-     *
-     * @param root root element of the workspace configuration
-     *
-     * @see #parseWorkspaceConfig(InputSource)
-     */
-    protected WorkspaceConfig parseWorkspaceConfig(Element root)
-            throws ConfigurationException {
 
         // Workspace home directory
         String home = getVariables().getProperty(WORKSPACE_HOME_VARIABLE);
@@ -769,11 +744,11 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * <p/>
      * <code>RepositoryLockMechanism</code> is a
      * {@link #parseBeanConfig(Element,String) bean configuration} element.
-     *
+     * 
      * @param root the root configuration element
      * @return repository lock mechanism factory
      * @throws ConfigurationException if the configuration is broken
-     */
+     */    
     protected RepositoryLockMechanismFactory getRepositoryLockMechanismFactory(final Element root) {
         return new RepositoryLockMechanismFactory() {
             public RepositoryLockMechanism getRepositoryLockMechanism() throws RepositoryException {

@@ -16,23 +16,17 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+
+import javax.jcr.PropertyType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import javax.jcr.PropertyType;
-
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
  * A <code>NodeTypeDef</code> holds the definition of a node type.
@@ -49,14 +43,13 @@ public class NodeTypeDef implements Cloneable {
 
     private boolean mixin;
     private boolean orderableChildNodes;
-    private boolean queryable;
 
     private boolean abstractStatus;
     private Name primaryItemName;
 
-    private Set<PropDef> propDefs;
-    private Set<NodeDef> nodeDefs;
-    private Set<Name> dependencies;
+    private HashSet propDefs;
+    private HashSet nodeDefs;
+    private Set dependencies;
 
     /**
      * Default constructor.
@@ -65,65 +58,12 @@ public class NodeTypeDef implements Cloneable {
         dependencies = null;
         name = null;
         primaryItemName = null;
+        nodeDefs = new HashSet();
+        propDefs = new HashSet();
         supertypes = Name.EMPTY_ARRAY;
         mixin = false;
         orderableChildNodes = false;
         abstractStatus = false;
-        queryable = true;
-        nodeDefs = new HashSet<NodeDef>();
-        propDefs = new HashSet<PropDef>();
-    }
-
-    /**
-     * Creates a node type def from a spi QNodeTypeDefinition
-     * @param def definition
-     */
-    public NodeTypeDef(QNodeTypeDefinition def) {
-        name = def.getName();
-        primaryItemName = def.getPrimaryItemName();
-        supertypes = def.getSupertypes();
-        mixin = def.isMixin();
-        orderableChildNodes = def.hasOrderableChildNodes();
-        abstractStatus = def.isAbstract();
-        queryable = def.isQueryable();
-        nodeDefs = new HashSet<NodeDef>();
-        for (QNodeDefinition nd: def.getChildNodeDefs()) {
-            nodeDefs.add(new NodeDefImpl(nd));
-        }
-        propDefs = new HashSet<PropDef>();
-        for (QPropertyDefinition pd: def.getPropertyDefs()) {
-            propDefs.add(new PropDefImpl(pd));
-        }
-    }
-
-    /**
-     * Returns the QNodeTypeDefintion for this NodeTypeDef
-     * @return the QNodeTypeDefintion
-     */
-    public QNodeTypeDefinition getQNodeTypeDefinition() {
-        QNodeDefinition[] qNodeDefs = new QNodeDefinition[nodeDefs.size()];
-        int i=0;
-        for (NodeDef nd: nodeDefs) {
-            qNodeDefs[i++] = ((NodeDefImpl) nd).getQNodeDefinition();
-        }
-        QPropertyDefinition[] qPropDefs = new QPropertyDefinition[propDefs.size()];
-        i=0;
-        for (PropDef pd: propDefs) {
-            qPropDefs[i++] = ((PropDefImpl) pd).getQPropertyDefinition();
-        }
-
-        return new QNodeTypeDefinitionImpl(
-                getName(),
-                getSupertypes(),
-                null,
-                isMixin(),
-                isAbstract(),
-                isQueryable(),
-                hasOrderableChildNodes(),
-                getPrimaryItemName(),
-                qPropDefs,
-                qNodeDefs
-        );
     }
 
     /**
@@ -140,11 +80,12 @@ public class NodeTypeDef implements Cloneable {
      */
     public Collection getDependencies() {
         if (dependencies == null) {
-            dependencies = new HashSet<Name>();
+            dependencies = new HashSet();
             // supertypes
             dependencies.addAll(Arrays.asList(supertypes));
             // child node definitions
-            for (NodeDef nd: nodeDefs) {
+            for (Iterator iter = nodeDefs.iterator(); iter.hasNext();) {
+                NodeDef nd = (NodeDef) iter.next();
                 // default primary type
                 Name ntName = nd.getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
@@ -152,23 +93,23 @@ public class NodeTypeDef implements Cloneable {
                 }
                 // required primary type
                 Name[] ntNames = nd.getRequiredPrimaryTypes();
-                for (Name ntName1 : ntNames) {
-                    if (ntName1 != null && !name.equals(ntName1)) {
-                        dependencies.add(ntName1);
+                for (int j = 0; j < ntNames.length; j++) {
+                    if (ntNames[j] != null && !name.equals(ntNames[j])) {
+                        dependencies.add(ntNames[j]);
                     }
                 }
             }
             // property definitions
-            for (PropDef pd : propDefs) {
-                // [WEAK]REFERENCE value constraints
-                if (pd.getRequiredType() == PropertyType.REFERENCE
-                        || pd.getRequiredType() == PropertyType.WEAKREFERENCE) {
-                    QValueConstraint[] ca = pd.getValueConstraints();
+            for (Iterator iter = propDefs.iterator(); iter.hasNext();) {
+                PropDef pd = (PropDef) iter.next();
+                // REFERENCE value constraints
+                if (pd.getRequiredType() == PropertyType.REFERENCE) {
+                    ValueConstraint[] ca = pd.getValueConstraints();
                     if (ca != null) {
-                        for (QValueConstraint aCa : ca) {
-                            Name rcName = NameFactoryImpl.getInstance().create(aCa.getString());
-                            if (!name.equals(rcName)) {
-                                dependencies.add(rcName);
+                        for (int j = 0; j < ca.length; j++) {
+                            ReferenceConstraint rc = (ReferenceConstraint) ca[j];
+                            if (!name.equals(rc.getNodeTypeName())) {
+                                dependencies.add(rc.getNodeTypeName());
                             }
                         }
                     }
@@ -206,9 +147,9 @@ public class NodeTypeDef implements Cloneable {
             supertypes = new Name[] { names[0] };
         } else {
             // Sort and remove duplicates
-            SortedSet<Name> types = new TreeSet<Name>();
+            SortedSet types = new TreeSet();
             types.addAll(Arrays.asList(names));
-            supertypes = types.toArray(new Name[types.size()]);
+            supertypes = (Name[]) types.toArray(new Name[types.size()]);
         }
     }
 
@@ -237,15 +178,6 @@ public class NodeTypeDef implements Cloneable {
      */
     public void setAbstract(boolean abstractStatus) {
         this.abstractStatus = abstractStatus;
-    }
-
-    /**
-     * Sets the 'queryable' flag.
-     *
-     * @param queryable flag
-     */
-    public void setQueryable(boolean queryable) {
-        this.queryable = queryable;
     }
 
     /**
@@ -337,15 +269,6 @@ public class NodeTypeDef implements Cloneable {
     }
 
     /**
-     * Returns the value of the 'queryable' flag.
-     *
-     * @return true if this node type is queryable; false otherwise.
-     */
-    public boolean isQueryable() {
-        return queryable;
-    }
-
-    /**
      * Returns the name of the primary item (one of the child items of the
      * node's of this node type) or <code>null</code> if not set.
      *
@@ -366,7 +289,7 @@ public class NodeTypeDef implements Cloneable {
         if (propDefs.isEmpty()) {
             return PropDef.EMPTY_ARRAY;
         }
-        return propDefs.toArray(new PropDef[propDefs.size()]);
+        return (PropDef[]) propDefs.toArray(new PropDef[propDefs.size()]);
     }
 
     /**
@@ -380,7 +303,7 @@ public class NodeTypeDef implements Cloneable {
         if (nodeDefs.isEmpty()) {
             return NodeDef.EMPTY_ARRAY;
         }
-        return nodeDefs.toArray(new NodeDef[nodeDefs.size()]);
+        return (NodeDef[]) nodeDefs.toArray(new NodeDef[nodeDefs.size()]);
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -392,11 +315,8 @@ public class NodeTypeDef implements Cloneable {
         clone.mixin = mixin;
         clone.orderableChildNodes = orderableChildNodes;
         clone.abstractStatus = abstractStatus;
-        clone.queryable = queryable;
-        clone.nodeDefs = new HashSet<NodeDef>();
-        // todo: itemdefs should be cloned as well, since mutable
-        clone.nodeDefs = new HashSet<NodeDef>(nodeDefs);
-        clone.propDefs = new HashSet<PropDef>(propDefs);
+        clone.nodeDefs = (HashSet) nodeDefs.clone();
+        clone.propDefs = (HashSet) propDefs.clone();
         return clone;
     }
 
@@ -412,7 +332,6 @@ public class NodeTypeDef implements Cloneable {
                     && mixin == other.mixin
                     && orderableChildNodes == other.orderableChildNodes
                     && abstractStatus == other.abstractStatus
-                    && queryable == other.queryable
                     && propDefs.equals(other.propDefs)
                     && nodeDefs.equals(other.nodeDefs);
         }

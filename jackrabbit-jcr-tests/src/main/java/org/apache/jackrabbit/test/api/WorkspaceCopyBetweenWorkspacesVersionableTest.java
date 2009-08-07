@@ -19,8 +19,6 @@ package org.apache.jackrabbit.test.api;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 /**
  * <code>WorkspaceCopyBetweenWorkspacesVersionableTest</code> contains tests for
  * copying versionable nodes between workspace.
@@ -37,8 +35,7 @@ public class WorkspaceCopyBetweenWorkspacesVersionableTest extends AbstractWorks
      * versionable and checked-in, or is non-versionable but its nearest
      * versionable ancestor is checked-in.
      */
-    public void testCopyNodesVersionableAndCheckedIn() throws RepositoryException,
-            NotExecutableException {
+    public void testCopyNodesVersionableAndCheckedIn() throws RepositoryException {
         // prepare the test data
         // create a non-versionable node below a versionable node
         // required for having a nearest versionable ancestor to a nonversionable sub node

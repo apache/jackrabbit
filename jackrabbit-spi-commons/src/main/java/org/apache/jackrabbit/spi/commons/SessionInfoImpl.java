@@ -18,7 +18,6 @@ package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.SessionInfo;
 
-import javax.jcr.RepositoryException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +32,6 @@ public class SessionInfoImpl implements SessionInfo, Serializable {
      * The userId or <code>null</code> if unknown.
      */
     private String userId;
-
-    /**
-     * The user data or <code>null</code>.
-     */
-    private String userData;
 
     /**
      * The name of the workspace to connect to or <code>null</code> if this
@@ -110,12 +104,5 @@ public class SessionInfoImpl implements SessionInfo, Serializable {
      */
     public void removeLockToken(String s) {
         lockTokens.remove(s);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setUserData(String userData) throws RepositoryException {
-        this.userData = userData;
     }
 }

@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import javax.jcr.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +29,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.ObservationManager;
 import java.security.Principal;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,16 +40,6 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
 
     private static Logger log = LoggerFactory.getLogger(AbstractAccessControlProvider.class);
 
-    /**
-     * Constant for the name of the configuration option "omit-default-permission".
-     * The option is a flag indicating whether default permissions should be
-     * created upon initialization of this provider.<p/>
-     * If this option is present in the configuration no initial ACL content
-     * is created.<br>
-     * If this configuration option is omitted the default permissions are
-     * installed. Note however, that the initialization should not overwrite
-     * previously installed AC content.
-     */
     public static final String PARAM_OMIT_DEFAULT_PERMISSIONS = "omit-default-permission";
 
     /**
@@ -140,8 +131,9 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     /**
      * @see AccessControlUtils#isAdminOrSystem(Set)
      */
-    public boolean isAdminOrSystem(Set<Principal> principals) {
-        for (Principal p : principals) {
+    public boolean isAdminOrSystem(Set principals) {
+        for (Iterator it = principals.iterator(); it.hasNext();) {
+            Principal p = (Principal) it.next();
             if (p instanceof AdminPrincipal || p instanceof SystemPrincipal) {
                 return true;
             }
@@ -152,7 +144,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     /**
      * @see AccessControlUtils#isReadOnly(Set)
      */
-    public boolean isReadOnly(Set<Principal> principals) {
+    public boolean isReadOnly(Set principals) {
         // TODO: find ways to determine read-only status
         return false;
     }
@@ -190,12 +182,5 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     public void close() {
         checkInitialized();
         initialized = false;
-    }
-
-    /**
-     * @see AccessControlProvider#isLive()
-     */
-    public boolean isLive() {
-        return initialized && session.isLive();
     }
 }

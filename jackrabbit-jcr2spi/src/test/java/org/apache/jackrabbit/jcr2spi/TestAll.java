@@ -58,7 +58,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MoveTreeTest.class);
         suite.addTestSuite(MoveNewTreeTest.class);
         suite.addTestSuite(MoveMultipleTest.class);
-        suite.addTestSuite(WorkspaceMoveTest.class);
+        //suite.addTestSuite(WorkspaceMoveTest.class);  // see JCR-1276
         suite.addTestSuite(RevertMoveTest.class);
         suite.addTestSuite(MoveToNewTest.class);
         suite.addTestSuite(MoveCombinedTest.class);

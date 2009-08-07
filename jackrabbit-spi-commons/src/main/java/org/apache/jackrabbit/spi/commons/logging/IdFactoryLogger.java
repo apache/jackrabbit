@@ -74,18 +74,4 @@ public class IdFactoryLogger extends AbstractLogger implements IdFactory {
             }}, "createNodeId(String)", new Object[]{uniqueID});
     }
 
-    public String toJcrIdentifier(final NodeId nodeId) {
-        return (String) execute(new SafeCallable() {
-            public Object call() {
-                return idFactory.toJcrIdentifier(nodeId);
-            }}, "toJcrIdentifier(String)", new Object[]{nodeId});
-    }
-
-    public NodeId fromJcrIdentifier(final String jcrIdentifier) {
-        return (NodeId) execute(new SafeCallable() {
-            public Object call() {
-                return idFactory.fromJcrIdentifier(jcrIdentifier);
-            }}, "fromJcrIdentifier(String)", new Object[]{jcrIdentifier});
-    }
-
 }

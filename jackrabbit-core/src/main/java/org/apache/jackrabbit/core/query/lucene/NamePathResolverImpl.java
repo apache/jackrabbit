@@ -16,26 +16,30 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import javax.jcr.NamespaceException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+
+import javax.jcr.NamespaceException;
 
 /**
  * <code>NamePathResolverImpl</code>...
  */
 public class NamePathResolverImpl extends DefaultNamePathResolver {
+
+    private static Logger log = LoggerFactory.getLogger(NamePathResolverImpl.class);
 
     private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
     private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
@@ -75,10 +79,10 @@ public class NamePathResolverImpl extends DefaultNamePathResolver {
 
         //-------------------------------------------------------< NameResolver >---
         /**
-         * Parses the prefixed JCR name and returns the resolved <code>Name</code> object.
+         * Parses the prefixed JCR name and returns the resolved qualified name.
          *
-         * @param name The JCR name string.
-         * @return The corresponding <code>Name</code>.
+         * @param name prefixed JCR name
+         * @return qualified name
          * @throws IllegalNameException if the JCR name format is invalid
          * @throws NamespaceException if the namespace prefix can not be resolved
          */
@@ -87,14 +91,14 @@ public class NamePathResolverImpl extends DefaultNamePathResolver {
         }
 
         /**
-         * Returns the qualified JCR name for the given <code>Name</code>.
+         * Returns the prefixed JCR name for the given qualified name.
          * Note, that the JCR prefix is always retrieved from the NamespaceResolver
          * even if the name is in the defaut namespace. This is a special treatement
          * for query specific implementation, which defines a prefix for all namespace
          * URIs including the default namespace.
          *
-         * @param name A <code>Name</code> object.
-         * @return The corresponding qualified JCR name string.
+         * @param name qualified name
+         * @return prefixed JCR name
          * @throws NamespaceException if the namespace URI can not be resolved
          */
         public String getJCRName(Name name) throws NamespaceException {

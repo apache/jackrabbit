@@ -21,10 +21,6 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
@@ -42,25 +38,20 @@ import javax.jcr.NamespaceException;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeTypeExistsException;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashSet;
-import java.util.List;
 import java.io.PrintStream;
 
 /**
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements NodeTypeDefinitionProvider, NodeTypeRegistryListener, Dumpable {
+public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryListener, Dumpable {
 
     /**
      * Logger instance for this class
@@ -78,7 +69,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     private final NodeTypeRegistry ntReg;
 
     /**
-     * The ValueFactory used to build property definitions.
+     * The ValueFactory used to convert qualified values to JCR values.
      */
     private final ValueFactory valueFactory;
 
@@ -105,14 +96,15 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      *
      * @param ntReg        node type registry
      * @param mgrProvider  the manager provider
-     * @throws RepositoryException If an error occurs.
+     * @param valueFactory the JCR value factory
      */
     public NodeTypeManagerImpl(NodeTypeRegistry ntReg,
-                               ManagerProvider mgrProvider) throws RepositoryException {
+                               ManagerProvider mgrProvider,
+                               ValueFactory valueFactory) {
         this.mgrProvider = mgrProvider;
         this.ntReg = ntReg;
         this.ntReg.addListener(this);
-        this.valueFactory = mgrProvider.getJcrValueFactory();
+        this.valueFactory = valueFactory;
 
         // setup caches with soft references to node type
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
@@ -124,13 +116,18 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         return mgrProvider.getNamespaceResolver();
     }
 
+    private NamePathResolver resolver() {
+        return mgrProvider.getNamePathResolver();
+    }
+
     private EffectiveNodeTypeProvider entProvider() {
         return mgrProvider.getEffectiveNodeTypeProvider();
     }
-
     //--------------------------------------------------------------------------
     /**
-     * @see AbstractNodeTypeManager#getNodeType(org.apache.jackrabbit.spi.Name)
+     * @param name
+     * @return
+     * @throws NoSuchNodeTypeException
      */
     public NodeTypeImpl getNodeType(Name name) throws NoSuchNodeTypeException {
         synchronized (ntCache) {
@@ -143,13 +140,6 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
             }
             return nt;
         }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager#getNamePathResolver() 
-     */
-    public NamePathResolver getNamePathResolver() {
-        return mgrProvider.getNamePathResolver();
     }
 
     /**
@@ -176,7 +166,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         synchronized (ndCache) {
             NodeDefinition ndi = (NodeDefinition) ndCache.get(def);
             if (ndi == null) {
-                ndi = new NodeDefinitionImpl(def, this, getNamePathResolver());
+                ndi = new NodeDefinitionImpl(def, this, resolver());
                 ndCache.put(def, ndi);
             }
             return ndi;
@@ -194,7 +184,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         synchronized (pdCache) {
             PropertyDefinition pdi = (PropertyDefinition) pdCache.get(def);
             if (pdi == null) {
-                pdi = new PropertyDefinitionImpl(def, this, getNamePathResolver(), valueFactory);
+                pdi = new PropertyDefinitionImpl(def, this, resolver(), valueFactory);
                 pdCache.put(def, pdi);
             }
             return pdi;
@@ -207,16 +197,6 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     NodeTypeRegistry getNodeTypeRegistry() {
         return ntReg;
     }
-
-    //-----------------------------------------< NodeTypeDefinitionProvider >---
-    /**
-     * @see NodeTypeDefinitionProvider#getNodeTypeDefinition(org.apache.jackrabbit.spi.Name) 
-     */
-    public QNodeTypeDefinition getNodeTypeDefinition(Name ntName) throws NoSuchNodeTypeException, RepositoryException {
-        NodeTypeImpl nt = getNodeType(ntName);
-        return nt.getDefinition();
-    }
-
     //-------------------------------------------< NodeTypeRegistryListener >---
     /**
      * {@inheritDoc}
@@ -232,7 +212,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = getNamePathResolver().getJCRName(ntName);
+            String name = resolver().getJCRName(ntName);
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -269,7 +249,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = getNamePathResolver().getJCRName(ntName);
+            String name = resolver().getJCRName(ntName);
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -348,62 +328,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            Name qName = getNamePathResolver().getQName(nodeTypeName);
+            Name qName = resolver().getQName(nodeTypeName);
             return getNodeType(qName);
         } catch (NamespaceException e) {
             throw new NoSuchNodeTypeException(nodeTypeName, e);
         } catch (NameException e) {
             throw new NoSuchNodeTypeException(nodeTypeName, e);
         }
-    }
-
-    /**
-     * @see NodeTypeManager#hasNodeType(String)
-     */
-    public boolean hasNodeType(String name) throws RepositoryException {
-        try {
-            Name qName = getNamePathResolver().getQName(name);
-            return hasNodeType(qName);
-        } catch (NamespaceException e) {
-            return false;
-        } catch (NameException e) {
-            return false;
-        }
-    }
-
-    /**
-     * @see NodeTypeManager#registerNodeTypes(javax.jcr.nodetype.NodeTypeDefinition[], boolean)
-     */
-    public NodeTypeIterator registerNodeTypes(NodeTypeDefinition[] ntds, boolean allowUpdate)
-            throws RepositoryException {
-        List<QNodeTypeDefinition> defs = new ArrayList<QNodeTypeDefinition>(ntds.length);
-        for (NodeTypeDefinition definition : ntds) {
-            QNodeTypeDefinition qdef = new QNodeTypeDefinitionImpl(definition, getNamePathResolver(), mgrProvider.getQValueFactory());
-            if (!allowUpdate && hasNodeType(qdef.getName())) {
-                throw new NodeTypeExistsException("NodeType " + definition.getName() + " already exists.");
-            }
-            defs.add(qdef);
-        }
-
-        getNodeTypeRegistry().registerNodeTypes(defs, allowUpdate);
-
-        List<NodeType> nts = new ArrayList<NodeType>();
-        for (Iterator<QNodeTypeDefinition> it = defs.iterator(); it.hasNext();) {
-            nts.add(getNodeType(it.next().getName()));
-        }
-        return new NodeTypeIteratorAdapter(nts);
-
-    }
-
-    /**
-     * @see NodeTypeManager#unregisterNodeTypes(String[])
-     */
-    public void unregisterNodeTypes(String[] names) throws RepositoryException {
-        HashSet ntNames = new HashSet();
-        for (String name : names) {
-            ntNames.add(getNamePathResolver().getQName(name));
-        }
-        getNodeTypeRegistry().unregisterNodeTypes(ntNames);
     }
 
     //-----------------------------------------------------------< Dumpable >---

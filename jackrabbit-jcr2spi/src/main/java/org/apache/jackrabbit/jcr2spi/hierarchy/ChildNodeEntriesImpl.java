@@ -16,28 +16,27 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-
-import org.apache.commons.collections.list.AbstractLinkedList;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.commons.collections.list.AbstractLinkedList;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 
 /**
  * <code>ChildNodeEntriesImpl</code> implements a memory sensitive implementation
@@ -50,6 +49,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     private static final int STATUS_OK = 0;
     private static final int STATUS_INVALIDATED = 1;
 
+    private int status = STATUS_OK;
     private boolean complete = false;
 
     /**
@@ -122,9 +122,16 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * @see ChildNodeEntries#isComplete()
      */
     public boolean isComplete() {
-        return (parent.getStatus() != Status.INVALIDATED && complete) ||
+        return (status == STATUS_OK && complete) ||
                 parent.getStatus() == Status.NEW ||
                 Status.isTerminal(parent.getStatus());
+    }
+
+    /**
+     * @see ChildNodeEntries#invalidate()
+     */
+    public void invalidate() {
+        this.status = STATUS_INVALIDATED;
     }
 
     /**
@@ -182,6 +189,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             prevLN = ln;
         }
         // finally reset the status
+        status = STATUS_OK;
         complete = true;
     }
 
@@ -767,13 +775,13 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         /**
          * Returns a unmodifiable List of NodeEntry objects even if the name map
          * only contains a single entry for the given name. If no matching entry
-         * exists for the given <code>Name</code> an empty list is returned.
+         * exists for the given qualified name an empty list is returned.
          *
-         * @param name
+         * @param qName
          * @return list of entries or an empty list.
          */
-        public List getList(Name name) {
-            Object obj = get(name);
+        public List getList(Name qName) {
+            Object obj = get(qName);
             if (obj == null) {
                 return Collections.EMPTY_LIST;
             } else if (obj instanceof List) {
@@ -785,8 +793,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public NodeEntry getNodeEntry(Name name, int index) {
-            Object obj = get(name);
+        public NodeEntry getNodeEntry(Name qName, int index) {
+            Object obj = get(qName);
             if (obj == null) {
                 return null;
             }
@@ -802,35 +810,35 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             return null;
         }
 
-        public LinkedEntries.LinkNode getLinkNode(Name name, int index) {
+        public LinkedEntries.LinkNode getLinkNode(Name qName, int index) {
             if (index < Path.INDEX_DEFAULT) {
                 throw new IllegalArgumentException("Illegal index " + index);
             }
 
-            LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(name);
+            LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(qName);
             if (val != null) {
                 return (index == Path.INDEX_DEFAULT) ? val : null;
             } else {
                 // look in snsMap
-                List l = (List) snsMap.get(name);
+                List l = (List) snsMap.get(qName);
                 int pos = index - 1; // Index of NodeEntry is 1-based
                 return (l != null && pos < l.size()) ? (LinkedEntries.LinkNode) l.get(pos) : null;
             }
         }
 
-        public LinkedEntries.LinkNode getLinkNode(Name name, int index, String uniqueID) {
+        public LinkedEntries.LinkNode getLinkNode(Name qName, int index, String uniqueID) {
             if (uniqueID != null) {
                 // -> try if any entry matches.
                 // if none matches it be might that entry doesn't have uniqueID
                 // set yet -> search without uniqueID
-                LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(name);
+                LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(qName);
                 if (val != null) {
                     if (uniqueID.equals(val.getNodeEntry().getUniqueID())) {
                         return val;
                     }
                 } else {
                     // look in snsMap
-                    List l = (List) snsMap.get(name);
+                    List l = (List) snsMap.get(qName);
                     if (l != null) {
                         for (Iterator it = l.iterator(); it.hasNext();) {
                             LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
@@ -843,25 +851,25 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
             // no uniqueID passed or not match.
             // try to load the child entry by name and index.
-            return getLinkNode(name, index);
+            return getLinkNode(qName, index);
         }
 
-        public void put(Name name, int index, LinkedEntries.LinkNode value) {
+        public void put(Name qName, int index, LinkedEntries.LinkNode value) {
             // if 'nameMap' already contains a single entry -> move it to snsMap
-            LinkedEntries.LinkNode single = (LinkedEntries.LinkNode) nameMap.remove(name);
+            LinkedEntries.LinkNode single = (LinkedEntries.LinkNode) nameMap.remove(qName);
             List l;
             if (single != null) {
                 l = new ArrayList();
                 l.add(single);
-                snsMap.put(name, l);
+                snsMap.put(qName, l);
             } else {
                 // if 'snsMap' already contains list
-                l = (List) snsMap.get(name);
+                l = (List) snsMap.get(qName);
             }
 
             if (l == null) {
                 // no same name siblings -> simply put to the name map.
-                nameMap.put(name, value);
+                nameMap.put(qName, value);
             } else {
                 // sibling(s) already present -> insert into the list
                 int position = index - 1;
@@ -873,10 +881,10 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public LinkedEntries.LinkNode remove(Name name, LinkedEntries.LinkNode value) {
-            Object rm = nameMap.remove(name);
+        public LinkedEntries.LinkNode remove(Name qName, LinkedEntries.LinkNode value) {
+            Object rm = nameMap.remove(qName);
             if (rm == null) {
-                List l = (List) snsMap.get(name);
+                List l = (List) snsMap.get(qName);
                 if (l != null && l.remove(value)) {
                     rm = value;
                 }
@@ -884,8 +892,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             return ((LinkedEntries.LinkNode) rm);
         }
 
-        public void reorder(Name name, LinkedEntries.LinkNode insertValue, int position) {
-            List sns = (List) snsMap.get(name);
+        public void reorder(Name qName, LinkedEntries.LinkNode insertValue, int position) {
+            List sns = (List) snsMap.get(qName);
             if (sns == null) {
                 // no same name siblings -> no special handling required
                 return;

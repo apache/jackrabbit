@@ -1,115 +1,111 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha7
+Release Notes -- Apache Jackrabbit -- Version 1.6.0
 
 Introduction
 ------------
 
-This is an alpha release of Apache Jackrabbit 2.0. This release implements
-a pre-release version of the JCR 2.0 API, specified by the Java Specification
-Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
+Apache Jackrabbit 1.6 is an incremental feature release. While
+remaining compatible with previous releases, Jackrabbit 1.6 introduces
+a number of new features, improvements and fixes to known issues.
 
-The purpose of this alpha release is to allow people to test and review
-the new JCR 2.0 features before they are finalized. Feedback to both the
-Jackrabbit project and the JSR 283 expert group is highly appreciated.
-Note that an alpha release is not expected to be feature-complete or
-otherwise suitable for production use.
+The most notable changes in this release are:
 
-Changes in this release
------------------------
+    * The RepositoryCopier tool makes it easy to backup and migrate
+      repositories (JCR-442). There is also improved support for selectively
+      copying content and version histories between repositories (JCR-1972).
 
-Jackrabbit 2.0 is a major upgrade from the earlier 1.x releases. The most
-notable changes in this release are:
+    * A new WebDAV-based JCR remoting layer has been added to complement
+      the existing JCR-RMI layer (JCR-1877, JCR-1958).
 
-  * Upgrade to JCR 2.0. This Jackrabbit release implements and is based
-    on a pre-release version of the JCR 2.0 API. See below for a status
-    listing of the issues related to JCR 2.0 changes. We expect to achieve
-    full feature-completeness in time for the final Jackrabbit 2.0 release.
+    * Query performance has been further optimized (JCR-1820, JCR-1855
+      and JCR-2025).
 
-  * Upgrade to Java 5. All of Jackrabbit (except the jcr-tests component)
-    now requires Java 5 as the base platform. Java 1.4 environments are no
-    longer supported.
+    * Added support for Ingres and MaxDB/SapDB databases (JCR-1960, JCR-1527).
 
-  * Removal of deprecated classes and features. Jackrabbit 2.0 is not
-    backwards compatible with client code that used any classes or features
-    that had been deprecated during the 1.x release cycle.
+    * Session.refresh() can now be used to synchronize a cluster node
+      with changes from the other nodes in the cluster (JCR-1753).
 
-  * Separate JCR Commons components. Many of the general-purpose JCR
-    components like JCR-RMI and OCM are now developed and released
-    separately from the Jackrabbit content repository. See the individual
-    components for their most recent releases.
+    * Unreferenced version histories are now automatically removed once
+      all the contained versions have been removed (JCR-134).
 
-  * Data store feature enabled in the default repository configuration.
+    * Standalone components like the JCR-RMI layer and the OCM framework
+      have been moved to a separate JCR Commons subproject of Jackrabbit,
+      and are not included in this release. Updates to those components
+      will be distributed as separate releases.
 
-For more detailed information about all the changes in this and other
-Jackrabbit releases, please see the Jackrabbit issue tracker at
+    * Development preview: There are even more JSR 283 features in
+      Jackrabbit 1.6 than were included in the 1.5 version. These new
+      features are accessible through special "jsr283" interfaces in
+      the Jackrabbit API. Note that none of these features are ready
+      for production use, and will be replaced with final JCR 2.0 versions
+      in Jackrabbit 2.0. 
+
+See the Jackrabbit issue tracker for all the 120 changes in this release:
 
     https://issues.apache.org/jira/browse/JCR
 
-JCR 2.0 feature completeness
-----------------------------
-
-The following 43 top level JCR 2.0 implementation issues are being tracked in
-the Jackrabbit issue tracker. Most of them have already been partially
-implemented, but the issue will only be marked as resolved once no more
-related work is needed.
-
-Open (5 issues)
-  [JCR-1588] JSR 283: Access Control
-  [JCR-1590] JSR 283: Locking
-  [JCR-1712] JSR 283: JCR Names
-  [JCR-2085] test case (TCK) maintenance for JCR 2.0
-  [JCR-2208] update tests so that both Query.XPATH and Query:SQL are ...
-
-Resolved (38 issues)
-  [JCR-1564] JSR 283 namespace handling
-  [JCR-1565] JSR 283 lifecycle management
-  [JCR-1589] JSR 283: Retention & Hold Management
-  [JCR-1591] JSR 283: NodeType Management
-  [JCR-1592] JSR 283: Activities
-  [JCR-1593] JSR 283: Simple versioning
-  [JCR-1608] JSR 283: Workspace Management
-  [JCR-1609] JSR 283: new Property Types
-  [JCR-1834] JSR 283: Create RepositoryFactory implementation
-  [JCR-1839] JSR 283: Introduce Event.getDate()
-  [JCR-1849] JSR 283: EventJournal
-  [JCR-1904] JSR 283: Event user data
-  [JCR-1947] JSR 283: Node Type Attribute Subtyping Rules
-  [JCR-1974] JSR 283: Evaluate Capabilities
-  [JCR-2028] JSR 283: JCR Path
-  [JCR-2053] JSR 283: Shareable nodes support in query
-  [JCR-2056] JSR 283: Binary interfaces
-  [JCR-2058] JSR 283: VersionManager and new versioning methods
-  [JCR-2059] JSR 283: Access Property/Node from Session
-  [JCR-2060] JSR 283: Access Nodes and Properties by Array of "NameGlob"
-  [JCR-2061] JSR 283: References and Dereferencing of Property Values
-  [JCR-2062] JSR 283: Repository Compliance
-  [JCR-2074] JSR 283: New Event Types
-  [JCR-2075] JSR 283: Identifier based event filtering
-  [JCR-2076] JSR 283: QOM and SQL2
-  [JCR-2086] JSR 283: Implementation of EventIterator.getDate
-  [JCR-2090] JSR 283: new methods on NodeType
-  [JCR-2091] Searchability settings in PropertyDefinition
-  [JCR-2092] make spi query code compatible with JCR 2.0
-  [JCR-2093] Implement QueryObjectModelFactory.fullTextSearch() in ...
-  [JCR-2116] JSR 283: Built-In Node Types
-  [JCR-2117] JSR 283: adopt CND syntax changes
-  [JCR-2137] Use type StaticOperand for fullTextSearchExpression
-  [JCR-2140] JSR 283: Configuration and Baselines
-  [JCR-2198] Text.escapeIllegalJCRChars should be adjusted to match the ...
-  [JCR-2200] Implement Query.getBindVariableNames()
-  [JCR-2201] Implement QueryResult.getSelectorNames()
-  [JCR-2234] changed behavior of javax.jcr.Value get* methods
+The issue tracker also documents all the known issues in this release.
 
 Release Contents
 ----------------
 
-This release consists of a single source archive packaged as a jar file.
-The archive can be unpacked with the jar tool from your JDK installation.
-See the README.txt file for instructions on how to build this release.
+This release consists of a single source archive (jackrabbit-1.6.0-src.jar)
+that contains all the Apache Jackrabbit components. Use the following
+commands (or the equivalent in your system) to build the release with
+Maven 2 and Java 1.4 or higher:
+
+    jar xf jackrabbit-1.6.0-src.jar
+    cd jackrabbit-1.6.0-src
+    mvn install
 
 The source archive is accompanied by SHA1 and MD5 checksums and a PGP
 signature that you can use to verify the authenticity of your download.
 The public key used for the PGP signature can be found at
 https://svn.apache.org/repos/asf/jackrabbit/dist/KEYS.
+
+Upgrading to Jackrabbit 1.6
+---------------------------
+
+Apache Jackrabbit 1.6 is fully compatible with the previous 1.x releases.
+A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
+the relevant jar files with the new versions and adding some new dependencies.
+No changes to repository contents are needed.
+
+The Lucene dependency was upgraded to 2.4.1. Note that Jackrabbit 1.6 only
+works with this version of Lucene, not with earlier versions and possibly
+not even with later versions due to the tight integration with Lucene
+internals (JCR-1855).
+
+The POI dependency was upgraded to 3.2-FINAL.
+
+Repository configuration has been extended with options for the repository
+lock mechanism. No changes to existing configuration files are needed unless
+you need to use this new feature (JCR-1605).
+
+Contributors
+------------
+
+The following people have contributed to this release by submitting bug
+reports or by participating in the issue resolution process.
+
+    Alessandro Cosenza      Dominique Pfister        Murray Armfield
+    Alexander Klimetschek   Eric Wout van der Steen  Nicolas Toper
+    Angela Schreiber        Fabrizio Giustina        Oleg Alexeyev
+    Ard Schrijvers          Felix Meschberger        Paco Avila
+    Arthur Meyer            Greg Klebus              Roman Puchkovskiy
+    Attila Király           Jacco van Weert          Ryan Vanderwerf
+    Bart van der Schans     James Abley              Sandrine Raffalli
+    Boni Gopalan            Jason Gritman            Savvas Triantafyllou
+    Brian Whipple           Jukka Zitting            Sébastien Launay
+    Cédric Damioli          Julian Reschke           Stefan Guggisberg
+    Charles Brooking        Julian Sedding           Stephane Landelle
+    Christian               Ken Yue                  Thomas Fromm
+    Christophe Lombart      Marcel Reutegger         Thomas Mueller
+    Claus Köll              Marius Ropotica          Tobias Bocanegra
+    Dan Diephouse           Martijn Hendriks         Torsten Weck
+    Dave Brosius            Micah Whitacre           Tyson Norris
+    Dirk Feufel             Michael Dürig            Yoav Landman
+
+Thank you to everyone involved!
 
 About Apache Jackrabbit
 -----------------------
@@ -134,3 +130,4 @@ the Foundation's intellectual property framework limits the legal exposure
 of its 2,500+ contributors.
 
 For more information, visit http://www.apache.org/
+

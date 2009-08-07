@@ -171,7 +171,7 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
          * Maps <code>Integer</code> document numbers to <code>Float</code>
          * scores.
          */
-        private final Map<Integer, Float> scores = new HashMap<Integer, Float>();
+        private final Map scores = new HashMap();
 
         /**
          * The current document number.
@@ -190,17 +190,17 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
                 throws IOException {
             super(similarity);
             ScoreNode node;
-            Set<Integer> sortedDocs = new TreeSet<Integer>();
+            Set sortedDocs = new TreeSet();
             try {
                 while ((node = hits.nextScoreNode()) != null) {
-                    String uuid = node.getNodeId().toString();
+                    String uuid = node.getNodeId().getUUID().toString();
                     Term id = new Term(FieldNames.UUID, uuid);
                     TermDocs tDocs = reader.termDocs(id);
                     try {
                         if (tDocs.next()) {
-                            Integer doc = tDocs.doc();
+                            Integer doc = new Integer(tDocs.doc());
                             sortedDocs.add(doc);
-                            scores.put(doc, node.getScore());
+                            scores.put(doc, new Float(node.getScore()));
                         }
                     } finally {
                         tDocs.close();
@@ -227,14 +227,14 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
          * {@inheritDoc}
          */
         public int doc() {
-            return currentDoc;
+            return currentDoc.intValue();
         }
 
         /**
          * {@inheritDoc}
          */
         public float score() throws IOException {
-            return scores.get(currentDoc);
+            return ((Float) scores.get(currentDoc)).floatValue();
         }
 
         /**

@@ -213,12 +213,12 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
         while (next == null && rows.hasNext()) {
             try {
                 QueryResultRow row = (QueryResultRow) rows.next();
-                nextId = row.getNodeId(null);
+                nextId = row.getNodeId();
                 Item tmp = itemMgr.getItem(hierarchyMgr.getNodeEntry(nextId));
 
                 if (tmp.isNode()) {
                     next = (Node) tmp;
-                    nextScore = row.getScore(null);
+                    nextScore = row.getScore();
                 } else {
                     log.warn("Item with Id is not a Node: " + nextId);
                     // try next

@@ -32,11 +32,6 @@
     </FileSystem>
 
     <!--
-        data store configuration
-    -->
-    <DataStore class="org.apache.jackrabbit.core.data.FileDataStore"/>
-
-    <!--
         security configuration
     -->
     <Security appName="Jackrabbit">
@@ -103,6 +98,7 @@
         -->
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
             <param name="path" value="${wsp.home}/index"/>
+            <param name="extractorPoolSize" value="2"/>
             <param name="supportHighlighting" value="true"/>
         </SearchIndex>
     </Workspace>
@@ -137,6 +133,7 @@
     -->
     <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
         <param name="path" value="${rep.home}/repository/index"/>
+        <param name="extractorPoolSize" value="2"/>
         <param name="supportHighlighting" value="true"/>
     </SearchIndex>
 </Repository>

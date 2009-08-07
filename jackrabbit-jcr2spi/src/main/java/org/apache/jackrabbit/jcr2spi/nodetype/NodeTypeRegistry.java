@@ -18,10 +18,9 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidNodeTypeDefException;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.RepositoryException;
 import java.util.Collection;
 
@@ -72,27 +71,95 @@ public interface NodeTypeRegistry {
     public Name[] getRegisteredNodeTypes() throws RepositoryException;
 
     /**
-     * Registers the specified node type definitions. If <code>allowUpdate</code>
-     * is <code>true</code> existing node types will be updated, otherwise
-     * an <code>NodeTypeExistsException</code> is thrown.
+     * Validates the <code>NodeTypeDef</code> and returns
+     * a registered <code>EffectiveNodeType</code> instance.
+     * <p/>
+     * The validation includes the following checks:
+     * <ul>
+     * <li>Supertypes must exist and be registered</li>
+     * <li>Inheritance graph must not be circular</li>
+     * <li>Aggregation of supertypes must not result in name conflicts,
+     * ambiguities, etc.</li>
+     * <li>Definitions of auto-created properties must specify a name</li>
+     * <li>Default values in property definitions must satisfy value constraints
+     * specified in the same property definition</li>
+     * <li>Definitions of auto-created child-nodes must specify a name</li>
+     * <li>Default node type in child-node definitions must exist and be
+     * registered</li>
+     * <li>The aggregation of the default node types in child-node definitions
+     * must not result in name conflicts, ambiguities, etc.</li>
+     * <li>Definitions of auto-created child-nodes must not specify default
+     * node types which would lead to infinite child node creation
+     * (e.g. node type 'A' defines auto-created child node with default
+     * node type 'A' ...)</li>
+     * <li>Node types specified as constraints in child-node definitions
+     * must exist and be registered</li>
+     * <li>The aggregation of the node types specified as constraints in
+     * child-node definitions must not result in name conflicts, ambiguities,
+     * etc.</li>
+     * <li>Default node types in child-node definitions must satisfy
+     * node type constraints specified in the same child-node definition</li>
+     * </ul>
      *
-     * @param ntDefs
-     * @param allowUpdate
-     * @throws NodeTypeExistsException
-     * @throws InvalidNodeTypeDefinitionException
+     * @param ntDef the definition of the new node type
+     * @return an <code>EffectiveNodeType</code> instance
+     * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    public void registerNodeTypes(Collection<QNodeTypeDefinition> ntDefs, boolean allowUpdate) throws NodeTypeExistsException, InvalidNodeTypeDefinitionException, RepositoryException;
+    public EffectiveNodeType registerNodeType(QNodeTypeDefinition ntDef)
+            throws InvalidNodeTypeDefException, RepositoryException;
 
     /**
-     * Unregisters a collection of node types.
+     * Same as <code>{@link #registerNodeType(QNodeTypeDefinition)}</code> except
+     * that a collection of <code>NodeTypeDef</code>s is registered instead of
+     * just one.
+     * <p/>
+     * This method can be used to register a set of node types that have
+     * dependencies on each other.
+     * <p/>
+     * Note that in the case an exception is thrown, some node types might have
+     * been nevertheless successfully registered.
+     *
+     * @param ntDefs a collection of <code>NodeTypeDef<code>s
+     * @throws InvalidNodeTypeDefException
+     * @throws RepositoryException
+     */
+    public void registerNodeTypes(Collection ntDefs)
+            throws InvalidNodeTypeDefException, RepositoryException;
+
+    /**
+     * @param nodeTypeName
+     * @throws NoSuchNodeTypeException
+     * @throws RepositoryException
+     */
+    public void unregisterNodeType(Name nodeTypeName)
+            throws NoSuchNodeTypeException, RepositoryException;
+
+    /**
+     * Same as <code>{@link #unregisterNodeType(Name)}</code> except
+     * that a set of node types is unregistered instead of just one.
+     * <p/>
+     * This method can be used to unregister a set of node types that depend on
+     * each other.
      *
      * @param nodeTypeNames a collection of <code>Name</code> objects denoting the
      *                node types to be unregistered
      * @throws NoSuchNodeTypeException if any of the specified names does not
      *                                 denote a registered node type.
      * @throws RepositoryException if another error occurs
+     * @see #unregisterNodeType(Name)
      */
-    public void unregisterNodeTypes(Collection<Name> nodeTypeNames)
+    public void unregisterNodeTypes(Collection nodeTypeNames)
         throws NoSuchNodeTypeException, RepositoryException;
+
+    /**
+     * @param ntd
+     * @return
+     * @throws NoSuchNodeTypeException
+     * @throws InvalidNodeTypeDefException
+     * @throws RepositoryException
+     */
+    public EffectiveNodeType reregisterNodeType(QNodeTypeDefinition ntd)
+            throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
+            RepositoryException;
 }

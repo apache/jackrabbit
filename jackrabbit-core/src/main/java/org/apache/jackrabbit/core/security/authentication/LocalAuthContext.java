@@ -26,11 +26,7 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Provide AuthContext interface, for a JAAS-LoginModule not running in
@@ -71,17 +67,7 @@ public class LocalAuthContext implements AuthContext {
         } catch (ConfigurationException e) {
             throw new LoginException(e.getMessage());
         }
-
-        Map<String, Object> state = new HashMap<String, Object>();
-        Map<String, String> options = new HashMap<String, String>();
-        Properties parameters = config.getParameters();
-        Enumeration< ? > names = parameters.propertyNames();
-        while (names.hasMoreElements()) {
-            String name = (String) names.nextElement();
-            options.put(name, parameters.getProperty(name));
-        }
-        module.initialize(subject, cbHandler, state, options);
-
+        module.initialize(subject, cbHandler, new HashMap(), config.getParameters());
         try {
             if (!(module.login() && module.commit())) {
                 throw new FailedLoginException("LoginModule ignored Credentials");

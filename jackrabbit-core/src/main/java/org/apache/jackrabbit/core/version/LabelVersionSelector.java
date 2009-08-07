@@ -17,8 +17,9 @@
 package org.apache.jackrabbit.core.version;
 
 import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.spi.Name;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
 
 /**
  * This Class implements a version selector that selects a version by label.
@@ -37,15 +38,15 @@ public class LabelVersionSelector implements VersionSelector {
     /**
      * a versionlabel hint
      */
-    private Name label = null;
+    private String label = null;
 
     /**
      * Creates a <code>LabelVersionSelector</code> that will try to select a
      * version with the given label.
      *
-     * @param label label hint
+     * @param label
      */
-    public LabelVersionSelector(Name label) {
+    public LabelVersionSelector(String label) {
         this.label = label;
     }
 
@@ -54,26 +55,28 @@ public class LabelVersionSelector implements VersionSelector {
      *
      * @return the label hint.
      */
-    public Name getLabel() {
+    public String getLabel() {
         return label;
     }
 
     /**
      * Sets the label hint
      *
-     * @param label label hint
+     * @param label
      */
-    public void setLabel(Name label) {
+    public void setLabel(String label) {
         this.label = label;
     }
 
     /**
-     * {@inheritDoc}
-     *
      * Selects a version from the given version history using the previously
      * assigned hint in the following order: name, label, date, latest.
+     *
+     * @param versionHistory
+     * @return
+     * @throws RepositoryException
      */
-    public InternalVersion select(InternalVersionHistory versionHistory)
+    public Version select(VersionHistory versionHistory)
             throws RepositoryException {
         return selectByLabel(versionHistory, label);
     }
@@ -81,14 +84,18 @@ public class LabelVersionSelector implements VersionSelector {
     /**
      * Selects a version by label
      *
-     * @param history history to select from
-     * @param label desired label
+     * @param history
+     * @param label
      * @return the version with the given label or <code>null</code>
-     * @throws RepositoryException if an error occurs
+     * @throws RepositoryException
      */
-    public static InternalVersion selectByLabel(InternalVersionHistory history, Name label)
+    public static Version selectByLabel(VersionHistory history, String label)
             throws RepositoryException {
-        return history.getVersionByLabel(label);
+        try {
+            return history.getVersionByLabel(label);
+        } catch (VersionException e) {
+            return null;
+        }
     }
 
     /**

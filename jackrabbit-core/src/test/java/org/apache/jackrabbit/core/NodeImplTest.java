@@ -16,21 +16,22 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
+import javax.jcr.RepositoryException;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Iterator;
@@ -79,8 +80,8 @@ public class NodeImplTest extends AbstractJCRTest {
         }
     }
 
-    private Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) getHelper().getReadOnlySession();
+    private static Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {
+        SessionImpl s = (SessionImpl) helper.getReadOnlySession();
         try {
             for (Iterator it = s.getSubject().getPrincipals().iterator(); it.hasNext();) {
                 Principal p = (Principal) it.next();
@@ -101,7 +102,7 @@ public class NodeImplTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @throws NotExecutableException
      */
-    public void testIsCheckedOut() throws RepositoryException, NotExecutableException {
+    public void testInternalIsCheckedOut() throws RepositoryException, NotExecutableException {
         Node n = testRootNode.addNode(nodeName1);
         NodeImpl testNode = (NodeImpl) n.addNode(nodeName2);
         testRootNode.save();
@@ -110,16 +111,16 @@ public class NodeImplTest extends AbstractJCRTest {
         changeReadPermission(principal, n, false);
         changeReadPermission(principal, testNode, true);
 
-        Session readOnly = getHelper().getReadOnlySession();
+        Session readOnly = helper.getReadOnlySession();
         try {
             NodeImpl tn = (NodeImpl) readOnly.getItem(testNode.getPath());
-            assertTrue(tn.isCheckedOut());
+            assertTrue(tn.internalIsCheckedOut());
 
             n.addMixin(mixVersionable);
             testRootNode.save();
             n.checkin();
 
-            assertFalse(tn.isCheckedOut());
+            assertFalse(tn.internalIsCheckedOut());
         } finally {
             readOnly.logout();
             // reset the denied read-access
@@ -127,30 +128,31 @@ public class NodeImplTest extends AbstractJCRTest {
             changeReadPermission(principal, n, true);
         }
     }
-
+    
     public void testAddNodeUuid() throws RepositoryException, NotExecutableException {
         String uuid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
         Node n = testRootNode.addNode(nodeName1);
         Node testNode = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
-        testNode.addMixin(NodeType.MIX_REFERENCEABLE);
-        testRootNode.getSession().save();
-        assertEquals(
-                "Node identifier should be: " + uuid,
-                uuid, testNode.getIdentifier());
+        testNode.addMixin(JcrConstants.MIX_REFERENCEABLE);
+        testRootNode.save();
+        assertEquals("Node UUID should be: "+uuid, uuid, testNode.getUUID());
     }
-
+    
     public void testAddNodeUuidCollision() throws RepositoryException, NotExecutableException {
         String uuid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
         Node n = testRootNode.addNode(nodeName1);
         Node testNode1 = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
-        testNode1.addMixin(NodeType.MIX_REFERENCEABLE);
-        testRootNode.getSession().save();
-
+        testNode1.addMixin(JcrConstants.MIX_REFERENCEABLE);
+        testRootNode.save();
+        boolean collisionDetected = false;
+        
         try {
-            ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
-            fail("UUID collision not detected by addNodeWithUuid");
-        } catch (ItemExistsException e) {
+            Node testNode2 = ((NodeImpl) n).addNodeWithUuid(nodeName2, uuid);
+            testNode1.addMixin(JcrConstants.MIX_REFERENCEABLE);
+            testRootNode.save();
+        } catch (ItemExistsException iee) {
+            collisionDetected = true;
         }
-    }
-
+        assertTrue("Node collision detected: "+uuid, collisionDetected);
+    }    
 }

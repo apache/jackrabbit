@@ -48,7 +48,9 @@ public interface NodeTypeStorage {
      */
     public Iterator getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException;
 
-    public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs, boolean allowUpdate) throws RepositoryException;
-    
+    public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException;
+
+    public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException;
+
     public void unregisterNodeTypes(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException;
 }

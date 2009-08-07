@@ -106,7 +106,7 @@ public class Scope implements XmlSerializable {
      * @return Scope object.
      */
     public static Scope create(String localName, Namespace namespace) {
-        String key = DomUtil.getExpandedName(localName, namespace);
+        String key = DomUtil.getQualifiedName(localName, namespace);
         if (scopes.containsKey(key)) {
             return (Scope) scopes.get(key);
         } else {

@@ -32,7 +32,7 @@ public final class ScoreNodeMap {
     /**
      * The internal map.
      */
-    private final Map<Object, Object> map = new HashMap<Object, Object>();
+    private final Map map = new HashMap();
 
     /**
      * Adds <code>scoreNodes</code> to this map under the given <code>key</code>.
@@ -62,8 +62,8 @@ public final class ScoreNodeMap {
             ((List) existing).add(nodes);
         } else {
             // ScoreNode[]
-            List<ScoreNode[]> tmp = new ArrayList<ScoreNode[]>();
-            tmp.add((ScoreNode[]) existing);
+            ArrayList tmp = new ArrayList();
+            tmp.add(existing);
             tmp.add(nodes);
             existing = tmp;
             map.put(key, existing);
@@ -83,8 +83,8 @@ public final class ScoreNodeMap {
         if (sn == null) {
             return null;
         } else if (sn instanceof List) {
-            List<ScoreNode[]> list = (List<ScoreNode[]>) sn;
-            return list.toArray(new ScoreNode[list.size()][]);
+            List list = (List) sn;
+            return (ScoreNode[][]) list.toArray(new ScoreNode[list.size()][]);
         } else {
             // ScoreNode[]
             return new ScoreNode[][]{(ScoreNode[]) sn};

@@ -17,12 +17,13 @@
 package org.apache.jackrabbit.core.state;
 
 import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Component that holds references to listeners interested in changes to item
@@ -34,13 +35,13 @@ public class StateChangeDispatcher {
      * Simple item state listeners.
      * A copy on write array list is used so that no synchronization is required.
      */
-    private final Collection<WeakReference<ItemStateListener>> listeners = new CopyOnWriteArrayList();
+    private final Collection listeners = new CopyOnWriteArrayList();
 
     /**
      * Node state listeners
      * A copy on write array list is used so that no synchronization is required.
      */
-    private final transient Collection<WeakReference<NodeStateListener>> nsListeners = new CopyOnWriteArrayList();
+    private final transient Collection nsListeners = new CopyOnWriteArrayList();
 
     /**
      * Add an <code>ItemStateListener</code>.
@@ -48,17 +49,18 @@ public class StateChangeDispatcher {
      */
     public void addListener(ItemStateListener listener) {
         assert getReference(listeners, listener) == null;
-        listeners.add(new WeakReference<ItemStateListener>(listener));
+        listeners.add(new WeakReference(listener));
 
         if (listener instanceof NodeStateListener) {
-            NodeStateListener nsListener = (NodeStateListener) listener;
-            assert getReference(nsListeners, nsListener) == null;
-            nsListeners.add(new WeakReference<NodeStateListener>(nsListener));
+            assert getReference(nsListeners, listener) == null;
+            nsListeners.add(new WeakReference(listener));
         }
     }
-
-    private <T> Reference<T> getReference(Collection< ? extends Reference<T>> coll, ItemStateListener listener) {
-        for (Reference<T> ref : coll) {
+    
+    private Reference getReference(Collection coll, ItemStateListener listener) {
+        Iterator iter = coll.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
             Object o = ref.get();
             if (o == listener) {
                 return ref;
@@ -86,8 +88,10 @@ public class StateChangeDispatcher {
      * @param created created state.
      */
     public void notifyStateCreated(ItemState created) {
-        for (Reference<ItemStateListener> ref : listeners) {
-            ItemStateListener l = ref.get();
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            ItemStateListener l = (ItemStateListener) ref.get();
             if (l != null) {
                 l.stateCreated(created);
             }
@@ -99,8 +103,10 @@ public class StateChangeDispatcher {
      * @param modified modified state.
      */
     public void notifyStateModified(ItemState modified) {
-        for (Reference<ItemStateListener> ref : listeners) {
-            ItemStateListener l = ref.get();
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            ItemStateListener l = (ItemStateListener) ref.get();
             if (l != null) {
                 l.stateModified(modified);
             }
@@ -112,11 +118,13 @@ public class StateChangeDispatcher {
      * @param destroyed destroyed state.
      */
     public void notifyStateDestroyed(ItemState destroyed) {
-        for (Reference<ItemStateListener> ref : listeners) {
-            ItemStateListener l = ref.get();
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            ItemStateListener l = (ItemStateListener) ref.get();
             if (l != null) {
                 l.stateDestroyed(destroyed);
-            }
+            }            
         }
     }
 
@@ -125,11 +133,13 @@ public class StateChangeDispatcher {
      * @param discarded discarded state.
      */
     public void notifyStateDiscarded(ItemState discarded) {
-        for (Reference<ItemStateListener> ref : listeners) {
-            ItemStateListener l = ref.get();
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            ItemStateListener l = (ItemStateListener) ref.get();
             if (l != null) {
                 l.stateDiscarded(discarded);
-            }
+            }               
         }
     }
 
@@ -141,11 +151,13 @@ public class StateChangeDispatcher {
      * @param id    id of new node
      */
     public void notifyNodeAdded(NodeState state, Name name, int index, NodeId id) {
-        for (Reference<NodeStateListener> ref : nsListeners) {
-            NodeStateListener n = ref.get();
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            NodeStateListener n = (NodeStateListener) ref.get();
             if (n != null) {
                 n.nodeAdded(state, name, index, id);
-            }
+            }                 
         }
     }
 
@@ -154,11 +166,13 @@ public class StateChangeDispatcher {
      * @param state node state that changed
      */
     public void notifyNodesReplaced(NodeState state) {
-        for (Reference<NodeStateListener> ref : nsListeners) {
-            NodeStateListener n = ref.get();
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            NodeStateListener n = (NodeStateListener) ref.get();
             if (n != null) {
                 n.nodesReplaced(state);
-            }
+            }              
         }
     }
 
@@ -167,11 +181,13 @@ public class StateChangeDispatcher {
      * @param state node state that changed
      */
     public void notifyNodeModified(NodeState state) {
-        for (Reference<NodeStateListener> ref : nsListeners) {
-            NodeStateListener n = ref.get();
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            NodeStateListener n = (NodeStateListener) ref.get();
             if (n != null) {
                 n.nodeModified(state);
-            }
+            }               
         }
     }
 
@@ -183,11 +199,13 @@ public class StateChangeDispatcher {
      * @param id    id of new node
      */
     public void notifyNodeRemoved(NodeState state, Name name, int index, NodeId id) {
-        for (Reference<NodeStateListener> ref : nsListeners) {
-            NodeStateListener n = ref.get();
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            NodeStateListener n = (NodeStateListener) ref.get();
             if (n != null) {
                 n.nodeRemoved(state, name, index, id);
-            }
+            }               
         }
     }
 

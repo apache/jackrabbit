@@ -19,10 +19,8 @@ package org.apache.jackrabbit.spi.commons.value;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.util.Calendar;
 
-import javax.jcr.Binary;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -37,6 +35,15 @@ import org.apache.jackrabbit.spi.QValue;
  * <code>QValue</code>.
  */
 public final class QValueValue implements Value {
+
+    private static final short STATE_UNDEFINED = 0;
+
+    private static final short STATE_VALUE_CONSUMED = 1;
+
+    private static final short STATE_STREAM_CONSUMED = 2;
+
+    // the state of this value instance
+    private short state = STATE_UNDEFINED;
 
     // wrapped QValue
     private final QValue qvalue;
@@ -73,6 +80,7 @@ public final class QValueValue implements Value {
      * @see javax.jcr.Value#getBoolean()
      */
     public boolean getBoolean() throws RepositoryException {
+        setValueConsumed();
         if (getType() == PropertyType.STRING || getType() == PropertyType.BINARY || getType() == PropertyType.BOOLEAN) {
             return Boolean.valueOf(qvalue.getString()).booleanValue();
         } else {
@@ -81,32 +89,10 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * @see javax.jcr.Value#getDecimal()
-     */
-    public BigDecimal getDecimal() throws ValueFormatException, IllegalStateException, RepositoryException {
-        switch (getType()) {
-            case PropertyType.DECIMAL:
-            case PropertyType.DOUBLE:
-            case PropertyType.LONG:
-            case PropertyType.DATE:
-            case PropertyType.STRING:
-                return qvalue.getDecimal();
-            default:
-                throw new ValueFormatException("incompatible type " + PropertyType.nameFromValue(qvalue.getType()));
-        }
-    }
-
-    /**
-     * @see javax.jcr.Value#getBinary()
-     */
-    public Binary getBinary() throws RepositoryException {
-        return qvalue.getBinary();
-    }
-
-    /**
      * @see javax.jcr.Value#getDate()
      */
     public Calendar getDate() throws RepositoryException {
+        setValueConsumed();
         return qvalue.getCalendar();
     }
 
@@ -114,6 +100,7 @@ public final class QValueValue implements Value {
      * @see javax.jcr.Value#getDouble()
      */
     public double getDouble() throws RepositoryException {
+        setValueConsumed();
         return qvalue.getDouble();
     }
 
@@ -121,6 +108,7 @@ public final class QValueValue implements Value {
      * @see javax.jcr.Value#getLong()
      */
     public long getLong() throws RepositoryException {
+        setValueConsumed();
         return qvalue.getLong();
     }
 
@@ -128,6 +116,7 @@ public final class QValueValue implements Value {
      * @see javax.jcr.Value#getStream()
      */
     public InputStream getStream() throws IllegalStateException, RepositoryException {
+        setStreamConsumed();
         if (stream == null) {
             if (getType() == PropertyType.NAME || getType() == PropertyType.PATH) {
                 // needs namespace mapping
@@ -150,6 +139,7 @@ public final class QValueValue implements Value {
      * @see javax.jcr.Value#getString()
      */
     public String getString() throws RepositoryException {
+        setValueConsumed();
         if (getType() == PropertyType.NAME) {
             // needs formatting
             return resolver.getJCRName(qvalue.getName());
@@ -162,7 +152,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * @see javax.jcr.Value#getType()
+     * @see javax.jcr.Value#getType() 
      */
     public int getType() {
         return qvalue.getType();
@@ -175,15 +165,50 @@ public final class QValueValue implements Value {
     public boolean equals(Object obj) {
         if (obj instanceof QValueValue) {
             return qvalue.equals(((QValueValue) obj).qvalue);
-        } else {
+        }
+        else {
             return false;
         }
     }
 
     /**
-     * @see Object#hashCode()
+     * @see Object#hashCode() 
      */
     public int hashCode() {
         return qvalue.hashCode();
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Checks if the non-stream value of this instance has already been
+     * consumed (if any getter methods except <code>{@link #getStream()}</code> and
+     * <code>{@link #getType()}</code> have been previously called at least once) and
+     * sets the state to <code>STATE_STREAM_CONSUMED</code>.
+     *
+     * @throws IllegalStateException if any getter methods other than
+     *                               <code>getStream()</code> and
+     *                               <code>getType()</code> have been
+     *                               previously called at least once.
+     */
+    private void setStreamConsumed() throws IllegalStateException {
+        if (state == STATE_VALUE_CONSUMED) {
+            throw new IllegalStateException("non-stream value has already been consumed");
+        }
+        state = STATE_STREAM_CONSUMED;
+    }
+
+    /**
+     * Checks if the stream value of this instance has already been
+     * consumed (if {@link #getStream()} has been previously called
+     * at least once) and sets the state to <code>STATE_VALUE_CONSUMED</code>.
+     *
+     * @throws IllegalStateException if <code>getStream()</code> has been
+     *                               previously called at least once.
+     */
+    private void setValueConsumed() throws IllegalStateException {
+        if (state == STATE_STREAM_CONSUMED) {
+            throw new IllegalStateException("stream value has already been consumed");
+        }
+        state = STATE_VALUE_CONSUMED;
     }
 }

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.RepositoryException;
@@ -44,7 +44,7 @@ class VersionIteratorImpl implements VersionIterator {
     /**
      * the id's of the versions to return
      */
-    private LinkedList<NodeId> versions = new LinkedList<NodeId>();
+    private LinkedList/*<NodeId>*/ versions = new LinkedList/*<NodeId>*/();
 
     /**
      * the current position
@@ -81,13 +81,12 @@ class VersionIteratorImpl implements VersionIterator {
      * @param rootVersion the root version
      * @param baseVersion the ending base version
      */
-    public VersionIteratorImpl(Session session, InternalVersion rootVersion,
-                               InternalVersion baseVersion) {
+    public VersionIteratorImpl(Session session, InternalVersion rootVersion, InternalVersion baseVersion) {
         this.session = (SessionImpl) session;
         if (baseVersion == null) {
-            collectAllVersions(rootVersion);
+            initVersions(rootVersion);
         } else {
-            collectLinearVersions(baseVersion);
+            initVersions(rootVersion, baseVersion);
         }
         // retrieve initial size, since size of the list is not stable
         size = versions.size();
@@ -100,7 +99,7 @@ class VersionIteratorImpl implements VersionIterator {
         if (versions.isEmpty()) {
             throw new NoSuchElementException();
         }
-        NodeId id = versions.removeFirst();
+        NodeId id = (NodeId) versions.removeFirst();
         pos++;
 
         try {
@@ -162,11 +161,11 @@ class VersionIteratorImpl implements VersionIterator {
      *
      * @param root the root version
      */
-    private synchronized void collectAllVersions(InternalVersion root) {
-        LinkedList<InternalVersion> workQueue = new LinkedList<InternalVersion>();
+    private synchronized void initVersions(InternalVersion root) {
+        LinkedList workQueue = new LinkedList();
         workQueue.add(root);
         while (!workQueue.isEmpty()) {
-            InternalVersion currentVersion = workQueue.removeFirst();
+            InternalVersion currentVersion = (InternalVersion) workQueue.removeFirst();
             NodeId id = currentVersion.getId();
             if (!versions.contains(id)) {
                 versions.add(id);
@@ -178,13 +177,15 @@ class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * Adds all versions of a single line of decent starting from the root
-     * version to the <code>base</code> version.
+     * Adds all versions of a single line of decent starting from <code>root</code>
+     * and ending at <code>base</code>.
      *
+     * @param root the root version
      * @param base the base version
      */
-    private synchronized void collectLinearVersions(InternalVersion base) {
-        while (base != null) {
+    private synchronized void initVersions(InternalVersion root, InternalVersion base) {
+        NodeId rootId = root == null ? null : root.getId();
+        while (base != null && !base.getId().equals(rootId)) {
             versions.addFirst(base.getId());
             InternalVersion[] preds = base.getPredecessors();
             if (preds.length == 0) {

@@ -132,9 +132,9 @@ public class AuthContextProvider {
             props = new Properties[] {config.getParameters()};
         } else {
             AppConfigurationEntry[] entries = getJAASConfig();
-            if (entries != null) {
-                List<Properties> tmp = new ArrayList<Properties>(entries.length);
-                for (int i = 0; i < entries.length; i++) {
+            if(entries != null) {
+                List tmp = new ArrayList(entries.length);
+                for(int i=0; i < entries.length; i++) {
                     Map opt = entries[i].getOptions();
                     if (opt != null) {
                         Properties prop = new Properties();
@@ -142,7 +142,7 @@ public class AuthContextProvider {
                         tmp.add(prop);
                     }
                 }
-                props = tmp.toArray(new Properties[tmp.size()]);
+                props = (Properties[]) tmp.toArray(new Properties[tmp.size()]);
             }
         }
         return props;

@@ -19,7 +19,7 @@ package org.apache.jackrabbit.spi;
 import javax.jcr.nodetype.NodeDefinition;
 
 /**
- * <code>QNodeDefinition</code> is the SPI representation of
+ * <code>QNodeDefinition</code> is the qualified SPI representation of
  * a {@link NodeDefinition node definition}. It refers to <code>Name</code>s only
  * and is thus isolated from session-specific namespace mappings.
  *

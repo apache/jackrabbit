@@ -59,9 +59,8 @@ public class TextNodeTest extends AbstractQueryTest {
 
     /**
      * Tests if text() node test is equivalent with jcr:xmltext.
-     * @throws NotExecutableException 
      */
-    public void testTextNodeTest() throws RepositoryException, NotExecutableException {
+    public void testTextNodeTest() throws RepositoryException {
         Node text1 = testRootNode.addNode(jcrXMLText);
         text1.setProperty(jcrXMLCharacters, "foo");
         testRootNode.save();
@@ -72,9 +71,8 @@ public class TextNodeTest extends AbstractQueryTest {
     /**
      * Tests if text() node test is equivalent with jcr:xmltext and will select
      * multiple nodes with name jcr:xmltext.
-     * @throws NotExecutableException 
      */
-    public void testTextNodeTestMultiNodes() throws RepositoryException, NotExecutableException {
+    public void testTextNodeTestMultiNodes() throws RepositoryException {
         Node text1 = testRootNode.addNode(jcrXMLText);
         text1.setProperty(jcrXMLCharacters, "foo");
         Node text2 = testRootNode.addNode(nodeName1, testNodeType).addNode(jcrXMLText);
@@ -87,9 +85,8 @@ public class TextNodeTest extends AbstractQueryTest {
     /**
      * Tests if text() node test is equivalent with jcr:xmltext and jcr:contains
      * matches content in jcr:xmlcharacters property.
-     * @throws NotExecutableException 
      */
-    public void testTextNodeTestContains() throws RepositoryException, NotExecutableException {
+    public void testTextNodeTestContains() throws RepositoryException {
         Node text1 = testRootNode.addNode(jcrXMLText);
         text1.setProperty(jcrXMLCharacters, "the quick brown fox jumps over the lazy dog.");
         Node text2 = testRootNode.addNode(nodeName1, testNodeType).addNode(jcrXMLText);

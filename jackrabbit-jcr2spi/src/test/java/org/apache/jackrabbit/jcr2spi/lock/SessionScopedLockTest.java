@@ -19,6 +19,11 @@ package org.apache.jackrabbit.jcr2spi.lock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
+import javax.jcr.lock.Lock;
+
 /**
  * <code>SessionScopedLockTest</code>...
  */
@@ -28,5 +33,49 @@ public class SessionScopedLockTest extends AbstractLockTest {
 
     boolean isSessionScoped() {
         return true;
+    }
+
+    /**
+     * Test locks are released when session logs out
+     */
+    public void testLockNotLiveAfterLogout() throws RepositoryException {
+        Node testRoot2 = (Node) otherSession.getItem(testRootNode.getPath());
+
+        Node lockedNode2 = testRoot2.addNode(nodeName2, testNodeType);
+        lockedNode2.addMixin(mixLockable);
+        testRoot2.save();
+
+        Lock lock2 = lockedNode2.lock(false, isSessionScoped());
+        otherSession.logout();
+
+        assertFalse(lock2.isLive());
+    }
+
+    /**
+     * Test locks are released when session logs out
+     */
+    public void testNotLockedAfterLogout() throws RepositoryException {
+        Node testRoot2 = (Node) otherSession.getItem(testRootNode.getPath());
+
+        Node lockedNode2 = testRoot2.addNode(nodeName2, testNodeType);
+        lockedNode2.addMixin(mixLockable);
+        testRoot2.save();
+
+        // force reloading of the testroot in order to be aware of the
+        // locked noded added by another session
+        testRootNode.refresh(false);
+        Node n2 = (Node) superuser.getItem(lockedNode2.getPath());
+
+        // remove lock implicit by logout lock-holding session
+        otherSession.logout();
+
+        assertFalse(n2.isLocked());
+        assertFalse(n2.holdsLock());
+        try {
+            n2.getLock();
+            fail("Upon logout of the session a session-scoped lock must be gone.");
+        } catch (LockException e) {
+            // ok
+        }
     }
 }

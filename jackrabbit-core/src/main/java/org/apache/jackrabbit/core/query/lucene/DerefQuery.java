@@ -31,6 +31,7 @@ import org.apache.jackrabbit.spi.Name;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -113,15 +114,7 @@ class DerefQuery extends Query {
      * @return 'DerefQuery'.
      */
     public String toString(String field) {
-        StringBuffer sb = new StringBuffer();
-        sb.append("DerefQuery(");
-        sb.append(refProperty);
-        sb.append(", ");
-        sb.append(contextQuery);
-        sb.append(", ");
-        sb.append(nameTest);
-        sb.append(")");
-        return sb.toString();
+        return "DerefQuery";
     }
 
     /**
@@ -237,7 +230,7 @@ class DerefQuery extends Query {
         /**
          * List of UUIDs of selected nodes
          */
-        private List<String> uuids = null;
+        private List uuids = null;
 
         /**
          * The next document id to return
@@ -298,19 +291,9 @@ class DerefQuery extends Query {
             throw new UnsupportedOperationException();
         }
 
-        /**
-         * 1. do context query
-         * 2. go through each document from the query
-         * 3. find reference property UUIDs
-         * 4. Use UUIDs to find document number
-         * 5. Use the name test to filter the documents
-         * 
-         * @throws IOException if an exception occurs while reading from the
-         *                     index.
-         */
         private void calculateChildren() throws IOException {
             if (uuids == null) {
-                uuids = new ArrayList<String>();
+                uuids = new ArrayList();
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
                         hits.set(doc);
@@ -335,9 +318,9 @@ class DerefQuery extends Query {
                         // no reference properties at all on this node
                         continue;
                     }
-                    for (String value : values) {
-                        if (value.startsWith(prefix)) {
-                            uuids.add(value.substring(prefix.length()));
+                    for (int v = 0; v < values.length; v++) {
+                        if (values[v].startsWith(prefix)) {
+                            uuids.add(values[v].substring(prefix.length()));
                         }
                     }
                 }
@@ -345,8 +328,8 @@ class DerefQuery extends Query {
                 // collect the doc ids of all target nodes. we reuse the existing
                 // bitset.
                 hits.clear();
-                for (String uuid : uuids) {
-                    TermDocs node = reader.termDocs(new Term(FieldNames.UUID, uuid));
+                for (Iterator it = uuids.iterator(); it.hasNext();) {
+                    TermDocs node = reader.termDocs(new Term(FieldNames.UUID, (String) it.next()));
                     try {
                         while (node.next()) {
                             hits.set(node.doc());

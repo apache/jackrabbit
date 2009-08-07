@@ -62,13 +62,6 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(SearchInfo.class);
 
-    public static final long NRESULTS_UNDEFINED = -1;
-    public static final long OFFSET_UNDEFINED = -1;
-
-    private static final String LIMIT = "limit";
-    private static final String NRESULTS = "nresults";
-    private static final String OFFSET = "offset";
-
     /**
      * Set of namespace uri String which are ignored in the search request.
      */
@@ -86,9 +79,6 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
     private final Namespace languageNamespace;
     private final String query;
     private final Map namespaces;
-
-    private long nresults = NRESULTS_UNDEFINED;
-    private long offset = OFFSET_UNDEFINED;
 
     /**
      * Create a new <code>SearchInfo</code> instance.
@@ -153,42 +143,6 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
     }
 
     /**
-     * Returns the maximal number of search results that should be returned.
-     *
-     * @return the maximal number of search results that should be returned.
-     */
-    public long getNumberResults() {
-        return nresults;
-    }
-
-    /**
-     * Sets the maximal number of search results that should be returned.
-     *
-     * @param nresults The maximal number of search results
-     */
-    public void setNumberResults(long nresults) {
-        this.nresults = nresults;
-    }
-
-    /**
-     * Returns the desired offset in the total result set.
-     *
-     * @return the desired offset in the total result set.
-     */
-    public long getOffset() {
-        return offset;
-    }
-
-    /**
-     * Sets the desired offset in the total result set.
-     *
-     * @param offset The desired offset in the total result set.
-     */
-    public void setOffset(long offset) {
-        this.offset = offset;
-    }
-
-    /**
      * Return the xml representation of this <code>SearchInfo</code> instance.
      *
      * @return xml representation
@@ -202,16 +156,6 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
             DomUtil.setNamespaceAttribute(sRequestElem, prefix, uri);
         }
         DomUtil.addChildElement(sRequestElem, language, languageNamespace, query);
-        if (nresults != NRESULTS_UNDEFINED|| offset != OFFSET_UNDEFINED) {
-            Element limitE = DomUtil.addChildElement(sRequestElem, LIMIT, NAMESPACE);
-            if (nresults != NRESULTS_UNDEFINED) {
-                DomUtil.addChildElement(limitE, NRESULTS, NAMESPACE, nresults + "");
-            }
-            if (offset != OFFSET_UNDEFINED) {
-                // TODO define reasonable namespace...
-                DomUtil.addChildElement(limitE, OFFSET, Namespace.EMPTY_NAMESPACE, offset + "");
-            }
-        }
         return sRequestElem;
     }
 
@@ -238,35 +182,11 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
                 namespaces.put(nsAttributes[i].getLocalName(), nsAttributes[i].getValue());
             }
         }
-        SearchInfo sInfo;
         if (first != null) {
-            sInfo = new SearchInfo(first.getLocalName(), DomUtil.getNamespace(first), DomUtil.getText(first), namespaces);
+            return new SearchInfo(first.getLocalName(), DomUtil.getNamespace(first), DomUtil.getText(first), namespaces);
         } else {
             log.warn("A single child element is expected with the 'DAV:searchrequest'.");
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
-
-        Element limit = DomUtil.getChildElement(searchRequest, LIMIT, NAMESPACE);
-        if (limit != null) {
-            // try to get the value DAV:nresults element
-            String nresults = DomUtil.getChildTextTrim(limit, NRESULTS, NAMESPACE);
-            if (nresults != null) {
-                try {
-                    sInfo.setNumberResults(Long.valueOf(nresults));
-                } catch (NumberFormatException e) {
-                    log.error("DAV:nresults cannot be parsed into a long -> ignore.");
-                }
-            }
-            // try of an offset is defined within the DAV:limit element.
-            String offset = DomUtil.getChildTextTrim(limit, OFFSET, Namespace.EMPTY_NAMESPACE);
-            if (offset != null) {
-                try {
-                    sInfo.setOffset(Long.valueOf(offset));
-                } catch (NumberFormatException e) {
-                    log.error("'offset' cannot be parsed into a long -> ignore.");
-                }
-            }
-        }
-        return sInfo;
     }
 }

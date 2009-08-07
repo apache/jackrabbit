@@ -20,8 +20,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 /**
  * <code>WorkspaceCloneReferenceableTest</code> contains tests for cloning
  * referenceable nodes between workspaces.
@@ -38,8 +36,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      * that the new node in the destination workspcace has the same UUID as the
      * node in the source workspace.
      */
-    public void testCloneNodesReferenceableNodesOriginalUUID() throws RepositoryException,
-            NotExecutableException {
+    public void testCloneNodesReferenceableNodesOriginalUUID() throws RepositoryException {
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
 
@@ -63,8 +60,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      * will reflect the clones state in srcWorkspace, in other words the
      * existing node will be moved and changed.
      */
-    public void testCloneNodesRemoveExistingTrue() throws RepositoryException,
-            NotExecutableException {
+    public void testCloneNodesRemoveExistingTrue() throws RepositoryException {
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
 
@@ -87,8 +83,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      * If removeExisting is false then a UUID collision causes this method to
      * throw a ItemExistsException and no changes are made.
      */
-    public void testCloneNodesRemoveExistingFalse() throws RepositoryException,
-            NotExecutableException {
+    public void testCloneNodesRemoveExistingFalse() throws RepositoryException {
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
 
@@ -107,8 +102,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
     /**
      * The clone method clones both referenceable and nonreferenceable nodes.
      */
-    public void testCloneNodesReferenceableAndNonreferenceable() throws RepositoryException,
-            NotExecutableException {
+    public void testCloneNodesReferenceableAndNonreferenceable() throws RepositoryException {
         // clone referenceable node
 
         // add mixin referenceable to node1

@@ -20,7 +20,6 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -34,7 +33,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.BitSet;
-import java.util.List;
+import java.util.Iterator;
 
 /**
  * Implements common functionality for a lucene index.
@@ -182,16 +181,16 @@ abstract class AbstractIndex {
                 public Object call() throws Exception {
                     long time = System.currentTimeMillis();
                     writer.addDocument(doc);
-                    return System.currentTimeMillis() - time;
+                    return new Long(System.currentTimeMillis() - time);
                 }
             };
         }
         DynamicPooledExecutor.Result[] results = EXECUTOR.executeAndWait(commands);
         invalidateSharedReader();
         IOException ex = null;
-        for (DynamicPooledExecutor.Result result : results) {
-            if (result.getException() != null) {
-                Throwable cause = result.getException().getCause();
+        for (int i = 0; i < results.length; i++) {
+            if (results[i].getException() != null) {
+                Throwable cause = results[i].getException().getCause();
                 if (ex == null) {
                     // only throw the first exception
                     if (cause instanceof IOException) {
@@ -204,7 +203,7 @@ abstract class AbstractIndex {
                     log.warn("Exception while inverting document", cause);
                 }
             } else {
-                log.debug("Inverted document in {} ms", result.get());
+                log.debug("Inverted document in {} ms", results[i].get());
             }
         }
         if (ex != null) {
@@ -239,28 +238,11 @@ abstract class AbstractIndex {
             indexWriter = null;
         }
         if (indexReader == null) {
-            IndexDeletionPolicy idp = getIndexDeletionPolicy();
-            IndexReader reader;
-            if (idp != null) {
-                reader = IndexReader.open(getDirectory(), idp);
-            } else {
-                reader = IndexReader.open(getDirectory());
-            }
+            IndexReader reader = IndexReader.open(getDirectory());
             reader.setTermInfosIndexDivisor(termInfosIndexDivisor);
             indexReader = new CommittableIndexReader(reader);
         }
         return indexReader;
-    }
-
-    /**
-     * Returns the index deletion policy for this index. This implementation
-     * always returns <code>null</code>.
-     *
-     * @return the index deletion policy for this index or <code>null</code> if
-     *          none is present.
-     */
-    protected IndexDeletionPolicy getIndexDeletionPolicy() {
-        return null;
     }
 
     /**
@@ -480,14 +462,15 @@ abstract class AbstractIndex {
      * @throws IOException if the document cannot be added to the indexing
      *                     queue.
      */
-    @SuppressWarnings("unchecked")
     private Document getFinishedDocument(Document doc) throws IOException {
         if (!Util.isDocumentReady(doc)) {
             Document copy = new Document();
             // mark the document that reindexing is required
             copy.add(new Field(FieldNames.REINDEXING_REQUIRED, "",
                     Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
-            for (Fieldable f : (List<Fieldable>) doc.getFields()) {
+            Iterator fields = doc.getFields().iterator();
+            while (fields.hasNext()) {
+                Fieldable f = (Fieldable) fields.next();
                 Fieldable field = null;
                 Field.TermVector tv = getTermVectorParameter(f);
                 Field.Store stored = getStoreParameter(f);

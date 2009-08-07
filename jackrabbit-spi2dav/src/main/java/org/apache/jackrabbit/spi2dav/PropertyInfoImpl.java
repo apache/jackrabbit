@@ -68,7 +68,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
         String typeName = propSet.get(ItemResourceConstants.JCR_TYPE).getValue().toString();
         type = PropertyType.valueFromName(typeName);
 
-        // values from jcr-server must be converted to SPI values.
+        // values from jcr-server must be converted to qualified values.
         if (propSet.contains(ItemResourceConstants.JCR_VALUE)) {
             ValuesProperty vp = new ValuesProperty(propSet.get(ItemResourceConstants.JCR_VALUE), type, valueFactory);
             Value jcrValue = vp.getJcrValue(type, valueFactory);

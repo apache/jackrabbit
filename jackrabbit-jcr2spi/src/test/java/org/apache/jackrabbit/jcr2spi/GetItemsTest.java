@@ -36,7 +36,6 @@ import org.apache.commons.collections.iterators.EmptyIterator;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.iterators.TransformIterator;
-import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
@@ -44,7 +43,6 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
-import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -63,13 +61,12 @@ import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
  * for JCR-1797.
  */
 public class GetItemsTest extends AbstractJCR2SPITest {
-    private List<ItemInfo> itemInfos;
+    private List itemInfos;
     private Session session;
 
-    @Override
     public void setUp() throws Exception {
         super.setUp();
-        itemInfos = new ArrayList<ItemInfo>();
+        itemInfos = new ArrayList();
 
         // build up a hierarchy of items
         new NodeInfoBuilder()
@@ -96,7 +93,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
             .createNodeInfo("node3").build(itemInfos)
             .build(itemInfos);
 
-        session = repository.login("default");
+        session = repository.login();
     }
 
     private Iterable itemInfosProvider;
@@ -115,8 +112,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
                 }
             };
 
-            @SuppressWarnings("unchecked")
-            public Iterator<ItemInfo> iterator() {
+            public Iterator iterator() {
                 return new IteratorChain(
                         new FilterIterator(itemInfos.iterator(), isRoot),
                         new FilterIterator(itemInfos.iterator(), NotPredicate.getInstance(isRoot)));
@@ -143,8 +139,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
                 }
             };
 
-            @SuppressWarnings("unchecked")
-            public Iterator<ItemInfo> iterator() {
+            public Iterator iterator() {
                 return new IteratorChain(
                         new FilterIterator(itemInfos.iterator(), isTarget),
                         new FilterIterator(itemInfos.iterator(), NotPredicate.getInstance(isTarget)));
@@ -157,8 +152,8 @@ public class GetItemsTest extends AbstractJCR2SPITest {
 
     private void checkHierarchy() throws PathNotFoundException, RepositoryException, ItemNotFoundException,
             AccessDeniedException {
-        for (Iterator<ItemInfo> itemInfos = itemInfosProvider.iterator(); itemInfos.hasNext();) {
-            ItemInfo itemInfo = itemInfos.next();
+        for (Iterator itemInfos = itemInfosProvider.iterator(); itemInfos.hasNext();) {
+            ItemInfo itemInfo = (ItemInfo) itemInfos.next();
             String jcrPath = toJCRPath(itemInfo.getPath());
             Item item = session.getItem(jcrPath);
             assertEquals(jcrPath, item.getPath());
@@ -190,39 +185,27 @@ public class GetItemsTest extends AbstractJCR2SPITest {
         return jcrPath.toString();
     }
 
-    @Override
-    protected QNodeDefinition createRootNodeDefinition() {
+    public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws RepositoryException {
         fail("Not implemented");
         return null;
     }
 
-    @Override
-    public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId)
-            throws RepositoryException {
-
-        fail("Not implemented");
-        return null;
-    }
-
-    @Override
-    public Iterator<ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+    public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         return itemInfosProvider.iterator();
     }
 
-    @Override
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         fail("Not implemented");
         return null;
     }
 
-    @Override
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) {
         fail("Not implemented");
         return null;
     }
 
     interface Iterable {
-        public Iterator<ItemInfo> iterator();
+        public Iterator iterator();
     }
 
     /**
@@ -233,7 +216,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
         private final String name;
 
         protected boolean stale;
-        private final List<ItemInfo> itemInfos = new ArrayList<ItemInfo>();
+        private final List itemInfos = new ArrayList();
         private NodeInfo nodeInfo;
 
         public NodeInfoBuilder() {
@@ -254,8 +237,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
             return new NodeInfoBuilder(this, name);
         }
 
-        @SuppressWarnings("unchecked")
-        public NodeInfoBuilder build(List<ItemInfo> infos) throws RepositoryException {
+        public NodeInfoBuilder build(List infos) throws RepositoryException {
             if (stale) {
                 throw new IllegalStateException("Builder is stale");
             }
@@ -265,7 +247,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
                 NodeId id = getId();
                 Path path = id.getPath();
 
-                Iterator<ItemInfo> propertyIds = new TransformIterator(new FilterIterator(itemInfos.iterator(),
+                Iterator propertyIds = new TransformIterator(new FilterIterator(itemInfos.iterator(),
                         new Predicate() {
                             public boolean evaluate(Object object) {
                                 return object instanceof PropertyInfo;
@@ -277,7 +259,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
                                 return info.getId();
                             }});
 
-                Iterator<ItemInfo> childInfos = new TransformIterator(itemInfos.iterator(), new Transformer(){
+                Iterator childInfos = new TransformIterator(itemInfos.iterator(), new Transformer(){
                     public Object transform(Object input) {
                         ItemInfo info = (ItemInfo) input;
                         Name name = info.getPath().getNameElement().getName();
@@ -352,7 +334,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
             this.value = value;
         }
 
-        public NodeInfoBuilder build(List<ItemInfo> infos) throws RepositoryException {
+        public NodeInfoBuilder build(List infos) throws RepositoryException {
             if (parent == null) {
                 return null;
             }

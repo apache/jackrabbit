@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
@@ -65,8 +65,8 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
         if (getDriver() == null) {
             setDriver("org.postgresql.Driver");
         }
-        if (getDatabaseType() == null) {
-            setDatabaseType("postgresql");
+        if (getSchema() == null) {
+            setSchema("postgresql");
         }
         super.init(context);
     }
@@ -91,7 +91,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
     protected synchronized NodePropBundle loadBundle(NodeId id)
             throws ItemStateException {
         try {
-            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id));
+            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
             ResultSet rs = stmt.getResultSet();
             try {
                 if (rs.next()) {

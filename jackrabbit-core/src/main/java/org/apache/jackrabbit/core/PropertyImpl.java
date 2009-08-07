@@ -16,13 +16,21 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Calendar;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.Binary;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -31,26 +39,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
-
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * <code>PropertyImpl</code> implements the <code>Property</code> interface.
@@ -186,18 +182,31 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Property#getLengths()
      */
     protected long getLength(InternalValue value) throws RepositoryException {
-        long length;
+        // TODO maybe move method to InternalValue
         switch (value.getType()) {
+            case PropertyType.STRING:
+            case PropertyType.LONG:
+            case PropertyType.DOUBLE:
+            case PropertyType.DATE:
+            case PropertyType.REFERENCE:
+            case PropertyType.BOOLEAN:
+                return value.toString().length();
+
             case PropertyType.NAME:
+                Name name = value.getQName();
+                return session.getJCRName(name).length();
+
             case PropertyType.PATH:
-                String str = ValueFormat.getJCRString(value, session);
-                length = str.length();
-                break;
+                Path path = value.getPath();
+                return session.getJCRPath(path).length();
+
+            case PropertyType.BINARY:
+                BLOBFileValue blob = value.getBLOBFileValue();
+                return blob.getLength();
+
             default:
-                length = value.getLength();
-                break;
+                return -1;
         }
-        return length;
     }
 
     /**
@@ -235,12 +244,12 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException(msg + this);
         }
 
-        // check protected flag and for retention/hold
+        // check protected flag and for retention/hold      
         int options = ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
-
+        
         // make sure the parent is checked-out and neither locked nor under retention
-        options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
+        options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
                 ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         session.getValidator().checkModify(parent, options, Permission.NONE);
     }
@@ -259,14 +268,14 @@ public class PropertyImpl extends ItemImpl implements Property {
             ((NodeImpl) getParent()).removeChildProperty(((PropertyId) id).getName());
             return;
         }
-        ArrayList<InternalValue> list = new ArrayList<InternalValue>();
+        ArrayList list = new ArrayList();
         // compact array (purge null entries)
-        for (InternalValue v : values) {
-            if (v != null) {
-                list.add(v);
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != null) {
+                list.add(values[i]);
             }
         }
-        values = list.toArray(new InternalValue[list.size()]);
+        values = (InternalValue[]) list.toArray(new InternalValue[list.size()]);
 
         // modify the state of this property
         PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
@@ -279,7 +288,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 if (old != null && old.getType() == PropertyType.BINARY) {
                     // make sure temporarily allocated data is discarded
                     // before overwriting it
-                    old.discard();
+                    old.getBLOBFileValue().discard();
                 }
             }
         }
@@ -332,7 +341,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType != PropertyType.NAME) {
             // type conversion required
             Value targetValue = ValueHelper.convert(
-                    ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
+                    InternalValue.create(name).toJCRValue(session),
                     reqType, session.getValueFactory());
             internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
         } else {
@@ -383,7 +392,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                     if (reqType != PropertyType.NAME) {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
-                                ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
+                                InternalValue.create(name).toJCRValue(session),
                                 reqType, session.getValueFactory());
                         internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
                     } else {
@@ -454,14 +463,14 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue[] internals = internalGetValues();
         Value[] values = new Value[internals.length];
         for (int i = 0; i < internals.length; i++) {
-            values[i] = ValueFormat.getJCRValue(internals[i], session, session.getValueFactory());
+            values[i] = internals[i].toJCRValue(session);
         }
         return values;
     }
 
     public Value getValue() throws RepositoryException {
         try {
-            return ValueFormat.getJCRValue(internalGetValue(), session, session.getValueFactory());
+            return internalGetValue().toJCRValue(session);
         } catch (RuntimeException e) {
             String msg = "Internal error while retrieving value of " + this;
             log.error(msg, e);
@@ -474,7 +483,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     public InputStream getStream() throws RepositoryException {
-        return getValue().getBinary().getStream();
+        return getValue().getStream();
     }
 
     public long getLong() throws RepositoryException {
@@ -495,64 +504,12 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public Node getNode() throws ValueFormatException, RepositoryException {
         Value value = getValue();
-        int type = value.getType();
-        switch (type) {
-            case PropertyType.REFERENCE:
-            case PropertyType.WEAKREFERENCE:
-                return session.getNodeByUUID(value.getString());
-
-            case PropertyType.PATH:
-            case PropertyType.NAME:
-                String path = value.getString();
-                Path p = session.getQPath(path);
-                boolean absolute = p.isAbsolute();
-                return (absolute) ? session.getNode(path) : getParent().getNode(path);
-
-            case PropertyType.STRING:
-                try {
-                    Value refValue = ValueHelper.convert(value, PropertyType.REFERENCE, session.getValueFactory());
-                    return session.getNodeByUUID(refValue.getString());
-                } catch (RepositoryException e) {
-                    // try if STRING value can be interpreted as PATH value
-                    Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
-                    p = session.getQPath(pathValue.getString());
-                    absolute = p.isAbsolute();
-                    return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
-                }
-
-            default:
-                throw new ValueFormatException("Property value cannot be converted to a PATH, REFERENCE or WEAKREFERENCE");
+        if (value.getType() == PropertyType.REFERENCE) {
+            return session.getNodeByUUID(value.getString());
+        } else {
+            // TODO: The specification suggests using value conversion
+            throw new ValueFormatException("property must be of type REFERENCE");
         }
-    }
-
-    public Property getProperty() throws RepositoryException {
-        Value value = getValue();
-        Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
-        String path = pathValue.getString();
-        boolean absolute;
-        try {
-            Path p = session.getQPath(path);
-            absolute = p.isAbsolute();
-        } catch (RepositoryException e) {
-            throw new ValueFormatException("Property value cannot be converted to a PATH");
-        }
-        return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
-    }
-
-    public BigDecimal getDecimal() throws RepositoryException {
-        return getValue().getDecimal();
-    }
-
-    public void setValue(BigDecimal value) throws RepositoryException {
-        setValue(session.getValueFactory().createValue(value));
-    }
-
-    public Binary getBinary() throws RepositoryException {
-        return getValue().getBinary();
-    }
-
-    public void setValue(Binary value) throws RepositoryException {
-        setValue(session.getValueFactory().createValue(value));
     }
 
     public void setValue(Calendar value) throws RepositoryException {
@@ -737,16 +694,10 @@ public class PropertyImpl extends ItemImpl implements Property {
         internalSetValue(internalValues, reqType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public long getLength() throws RepositoryException {
         return getLength(internalGetValue());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public long[] getLengths() throws RepositoryException {
         InternalValue[] values = internalGetValues();
         long[] lengths = new long[values.length];
@@ -766,21 +717,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         return data.getPropertyDefinition();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public int getType() throws RepositoryException {
         return getPropertyState().getType();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isMultiple() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        return data.getPropertyDefinition().isMultiple();
     }
 
     //-----------------------------------------------------------------< Item >

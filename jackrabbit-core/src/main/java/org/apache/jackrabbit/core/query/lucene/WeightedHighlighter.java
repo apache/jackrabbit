@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.index.TermVectorOffsetInfo;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.util.PriorityQueue;
 
 import java.util.Set;
@@ -77,7 +76,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set queryTerms,
                                    String text,
                                    String excerptStart,
                                    String excerptEnd,
@@ -103,7 +102,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set queryTerms,
                                    String text,
                                    int maxFragments,
                                    int surround) throws IOException {
@@ -151,21 +150,21 @@ public class WeightedHighlighter extends DefaultHighlighter {
 
         // retrieve fragment infos from queue and fill into list, least
         // fragment comes out first
-        List<FragmentInfo> infos = new LinkedList<FragmentInfo>();
+        List infos = new LinkedList();
         while (bestFragments.size() > 0) {
             FragmentInfo fi = (FragmentInfo) bestFragments.pop();
             infos.add(0, fi);
         }
 
-        Map<TermVectorOffsetInfo, Object> offsetInfos = new IdentityHashMap<TermVectorOffsetInfo, Object>();
+        Map offsetInfos = new IdentityHashMap();
         // remove overlapping fragment infos
-        Iterator<FragmentInfo> it = infos.iterator();
+        Iterator it = infos.iterator();
         while (it.hasNext()) {
-            FragmentInfo fi = it.next();
+            FragmentInfo fi = (FragmentInfo) it.next();
             boolean overlap = false;
-            Iterator<TermVectorOffsetInfo> fit = fi.iterator();
+            Iterator fit = fi.iterator();
             while (fit.hasNext() && !overlap) {
-                TermVectorOffsetInfo oi = fit.next();
+                TermVectorOffsetInfo oi = (TermVectorOffsetInfo) fit.next();
                 if (offsetInfos.containsKey(oi)) {
                     overlap = true;
                 }
@@ -173,7 +172,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
             if (overlap) {
                 it.remove();
             } else {
-                Iterator<TermVectorOffsetInfo> oit = fi.iterator();
+                Iterator oit = fi.iterator();
                 while (oit.hasNext()) {
                     offsetInfos.put(oit.next(), null);
                 }
@@ -184,7 +183,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
         StringBuffer sb = new StringBuffer(excerptStart);
         it = infos.iterator();
         while (it.hasNext()) {
-            FragmentInfo fi = it.next();
+            FragmentInfo fi = (FragmentInfo) it.next();
             sb.append(fragmentStart);
             int limit = Math.max(0, fi.getStartOffset() / 2 + fi.getEndOffset() / 2 - surround);
             int len = startFragment(sb, text, fi.getStartOffset(), limit);
@@ -272,14 +271,14 @@ public class WeightedHighlighter extends DefaultHighlighter {
     }
 
     private static class FragmentInfo {
-        List<TermVectorOffsetInfo> offsetInfosList;
+        ArrayList offsetInfosList;
         int startOffset;
         int endOffset;
         int maxFragmentSize;
         int quality;
 
         public FragmentInfo(TermVectorOffsetInfo offsetinfo, int maxFragmentSize) {
-            offsetInfosList = new ArrayList<TermVectorOffsetInfo>();
+            offsetInfosList = new ArrayList();
             offsetInfosList.add(offsetinfo);
             startOffset = offsetinfo.getStartOffset();
             endOffset = offsetinfo.getEndOffset();
@@ -314,7 +313,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
             return true;
         }
 
-        public Iterator<TermVectorOffsetInfo> iterator() {
+        public Iterator iterator() {
             return offsetInfosList.iterator();
         }
 

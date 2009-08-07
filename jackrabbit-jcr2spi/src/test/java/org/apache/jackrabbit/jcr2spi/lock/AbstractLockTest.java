@@ -25,8 +25,11 @@ import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Repository;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * <code>AbstractLockTest</code>...
@@ -46,7 +49,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        otherSession = getHelper().getSuperuserSession();
+        otherSession = helper.getSuperuserSession();
 
         lockedNode = testRootNode.addNode(nodeName1, testNodeType);
         lockedNode.addMixin(mixLockable);
@@ -97,6 +100,53 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             assertTrue("child node must still hold lock", l.getNode().isSame(childNode));
         } finally {
             childNode.unlock();
+        }
+    }
+
+    /**
+     * Test Lock.isDeep()
+     */
+    public void testNotIsDeep() throws RepositoryException {
+        assertFalse("Lock.isDeep() must be false if the lock has not been set as not deep", lock.isDeep());
+    }
+
+    /**
+     * Test Lock.isSessionScoped()
+     */
+    public void testIsSessionScoped() throws RepositoryException {
+        if (isSessionScoped()) {
+            assertTrue("Lock.isSessionScoped() must be true.", lock.isSessionScoped());
+        } else {
+            assertFalse("Lock.isSessionScoped() must be false. ", lock.isSessionScoped());
+        }
+    }
+
+    public void testLockIsLive() throws RepositoryException {
+        // assert: lock must be alive
+        assertTrue("lock must be alive", lock.isLive());
+    }
+
+    public void testRefresh() throws RepositoryException {
+        // assert: refresh must succeed
+        lock.refresh();
+    }
+
+    public void testUnlock() throws RepositoryException {
+        // unlock node
+        lockedNode.unlock();
+        // assert: lock must not be alive
+        assertFalse("lock must not be alive", lock.isLive());
+    }
+
+    public void testRefreshNotLive() throws Exception {
+        // unlock node
+        lockedNode.unlock();
+        // refresh
+        try {
+            lock.refresh();
+            fail("Refresh on a lock that is not alive must fail");
+        } catch (LockException e) {
+            // success
         }
     }
 
@@ -225,6 +275,15 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     /**
+     * A locked node must also be locked if accessed by some other session.
+     */
+    public void testLockVisibility() throws RepositoryException {
+        Node ln2 = (Node) otherSession.getItem(lockedNode.getPath());
+        assertTrue("Locked node must also be locked for another session", ln2.isLocked());
+        assertTrue("Locked node must also be locked for another session", ln2.holdsLock());
+    }
+
+    /**
      * If a locked nodes is unlocked again, any Lock instance retrieved by
      * another session must change the lock-status. Similarly, the previously
      * locked node must not be marked locked any more.
@@ -265,5 +324,44 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         // the removal must succeed.
         n.remove();
         otherSession.save();
+    }
+
+    public void testRemoveMixLockableFromLockedNode() throws RepositoryException {
+        try {
+            lockedNode.removeMixin(mixLockable);
+            lockedNode.save();
+
+            // the mixin got removed -> the lock should implicitely be released
+            // as well in order not to have inconsistencies
+            String msg = "Lock should have been released.";
+            assertFalse(msg, lock.isLive());
+            assertFalse(msg, lockedNode.isLocked());
+            if (!isSessionScoped()) {
+                List tokens = Arrays.asList(superuser.getLockTokens());
+                assertFalse(msg, tokens.contains(lock.getLockToken()));
+            }
+
+            assertFalse(msg, lockedNode.hasProperty(jcrLockOwner));
+            assertFalse(msg, lockedNode.hasProperty(jcrlockIsDeep));
+
+        } catch (ConstraintViolationException e) {
+            // cannot remove the mixin -> ok
+            // consequently the node must still be locked, the lock still live...
+            String msg = "Lock must still be live.";
+            assertTrue(msg, lock.isLive());
+            assertTrue(msg, lockedNode.isLocked());
+            if (!isSessionScoped()) {
+                List tokens = Arrays.asList(superuser.getLockTokens());
+                assertTrue(tokens.contains(lock.getLockToken()));
+            }
+            assertTrue(msg, lockedNode.hasProperty(jcrLockOwner));
+            assertTrue(msg, lockedNode.hasProperty(jcrlockIsDeep));
+        } finally {
+            // ev. re-add the mixin in order to be able to unlock the node
+            if (lockedNode.isLocked() && !lockedNode.isNodeType(mixLockable)) {
+                lockedNode.addMixin(mixLockable);
+                lockedNode.save();
+            }
+        }
     }
 }

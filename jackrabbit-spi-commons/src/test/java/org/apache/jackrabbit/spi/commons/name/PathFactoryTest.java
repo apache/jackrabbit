@@ -20,16 +20,14 @@ import junit.framework.TestCase;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.Path.Element;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * <code>PathFactoryTest</code>...
@@ -86,7 +84,7 @@ public class PathFactoryTest extends TestCase {
 
     public void testCreateElementNullName() {
         try {
-            factory.createElement((Name) null);
+            factory.createElement(null);
             fail("Creating element with null name is invalid");
         } catch (IllegalArgumentException e) {
             // ok
@@ -199,95 +197,15 @@ public class PathFactoryTest extends TestCase {
         }
     }
 
-    public void testIdentifier() {
-        String identifier = UUID.randomUUID().toString();
-
-        Path.Element elem = factory.createElement(identifier);
-        assertTrue(elem.denotesIdentifier());
-        assertFalse(elem.denotesCurrent());
-        assertFalse(elem.denotesName());
-        assertFalse(elem.denotesParent());
-        assertFalse(elem.denotesRoot());
-        assertNull(elem.getName());
-        assertNotNull(elem.getString());
-        assertEquals(Path.INDEX_UNDEFINED, elem.getIndex());
-        assertEquals(Path.INDEX_DEFAULT, elem.getNormalizedIndex());
-
-        Path p = factory.create(new Path.Element[] {elem});
-        assertTrue(p.denotesIdentifier());
-        assertTrue(p.isAbsolute());
-
-        assertFalse(p.denotesRoot());
-        assertFalse(p.isCanonical());
-        assertFalse(p.isNormalized());
-
-        assertEquals(1, p.getLength());
-        assertEquals(-1, p.getAncestorCount());
-
-        Path.Element lastElem = p.getNameElement();
-        assertNotNull(lastElem);
-        assertTrue(lastElem.denotesIdentifier());
-
-        assertEquals(1, p.getElements().length);
-
-        try {
-            p.getDepth();
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-        try {
-            p.getNormalizedPath();
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-        try {
-            p.getAncestor(1);
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-        try {
-            p.isAncestorOf(factory.getRootPath());
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-        try {
-            p.computeRelativePath(factory.getRootPath());
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-        try {
-            p.getCanonicalPath();
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-        try {
-            p.isDescendantOf(factory.getRootPath());
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-        try {
-            p.isEquivalentTo(factory.getRootPath());
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
-    }
-
     public void testCreateInvalidPath() throws NamespaceException {
 
         Path.Element rootEl = factory.getRootElement();
         Path.Element pe = factory.getParentElement();
+        Path.Element ce = factory.getCurrentElement();
         Path.Element element = factory.createElement(NameConstants.JCR_NAME, 3);
         Path.Element element2 = factory.createElement(NameConstants.JCR_DATA, 3);
 
-        List<Element[]> elementArrays = new ArrayList<Element[]>();
+        List elementArrays = new ArrayList();
         elementArrays.add(new Path.Element[]{rootEl, rootEl});
         elementArrays.add(new Path.Element[] {element, rootEl, pe});
         elementArrays.add(new Path.Element[] {pe, rootEl, element});
@@ -295,9 +213,9 @@ public class PathFactoryTest extends TestCase {
         elementArrays.add(new Path.Element[] {rootEl, pe});
         elementArrays.add(new Path.Element[] {rootEl, element, element2, pe, pe, pe});
 
-        for (Element[] elementArray : elementArrays) {
+        for (Iterator it = elementArrays.iterator(); it.hasNext(); ) {
             try {
-                Path p = factory.create(elementArray);
+                Path p = factory.create((Path.Element[]) it.next());
                 fail("Invalid path " + getString(p));
             } catch (IllegalArgumentException e) {
                 // ok
@@ -310,19 +228,19 @@ public class PathFactoryTest extends TestCase {
         Name rootName = factory.getRootElement().getName();
         Name parentName = factory.getParentElement().getName();
 
-        List<ParentPathNameIndexDoNormalize> list =
-            new ArrayList<ParentPathNameIndexDoNormalize>();
+        List list = new ArrayList();
         list.add(new ParentPathNameIndexDoNormalize(root, rootName, -1, true));
         list.add(new ParentPathNameIndexDoNormalize(root, rootName, -1, false));
         list.add(new ParentPathNameIndexDoNormalize(root, rootName, 3, false));
         list.add(new ParentPathNameIndexDoNormalize(factory.create(parentName), rootName, 3, true));
 
-        for (ParentPathNameIndexDoNormalize test : list) {
+        for (Iterator it = list.iterator(); it.hasNext();) {
+            ParentPathNameIndexDoNormalize test = (ParentPathNameIndexDoNormalize) it.next();
             try {
                 if (test.index == -1) {
-                    factory.create(test.parentPath, test.name, test.doNormalize);
+                    Path p = factory.create(test.parentPath, test.name, test.doNormalize);
                 } else {
-                    factory.create(test.parentPath, test.name, test.index, test.doNormalize);
+                    Path p = factory.create(test.parentPath, test.name, test.index, test.doNormalize);
                 }
                 fail("Invalid path " + test.parentPath + " + " + test.name);
             } catch (Exception e) {
@@ -332,6 +250,7 @@ public class PathFactoryTest extends TestCase {
     }
 
     public void testCreateInvalidPath3() {
+        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
         for (int i = 0; i < tests.length; i++) {
             if (!tests[i].isValid()) {

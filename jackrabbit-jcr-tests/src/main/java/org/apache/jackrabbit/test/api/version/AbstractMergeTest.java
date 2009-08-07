@@ -96,7 +96,7 @@ public abstract class AbstractMergeTest extends AbstractJCRTest {
         }
 
         // initialise a new session on second workspace as superuser
-        superuserW2 = getHelper().getSuperuserSession(workspaceName);
+        superuserW2 = helper.getSuperuserSession(workspaceName);
 
         workspace = superuser.getWorkspace();
         workspaceW2 = superuserW2.getWorkspace();

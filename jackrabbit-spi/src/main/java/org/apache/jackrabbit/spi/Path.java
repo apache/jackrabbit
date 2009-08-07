@@ -22,7 +22,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
- * The <code>Path</code> interface defines the SPI level representation of
+ * The <code>Path</code> interface defines the qualified representation of
  * a JCR path. It consists of an ordered list of {@link Path.Element} objects
  * and is immutable.<p/>
  *
@@ -138,16 +138,7 @@ public interface Path extends Serializable {
     public boolean denotesRoot();
 
     /**
-     * Test if this path represents an unresolved identifier-based path.
-     *
-     * @return <code>true</code> if this path represents an unresolved
-     * identifier-based path.
-     */
-    public boolean denotesIdentifier();
-
-    /**
-     * Tests whether this path is absolute, i.e. whether it starts with "/" or
-     * is an identifier based path.
+     * Tests whether this path is absolute, i.e. whether it starts with "/".
      *
      * @return true if this path is absolute; false otherwise.
      */
@@ -238,10 +229,8 @@ public interface Path extends Serializable {
      * that there is no ancestor of the specified degree. In case of this
      * being an absolute path, this would be the case if <code>degree</code> is
      * greater that the {@link #getDepth() depth} of this path.
-     * @throws RepositoryException If the implementation is not able to determine
-     * the ancestor of the specified degree for some other reason.
      */
-    public Path getAncestor(int degree) throws IllegalArgumentException, PathNotFoundException, RepositoryException;
+    public Path getAncestor(int degree) throws IllegalArgumentException, PathNotFoundException;
 
     /**
      * Returns the number of ancestors of this path. This is the equivalent
@@ -284,11 +273,10 @@ public interface Path extends Serializable {
      * canonical, e.g. the depth of "../../a" is -1.
      *
      * @return the depth this path
-     * @throws RepositoryException If the depths cannot be determined.
      * @see #getLength()
      * @see #getAncestorCount()
      */
-    public int getDepth() throws RepositoryException;
+    public int getDepth();
 
     /**
      * Determines if the the <code>other</code> path would be equal to <code>this</code>
@@ -401,9 +389,9 @@ public interface Path extends Serializable {
     public interface Element extends Serializable {
 
         /**
-         * Returns the name of this path element.
+         * Returns the qualified name of this path element.
          *
-         * @return The name of this path element.
+         * @return qualified name
          */
         public Name getName();
 
@@ -457,14 +445,6 @@ public interface Path extends Serializable {
          *         otherwise <code>false</code>
          */
         public boolean denotesName();
-
-        /**
-         * Returns <code>true</code> if this element represents an identifier element.
-         * 
-         * @return <code>true</code> if this element represents an identifier element.
-         * @since JCR 2.0
-         */
-        public boolean denotesIdentifier();
 
         /**
          * Return the String presentation of a {@link Path.Element}. It must be

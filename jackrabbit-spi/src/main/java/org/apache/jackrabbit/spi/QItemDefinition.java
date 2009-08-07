@@ -19,7 +19,7 @@ package org.apache.jackrabbit.spi;
 import javax.jcr.nodetype.ItemDefinition;
 
 /**
- * <code>QItemDefinition</code> is the SPI representation of
+ * <code>QItemDefinition</code> is the qualified SPI representation of
  * an {@link ItemDefinition item definition}. It refers to <code>Name</code>s
  * only and is thus isolated from session-specific namespace mappings.
  *

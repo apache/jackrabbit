@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.retention;
 
-import javax.jcr.retention.RetentionPolicy;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
@@ -40,7 +40,7 @@ public class RetentionPolicyImpl implements RetentionPolicy {
 
     /**
      * Creates a new <code>RetentionPolicy</code> that can be applied to a
-     * <code>Node</code> using {@link javax.jcr.retention.RetentionManager#setRetentionPolicy(String, javax.jcr.retention.RetentionPolicy)}.
+     * <code>Node</code> using {@link org.apache.jackrabbit.api.jsr283.retention.RetentionManager#setRetentionPolicy(String, org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy)}.
      *
      * @param jcrName The name of the policy. It must be a valid JCR name.
      * @param session The editing <code>Session</code> from which the retention
@@ -75,7 +75,7 @@ public class RetentionPolicyImpl implements RetentionPolicy {
 
     //----------------------------------------------------< RetentionPolicy >---
     /**
-     * @see javax.jcr.retention.RetentionPolicy#getName()
+     * @see org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy#getName()
      */
     public String getName() throws RepositoryException {
         return resolver.getJCRName(name);

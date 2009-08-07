@@ -31,6 +31,10 @@ public final class ConcurrentAddRemoveMoveTest extends ConcurrentModificationBas
         testRootNode.getSession().save();
     }
 
+    private Node getNode(String path) throws Exception {
+        return (Node) session.getItem(path);
+    }
+
     public void testAddWithMoveFrom() throws Exception {
         testRootNode.getNode("A").addNode("D");
         session.move(testRoot + "/A/B", testRoot + "/C/B");
@@ -89,7 +93,7 @@ public final class ConcurrentAddRemoveMoveTest extends ConcurrentModificationBas
 
     public void testMoveFromWithAdd() throws Exception {
         superuser.move(testRoot + "/A/B", testRoot + "/C/B");
-        session.getNode(testRoot).getNode("A").addNode("D");
+        getNode(testRoot).getNode("A").addNode("D");
 
         superuser.save();
 
@@ -102,7 +106,7 @@ public final class ConcurrentAddRemoveMoveTest extends ConcurrentModificationBas
 
     public void testMoveToWithAdd() throws Exception {
         superuser.move(testRoot + "/C", testRoot + "/A/C");
-        session.getNode(testRoot).getNode("A").addNode("D");
+        getNode(testRoot).getNode("A").addNode("D");
 
         superuser.save();
 
@@ -114,7 +118,7 @@ public final class ConcurrentAddRemoveMoveTest extends ConcurrentModificationBas
     }
 
     public void testMoveFromWithRemove() throws Exception {
-        Node d = session.getNode(testRoot).getNode("A").addNode("D");
+        Node d = getNode(testRoot).getNode("A").addNode("D");
         session.save();
 
         superuser.move(testRoot + "/A/B", testRoot + "/C/B");
@@ -130,7 +134,7 @@ public final class ConcurrentAddRemoveMoveTest extends ConcurrentModificationBas
     }
 
     public void testMoveToWithRemove() throws Exception {
-        Node d = session.getNode(testRoot).getNode("A").addNode("D");
+        Node d = getNode(testRoot).getNode("A").addNode("D");
         session.save();
 
         superuser.move(testRoot + "/C", testRoot + "/A/C");
@@ -149,7 +153,7 @@ public final class ConcurrentAddRemoveMoveTest extends ConcurrentModificationBas
 
     public void testAddAdd() throws Exception {
         testRootNode.getNode("A").addNode("D");
-        session.getNode(testRoot).getNode("A").addNode("E");
+        getNode(testRoot).getNode("A").addNode("E");
 
         superuser.save();
 
@@ -166,7 +170,7 @@ public final class ConcurrentAddRemoveMoveTest extends ConcurrentModificationBas
         Node d = testRootNode.getNode("A").addNode("D");
         superuser.save();
         d.remove();
-        session.getNode(testRoot).getNode("A").getNode("B").remove();
+        getNode(testRoot).getNode("A").getNode("B").remove();
 
         superuser.save();
 

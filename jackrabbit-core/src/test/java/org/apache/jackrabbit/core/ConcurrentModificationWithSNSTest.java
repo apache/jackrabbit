@@ -33,9 +33,13 @@ public class ConcurrentModificationWithSNSTest extends ConcurrentModificationBas
         superuser.save();
     }
 
+    private Node getNode(String path) throws Exception {
+        return (Node) session.getItem(path);
+    }
+
     public void testAddAdd() throws Exception {
         testRootNode.addNode("A");
-        session.getNode(testRoot).addNode("A");
+        getNode(testRoot).addNode("A");
         superuser.save();
         try {
             session.save();
@@ -46,7 +50,7 @@ public class ConcurrentModificationWithSNSTest extends ConcurrentModificationBas
 
     public void testAddRemove() throws Exception {
         testRootNode.addNode("A");
-        session.getNode(testRoot).getNode("A[2]").remove();
+        getNode(testRoot).getNode("A[2]").remove();
         superuser.save();
         try {
             session.save();
@@ -57,7 +61,7 @@ public class ConcurrentModificationWithSNSTest extends ConcurrentModificationBas
 
     public void testRemoveAdd() throws Exception {
         testRootNode.getNode("A[2]").remove();
-        session.getNode(testRoot).addNode("A");
+        getNode(testRoot).addNode("A");
         superuser.save();
         try {
             session.save();
@@ -68,7 +72,7 @@ public class ConcurrentModificationWithSNSTest extends ConcurrentModificationBas
 
     public void testRemoveRemove() throws Exception {
         testRootNode.getNode("A[1]").remove();
-        session.getNode(testRoot).getNode("A[3]").remove();
+        getNode(testRoot).getNode("A[3]").remove();
         superuser.save();
         try {
             session.save();
@@ -82,7 +86,7 @@ public class ConcurrentModificationWithSNSTest extends ConcurrentModificationBas
         Node f = testRootNode.addNode("folder", "nt:folder");
         superuser.save();
         f.addNode("A", "nt:folder");
-        session.getNode(f.getPath()).addNode("A", "nt:folder");
+        getNode(f.getPath()).addNode("A", "nt:folder");
         superuser.save();
         try {
             session.save();

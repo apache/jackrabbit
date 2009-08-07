@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 
 /**

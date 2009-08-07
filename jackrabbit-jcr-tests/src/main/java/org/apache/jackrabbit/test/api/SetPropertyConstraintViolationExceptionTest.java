@@ -397,7 +397,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
 
             // create a referenceable node not satisfying the constraint
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
-            ensureMixinType(nodeNotSatisfied, mixReferenceable);
+            nodeNotSatisfied.addMixin(mixReferenceable);
 
             testRootNode.save();
         } catch (ConstraintViolationException e) {

@@ -31,11 +31,14 @@ import org.apache.jackrabbit.core.persistence.bundle.util.TrackingInputStream;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -45,6 +48,7 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 /**
  * This is a generic persistence manager that stores the {@link NodePropBundle}s
@@ -63,7 +67,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     private static Logger log = LoggerFactory.getLogger(BundleFsPersistenceManager.class);
 
     /** flag indicating if this manager was initialized */
-    protected boolean initialized;
+    protected boolean initialized = false;
 
     /** file system where BLOB data is stored */
     protected BundleFsPersistenceManager.CloseableBLOBStore blobStore;
@@ -72,7 +76,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      * Default blocksize for BLOB filesystem:
      * @see #setBlobFSBlockSize(String)
      */
-    private int blobFSBlockSize;
+    private int blobFSBlockSize = 0;
 
     /**
      * the minimum size of a property until it gets written to the blob store
@@ -295,12 +299,12 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      * @param id the id of the node
      * @return the buffer with the appended data.
      */
-    protected StringBuffer buildNodeReferencesFilePath(
-            StringBuffer buf, NodeId id) {
+    protected StringBuffer buildNodeReferencesFilePath(StringBuffer buf,
+                                                       NodeReferencesId id) {
         if (buf == null) {
             buf = new StringBuffer();
         }
-        buildNodeFolderPath(buf, id);
+        buildNodeFolderPath(buf, id.getTargetId());
         buf.append('.');
         buf.append(NODEREFSFILENAME);
         return buf;
@@ -350,7 +354,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences loadReferencesTo(NodeId targetId)
+    public synchronized NodeReferences load(NodeReferencesId targetId)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -398,7 +402,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             Serializer.serialize(refs, out);
             out.close();
         } catch (Exception e) {
-            String msg = "failed to write " + refs;
+            String msg = "failed to write property state: " + refs.getTargetId();
             BundleFsPersistenceManager.log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -412,13 +416,13 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             throw new IllegalStateException("not initialized");
         }
         try {
-            StringBuffer buf = buildNodeReferencesFilePath(null, refs.getTargetId());
+            StringBuffer buf = buildNodeReferencesFilePath(null, refs.getId());
             itemFs.deleteFile(buf.toString());
         } catch (Exception e) {
             if (e instanceof NoSuchItemStateException) {
                 throw (NoSuchItemStateException) e;
             }
-            String msg = "failed to delete " + refs;
+            String msg = "failed to delete references: " + refs.getTargetId();
             BundleFsPersistenceManager.log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -427,7 +431,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean existsReferencesTo(NodeId targetId) throws ItemStateException {
+    public synchronized boolean exists(NodeReferencesId targetId) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -500,12 +504,12 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public Iterable<NodeId> getAllNodeIds(NodeId bigger, int maxCount)
+    public NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
             throws ItemStateException {
-        ArrayList<NodeId> list = new ArrayList<NodeId>();
+        ArrayList list = new ArrayList();
         try {
-            getListRecursive(list, "", bigger == null ? null : bigger, maxCount);
-            return list;
+            getListRecursive(list, "", bigger == null ? null : bigger.getUUID(), maxCount);
+            return new FileNodeIdIterator(list);
         } catch (FileSystemException e) {
             String msg = "failed to read node list: " + bigger + ": " + e;
             log.error(msg);
@@ -516,7 +520,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    protected NodeId getIdFromFileName(String fileName) {
+    protected UUID getUUIDFromFileName(String fileName) {
         StringBuffer buff = new StringBuffer(35);
         if (!fileName.endsWith("." + NODEFILENAME)) {
             return null;
@@ -534,12 +538,12 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
                 }
             }
         }
-        return new NodeId(buff.toString());
+        String u = buff.toString();
+        return new UUID(u);
     }
 
-    private void getListRecursive(
-            ArrayList<NodeId> list, String path, NodeId bigger, int maxCount)
-            throws FileSystemException {
+    private void getListRecursive(ArrayList list, String path, UUID bigger,
+            int maxCount) throws FileSystemException {
         if (maxCount > 0 && list.size() >= maxCount) {
             return;
         }
@@ -547,13 +551,14 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         Arrays.sort(files);
         for (int i = 0; i < files.length; i++) {
             String f = files[i];
-            NodeId n = getIdFromFileName(path + FileSystem.SEPARATOR + f);
-            if (n == null) {
+            UUID u = getUUIDFromFileName(path + FileSystem.SEPARATOR + f);
+            if (u == null) {
                 continue;
             }
-            if (bigger != null && bigger.toString().compareTo(n.toString()) >= 0) {
+            if (bigger != null && bigger.toString().compareTo(u.toString()) >= 0) {
                 continue;
             }
+            NodeId n = new NodeId(u);
             list.add(n);
             if (maxCount > 0 && list.size() >= maxCount) {
                 return;
@@ -565,6 +570,36 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             getListRecursive(list, path + FileSystem.SEPARATOR + dirs[i],
                     bigger, maxCount);
         }
+    }
+
+    private static class FileNodeIdIterator implements NodeIdIterator {
+
+        private final ArrayList list;
+        private int pos;
+
+        FileNodeIdIterator(ArrayList list) {
+            this.list = list;
+        }
+
+        public NodeId nextNodeId() throws NoSuchElementException {
+            if (pos < list.size()) {
+                return (NodeId) list.get(pos++);
+            }
+            throw new NoSuchElementException();
+        }
+
+        public boolean hasNext() {
+            return pos < list.size();
+        }
+
+        public Object next() {
+            return nextNodeId();
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
 }

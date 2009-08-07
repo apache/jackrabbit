@@ -112,11 +112,6 @@ public class FieldNames {
     public static final String SHAREABLE_NODE = "_:SHAREABLE_NODE".intern();
 
     /**
-     * Name of the field that contains all weak reference property values.
-     */
-    public static final String WEAK_REFS = "_:WEAK_REFS".intern();
-
-    /**
      * Returns a named length for use as a term in the index. The named length
      * is of the form: <code>propertyName</code> + '[' +
      * {@link LongField#longToString(long)}.

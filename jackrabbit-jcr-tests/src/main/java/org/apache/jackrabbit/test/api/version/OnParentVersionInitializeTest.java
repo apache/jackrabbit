@@ -20,7 +20,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 
 /**
  * <code>OnParentVersionInitializeTest</code> tests the {@link OnParentVersionAction#INITIALIZE INITIALIZE}
@@ -54,28 +53,6 @@ public class OnParentVersionInitializeTest extends AbstractOnParentVersionTest {
         p.save();
 
         propParent.restore(v, false);
-
-        assertEquals("On restore of a OnParentVersion-INITIALIZE property P, the current value of P must be left unchanged.", p.getString(), newPropValue);
-    }
-
-    /**
-     * Test the restore of a OnParentVersion-INITIALIZE property
-     *
-     * @throws javax.jcr.RepositoryException
-     */
-    public void testRestorePropJcr2() throws RepositoryException {
-
-        Node propParent = p.getParent();
-        VersionManager versionManager = propParent.getSession().getWorkspace().getVersionManager();
-        String path = propParent.getPath();
-        versionManager.checkout(path);
-        Version v = versionManager.checkin(path);
-        versionManager.checkout(path);
-
-        p.setValue(newPropValue);
-        p.getSession().save();
-
-        versionManager.restore(v, false);
 
         assertEquals("On restore of a OnParentVersion-INITIALIZE property P, the current value of P must be left unchanged.", p.getString(), newPropValue);
     }

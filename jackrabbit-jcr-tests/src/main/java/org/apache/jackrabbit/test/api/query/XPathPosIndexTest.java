@@ -29,10 +29,10 @@ import javax.jcr.query.QueryResult;
  * check the repository descriptor {@link javax.jcr.Repository#QUERY_XPATH_POS_INDEX}
  * first and throw a {@link org.apache.jackrabbit.test.NotExecutableException}
  * if the descriptor is not present.
- * <p>
+ * <p/>
  * This is a level 1 test, therefore does not write content to the workspace.
  * The tests require the following content in the default workspace:
- * <p>
+ * <p/>
  * At least three nodes with the name {@link #nodeName1} under the
  * {@link #testRoot}.
  *
@@ -50,7 +50,7 @@ public class XPathPosIndexTest extends AbstractQueryTest {
 
     /**
      * Test if the indexed notation is supported.
-     * <p>
+     * <p/>
      * For configuration description see {@link XPathPosIndexTest}.
      */
     public void testDocOrderIndexedNotation() throws Exception {

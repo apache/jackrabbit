@@ -16,40 +16,36 @@
  */
 package org.apache.jackrabbit.jcr2spi.version;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionIterator;
-
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
-import org.apache.jackrabbit.commons.iterator.FrozenNodeIteratorAdapter;
-import org.apache.jackrabbit.commons.iterator.VersionIteratorAdapter;
-import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
-import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.NodeImpl;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
+import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
+import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
+
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionIterator;
+import javax.jcr.version.VersionException;
+import javax.jcr.RepositoryException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.nodetype.ConstraintViolationException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>VersionHistoryImpl</code>...
@@ -77,13 +73,20 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     //-----------------------------------------------------< VersionHistory >---
     /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see VersionHistory#getVersionableUUID()
      */
     public String getVersionableUUID() throws RepositoryException {
-        return getVersionableIdentifier();
+        checkStatus();
+        return getProperty(NameConstants.JCR_VERSIONABLEUUID).getString();
     }
 
     /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see VersionHistory#getRootVersion()
      */
     public Version getRootVersion() throws RepositoryException {
@@ -98,6 +101,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see VersionHistory#getAllVersions()
      */
     public VersionIterator getAllVersions() throws RepositoryException {
@@ -116,42 +122,11 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     * @see VersionHistory#getAllLinearVersions()
-     */
-    public VersionIterator getAllLinearVersions() throws RepositoryException {
-        checkStatus();
-
-        // TODO: improve and use lazy loading of versions as needed.
-        // TODO: change session.getNodeByUUID to Session.getNodeByIdentifier as soon as implemented
-
-        List versions = new ArrayList();
-        Version rootV = getRootVersion();
-        Node vn = session.getNodeByUUID(getVersionableUUID());
-        Version v = vn.getBaseVersion();
-        while (v != null && !rootV.isSame(v)) {
-            versions.add(0, v);
-            v = v.getLinearPredecessor();
-        }
-        versions.add(0, rootV);
-        
-        return new VersionIteratorAdapter(versions);
-    }
-
-    /**
-     * @see VersionHistory#getAllFrozenNodes()
-     */
-    public NodeIterator getAllFrozenNodes() throws RepositoryException {
-        return new FrozenNodeIteratorAdapter(getAllVersions());
-    }
-
-    /**
-     * @see VersionHistory#getAllLinearFrozenNodes()
-     */
-    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
-        return new FrozenNodeIteratorAdapter(getAllLinearVersions());
-    }
-    
-    /**
+     *
+     * @param versionName
+     * @return
+     * @throws VersionException
+     * @throws RepositoryException
      * @see VersionHistory#getVersion(String)
      */
     public Version getVersion(String versionName) throws VersionException, RepositoryException {
@@ -161,6 +136,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     *
+     * @param label
+     * @return
+     * @throws RepositoryException
      * @see VersionHistory#getVersionByLabel(String)
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
@@ -169,6 +148,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     *
+     * @param versionName
+     * @param label
+     * @param moveLabel
+     * @throws VersionException
+     * @throws RepositoryException
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      */
     public void addVersionLabel(String versionName, String label, boolean moveLabel) throws VersionException, RepositoryException {
@@ -176,10 +161,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         Name qLabel = getQLabel(label);
         NodeState vState = getVersionState(versionName);
         // delegate to version manager that operates on workspace directely
-        session.getVersionStateManager().addVersionLabel((NodeState) getItemState(), vState, qLabel, moveLabel);
+        session.getVersionManager().addVersionLabel((NodeState) getItemState(), vState, qLabel, moveLabel);
     }
 
     /**
+     *
+     * @param label
+     * @throws VersionException
+     * @throws RepositoryException
      * @see VersionHistory#removeVersionLabel(String)
      */
     public void removeVersionLabel(String label) throws VersionException, RepositoryException {
@@ -188,10 +177,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         Version version = getVersionByLabel(qLabel);
         NodeState vState = getVersionState(version.getName());
         // delegate to version manager that operates on workspace directely
-        session.getVersionStateManager().removeVersionLabel((NodeState) getItemState(), vState, qLabel);
+        session.getVersionManager().removeVersionLabel((NodeState) getItemState(), vState, qLabel);
     }
 
     /**
+     *
+     * @param label
+     * @return
+     * @throws RepositoryException
      * @see VersionHistory#hasVersionLabel(String)
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
@@ -207,6 +200,11 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     * @param version
+     * @param label
+     * @return
+     * @throws VersionException
+     * @throws RepositoryException
      * @see VersionHistory#hasVersionLabel(Version, String)
      */
     public boolean hasVersionLabel(Version version, String label) throws VersionException, RepositoryException {
@@ -226,6 +224,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see VersionHistory#getVersionLabels()
      */
     public String[] getVersionLabels() throws RepositoryException {
@@ -240,6 +241,11 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     *
+     * @param version
+     * @return
+     * @throws VersionException
+     * @throws RepositoryException
      * @see VersionHistory#getVersionLabels(Version)
      */
     public String[] getVersionLabels(Version version) throws VersionException, RepositoryException {
@@ -259,6 +265,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     *
+     * @param versionName
+     * @throws ReferentialIntegrityException
+     * @throws AccessDeniedException
+     * @throws UnsupportedRepositoryOperationException
+     * @throws VersionException
+     * @throws RepositoryException
      * @see VersionHistory#removeVersion(String)
      */
     public void removeVersion(String versionName) throws ReferentialIntegrityException,
@@ -266,17 +279,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         VersionException, RepositoryException {
         checkStatus();
         NodeState vState = getVersionState(versionName);
-        session.getVersionStateManager().removeVersion((NodeState) getItemState(), vState);
+        session.getVersionManager().removeVersion((NodeState) getItemState(), vState);
     }
 
-    /**
-     * @see VersionHistory#getVersionableIdentifier()
-     */
-    public String getVersionableIdentifier() throws RepositoryException {
-        checkStatus();
-        return getProperty(NameConstants.JCR_VERSIONABLEUUID).getString();
-    }
-    
     //---------------------------------------------------------------< Item >---
     /**
      *

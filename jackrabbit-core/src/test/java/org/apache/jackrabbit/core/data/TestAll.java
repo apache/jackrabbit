@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.test.ConcurrentTestSuite;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -33,7 +31,7 @@ public class TestAll extends TestCase {
      * @return a test suite that executes all tests inside this package
      */
     public static Test suite() {
-        TestSuite suite = new ConcurrentTestSuite("Data tests");
+        TestSuite suite = new TestSuite("Data tests");
         suite.addTestSuite(LazyFileInputStreamTest.class);
         suite.addTestSuite(OpenFilesTest.class);
         suite.addTestSuite(DataStoreTest.class);

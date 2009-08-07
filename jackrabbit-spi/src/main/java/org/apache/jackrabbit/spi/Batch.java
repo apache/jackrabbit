@@ -108,7 +108,7 @@ public interface Batch {
      * 
      * @param parentId NodeId identifying the parent node.
      * @param propertyName Name of the property to be created.
-     * @param value The value of the property to be created.
+     * @param value The qualified value of the property to be created.
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
@@ -139,7 +139,7 @@ public interface Batch {
      *
      * @param parentId NodeId identifying the parent node.
      * @param propertyName Name of the property to be created.
-     * @param values The values of the property to be created.
+     * @param values The qualified values of the property to be created.
      * @throws javax.jcr.ValueFormatException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.lock.LockException
@@ -251,16 +251,6 @@ public interface Batch {
      * @see javax.jcr.Node#removeMixin(String)
      */
     public void setMixins(NodeId nodeId, Name[] mixinNodeTypeNames) throws RepositoryException;
-
-    /**
-     * Change the primary type of the node identified by the given <code>nodeId</code>.
-     *
-     * @param nodeId NodeId identifying the node to be modified.
-     * @param primaryNodeTypeName
-     * @throws RepositoryException
-     * @see javax.jcr.Node#setPrimaryType(String)
-     */
-    public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException;
 
     /**
      * Move the node identified by the given <code>srcNodeId</code> to the

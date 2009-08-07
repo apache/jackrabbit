@@ -42,8 +42,8 @@ public class ConcurrentSaveTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        addNodeSession = getHelper().getSuperuserSession();
-        removePropertySession = getHelper().getSuperuserSession();
+        addNodeSession = helper.getSuperuserSession();
+        removePropertySession = helper.getSuperuserSession();
     }
 
     protected void tearDown() throws Exception {

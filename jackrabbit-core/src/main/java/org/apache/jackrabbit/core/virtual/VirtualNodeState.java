@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
@@ -41,12 +41,12 @@ public class VirtualNodeState extends NodeState {
 
     /**
      * map of property states of this node state
+     * key=propname, value={@link VirtualPropertyState}
      */
-    private final HashMap<Name, VirtualPropertyState> properties =
-        new HashMap<Name, VirtualPropertyState>();
+    private final HashMap properties = new HashMap();
 
     /** a set of hard references to child states */
-    private HashSet<NodeState> stateRefs = null;
+    private HashSet stateRefs = null;
 
     /**
      * creates a new virtual node state
@@ -78,7 +78,7 @@ public class VirtualNodeState extends NodeState {
      * @return the properties.
      */
     public VirtualPropertyState[] getProperties() {
-        return properties.values().toArray(new VirtualPropertyState[properties.size()]);
+        return (VirtualPropertyState[]) properties.values().toArray(new VirtualPropertyState[properties.size()]);
     }
 
 
@@ -191,7 +191,7 @@ public class VirtualNodeState extends NodeState {
      */
     public void setMixinNodeTypes(Name[] mixins) throws RepositoryException {
         if (mixins != null) {
-            HashSet<Name> set = new HashSet<Name>();
+            HashSet set = new HashSet();
             InternalValue[] values = new InternalValue[mixins.length];
             for (int i = 0; i < mixins.length; i++) {
                 set.add(mixins[i]);
@@ -208,7 +208,7 @@ public class VirtualNodeState extends NodeState {
      */
     public void addStateReference(NodeState state) {
         if (stateRefs == null) {
-            stateRefs = new HashSet<NodeState>();
+            stateRefs = new HashSet();
         }
         stateRefs.add(state);
     }

@@ -43,8 +43,8 @@ public class AccessControlProviderFactoryImpl implements AccessControlProviderFa
     /**
      * The name of the security workspace (containing users...)
      */
-    private String secWorkspaceName;
-    private String defaultWorkspaceName;
+    private String secWorkspaceName = null;
+    private String defaultWorkspaceName = null;
 
     //---------------------------------------< AccessControlProviderFactory >---
     /**

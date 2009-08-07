@@ -21,7 +21,6 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 
 /**
  * <code>MergeCancelMergeTest</code> contains tests dealing with nodes on which
@@ -44,8 +43,7 @@ public class MergeCancelMergeTest extends AbstractMergeTest {
 
         nodeToMerge = testRootNodeW2.getNode(nodeName1);
         // node has to be checked out while merging
-        VersionManager versionManager = nodeToMerge.getSession().getWorkspace().getVersionManager();
-        versionManager.checkout(nodeToMerge.getPath());
+        nodeToMerge.checkout();
     }
 
     protected void tearDown() throws Exception {
@@ -101,19 +99,15 @@ public class MergeCancelMergeTest extends AbstractMergeTest {
      * initialize a versionable node on default and second workspace
      */
     protected void initNodes() throws RepositoryException {
-
-        VersionManager versionManager = testRootNode.getSession().getWorkspace().getVersionManager();
-
         // create a versionable node
         // nodeName1
         Node topVNode = testRootNode.addNode(nodeName1, versionableNodeType);
         topVNode.setProperty(propertyName1, topVNode.getName());
-        String path = topVNode.getPath();
 
         // save default workspace
-        testRootNode.getSession().save();
-        versionManager.checkin(path);
-        versionManager.checkout(path);
+        testRootNode.save();
+        topVNode.checkin();
+        topVNode.checkout();
 
         log.println("test nodes created successfully on " + workspace.getName());
 
@@ -122,53 +116,5 @@ public class MergeCancelMergeTest extends AbstractMergeTest {
         log.println(topVNode.getPath() + " cloned on " + superuserW2.getWorkspace().getName() + " at " + topVNode.getPath());
 
         testRootNodeW2 = (Node) superuserW2.getItem(testRoot);
-    }
-
-    /**
-     * Merge.cancelMerge(V): has the effect of removing the reference to V' from
-     * the jcr:mergeFailed property of N. <br> without adding it to
-     * jcr:predecessors.<br> Branches will not be joined.<br>
-     */
-    public void testMergeNodeCancelMergeJcr2() throws RepositoryException {
-        // create 2 independent versions for a node and its corresponding node
-        // so merge fails for this node
-    
-        // default workspace
-        Node originalNode = testRootNode.getNode(nodeName1);
-        VersionManager vmWsp1 = originalNode.getSession().getWorkspace().getVersionManager();
-        String originalPath = originalNode.getPath();
-        vmWsp1.checkout(originalPath);
-        vmWsp1.checkin(originalPath);
-    
-        // second workspace
-        VersionManager vmWsp2 = nodeToMerge.getSession().getWorkspace().getVersionManager();
-        String path = nodeToMerge.getPath();
-        vmWsp2.checkin(path);
-    
-        // "merge" the clonedNode with the newNode from the default workspace
-        vmWsp2.checkout(path);
-        vmWsp2.merge(path, workspace.getName(), true);
-    
-        // get predecessors
-        Version[] predecessors = vmWsp2.getBaseVersion(path).getPredecessors();
-        // get mergeFailed property
-        Property mergeFailedProperty = nodeToMerge.getProperty(jcrMergeFailed);
-        Value[] mergeFailedReferences = mergeFailedProperty.getValues();
-    
-        for (int i = 0; i < mergeFailedReferences.length; i++) {
-            String id = mergeFailedReferences[i].getString();
-            vmWsp2.cancelMerge(path, (Version) superuser.getNodeByIdentifier(id));
-        }
-    
-        // check predecessors - unchanged
-        Version[] predecessorsAfterCancel = vmWsp2.getBaseVersion(path).getPredecessors();
-        assertTrue(predecessors.length == predecessorsAfterCancel.length);
-    
-        // check mergeFailed property - reference removed
-        if (nodeToMerge.hasProperty(jcrMergeFailed)) {
-            Property mergeFailedPropertyAfterCancelMerge = nodeToMerge.getProperty(jcrMergeFailed);
-            Value[] mergeFailedReferencesAfterCancelMerge = mergeFailedPropertyAfterCancelMerge.getValues();
-            assertTrue(mergeFailedReferences.length > mergeFailedReferencesAfterCancelMerge.length);
-        }
     }
 }

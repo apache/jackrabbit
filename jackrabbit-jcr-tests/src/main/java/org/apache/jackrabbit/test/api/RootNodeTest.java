@@ -45,7 +45,7 @@ public class RootNodeTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         rootNode = session.getRootNode();
     }
 

@@ -22,10 +22,6 @@ import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
@@ -48,10 +44,6 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.ItemInfo;
 
 /**
  * Log wrapper for a {@link RepositoryService}.
@@ -109,8 +101,8 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getQValueFactory()", new Object[]{});
     }
 
-    public Map<String, String> getRepositoryDescriptors() throws RepositoryException {
-        return (Map<String, String>) execute(new Callable() {
+    public Map getRepositoryDescriptors() throws RepositoryException {
+        return (Map) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getRepositoryDescriptors();
             }
@@ -167,11 +159,12 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
     public boolean isGranted(final SessionInfo sessionInfo, final ItemId itemId, final String[] actions)
             throws RepositoryException {
 
-        return (Boolean) execute(new Callable() {
+        return ((Boolean) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return Boolean.valueOf(service.isGranted(unwrap(sessionInfo), itemId, actions));
             }
-        }, "isGranted(SessionInfo, ItemId, String[])", new Object[] { unwrap(sessionInfo), itemId, actions });
+        }, "isGranted(SessionInfo, ItemId, String[])", new Object[] { unwrap(sessionInfo), itemId, actions }))
+                .booleanValue();
     }
 
     public QNodeDefinition getNodeDefinition(final SessionInfo sessionInfo, final NodeId nodeId)
@@ -204,32 +197,24 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getNodeInfo(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
-    public Iterator<? extends ItemInfo> getItemInfos(final SessionInfo sessionInfo, final NodeId nodeId)
+    public Iterator getItemInfos(final SessionInfo sessionInfo, final NodeId nodeId)
             throws RepositoryException {
 
-        return (Iterator<? extends ItemInfo>) execute(new Callable() {
+        return (Iterator) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getItemInfos(unwrap(sessionInfo), nodeId);
             }
         }, "getItemInfos(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
-    public Iterator<ChildInfo> getChildInfos(final SessionInfo sessionInfo, final NodeId parentId)
+    public Iterator getChildInfos(final SessionInfo sessionInfo, final NodeId parentId)
             throws RepositoryException {
 
-        return (Iterator<ChildInfo>) execute(new Callable() {
+        return (Iterator) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getChildInfos(unwrap(sessionInfo), parentId);
             }
         }, "getChildInfos(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), parentId});
-    }
-
-    public Iterator<PropertyId> getReferences(final SessionInfo sessionInfo, final NodeId nodeId, final Name propertyName, final boolean weakReferences) throws RepositoryException {
-        return (Iterator<PropertyId>) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.getReferences(unwrap(sessionInfo), nodeId, propertyName, weakReferences);
-            }
-        }, "getReferences(SessionInfo, NodeId, Name, boolean)", new Object[]{unwrap(sessionInfo), nodeId, propertyName, weakReferences});
     }
 
     public PropertyInfo getPropertyInfo(final SessionInfo sessionInfo, final PropertyId propertyId)
@@ -269,7 +254,7 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return null;
             }
         }, "importXml(SessionInfo, NodeId, InputStream, int)",
-                new Object[]{unwrap(sessionInfo), parentId, xmlStream, uuidBehaviour});
+                new Object[]{unwrap(sessionInfo), parentId, xmlStream, new Integer(uuidBehaviour)});
     }
 
     public void move(final SessionInfo sessionInfo, final NodeId srcNodeId, final NodeId destParentNodeId,
@@ -318,7 +303,8 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return null;
             }
         }, "clone(SessionInfo, String, NodeId, NodeId, Name, boolean)",
-                new Object[] { unwrap(sessionInfo), srcWorkspaceName, srcNodeId, destParentNodeId, destName, removeExisting});
+                new Object[] { unwrap(sessionInfo), srcWorkspaceName, srcNodeId, destParentNodeId, destName,
+                Boolean.valueOf(removeExisting) });
     }
 
     public LockInfo getLockInfo(final SessionInfo sessionInfo, final NodeId nodeId)
@@ -339,7 +325,7 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return service.lock(unwrap(sessionInfo), nodeId, deep, sessionScoped);
             }
         }, "lock(SessionInfo, NodeId, boolean, boolean)",
-                new Object[]{unwrap(sessionInfo), nodeId, deep, sessionScoped});
+                new Object[]{unwrap(sessionInfo), nodeId, Boolean.valueOf(deep), Boolean.valueOf(sessionScoped)});
     }
 
     public LockInfo lock(final SessionInfo sessionInfo, final NodeId nodeId, final boolean deep,
@@ -352,7 +338,7 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
             }
         }, "lock(SessionInfo, NodeId, boolean, boolean, long, String)",
                 new Object[] { unwrap(sessionInfo),
-                nodeId, deep, sessionScoped, timeoutHint,
+                nodeId, Boolean.valueOf(deep), Boolean.valueOf(sessionScoped), new Long(timeoutHint),
                 ownerHint });
     }
 
@@ -398,14 +384,6 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "checkout(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
-    public NodeId checkpoint(final SessionInfo sessionInfo, final NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        return (NodeId) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.checkpoint(unwrap(sessionInfo), nodeId);
-            }
-        }, "checkpoint(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
-    }
-
     public void removeVersion(final SessionInfo sessionInfo, final NodeId versionHistoryId,
             final NodeId versionId) throws RepositoryException {
 
@@ -427,7 +405,7 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return null;
             }
         }, "restore(SessionInfo, NodeId, NodeId, boolean)",
-                new Object[]{unwrap(sessionInfo), nodeId, versionId, removeExisting});
+                new Object[]{unwrap(sessionInfo), nodeId, versionId, Boolean.valueOf(removeExisting)});
     }
 
     public void restore(final SessionInfo sessionInfo, final NodeId[] nodeIds, final boolean removeExisting)
@@ -439,29 +417,18 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return null;
             }
         }, "restore(SessionInfo, NodeId[], boolean)",
-                new Object[]{unwrap(sessionInfo), nodeIds, removeExisting});
+                new Object[]{unwrap(sessionInfo), nodeIds, Boolean.valueOf(removeExisting)});
     }
 
-    public Iterator<NodeId> merge(final SessionInfo sessionInfo, final NodeId nodeId, final String srcWorkspaceName,
+    public Iterator merge(final SessionInfo sessionInfo, final NodeId nodeId, final String srcWorkspaceName,
             final boolean bestEffort) throws RepositoryException {
 
-        return (Iterator<NodeId>) execute(new Callable() {
+        return (Iterator) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.merge(unwrap(sessionInfo), nodeId, srcWorkspaceName, bestEffort);
             }
         }, "merge(SessionInfo, NodeId, String, boolean)",
-                new Object[]{unwrap(sessionInfo), nodeId, srcWorkspaceName, bestEffort});
-    }
-
-    public Iterator<NodeId> merge(final SessionInfo sessionInfo, final NodeId nodeId, final String srcWorkspaceName,
-            final boolean bestEffort, final boolean isShallow) throws RepositoryException {
-
-        return (Iterator<NodeId>) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.merge(unwrap(sessionInfo), nodeId, srcWorkspaceName, bestEffort, isShallow);
-            }
-        }, "merge(SessionInfo, NodeId, String, boolean, boolean)",
-                new Object[]{unwrap(sessionInfo), nodeId, srcWorkspaceName, bestEffort});
+                new Object[]{unwrap(sessionInfo), nodeId, srcWorkspaceName, Boolean.valueOf(bestEffort)});
     }
 
     public void resolveMergeConflict(final SessionInfo sessionInfo, final NodeId nodeId,
@@ -485,7 +452,7 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return null;
             }
         }, "addVersionLabel(SessionInfo, NodeId, NodeId, Name, boolean)",
-                new Object[]{unwrap(sessionInfo), versionHistoryId, versionId, label, moveLabel});
+                new Object[]{unwrap(sessionInfo), versionHistoryId, versionId, label, Boolean.valueOf(moveLabel)});
     }
 
     public void removeVersionLabel(final SessionInfo sessionInfo, final NodeId versionHistoryId,
@@ -500,40 +467,6 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 new Object[]{unwrap(sessionInfo), versionHistoryId, versionId, label});
     }
 
-    public NodeId createActivity(final SessionInfo sessionInfo, final String title) throws UnsupportedRepositoryOperationException, RepositoryException {
-        return (NodeId) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.createActivity(unwrap(sessionInfo), title);
-            }
-        }, "createActivity(SessionInfo, String)", new Object[]{unwrap(sessionInfo), title});
-    }
-
-    public void removeActivity(final SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        execute(new Callable() {
-            public Object call() throws RepositoryException {
-                service.removeActivity(unwrap(sessionInfo), activityId);
-                return null;
-            }
-        }, "removeActivity(SessionInfo, NodeId)",
-                new Object[]{unwrap(sessionInfo), activityId});
-    }
-
-    public Iterator mergeActivity(final SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        return (Iterator) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.mergeActivity(unwrap(sessionInfo), activityId);
-            }
-        }, "mergeActivity(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), activityId});
-    }
-
-    public NodeId createConfiguration(final SessionInfo sessionInfo, final NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        return (NodeId) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.createConfiguration(unwrap(sessionInfo), nodeId);
-            }
-        }, "createConfiguration(SessionInfo, NodeId, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
-    }
-
     public String[] getSupportedQueryLanguages(final SessionInfo sessionInfo) throws RepositoryException {
         return (String[]) execute(new Callable() {
             public Object call() throws RepositoryException {
@@ -542,26 +475,27 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getSupportedQueryLanguages(SessionInfo)", new Object[]{unwrap(sessionInfo)});
     }
 
-    public String[] checkQueryStatement(final SessionInfo sessionInfo, final String statement,
-            final String language, final Map<String, String> namespaces) throws RepositoryException {
+    public void checkQueryStatement(final SessionInfo sessionInfo, final String statement,
+            final String language, final Map namespaces) throws RepositoryException {
 
-        return (String[]) execute(new Callable() {
+        execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.checkQueryStatement(unwrap(sessionInfo), statement, language, namespaces);
+                service.checkQueryStatement(unwrap(sessionInfo), statement, language, namespaces);
+                return null;
             }
         }, "checkQueryStatement(SessionInfo, String, String, Map)",
                 new Object[]{unwrap(sessionInfo), statement, language, namespaces});
     }
 
     public QueryInfo executeQuery(final SessionInfo sessionInfo, final String statement,
-                                  final String language, final Map<String, String> namespaces, final long limit, final long offset, final Map<String, QValue> values) throws RepositoryException {
+            final String language, final Map namespaces) throws RepositoryException {
 
         return (QueryInfo) execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.executeQuery(unwrap(sessionInfo), statement, language, namespaces, limit, offset, values);
+                return service.executeQuery(unwrap(sessionInfo), statement, language, namespaces);
             }
-        }, "executeQuery(SessionInfo, String, String, Map, long, long, Map)",
-                new Object[]{unwrap(sessionInfo), statement, language, namespaces, limit, offset, values});
+        }, "executeQuery(SessionInfo, String, String, Map)",
+                new Object[]{unwrap(sessionInfo), statement, language, namespaces});
     }
 
     public EventFilter createEventFilter(final SessionInfo sessionInfo, final int eventTypes,
@@ -574,8 +508,8 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                        qnodeTypeName, noLocal);
             }
         }, "createEventFilter(SessionInfo, int, Path, boolean, String[], Name[], boolean)",
-                new Object[]{unwrap(sessionInfo), eventTypes, absPath, isDeep, uuid,
-                qnodeTypeName, noLocal});
+                new Object[]{unwrap(sessionInfo), new Integer(eventTypes), absPath, Boolean.valueOf(isDeep), uuid,
+                qnodeTypeName, Boolean.valueOf(noLocal)});
     }
 
     public Subscription createSubscription(final SessionInfo sessionInfo, final EventFilter[] filters)
@@ -593,7 +527,7 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
             throws RepositoryException, InterruptedException {
 
         final String methodName = "getEvents(Subscription, long)";
-        final Object[] args = new Object[]{subscription, timeout};
+        final Object[] args = new Object[]{subscription, new Long(timeout)};
         final InterruptedException[] ex = new InterruptedException[1];
 
         EventBundle[] result = (EventBundle[]) execute(new Callable() {
@@ -613,18 +547,6 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }
 
         return result;
-    }
-
-    public EventBundle getEvents(final SessionInfo sessionInfo,
-                                 final EventFilter filter,
-                                 final long after) throws RepositoryException,
-            UnsupportedRepositoryOperationException {
-        return (EventBundle) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.getEvents(sessionInfo, filter, after);
-            }
-        }, "getEvents(SessionInfo, EventFilter, long)",
-                new Object[]{unwrap(sessionInfo), filter, after});
     }
 
     public void updateEventFilters(final Subscription subscription, final EventFilter[] eventFilters)
@@ -648,8 +570,8 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "dispose(Subscription)", new Object[]{});
     }
 
-    public Map<String, String> getRegisteredNamespaces(final SessionInfo sessionInfo) throws RepositoryException {
-        return (Map<String, String>) execute(new Callable() {
+    public Map getRegisteredNamespaces(final SessionInfo sessionInfo) throws RepositoryException {
+        return (Map) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getRegisteredNamespaces(unwrap(sessionInfo));
             }
@@ -697,15 +619,15 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "unregisterNamespace(SessionInfo, String)", new Object[]{unwrap(sessionInfo), uri});
     }
 
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(final SessionInfo sessionInfo) throws RepositoryException {
-        return (Iterator<QNodeTypeDefinition>) execute(new Callable() {
+    public Iterator getQNodeTypeDefinitions(final SessionInfo sessionInfo) throws RepositoryException {
+        return (Iterator) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getQNodeTypeDefinitions(unwrap(sessionInfo));
             }
         }, "getQNodeTypeDefinitions(SessionInfo)", new Object[]{unwrap(sessionInfo)});
     }
 
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(final SessionInfo sessionInfo, final Name[] nodetypeNames)
+    public Iterator getQNodeTypeDefinitions(final SessionInfo sessionInfo, final Name[] nodetypeNames)
             throws RepositoryException {
 
         return (Iterator) execute(new Callable() {
@@ -713,43 +635,6 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return service.getQNodeTypeDefinitions(unwrap(sessionInfo), nodetypeNames);
             }
         }, "getQNodeTypeDefinitions(SessionInfo, Name[])", new Object[]{unwrap(sessionInfo), nodetypeNames});
-    }
-
-    public void registerNodeTypes(final SessionInfo sessionInfo, final QNodeTypeDefinition[] nodeTypeDefinitions, final boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
-        execute(new Callable() {
-            public Object call() throws RepositoryException {
-                service.registerNodeTypes(unwrap(sessionInfo), nodeTypeDefinitions, allowUpdate);
-                return null;
-            }
-        }, "registerNodeTypes(SessionInfo, QNodeTypeDefinition[], boolean)", new Object[]{unwrap(sessionInfo), nodeTypeDefinitions, allowUpdate});
-    }
-
-    public void unregisterNodeTypes(final SessionInfo sessionInfo, final Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
-        execute(new Callable() {
-            public Object call() throws RepositoryException {
-                service.unregisterNodeTypes(unwrap(sessionInfo), nodeTypeNames);
-                return null;
-            }
-        }, "unregisterNodeTypes(SessionInfo, Name[])", new Object[]{unwrap(sessionInfo), nodeTypeNames});
-    }
-
-    public void createWorkspace(final SessionInfo sessionInfo, final String name, final String srcWorkspaceName) throws RepositoryException {
-        execute(new Callable() {
-            public Object call() throws RepositoryException {
-                service.createWorkspace(unwrap(sessionInfo), name, srcWorkspaceName);
-                return null;
-            }
-        }, "createWorkspace(SessionInfo, String, String)", new Object[]{unwrap(sessionInfo), name, srcWorkspaceName});
-    }
-
-    public void deleteWorkspace(final SessionInfo sessionInfo, final String name) throws RepositoryException {
-        execute(new Callable() {
-            public Object call() throws RepositoryException {
-                service.deleteWorkspace(unwrap(sessionInfo), name);
-                return null;
-            }
-        }, "deleteWorkspace(SessionInfo, String, String)", new Object[]{unwrap(sessionInfo), name});
-
     }
 
     // -----------------------------------------------------< private  >---

@@ -16,19 +16,14 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-import javax.jcr.nodetype.PropertyDefinition;
-
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
-import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
@@ -44,20 +39,16 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      */
     private static Logger log = LoggerFactory.getLogger(PropertyDefinitionImpl.class);
 
-    private final ValueFactory valueFactory;
-
     /**
      * Package private constructor
      *
      * @param propDef    property definition
      * @param ntMgr      node type manager
      * @param resolver   name resolver
-     * @param valueFactory the value factory
      */
     PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
-                           NamePathResolver resolver, ValueFactory valueFactory) {
+                           NamePathResolver resolver) {
         super(propDef, ntMgr, resolver);
-        this.valueFactory = valueFactory;
     }
 
     /**
@@ -81,7 +72,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
         Value[] values = new Value[defVals.length];
         for (int i = 0; i < defVals.length; i++) {
             try {
-                values[i] = ValueFormat.getJCRValue(defVals[i], resolver, valueFactory);
+                values[i] = defVals[i].toJCRValue(resolver);
             } catch (RepositoryException re) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
@@ -105,19 +96,13 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public String[] getValueConstraints() {
-        QValueConstraint[] constraints = ((PropDef) itemDef).getValueConstraints();
+        ValueConstraint[] constraints = ((PropDef) itemDef).getValueConstraints();
         if (constraints == null || constraints.length == 0) {
             return new String[0];
         }
         String[] vca = new String[constraints.length];
         for (int i = 0; i < constraints.length; i++) {
-            try {
-                ValueConstraint vc = ValueConstraint.create(((PropDef) itemDef).getRequiredType(), constraints[i].getString());
-                vca[i] = vc.getDefinition(resolver);
-            } catch (InvalidConstraintException e) {
-                log.warn("Error during conversion of value constraint.", e);
-                vca[i] = constraints[i].getString();
-            }
+            vca[i] = constraints[i].getDefinition(resolver);
         }
         return vca;
     }
@@ -128,25 +113,5 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
     public boolean isMultiple() {
         return ((PropDef) itemDef).isMultiple();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String[] getAvailableQueryOperators() {
-        return ((PropDef) itemDef).getAvailableQueryOperators();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isFullTextSearchable() {
-        return ((PropDef) itemDef).isFullTextSearchable();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isQueryOrderable() {
-        return ((PropDef) itemDef).isQueryOrderable();
-    }
 }
+

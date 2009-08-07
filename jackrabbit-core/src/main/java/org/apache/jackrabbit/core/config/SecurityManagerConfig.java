@@ -28,38 +28,19 @@ package org.apache.jackrabbit.core.config;
 public class SecurityManagerConfig extends BeanConfig {
 
     private final String workspaceName;
-    private final BeanConfig workspaceAccessConfig;
-    private final BeanConfig userManagerConfig;
+    private final BeanConfig workspaceAccessConfig; 
 
     /**
      * Creates an security manager configuration object from the
      * given bean configuration.
      *
      * @param config bean configuration
-     * @param workspaceName the security workspace name
-     * @param workspaceAccessConfig the configuration for the workspace access.
      */
     public SecurityManagerConfig(BeanConfig config, String workspaceName,
                                  BeanConfig workspaceAccessConfig) {
-        this(config, workspaceName, workspaceAccessConfig, null);
-    }
-
-    /**
-     * Creates an security manager configuration object from the
-     * given bean configuration.
-     *
-     * @param config bean configuration
-     * @param workspaceName the security workspace name
-     * @param workspaceAccessConfig the configuration for the workspace access.
-     * @param userManagerConfig Configuration options for the user manager.
-     */
-    public SecurityManagerConfig(BeanConfig config, String workspaceName,
-                                 BeanConfig workspaceAccessConfig,
-                                 BeanConfig userManagerConfig) {
         super(config);
         this.workspaceName = workspaceName;
         this.workspaceAccessConfig = workspaceAccessConfig;
-        this.userManagerConfig = userManagerConfig;
     }
 
     /**
@@ -79,14 +60,5 @@ public class SecurityManagerConfig extends BeanConfig {
      */
     public BeanConfig getWorkspaceAccessConfig() {
         return workspaceAccessConfig;
-    }
-
-    /**
-     * @return the configuration for the user manager.
-     * May be <code>null</code> if the configuration entry is missing (i.e.
-     * the system default should be used).
-     */
-    public BeanConfig getUserManagerConfig() {
-        return userManagerConfig;
     }
 }

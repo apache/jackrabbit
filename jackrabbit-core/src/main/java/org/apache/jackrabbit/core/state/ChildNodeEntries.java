@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.state;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.collections.MapIterator;
 import org.apache.commons.collections.OrderedMapIterator;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.util.EmptyLinkedMap;
 import org.apache.jackrabbit.spi.Name;
 
@@ -40,7 +40,7 @@ import java.util.Map;
  * <code>ChildNodeEntries</code> also provides an unmodifiable
  * <code>List</code> view.
  */
-class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
+class ChildNodeEntries implements List, Cloneable {
 
     /**
      * Insertion-ordered map of entries
@@ -52,7 +52,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
      * Map used for lookup by name
      * (key=name, value=either a single entry or a list of sns entries)
      */
-    private Map<Name, Object> nameMap;
+    private Map nameMap;
 
     /**
      * Indicates whether the entries and nameMap are shared with another
@@ -68,17 +68,17 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return (ChildNodeEntry) entries.get(id);
     }
 
-    List<ChildNodeEntry> get(Name nodeName) {
+    List get(Name nodeName) {
         Object obj = nameMap.get(nodeName);
         if (obj == null) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
-        if (obj instanceof ArrayList<?>) {
+        if (obj instanceof ArrayList) {
             // map entry is a list of siblings
-            return Collections.unmodifiableList((ArrayList<ChildNodeEntry>) obj);
+            return Collections.unmodifiableList((ArrayList) obj);
         } else {
             // map entry is a single child node entry
-            return Collections.singletonList((ChildNodeEntry) obj);
+            return Collections.singletonList(obj);
         }
     }
 
@@ -91,11 +91,11 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         if (obj == null) {
             return null;
         }
-        if (obj instanceof ArrayList<?>) {
+        if (obj instanceof ArrayList) {
             // map entry is a list of siblings
-            ArrayList<ChildNodeEntry> siblings = (ArrayList<ChildNodeEntry>) obj;
+            ArrayList siblings = (ArrayList) obj;
             if (index <= siblings.size()) {
-                return siblings.get(index - 1);
+                return (ChildNodeEntry) siblings.get(index - 1);
             }
         } else {
             // map entry is a single child node entry
@@ -108,13 +108,13 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
 
     ChildNodeEntry add(Name nodeName, NodeId id) {
         ensureModifiable();
-        List<Object> siblings = null;
+        List siblings = null;
         int index = 0;
         Object obj = nameMap.get(nodeName);
         if (obj != null) {
-            if (obj instanceof ArrayList<?>) {
+            if (obj instanceof ArrayList) {
                 // map entry is a list of siblings
-                siblings = (ArrayList<Object>) obj;
+                siblings = (ArrayList) obj;
                 if (siblings.size() > 0) {
                     // reuse immutable Name instance from 1st same name sibling
                     // in order to help gc conserving memory
@@ -123,7 +123,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
             } else {
                 // map entry is a single child node entry,
                 // convert to siblings list
-                siblings = new ArrayList<Object>();
+                siblings = new ArrayList();
                 siblings.add(obj);
                 nameMap.put(nodeName, siblings);
             }
@@ -143,8 +143,10 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return entry;
     }
 
-    void addAll(List<ChildNodeEntry> entriesList) {
-        for (ChildNodeEntry entry : entriesList) {
+    void addAll(List entriesList) {
+        Iterator iter = entriesList.iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             // delegate to add(Name, String) to maintain consistency
             add(entry.getName(), entry.getId());
         }
@@ -173,19 +175,19 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         }
 
         // map entry is a list of siblings
-        List<ChildNodeEntry> siblings = (ArrayList<ChildNodeEntry>) obj;
+        List siblings = (ArrayList) obj;
         if (index > siblings.size()) {
             return null;
         }
 
         // remove from siblings list
-        ChildNodeEntry removedEntry = siblings.remove(index - 1);
+        ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
         // remove from ordered entries map
         entries.remove(removedEntry.getId());
 
         // update indices of subsequent same-name siblings
         for (int i = index - 1; i < siblings.size(); i++) {
-            ChildNodeEntry oldEntry = siblings.get(i);
+            ChildNodeEntry oldEntry = (ChildNodeEntry) siblings.get(i);
             ChildNodeEntry newEntry = new ChildNodeEntry(nodeName, oldEntry.getId(), oldEntry.getIndex() - 1);
             // overwrite old entry with updated entry in siblings list
             siblings.set(i, newEntry);
@@ -252,16 +254,18 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
      * @return a new list of those entries that do only exist in
      *         <code>this</code> but not in <code>other</code>
      */
-    List<ChildNodeEntry> removeAll(ChildNodeEntries other) {
+    List removeAll(ChildNodeEntries other) {
         if (entries.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
         if (other.isEmpty()) {
             return this;
         }
 
-        List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (ChildNodeEntry entry : this) {
+        List result = new ArrayList();
+        Iterator iter = iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 continue;
@@ -271,6 +275,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
                 result.add(entry);
             }
         }
+
         return result;
     }
 
@@ -287,14 +292,16 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
      * @return a new list of those entries that do exist in
      *         <code>this</code> <i>and</i> in <code>other</code>
      */
-    List<ChildNodeEntry> retainAll(ChildNodeEntries other) {
+    List retainAll(ChildNodeEntries other) {
         if (entries.isEmpty()
                 || other.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
 
-        List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (ChildNodeEntry entry : this) {
+        List result = new ArrayList();
+        Iterator iter = iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 result.add(entry);
@@ -303,6 +310,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
                 result.add(entry);
             }
         }
+
         return result;
     }
 
@@ -325,8 +333,8 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return true;
     }
 
-    public ChildNodeEntry get(int index) {
-        return (ChildNodeEntry) entries.getValue(index);
+    public Object get(int index) {
+        return entries.getValue(index);
     }
 
     public int indexOf(Object o) {
@@ -346,19 +354,19 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return indexOf(o);
     }
 
-    public Iterator<ChildNodeEntry> iterator() {
+    public Iterator iterator() {
         return new EntriesIterator();
     }
 
-    public ListIterator<ChildNodeEntry> listIterator() {
+    public ListIterator listIterator() {
         return new EntriesIterator();
     }
 
-    public ListIterator<ChildNodeEntry> listIterator(int index) {
+    public ListIterator listIterator(int index) {
         if (index < 0 || index >= entries.size()) {
             throw new IndexOutOfBoundsException();
         }
-        ListIterator<ChildNodeEntry> iter = new EntriesIterator();
+        ListIterator iter = new EntriesIterator();
         while (index-- > 0) {
             iter.next();
         }
@@ -369,9 +377,9 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return entries.size();
     }
 
-    public List<ChildNodeEntry> subList(int fromIndex, int toIndex) {
+    public List subList(int fromIndex, int toIndex) {
         // @todo FIXME does not fulfill the contract of List.subList(int,int)
-        return Collections.unmodifiableList(new ArrayList<ChildNodeEntry>(this).subList(fromIndex, toIndex));
+        return Collections.unmodifiableList(new ArrayList(this).subList(fromIndex, toIndex));
     }
 
     public Object[] toArray() {
@@ -399,11 +407,11 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return a;
     }
 
-    public void add(int index, ChildNodeEntry element) {
+    public void add(int index, Object element) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean add(ChildNodeEntry o) {
+    public boolean add(Object o) {
         throw new UnsupportedOperationException();
     }
 
@@ -419,7 +427,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         throw new UnsupportedOperationException();
     }
 
-    public ChildNodeEntry remove(int index) {
+    public Object remove(int index) {
         throw new UnsupportedOperationException();
     }
 
@@ -435,7 +443,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         throw new UnsupportedOperationException();
     }
 
-    public ChildNodeEntry set(int index, ChildNodeEntry element) {
+    public Object set(int index, Object element) {
         throw new UnsupportedOperationException();
     }
 
@@ -503,11 +511,11 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
      */
     private void ensureModifiable() {
         if (nameMap == Collections.EMPTY_MAP) {
-            nameMap = new HashMap<Name, Object>();
+            nameMap = new HashMap();
             entries = new LinkedMap();
         } else if (shared) {
             entries = (LinkedMap) entries.clone();
-            nameMap = (Map<Name, Object>) ((HashMap<Name, Object>) nameMap).clone();
+            nameMap = (Map) ((HashMap) nameMap).clone();
             for (Iterator it = nameMap.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry entry = (Map.Entry) it.next();
                 Object value = entry.getValue();
@@ -520,7 +528,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
     }
 
     //--------------------------------------------------------< inner classes >
-    class EntriesIterator implements ListIterator<ChildNodeEntry> {
+    class EntriesIterator implements ListIterator {
 
         private final OrderedMapIterator mapIter;
 
@@ -532,9 +540,9 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
             return mapIter.hasNext();
         }
 
-        public ChildNodeEntry next() {
+        public Object next() {
             mapIter.next();
-            return (ChildNodeEntry) mapIter.getValue();
+            return mapIter.getValue();
         }
 
         public boolean hasPrevious() {
@@ -545,16 +553,16 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
             return entries.indexOf(mapIter.getKey()) + 1;
         }
 
-        public ChildNodeEntry previous() {
+        public Object previous() {
             mapIter.previous();
-            return (ChildNodeEntry) mapIter.getValue();
+            return mapIter.getValue();
         }
 
         public int previousIndex() {
             return entries.indexOf(mapIter.getKey()) - 1;
         }
 
-        public void add(ChildNodeEntry o) {
+        public void add(Object o) {
             throw new UnsupportedOperationException();
         }
 
@@ -562,7 +570,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
             throw new UnsupportedOperationException();
         }
 
-        public void set(ChildNodeEntry o) {
+        public void set(Object o) {
             throw new UnsupportedOperationException();
         }
     }

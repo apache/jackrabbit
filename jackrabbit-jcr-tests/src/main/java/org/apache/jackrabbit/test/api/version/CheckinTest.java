@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.InvalidItemStateException;
@@ -37,9 +36,7 @@ public class CheckinTest extends AbstractVersionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkout(path);
+        versionableNode.checkout();
     }
 
     /**
@@ -50,19 +47,6 @@ public class CheckinTest extends AbstractVersionTest {
     public void testIsCheckedOut() throws RepositoryException {
         versionableNode.checkin();
         assertTrue("After calling Node.checkin() on a versionable node N, N.isCheckedOut() must return false", versionableNode.isCheckedOut() == false);
-    }
-
-    /**
-     * Test if VersionManager.isCheckedOut(P) returns false if P is the
-     * absolute path of a checked-in versionable node.
-     *
-     * @throws javax.jcr.RepositoryException
-     */
-    public void testIsCheckedOutJcr2() throws RepositoryException {
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkin(path);
-        assertTrue("VersionManager.isCheckedOut(P) must return false if the path P resolves to a checked-in node.", versionManager.isCheckedOut(path) == false);
     }
 
     /**
@@ -80,22 +64,6 @@ public class CheckinTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if the node's jcr:predecessors property contains an empty value array
-     * after checkin.
-     *
-     * @throws RepositoryException
-     */
-    public void testCheckinRemovesPredecessorPropertyJcr2() throws RepositoryException {
-
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkin(path);
-        Value[] predecessorsValue = versionableNode.getProperty(jcrPredecessors).getValues();
-
-        assertTrue("Checkin must set the node's jcr:predecessors property to the empty array", predecessorsValue.length == 0);
-    }
-
-    /**
      * Test if the nodes jcr:predecessors property is copied to the new version
      * on Node.checkin().
      *
@@ -106,24 +74,6 @@ public class CheckinTest extends AbstractVersionTest {
         Value[] nPredecessorsValue = versionableNode.getProperty(jcrPredecessors).getValues();
 
         Version v = versionableNode.checkin();
-        Value[] vPredecessorsValue = v.getProperty(jcrPredecessors).getValues();
-
-        assertEquals("The versionable checked-out node's jcr:predecessors property is copied to the new version on checkin.", Arrays.asList(nPredecessorsValue), Arrays.asList(vPredecessorsValue));
-    }
-
-    /**
-     * Test if the nodes jcr:predecessors property is copied to the new version
-     * on checkin.
-     *
-     * @throws RepositoryException
-     */
-    public void testPredecessorIsCopiedToNewVersionJcr2() throws RepositoryException {
-
-        Value[] nPredecessorsValue = versionableNode.getProperty(jcrPredecessors).getValues();
-
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        Version v = versionManager.checkin(path);
         Value[] vPredecessorsValue = v.getProperty(jcrPredecessors).getValues();
 
         assertEquals("The versionable checked-out node's jcr:predecessors property is copied to the new version on checkin.", Arrays.asList(nPredecessorsValue), Arrays.asList(vPredecessorsValue));
@@ -147,26 +97,6 @@ public class CheckinTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if VersionManager.checkin(P) has no effect if the path P resolves
-     * to a checked-in node.
-     *
-     * @throws RepositoryException
-     */
-    public void testMultipleCheckinHasNoEffectJcr2() throws RepositoryException {
-
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        Version v = versionManager.checkin(path);
-        try {
-            Version v2 = versionManager.checkin(path);
-
-            assertTrue("Calling VersionManager.checkin(P) must not have an if the path P resolves to a node that is already checked-in.", v.isSame(v2));
-        } catch (RepositoryException e) {
-            fail("Calling VersionManager.checkin(P) must not throw an exception if the path P resolves to a node that is already checked-in.");
-        }
-    }
-
-    /**
      * Test if versionable node N's jcr:baseVersion property is set to refer to
      * the new version after checkin.
      *
@@ -174,21 +104,6 @@ public class CheckinTest extends AbstractVersionTest {
      */
     public void testBaseVersionAfterCheckin() throws RepositoryException {
         Version v = versionableNode.checkin();
-        Value baseVersionRef = versionableNode.getProperty(jcrBaseVersion).getValue();
-
-        assertEquals("Checked-in node's jcr:baseVersion property is set to refer to the version created on checkin.", superuser.getValueFactory().createValue(v), baseVersionRef);
-    }
-
-    /**
-     * Test if versionable node N's jcr:baseVersion property is set to refer to
-     * the new version after checkin.
-     *
-     * @throws RepositoryException
-     */
-    public void testBaseVersionAfterCheckinJcr2() throws RepositoryException {
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        Version v = versionManager.checkin(path);
         Value baseVersionRef = versionableNode.getProperty(jcrBaseVersion).getValue();
 
         assertEquals("Checked-in node's jcr:baseVersion property is set to refer to the version created on checkin.", superuser.getValueFactory().createValue(v), baseVersionRef);
@@ -213,26 +128,6 @@ public class CheckinTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if VersionManager.checkin(P) throws InvalidItemStateException if
-     * the path P resolves to a node that has unsaved changes pending.
-     *
-     * @throws RepositoryException
-     */
-    public void testCheckinWithPendingChangesJcr2() throws RepositoryException {
-        try {
-            // modify node without calling save()
-            versionableNode.setProperty(propertyName1, propertyValue);
-            VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-            String path = versionableNode.getPath();
-            versionManager.checkin(path);
-
-            fail("InvalidItemStateException must be thrown on attempt to checkin a node having any unsaved changes pending.");
-        } catch (InvalidItemStateException e) {
-            // ok
-        }
-    }
-
-    /**
      * Test if Node.isCheckedOut() returns false after Node.checkin().
      *
      * @throws RepositoryException
@@ -242,20 +137,6 @@ public class CheckinTest extends AbstractVersionTest {
         boolean isCheckedOut = versionableNode.isCheckedOut();
 
         assertFalse("Node.isCheckedOut() must return false after Node.checkin().", isCheckedOut);
-    }
-
-    /**
-     * Test if VersionManager.isCheckedOut(P) returns false after calling VersionManager.checkin(P).
-     *
-     * @throws RepositoryException
-     */
-    public void testIsNotCheckedOutJcr2() throws RepositoryException {
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkin(path);
-        boolean isCheckedOut = versionManager.isCheckedOut(path);
-
-        assertFalse("VersionManager.isCheckedOut(P) must return false after VersionManager.checkin(P).", isCheckedOut);
     }
 
     /**
@@ -273,22 +154,6 @@ public class CheckinTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if VersionManager.checkin(String) adds another version to the VersionHistory
-     *
-     * @throws RepositoryException
-     */
-    public void testCheckinCreatesNewVersionJcr2() throws RepositoryException {
-
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        long initialNumberOfVersions = getNumberOfVersions(versionManager.getVersionHistory(path));
-        versionManager.checkin(path);
-        long numberOfVersions = getNumberOfVersions(versionManager.getVersionHistory(path));
-
-        assertTrue("Checkin must create a new Version in the VersionHistory.", numberOfVersions == initialNumberOfVersions + 1);
-    }
-
-    /**
      * Test calling Node.checkin() on a non-versionable node.
      *
      * @throws RepositoryException
@@ -297,23 +162,6 @@ public class CheckinTest extends AbstractVersionTest {
         try {
             nonVersionableNode.checkin();
             fail("Node.checkin() on a non versionable node must throw UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException e) {
-            //success
-        }
-    }
-
-    /**
-     * Test calling VersionManager.checkin(P) with the path P resolving to
-     * a non-versionable node.
-     *
-     * @throws RepositoryException
-     */
-    public void testCheckinNonVersionableNodeJcr2() throws RepositoryException {
-        try {
-            VersionManager versionManager = nonVersionableNode.getSession().getWorkspace().getVersionManager();
-            String path = nonVersionableNode.getPath();
-            versionManager.checkin(path);
-            fail("VersionManager.checkin(P) must throw UnsupportedRepositoryOperationException if the path P resolves to a non-versionable node.");
         } catch (UnsupportedRepositoryOperationException e) {
             //success
         }

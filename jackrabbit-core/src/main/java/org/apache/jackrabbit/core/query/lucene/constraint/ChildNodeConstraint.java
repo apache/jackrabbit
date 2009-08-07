@@ -41,7 +41,7 @@ public class ChildNodeConstraint extends HierarchyConstraint {
      */
     public ChildNodeConstraint(ChildNodeImpl constraint,
                                SelectorImpl selector) {
-        super(constraint.getParentPath(), selector);
+        super(constraint.getPath(), selector);
     }
 
     /**

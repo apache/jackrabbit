@@ -21,10 +21,8 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.w3c.dom.Element;
@@ -35,8 +33,6 @@ import javax.jcr.Value;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * This class implements the <code>QPropertyDefinition</code> interface and additionally
@@ -52,7 +48,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * The value constraints.
      */
-    private final QValueConstraint[] valueConstraints;
+    private final String[] valueConstraints;
 
     /**
      * The default values.
@@ -63,10 +59,6 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      * The 'multiple' flag
      */
     private final boolean multiple;
-
-    private final String[] availableQueryOperators;
-    private final boolean fullTextSearcheable;
-    private final boolean queryOrderable;
 
     /**
      * Default constructor.
@@ -88,17 +80,6 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             multiple = Boolean.valueOf(pdefElement.getAttribute(MULTIPLE_ATTRIBUTE)).booleanValue();
         } else {
             multiple = false;
-        }
-
-        if (pdefElement.hasAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE)) {
-            fullTextSearcheable = Boolean.valueOf(pdefElement.getAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE)).booleanValue();
-        } else {
-            fullTextSearcheable = false;
-        }
-        if (pdefElement.hasAttribute(QUERY_ORDERABLE_ATTRIBUTE)) {
-            queryOrderable = Boolean.valueOf(pdefElement.getAttribute(QUERY_ORDERABLE_ATTRIBUTE)).booleanValue();
-        } else {
-            queryOrderable = false;
         }
 
         Element child = DomUtil.getChildElement(pdefElement, DEFAULTVALUES_ELEMENT, null);
@@ -128,31 +109,21 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
 
         child = DomUtil.getChildElement(pdefElement, VALUECONSTRAINTS_ELEMENT, null);
         if (child == null) {
-            valueConstraints = QValueConstraint.EMPTY_ARRAY;
+            valueConstraints = new String[0];
         } else {
-            List<QValueConstraint> vc = new ArrayList<QValueConstraint>();
+            List vc = new ArrayList();
             ElementIterator it = DomUtil.getChildren(child, VALUECONSTRAINT_ELEMENT, null);
             while (it.hasNext()) {
+                int constType = (requiredType == PropertyType.REFERENCE) ?  PropertyType.NAME : requiredType;
                 String qValue = DomUtil.getText(it.nextElement());
                 // in case of name and path constraint, the value must be
-                // converted to SPI values
-                // TODO: tobefixed. path-constraint may contain trailing *
-                vc.add(ValueConstraint.create(requiredType, qValue, resolver));
+                // converted to be in qualified format
+                if (constType == PropertyType.NAME || constType == PropertyType.PATH) {
+                   qValue = ValueFormat.getQValue(qValue, constType, resolver, qValueFactory).getString();
+                }
+                vc.add(qValue);
             }
-            valueConstraints = vc.toArray(new QValueConstraint[vc.size()]);
-        }
-
-        child = DomUtil.getChildElement(pdefElement, AVAILABLE_QUERY_OPERATORS_ELEMENT, null);
-        if (child == null) {
-            availableQueryOperators = new String[0];
-        } else {
-            List<String> names = new ArrayList<String>();
-            ElementIterator it = DomUtil.getChildren(child, AVAILABLE_QUERY_OPERATOR_ELEMENT, null);
-            while (it.hasNext()) {
-                String str = DomUtil.getText(it.nextElement());
-                names.add(str);
-            }
-            availableQueryOperators = names.toArray(new String[names.size()]);
+            valueConstraints = (String[]) vc.toArray(new String[vc.size()]);
         }
     }
     
@@ -167,7 +138,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * {@inheritDoc}
      */
-    public QValueConstraint[] getValueConstraints() {
+    public String[] getValueConstraints() {
         return valueConstraints;
     }
 
@@ -183,27 +154,6 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      */
     public boolean isMultiple() {
         return multiple;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String[] getAvailableQueryOperators() {
-        return availableQueryOperators;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isFullTextSearchable() {
-        return fullTextSearcheable;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isQueryOrderable() {
-        return queryOrderable;
     }
 
     /**
@@ -234,19 +184,16 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             QPropertyDefinition other = (QPropertyDefinition) obj;
             return super.equals(obj)
                     && requiredType == other.getRequiredType()
-                    && multiple == other.isMultiple()
-                    && fullTextSearcheable == other.isFullTextSearchable()
-                    && queryOrderable == other.isQueryOrderable()
                     && Arrays.equals(valueConstraints, other.getValueConstraints())
                     && Arrays.equals(defaultValues, other.getDefaultValues())
-                    && Arrays.equals(availableQueryOperators, other.getAvailableQueryOperators());
+                    && multiple == other.isMultiple();
         }
         return false;
     }
 
     /**
      * Overwrites {@link QItemDefinitionImpl#hashCode()}.
-     *
+     * 
      * @return
      */
     public int hashCode() {
@@ -262,19 +209,9 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                 sb.append(getName().toString());
             }
             sb.append('/');
-            sb.append(requiredType);
+            sb.append(getRequiredType());
             sb.append('/');
-            sb.append(multiple ? 1 : 0);
-            sb.append('/');
-            sb.append(fullTextSearcheable ? 1 : 0);
-            sb.append('/');
-            sb.append(queryOrderable ? 1 : 0);
-            sb.append('/');
-            Set s = new HashSet(availableQueryOperators.length);
-            for (int i = 0; i < availableQueryOperators.length; i++) {
-                s.add(availableQueryOperators[i]);
-            }
-            sb.append(s.toString());
+            sb.append(isMultiple() ? 1 : 0);
 
             hashCode = sb.toString().hashCode();
         }

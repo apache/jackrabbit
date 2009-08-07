@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.id.NodeId;
-import javax.jcr.version.Version;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.api.jsr283.version.Version;
 
 import java.util.Calendar;
 

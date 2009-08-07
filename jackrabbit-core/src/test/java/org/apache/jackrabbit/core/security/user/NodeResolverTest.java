@@ -48,7 +48,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
         nodeResolver = createNodeResolver(superuser);
     }
 
-    protected static UserImpl getCurrentUser(Session session) throws NotExecutableException, RepositoryException {
+    private static UserImpl getCurrentUser(Session session) throws NotExecutableException, RepositoryException {
         if (!(session instanceof JackrabbitSession)) {
             throw new NotExecutableException();
         }
@@ -186,12 +186,11 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
             NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
 
             NodeIterator result = nr.findNodes(propName, "blub", UserConstants.NT_REP_USER, false);
-            assertTrue("expected result", result.hasNext());
-            assertEquals(currentUser.getNode().getPath(), result.nextNode().getPath());
-            assertFalse("expected no more results", result.hasNext());
+            assertTrue(result.getSize() == 1);
+            assertTrue(result.nextNode().isSame(currentUser.getNode()));
 
             result = nr.findNodes(propName, "blub", UserConstants.NT_REP_AUTHORIZABLE, false);
-            assertTrue(getSize(result) > 1);
+            assertTrue(result.getSize() > 1);
 
         } finally {
             currentUser.removeProperty(propertyName1);
@@ -205,7 +204,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
 
     public void testFindNodesWithNonExistingSearchRoot() throws NotExecutableException, RepositoryException {
         String searchRoot = nodeResolver.getSearchRoot(UserConstants.NT_REP_AUTHORIZABLE);
-        if (superuser.nodeExists(searchRoot)) {
+        if (((SessionImpl) superuser).nodeExists(searchRoot)) {
             throw new NotExecutableException();
         }
 

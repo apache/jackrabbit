@@ -19,17 +19,15 @@ package org.apache.jackrabbit.spi.commons;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
- * <code>QPropertyDefinitionImpl</code> implements SPI property
- * definition interface.
+ * <code>QPropertyDefinitionImpl</code> implements a qualified property
+ * definition.
  */
-public class QPropertyDefinitionImpl extends QItemDefinitionImpl
+public class QPropertyDefinitionImpl
+        extends QItemDefinitionImpl
         implements QPropertyDefinition {
 
     /**
@@ -40,7 +38,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
     /**
      * The value constraints.
      */
-    private final QValueConstraint[] valueConstraints;
+    private final String[] valueConstraints;
 
     /**
      * The default values.
@@ -53,21 +51,6 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
     private final boolean multiple;
 
     /**
-     * The available query operators
-     */
-    private final String[] availableQueryOperators;
-
-    /**
-     * The 'fullTextSearcheable' flag
-     */
-    private final boolean fullTextSearchable;
-
-    /**
-     * The 'queryOrderable' flag
-     */
-    private final boolean queryOrderable;
-
-    /**
      * Copy constructor.
      *
      * @param propDef some other property definition.
@@ -77,14 +60,11 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
                 propDef.isAutoCreated(), propDef.isMandatory(),
                 propDef.getOnParentVersion(), propDef.isProtected(),
                 propDef.getDefaultValues(), propDef.isMultiple(),
-                propDef.getRequiredType(), propDef.getValueConstraints(),
-                propDef.getAvailableQueryOperators(),
-                propDef.isFullTextSearchable(),
-                propDef.isQueryOrderable());
+                propDef.getRequiredType(), propDef.getValueConstraints());
     }
 
     /**
-     * Creates a new serializable property definition.
+     * Creates a new serializable qualified property definition.
      *
      * @param name              the name of the child item.
      * @param declaringNodeType the delaring node type
@@ -98,22 +78,14 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
      * @param requiredType      the required type for this property.
      * @param valueConstraints  the value constraints for this property. If none
      *                          exist an empty array must be passed.
-     * @param availableQueryOperators the available query operators
-     * @param isFullTextSearchable if this is fulltext searchable
-     * @param isQueryOrderable   if this is queryable
      * @throws NullPointerException if <code>valueConstraints</code> is
      *                              <code>null</code>.
-     * @since JCR 2.0
      */
     public QPropertyDefinitionImpl(Name name, Name declaringNodeType,
                                    boolean isAutoCreated, boolean isMandatory,
                                    int onParentVersion, boolean isProtected,
                                    QValue[] defaultValues, boolean isMultiple,
-                                   int requiredType,
-                                   QValueConstraint[] valueConstraints,
-                                   String[] availableQueryOperators,
-                                   boolean isFullTextSearchable,
-                                   boolean isQueryOrderable) {
+                                   int requiredType, String[] valueConstraints) {
         super(name, declaringNodeType, isAutoCreated, isMandatory,
                 onParentVersion, isProtected);
         if (valueConstraints == null) {
@@ -123,9 +95,6 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         this.multiple = isMultiple;
         this.requiredType = requiredType;
         this.valueConstraints = valueConstraints;
-        this.availableQueryOperators = availableQueryOperators;
-        this.fullTextSearchable = isFullTextSearchable;
-        this.queryOrderable = isQueryOrderable;
     }
 
     //------------------------------------------------< QPropertyDefinition >---
@@ -139,7 +108,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
     /**
      * {@inheritDoc}
      */
-    public QValueConstraint[] getValueConstraints() {
+    public String[] getValueConstraints() {
         return valueConstraints;
     }
 
@@ -155,27 +124,6 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
      */
     public boolean isMultiple() {
         return multiple;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String[] getAvailableQueryOperators() {
-        return availableQueryOperators;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isFullTextSearchable() {
-        return fullTextSearchable;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isQueryOrderable() {
-        return queryOrderable;
     }
 
     /**
@@ -206,12 +154,9 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
             QPropertyDefinition other = (QPropertyDefinition) obj;
             return super.equals(obj)
                     && requiredType == other.getRequiredType()
-                    && multiple == other.isMultiple()
-                    && fullTextSearchable == other.isFullTextSearchable()
-                    && queryOrderable == other.isQueryOrderable()
                     && Arrays.equals(valueConstraints, other.getValueConstraints())
                     && Arrays.equals(defaultValues, other.getDefaultValues())
-                    && Arrays.equals(availableQueryOperators, other.getAvailableQueryOperators());
+                    && multiple == other.isMultiple();
         }
         return false;
     }
@@ -219,7 +164,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
     /**
      * Overwrites {@link QItemDefinitionImpl#hashCode()}.
      *
-     * @return the hashcode
+     * @return
      */
     public int hashCode() {
         if (hashCode == 0) {
@@ -234,18 +179,9 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
                 sb.append(getName().toString());
             }
             sb.append('/');
-            sb.append(requiredType);
+            sb.append(getRequiredType());
             sb.append('/');
-            sb.append(multiple ? 1 : 0);
-            sb.append('/');
-            sb.append(fullTextSearchable ? 1 : 0);
-            sb.append('/');
-            sb.append(queryOrderable ? 1 : 0);
-            sb.append('/');
-            Set<String> s = new HashSet<String>();
-            String[] names = getAvailableQueryOperators();
-            s.addAll(Arrays.asList(names));
-            sb.append(s.toString());
+            sb.append(isMultiple() ? 1 : 0);
 
             hashCode = sb.toString().hashCode();
         }

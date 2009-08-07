@@ -22,7 +22,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
-import java.math.BigDecimal;
 
 /**
  * A <code>DateValue</code> provides an implementation
@@ -135,6 +134,8 @@ public class DateValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (date != null) {
             return (Calendar) date.clone();
         } else {
@@ -148,6 +149,8 @@ public class DateValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (date != null) {
             return date.getTimeInMillis();
         } else {
@@ -161,6 +164,8 @@ public class DateValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (date != null) {
             throw new ValueFormatException("cannot convert date to boolean");
         } else {
@@ -174,25 +179,14 @@ public class DateValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (date != null) {
             long ms = date.getTimeInMillis();
             if (ms <= Double.MAX_VALUE) {
                 return ms;
             }
             throw new ValueFormatException("conversion from date to double failed: inconvertible types");
-        } else {
-            throw new ValueFormatException("empty value");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        if (date != null) {
-            return new BigDecimal(date.getTimeInMillis());
         } else {
             throw new ValueFormatException("empty value");
         }

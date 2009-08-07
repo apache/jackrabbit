@@ -163,12 +163,12 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
         /**
          * The matching terms
          */
-        private final Map<Term, Integer> orderedTerms = new LinkedHashMap<Term, Integer>();
+        private final Map orderedTerms = new LinkedHashMap();
 
         /**
          * Iterator over all matching terms
          */
-        private final Iterator<Term> it;
+        private final Iterator it;
 
         public LowerUpperCaseTermEnum(IndexReader reader,
                                       String field,
@@ -191,7 +191,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
 
             if (!neverMatches) {
                 // create range scans
-                List<RangeScan> rangeScans = new ArrayList<RangeScan>(2);
+                List rangeScans = new ArrayList(2);
                 try {
                     int idx = 0;
                     while (idx < pattern.length()
@@ -228,13 +228,14 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
                     }
 
                     // do range scans with pattern matcher
-                    for (RangeScan scan : rangeScans) {
+                    for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                        RangeScan scan = (RangeScan) it.next();
                         do {
                             Term t = scan.term();
                             if (t != null) {
                                 input.setBase(t.text());
                                 if (WildcardTermEnum.this.pattern.reset().matches()) {
-                                    orderedTerms.put(t, scan.docFreq());
+                                    orderedTerms.put(t, new Integer(scan.docFreq()));
                                 }
                             }
                         } while (scan.next());
@@ -242,7 +243,9 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
 
                 } finally {
                     // close range scans
-                    for (RangeScan scan : rangeScans) {
+                    Iterator it = rangeScans.iterator();
+                    while (it.hasNext()) {
+                        RangeScan scan = (RangeScan) it.next();
                         try {
                             scan.close();
                         } catch (IOException e) {
@@ -280,8 +283,8 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
          * {@inheritDoc}
          */
         public int docFreq() {
-            Integer docFreq = orderedTerms.get(current);
-            return docFreq != null ? docFreq : 0;
+            Integer docFreq = (Integer) orderedTerms.get(current);
+            return docFreq != null ? docFreq.intValue() : 0;
         }
 
         /**
@@ -296,7 +299,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
          * <code>null</code> if there is no next.
          */
         private void getNext() {
-            current = it.hasNext() ? it.next() : null;
+            current = it.hasNext() ? (Term) it.next() : null;
         }
     }
 }

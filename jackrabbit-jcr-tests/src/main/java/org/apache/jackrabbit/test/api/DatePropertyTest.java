@@ -146,15 +146,17 @@ public class DatePropertyTest extends AbstractPropertyTest {
         }
         try {
             val.getDate();
-        } catch (IllegalStateException ise) {
             fail("Non stream method call after stream method call " +
-                    "should not throw an IllegalStateException.");
+                    "should throw an IllegalStateException.");
+        } catch (IllegalStateException ise) {
+            //ok
         }
         try {
             ins = otherVal.getStream();
-        } catch (IllegalStateException ise) {
             fail("Stream method call after a non stream method call " +
-                    "should not throw an IllegalStateException.");
+                    "should throw an IllegalStateException.");
+        } catch (IllegalStateException ise) {
+            // ok
         } finally {
             if (in != null) {
                 in.close();
@@ -177,13 +179,13 @@ public class DatePropertyTest extends AbstractPropertyTest {
 
 
     /**
-     * Tests failure of conversion from Date type to Reference or Path type.
+     * Tests failure of conversion from Date type to Reference type.
      */
-    public void testGetNode() throws RepositoryException {
+    public void testAsReference() throws RepositoryException {
         if (!multiple) {
             try {
                 prop.getNode();
-                fail("Conversion from a Date value to a Reference or Path value " +
+                fail("Conversion from a Date value to a Reference value " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
                 //ok
@@ -192,29 +194,6 @@ public class DatePropertyTest extends AbstractPropertyTest {
             try {
                 prop.getNode();
                 fail("Property.getNode() called on a multivalue property " +
-                        "should throw a ValueFormatException.");
-            } catch (ValueFormatException vfe) {
-                // ok
-            }
-        }
-    }
-
-    /**
-     * Tests failure of conversion from Date type to Path type.
-     */
-    public void testGetProperty() throws RepositoryException {
-        if (!multiple) {
-            try {
-                prop.getProperty();
-                fail("Conversion from a Date value to a Path value " +
-                        "should throw a ValueFormatException.");
-            } catch (ValueFormatException vfe) {
-                //ok
-            }
-        } else {
-            try {
-                prop.getProperty();
-                fail("Property.getProperty() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
                 // ok

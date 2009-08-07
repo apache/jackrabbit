@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.AbstractVersionManagementTest;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.Privilege;
+import javax.jcr.Node;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemNotFoundException;
 import java.security.Principal;
 import java.util.Map;
 

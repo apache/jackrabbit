@@ -17,22 +17,17 @@
 package org.apache.jackrabbit.core;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -41,6 +36,9 @@ import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>HierarchyManagerImpl</code> ...
@@ -188,7 +186,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @return set of parent <code>NodeId</code>s. If state has no parent,
      *         array has length <code>0</code>.
      */
-    protected Set<NodeId> getParentIds(ItemState state, boolean useOverlayed) {
+    protected Set getParentIds(ItemState state, boolean useOverlayed) {
         if (state.isNode()) {
             // if this is a node, quickly check whether it is shareable and
             // whether it contains more than one parent
@@ -196,18 +194,18 @@ public class HierarchyManagerImpl implements HierarchyManager {
             if (ns.isShareable() && useOverlayed && ns.hasOverlayedState()) {
                 ns = (NodeState) ns.getOverlayedState();
             }
-            Set<NodeId> s = ns.getSharedSet();
+            Set s = ns.getSharedSet();
             if (s.size() > 1) {
                 return s;
             }
         }
         NodeId parentId = getParentId(state);
         if (parentId != null) {
-            LinkedHashSet<NodeId> s = new LinkedHashSet<NodeId>();
+            LinkedHashSet s = new LinkedHashSet();
             s.add(parentId);
             return s;
         }
-        return Collections.emptySet();
+        return Collections.EMPTY_SET;
     }
 
     /**
@@ -308,7 +306,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * Internal implementation of {@link #resolvePath(Path)} that will either
      * resolve to a node or a property. Should be overridden by a subclass
      * that can resolve an intermediate path into an <code>ItemId</code>. This
-     * subclass can then invoke {@link #resolvePath(org.apache.jackrabbit.spi.Path.Element[], int, ItemId, int)}
+     * subclass can then invoke {@link #resolvePath(Path.Element[], int, ItemId, int)}
      * with a value of <code>next</code> greater than <code>1</code>.
      *
      * @param path path to resolve
@@ -333,7 +331,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * Called by {@link #resolvePath(org.apache.jackrabbit.spi.Path.Element[], int, ItemId, int)}.
+     * Called by {@link #resolvePath(Path.Element[], int, ItemId, int)}.
      * May be overridden by some subclass to process/cache intermediate state.
      *
      * @param id      id of resolved item
@@ -579,13 +577,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
         try {
             ItemState state = getItemState(descendant);
-            Set<NodeId> parentIds = getParentIds(state, false);
+            Set parentIds = getParentIds(state, false);
             while (parentIds.size() > 0) {
                 if (parentIds.contains(ancestor)) {
                     return true;
                 }
-                Set<NodeId> grandparentIds = new LinkedHashSet<NodeId>();
-                for (NodeId parentId : parentIds) {
+                Set grandparentIds = new LinkedHashSet();
+                Iterator iter = parentIds.iterator();
+                while (iter.hasNext()) {
+                    NodeId parentId = (NodeId) iter.next();
                     grandparentIds.addAll(getParentIds(getItemState(parentId), false));
                 }
                 parentIds = grandparentIds;
@@ -617,14 +617,16 @@ public class HierarchyManagerImpl implements HierarchyManager {
         int depth = 1;
         try {
             ItemState state = getItemState(descendant);
-            Set<NodeId> parentIds = getParentIds(state, true);
+            Set parentIds = getParentIds(state, true);
             while (parentIds.size() > 0) {
                 if (parentIds.contains(ancestor)) {
                     return depth;
                 }
                 depth++;
-                Set<NodeId> grandparentIds = new LinkedHashSet<NodeId>();
-                for (NodeId parentId : parentIds) {
+                Set grandparentIds = new LinkedHashSet();
+                Iterator iter = parentIds.iterator();
+                while (iter.hasNext()) {
+                    NodeId parentId = (NodeId) iter.next();
                     state = getItemState(parentId);
                     grandparentIds.addAll(getParentIds(state, true));
                 }

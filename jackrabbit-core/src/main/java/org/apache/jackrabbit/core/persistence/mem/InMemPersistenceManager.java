@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.persistence.mem;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -29,15 +29,18 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.PropertyType;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -46,6 +49,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -70,8 +74,8 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
 
     protected boolean initialized;
 
-    protected Map<ItemId, byte[]> stateStore;
-    protected Map<NodeId, byte[]> refsStore;
+    protected Map stateStore;
+    protected Map refsStore;
 
     // initial size of buffer used to serialize objects
     protected static final int INITIAL_BUFFER_SIZE = 1024;
@@ -147,15 +151,15 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         StringBuffer sb = new StringBuffer();
         char[] chars = parentUUID.toCharArray();
         int cnt = 0;
-        for (char ch : chars) {
-            if (ch == '-') {
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == '-') {
                 continue;
             }
             //if (cnt > 0 && cnt % 4 == 0) {
             if (cnt == 2 || cnt == 4) {
                 sb.append(FileSystem.SEPARATOR_CHAR);
             }
-            sb.append(ch);
+            sb.append(chars[i]);
             cnt++;
         }
         sb.append(FileSystem.SEPARATOR_CHAR);
@@ -213,7 +217,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             int n = in.readInt();   // number of entries
             while (n-- > 0) {
                 String s = in.readUTF();    // target id
-                NodeId id = NodeId.valueOf(s);
+                NodeReferencesId id = (NodeReferencesId) NodeReferencesId.valueOf(s);
                 int length = in.readInt();  // data length
                 byte[] data = new byte[length];
                 in.readFully(data);  // data
@@ -241,14 +245,16 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
 
             out.writeInt(stateStore.size());    // number of entries
             // entries
-            for (ItemId id : stateStore.keySet()) {
+            Iterator iterKeys = stateStore.keySet().iterator();
+            while (iterKeys.hasNext()) {
+                ItemId id = (ItemId) iterKeys.next();
                 if (id.denotesNode()) {
                     out.writeByte(NODE_ENTRY);  // entry type
                 } else {
                     out.writeByte(PROP_ENTRY);  // entry type
                 }
                 out.writeUTF(id.toString());    // id
-                byte[] data = stateStore.get(id);
+                byte[] data = (byte[]) stateStore.get(id);
                 out.writeInt(data.length);  // data length
                 out.write(data);    // data
             }
@@ -265,9 +271,11 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         try {
             out.writeInt(refsStore.size()); // number of entries
             // entries
-            for (NodeId id : refsStore.keySet()) {
+            Iterator iterKeys = refsStore.keySet().iterator();
+            while (iterKeys.hasNext()) {
+                NodeReferencesId id = (NodeReferencesId) iterKeys.next();
                 out.writeUTF(id.toString());    // target id
-                byte[] data = refsStore.get(id);
+                byte[] data = (byte[]) refsStore.get(id);
                 out.writeInt(data.length);  // data length
                 out.write(data);    // data
             }
@@ -285,8 +293,8 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("already initialized");
         }
 
-        stateStore = new HashMap<ItemId, byte[]>(initialCapacity, loadFactor);
-        refsStore = new HashMap<NodeId, byte[]>(initialCapacity, loadFactor);
+        stateStore = new HashMap(initialCapacity, loadFactor);
+        refsStore = new HashMap(initialCapacity, loadFactor);
 
         wspFS = context.getFileSystem();
 
@@ -324,12 +332,12 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
                 // clear out blob store
                 try {
                     String[] folders = blobFS.listFolders("/");
-                    for (String folder: folders) {
-                        blobFS.deleteFolder(folder);
+                    for (int i = 0; i < folders.length; i++) {
+                        blobFS.deleteFolder(folders[i]);
                     }
                     String[] files = blobFS.listFiles("/");
-                    for (String file : files) {
-                        blobFS.deleteFile(file);
+                    for (int i = 0; i < files.length; i++) {
+                        blobFS.deleteFile(files[i]);
                     }
                 } catch (Exception e) {
                     // ignore
@@ -360,7 +368,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        byte[] data = stateStore.get(id);
+        byte[] data = (byte[]) stateStore.get(id);
         if (data == null) {
             throw new NoSuchItemStateException(id.toString());
         }
@@ -387,7 +395,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        byte[] data = stateStore.get(id);
+        byte[] data = (byte[]) stateStore.get(id);
         if (data == null) {
             throw new NoSuchItemStateException(id.toString());
         }
@@ -477,9 +485,14 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         // delete binary values (stored as files)
         InternalValue[] values = state.getValues();
         if (values != null) {
-            for (InternalValue val : values) {
+            for (int i = 0; i < values.length; i++) {
+                InternalValue val = values[i];
                 if (val != null) {
-                    val.deleteBinaryResource();
+                    if (val.getType() == PropertyType.BINARY) {
+                        BLOBFileValue blobVal = val.getBLOBFileValue();
+                        // delete blob file and prune empty parent folders
+                        blobVal.delete(true);
+                    }
                 }
             }
         }
@@ -491,14 +504,14 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences loadReferencesTo(NodeId id)
+    public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        byte[] data = refsStore.get(id);
+        byte[] data = (byte[]) refsStore.get(id);
         if (data == null) {
             throw new NoSuchItemStateException(id.toString());
         }
@@ -530,11 +543,11 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             Serializer.serialize(refs, out);
 
             // store in serialized format in map for better memory efficiency
-            refsStore.put(refs.getTargetId(), out.toByteArray());
+            refsStore.put(refs.getId(), out.toByteArray());
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to store " + refs;
+            String msg = "failed to store references: " + refs.getId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -549,7 +562,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         }
 
         // remove node references
-        refsStore.remove(refs.getTargetId());
+        refsStore.remove(refs.getId());
     }
 
     /**
@@ -575,7 +588,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public boolean existsReferencesTo(NodeId id) throws ItemStateException {
+    public boolean exists(NodeReferencesId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

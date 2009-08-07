@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 /**
  * <code>DescendantNodeConstraint</code> implements a descendant node
@@ -42,7 +42,7 @@ public class DescendantNodeConstraint extends HierarchyConstraint {
      */
     public DescendantNodeConstraint(DescendantNodeImpl constraint,
                                     SelectorImpl selector) {
-        super(constraint.getAncestorPath(), selector);
+        super(constraint.getPath(), selector);
     }
 
     /**

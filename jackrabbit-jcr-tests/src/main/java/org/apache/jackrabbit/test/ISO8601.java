@@ -25,7 +25,7 @@ import java.util.TimeZone;
  * The <code>ISO8601</code> utility class provides helper methods
  * to deal with date/time formatting using a specific ISO8601-compliant
  * format (see <a href="http://www.w3.org/TR/NOTE-datetime">ISO 8601</a>).
- * <p>
+ * <p/>
  * The currently supported format is:
  * <pre>
  *   &plusmn;YYYY-MM-DDThh:mm:ss.SSSTZD

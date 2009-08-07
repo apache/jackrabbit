@@ -16,16 +16,20 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
-import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -39,17 +43,13 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * The <code>DefaultAccessManager</code> controls access by evaluating access
@@ -71,7 +71,7 @@ import java.util.Set;
  * the <code>AccessControlProvider</code> set to this AccessManager.
  *
  * @see AccessManager
- * @see javax.jcr.security.AccessControlManager
+ * @see AccessControlManager
  */
 public class DefaultAccessManager extends AbstractAccessControlManager implements AccessManager {
 
@@ -96,7 +96,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
     private NamePathResolver resolver;
 
-    private Set<Principal> principals;
+    private Set principals;
 
     private AccessControlProvider acProvider;
 
@@ -146,11 +146,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         hierMgr = amContext.getHierarchyManager();
 
         Subject subject = amContext.getSubject();
-        if (subject == null) {
-            principals = Collections.emptySet();
-        } else {
-            principals = subject.getPrincipals();
-        }
+        principals = (subject == null) ? Collections.EMPTY_SET : subject.getPrincipals();
 
         wspAccess = new WorkspaceAccess(wspAccessManager, isSystemOrAdmin(subject));
         privilegeRegistry = new PrivilegeRegistry(resolver);
@@ -275,7 +271,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
     //-----------------------------------------------< AccessControlManager >---
     /**
-     * @see javax.jcr.security.AccessControlManager#hasPrivileges(String, Privilege[])
+     * @see AccessControlManager#hasPrivileges(String, Privilege[])
      */
     public boolean hasPrivileges(String absPath, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
         checkInitialized();
@@ -292,7 +288,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see javax.jcr.security.AccessControlManager#getPrivileges(String)
+     * @see AccessControlManager#getPrivileges(String)
      */
     public Privilege[] getPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
         checkInitialized();
@@ -304,7 +300,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see javax.jcr.security.AccessControlManager#getPolicies(String)
+     * @see AccessControlManager#getPolicies(String)
      */
     public AccessControlPolicy[] getPolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -320,7 +316,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see javax.jcr.security.AccessControlManager#getEffectivePolicies(String)
+     * @see AccessControlManager#getEffectivePolicies(String)
      */
     public AccessControlPolicy[] getEffectivePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -331,7 +327,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see javax.jcr.security.AccessControlManager#getApplicablePolicies(String)
+     * @see AccessControlManager#getApplicablePolicies(String)
      */
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -350,7 +346,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see javax.jcr.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
+     * @see AccessControlManager#setPolicy(String, AccessControlPolicy)
      */
     public void setPolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -362,7 +358,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see javax.jcr.security.AccessControlManager#removePolicy(String, AccessControlPolicy)
+     * @see AccessControlManager#removePolicy(String, AccessControlPolicy)
      */
     public void removePolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -375,7 +371,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
     //-------------------------------------< JackrabbitAccessControlManager >---
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(Principal)
+     * @see JackrabbitAccessControlManager#getApplicablePolicies(Principal)
      */
     public JackrabbitAccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
         checkInitialized();
@@ -385,16 +381,6 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         return editor.editAccessControlPolicies(principal);
     }
 
-    /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(Principal)
-     */
-    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
-        checkInitialized();
-        if (editor == null) {
-            throw new UnsupportedRepositoryOperationException("Editing of access control policies is not supported.");
-        }
-        return editor.getPolicies(principal);
-    }
     //---------------------------------------< AbstractAccessControlManager >---
     /**
      * @see AbstractAccessControlManager#checkInitialized()
@@ -467,16 +453,16 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
         private final boolean isAdmin;
         // TODO: entries must be cleared if access permission to wsp changes.
-        private final List <String>allowed;
-        private final List<String> denied;
+        private final List allowed;
+        private final List denied;
 
         private WorkspaceAccess(WorkspaceAccessManager wspAccessManager,
                                 boolean isAdmin) {
             this.wspAccessManager = wspAccessManager;
             this.isAdmin = isAdmin;
             if (!isAdmin) {
-                allowed = new ArrayList<String>(5);
-                denied = new ArrayList<String>(5);
+                allowed = new ArrayList(5);
+                denied = new ArrayList(5);
             } else {
                 allowed = denied = null;
             }

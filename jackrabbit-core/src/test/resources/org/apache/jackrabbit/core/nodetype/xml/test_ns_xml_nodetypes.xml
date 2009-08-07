@@ -22,20 +22,17 @@
            xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
 
   <nodeType name="testns2:emptyNodeType"
-            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""
-            isAbstract="true" isQueryable="false">
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
   </nodeType>
 
   <nodeType name="testns1:mixinNodeType"
-            isMixin="true" hasOrderableChildNodes="false" primaryItemName=""
-            isAbstract="false" isQueryable="true"/>
+            isMixin="true" hasOrderableChildNodes="false" primaryItemName=""/>
 
   <nodeType name="testns1:orderedNodeType"
-            isMixin="false" hasOrderableChildNodes="true" primaryItemName=""
-            isAbstract="false" isQueryable="true">
+            isMixin="false" hasOrderableChildNodes="true" primaryItemName="">
         <supertypes>
           <supertype>nt:base</supertype>
         </supertypes>
@@ -44,78 +41,60 @@
 
   <nodeType name="testns2:itemNodeType"
             isMixin="false" hasOrderableChildNodes="false"
-            primaryItemName="testns1:emptyItem" isAbstract="false" isQueryable="true">
+            primaryItemName="testns1:emptyItem">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"
-                 availableQueryOperators="OP_EQ OP_NE OP_LT OP_LE OP_GT OP_GE"/>
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:emptyItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"
-                 availableQueryOperators="OP_EQ OP_NE OP_LT OP_LE OP_GT OP_GE"/>
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:autoCreatedItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"
-                 availableQueryOperators="OP_EQ OP_NE OP_LT OP_LE OP_GT OP_GE"/>
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:mandatoryItem"
                  requiredType="undefined" autoCreated="false" mandatory="true"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"
-                 availableQueryOperators="OP_EQ OP_LIKE"/>
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:copyItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="COPY" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"/>
+                 onParentVersion="COPY" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:versionItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="VERSION" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"/>
+                 onParentVersion="VERSION" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:initializeItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="INITIALIZE" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"/>
+                 onParentVersion="INITIALIZE" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:computeItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="COMPUTE" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"/>
+                 onParentVersion="COMPUTE" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:abortItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="ABORT" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"/>
+                 onParentVersion="ABORT" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:protectedItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="true" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true"/>
+                 onParentVersion="IGNORE" protected="true" multiple="false"/>
   </nodeType>
 
   <nodeType name="testns1:propertyNodeType"
-            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""
-            isAbstract="false" isQueryable="true">
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="testns1:emptyProperty"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="false" isQueryOrderable="false"/>
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="testns1:binaryProperty"
                  requiredType="Binary" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="true" isQueryOrderable="true">
+                 onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>[0,)</valueConstraint>
       </valueConstraints>
     </propertyDefinition>
     <propertyDefinition name="testns1:booleanProperty"
                  requiredType="Boolean" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="false" isQueryOrderable="false">
+                 onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>true</valueConstraint>
         <valueConstraint>false</valueConstraint>
@@ -126,8 +105,7 @@
     </propertyDefinition>
     <propertyDefinition name="testns1:dateProperty"
                  requiredType="Date" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="false" isQueryOrderable="false">
+                 onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>
           [2005-01-01T00:00:00.000Z,2006-01-01T00:00:00.000Z)
@@ -139,8 +117,7 @@
     </propertyDefinition>
     <propertyDefinition name="testns1:doubleProperty"
                  requiredType="Double" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="false" isQueryOrderable="false">
+                 onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>[,0.0)</valueConstraint>
         <valueConstraint>(1.0,2.0)</valueConstraint>
@@ -152,8 +129,7 @@
     </propertyDefinition>
     <propertyDefinition name="testns1:longProperty"
                  requiredType="Long" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="false" isQueryOrderable="false">
+                 onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>(-10,0]</valueConstraint>
         <valueConstraint>[1,2]</valueConstraint>
@@ -165,8 +141,7 @@
     </propertyDefinition>
     <propertyDefinition name="testns1:nameProperty"
                  requiredType="Name" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="false" isQueryOrderable="false">
+                 onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>testns1:testName</valueConstraint>
       </valueConstraints>
@@ -176,16 +151,14 @@
     </propertyDefinition>
     <propertyDefinition name="testns1:pathProperty"
                  requiredType="Path" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
-                 isFullTextSearchable="false" isQueryOrderable="false">
+                 onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>/testns1:testPath</valueConstraint>
       </valueConstraints>
     </propertyDefinition>
     <propertyDefinition name="testns1:stringProperty"
                  requiredType="String" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="true"
-                 isFullTextSearchable="false" isQueryOrderable="false">
+                 onParentVersion="IGNORE" protected="false" multiple="true">
       <valueConstraints>
         <valueConstraint>bananas?</valueConstraint>
       </valueConstraints>
@@ -196,13 +169,11 @@
     </propertyDefinition>
     <propertyDefinition name="testns1:multipleProperty"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="true"
-                 isFullTextSearchable="false" isQueryOrderable="false"/>
+                 onParentVersion="IGNORE" protected="false" multiple="true"/>
   </nodeType>
 
   <nodeType name="testns1:childNodeType"
-            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""
-            isAbstract="false" isQueryable="true">
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>

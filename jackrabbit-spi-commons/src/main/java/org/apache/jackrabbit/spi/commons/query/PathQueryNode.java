@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
-import java.util.Collection;
+import java.util.List;
 
 import javax.jcr.RepositoryException;
 
@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 /**
  * Implements a query node that defines a path restriction.
  */
-public class PathQueryNode extends NAryQueryNode<LocationStepQueryNode> {
+public class PathQueryNode extends NAryQueryNode {
 
     /**
      * Flag indicating whether this path is absolute.
@@ -34,10 +34,9 @@ public class PathQueryNode extends NAryQueryNode<LocationStepQueryNode> {
     private boolean absolute = false;
 
     /**
-     * Valid node type names under /jcr:system. Used to determine if a
-     * query needs to be executed also against the /jcr:system tree.
+     * List of valid node type names under /jcr:system
      */
-    private final Collection<Name> validJcrSystemNodeTypeNames;
+    private final List validJcrSystemNodeTypeNames;
 
     /**
      * Empty step node array.
@@ -46,23 +45,21 @@ public class PathQueryNode extends NAryQueryNode<LocationStepQueryNode> {
 
     /**
      * Creates a relative <code>PathQueryNode</code> with no location steps and
-     * the collection of node types under /jcr:system.
+     * the list of node types under /jcr:system.
      *
      * @param parent the parent query node.
-     * @param validJcrSystemNodeTypeNames valid node types under /jcr:system
      */
-    protected PathQueryNode(
-            QueryNode parent, Collection<Name> validJcrSystemNodeTypeNames) {
+    protected PathQueryNode(QueryNode parent, List validJcrSystemNodeTypeNames) {
         super(parent);
         this.validJcrSystemNodeTypeNames = validJcrSystemNodeTypeNames;
     }
 
     /**
-     * Returns the collection of valid node types under /jcr:system.
+     * Returns a list of valid node types under /jcr:system. List&lt;Name>.
      *
-     * @return valid node types under /jcr:system.
+     * @return a list of valid node types under /jcr:system.
      */
-    public Collection<Name> getValidJcrSystemNodeTypeNames() {
+    public List getValidJcrSystemNodeTypeNames() {
         return validJcrSystemNodeTypeNames;
     }
 
@@ -101,7 +98,7 @@ public class PathQueryNode extends NAryQueryNode<LocationStepQueryNode> {
         if (operands == null) {
             return EMPTY;
         } else {
-            return operands.toArray(new LocationStepQueryNode[operands.size()]);
+            return (LocationStepQueryNode[]) operands.toArray(new LocationStepQueryNode[operands.size()]);
         }
     }
 

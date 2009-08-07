@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.value;
 
+import org.apache.jackrabbit.uuid.UUID;
+
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
-import java.util.UUID;
-import java.math.BigDecimal;
 
 /**
  * A <code>ReferenceValue</code> provides an implementation
@@ -147,6 +147,8 @@ public class ReferenceValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to date failed: inconvertible types");
     }
 
@@ -156,6 +158,8 @@ public class ReferenceValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to long failed: inconvertible types");
     }
 
@@ -165,6 +169,8 @@ public class ReferenceValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to boolean failed: inconvertible types");
     }
 
@@ -174,15 +180,8 @@ public class ReferenceValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        throw new ValueFormatException("conversion to double failed: inconvertible types");
-    }
+        setValueConsumed();
 
-    /**
-     * {@inheritDoc}
-     */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
+        throw new ValueFormatException("conversion to double failed: inconvertible types");
     }
 }

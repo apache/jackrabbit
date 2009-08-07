@@ -59,7 +59,7 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
     public PrincipalProvider registerProvider(Properties config) throws RepositoryException {
         PrincipalProvider provider = createProvider(config);
         if (provider != null) {
-            synchronized (providers) {
+            synchronized(providers) {
                 providers.put(provider.getClass().getName(), provider);
             }
         } else {

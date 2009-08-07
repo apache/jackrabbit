@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.BufferUtils;
+import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +28,15 @@ import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Semaphore;
 import java.io.IOException;
+
+import EDU.oswego.cs.dl.util.concurrent.Sync;
+import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 /**
  * Merges indexes in a separate daemon thread.
  */
-class IndexMerger implements IndexListener {
+class IndexMerger extends Thread implements IndexListener {
 
     /**
      * Logger instance for this class.
@@ -63,12 +66,18 @@ class IndexMerger implements IndexListener {
     /**
      * Queue of merge Tasks
      */
-    private final BlockingQueue<Merge> mergeTasks = new LinkedBlockingQueue<Merge>();
+    private final Buffer mergeTasks = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+
+    /**
+     * List of id <code>Term</code> that identify documents that were deleted
+     * while a merge was running.
+     */
+    private final List deletedDocuments = Collections.synchronizedList(new ArrayList());
 
     /**
      * List of <code>IndexBucket</code>s in ascending document limit.
      */
-    private final List<IndexBucket> indexBuckets = new ArrayList<IndexBucket>();
+    private final List indexBuckets = new ArrayList();
 
     /**
      * The <code>MultiIndex</code> this index merger is working on.
@@ -83,40 +92,27 @@ class IndexMerger implements IndexListener {
     /**
      * Mutex that is acquired when replacing indexes on MultiIndex.
      */
-    private final Semaphore indexReplacement;
+    private final Sync indexReplacement = new Mutex();
 
     /**
-     * List of merger threads that are currently busy.
+     * When released, indicates that this index merger is idle.
      */
-    private final List<Worker> busyMergers = new ArrayList<Worker>();
-
-    /**
-     * List of merger threads.
-     */
-    private final List<Worker> workers = new ArrayList<Worker>();
+    private final Sync mergerIdle = new Mutex();
 
     /**
      * Creates an <code>IndexMerger</code>.
      *
      * @param multiIndex the <code>MultiIndex</code>.
-     * @param numWorkers the number of worker threads to use.
      */
-    IndexMerger(MultiIndex multiIndex, int numWorkers) {
+    IndexMerger(MultiIndex multiIndex) {
         this.multiIndex = multiIndex;
-        for (int i = 0; i < numWorkers; i++) {
-            Worker w = new Worker();
-            workers.add(w);
-            busyMergers.add(w);
-        }
-        this.indexReplacement = new Semaphore(workers.size());
-    }
-
-    /**
-     * Starts this index merger.
-     */
-    void start() {
-        for (Thread t : workers) {
-            t.start();
+        setName("IndexMerger");
+        setDaemon(true);
+        try {
+            mergerIdle.acquire();
+        } catch (InterruptedException e) {
+            // will never happen, lock is free upon construction
+            throw new InternalError("Unable to acquire mutex after construction");
         }
     }
 
@@ -153,9 +149,9 @@ class IndexMerger implements IndexListener {
             }
 
             // put index in bucket
-            IndexBucket bucket = indexBuckets.get(indexBuckets.size() - 1);
-            for (IndexBucket indexBucket : indexBuckets) {
-                bucket = indexBucket;
+            IndexBucket bucket = (IndexBucket) indexBuckets.get(indexBuckets.size() - 1);
+            for (int i = 0; i < indexBuckets.size(); i++) {
+                bucket = (IndexBucket) indexBuckets.get(i);
                 if (bucket.fits(numDocs)) {
                     break;
                 }
@@ -176,27 +172,20 @@ class IndexMerger implements IndexListener {
                 long targetMergeDocs = bucket.upper;
                 targetMergeDocs = Math.min(targetMergeDocs * mergeFactor, maxMergeDocs);
                 // sum up docs in bucket
-                List<Index> indexesToMerge = new ArrayList<Index>();
+                List indexesToMerge = new ArrayList();
                 int mergeDocs = 0;
-                for (Iterator<Index> it = bucket.iterator(); it.hasNext() && mergeDocs <= targetMergeDocs;) {
+                for (Iterator it = bucket.iterator(); it.hasNext() && mergeDocs <= targetMergeDocs;) {
                     indexesToMerge.add(it.next());
                 }
                 if (indexesToMerge.size() > 2) {
                     // found merge
-                    Index[] idxs = indexesToMerge.toArray(new Index[indexesToMerge.size()]);
+                    Index[] idxs = (Index[]) indexesToMerge.toArray(new Index[indexesToMerge.size()]);
                     bucket.removeAll(indexesToMerge);
                     if (log.isDebugEnabled()) {
                         log.debug("requesting merge for " + indexesToMerge);
                     }
-                    addMergeTask(new Merge(idxs));
-                    if (log.isDebugEnabled()) {
-                        log.debug("merge queue now contains " + mergeTasks.size() + " tasks.");
-                        int numBusy;
-                        synchronized (busyMergers) {
-                            numBusy = busyMergers.size();
-                        }
-                        log.debug("# of busy merge workers: " + numBusy);
-                    }
+                    mergeTasks.add(new Merge(idxs));
+                    log.debug("merge queue now contains " + mergeTasks.size() + " tasks.");
                 }
             }
         }
@@ -207,27 +196,18 @@ class IndexMerger implements IndexListener {
      */
     public void documentDeleted(Term id) {
         log.debug("document deleted: " + id.text());
-        synchronized (busyMergers) {
-            for (Worker w : busyMergers) {
-                w.documentDeleted(id);
-            }
-        }
+        deletedDocuments.add(id);
     }
 
     /**
      * When the calling thread returns this index merger will be idle, that is
-     * there will be no merge tasks pending anymore. The method returns
-     * immediately if there are currently no tasks pending at all.
-     *
-     * @throws InterruptedException if this thread is interrupted while waiting
-     *                              for the worker threads to become idle.
+     * there will be no merge tasks pending anymore. The method returns immediately
+     * if there are currently no tasks pending at all.
      */
     void waitUntilIdle() throws InterruptedException {
-        synchronized (busyMergers) {
-            while (!busyMergers.isEmpty()) {
-                busyMergers.wait();
-            }
-        }
+        mergerIdle.acquire();
+        // and immediately release again
+        mergerIdle.release();
     }
 
     /**
@@ -236,48 +216,135 @@ class IndexMerger implements IndexListener {
      */
     void dispose() {
         log.debug("dispose IndexMerger");
-        // get all permits for index replacements
+        // get mutex for index replacements
         try {
-            indexReplacement.acquire(workers.size());
+            indexReplacement.acquire();
         } catch (InterruptedException e) {
-            log.warn("Interrupted while acquiring index replacement permits: " + e);
+            log.warn("Interrupted while acquiring index replacement sync: " + e);
             // try to stop IndexMerger without the sync
         }
 
-        log.debug("merge queue size: " + mergeTasks.size());
         // clear task queue
         mergeTasks.clear();
 
         // send quit
-        addMergeTask(QUIT);
+        mergeTasks.add(QUIT);
         log.debug("quit sent");
 
         try {
-            // give the merger threads some time to quit,
-            // it is possible that the mergers are busy working on a large index.
+            // give the merger thread some time to quit,
+            // it is possible that the merger is busy working on a large index.
             // if that is the case we will just ignore it and the daemon will
             // die without being able to finish the merge.
             // at this point it is not possible anymore to replace indexes
-            // on the MultiIndex because we hold all indexReplacement permits.
-            for (Thread t : workers) {
-                t.join(500);
-                if (t.isAlive()) {
-                    log.info("Unable to stop IndexMerger.Worker. Daemon is busy.");
-                } else {
-                    log.debug("IndexMerger.Worker thread stopped");
+            // on the MultiIndex because we hold the indexReplacement Sync.
+            this.join(500);
+            if (isAlive()) {
+                log.info("Unable to stop IndexMerger. Daemon is busy.");
+            } else {
+                log.debug("IndexMerger thread stopped");
+            }
+            log.debug("merge queue size: " + mergeTasks.size());
+        } catch (InterruptedException e) {
+            log.warn("Interrupted while waiting for IndexMerger thread to terminate.");
+        }
+    }
+
+    /**
+     * Implements the index merging.
+     */
+    public void run() {
+        for (;;) {
+            boolean isIdle = false;
+            if (mergeTasks.size() == 0) {
+                mergerIdle.release();
+                isIdle = true;
+            }
+            Merge task = (Merge) mergeTasks.remove();
+            if (task == QUIT) {
+                mergerIdle.release();
+                break;
+            }
+            if (isIdle) {
+                try {
+                    mergerIdle.acquire();
+                } catch (InterruptedException e) {
+                    Thread.interrupted();
+                    log.warn("Unable to acquire mergerIdle sync");
                 }
             }
-        } catch (InterruptedException e) {
-            log.warn("Interrupted while waiting for IndexMerger threads to terminate.");
+
+            log.debug("accepted merge request");
+
+            // reset deleted documents
+            deletedDocuments.clear();
+
+            // get readers
+            String[] names = new String[task.indexes.length];
+            for (int i = 0; i < task.indexes.length; i++) {
+                names[i] = task.indexes[i].name;
+            }
+            try {
+                log.debug("create new index");
+                PersistentIndex index = multiIndex.getOrCreateIndex(null);
+                boolean success = false;
+                try {
+
+                    log.debug("get index readers from MultiIndex");
+                    IndexReader[] readers = multiIndex.getIndexReaders(names, this);
+                    try {
+                        // do the merge
+                        long time = System.currentTimeMillis();
+                        index.addIndexes(readers);
+                        time = System.currentTimeMillis() - time;
+                        int docCount = 0;
+                        for (int i = 0; i < readers.length; i++) {
+                            docCount += readers[i].numDocs();
+                        }
+                        log.info("merged " + docCount + " documents in " + time + " ms into " + index.getName() + ".");
+                    } finally {
+                        for (int i = 0; i < readers.length; i++) {
+                            try {
+                                Util.closeOrRelease(readers[i]);
+                            } catch (IOException e) {
+                                log.warn("Unable to close IndexReader: " + e);
+                            }
+                        }
+                    }
+
+                    // inform multi index
+                    // if we cannot get the sync immediately we have to quit
+                    if (!indexReplacement.attempt(0)) {
+                        log.debug("index merging canceled");
+                        break;
+                    }
+                    try {
+                        log.debug("replace indexes");
+                        multiIndex.replaceIndexes(names, index, deletedDocuments);
+                    } finally {
+                        indexReplacement.release();
+                    }
+
+                    success = true;
+
+                } finally {
+                    if (!success) {
+                        // delete index
+                        log.debug("deleting index " + index.getName());
+                        multiIndex.deleteIndex(index);
+                    }
+                }
+            } catch (Throwable e) {
+                log.error("Error while merging indexes: ", e);
+            }
         }
+        log.info("IndexMerger terminated");
     }
 
     //-----------------------< merge properties >-------------------------------
 
     /**
      * The merge factor.
-     *
-     * @param mergeFactor the merge factor.
      */
     public void setMergeFactor(int mergeFactor) {
         this.mergeFactor = mergeFactor;
@@ -286,8 +353,6 @@ class IndexMerger implements IndexListener {
 
     /**
      * The initial threshold for number of documents to merge to a new index.
-     *
-     * @param minMergeDocs the min merge docs number.
      */
     public void setMinMergeDocs(int minMergeDocs) {
         this.minMergeDocs = minMergeDocs;
@@ -295,26 +360,12 @@ class IndexMerger implements IndexListener {
 
     /**
      * The maximum number of document to merge.
-     *
-     * @param maxMergeDocs the max merge docs number.
      */
     public void setMaxMergeDocs(int maxMergeDocs) {
         this.maxMergeDocs = maxMergeDocs;
     }
 
     //------------------------------< internal >--------------------------------
-
-    private void addMergeTask(Merge task) {
-        for (;;) {
-            try {
-                mergeTasks.put(task);
-                break;
-            } catch (InterruptedException e) {
-                // try again
-                Thread.interrupted();
-            }
-        }
-    }
 
     /**
      * Implements a simple struct that holds the name of an index and how
@@ -395,9 +446,7 @@ class IndexMerger implements IndexListener {
      * <code>IndexBucket</code> contains {@link Index}es with documents less
      * or equal the document limit of the bucket.
      */
-    private static final class IndexBucket extends ArrayList<Index> {
-
-        private static final long serialVersionUID = 2985514550083374904L;
+    private static final class IndexBucket extends ArrayList {
 
         /**
          * The lower document limit.
@@ -445,132 +494,6 @@ class IndexMerger implements IndexListener {
          */
         boolean allowsMerge() {
             return allowMerge;
-        }
-    }
-
-    private class Worker extends Thread implements IndexListener {
-
-        /**
-         * List of id <code>Term</code> that identify documents that were deleted
-         * while a merge was running.
-         */
-        private final List<Term> deletedDocuments = Collections.synchronizedList(new ArrayList<Term>());
-
-        public Worker() {
-            setName("IndexMerger.Worker");
-            setDaemon(true);
-        }
-
-        /**
-         * Implements the index merging.
-         */
-        public void run() {
-            for (;;) {
-                boolean isIdle = false;
-                if (mergeTasks.size() == 0) {
-                    synchronized (busyMergers) {
-                        busyMergers.remove(this);
-                        busyMergers.notifyAll();
-                    }
-                    isIdle = true;
-                }
-                Merge task;
-                for (;;) {
-                    try {
-                        task = mergeTasks.take();
-                        break;
-                    } catch (InterruptedException e) {
-                        // try again
-                        Thread.interrupted();
-                    }
-                }
-                if (task == QUIT) {
-                    synchronized (busyMergers) {
-                        busyMergers.remove(this);
-                    }
-                    // put back QUIT to signal other workers
-                    addMergeTask(task);
-                    break;
-                }
-                if (isIdle) {
-                    synchronized (busyMergers) {
-                        busyMergers.add(this);
-                    }
-                }
-
-                log.debug("accepted merge request");
-
-                // reset deleted documents
-                deletedDocuments.clear();
-
-                // get readers
-                String[] names = new String[task.indexes.length];
-                for (int i = 0; i < task.indexes.length; i++) {
-                    names[i] = task.indexes[i].name;
-                }
-                try {
-                    log.debug("create new index");
-                    PersistentIndex index = multiIndex.getOrCreateIndex(null);
-                    boolean success = false;
-                    try {
-
-                        log.debug("get index readers from MultiIndex");
-                        IndexReader[] readers = multiIndex.getIndexReaders(names, IndexMerger.this);
-                        try {
-                            // do the merge
-                            long time = System.currentTimeMillis();
-                            index.addIndexes(readers);
-                            time = System.currentTimeMillis() - time;
-                            int docCount = 0;
-                            for (IndexReader reader : readers) {
-                                docCount += reader.numDocs();
-                            }
-                            log.info("merged " + docCount + " documents in " + time + " ms into " + index.getName() + ".");
-                        } finally {
-                            for (IndexReader reader : readers) {
-                                try {
-                                    Util.closeOrRelease(reader);
-                                } catch (IOException e) {
-                                    log.warn("Unable to close IndexReader: " + e);
-                                }
-                            }
-                        }
-
-                        // inform multi index
-                        // if we cannot get the sync immediately we have to quit
-                        if (!indexReplacement.tryAcquire()) {
-                            log.debug("index merging canceled");
-                            break;
-                        }
-                        try {
-                            log.debug("replace indexes");
-                            multiIndex.replaceIndexes(names, index, deletedDocuments);
-                        } finally {
-                            indexReplacement.release();
-                        }
-
-                        success = true;
-
-                    } finally {
-                        if (!success) {
-                            // delete index
-                            log.debug("deleting index " + index.getName());
-                            multiIndex.deleteIndex(index);
-                        }
-                    }
-                } catch (Throwable e) {
-                    log.error("Error while merging indexes: ", e);
-                }
-            }
-            log.info("IndexMerger.Worker terminated");
-        }
-
-        /**
-         * @inheritDoc
-         */
-        public void documentDeleted(Term id) {
-            log.debug("document deleted: " + id.text());
-            deletedDocuments.add(id);
         }
     }
 }

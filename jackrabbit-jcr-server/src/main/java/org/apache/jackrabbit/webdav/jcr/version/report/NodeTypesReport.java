@@ -127,10 +127,6 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
             ntDef.setAttribute(NAME_ATTRIBUTE, nt.getName());
             ntDef.setAttribute(ISMIXIN_ATTRIBUTE, Boolean.toString(nt.isMixin()));
             ntDef.setAttribute(HASORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(nt.hasOrderableChildNodes()));
-            // JCR 2.0 extension
-            ntDef.setAttribute(ISABSTRACT_ATTRIBUTE, Boolean.toString(nt.isAbstract()));
-            // JCR 2.0 extension
-            ntDef.setAttribute(ISQUERYABLE_ATTRIBUTE, Boolean.toString(nt.isQueryable()));
 
             // declared supertypes
             NodeType[] snts = nt.getDeclaredSupertypes();

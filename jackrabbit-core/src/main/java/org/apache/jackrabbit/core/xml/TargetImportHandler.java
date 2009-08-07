@@ -24,7 +24,6 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
 
 /**
  * <code>TargetImportHandler</code> serves as the base class for the concrete
@@ -34,8 +33,6 @@ import javax.jcr.ValueFactory;
 abstract class TargetImportHandler extends DefaultHandler {
 
     protected final Importer importer;
-
-    protected final ValueFactory valueFactory;
 
     /**
      * The current namespace context. A new namespace context is created
@@ -48,9 +45,8 @@ abstract class TargetImportHandler extends DefaultHandler {
 
     protected NamePathResolver resolver;
 
-    protected TargetImportHandler(Importer importer, ValueFactory valueFactory) {
+    protected TargetImportHandler(Importer importer) {
         this.importer = importer;
-        this.valueFactory = valueFactory;
     }
 
     /**

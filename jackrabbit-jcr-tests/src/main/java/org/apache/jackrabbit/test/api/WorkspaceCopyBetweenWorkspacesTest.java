@@ -91,8 +91,7 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
      */
     public void testCopyNodesConstraintViolationException() throws RepositoryException {
         // if parent node is nt:base then no sub nodes can be created
-        String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
-        Node subNodesNotAllowedNode = testRootNodeW2.addNode(nodeName3, nodetype);
+        Node subNodesNotAllowedNode = testRootNodeW2.addNode(nodeName3, ntBase);
         testRootNodeW2.save();
         try {
             String dstAbsPath = subNodesNotAllowedNode.getPath() + "/" + node2.getName();
@@ -110,7 +109,7 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
      * sufficient access permissions to complete the operation.
      */
     public void testCopyNodesAccessDenied() throws RepositoryException {
-        Session readOnlySuperuser = getHelper().getReadOnlySession();
+        Session readOnlySuperuser = helper.getReadOnlySession();
         try {
             String dstAbsPath = node2.getPath() + "/" + node1.getName();
             try {
@@ -166,8 +165,10 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
         Node lockTarget = (Node) rwSessionW2.getItem(node2W2.getPath());
 
         // add mixin "lockable" to be able to lock the node
-        ensureMixinType(lockTarget, mixLockable);
-        lockTarget.getParent().save();
+        if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
+            lockTarget.addMixin(mixLockable);
+            lockTarget.getParent().save();
+        }
 
         // lock dst parent node using other session
         lockTarget.lock(true, true);

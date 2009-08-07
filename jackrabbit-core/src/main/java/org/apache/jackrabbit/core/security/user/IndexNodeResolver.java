@@ -95,7 +95,7 @@ class IndexNodeResolver extends NodeResolver {
      */
     private Query buildQuery(Name nodeName, Name ntName)
             throws RepositoryException {
-        StringBuilder stmt = new StringBuilder("/jcr:root");
+        StringBuffer stmt = new StringBuffer("/jcr:root");
         stmt.append(getSearchRoot(ntName));
         stmt.append("//element(");
         stmt.append(ISO9075.encode(getNamePathResolver().getJCRName(nodeName)));
@@ -118,7 +118,8 @@ class IndexNodeResolver extends NodeResolver {
     private Query buildQuery(String value, Set props, Name ntName,
                              boolean exact, long maxSize)
             throws RepositoryException {
-        StringBuilder stmt = new StringBuilder("/jcr:root");
+        // TODO: include maxSize in query statement.
+        StringBuffer stmt = new StringBuffer("/jcr:root");
         stmt.append(getSearchRoot(ntName));
         stmt.append("//element(*,");
         stmt.append(getNamePathResolver().getJCRName(ntName));
@@ -133,38 +134,15 @@ class IndexNodeResolver extends NodeResolver {
                 stmt.append((exact) ? "@" : "jcr:like(@");
                 String pName = getNamePathResolver().getJCRName((Name) itr.next());
                 stmt.append(ISO9075.encode(pName));
-                if (exact) {
-                    stmt.append("='");
-                    stmt.append(value);
-                    stmt.append("'");
-                } else {
-                    stmt.append(",'%");
-                    stmt.append(escapeForQuery(value));
-                    stmt.append("%')");
-                }
+                stmt.append((exact) ? "='" : ",'%");
+                stmt.append(value);
+                stmt.append((exact) ? "'" : "%')");
                 if (++i < props.size()) {
                     stmt.append(" or ");
                 }
             }
             stmt.append("]");
         }
-        Query q = queryManager.createQuery(stmt.toString(), Query.XPATH);
-        q.setLimit(maxSize);
-        return q;
-    }
-
-    private static String escapeForQuery(String value) {
-        StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            if (c == '\\') {
-                ret.append("\\\\");
-            } else if (c == '\'') {
-                ret.append("\\'");
-            } else {
-                ret.append(c);
-            }
-        }
-        return ret.toString();
+        return queryManager.createQuery(stmt.toString(), Query.XPATH);
     }
 }

@@ -18,15 +18,12 @@ package org.apache.jackrabbit.value;
 
 import org.apache.jackrabbit.util.ISO8601;
 
-import javax.jcr.Binary;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Calendar;
 
 /**
@@ -37,19 +34,22 @@ import java.util.Calendar;
  * @see StringValue
  * @see LongValue
  * @see DoubleValue
- * @see DecimalValue
  * @see BooleanValue
  * @see DateValue
  * @see BinaryValue
  * @see NameValue
  * @see PathValue
- * @see URIValue
  * @see ReferenceValue
- * @see WeakReferenceValue
  */
 public abstract class BaseValue implements Value {
 
     protected static final String DEFAULT_ENCODING = "UTF-8";
+
+    private static final short STATE_UNDEFINED = 0;
+    private static final short STATE_VALUE_CONSUMED = 1;
+    private static final short STATE_STREAM_CONSUMED = 2;
+
+    private short state = STATE_UNDEFINED;
 
     protected final int type;
 
@@ -62,6 +62,39 @@ public abstract class BaseValue implements Value {
      */
     BaseValue(int type) {
         this.type = type;
+    }
+
+    /**
+     * Checks if the non-stream value of this instance has already been
+     * consumed (if any getter methods except <code>{@link #getStream()}</code> and
+     * <code>{@link #getType()}</code> have been previously called at least once) and
+     * sets the state to <code>STATE_STREAM_CONSUMED</code>.
+     *
+     * @throws IllegalStateException if any getter methods other than
+     *                               <code>getStream()</code> and
+     *                               <code>getType()</code> have been
+     *                               previously called at least once.
+     */
+    protected void setStreamConsumed() throws IllegalStateException {
+        if (state == STATE_VALUE_CONSUMED) {
+            throw new IllegalStateException("non-stream value has already been consumed");
+        }
+        state = STATE_STREAM_CONSUMED;
+    }
+
+    /**
+     * Checks if the stream value of this instance has already been
+     * consumed (if {@link #getStream()} has been previously called
+     * at least once) and sets the state to <code>STATE_VALUE_CONSUMED</code>.
+     *
+     * @throws IllegalStateException if <code>getStream()</code> has been
+     *                               previously called at least once.
+     */
+    protected void setValueConsumed() throws IllegalStateException {
+        if (state == STATE_STREAM_CONSUMED) {
+            throw new IllegalStateException("stream value has already been consumed");
+        }
+        state = STATE_VALUE_CONSUMED;
     }
 
     /**
@@ -91,6 +124,8 @@ public abstract class BaseValue implements Value {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         Calendar cal = ISO8601.parse(getInternalString());
         if (cal == null) {
             throw new ValueFormatException("not a valid date format");
@@ -105,6 +140,8 @@ public abstract class BaseValue implements Value {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         try {
             return Long.parseLong(getInternalString());
         } catch (NumberFormatException e) {
@@ -118,7 +155,9 @@ public abstract class BaseValue implements Value {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        return Boolean.valueOf(getInternalString());
+        setValueConsumed();
+
+        return Boolean.valueOf(getInternalString()).booleanValue();
     }
 
     /**
@@ -127,6 +166,8 @@ public abstract class BaseValue implements Value {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         try {
             return Double.parseDouble(getInternalString());
         } catch (NumberFormatException e) {
@@ -137,21 +178,10 @@ public abstract class BaseValue implements Value {
     /**
      * {@inheritDoc}
      */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        try {
-            return new BigDecimal(getInternalString());
-        } catch (NumberFormatException e) {
-            throw new ValueFormatException("conversion to Decimal failed", e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public InputStream getStream()
             throws IllegalStateException, RepositoryException {
+        setStreamConsumed();
+
         if (stream != null) {
             return stream;
         }
@@ -169,26 +199,11 @@ public abstract class BaseValue implements Value {
     /**
      * {@inheritDoc}
      */
-    public Binary getBinary()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        try {
-            // convert via string
-            return new BinaryImpl(new ByteArrayInputStream(getInternalString().getBytes(DEFAULT_ENCODING)));
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException(DEFAULT_ENCODING
-                    + " not supported on this platform", e);
-        } catch (IOException e) {
-            throw new RepositoryException("failed to create Binary instance", e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public String getString()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         return getInternalString();
     }
 }

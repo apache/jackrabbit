@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
@@ -32,7 +32,6 @@ import org.xml.sax.SAXException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
-import javax.jcr.ValueFactory;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -51,7 +50,7 @@ class DocViewImportHandler extends TargetImportHandler {
      * in the startElement method and is popped from the stack in the
      * endElement method.
      */
-    private final Stack<NodeInfo> stack = new Stack<NodeInfo>();
+    private final Stack stack = new Stack();
     // buffer used to merge adjacent character data
     private BufferedStringValue textHandler = null;
 
@@ -60,8 +59,8 @@ class DocViewImportHandler extends TargetImportHandler {
      *
      * @param importer
      */
-    DocViewImportHandler(Importer importer, ValueFactory valueFactory) {
-        super(importer, valueFactory);
+    DocViewImportHandler(Importer importer) {
+        super(importer);
     }
 
     /**
@@ -103,7 +102,7 @@ class DocViewImportHandler extends TargetImportHandler {
     private void appendCharacters(char[] ch, int start, int length)
             throws SAXException {
         if (textHandler == null) {
-            textHandler = new BufferedStringValue(resolver, valueFactory);
+            textHandler = new BufferedStringValue(resolver);
         }
         try {
             textHandler.append(ch, start, length);
@@ -156,10 +155,10 @@ class DocViewImportHandler extends TargetImportHandler {
                         new NodeInfo(NameConstants.JCR_XMLTEXT, null, null, null);
                 TextValue[] values =
                         new TextValue[]{textHandler};
-                ArrayList<PropInfo> props = new ArrayList<PropInfo>();
-                props.add(new PropInfo(
-                        NameConstants.JCR_XMLCHARACTERS,
-                        PropertyType.STRING, values));
+                ArrayList props = new ArrayList();
+                PropInfo prop = new PropInfo(
+                        NameConstants.JCR_XMLCHARACTERS, PropertyType.STRING, values);
+                props.add(prop);
                 // call Importer
                 importer.startNode(node, props);
                 importer.endNode(node);
@@ -230,7 +229,7 @@ class DocViewImportHandler extends TargetImportHandler {
             Name nodeTypeName = null;
             Name[] mixinTypes = null;
 
-            ArrayList<PropInfo> props = new ArrayList<PropInfo>(atts.getLength());
+            ArrayList props = new ArrayList(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
                 if (atts.getURI(i).equals(Name.NS_XMLNS_URI)) {
                     // skip namespace declarations reported as attributes
@@ -251,7 +250,7 @@ class DocViewImportHandler extends TargetImportHandler {
                 // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
                 // todo proper multi-value serialization support
                 propValues = new TextValue[1];
-                propValues[0] = new StringValue(attrValue, resolver, valueFactory);
+                propValues[0] = new StringValue(attrValue, resolver);
 
                 if (propName.equals(NameConstants.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType

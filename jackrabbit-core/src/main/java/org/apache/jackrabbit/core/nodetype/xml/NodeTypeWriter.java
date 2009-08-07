@@ -19,29 +19,22 @@ package org.apache.jackrabbit.core.nodetype.xml;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMBuilder;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * Node type definition writer. This class is used to write the
@@ -67,8 +60,8 @@ public final class NodeTypeWriter {
             throws IOException, RepositoryException {
         try {
             NodeTypeWriter writer = new NodeTypeWriter(registry);
-            for (NodeTypeDef type : types) {
-                writer.addNodeTypeDef(type);
+            for (int i = 0; i < types.length; i++) {
+                writer.addNodeTypeDef(types[i]);
             }
             writer.write(xml);
         } catch (ParserConfigurationException e) {
@@ -87,8 +80,6 @@ public final class NodeTypeWriter {
     /** The namespace resolver. */
     private final NamePathResolver resolver;
 
-    private final ValueFactoryQImpl factory;
-
     /**
      * Creates a node type definition file writer. The given namespace
      * registry is used for the XML namespace bindings.
@@ -104,16 +95,15 @@ public final class NodeTypeWriter {
         builder = new DOMBuilder(Constants.NODETYPES_ELEMENT);
 
         String[] prefixes = registry.getPrefixes();
-        for (String prefix : prefixes) {
-            if (!"".equals(prefix)) {
-                String uri = registry.getURI(prefix);
-                builder.setAttribute("xmlns:" + prefix, uri);
+        for (int i = 0; i < prefixes.length; i++) {
+            if (!"".equals(prefixes[i])) {
+                String uri = registry.getURI(prefixes[i]);
+                builder.setAttribute("xmlns:" + prefixes[i], uri);
             }
         }
 
         NamespaceResolver nsResolver = new AdditionalNamespaceResolver(registry);
         resolver = new DefaultNamePathResolver(nsResolver);
-        factory = new ValueFactoryQImpl(InternalValueFactory.getInstance(), resolver);
     }
 
     /**
@@ -135,10 +125,6 @@ public final class NodeTypeWriter {
         builder.setAttribute(
                 Constants.ISMIXIN_ATTRIBUTE, def.isMixin());
         builder.setAttribute(
-                Constants.ISQUERYABLE_ATTRIBUTE, def.isQueryable());
-        builder.setAttribute(
-                Constants.ISABSTRACT_ATTRIBUTE, def.isAbstract());
-        builder.setAttribute(
                 Constants.HASORDERABLECHILDNODES_ATTRIBUTE,
                 def.hasOrderableChildNodes());
 
@@ -156,24 +142,24 @@ public final class NodeTypeWriter {
         Name[] supertypes = def.getSupertypes();
         if (supertypes.length > 0) {
             builder.startElement(Constants.SUPERTYPES_ELEMENT);
-            for (Name supertype : supertypes) {
+            for (int i = 0; i < supertypes.length; i++) {
                 builder.addContentElement(
                         Constants.SUPERTYPE_ELEMENT,
-                        resolver.getJCRName(supertype));
+                        resolver.getJCRName(supertypes[i]));
             }
             builder.endElement();
         }
 
         // property definitions
         PropDef[] properties = def.getPropertyDefs();
-        for (PropDef property : properties) {
-            addPropDef(property);
+        for (int i = 0; i < properties.length; i++) {
+            addPropDef(properties[i]);
         }
 
         // child node definitions
         NodeDef[] nodes = def.getChildNodeDefs();
-        for (NodeDef node : nodes) {
-            addChildNodeDef(node);
+        for (int i = 0; i < nodes.length; i++) {
+            addChildNodeDef(nodes[i]);
         }
 
         builder.endElement();
@@ -207,55 +193,17 @@ public final class NodeTypeWriter {
         builder.setAttribute(
                 Constants.MULTIPLE_ATTRIBUTE, def.isMultiple());
         builder.setAttribute(
-                Constants.ISFULLTEXTSEARCHABLE_ATTRIBUTE, def.isFullTextSearchable());
-        builder.setAttribute(
-                Constants.ISQUERYORDERABLE_ATTRIBUTE, def.isQueryOrderable());
-        // TODO do properly...
-        String[] qops = def.getAvailableQueryOperators();
-        if (qops != null && qops.length > 0) {
-            List ops = Arrays.asList(qops);
-            List defaultOps = Arrays.asList(Operator.getAllQueryOperators());
-            if (!ops.containsAll(defaultOps)) {
-                StringBuffer sb = new StringBuffer();
-                for (int i = 0; i < qops.length; i++) {
-                    if (i > 0) {
-                        sb.append(' ');
-                    }
-                    if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO)) {
-                        sb.append(Constants.EQ_ENTITY);
-                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO)) {
-                        sb.append(Constants.NE_ENTITY);
-                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN)) {
-                        sb.append(Constants.GT_ENTITY);
-                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO)) {
-                        sb.append(Constants.GE_ENTITY);
-                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN)) {
-                        sb.append(Constants.LT_ENTITY);
-                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO)) {
-                        sb.append(Constants.LE_ENTITY);
-                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LIKE)) {
-                        sb.append(Constants.LIKE_ENTITY);
-                    }
-                }
-                builder.setAttribute(
-                        Constants.AVAILABLEQUERYOPERATORS_ATTRIBUTE, sb.toString());
-            }
-        }
-
-        builder.setAttribute(
                 Constants.REQUIREDTYPE_ATTRIBUTE,
                 PropertyType.nameFromValue(def.getRequiredType()));
 
         // value constraints
-        QValueConstraint[] constraints = def.getValueConstraints();
+        ValueConstraint[] constraints = def.getValueConstraints();
         if (constraints != null && constraints.length > 0) {
             builder.startElement(Constants.VALUECONSTRAINTS_ELEMENT);
-            for (QValueConstraint constraint : constraints) {
-                ValueConstraint vc = ValueConstraint.create(
-                        def.getRequiredType(), constraint.getString());
+            for (int i = 0; i < constraints.length; i++) {
                 builder.addContentElement(
                         Constants.VALUECONSTRAINT_ELEMENT,
-                        vc.getDefinition(resolver));
+                        constraints[i].getDefinition(resolver));
             }
             builder.endElement();
         }
@@ -264,10 +212,10 @@ public final class NodeTypeWriter {
         InternalValue[] defaults = def.getDefaultValues();
         if (defaults != null && defaults.length > 0) {
             builder.startElement(Constants.DEFAULTVALUES_ELEMENT);
-            for (InternalValue v : defaults) {
+            for (int i = 0; i < defaults.length; i++) {
                 builder.addContentElement(
                         Constants.DEFAULTVALUE_ELEMENT,
-                        factory.createValue(v).getString());
+                        defaults[i].toJCRValue(resolver).getString());
             }
             builder.endElement();
         }
@@ -314,10 +262,10 @@ public final class NodeTypeWriter {
         // required primary types
         Name[] requiredTypes = def.getRequiredPrimaryTypes();
         builder.startElement(Constants.REQUIREDPRIMARYTYPES_ELEMENT);
-        for (Name requiredType : requiredTypes) {
+        for (int i = 0; i < requiredTypes.length; i++) {
             builder.addContentElement(
                     Constants.REQUIREDPRIMARYTYPE_ELEMENT,
-                    resolver.getJCRName(requiredType));
+                    resolver.getJCRName(requiredTypes[i]));
         }
         builder.endElement();
 

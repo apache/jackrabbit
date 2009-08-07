@@ -77,7 +77,7 @@ public class AbstractLogger {
      */
     protected Object execute(SafeCallable thunk, String methodName, Object[] args)  {
         writer.enter(methodName, args);
-        Object result;
+        Object result = null;
         try {
             result = thunk.call();
             writer.leave(methodName, args, result);

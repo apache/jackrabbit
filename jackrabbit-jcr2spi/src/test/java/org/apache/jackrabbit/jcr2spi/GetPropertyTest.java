@@ -16,20 +16,19 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.Session;
+import javax.jcr.RepositoryException;
+import javax.jcr.PropertyIterator;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.PathNotFoundException;
 
 /** <code>GetPropertyTest</code>... */
 public class GetPropertyTest extends AbstractJCRTest {
@@ -56,7 +55,7 @@ public class GetPropertyTest extends AbstractJCRTest {
 
         testRootNode.save();
 
-        readOnly = getHelper().getReadOnlySession();
+        readOnly = helper.getReadOnlySession();
     }
 
     protected void tearDown() throws Exception {
@@ -123,61 +122,6 @@ public class GetPropertyTest extends AbstractJCRTest {
         assertTrue(readOnly.itemExists(p3.getPath()));
     }
 
-    public void testGetExternallyChangedNode() throws RepositoryException {
-        // Access node1 through session 1
-        Node node1 = (Node) readOnly.getItem(node1Path);
-
-        // Add node and property through session 2
-        Node n2 = testRootNode.getNode(nodeName1).addNode(nodeName2);
-        Property p3 = n2.setProperty(propertyName1, "test");
-        testRootNode.save();
-
-        // Assert added nodes are visible in session 1 after refresh
-        node1.refresh(false);
-        assertTrue(readOnly.itemExists(n2.getPath()));
-        assertTrue(readOnly.itemExists(p3.getPath()));
-
-        Item m2 = readOnly.getItem(n2.getPath());
-        assertTrue(m2.isNode());
-        assertTrue(((Node) m2).hasProperty(propertyName1));
-
-        // Remove property through session 2
-        p3.remove();
-        testRootNode.save();
-
-        // Assert removal is visible through session 1
-        node1.refresh(false);
-        assertFalse(((Node) m2).hasProperty(propertyName1));
-    }
-
-    public void testGetExternallyChangedProperty() throws RepositoryException {
-        // Access node1 through session 1
-        Node node1 = (Node) readOnly.getItem(node1Path);
-
-        // Add node and property through session 2
-        Node n2 = testRootNode.getNode(nodeName1).addNode(nodeName2);
-        Property p3 = n2.setProperty(propertyName1, "test");
-        p3.setValue("v3");
-        testRootNode.save();
-
-        // Assert added nodes are visible in session 1 after refresh
-        node1.refresh(false);
-        assertTrue(readOnly.itemExists(n2.getPath()));
-        assertTrue(readOnly.itemExists(p3.getPath()));
-
-        Item q3 = readOnly.getItem(p3.getPath());
-        assertFalse(q3.isNode());
-        assertTrue("v3".equals(((Property) q3).getString()));
-
-        // Change property value through session 2
-        p3.setValue("v3_modified");
-        testRootNode.save();
-
-        // Assert modification is visible through session 1
-        node1.refresh(false);
-        assertTrue("v3_modified".equals(((Property) q3).getString()));
-    }
-
     public void testGetDeepSNSProperties() throws RepositoryException, NotExecutableException {
         Node n = testRootNode.getNode(nodeName1);
         if (!n.getDefinition().allowsSameNameSiblings()) {
@@ -190,7 +134,7 @@ public class GetPropertyTest extends AbstractJCRTest {
         Property p3 = sib3.setProperty(propertyName1, "sib3-prop");
         testRootNode.save();
 
-        Session s = getHelper().getReadWriteSession();
+        Session s = helper.getReadWriteSession();
         try {
             Node sibNode = (Node) s.getItem(sib2.getPath());
             sibNode.remove();
@@ -229,7 +173,7 @@ public class GetPropertyTest extends AbstractJCRTest {
     }
 
     public void testGetPropertyOfRemovedAncestor() throws RepositoryException {
-        Session rw = getHelper().getReadWriteSession();
+        Session rw = helper.getReadWriteSession();
         try {
             // add modification to a property.
             Property p = (Property) rw.getItem(prop1Path);

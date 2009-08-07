@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -27,12 +27,14 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -167,7 +169,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * Always throws a {@link UnsupportedOperationException}.
          */
-        public NodeReferences getNodeReferences(NodeId id)
+        public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {
             throw new UnsupportedOperationException();
         }
@@ -175,7 +177,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeId id) {
+        public boolean hasNodeReferences(NodeReferencesId id) {
             return false;
         }
     }
@@ -188,8 +190,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * Map of deleted {@link ItemState}s indexed by {@link ItemId}.
          */
-        private final Map<ItemId, ItemState> deleted =
-            new HashMap<ItemId, ItemState>();
+        private final Map deleted = new HashMap();
 
         /**
          * Creates a new <code>AtticItemStateManager</code> based on
@@ -198,7 +199,8 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
          *  <code>ChangeLog</code>.
          */
         private AtticItemStateManager(ChangeLog changes) {
-            for (ItemState state : changes.deletedStates()) {
+            for (Iterator it = changes.deletedStates(); it.hasNext();) {
+                ItemState state = (ItemState) it.next();
                 deleted.put(state.getId(), state);
             }
         }
@@ -237,7 +239,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * Always throws a {@link UnsupportedOperationException}.
          */
-        public NodeReferences getNodeReferences(NodeId id)
+        public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {
             throw new UnsupportedOperationException();
         }
@@ -245,7 +247,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeId id) {
+        public boolean hasNodeReferences(NodeReferencesId id) {
             return false;
         }
     }

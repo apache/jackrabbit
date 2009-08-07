@@ -26,9 +26,9 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.ItemId;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.PathNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -45,7 +45,7 @@ public class HierarchyEventListener implements InternalEventListener {
     private static Logger log = LoggerFactory.getLogger(HierarchyEventListener.class);
 
     private final HierarchyManager hierarchyMgr;
-    private final Collection<EventFilter> eventFilter;
+    private final Collection eventFilter;
 
     public HierarchyEventListener(WorkspaceManager wspManager,
                                   HierarchyManager hierarchyMgr,
@@ -60,18 +60,14 @@ public class HierarchyEventListener implements InternalEventListener {
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
             }
-            if (filter == null) {
-                this.eventFilter = Collections.emptyList();
-            } else {
-                this.eventFilter = Collections.singletonList(filter);
-            }
+            this.eventFilter = (filter == null) ? Collections.EMPTY_LIST : Collections.singletonList(filter);
             try {
                 wspManager.addEventListener(this);
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
             }
         } else {
-            this.eventFilter = Collections.emptyList();
+            this.eventFilter = Collections.EMPTY_LIST;
         }
     }
 
@@ -79,7 +75,7 @@ public class HierarchyEventListener implements InternalEventListener {
     /**
      * @see InternalEventListener#getEventFilters()
      */
-    public Collection<EventFilter> getEventFilters() {
+    public Collection getEventFilters() {
         return eventFilter;
     }
 
@@ -89,7 +85,7 @@ public class HierarchyEventListener implements InternalEventListener {
      * since workspace operations are reported as local changes as well and
      * might have invoked changes (autocreated items etc.).
      *
-     * @param eventBundle the events.
+     * @param eventBundle
      * @see InternalEventListener#onEvent(EventBundle)
      */
     public void onEvent(EventBundle eventBundle) {
@@ -104,20 +100,17 @@ public class HierarchyEventListener implements InternalEventListener {
      * Retrieve the workspace state(s) affected by the given event and refresh
      * them accordingly.
      *
-     * @param events the events to process.
+     * @param events
      */
-    private void pushEvents(Collection<Event> events) {
+    private void pushEvents(Collection events) {
         if (events.isEmpty()) {
             log.debug("Empty event bundle");
             return;
         }
-
-        // TODO: handle new 283 event types and clean add/remove that is also present as move-event.
-
         // collect set of removed node ids
-        Set<ItemId> removedEvents = new HashSet<ItemId>();
+        Set removedEvents = new HashSet();
         // separately collect the add events
-        Set<Event> addEvents = new HashSet<Event>();
+        Set addEvents = new HashSet();
 
         for (Iterator it = events.iterator(); it.hasNext();) {
             Event event = (Event) it.next();
@@ -160,7 +153,7 @@ public class HierarchyEventListener implements InternalEventListener {
                         try {
                             Path parentPath = ev.getPath().getAncestor(1);
                             parent = hierarchyMgr.lookup(parentPath);
-                        } catch (RepositoryException e) {
+                        } catch (PathNotFoundException e) {
                             // should not occur
                             log.debug(e.getMessage());
                         }
@@ -175,49 +168,38 @@ public class HierarchyEventListener implements InternalEventListener {
         }
 
         /* process all other events (removal, property changed) */
-        for (Event event : events) {
+        for (Iterator it = events.iterator(); it.hasNext(); ) {
+            Event event = (Event) it.next();
             int type = event.getType();
 
             NodeId parentId = event.getParentId();
             NodeEntry parent = (parentId != null) ? (NodeEntry) hierarchyMgr.lookup(parentId) : null;
-            switch (type) {
-                case Event.NODE_REMOVED:
-                case Event.PROPERTY_REMOVED:
-                    // notify parent about removal if its child-entry.
-                    // - if parent is 'null' (i.e. not yet loaded) the child-entry does
-                    //   not exist either -> no need to inform child-entry
-                    // - if parent got removed with the same event-bundle
-                    //   only remove the parent an skip this event.
-                    if (parent != null && !removedEvents.contains(parentId)) {
-                        parent.refresh(event);
-                    }
-                    break;
-                case Event.PROPERTY_CHANGED:
-                    // notify parent in case jcr:mixintypes or jcr:uuid was changed.
-                    // if parent is 'null' (i.e. not yet loaded) the prop-entry does
-                    // not exist either -> no need to inform propEntry
-                    if (parent != null) {
-                        parent.refresh(event);
-                    }
-                    break;
-                case Event.NODE_MOVED:
-                    // TODO: implementation missing
-                    throw new UnsupportedOperationException("Implementation missing");
-                    //break;
-                case Event.PERSIST:
-                    // TODO: implementation missing
-                    throw new UnsupportedOperationException("Implementation missing");
-                    //break;
-                default:
-                    // should never occur
-                    throw new IllegalArgumentException("Invalid event type: " + event.getType());
+            if (type == Event.NODE_REMOVED || type == Event.PROPERTY_REMOVED) {
+                // notify parent about removal if its child-entry.
+                // - if parent is 'null' (i.e. not yet loaded) the child-entry does
+                //   not exist either -> no need to inform child-entry
+                // - if parent got removed with the same event-bundle
+                //   only remove the parent an skip this event.
+                if (parent != null && !removedEvents.contains(parentId)) {
+                    parent.refresh(event);
+                }
+            } else if (type == Event.PROPERTY_CHANGED) {
+                // notify parent in case jcr:mixintypes or jcr:uuid was changed.
+                // if parent is 'null' (i.e. not yet loaded) the prop-entry does
+                // not exist either -> no need to inform propEntry
+                if (parent != null) {
+                    parent.refresh(event);
+                }
+            } else {
+                // should never occur
+                throw new IllegalArgumentException("Invalid event type: " + event.getType());
             }
         }
     }
 
-    private static Collection<Event> getEventCollection(EventBundle eventBundle) {
-        List<Event> evs = new ArrayList<Event>();
-        for (Iterator<Event> it = eventBundle.getEvents(); it.hasNext();) {
+    private static Collection getEventCollection(EventBundle eventBundle) {
+        List evs = new ArrayList();
+        for (Iterator it = eventBundle.getEvents(); it.hasNext();) {
            evs.add(it.next());
         }
         return evs;

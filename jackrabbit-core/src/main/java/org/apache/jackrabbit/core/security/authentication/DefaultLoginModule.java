@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -48,7 +49,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractLoginModule.class);
 
-    protected User user;
+    private User user;
     private UserManager userManager;
 
     /**
@@ -112,8 +113,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
     /**
      * Handles the impersonation of given Credentials.<p />
      * Current implementation takes {@link User} for the given Principal and
-     * delegates the check to
-     * {@link org.apache.jackrabbit.api.security.user.Impersonation#allows(javax.security.auth.Subject)}
+     * delegates the check to {@link Impersonation#allows(javax.security.auth.Subject)}
      *
      * @param principal Principal to impersonate.
      * @param credentials Credentials used to create the impersonation subject.

@@ -79,7 +79,7 @@ public interface Journal {
      * @return the InstanceRevision manager
      * @throws JournalException on error
      */
-    InstanceRevision getInstanceRevision() throws JournalException;
+    public InstanceRevision getInstanceRevision() throws JournalException;
 
     /**
      * Return an iterator over all records after the specified revision.
@@ -88,7 +88,7 @@ public interface Journal {
      * @return an iterator over all records after the specified revision.
      * @throws JournalException if an error occurs
      */
-    RecordIterator getRecords(long startRevision)
+    public RecordIterator getRecords(long startRevision)
             throws JournalException;
 
     /**
@@ -97,5 +97,5 @@ public interface Journal {
      * @return an iterator over all records.
      * @throws JournalException if an error occurs
      */
-    RecordIterator getRecords() throws JournalException;
+    public RecordIterator getRecords() throws JournalException;
 }

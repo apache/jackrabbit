@@ -17,8 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.BitSet;
 
 import javax.jcr.RepositoryException;
 
@@ -50,10 +49,9 @@ public abstract class QueryConstraint extends SelectorBasedConstraint {
     private final LuceneQueryFactory factory;
 
     /**
-     * Map of document numbers with their respective score value that match the
-     * query constraint.
+     * The bitset with the matching document numbers.
      */
-    private Map<Integer, Float> matches;
+    private BitSet matches;
 
     /**
      * Creates a new query constraint using the given lucene query.
@@ -97,11 +95,7 @@ public abstract class QueryConstraint extends SelectorBasedConstraint {
     private boolean evaluate(ScoreNode sn, EvaluationContext context)
             throws IOException {
         initMatches(context);
-        Float score = matches.get(sn.getDoc(context.getIndexReader()));
-        if (score != null) {
-            sn.setScore(score);
-        }
-        return score != null;
+        return matches.get(sn.getDoc(context.getIndexReader()));
     }
 
     /**
@@ -126,10 +120,10 @@ public abstract class QueryConstraint extends SelectorBasedConstraint {
             IndexReader reader = context.getIndexReader();
             QueryHits hits = context.evaluate(and);
             try {
-                matches = new HashMap<Integer, Float>();
+                matches = new BitSet();
                 ScoreNode sn;
                 while ((sn = hits.nextScoreNode()) != null) {
-                    matches.put(sn.getDoc(reader), sn.getScore());
+                    matches.set(sn.getDoc(reader));
                 }
             } finally {
                 hits.close();

@@ -27,7 +27,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
- * <code>ItemDefinitionProvider</code>...
+ * <code>ItemDefinitionManager</code>...
  */
 public interface ItemDefinitionProvider {
 

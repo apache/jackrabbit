@@ -69,11 +69,7 @@ public interface ObservationConstants {
     public static final String XML_EVENT_TRANSACTION_ID = "transactionid";
     public static final String XML_EVENT = "event";
     public static final String XML_EVENTUSERID = "eventuserid";
-    public static final String XML_EVENTUSERDATA = "eventuserdata";
-    public static final String XML_EVENTDATE = "eventdate";
-    public static final String XML_EVENTIDENTIFIER = "eventidentifier";
-    public static final String XML_EVENTINFO = "eventinfo";
-    
+
     //---< Property Names >-----------------------------------------------------
     /**
      * The protected subscription discovery property is used to find out about

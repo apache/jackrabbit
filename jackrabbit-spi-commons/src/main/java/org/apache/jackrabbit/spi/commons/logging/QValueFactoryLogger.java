@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
-import java.net.URI;
-import java.math.BigDecimal;
 
 import javax.jcr.RepositoryException;
 
@@ -102,20 +100,6 @@ public class QValueFactoryLogger extends AbstractLogger implements QValueFactory
             public Object call() throws RepositoryException {
                 return qValueFactory.create(value);
             }}, "create(Path)", new Object[]{value});
-    }
-
-    public QValue create(final URI value) throws RepositoryException {
-        return (QValue) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return qValueFactory.create(value);
-            }}, "create(URI)", new Object[]{value});
-    }
-
-    public QValue create(final BigDecimal value) throws RepositoryException {
-        return (QValue) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return qValueFactory.create(value);
-            }}, "create(BigDecimal)", new Object[]{value});
     }
 
     public QValue create(final byte[] value) throws RepositoryException {

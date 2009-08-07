@@ -18,48 +18,49 @@ package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
 import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.retention.RetentionManager;
+import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
-import org.apache.jackrabbit.core.version.InternalVersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -84,33 +85,31 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 import java.io.File;
 import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver, Dumpable {
+        implements org.apache.jackrabbit.api.jsr283.Session, JackrabbitSession, NamespaceResolver, NamePathResolver, Dumpable {
 
     /**
      * Name of the session attribute that controls whether the
@@ -126,6 +125,26 @@ public class SessionImpl extends AbstractSession
         "org.apache.jackrabbit.disableClusterSyncOnRefresh";
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
+
+    /**
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_READ} instead.
+     */
+    public static final String READ_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_READ;
+
+    /**
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_REMOVE} instead.
+     */
+    public static final String REMOVE_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE;
+
+    /**
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_ADD_NODE} instead.
+     */
+    public static final String ADD_NODE_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE;
+
+    /**
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_SET_PROPERTY} instead.
+     */
+    public static final String SET_PROPERTY_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY;
 
     /**
      * flag indicating whether this session is alive
@@ -156,8 +175,7 @@ public class SessionImpl extends AbstractSession
     /**
      * the attributes of this session
      */
-    protected final Map<String, Object> attributes =
-        new HashMap<String, Object>();
+    protected final HashMap attributes = new HashMap();
 
     /**
      * the node type manager
@@ -197,18 +215,12 @@ public class SessionImpl extends AbstractSession
     /**
      * The version manager for this session
      */
-    protected final InternalVersionManager versionMgr;
-
-    /**
-     * node type instance handler
-     */
-    protected final NodeTypeInstanceHandler ntInstanceHandler;
+    protected final VersionManager versionMgr;
 
     /**
      * Listeners (weak references)
      */
-    protected final Map<SessionListener, SessionListener> listeners =
-        new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    protected final Map listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
      * value factory
@@ -229,7 +241,7 @@ public class SessionImpl extends AbstractSession
      * Retention and Hold Manager
      */
     private RetentionManager retentionManager;
-
+        
     /**
      * The stack trace knows who opened this session. It is logged
      * if the session is finalized, but Session.logout() was never called.
@@ -279,7 +291,7 @@ public class SessionImpl extends AbstractSession
 
         userId = retrieveUserId(subject);
 
-        namePathResolver = new DefaultNamePathResolver(this, this, true);
+        namePathResolver = new DefaultNamePathResolver(this, true);
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), this, rep.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(wspConfig,
@@ -289,7 +301,6 @@ public class SessionImpl extends AbstractSession
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(subject, itemStateMgr.getHierarchyMgr());
         versionMgr = createVersionManager(rep);
-        ntInstanceHandler = new NodeTypeInstanceHandler(userId);
     }
 
     /**
@@ -343,7 +354,7 @@ public class SessionImpl extends AbstractSession
      * the repository version manager.
      * @return version manager
      */
-    protected InternalVersionManager createVersionManager(RepositoryImpl rep)
+    protected VersionManager createVersionManager(RepositoryImpl rep)
             throws RepositoryException {
 
         return rep.getVersionManager();
@@ -481,11 +492,11 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns the <code>InternalVersionManager</code> associated with this session.
+     * Returns the <code>VersionManager</code> associated with this session.
      *
-     * @return the <code>InternalVersionManager</code> associated with this session
+     * @return the <code>VersionManager</code> associated with this session
      */
-    public InternalVersionManager getInternalVersionManager() {
+    public VersionManager getVersionManager() {
         return versionMgr;
     }
 
@@ -493,20 +504,12 @@ public class SessionImpl extends AbstractSession
     /**
      * Returns the internal retention manager used for evaluation of effective
      * retention policies and holds.
-     *
+     * 
      * @return internal retention manager
      * @throws RepositoryException
      */
     protected RetentionRegistry getRetentionRegistry() throws RepositoryException {
         return wsp.getRetentionRegistry();
-    }
-
-    /**
-     * Returns the node type instance handler for this session
-     * @return the node type instance handler.
-     */
-    public NodeTypeInstanceHandler getNodeTypeInstanceHandler() {
-        return ntInstanceHandler;
     }
 
     /**
@@ -524,6 +527,35 @@ public class SessionImpl extends AbstractSession
         } else {
             attributes.remove(name);
         }
+    }
+
+    /**
+     * Retrieves the referenceable node with the given <code>UUID</code>.
+     *
+     * @param uuid uuid of the node to be retrieved
+     * @return referenceable node with the given uuid
+     * @throws ItemNotFoundException if no node exists with the given uuid or
+     * if the existing node is not referenceable.
+     * @throws RepositoryException if another error occurs.
+     * @see #getNodeByUUID(String)
+     * @see #getNodeById(NodeId)
+     */
+    public Node getNodeByUUID(UUID uuid) throws ItemNotFoundException, RepositoryException {
+        NodeImpl node = getNodeById(new NodeId(uuid));
+        // since the uuid of a node is only exposed through jcr:uuid declared
+        // by mix:referenceable it's rather unlikely that a client can possibly
+        // know the internal uuid of a non-referenceable node; omitting the
+        // check for mix:referenceable seems therefore to be a reasonable
+        // compromise in order to improve performance.
+/*
+        if (node.isNodeType(Name.MIX_REFERENCEABLE)) {
+            return node;
+        } else {
+            // there is a node with that uuid but the node does not expose it
+            throw new ItemNotFoundException(uuid.toString());
+        }
+*/
+        return node;
     }
 
     /**
@@ -555,17 +587,18 @@ public class SessionImpl extends AbstractSession
      */
     protected String[] getWorkspaceNames() throws RepositoryException {
         // filter workspaces according to access rights
-        List<String> names = new ArrayList<String>();
-        for (String name : rep.getWorkspaceNames()) {
+        ArrayList list = new ArrayList();
+        String[] names = rep.getWorkspaceNames();
+        for (int i = 0; i < names.length; i++) {
             try {
-                if (getAccessManager().canAccess(name)) {
-                    names.add(name);
+                if (getAccessManager().canAccess(names[i])) {
+                    list.add(names[i]);
                 }
-            } catch (NoSuchWorkspaceException e) {
-                log.warn("Workspace disappeared unexpectedly: " + name, e);
+            } catch (NoSuchWorkspaceException nswe) {
+                // should never happen, ignore...
             }
         }
-        return names.toArray(new String[names.size()]);
+        return (String[]) list.toArray(new String[list.size()]);
     }
 
     /**
@@ -606,11 +639,12 @@ public class SessionImpl extends AbstractSession
      */
     protected void notifyLoggingOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        List<SessionListener> copy =
-            new ArrayList<SessionListener>(listeners.values());
-        for (SessionListener listener : copy) {
-            if (listener != null) {
-                listener.loggingOut(this);
+        SessionListener[] la =
+                (SessionListener[]) listeners.values().toArray(
+                        new SessionListener[listeners.size()]);
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].loggingOut(this);
             }
         }
     }
@@ -620,11 +654,12 @@ public class SessionImpl extends AbstractSession
      */
     protected void notifyLoggedOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        List<SessionListener> copy =
-            new ArrayList<SessionListener>(listeners.values());
-        for (SessionListener listener : copy) {
-            if (listener != null) {
-                listener.loggedOut(this);
+        SessionListener[] la =
+                (SessionListener[]) listeners.values().toArray(
+                        new SessionListener[listeners.size()]);
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].loggedOut(this);
             }
         }
     }
@@ -655,8 +690,8 @@ public class SessionImpl extends AbstractSession
      * @throws RepositoryException
      */
     public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
-        ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
-        InternalVersionManagerImpl vm = (InternalVersionManagerImpl) rep.getVersionManager();
+        ArrayList pmList = new ArrayList();
+        VersionManagerImpl vm = (VersionManagerImpl) rep.getVersionManager();
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);
         String[] wspNames = rep.getWorkspaceNames();
@@ -678,7 +713,7 @@ public class SessionImpl extends AbstractSession
         }
         IterablePersistenceManager[] ipmList = new IterablePersistenceManager[pmList.size()];
         for (int i = 0; i < pmList.size(); i++) {
-            pm = pmList.get(i);
+            pm = (PersistenceManager) pmList.get(i);
             if (!(pm instanceof IterablePersistenceManager)) {
                 ipmList = null;
                 break;
@@ -731,33 +766,6 @@ public class SessionImpl extends AbstractSession
         return namePathResolver.getQPath(path);
     }
 
-    public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
-        return namePathResolver.getQPath(path, normalizeIdentifier);
-    }
-
-    //---------------------------------------------------< IdentifierResolver >
-    /**
-     * @see IdentifierResolver#getPath(String)
-     */
-    public Path getPath(String identifier) throws MalformedPathException {
-        try {
-            return getHierarchyManager().getPath(NodeId.valueOf(identifier));
-        } catch (RepositoryException e) {
-            throw new MalformedPathException("Identifier '" + identifier + "' cannot be resolved.");
-        }
-    }
-
-    /**
-     * @see IdentifierResolver#checkFormat(String)
-     */
-    public void checkFormat(String identifier) throws MalformedPathException {
-        try {
-            NodeId.valueOf(identifier);
-        } catch (IllegalArgumentException e) {
-            throw new MalformedPathException("Invalid identifier: " + identifier);
-        }
-    }
-
     //----------------------------------------------------< JackrabbitSession >
     /**
      * @see JackrabbitSession#getPrincipalManager()
@@ -794,10 +802,6 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public Workspace getWorkspace() {
-        return getWorkspaceImpl();
-    }
-
-    WorkspaceImpl getWorkspaceImpl() {
         return wsp;
     }
 
@@ -848,21 +852,7 @@ public class SessionImpl extends AbstractSession
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
         try {
-            NodeImpl node = getNodeById(new NodeId(uuid));
-            // since the uuid of a node is only exposed through jcr:uuid declared
-            // by mix:referenceable it's rather unlikely that a client can possibly
-            // know the internal uuid of a non-referenceable node; omitting the
-            // check for mix:referenceable seems therefore to be a reasonable
-            // compromise in order to improve performance.
-            /*
-            if (node.isNodeType(Name.MIX_REFERENCEABLE)) {
-                return node;
-            } else {
-                // there is a node with that uuid but the node does not expose it
-                throw new ItemNotFoundException(uuid.toString());
-            }
-             */
-            return node;
+            return getNodeByUUID(UUID.fromString(uuid));
         } catch (IllegalArgumentException e) {
             // Assuming the exception is from UUID.fromString()
             throw new RepositoryException("Invalid UUID: " + uuid, e);
@@ -1070,7 +1060,7 @@ public class SessionImpl extends AbstractSession
         // verify for both source and destination parent nodes that
         // - they are checked-out
         // - are not protected neither by node type constraints nor by retention/hold
-        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
+        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkRemove(srcParentNode, options, Permission.NONE);
         getValidator().checkModify(destParentNode, options, Permission.NONE);
@@ -1115,7 +1105,7 @@ public class SessionImpl extends AbstractSession
             destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
         } else {
             // check shareable case
-            if (targetNode.getNodeState().isShareable()) {
+            if (((NodeState) targetNode.getItemState()).isShareable()) {
                 String msg = "Moving a shareable node is not supported.";
                 log.debug(msg);
                 throw new UnsupportedRepositoryOperationException(msg);
@@ -1167,7 +1157,7 @@ public class SessionImpl extends AbstractSession
 
         // verify that parent node is checked-out, not locked and not protected
         // by either node type constraints nor by some retention or hold.
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT |
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkModify(parent, options, Permission.NONE);
 
@@ -1190,9 +1180,11 @@ public class SessionImpl extends AbstractSession
             ObservationManager manager = getWorkspace().getObservationManager();
             // Use a copy to avoid modifying the set of registered listeners
             // while iterating over it
-            Collection<EventListener> listeners =
+            Collection listeners =
                 IteratorUtils.toList(manager.getRegisteredEventListeners());
-            for (EventListener listener : listeners) {
+            Iterator iterator = listeners.iterator();
+            while (iterator.hasNext()) {
+                EventListener listener = (EventListener) iterator.next();
                 try {
                     manager.removeEventListener(listener);
                 } catch (RepositoryException e) {
@@ -1264,9 +1256,10 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
-    public ValueFactory getValueFactory() {
+    public ValueFactory getValueFactory()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         if (valueFactory == null) {
-            valueFactory = new ValueFactoryImpl(this, rep.getDataStore());
+            valueFactory = ValueFactoryImpl.getInstance();
         }
         return valueFactory;
     }
@@ -1289,7 +1282,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public String[] getAttributeNames() {
-        return attributes.keySet().toArray(new String[attributes.size()]);
+        return (String[]) attributes.keySet().toArray(new String[attributes.size()]);
     }
 
     /**
@@ -1369,7 +1362,7 @@ public class SessionImpl extends AbstractSession
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * @see javax.jcr.Session#getNodeByIdentifier(String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#getNodeByIdentifier(String)
      * @since JCR 2.0
      */
     public Node getNodeByIdentifier(String id)
@@ -1384,7 +1377,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#getNode(String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#getNode(String)
      * @since JCR 2.0
      */
     public Node getNode(String absPath)
@@ -1408,7 +1401,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#getProperty(String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#getProperty(String)
      * @since JCR 2.0
      */
     public Property getProperty(String absPath)
@@ -1432,7 +1425,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#nodeExists(String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#nodeExists(String)
      * @since JCR 2.0
      */
     public boolean nodeExists(String absPath) throws RepositoryException {
@@ -1453,7 +1446,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#propertyExists(String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#propertyExists(String)
      * @since JCR 2.0
      */
     public boolean propertyExists(String absPath) throws RepositoryException {
@@ -1474,7 +1467,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#removeItem(String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#removeItem(String)
      * @since JCR 2.0
      */
     public void removeItem(String absPath) throws VersionException,
@@ -1499,7 +1492,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#hasPermission(String, String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#hasPermission(String, String)
      * @since 2.0
      */
     public boolean hasPermission(String absPath, String actions) throws RepositoryException {
@@ -1511,7 +1504,7 @@ public class SessionImpl extends AbstractSession
             throw new RepositoryException("Absolute path expected. Was:" + absPath);
         }
 
-        Set<String> s = new HashSet<String>(Arrays.asList(actions.split(",")));
+        Set s = new HashSet(Arrays.asList(actions.split(",")));
         int permissions = 0;
         if (s.remove(ACTION_READ)) {
             permissions |= Permission.READ;
@@ -1535,7 +1528,11 @@ public class SessionImpl extends AbstractSession
             }
         }
         if (!s.isEmpty()) {
-            throw new IllegalArgumentException("Unknown actions: " + s);
+            StringBuffer sb = new StringBuffer();
+            for (Iterator it = s.iterator(); it.hasNext();) {
+                sb.append(it.next());
+            }
+            throw new IllegalArgumentException("Unknown actions: " + sb.toString());
         }
         try {
             return getAccessManager().isGranted(path, permissions);
@@ -1545,73 +1542,17 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#hasCapability(String, Object, Map)
+     * @see org.apache.jackrabbit.api.jsr283.Session#hasCapability(String, Object, Map)
      * @since JCR 2.0
      */
-    public boolean hasCapability(String methodName, Object target, Object[] arguments)
+    public boolean hasCapability(String methodType, Object target, Map arguments)
             throws RepositoryException {
-        // value of this method (as currently spec'ed) to jcr api clients
-        // is rather limited...
-
-        // here's therefore a minimal rather than best effort implementation;
-        // returning true is always fine according to the spec...
-        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
-                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
-        if (target instanceof Node) {
-            if (methodName.equals("addNode")
-                    || methodName.equals("addMixin")
-                    || methodName.equals("orderBefore")
-                    || methodName.equals("removeMixin")
-                    || methodName.equals("removeShare")
-                    || methodName.equals("removeSharedSet")
-                    || methodName.equals("setPrimaryType")
-                    || methodName.equals("setProperty")
-                    || methodName.equals("update")) {
-                return getValidator().canModify((ItemImpl) target, options, Permission.NONE);
-            } else if (methodName.equals("remove")) {
-                try {
-                    getValidator().checkRemove((ItemImpl) target, options, Permission.NONE);
-                } catch (RepositoryException e) {
-                    return false;
-                }
-            }
-        } else if (target instanceof Property) {
-            if (methodName.equals("setValue")
-                    || methodName.equals("save")) {
-                return getValidator().canModify((ItemImpl) target, options, Permission.NONE);
-            } else if (methodName.equals("remove")) {
-                try {
-                    getValidator().checkRemove((ItemImpl) target, options, Permission.NONE);
-                } catch (RepositoryException e) {
-                    return false;
-                }
-            }
-        } else if (target instanceof Workspace) {
-            if (methodName.equals("clone")
-                    || methodName.equals("copy")
-                    || methodName.equals("createWorkspace")
-                    || methodName.equals("deleteWorkspace")
-                    || methodName.equals("getImportContentHandler")
-                    || methodName.equals("importXML")
-                    || methodName.equals("move")) {
-                // todo minimal, best effort checks (e.g. permissions for write methods etc)
-            }
-        } else if (target instanceof Session) {
-            if (methodName.equals("clone")
-                    || methodName.equals("removeItem")
-                    || methodName.equals("getImportContentHandler")
-                    || methodName.equals("importXML")
-                    || methodName.equals("save")) {
-                // todo minimal, best effort checks (e.g. permissions for write methods etc)
-            }
-        }
-
-        // we're unable to evaluate capability, return true (staying on the safe side)
-        return true;
+        //TODO
+        throw new UnsupportedRepositoryOperationException("Not yet implemented");
     }
 
     /**
-     * @see javax.jcr.Session#getAccessControlManager()
+     * @see org.apache.jackrabbit.api.jsr283.Session#getAccessControlManager()
      * @since JCR 2.0
      */
     public AccessControlManager getAccessControlManager()
@@ -1624,7 +1565,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#getRetentionManager()
+     * @see org.apache.jackrabbit.api.jsr283.Session#getRetentionManager()
      * @since JCR 2.0
      */
     public RetentionManager getRetentionManager()
@@ -1657,10 +1598,10 @@ public class SessionImpl extends AbstractSession
         ps.println();
         itemStateMgr.dump(ps);
     }
-
+    
     /**
-     * Finalize the session. If the application doesn't call Session.logout(),
-     * the session is closed automatically; however a warning is written to the log file,
+     * Finalize the session. If the application doesn't close Session.logout(), 
+     * the session is closed automatically; however a warning is written to the log file, 
      * together with the stack trace of where the session was opened.
      */
     public void finalize() {
@@ -1669,4 +1610,5 @@ public class SessionImpl extends AbstractSession
             logout();
         }
     }
+
 }

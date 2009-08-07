@@ -382,15 +382,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     private static void addIfHeader(SessionInfo sInfo, HttpMethod method) {
-        try {
-            String[] locktokens = sInfo.getLockTokens();
-            if (locktokens != null && locktokens.length > 0) {
-                IfHeader ifH = new IfHeader(locktokens);
-                method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
-            }
-        } catch (RepositoryException e) {
-            // should never get here
-            log.error("Unable to retrieve lock tokens: omitted from request header.");
+        String[] locktokens = sInfo.getLockTokens();
+        if (locktokens != null && locktokens.length > 0) {
+            IfHeader ifH = new IfHeader(locktokens);
+            method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
         }
     }
 
@@ -596,17 +591,6 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 vs[i] = getQValueFactory(sessionInfo).create(mixinNodeTypeNames[i]);
             }
             addProperty(nodeId, NameConstants.JCR_MIXINTYPES, vs);
-        }
-
-        /**
-         * @inheritDoc
-         */
-        public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
-            assertMethod();
-
-            NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            QValue v = getQValueFactory(sessionInfo).create(primaryNodeTypeName);
-            addProperty(nodeId, NameConstants.JCR_PRIMARYTYPE, v);
         }
 
         /**

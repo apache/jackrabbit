@@ -19,11 +19,9 @@ package org.apache.jackrabbit.core;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Random;
 
-import javax.jcr.Binary;
 import javax.jcr.Credentials;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
@@ -31,9 +29,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeTemplate;
 
 import junit.framework.TestCase;
 
@@ -85,54 +80,26 @@ public class RepositoryCopierTest extends TestCase {
                     session.getWorkspace().getNamespaceRegistry();
                 registry.registerNamespace("test", "http://www.example.org/");
 
-                NodeTypeManager manager =
-                    session.getWorkspace().getNodeTypeManager();
-                NodeTypeTemplate template = manager.createNodeTypeTemplate();
-                template.setName("test:unstructured");
-                template.setDeclaredSuperTypeNames(
-                        new String[] { "nt:unstructured" });
-                manager.registerNodeType(template, false);
-
                 Node root = session.getRootNode();
 
                 Node referenceable =
-                    root.addNode("referenceable", "test:unstructured");
-                referenceable.addMixin(NodeType.MIX_REFERENCEABLE);
+                    root.addNode("referenceable", "nt:unstructured");
+                referenceable.addMixin("mix:referenceable");
                 session.save();
-                identifier = referenceable.getIdentifier();
+                identifier = referenceable.getUUID();
 
-                Node properties = root.addNode("properties", "test:unstructured");
+                Node properties = root.addNode("properties", "nt:unstructured");
                 properties.setProperty("boolean", true);
-                Binary binary = session.getValueFactory().createBinary(
+                Value binary = session.getValueFactory().createValue(
                         new ByteArrayInputStream(BINARY));
-                try {
-                    properties.setProperty("binary", binary);
-                } finally {
-                    binary.dispose();
-                }
+                properties.setProperty("binary", binary);
                 properties.setProperty("date", DATE);
-                properties.setProperty("decimal", new BigDecimal(123));
                 properties.setProperty("double", Math.PI);
                 properties.setProperty("long", 9876543210L);
                 properties.setProperty("reference", referenceable);
                 properties.setProperty("string", "test");
                 properties.setProperty("multiple", "a,b,c".split(","));
                 session.save();
-
-                binary = properties.getProperty("binary").getBinary();
-                try {
-                    InputStream stream = binary.getStream();
-                    try {
-                        for (int i = 0; i < BINARY.length; i++) {
-                            assertEquals(BINARY[i], (byte) stream.read());
-                        }
-                        assertEquals(-1, stream.read());
-                    } finally {
-                        stream.close();
-                    }
-                } finally {
-                    binary.dispose();
-                }
             } finally {
                 session.logout();
             }
@@ -151,15 +118,8 @@ public class RepositoryCopierTest extends TestCase {
                         "http://www.example.org/",
                         session.getNamespaceURI("test"));
 
-                NodeTypeManager manager =
-                    session.getWorkspace().getNodeTypeManager();
-                assertTrue(manager.hasNodeType("test:unstructured"));
-                NodeType type = manager.getNodeType("test:unstructured");
-                assertFalse(type.isMixin());
-                assertTrue(type.isNodeType("nt:unstructured"));
-
-                assertTrue(session.nodeExists("/properties"));
-                Node properties = session.getNode("/properties");
+                assertTrue(session.itemExists("/properties"));
+                Node properties = (Node) session.getItem("/properties");
                 assertEquals(
                         PropertyType.BOOLEAN,
                         properties.getProperty("boolean").getType());
@@ -168,19 +128,15 @@ public class RepositoryCopierTest extends TestCase {
                 assertEquals(
                         PropertyType.BINARY,
                         properties.getProperty("binary").getType());
-                Binary binary = properties.getProperty("binary").getBinary();
+                Value binary = properties.getProperty("binary").getValue();
+                InputStream stream = binary.getStream();
                 try {
-                    InputStream stream = binary.getStream();
-                    try {
-                        for (int i = 0; i < BINARY.length; i++) {
-                            assertEquals(BINARY[i], (byte) stream.read());
-                        }
-                        assertEquals(-1, stream.read());
-                    } finally {
-                        stream.close();
+                    for (int i = 0; i < BINARY.length; i++) {
+                        assertEquals(BINARY[i], (byte) stream.read());
                     }
+                    assertEquals(-1, stream.read());
                 } finally {
-                    binary.dispose();
+                    stream.close();
                 }
                 assertEquals(
                         PropertyType.DATE,
@@ -189,16 +145,10 @@ public class RepositoryCopierTest extends TestCase {
                         DATE.getTimeInMillis(),
                         properties.getProperty("date").getDate().getTimeInMillis());
                 assertEquals(
-                        PropertyType.DECIMAL,
-                        properties.getProperty("decimal").getType());
-                assertEquals(
-                        new BigDecimal(123),
-                        properties.getProperty("decimal").getDecimal());
-                assertEquals(
                         PropertyType.DOUBLE,
                         properties.getProperty("double").getType());
-                assertEquals(
-                        Math.PI, properties.getProperty("double").getDouble());
+                assertTrue(
+                        Math.PI == properties.getProperty("double").getDouble());
                 assertEquals(
                         PropertyType.LONG,
                         properties.getProperty("long").getType());

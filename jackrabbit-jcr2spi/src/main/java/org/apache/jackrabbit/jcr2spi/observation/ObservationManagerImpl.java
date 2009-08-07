@@ -16,30 +16,28 @@
  */
 package org.apache.jackrabbit.jcr2spi.observation;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.commons.iterator.EventListenerIteratorAdapter;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.EventJournal;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
-
-import org.apache.jackrabbit.commons.iterator.EventListenerIteratorAdapter;
-import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>ObservationManagerImpl</code>...
@@ -57,8 +55,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     private final WorkspaceManager wspManager;
 
     /**
-     * The name and path resolver associated with the session this observation
-     * manager belongs to.
+     * The session this observation manager belongs to.
      */
     private final NamePathResolver resolver;
 
@@ -70,22 +67,20 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     /**
      * Live mapping of <code>EventListener</code> to <code>EventFilter</code>.
      */
-    private final Map<EventListener, EventFilter> subscriptions = new HashMap<EventListener, EventFilter>();
+    private final Map subscriptions = new HashMap();
 
     /**
      * A read only mapping of <code>EventListener</code> to <code>EventFilter</code>.
      */
-    private Map<EventListener, EventFilter> readOnlySubscriptions;
+    private Map readOnlySubscriptions;
 
     /**
      * Creates a new observation manager for <code>session</code>.
-     *
      * @param wspManager the WorkspaceManager.
-     * @param resolver   the name path resolver for this session.
+     * @param resolver
      * @param ntRegistry The <code>NodeTypeRegistry</code> of the session.
      */
-    public ObservationManagerImpl(WorkspaceManager wspManager,
-                                  NamePathResolver resolver,
+    public ObservationManagerImpl(WorkspaceManager wspManager, NamePathResolver resolver,
                                   NodeTypeRegistry ntRegistry) {
         this.wspManager = wspManager;
         this.resolver = resolver;
@@ -102,8 +97,33 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                                  String[] uuids,
                                  String[] nodeTypeNames,
                                  boolean noLocal) throws RepositoryException {
-        EventFilter filter = createEventFilter(eventTypes, absPath,
-                isDeep, uuids, nodeTypeNames, noLocal);
+        Path path;
+        try {
+            path = resolver.getQPath(absPath).getCanonicalPath();
+        } catch (NameException e) {
+            throw new RepositoryException("Malformed path: " + absPath);
+        }
+
+        // create NodeType instances from names
+        Name[] qNodeTypeNames;
+        if (nodeTypeNames == null) {
+            qNodeTypeNames = null;
+        } else {
+            try {
+                qNodeTypeNames = new Name[nodeTypeNames.length];
+                for (int i = 0; i < nodeTypeNames.length; i++) {
+                    Name ntName = resolver.getQName(nodeTypeNames[i]);
+                    if (!ntRegistry.isRegistered(ntName)) {
+                        throw new RepositoryException("unknown node type: " + nodeTypeNames[i]);
+                    }
+                    qNodeTypeNames[i] = ntName;
+                }
+            } catch (NameException e) {
+                throw new RepositoryException(e.getMessage());
+            }
+        }
+
+        EventFilter filter = wspManager.createEventFilter(eventTypes, path, isDeep, uuids, qNodeTypeNames, noLocal);
         synchronized (subscriptions) {
             subscriptions.put(listener, filter);
             readOnlySubscriptions = null;
@@ -144,35 +164,10 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         return new EventListenerIteratorAdapter(activeListeners.keySet());
     }
 
-    /**
-     * @see javax.jcr.observation.ObservationManager#getEventJournal()
-     */
-    public EventJournal getEventJournal() throws RepositoryException {
-        return getEventJournal(Event.ALL_TYPES, "/", true, null, null);
-    }
-
-    /**
-     * @see javax.jcr.observation.ObservationManager#getEventJournal(int, String, boolean, String[], String[])
-     */
-    public EventJournal getEventJournal(
-            int eventTypes, String absPath, boolean isDeep,
-            String[] uuid, String[] nodeTypeName)
-            throws RepositoryException {
-        EventFilter filter = createEventFilter(eventTypes, absPath, isDeep, uuid, nodeTypeName, false);
-        return new EventJournalImpl(wspManager, filter, resolver);
-    }
-
-    /**
-     * @see javax.jcr.observation.ObservationManager#setUserData(String) 
-     */
-    public void setUserData(String userData) throws RepositoryException {
-        wspManager.setUserData(userData);
-    }
-
     //-----------------------< InternalEventListener >--------------------------
 
-    public Collection<EventFilter> getEventFilters() {
-        List<EventFilter> filters = new ArrayList<EventFilter>();
+    public Collection getEventFilters() {
+        List filters = new ArrayList();
         synchronized (subscriptions) {
             ensureReadOnlyMap();
             filters.addAll(readOnlySubscriptions.values());
@@ -182,17 +177,16 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
 
     public void onEvent(EventBundle eventBundle) {
         // get active listeners
-        Map<EventListener, EventFilter> activeListeners;
+        Map activeListeners;
         synchronized (subscriptions) {
             ensureReadOnlyMap();
             activeListeners = readOnlySubscriptions;
         }
-        for (Map.Entry<EventListener, EventFilter> entry : activeListeners.entrySet()) {
-            EventListener listener = entry.getKey();
-            EventFilter filter = entry.getValue();
-            FilteredEventIterator eventIter = new FilteredEventIterator(
-                    eventBundle.getEvents(), eventBundle.isLocal(), filter,
-                    resolver, wspManager.getIdFactory());
+        for (Iterator it = activeListeners.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            EventListener listener = (EventListener) entry.getKey();
+            EventFilter filter = (EventFilter) entry.getValue();
+            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter, resolver);
             if (eventIter.hasNext()) {
                 try {
                     listener.onEvent(eventIter);
@@ -214,58 +208,8 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
      */
     private void ensureReadOnlyMap() {
         if (readOnlySubscriptions == null) {
-            readOnlySubscriptions = new HashMap<EventListener, EventFilter>(subscriptions);
+            readOnlySubscriptions = new HashMap(subscriptions);
         }
     }
 
-    /**
-     * Creates an SPI event filter from the given list of constraints.
-     *
-     * @param eventTypes    the event types.
-     * @param absPath       an absolute path.
-     * @param isDeep        whether to include events for descendant items of
-     *                      the node at absPath.
-     * @param uuids         uuid filters.
-     * @param nodeTypeNames node type filters.
-     * @param noLocal       whether to exclude changes from the local session.
-     * @return the SPI event filter instance.
-     * @throws RepositoryException if an error occurs while creating the event
-     *                             filter.
-     */
-    private EventFilter createEventFilter(int eventTypes,
-                                          String absPath,
-                                          boolean isDeep,
-                                          String[] uuids,
-                                          String[] nodeTypeNames,
-                                          boolean noLocal)
-            throws RepositoryException {
-        Path path;
-        try {
-            path = resolver.getQPath(absPath).getCanonicalPath();
-        } catch (NameException e) {
-            throw new RepositoryException("Malformed path: " + absPath);
-        }
-
-        // create NodeType instances from names
-        Name[] qNodeTypeNames;
-        if (nodeTypeNames == null) {
-            qNodeTypeNames = null;
-        } else {
-            try {
-                qNodeTypeNames = new Name[nodeTypeNames.length];
-                for (int i = 0; i < nodeTypeNames.length; i++) {
-                    Name ntName = resolver.getQName(nodeTypeNames[i]);
-                    if (!ntRegistry.isRegistered(ntName)) {
-                        throw new RepositoryException("unknown node type: " + nodeTypeNames[i]);
-                    }
-                    qNodeTypeNames[i] = ntName;
-                }
-            } catch (NameException e) {
-                throw new RepositoryException(e.getMessage());
-            }
-        }
-
-        return wspManager.createEventFilter(eventTypes, path, isDeep,
-                uuids, qNodeTypeNames, noLocal);
-    }
 }

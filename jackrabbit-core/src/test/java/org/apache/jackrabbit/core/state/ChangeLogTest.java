@@ -18,9 +18,12 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.NameFactory;
+
+import java.util.Iterator;
 
 /**
  * <code>ChangeLogTest</code> contains the test cases for the methods
@@ -40,7 +43,8 @@ public class ChangeLogTest extends AbstractJCRTest {
      * entry in either the added nor the removed states
      */
     public void testAddDelete() throws Exception {
-        PropertyId id = new PropertyId(new NodeId(), factory.create("", "a"));
+        PropertyId id = new PropertyId(
+                new NodeId(UUID.randomUUID()), factory.create("", "a"));
         ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
@@ -48,10 +52,10 @@ public class ChangeLogTest extends AbstractJCRTest {
         log.added(state);
         log.deleted(state);
 
-        assertFalse("State not in added collection",
-                log.addedStates().iterator().hasNext());
-        assertFalse("State not in deleted collection",
-                log.deletedStates().iterator().hasNext());
+        Iterator iter = log.addedStates();
+        assertFalse("State not in added collection", iter.hasNext());
+        iter = log.deletedStates();
+        assertFalse("State not in deleted collection", iter.hasNext());
     }
 
     /**
@@ -59,7 +63,8 @@ public class ChangeLogTest extends AbstractJCRTest {
      * in the added states.
      */
     public void testAddModify() throws Exception {
-        PropertyId id = new PropertyId(new NodeId(), factory.create("", "a"));
+        PropertyId id = new PropertyId(
+                new NodeId(UUID.randomUUID()), factory.create("", "a"));
         ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
@@ -67,10 +72,10 @@ public class ChangeLogTest extends AbstractJCRTest {
         log.added(state);
         log.modified(state);
 
-        assertTrue("State still in added collection",
-                log.addedStates().iterator().hasNext());
-        assertFalse("State not in modified collection",
-                log.modifiedStates().iterator().hasNext());
+        Iterator iter = log.addedStates();
+        assertTrue("State still in added collection", iter.hasNext());
+        iter = log.modifiedStates();
+        assertFalse("State not in modified collection", iter.hasNext());
     }
 
     /**
@@ -80,7 +85,8 @@ public class ChangeLogTest extends AbstractJCRTest {
     public void testPreserveOrder() throws Exception {
         ItemState[] states = new ItemState[10];
         for (int i = 0; i < states.length; i++) {
-            PropertyId id = new PropertyId(new NodeId(), factory.create("", "a" + i));
+            PropertyId id = new PropertyId(
+                    new NodeId(UUID.randomUUID()), factory.create("", "a" + i));
             states[i] = new PropertyState(id, ItemState.STATUS_NEW, false);
         }
 
@@ -90,8 +96,11 @@ public class ChangeLogTest extends AbstractJCRTest {
             log.added(states[i]);
         }
 
+        Iterator iter = log.addedStates();
         int i = 0;
-        for (ItemState state : log.addedStates()) {
+
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
             assertTrue("Added states preserve order.",
                     state.equals(states[i++]));
         }

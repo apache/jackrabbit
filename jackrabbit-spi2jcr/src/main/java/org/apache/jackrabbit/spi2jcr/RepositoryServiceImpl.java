@@ -38,11 +38,7 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
-import org.apache.jackrabbit.spi.commons.EventBundleImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -52,7 +48,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.RepositoryException;
@@ -79,13 +74,9 @@ import javax.jcr.Workspace;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Value;
 import javax.jcr.ItemVisitor;
-import javax.jcr.ValueFactory;
-import javax.jcr.GuestCredentials;
-import javax.jcr.PropertyIterator;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventJournal;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.Query;
@@ -94,15 +85,11 @@ import javax.jcr.lock.Lock;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.nodetype.NodeTypeDefinition;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -141,11 +128,6 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final IdFactoryImpl idFactory = (IdFactoryImpl) IdFactoryImpl.getInstance();
 
     /**
-     * The QValueFactory
-     */
-    private QValueFactory qValueFactory = QValueFactoryImpl.getInstance();
-
-    /**
      * Set to <code>true</code> if the underlying JCR repository supports
      * observation.
      */
@@ -163,16 +145,6 @@ public class RepositoryServiceImpl implements RepositoryService {
         this.repository = repository;
         this.batchReadConfig = batchReadConfig;
         this.supportsObservation = "true".equals(repository.getDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED));
-
-        try {
-            Session s = repository.login(new GuestCredentials());
-            ValueFactory vf = s.getValueFactory();
-            if (vf instanceof ValueFactoryQImpl) {
-                qValueFactory = ((ValueFactoryQImpl) vf).getQValueFactory();
-            }
-        } catch (RepositoryException e) {
-            // ignore            
-        }
     }
 
     /**
@@ -200,7 +172,7 @@ public class RepositoryServiceImpl implements RepositoryService {
      * {@inheritDoc}
      */
     public QValueFactory getQValueFactory() {
-        return qValueFactory;
+        return QValueFactoryImpl.getInstance();
     }
 
     /**
@@ -416,27 +388,6 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName, boolean weakReferences) throws ItemNotFoundException, RepositoryException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        Node node = getNode(nodeId, sInfo);
-        String jcrName = (propertyName == null) ? null : sInfo.getNamePathResolver().getJCRName(propertyName);
-
-        List<PropertyId> ids = new ArrayList<PropertyId>();
-        PropertyIterator it;
-        if (weakReferences) {
-            it = node.getWeakReferences(jcrName);
-        } else {
-            it = node.getReferences(jcrName);
-        }
-        while (it.hasNext()) {
-            ids.add(idFactory.createPropertyId(it.nextProperty(), sInfo.getNamePathResolver()));
-        }
-        return ids.iterator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo,
                                         PropertyId propertyId)
             throws ItemNotFoundException, RepositoryException {
@@ -629,8 +580,8 @@ public class RepositoryServiceImpl implements RepositoryService {
                 Node n = getNode(nodeId, sInfo);
                 Lock lock;
                 // TODO: remove check once jsr283 is released
-                if (sInfo.getSession() instanceof javax.jcr.Session) {
-                    javax.jcr.lock.LockManager lMgr = (((javax.jcr.Workspace) sInfo.getSession().getWorkspace()).getLockManager());
+                if (sInfo.getSession() instanceof org.apache.jackrabbit.api.jsr283.Session) {
+                    org.apache.jackrabbit.api.jsr283.lock.LockManager lMgr = (((org.apache.jackrabbit.api.jsr283.Workspace) sInfo.getSession().getWorkspace()).getLockManager());
                     lock = lMgr.lock(n.getPath(), deep, sessionScoped, timeoutHint, ownerHint);
                 } else {
                     lock = n.lock(deep, sessionScoped);
@@ -688,17 +639,6 @@ public class RepositoryServiceImpl implements RepositoryService {
                 return null;
             }
         }, sInfo);
-    }
-
-    public NodeId checkpoint(SessionInfo sessionInfo, final NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        Version newVersion = (Version) executeWithLocalEvents(new Callable() {
-            public Object run() throws RepositoryException {
-                VersionManager vMgr = sInfo.getSession().getWorkspace().getVersionManager();
-                return vMgr.checkpoint(getNodePath(nodeId, sInfo));
-            }
-        }, sInfo);
-        return idFactory.createNodeId(newVersion, sInfo.getNamePathResolver());
     }
 
     /**
@@ -816,32 +756,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         return (Iterator) executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                String nodePath = getNodePath(nodeId, sInfo);
-                NodeIterator it = getVersionManager(sInfo).merge(nodePath, srcWorkspaceName, bestEffort);
-                List ids = new ArrayList();
-                while (it.hasNext()) {
-                    ids.add(idFactory.createNodeId(it.nextNode(),
-                            sInfo.getNamePathResolver()));
-                }
-                return ids.iterator();
-            }
-        }, sInfo);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterator merge(final SessionInfo sessionInfo,
-                          final NodeId nodeId,
-                          final String srcWorkspaceName,
-                          final boolean bestEffort,
-                          final boolean isShallow)
-            throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return (Iterator) executeWithLocalEvents(new Callable() {
-            public Object run() throws RepositoryException {
-                String nodePath = getNodePath(nodeId, sInfo);
-                NodeIterator it = getVersionManager(sInfo).merge(nodePath, srcWorkspaceName, bestEffort, isShallow);
+                Node n = getNode(nodeId, sInfo);
+                NodeIterator it = n.merge(srcWorkspaceName, bestEffort);
                 List ids = new ArrayList();
                 while (it.hasNext()) {
                     ids.add(idFactory.createNodeId(it.nextNode(),
@@ -949,69 +865,6 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public NodeId createActivity(SessionInfo sessionInfo, final String title) throws UnsupportedRepositoryOperationException, RepositoryException {
-        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        final VersionManager vMgr = getVersionManager(sInfo);
-        Node activity = (Node) executeWithLocalEvents(new Callable() {
-            public Object run() throws RepositoryException {
-                return vMgr.createActivity(title);
-            }
-        }, getSessionInfoImpl(sessionInfo));
-        return idFactory.createNodeId(activity, sInfo.getNamePathResolver());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void removeActivity(SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        final VersionManager vMgr = getVersionManager(sInfo);
-        Node activity = (Node) executeWithLocalEvents(new Callable() {
-            public Object run() throws RepositoryException {
-                // TODO: uncomment as soon as removeActivity method is fixed in jsr 283
-                // return vMgr.removeActivity(getNode(activityId, sInfo));
-                throw new UnsupportedOperationException("Impl missing... waiting for updated jsr 283 jar.");
-            }
-        }, getSessionInfoImpl(sessionInfo));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterator mergeActivity(SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return (Iterator) executeWithLocalEvents(new Callable() {
-            public Object run() throws RepositoryException {
-                Node node = getNode(activityId, sInfo);
-                NodeIterator it = getVersionManager(sInfo).merge(node);
-                List ids = new ArrayList();
-                while (it.hasNext()) {
-                    ids.add(idFactory.createNodeId(it.nextNode(),
-                            sInfo.getNamePathResolver()));
-                }
-                return ids.iterator();
-            }
-        }, sInfo);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeId createConfiguration(SessionInfo sessionInfo, final NodeId nodeId)
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        final VersionManager vMgr = getVersionManager(sInfo);
-        Node configuration = (Node) executeWithLocalEvents(new Callable() {
-            public Object run() throws RepositoryException {
-                return vMgr.createConfiguration(getNodePath(nodeId, sInfo));
-            }
-        }, getSessionInfoImpl(sessionInfo));
-        return idFactory.createNodeId(configuration, sInfo.getNamePathResolver());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo)
             throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
@@ -1021,35 +874,25 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public String[] checkQueryStatement(SessionInfo sessionInfo,
+    public void checkQueryStatement(SessionInfo sessionInfo,
                                     String statement,
                                     String language,
                                     Map namespaces)
             throws InvalidQueryException, RepositoryException {
-        Query q = createQuery(getSessionInfoImpl(sessionInfo).getSession(),
-                statement, language, namespaces);
-        return q.getBindVariableNames();
+        createQuery(getSessionInfoImpl(sessionInfo).getSession(), statement,
+                language, namespaces);
     }
 
     /**
      * {@inheritDoc}
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
+    public QueryInfo executeQuery(SessionInfo sessionInfo,
+                                  String statement,
+                                  String language,
+                                  Map namespaces) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Query query = createQuery(sInfo.getSession(), statement,
                 language, namespaces);
-        if (limit != -1) {
-            query.setLimit(limit);
-        }
-        if (offset != -1) {
-            query.setOffset(offset);
-        }
-        if (values != null && !values.isEmpty()) {
-            for (Map.Entry<String, QValue> entry : values.entrySet()) {
-                Value value = ValueFormat.getJCRValue(entry.getValue(), sInfo.getNamePathResolver(), sInfo.getSession().getValueFactory());
-                query.bindValue(entry.getKey(), value);
-            }
-        }
         return new QueryInfoImpl(query.execute(), idFactory,
                 sInfo.getNamePathResolver(), getQValueFactory());
     }
@@ -1078,7 +921,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public Subscription createSubscription(SessionInfo sessionInfo,
                                            EventFilter[] filters)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getSessionInfoImpl(sessionInfo).createSubscription(idFactory, qValueFactory, filters);
+        return getSessionInfoImpl(sessionInfo).createSubscription(idFactory, filters);
     }
 
     /**
@@ -1092,37 +935,6 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new RepositoryException("Unknown subscription implementation: "
                     + subscription.getClass().getName());
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public EventBundle getEvents(SessionInfo sessionInfo,
-                                   EventFilter filter,
-                                   long after)
-            throws RepositoryException, UnsupportedRepositoryOperationException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        EventJournal journal = sInfo.getSession().getWorkspace().getObservationManager().getEventJournal();
-        if (journal == null) {
-            throw new UnsupportedRepositoryOperationException();
-        }
-        EventFactory factory = new EventFactory(sInfo.getSession(),
-                sInfo.getNamePathResolver(), idFactory, qValueFactory);
-        journal.skipTo(after);
-        List<Event> events = new ArrayList<Event>();
-        int batchSize = 1024;
-        boolean distinctDates = true;
-        long lastDate = Long.MIN_VALUE;
-        while (journal.hasNext() && (batchSize > 0 || !distinctDates)) {
-            Event e = factory.fromJCREvent(journal.nextEvent());
-            if (filter.accept(e, false)) {
-                distinctDates = lastDate != e.getDate();
-                lastDate = e.getDate();
-                events.add(e);
-                batchSize--;
-            }
-        }
-        return new EventBundleImpl(events, false);
     }
 
     /**
@@ -1237,56 +1049,6 @@ public class RepositoryServiceImpl implements RepositoryService {
             }
         }
         return defs.iterator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
-
-        NodeTypeDefinition[] defs = new NodeTypeDefinition[nodeTypeDefinitions.length];
-        for (int i = 0; i < nodeTypeDefinitions.length; i++) {
-            defs[i] = new NodeTypeDefinitionImpl(nodeTypeDefinitions[i], sInfo.getNamePathResolver(), sInfo.getSession().getValueFactory()) {
-            };
-        }
-        ntMgr.registerNodeTypes(defs, allowUpdate);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
-        String[] names = new String[nodeTypeNames.length];
-        for (int i = 0; i < nodeTypeNames.length; i++) {
-            names[i] = sInfo.getNamePathResolver().getJCRName(nodeTypeNames[i]);
-        }
-        ntMgr.unregisterNodeTypes(names);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        Workspace wsp = sInfo.getSession().getWorkspace();
-        if (srcWorkspaceName == null) {
-            wsp.createWorkspace(name);
-        } else {
-            wsp.createWorkspace(name, srcWorkspaceName);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        Workspace wsp = sInfo.getSession().getWorkspace();
-        wsp.deleteWorkspace(name);
     }
 
     //----------------------------< internal >----------------------------------
@@ -1505,16 +1267,6 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
-        public void setPrimaryType(final NodeId nodeId, final Name primaryNodeTypeName) throws RepositoryException {
-            executeGuarded(new Callable() {
-                public Object run() throws RepositoryException {
-                    Node n = getNode(nodeId, sInfo);
-                    n.setPrimaryType(getJcrName(primaryNodeTypeName));
-                    return null;
-                }
-            });
-        }
-
         public void move(final NodeId srcNodeId,
                          final NodeId destParentNodeId,
                          final Name destName) throws RepositoryException {
@@ -1629,7 +1381,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         Session session = sessionInfo.getSession();
         StringBuffer path = new StringBuffer();
         if (id.getUniqueID() != null) {
-            path.append(session.getNodeByIdentifier(id.getUniqueID()).getPath());
+            path.append(session.getNodeByUUID(id.getUniqueID()).getPath());
         } else {
             path.append("/");
         }
@@ -1661,10 +1413,6 @@ public class RepositoryServiceImpl implements RepositoryService {
             // if the parent of an batch operation is not available, this indicates
             // that it has been destroyed by another session.
             throw new InvalidItemStateException(e);
-        } catch (ItemNotFoundException e) {
-            // if the parent of an batch operation is not available, this indicates
-            // that it has been destroyed by another session.
-            throw new InvalidItemStateException(e);
         }
     }
 
@@ -1672,7 +1420,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         Session session = sessionInfo.getSession();
         Node n;
         if (id.getUniqueID() != null) {
-            n = session.getNodeByIdentifier(id.getUniqueID());
+            n = session.getNodeByUUID(id.getUniqueID());
         } else {
             n = session.getRootNode();
         }
@@ -1688,16 +1436,11 @@ public class RepositoryServiceImpl implements RepositoryService {
         return n.getNode(jcrPath);
     }
 
-    private String getNodePath(NodeId nodeId, SessionInfoImpl sessionInfo) throws RepositoryException {
-        // TODO: improve. avoid roundtrip over node access.
-        return getNode(nodeId, sessionInfo).getPath();
-    }
-
     private Property getProperty(PropertyId id, SessionInfoImpl sessionInfo) throws ItemNotFoundException, PathNotFoundException, RepositoryException {
         Session session = sessionInfo.getSession();
         Node n;
         if (id.getUniqueID() != null) {
-            n = session.getNodeByIdentifier(id.getUniqueID());
+            n = session.getNodeByUUID(id.getUniqueID());
         } else {
             n = session.getRootNode();
         }
@@ -1707,10 +1450,6 @@ public class RepositoryServiceImpl implements RepositoryService {
             jcrPath = jcrPath.substring(1, jcrPath.length());
         }
         return n.getProperty(jcrPath);
-    }
-
-    private VersionManager getVersionManager(SessionInfoImpl sessionInfo) throws RepositoryException {
-        return sessionInfo.getSession().getWorkspace().getVersionManager();
     }
 
     private Query createQuery(Session session,

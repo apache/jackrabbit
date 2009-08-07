@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ValueFactory;
 
 /**
  * Test case for concurrent garbage collection
@@ -40,35 +38,6 @@ public class GCConcurrentTest extends AbstractJCRTest {
 
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(GCConcurrentTest.class);
-
-    public void testConcurrentDelete() throws Exception {
-        Node root = testRootNode;
-        Session session = root.getSession();
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-        if (rep.getDataStore() == null) {
-            LOG.info("testGC skipped. Data store is not used.");
-            return;
-        }
-        final String testNodeName = "testConcurrentDelete";
-        node(root, testNodeName);
-        session.save();
-        GarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
-        gc.setPersistenceManagerScan(false);
-        gc.setScanEventListener(new ScanEventListener() {
-            public void beforeScanning(Node n) throws RepositoryException {
-                if (n.getName().equals(testNodeName)) {
-                    n.remove();
-                    n.getSession().save();
-                }
-            }
-            public void afterScanning(Node n) throws RepositoryException {
-            }
-            public void done() {
-            }
-        });
-        gc.scan();
-        gc.stopScan();
-    }
 
     public void testGC() throws Exception {
         Node root = testRootNode;
@@ -89,8 +58,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
                 gcThread.start();
             }
             Node n = node(root, "test" + i);
-            ValueFactory vf = session.getValueFactory();
-            n.setProperty("data", vf.createBinary(randomInputStream(i)));
+            n.setProperty("data", randomInputStream(i));
             session.save();
             LOG.debug("saved: " + i);
         }
@@ -98,7 +66,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
         for (int i = 0; i < len; i++) {
             Node n = root.getNode("test" + i);
             Property p = n.getProperty("data");
-            InputStream in = p.getBinary().getStream();
+            InputStream in = p.getStream();
             InputStream expected = randomInputStream(i);
             checkStreams(expected, in);
             n.remove();
@@ -108,7 +76,6 @@ public class GCConcurrentTest extends AbstractJCRTest {
         Thread.sleep(10);
         gc.setStop(true);
         Thread.sleep(10);
-        gcThread.join();
         gc.throwException();
     }
 

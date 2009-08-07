@@ -16,11 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -68,7 +63,7 @@ public class NodeTypeTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
         rootNode = session.getRootNode();
     }
@@ -199,64 +194,37 @@ public class NodeTypeTest extends AbstractJCRTest {
     }
 
     /**
-     * Test if all node types returned by getDeclaredSupertypes() are also
+     * Test if all node types returned by getDeclatedSupertypes() are also
      * returned by getSupertypes(). All existing node types are tested.
      */
     public void testGetDeclaredSupertypes()
             throws RepositoryException {
 
-        for (NodeTypeIterator types = manager.getAllNodeTypes(); types.hasNext(); ) {
+        NodeTypeIterator types = manager.getAllNodeTypes();
+        while (types.hasNext()) {
             NodeType type = types.nextNodeType();
 
-            Set declaredSupertypeNames = asSetOfNames(type.getDeclaredSupertypes());
-            Set supertypeNames = asSetOfNames(type.getSupertypes());
-            
-            assertTrue("all declared supertypes must be supertypes: "
-                    + (new HashSet(declaredSupertypeNames).removeAll(supertypeNames)),
-                    supertypeNames.containsAll(declaredSupertypeNames));
-            
-            assertEquals("getDeclaredSuperTypes and getDeclaredSuperTypeNames must be consistent",
-                    declaredSupertypeNames, new HashSet(Arrays.asList(type.getDeclaredSupertypeNames())));
-        }
-    }
+            NodeType declaredSupertypes[] = type.getDeclaredSupertypes();
+            NodeType supertypes[] = type.getSupertypes();
 
-    /**
-     * Test if all node types returned by getDeclaredSubtypes() are also
-     * returned by getSubtypes(), and that the information is consistent
-     * with getSuperTypes/getDeclaredSuperTypes. All existing node types are tested.
-     * 
-     * @since JCR 2.0
-     */
-    public void testGetDeclaredSubtypes()
-            throws RepositoryException {
-
-        for (NodeTypeIterator types = manager.getAllNodeTypes(); types.hasNext(); ) {
-            NodeType type = types.nextNodeType();
-            String name = type.getName();
-
-            Set declaredSubtypeNames = asSetOfNames(type.getDeclaredSubtypes());
-            Set subtypeNames = asSetOfNames(type.getSubtypes());
-            
-            assertTrue("all declared subtypes must be subtypes: "
-                    + (new HashSet(declaredSubtypeNames).removeAll(subtypeNames)),
-                    subtypeNames.containsAll(declaredSubtypeNames));
-            
-            // check the reverse relation
-            for (Iterator it = subtypeNames.iterator(); it.hasNext(); ) {
-                String subtypename = (String) it.next();
-                boolean isDeclared = declaredSubtypeNames.contains(subtypename);
-                
-                NodeType subtype = manager.getNodeType(subtypename);
-                Set supertypeNames = asSetOfNames(subtype.getSupertypes());
-                
-                assertTrue(name + " should occur in set of super types: " + supertypeNames,
-                        supertypeNames.contains(name));
-                
-                if (isDeclared) {
-                    Set declaredSupertypeNames = asSetOfNames(subtype.getDeclaredSupertypes());
-                    assertTrue(name + " should occur in set of declared super types: " + declaredSupertypeNames,
-                            declaredSupertypeNames.contains(name));
+            try {
+                for (int i = 0; i < declaredSupertypes.length; i++) {
+                    boolean exists = false;
+                    for (int j = 0; j < supertypes.length; j++) {
+                        if (supertypes[j].getName().equals(declaredSupertypes[i].getName())) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    assertTrue("All node types returned by " +
+                            "getDeclaredSupertypes() must also be " +
+                            "returned by getSupertypes()",
+                            exists);
                 }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                fail("The array returned by " +
+                        "getDeclaredSupertypes() must not exceed " +
+                        "the one returned by getSupertypes()");
             }
         }
     }
@@ -440,26 +408,5 @@ public class NodeTypeTest extends AbstractJCRTest {
         }
         return null;
     }
-    
-    /**
-     * Return the set of node type names for the specified node types.
-     */
-    private Set asSetOfNames(NodeType[] types) {
-        Set result = new HashSet();
-        for (int i = 0; i < types.length; i++) {
-            result.add(types[i].getName());
-        }
-        return result;
-    }
 
-    /**
-     * Return the set of node type names for the specified node types.
-     */
-    private Set asSetOfNames(NodeTypeIterator it) {
-        Set result = new HashSet();
-        while (it.hasNext()) {
-            result.add(it.nextNodeType().getName());
-        }
-        return result;
-    }
 }

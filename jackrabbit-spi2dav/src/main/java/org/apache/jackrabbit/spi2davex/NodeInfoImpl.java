@@ -55,7 +55,8 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private int numberOfChildNodes = -1;
 
     /**
-     * Creates a new <code>NodeInfo</code>.
+     * Creates a new serializable item info for the given qualified
+     * <code>item</code> info.
      *
      * @param id The node id.
      * @param path the path to this item.

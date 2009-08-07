@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -31,6 +32,7 @@ import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -43,7 +45,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -57,12 +59,13 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.SortComparatorSource;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
+import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.collections.collection.TransformedCollection;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Transformer;
 import org.xml.sax.SAXException;
 import org.w3c.dom.Element;
 
@@ -90,32 +93,26 @@ import java.util.Collection;
  */
 public class SearchIndex extends AbstractQueryHandler {
 
-    /**
-     * Valid node type names under /jcr:system. Used to determine if a
-     * query needs to be executed also against the /jcr:system tree.
-     */
-    public static final Collection<Name> VALID_SYSTEM_INDEX_NODE_TYPE_NAMES =
-        Collections.unmodifiableCollection(Arrays.asList(
-                NameConstants.NT_CHILDNODEDEFINITION,
-                NameConstants.NT_FROZENNODE,
-                NameConstants.NT_NODETYPE,
-                NameConstants.NT_PROPERTYDEFINITION,
-                NameConstants.NT_VERSION,
-                NameConstants.NT_VERSIONEDCHILD,
-                NameConstants.NT_VERSIONHISTORY,
-                NameConstants.NT_VERSIONLABELS,
-                NameConstants.REP_NODETYPES,
-                NameConstants.REP_SYSTEM,
-                NameConstants.REP_VERSIONSTORAGE,
-                // Supertypes
-                NameConstants.NT_BASE,
-                NameConstants.MIX_REFERENCEABLE));
-        
-    /**
-     * Default query node factory.
-     */
-    private static final DefaultQueryNodeFactory DEFAULT_QUERY_NODE_FACTORY =
-        new DefaultQueryNodeFactory(VALID_SYSTEM_INDEX_NODE_TYPE_NAMES);
+    public static final List VALID_SYSTEM_INDEX_NODE_TYPE_NAMES
+        = Collections.unmodifiableList(Arrays.asList(new Name[]{
+            NameConstants.NT_CHILDNODEDEFINITION,
+            NameConstants.NT_FROZENNODE,
+            NameConstants.NT_NODETYPE,
+            NameConstants.NT_PROPERTYDEFINITION,
+            NameConstants.NT_VERSION,
+            NameConstants.NT_VERSIONEDCHILD,
+            NameConstants.NT_VERSIONHISTORY,
+            NameConstants.NT_VERSIONLABELS,
+            NameConstants.REP_NODETYPES,
+            NameConstants.REP_SYSTEM,
+            NameConstants.REP_VERSIONSTORAGE,
+            // Supertypes
+            NameConstants.NT_BASE,
+            NameConstants.MIX_REFERENCEABLE
+        }));
+
+    private static final DefaultQueryNodeFactory DEFAULT_QUERY_NODE_FACTORY = new DefaultQueryNodeFactory(
+            VALID_SYSTEM_INDEX_NODE_TYPE_NAMES);
 
     /** The logger instance for this class */
     private static final Logger log = LoggerFactory.getLogger(SearchIndex.class);
@@ -170,11 +167,6 @@ public class SearchIndex extends AbstractQueryHandler {
     public static final int DEFAULT_TERM_INFOS_INDEX_DIVISOR = 1;
 
     /**
-     * The default value for {@link #indexMergerPoolSize}.
-     */
-    public static final int DEFAULT_INDEX_MERGER_POOL_SIZE = 2;
-
-    /**
      * The path factory.
      */
     protected static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
@@ -182,12 +174,12 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The path of the root node.
      */
-    protected static final Path ROOT_PATH;
+    private static final Path ROOT_PATH;
 
     /**
      * The path <code>/jcr:system</code>.
      */
-    protected static final Path JCR_SYSTEM_PATH;
+    private static final Path JCR_SYSTEM_PATH;
 
     static {
         ROOT_PATH = PATH_FACTORY.create(NameConstants.ROOT);
@@ -202,7 +194,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The actual index
      */
-    protected MultiIndex index;
+    private MultiIndex index;
 
     /**
      * The analyzer we use for indexing.
@@ -249,13 +241,6 @@ public class SearchIndex extends AbstractQueryHandler {
      * volatileIdleTime config parameter.
      */
     private int volatileIdleTime = 3;
-
-    /**
-     * The maximum age (in seconds) of the index history. The default value is
-     * zero. Which means, index commits are deleted as soon as they are not used
-     * anymore.
-     */
-    private long maxHistoryAge = 0;
 
     /**
      * maxMergeDocs config parameter
@@ -333,7 +318,7 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean autoRepair = true;
 
     /**
-     * The id resolver cache size.
+     * The uuid resolver cache size.
      * <p/>
      * Default value is: <code>1000</code>.
      */
@@ -357,7 +342,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The excerpt provider class. Implements {@link ExcerptProvider}.
      */
-    private Class<?> excerptProviderClass = DefaultHTMLExcerpt.class;
+    private Class excerptProviderClass = DefaultHTMLExcerpt.class;
 
     /**
      * The path to the indexing configuration file.
@@ -379,12 +364,12 @@ public class SearchIndex extends AbstractQueryHandler {
      * The indexing configuration class.
      * Implements {@link IndexingConfiguration}.
      */
-    private Class<?> indexingConfigurationClass = IndexingConfigurationImpl.class;
+    private Class indexingConfigurationClass = IndexingConfigurationImpl.class;
 
     /**
      * The class that implements {@link SynonymProvider}.
      */
-    private Class<?> synonymProviderClass;
+    private Class synonymProviderClass;
 
     /**
      * The currently set synonym provider.
@@ -415,7 +400,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The class that implements {@link SpellChecker}.
      */
-    private Class<?> spellCheckerClass;
+    private Class spellCheckerClass;
 
     /**
      * The spell checker for this query handler or <code>null</code> if none is
@@ -455,11 +440,6 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean initializeHierarchyCache = true;
 
     /**
-     * The number of worker threads for merging index segments.
-     */
-    private int indexMergerPoolSize = DEFAULT_INDEX_MERGER_POOL_SIZE;
-
-    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -485,7 +465,7 @@ public class SearchIndex extends AbstractQueryHandler {
             throw new IOException("SearchIndex requires 'path' parameter in configuration!");
         }
 
-        Set<NodeId> excludedIDs = new HashSet<NodeId>();
+        Set excludedIDs = new HashSet();
         if (context.getExcludedNodeId() != null) {
             excludedIDs.add(context.getExcludedNodeId());
         }
@@ -540,11 +520,12 @@ public class SearchIndex extends AbstractQueryHandler {
                 if (autoRepair) {
                     check.repair(true);
                 } else {
-                    List<ConsistencyCheckError> errors = check.getErrors();
+                    List errors = check.getErrors();
                     if (errors.size() == 0) {
                         log.info("No errors detected.");
                     }
-                    for (ConsistencyCheckError err : errors) {
+                    for (Iterator it = errors.iterator(); it.hasNext();) {
+                        ConsistencyCheckError err = (ConsistencyCheckError) it.next();
                         log.info(err.toString());
                     }
                 }
@@ -561,7 +542,7 @@ public class SearchIndex extends AbstractQueryHandler {
         if (!index.getIndexFormatVersion().equals(getIndexFormatVersion())) {
             log.warn("Using Version {} for reading. Please re-index version " +
                     "storage for optimal performance.",
-                    getIndexFormatVersion().getVersion());
+                    new Integer(getIndexFormatVersion().getVersion()));
         }
     }
 
@@ -576,7 +557,7 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Removes the node with <code>id</code> from the search index.
+     * Removes the node with <code>uuid</code> from the search index.
      * @param id the id of the node to remove from the index.
      * @throws IOException if an error occurs while removing the node from
      * the index.
@@ -590,73 +571,76 @@ public class SearchIndex extends AbstractQueryHandler {
      * {@link MultiIndex#update(Collection, Collection)} and
      * transforms the two iterators to the required types.
      *
-     * @param remove ids of nodes to remove.
+     * @param remove uuids of nodes to remove.
      * @param add    NodeStates to add. Calls to <code>next()</code> on this
      *               iterator may return <code>null</code>, to indicate that a
      *               node could not be indexed successfully.
      * @throws RepositoryException if an error occurs while indexing a node.
      * @throws IOException         if an error occurs while updating the index.
      */
-    public void updateNodes(Iterator<NodeId> remove, Iterator<NodeState> add)
+    public void updateNodes(NodeIdIterator remove, NodeStateIterator add)
             throws RepositoryException, IOException {
         checkOpen();
+        final Map aggregateRoots = new HashMap();
+        final HashSet removedUUIDs = new HashSet();
+        final Set addedUUIDs = new HashSet();
 
-        Map<NodeId, NodeState> aggregateRoots = new HashMap<NodeId, NodeState>();
-        Set<NodeId> removedIds = new HashSet<NodeId>();
-        Set<NodeId> addedIds = new HashSet<NodeId>();
-
-        Collection<NodeId> removeCollection = new ArrayList<NodeId>();
-        while (remove.hasNext()) {
-            NodeId id = remove.next();
-            removeCollection.add(id);
-            removedIds.add(id);
-        }
-
-        Collection<Document> addCollection = new ArrayList<Document>();
-        while (add.hasNext()) {
-            NodeState state = add.next();
-            if (state != null) {
-                NodeId id = state.getNodeId();
-                addedIds.add(id);
-                removedIds.remove(id);
-                retrieveAggregateRoot(state, aggregateRoots);
-
-                try {
-                    addCollection.add(createDocument(
-                            state, getNamespaceMappings(),
-                            index.getIndexFormatVersion()));
-                } catch (RepositoryException e) {
-                    log.warn("Exception while creating document for node: "
-                            + state.getNodeId() + ": " + e.toString());
-                }
-            }
-        }
-
-        index.update(removeCollection, addCollection);
+        index.update(IteratorUtils.toList(new TransformIterator(remove,
+                new Transformer() {
+                    public Object transform(Object input) {
+                        UUID uuid = ((NodeId) input).getUUID();
+                        removedUUIDs.add(uuid);
+                        return uuid;
+                    }
+                })), IteratorUtils.toList(new TransformIterator(add,
+                new Transformer() {
+                    public Object transform(Object input) {
+                        NodeState state = (NodeState) input;
+                        if (state == null) {
+                            return null;
+                        }
+                        UUID uuid = state.getNodeId().getUUID();
+                        addedUUIDs.add(uuid);
+                        removedUUIDs.remove(uuid);
+                        Document doc = null;
+                        try {
+                            doc = createDocument(state, getNamespaceMappings(),
+                                    index.getIndexFormatVersion());
+                            retrieveAggregateRoot(state, aggregateRoots);
+                        } catch (RepositoryException e) {
+                            log.warn("Exception while creating document for node: "
+                                    + state.getNodeId() + ": " + e.toString());
+                        }
+                        return doc;
+                    }
+                })));
 
         // remove any aggregateRoot nodes that are new
         // and therefore already up-to-date
-        aggregateRoots.keySet().removeAll(addedIds);
+        aggregateRoots.keySet().removeAll(addedUUIDs);
 
-        // based on removed ids get affected aggregate root nodes
-        retrieveAggregateRoot(removedIds, aggregateRoots);
+        // based on removed UUIDs get affected aggregate root nodes
+        retrieveAggregateRoot(removedUUIDs, aggregateRoots);
 
         // update aggregates if there are any affected
-        if (!aggregateRoots.isEmpty()) {
-            Collection<Document> modified =
-                new ArrayList<Document>(aggregateRoots.size());
-
-            for (NodeState state : aggregateRoots.values()) {
-                try {
-                    modified.add(createDocument(
-                            state, getNamespaceMappings(),
-                            index.getIndexFormatVersion()));
-                } catch (RepositoryException e) {
-                    log.warn("Exception while creating document for node: "
-                            + state.getNodeId(), e);
-                }
-            }
-
+        if (aggregateRoots.size() > 0) {
+            Collection modified = TransformedCollection.decorate(
+                    new ArrayList(),
+                    new Transformer() {
+                        public Object transform(Object input) {
+                            NodeState state = (NodeState) input;
+                            try {
+                                return createDocument(state,
+                                        getNamespaceMappings(),
+                                        index.getIndexFormatVersion());
+                            } catch (RepositoryException e) {
+                                log.warn("Exception while creating document for node: "
+                                        + state.getNodeId() + ": " + e.toString());
+                            }
+                            return null;
+                        }
+                    });
+            modified.addAll(aggregateRoots.values());
             index.update(aggregateRoots.keySet(), modified);
         }
     }
@@ -712,62 +696,11 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public Iterable<NodeId> getWeaklyReferringNodes(NodeId id)
-            throws RepositoryException, IOException {
-        final List<Integer> docs = new ArrayList<Integer>();
-        final List<NodeId> ids = new ArrayList<NodeId>();
-        final IndexReader reader = getIndexReader();
-        try {
-            IndexSearcher searcher = new IndexSearcher(reader);
-            try {
-                Query q = new TermQuery(new Term(
-                        FieldNames.WEAK_REFS, id.toString()));
-                searcher.search(q, new HitCollector() {
-                    public void collect(int doc, float score) {
-                        docs.add(doc);
-                    }
-                });
-            } finally {
-                searcher.close();
-            }
-            for (Integer doc : docs) {
-                Document d = reader.document(doc, FieldSelectors.UUID);
-                ids.add(new NodeId(d.get(FieldNames.UUID)));
-            }
-        } finally {
-            Util.closeOrRelease(reader);
-        }
-        return ids;
-    }
-
-    /**
      * This method returns the QueryNodeFactory used to parse Queries. This method
      * may be overridden to provide a customized QueryNodeFactory
-     *
-     * @return the query node factory.
      */
     protected DefaultQueryNodeFactory getQueryNodeFactory() {
         return DEFAULT_QUERY_NODE_FACTORY;
-    }
-
-    /**
-     * Waits until all pending text extraction tasks have been processed
-     * and the updated index has been flushed to disk.
-     *
-     * @throws RepositoryException if the index update can not be written
-     */
-    public void flush() throws RepositoryException {
-        try {
-            index.getIndexingQueue().waitUntilEmpty();
-            index.flush();
-            // flush may have pushed nodes into the indexing queue
-            // -> wait again
-            index.getIndexingQueue().waitUntilEmpty();
-        } catch (IOException e) {
-            throw new RepositoryException("Failed to flush the index", e);
-        }
     }
 
     /**
@@ -843,24 +776,30 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @param session         the session that executes the query.
      * @param query           the query.
-     * @param orderings       the order specs for the sort order.
+     * @param orderProps      name of the properties for sort order.
+     * @param orderSpecs      the order specs for the sort order properties.
+     *                        <code>true</code> indicates ascending order,
+     *                        <code>false</code> indicates descending.
      * @param resultFetchHint a hint on how many results should be fetched.
      * @return the query hits.
      * @throws IOException if an error occurs while searching the index.
      */
     public MultiColumnQueryHits executeQuery(SessionImpl session,
                                              MultiColumnQuery query,
-                                             Ordering[] orderings,
+                                             Path[] orderProps,
+                                             boolean[] orderSpecs,
                                              long resultFetchHint)
             throws IOException {
         checkOpen();
+
+        Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
 
         final IndexReader reader = getIndexReader();
         JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
                 session, reader, getContext().getItemStateManager());
         searcher.setSimilarity(getSimilarity());
         return new FilterMultiColumnQueryHits(
-                query.execute(searcher, orderings, resultFetchHint)) {
+                query.execute(searcher, sort, resultFetchHint)) {
             public void close() throws IOException {
                 try {
                     super.close();
@@ -1038,7 +977,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected SortField[] createSortFields(Path[] orderProps,
                                            boolean[] orderSpecs) {
-        List<SortField> sortFields = new ArrayList<SortField>();
+        List sortFields = new ArrayList();
         for (int i = 0; i < orderProps.length; i++) {
             if (orderProps[i].getLength() == 1
                     && NameConstants.JCR_SCORE.equals(orderProps[i].getNameElement().getName())) {
@@ -1051,23 +990,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 sortFields.add(new SortField(orderProps[i].getString(), scs, !orderSpecs[i]));
             }
         }
-        return sortFields.toArray(new SortField[sortFields.size()]);
-    }
-
-    /**
-     * Creates internal orderings for the QOM ordering specifications.
-     *
-     * @param orderings the QOM ordering specifications.
-     * @return the internal orderings.
-     * @throws RepositoryException if an error occurs.
-     */
-    protected Ordering[] createOrderings(OrderingImpl[] orderings)
-            throws RepositoryException {
-        Ordering[] ords = new Ordering[orderings.length];
-        for (int i = 0; i < orderings.length; i++) {
-            ords[i] = Ordering.fromQOM(orderings[i], scs, nsMappings);
-        }
-        return ords;
+        return (SortField[]) sortFields.toArray(new SortField[sortFields.size()]);
     }
 
     /**
@@ -1178,7 +1101,7 @@ public class SearchIndex extends AbstractQueryHandler {
     protected DirectoryManager createDirectoryManager()
             throws IOException {
         try {
-            Class<?> clazz = Class.forName(directoryManagerClass);
+            Class clazz = Class.forName(directoryManagerClass);
             if (!DirectoryManager.class.isAssignableFrom(clazz)) {
                 throw new IOException(directoryManagerClass +
                         " is not a DirectoryManager implementation");
@@ -1314,37 +1237,45 @@ public class SearchIndex extends AbstractQueryHandler {
             }
             try {
                 ItemStateManager ism = getContext().getItemStateManager();
-                for (AggregateRule aggregateRule : aggregateRules) {
+                for (int i = 0; i < aggregateRules.length; i++) {
                     boolean ruleMatched = false;
                     // node includes
-                    NodeState[] aggregates = aggregateRule.getAggregatedNodeStates(state);
+                    NodeState[] aggregates = aggregateRules[i].getAggregatedNodeStates(state);
                     if (aggregates != null) {
                         ruleMatched = true;
-                        for (NodeState aggregate : aggregates) {
-                            Document aDoc = createDocument(aggregate, getNamespaceMappings(), index.getIndexFormatVersion());
+                        for (int j = 0; j < aggregates.length; j++) {
+                            Document aDoc = createDocument(aggregates[j],
+                                    getNamespaceMappings(),
+                                    index.getIndexFormatVersion());
                             // transfer fields to doc if there are any
                             Fieldable[] fulltextFields = aDoc.getFieldables(FieldNames.FULLTEXT);
                             if (fulltextFields != null) {
-                                for (Fieldable fulltextField : fulltextFields) {
-                                    doc.add(fulltextField);
+                                for (int k = 0; k < fulltextFields.length; k++) {
+                                    doc.add(fulltextFields[k]);
                                 }
-                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, aggregate.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
+                                        aggregates[j].getNodeId().getUUID().toString(),
+                                        Field.Store.NO,
+                                        Field.Index.NOT_ANALYZED_NO_NORMS));
                             }
                         }
                     }
                     // property includes
-                    PropertyState[] propStates = aggregateRule.getAggregatedPropertyStates(state);
+                    PropertyState[] propStates = aggregateRules[i].getAggregatedPropertyStates(state);
                     if (propStates != null) {
                         ruleMatched = true;
-                        for (PropertyState propState : propStates) {
-                            String namePrefix = FieldNames.createNamedValue(getNamespaceMappings().translateName(propState.getName()), "");
+                        for (int j = 0; j < propStates.length; j++) {
+                            PropertyState propState = propStates[j];
+                            String namePrefix = FieldNames.createNamedValue(
+                                    getNamespaceMappings().translateName(propState.getName()), "");
                             NodeState parent = (NodeState) ism.getItemState(propState.getParentId());
                             Document aDoc = createDocument(parent, getNamespaceMappings(), getIndex().getIndexFormatVersion());
                             try {
                                 // find the right fields to transfer
                                 Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
                                 Token t = new Token();
-                                for (Fieldable field : fields) {
+                                for (int k = 0; k < fields.length; k++) {
+                                    Fieldable field = fields[k];
                                     // assume properties fields use SingleTokenStream
                                     t = field.tokenStreamValue().next(t);
                                     String value = new String(t.termBuffer(), 0, t.termLength());
@@ -1357,7 +1288,10 @@ public class SearchIndex extends AbstractQueryHandler {
                                         value = FieldNames.createNamedValue(path, value);
                                         t.setTermBuffer(value);
                                         doc.add(new Field(field.name(), new SingletonTokenStream(t)));
-                                        doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, parent.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                                        doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
+                                                parent.getNodeId().getUUID().toString(),
+                                                Field.Store.NO,
+                                                Field.Index.NOT_ANALYZED_NO_NORMS));
                                     }
                                 }
                             } finally {
@@ -1374,7 +1308,7 @@ public class SearchIndex extends AbstractQueryHandler {
             } catch (Exception e) {
                 // do not fail if aggregate cannot be created
                 log.warn("Exception while building indexing aggregate for"
-                        + " node with id: " + state.getNodeId(), e);
+                        + " node with UUID: " + state.getNodeId().getUUID(), e);
             }
         }
     }
@@ -1417,38 +1351,38 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @param state the node state for which we want to retrieve the aggregate
      *              root.
-     * @param map   aggregate roots are collected in this map.
+     * @param map   aggregate roots are collected in this map. Key=UUID,
+     *              value=NodeState.
      */
-    protected void retrieveAggregateRoot(
-            NodeState state, Map<NodeId, NodeState> map) {
+    protected void retrieveAggregateRoot(NodeState state, Map map) {
         if (indexingConfig != null) {
             AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
                 return;
             }
             try {
-                for (AggregateRule aggregateRule : aggregateRules) {
-                    NodeState root = aggregateRule.getAggregateRoot(state);
+                for (int i = 0; i < aggregateRules.length; i++) {
+                    NodeState root = aggregateRules[i].getAggregateRoot(state);
                     if (root != null) {
-                        map.put(root.getNodeId(), root);
+                        map.put(root.getNodeId().getUUID(), root);
                     }
                 }
             } catch (Exception e) {
                 log.warn("Unable to get aggregate root for "
-                        + state.getNodeId(), e);
+                        + state.getNodeId().getUUID(), e);
             }
         }
     }
 
     /**
-     * Retrieves the root of the indexing aggregate for <code>removedIds</code>
+     * Retrieves the root of the indexing aggregate for <code>removedUUIDs</code>
      * and puts it into <code>map</code>.
      *
-     * @param removedIds     the ids of removed nodes.
-     * @param map            aggregate roots are collected in this map
+     * @param removedUUIDs   the UUIDs of removed nodes.
+     * @param map            aggregate roots are collected in this map.
+     *                       Key=UUID, value=NodeState.
      */
-    protected void retrieveAggregateRoot(
-            Set<NodeId> removedIds, Map<NodeId, NodeState> map) {
+    protected void retrieveAggregateRoot(Set removedUUIDs, Map map) {
         if (indexingConfig != null) {
             AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
@@ -1459,20 +1393,22 @@ public class SearchIndex extends AbstractQueryHandler {
             try {
                 CachingMultiIndexReader reader = index.getIndexReader();
                 try {
-                    Term aggregateIds =
-                        new Term(FieldNames.AGGREGATED_NODE_UUID, "");
+                    Term aggregateUUIDs = new Term(
+                            FieldNames.AGGREGATED_NODE_UUID, "");
                     TermDocs tDocs = reader.termDocs();
                     try {
                         ItemStateManager ism = getContext().getItemStateManager();
-                        for (NodeId id : removedIds) {
-                            aggregateIds =
-                                aggregateIds.createTerm(id.toString());
-                            tDocs.seek(aggregateIds);
+                        Iterator it = removedUUIDs.iterator();
+                        while (it.hasNext()) {
+                            UUID uuid = (UUID) it.next();
+                            aggregateUUIDs = aggregateUUIDs.createTerm(
+                                    uuid.toString());
+                            tDocs.seek(aggregateUUIDs);
                             while (tDocs.next()) {
-                                Document doc = reader.document(
-                                        tDocs.doc(), FieldSelectors.UUID);
-                                NodeId nId = new NodeId(doc.get(FieldNames.UUID));
-                                map.put(nId, (NodeState) ism.getItemState(nId));
+                                Document doc = reader.document(tDocs.doc(), FieldSelectors.UUID);
+                                NodeId nId = new NodeId(UUID.fromString(
+                                        doc.get(FieldNames.UUID)));
+                                map.put(nId.getUUID(), ism.getItemState(nId));
                                 found++;
                             }
                         }
@@ -1486,7 +1422,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 log.warn("Exception while retrieving aggregate roots", e);
             }
             time = System.currentTimeMillis() - time;
-            log.debug("Retrieved {} aggregate roots in {} ms.", found, time);
+            log.debug("Retrieved {} aggregate roots in {} ms.",
+                    new Integer(found), new Long(time));
         }
     }
 
@@ -1548,8 +1485,8 @@ public class SearchIndex extends AbstractQueryHandler {
          * {@inheritDoc}
          */
         public void release() throws IOException {
-            for (CachingMultiIndexReader subReader : subReaders) {
-                subReader.release();
+            for (int i = 0; i < subReaders.length; i++) {
+                subReaders[i].release();
             }
         }
 
@@ -1593,8 +1530,8 @@ public class SearchIndex extends AbstractQueryHandler {
 
         public int hashCode() {
             int hash = 0;
-            for (CachingMultiIndexReader subReader : subReaders) {
-                hash = 31 * hash + subReader.hashCode();
+            for (int i = 0; i < subReaders.length; i++) {
+                hash = 31 * hash + subReaders[i].hashCode();
             }
             return hash;
         }
@@ -1602,9 +1539,10 @@ public class SearchIndex extends AbstractQueryHandler {
         /**
          * {@inheritDoc}
          */
-        public ForeignSegmentDocId createDocId(NodeId id) throws IOException {
-            for (CachingMultiIndexReader subReader : subReaders) {
-                ForeignSegmentDocId doc = subReader.createDocId(id);
+        public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
+            for (int i = 0; i < subReaders.length; i++) {
+                CachingMultiIndexReader subReader = subReaders[i];
+                ForeignSegmentDocId doc = subReader.createDocId(uuid);
                 if (doc != null) {
                     return doc;
                 }
@@ -1650,7 +1588,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setAnalyzer(String analyzerClassName) {
         try {
-            Class<?> analyzerClass = Class.forName(analyzerClassName);
+            Class analyzerClass = Class.forName(analyzerClassName);
             analyzer.setDefaultAnalyzer((Analyzer) analyzerClass.newInstance());
         } catch (Exception e) {
             log.warn("Invalid Analyzer class: " + analyzerClassName, e);
@@ -1945,7 +1883,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setExcerptProviderClass(String className) {
         try {
-            Class<?> clazz = Class.forName(className);
+            Class clazz = Class.forName(className);
             if (ExcerptProvider.class.isAssignableFrom(clazz)) {
                 excerptProviderClass = clazz;
             } else {
@@ -1990,7 +1928,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setIndexingConfigurationClass(String className) {
         try {
-            Class<?> clazz = Class.forName(className);
+            Class clazz = Class.forName(className);
             if (IndexingConfiguration.class.isAssignableFrom(clazz)) {
                 indexingConfigurationClass = clazz;
             } else {
@@ -2020,7 +1958,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setSynonymProviderClass(String className) {
         try {
-            Class<?> clazz = Class.forName(className);
+            Class clazz = Class.forName(className);
             if (SynonymProvider.class.isAssignableFrom(clazz)) {
                 synonymProviderClass = clazz;
             } else {
@@ -2054,7 +1992,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setSpellCheckerClass(String className) {
         try {
-            Class<?> clazz = Class.forName(className);
+            Class clazz = Class.forName(className);
             if (SpellChecker.class.isAssignableFrom(clazz)) {
                 spellCheckerClass = clazz;
             } else {
@@ -2123,7 +2061,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setSimilarityClass(String className) {
         try {
-            Class<?> similarityClass = Class.forName(className);
+            Class similarityClass = Class.forName(className);
             similarity = (Similarity) similarityClass.newInstance();
         } catch (Exception e) {
             log.warn("Invalid Similarity class: " + className, e);
@@ -2205,44 +2143,6 @@ public class SearchIndex extends AbstractQueryHandler {
         this.initializeHierarchyCache = initializeHierarchyCache;
     }
 
-    /**
-     * @return the current size of the index merger pool.
-     */
-    public int getIndexMergerPoolSize() {
-        return indexMergerPoolSize;
-    }
-
-    /**
-     * Sets a new value for the index merger pool size.
-     *
-     * @param indexMergerPoolSize the number of worker threads.
-     * @throws IllegalArgumentException if the size is less than or equal 0.
-     */
-    public void setIndexMergerPoolSize(int indexMergerPoolSize) {
-        if (indexMergerPoolSize <= 0) {
-            throw new IllegalArgumentException("must be greater than 0");
-        }
-        this.indexMergerPoolSize = indexMergerPoolSize;
-    }
-
-    /**
-     * @return the maximum age in seconds for outdated generations of
-     * {@link IndexInfos}.
-     */
-    public long getMaxHistoryAge() {
-        return maxHistoryAge;
-    }
-
-    /**
-     * Sets a new value for the maximum age in seconds for outdated generations
-     * of {@link IndexInfos}.
-     *
-     * @param maxHistoryAge age in seconds.
-     */
-    public void setMaxHistoryAge(long maxHistoryAge) {
-        this.maxHistoryAge = maxHistoryAge;
-    }
-
     //----------------------------< internal >----------------------------------
 
     /**
@@ -2251,7 +2151,7 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @throws IOException if this <code>SearchIndex</code> had been closed.
      */
-    protected void checkOpen() throws IOException {
+    private void checkOpen() throws IOException {
         if (closed) {
             throw new IOException("query handler closed and cannot be used anymore.");
         }

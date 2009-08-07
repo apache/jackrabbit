@@ -28,10 +28,6 @@ import org.apache.jackrabbit.jcr2spi.operation.Merge;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
-import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
-import org.apache.jackrabbit.jcr2spi.operation.CreateActivity;
-import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.slf4j.LoggerFactory;
@@ -39,12 +35,6 @@ import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.MergeException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.spi.Name;
@@ -77,12 +67,6 @@ public class VersionManagerImpl implements VersionManager {
     public void checkout(NodeState nodeState) throws RepositoryException {
         Operation co = Checkout.create(nodeState, this);
         workspaceManager.execute(co);
-    }
-
-    public NodeEntry checkpoint(NodeState nodeState) throws RepositoryException {
-        Checkpoint cp = Checkpoint.create(nodeState, this);
-        workspaceManager.execute(cp);
-        return workspaceManager.getHierarchyManager().getNodeEntry(cp.getNewVersionId());
     }
 
     /**
@@ -156,11 +140,7 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
-        return merge(nodeState, workspaceName, bestEffort, false);
-    }
-
-    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        Merge op = Merge.create(nodeState, workspaceName, bestEffort, isShallow, this);
+        Merge op = Merge.create(nodeState, workspaceName, bestEffort, this);
         workspaceManager.execute(op);
         return op.getFailedIds();
     }
@@ -199,29 +179,6 @@ public class VersionManagerImpl implements VersionManager {
         }
         Operation op = ResolveMergeConflict.create(nodeState, mergeFailedIds, predecessorIds, done);
         workspaceManager.execute(op);
-    }
-
-    public NodeEntry createConfiguration(NodeState nodeState) throws UnsupportedRepositoryOperationException, RepositoryException {
-        CreateConfiguration op = CreateConfiguration.create(nodeState, this);
-        workspaceManager.execute(op);
-        return workspaceManager.getHierarchyManager().getNodeEntry(op.getNewConfigurationId());
-    }
-
-    public NodeEntry createActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException {
-        CreateActivity op = CreateActivity.create(title, this);
-        workspaceManager.execute(op);
-        return workspaceManager.getHierarchyManager().getNodeEntry(op.getNewActivityId());
-    }
-
-    public void removeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException {
-        Operation op = RemoveActivity.create(activityState, workspaceManager.getHierarchyManager());
-        workspaceManager.execute(op);
-    }
-
-    public Iterator mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException {
-        Merge op = Merge.create(activityState, null, false, false, this);
-        workspaceManager.execute(op);
-        return op.getFailedIds();
     }
 
     public NodeEntry getVersionableNodeEntry(NodeState versionState) throws RepositoryException {

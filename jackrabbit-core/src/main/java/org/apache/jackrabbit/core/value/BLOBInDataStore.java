@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
 /**
  * Represents binary data which is stored in the data store.
  */
-class BLOBInDataStore extends BLOBFileValue {
+public class BLOBInDataStore extends BLOBFileValue {
 
     private final DataStore store;
     private final DataIdentifier identifier;
@@ -53,19 +53,22 @@ class BLOBInDataStore extends BLOBFileValue {
         this.identifier = identifier;
     }
 
-    void delete(boolean pruneEmptyParentDirs) {
+    public void delete(boolean pruneEmptyParentDirs) {
         // do nothing
     }
 
-    void discard() {
+    public void discard() {
         // do nothing
     }
-
-    DataIdentifier getDataIdentifier() {
+    
+    public DataIdentifier getDataIdentifier() {
         return identifier;
     }
 
-    boolean isImmutable() {
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isImmutable() {
         return true;
     }
 
@@ -88,11 +91,11 @@ class BLOBInDataStore extends BLOBFileValue {
         return 0;
     }
 
-    public long getSize() {
+    public long getLength() {
         try {
             return getDataRecord().getLength();
         } catch (DataStoreException e) {
-            log.warn("getSize for " + identifier + " failed", e);
+            log.warn("getLength for " + identifier + " failed", e);
             return -1;
         }
     }
@@ -101,8 +104,14 @@ class BLOBInDataStore extends BLOBFileValue {
         return getDataRecord().getStream();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
-        return PREFIX + identifier;
+        StringBuffer buff = new StringBuffer(20);
+        buff.append(PREFIX);
+        buff.append(identifier.toString());
+        return buff.toString();
     }
 
     static BLOBInDataStore getInstance(DataStore store, String s) {
@@ -110,7 +119,7 @@ class BLOBInDataStore extends BLOBFileValue {
         DataIdentifier identifier = new DataIdentifier(id);
         return new BLOBInDataStore(store, identifier);
     }
-
+    
     static BLOBInDataStore getInstance(DataStore store, DataIdentifier identifier) {
         return new BLOBInDataStore(store, identifier);
     }
@@ -133,6 +142,10 @@ class BLOBInDataStore extends BLOBFileValue {
     private DataRecord getDataRecord() throws DataStoreException {
         // may not keep the record, otherwise garbage collection doesn't work
         return store.getRecord(identifier);
+    }
+
+    public boolean isSmall() {
+        return false;
     }
 
 }

@@ -50,7 +50,7 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
     }
 
     /**

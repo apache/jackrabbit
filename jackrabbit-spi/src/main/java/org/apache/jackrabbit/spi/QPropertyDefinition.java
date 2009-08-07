@@ -19,9 +19,9 @@ package org.apache.jackrabbit.spi;
 import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * <code>QPropertyDefinition</code> is the SPI representation of
- * a {@link PropertyDefinition property definition}. It refers to <code>Name</code>s,
- * SPI default values and value constraints only and is thus isolated
+ * <code>QPropertyDefinition</code> is the qualified SPI representation of
+ * a {@link PropertyDefinition property definition}. It refers to
+ * qualified default values and value constraints only and is thus isolated
  * from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.PropertyDefinition
@@ -45,7 +45,7 @@ public interface QPropertyDefinition extends QItemDefinition {
      *
      * @return the array of value constraints.
      */
-    public QValueConstraint[] getValueConstraints();
+    public String[] getValueConstraints();
 
     /**
      * Returns the array of default values or <code>null</code> if no default
@@ -61,28 +61,4 @@ public interface QPropertyDefinition extends QItemDefinition {
      * @return the 'multiple' flag.
      */
     public boolean isMultiple();
-
-    /**
-     * Returns the availabe query operators.
-     *
-     * @return the availabe query operators.
-     * @since JCR 2.0
-     */
-    public String[] getAvailableQueryOperators();
-
-    /**
-     * Reports whether this property definition is full text searchable.
-     *
-     * @return <code>true</code> if this property definition is full text searchable.
-     * @since JCR 2.0
-     */
-    public boolean isFullTextSearchable();
-
-    /**
-     * Reports whether this property definition is query-orderable.
-     *
-     * @return <code>true</code> if this property definition is query-orderable.
-     * @since JCR 2.0
-     */
-    public boolean isQueryOrderable();
 }

@@ -20,7 +20,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 
 /**
  * <code>OnParentVersionIgnoreTest</code> tests the OnParentVersion {@link OnParentVersionAction#IGNORE IGNORE}
@@ -59,28 +58,6 @@ public class OnParentVersionIgnoreTest extends AbstractOnParentVersionTest {
     }
 
     /**
-     * Test the restore of a OnParentVersion-IGNORE property
-     *
-     * @throws javax.jcr.RepositoryException
-     */
-    public void testRestorePropJcr2() throws RepositoryException {
-
-        Node propParent = p.getParent();
-        VersionManager versionManager = propParent.getSession().getWorkspace().getVersionManager();
-        String path = propParent.getPath();
-        versionManager.checkout(path);
-        Version v = versionManager.checkin(path);
-        versionManager.checkout(path);
-
-        p.setValue(newPropValue);
-        p.getSession().save();
-
-        versionManager.restore(v, false);
-
-        assertEquals("On restore of a OnParentVersion-IGNORE property P, the current value of P must be left unchanged.", p.getString(), newPropValue);
-    }
-
-    /**
      * Test the restore of a OnParentVersion-Ignore node
      *
      * @throws javax.jcr.RepositoryException
@@ -102,27 +79,4 @@ public class OnParentVersionIgnoreTest extends AbstractOnParentVersionTest {
         }
     }
 
-    /**
-     * Test the restore of a OnParentVersion-Ignore node
-     *
-     * @throws javax.jcr.RepositoryException
-     */
-    public void testRestoreNodeJcr2() throws RepositoryException {
-
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkout(path);
-        Version v = versionManager.checkin(path);
-        versionManager.checkout(path);
-
-        // add 'ignore' child
-        String childName = addChildNode(OPVAction).getName();
-        versionableNode.getSession().save();
-
-        versionManager.restore(v, false);
-
-        if (!versionableNode.hasNode(childName)) {
-            fail("On restore of a OnParentVersion-Ignore child node, the node needs to be untouched.");
-        }
-    }
 }

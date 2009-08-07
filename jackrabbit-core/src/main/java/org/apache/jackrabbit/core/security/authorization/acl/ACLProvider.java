@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.ItemImpl;
@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlPr
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
@@ -52,6 +53,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import java.security.Principal;
@@ -83,7 +85,7 @@ import java.util.Arrays;
  * ACL items inherit the ACL from node they defined the ACL for.</li>
  * </ul>
  *
- * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider for additional information.
+ * @see AccessControlProvider for additional information.
  */
 public class ACLProvider extends AbstractAccessControlProvider implements AccessControlConstants {
 
@@ -133,7 +135,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
     //----------------------------------------------< AccessControlProvider >---
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#init(Session, Map)
+     * @see AccessControlProvider#init(Session, Map)
      */
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
@@ -150,7 +152,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
+     * @see AccessControlProvider#getEffectivePolicies(Path)
      * @param absPath
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
@@ -166,14 +168,15 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         if (acls.isEmpty()) {
             // no access control information can be retrieved for the specified
             // node, since neither the node nor any of its parents is access
-            // controlled.
+            // controlled -> build a default policy.
             log.warn("No access controlled node present in item hierarchy starting from " + targetNode.getPath());
+            acls.add(new UnmodifiableAccessControlList(Collections.EMPTY_LIST));
         }
         return (AccessControlList[]) acls.toArray(new AccessControlList[acls.size()]);
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEditor(Session)
+     * @see AccessControlProvider#getEditor(Session)
      */
     public AccessControlEditor getEditor(Session session) {
         checkInitialized();
@@ -181,9 +184,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#compilePermissions(Set)
+     * @see AccessControlProvider#compilePermissions(Set)
      */
-    public CompiledPermissions compilePermissions(Set<Principal> principals) throws RepositoryException {
+    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
@@ -195,9 +198,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#canAccessRoot(Set)
+     * @see AccessControlProvider#canAccessRoot(Set)
      */
-    public boolean canAccessRoot(Set<Principal> principals) throws RepositoryException {
+    public boolean canAccessRoot(Set principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return true;
@@ -273,34 +276,31 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             log.debug("Install initial ACL:...");
             String rootPath = session.getRootNode().getPath();
             AccessControlPolicy[] acls = editor.editAccessControlPolicies(rootPath);
-            if (acls.length > 0) {
-                ACLTemplate acl = (ACLTemplate) acls[0];
-                
-                PrincipalManager pMgr = session.getPrincipalManager();
-                AccessControlManager acMgr = session.getAccessControlManager();
+            ACLTemplate acl = (ACLTemplate) acls[0];
 
-                log.debug("... Privilege.ALL for administrators.");
-                Principal administrators;
-                String pName = SecurityConstants.ADMINISTRATORS_NAME;
-                if (pMgr.hasPrincipal(pName)) {
-                    administrators = pMgr.getPrincipal(pName);
-                } else {
-                    log.warn("Administrators principal group is missing.");
-                    administrators = new PrincipalImpl(pName);
-                }
-                Privilege[] privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_ALL)};
-                acl.addAccessControlEntry(administrators, privs);
+            PrincipalManager pMgr = session.getPrincipalManager();
+            AccessControlManager acMgr = session.getAccessControlManager();
 
-                Principal everyone = pMgr.getEveryone();
-                log.debug("... Privilege.READ for everyone.");
-                privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_READ)};
-                acl.addAccessControlEntry(everyone, privs);
-
-                editor.setPolicy(rootPath, acl);
-                session.save();
+            log.debug("... Privilege.ALL for administrators.");
+            Principal administrators;
+            String pName = SecurityConstants.ADMINISTRATORS_NAME;
+            if (pMgr.hasPrincipal(pName)) {
+                administrators = pMgr.getPrincipal(pName);
             } else {
-                log.warn("No applicable ACL available for the root node -> skip initialization of the root node's ACL.");
+                log.warn("Administrators principal group is missing.");
+                administrators = new PrincipalImpl(pName);
             }
+            Privilege[] privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_ALL)};
+            acl.addAccessControlEntry(administrators, privs);
+
+            Principal everyone = pMgr.getEveryone();
+            log.debug("... Privilege.READ for everyone.");
+            privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_READ)};
+            acl.addAccessControlEntry(everyone, privs);
+
+            editor.setPolicy(rootPath, acl);
+            session.save();
+
         } catch (RepositoryException e) {
             log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
             session.getRootNode().refresh(false);
@@ -336,16 +336,16 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * flag indicating that there is not 'deny READ'.
          * -> simplify {@link #grants(Path, int)} in case of permissions == READ
          */
-        private boolean readAllowed;
+        private boolean readAllowed = false;
 
-        private AclPermissions(Set<Principal> principals) throws RepositoryException {
+        private AclPermissions(Set principals) throws RepositoryException {
             this(principals, true);
         }
 
-        private AclPermissions(Set<Principal> principals, boolean listenToEvents) throws RepositoryException {
+        private AclPermissions(Set principals, boolean listenToEvents) throws RepositoryException {
             principalNames = new ArrayList(principals.size());
-            for (Principal princ : principals) {
-                principalNames.add(princ.getName());
+            for (Iterator it = principals.iterator(); it.hasNext();) {
+                principalNames.add(((Principal) it.next()).getName());
             }
             jcrReadPrivilegeName = session.getAccessControlManager().privilegeFromName(Privilege.JCR_READ).getName();
 
@@ -382,9 +382,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * this shortcut is not possible.
          *
          * @param principalnames
-         * @return true if read is allowed everywhere.
          */
-        private boolean isReadAllowed(Collection<String> principalnames) {
+        private boolean isReadAllowed(Collection principalnames) {
             boolean isReadAllowed = false;
             if (initializedWithDefaults) {
                 try {
@@ -479,7 +478,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
             int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
 
-            while (entries.hasNext()) {
+            while (entries.hasNext() && allows != privAll) {
                 ACLTemplate.Entry ace = (ACLTemplate.Entry) entries.next();
                 // Determine if the ACE is defined on the node at absPath (locally):
                 // Except for READ-privileges the permissions must be determined
@@ -538,7 +537,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         //--------------------------------------------------< EventListener >---
         /**
-         * @see javax.jcr.observation.EventListener#onEvent(EventIterator)
+         * @see EventListener#onEvent(EventIterator)
          */
         public synchronized void onEvent(EventIterator events) {
             // only invalidate cache if any of the events affects the
@@ -599,10 +598,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                                 }
                             }
                             break;
-                        case Event.NODE_MOVED:
-                            // protected ac nodes cannot be moved around
-                            // -> nothing to do TODO check again
-                            break;
                         default:
                             // illegal event-type: should never occur. ignore
                     }
@@ -617,11 +612,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         }
     }
 
-    //--------------------------------------------------------------------------
-    /**
-     * Inner class used to collect ACEs for a given set of principals throughout
-     * the node hierarchy.
-     */
     private class Entries {
 
         private final ListOrderedMap principalNamesToEntries;

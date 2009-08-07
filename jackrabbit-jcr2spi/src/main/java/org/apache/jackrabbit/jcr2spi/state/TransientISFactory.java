@@ -32,7 +32,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 
 import java.util.Iterator;
-import java.util.Collections;
 
 /**
  * <code>TransientISFactory</code>...
@@ -140,13 +139,13 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
 
     /**
      * @inheritDoc
-     * @see ItemStateFactory#getNodeReferences(NodeState,org.apache.jackrabbit.spi.Name,boolean)
+     * @see ItemStateFactory#getNodeReferences(NodeState)
      */
-    public Iterator<PropertyId> getNodeReferences(NodeState nodeState, Name propertyName, boolean weak) {
+    public PropertyId[] getNodeReferences(NodeState nodeState) {
         if (nodeState.getStatus() == Status.NEW) {
-            return Collections.EMPTY_SET.iterator();
+            return new PropertyId[0];
         }
-        return workspaceStateFactory.getNodeReferences(nodeState, propertyName, weak);
+        return workspaceStateFactory.getNodeReferences(nodeState);
     }
 
     //------------------------------------------< ItemStateCreationListener >---

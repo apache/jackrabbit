@@ -16,23 +16,13 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Iterator;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -42,6 +32,13 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * Implementation of a <code>HierarchyManager</code> that caches paths of
@@ -311,8 +308,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 // Item not cached, ignore
                 return;
             }
-            for (PathMap.Element element : entry.getElements()) {
-                Iterator iter = element.getChildren();
+            PathMap.Element[] elements = entry.getElements();
+            for (int i = 0; i < elements.length; i++) {
+                Iterator iter = elements[i].getChildren();
                 while (iter.hasNext()) {
                     PathMap.Element child = (PathMap.Element) iter.next();
                     ChildNodeEntry cne = modified.getChildNodeEntry(
@@ -395,11 +393,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (entry == null) {
                 return;
             }
-            for (PathMap.Element parent : entry.getElements()) {
-                HashMap<Path.Element, PathMap.Element> newChildrenOrder = new HashMap<Path.Element, PathMap.Element>();
+            PathMap.Element[] parents = entry.getElements();
+            for (int i = 0; i < parents.length; i++) {
+                HashMap newChildrenOrder = new HashMap();
                 boolean orderChanged = false;
 
-                Iterator iter = parent.getChildren();
+                Iterator iter = parents[i].getChildren();
                 while (iter.hasNext()) {
                     PathMap.Element child = (PathMap.Element) iter.next();
                     LRUEntry childEntry = (LRUEntry) child.get();
@@ -437,7 +436,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
                 if (orderChanged) {
                     /* If at least one child changed its position, reorder */
-                    parent.setChildren(newChildrenOrder);
+                    parents[i].setChildren(newChildrenOrder);
                 }
             }
             checkConsistency();
@@ -658,11 +657,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param id    child node id
      *
      * @throws PathNotFoundException if the path was not found
-     * @throws RepositoryException If the path's direct ancestor cannot be determined.
-     * @throws ItemStateException If the id cannot be resolved to a NodeState.
      */
     private void nodeAdded(NodeState state, Path path, NodeId id)
-            throws RepositoryException, ItemStateException {
+            throws PathNotFoundException, ItemStateException {
 
         // assert: synchronized (cacheMonitor)
         PathMap.Element element = null;
@@ -702,12 +699,10 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param path  node path
      * @param id    node id
      *
-     * @throws PathNotFoundException if the path was not found.
-     * @throws RepositoryException If the path's direct ancestor cannot be determined.
-     * @throws ItemStateException If the id cannot be resolved to a NodeState.
+     * @throws PathNotFoundException if the path was not found
      */
     private void nodeRemoved(NodeState state, Path path, NodeId id)
-            throws RepositoryException, ItemStateException {
+            throws PathNotFoundException, ItemStateException {
 
         // assert: synchronized (cacheMonitor)
         PathMap.Element parent = pathCache.map(path.getAncestor(1), true);

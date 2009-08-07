@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.api.XASession;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
@@ -24,9 +23,9 @@ import org.apache.jackrabbit.core.lock.XALockManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
-import org.apache.jackrabbit.core.version.InternalVersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
-import org.apache.jackrabbit.core.version.InternalXAVersionManager;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.version.XAVersionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +53,7 @@ public class XASessionImpl extends SessionImpl
     /**
      * Global transactions
      */
-    private static final Map<Xid, TransactionContext> txGlobal =
-        Collections.synchronizedMap(new HashMap<Xid, TransactionContext>());
+    private static final Map txGlobal = Collections.synchronizedMap(new HashMap());
 
     /**
      * System property specifying the default Transaction Timeout
@@ -134,7 +132,7 @@ public class XASessionImpl extends SessionImpl
     private void init() throws RepositoryException {
         XAItemStateManager stateMgr = (XAItemStateManager) wsp.getItemStateManager();
         XALockManager lockMgr = (XALockManager) getLockManager();
-        InternalXAVersionManager versionMgr = (InternalXAVersionManager) getInternalVersionManager();
+        XAVersionManager versionMgr = (XAVersionManager) getVersionManager();
 
         /**
          * Create array that contains all resources that participate in this
@@ -170,11 +168,11 @@ public class XASessionImpl extends SessionImpl
     /**
      * {@inheritDoc}
      */
-    protected InternalVersionManager createVersionManager(RepositoryImpl rep)
+    protected VersionManager createVersionManager(RepositoryImpl rep)
             throws RepositoryException {
 
-        InternalVersionManagerImpl vMgr = (InternalVersionManagerImpl) rep.getVersionManager();
-        return new InternalXAVersionManager(vMgr, rep.getNodeTypeRegistry(), this, rep.getItemStateCacheFactory());
+        VersionManagerImpl vMgr = (VersionManagerImpl) rep.getVersionManager();
+        return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), this, rep.getItemStateCacheFactory());
     }
 
     /**
@@ -387,7 +385,9 @@ public class XASessionImpl extends SessionImpl
      */
     public synchronized void associate(TransactionContext tx) {
         this.tx = tx;
-        for (InternalXAResource txResource : txResources) {
+
+        for (int i = 0; i < txResources.length; i++) {
+            InternalXAResource txResource = txResources[i];
             txResource.associate(tx);
         }
     }
@@ -410,9 +410,9 @@ public class XASessionImpl extends SessionImpl
         super.logout();
         // dispose the caches
         try {
-            ((InternalXAVersionManager) versionMgr).close();
+            ((XAVersionManager) versionMgr).close();
         } catch (Exception e) {
-            log.warn("error while closing InternalXAVersionManager", e);
+            log.warn("error while closing XAVersionManager", e);
         }
     }
 

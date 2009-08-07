@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.persistence.db;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
@@ -31,8 +31,10 @@ import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -553,7 +555,9 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 InternalValue val = values[i];
                 if (val != null) {
                     if (val.getType() == PropertyType.BINARY) {
-                        val.deleteBinaryResource();
+                        BLOBFileValue blobVal = val.getBLOBFileValue();
+                        // delete internal resource representation of BLOB value
+                        blobVal.delete(true);
                         // also remove from BLOBStore
                         String blobId = blobStore.createId(state.getPropertyId(), i);
                         try {
@@ -580,7 +584,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     /**
      * {@inheritDoc}
      */
-    public NodeReferences loadReferencesTo(NodeId targetId)
+    public NodeReferences load(NodeReferencesId targetId)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -632,7 +636,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         // check if insert or update
-        boolean update = existsReferencesTo(refs.getTargetId());
+        boolean update = exists(refs.getId());
         String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
         try {
@@ -643,12 +647,12 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
             // we are synchronized on this instance, therefore we do not
             // not have to additionally synchronize on the sql statement
-            executeStmt(sql, new Object[]{out.toByteArray(), refs.getTargetId().toString()});
+            executeStmt(sql, new Object[]{out.toByteArray(), refs.getId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write " + refs;
+            String msg = "failed to write node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -666,9 +670,9 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         try {
             // we are synchronized on this instance, therefore we do not
             // not have to additionally synchronize on the sql statement
-            executeStmt(nodeReferenceDeleteSQL, new Object[]{refs.getTargetId().toString()});
+            executeStmt(nodeReferenceDeleteSQL, new Object[]{refs.getId().toString()});
         } catch (Exception e) {
-            String msg = "failed to delete " + refs;
+            String msg = "failed to delete node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -730,7 +734,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     /**
      * {@inheritDoc}
      */
-    public boolean existsReferencesTo(NodeId targetId) throws ItemStateException {
+    public boolean exists(NodeReferencesId targetId) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

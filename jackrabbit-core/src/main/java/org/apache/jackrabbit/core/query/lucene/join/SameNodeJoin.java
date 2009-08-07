@@ -55,7 +55,8 @@ public class SameNodeJoin extends AbstractCondition {
         int idx = getIndex(inner, innerSelectorName);
         ScoreNode[] nodes;
         while ((nodes = inner.nextScoreNodes()) != null) {
-            innerIndex.addScoreNodes(nodes[idx].getDoc(reader), nodes);
+            Integer docNum = new Integer(nodes[idx].getDoc(reader));
+            innerIndex.addScoreNodes(docNum, nodes);
         }
     }
 
@@ -64,6 +65,6 @@ public class SameNodeJoin extends AbstractCondition {
      */
     public ScoreNode[][] getMatchingScoreNodes(ScoreNode outer)
             throws IOException {
-        return innerIndex.getScoreNodes(outer.getDoc(reader));
+        return innerIndex.getScoreNodes(new Integer(outer.getDoc(reader)));
     }
 }

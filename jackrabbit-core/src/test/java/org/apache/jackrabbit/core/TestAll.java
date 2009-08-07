@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.test.ConcurrentTestSuite;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -32,7 +30,7 @@ public class TestAll extends TestCase {
      *         package, except the multi-threading related ones.
      */
     public static Test suite() {
-        TestSuite suite = new ConcurrentTestSuite("Core tests");
+        TestSuite suite = new TestSuite("Core tests");
 
         suite.addTestSuite(CachingHierarchyManagerTest.class);
         suite.addTestSuite(ShareableNodeTest.class);

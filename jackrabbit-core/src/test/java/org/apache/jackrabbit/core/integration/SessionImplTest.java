@@ -36,7 +36,7 @@ public class SessionImplTest extends AbstractJCRTest {
      * instead of AccessControlException
      */
     public void testCheckAddNodePermissionOnRoot() throws RepositoryException {
-        Session session = getHelper().getReadOnlySession();
+        Session session = helper.getReadOnlySession();
         try {
             session.checkPermission("/", "add_node");
         } catch (PathNotFoundException e) {
@@ -59,7 +59,7 @@ public class SessionImplTest extends AbstractJCRTest {
         SimpleCredentials credentials =
             new SimpleCredentials("admin", "admin".toCharArray());
         credentials.setAttribute("test", "attribute");
-        Session session = getHelper().getRepository().login(credentials);
+        Session session = helper.getRepository().login(credentials);
         try {
             String[] names = session.getAttributeNames();
             assertEquals(1, names.length);

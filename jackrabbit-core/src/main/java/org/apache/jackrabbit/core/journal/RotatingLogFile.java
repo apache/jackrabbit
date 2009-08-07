@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Represents a log file that can be rotated.
  */
-public class RotatingLogFile implements Comparable<RotatingLogFile> {
+public class RotatingLogFile implements Comparable {
 
     /**
      * Logger.
@@ -129,6 +129,13 @@ public class RotatingLogFile implements Comparable<RotatingLogFile> {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public int compareTo(Object o) {
+        return compareTo((RotatingLogFile) o);
+    }
+
+    /**
      * Compares this log file to another file. It will return
      * a negative number if this log file has a smaller version,
      * a positive number if this log file a bigger version
@@ -154,7 +161,7 @@ public class RotatingLogFile implements Comparable<RotatingLogFile> {
             }
         });
 
-        ArrayList<RotatingLogFile> l = new ArrayList<RotatingLogFile>();
+        ArrayList l = new ArrayList();
         for (int i = 0; i < files.length; i++) {
             File file = files[i];
             try {
@@ -167,9 +174,11 @@ public class RotatingLogFile implements Comparable<RotatingLogFile> {
         RotatingLogFile[] logFiles = new RotatingLogFile[l.size()];
         l.toArray(logFiles);
 
-        Arrays.sort(logFiles, new Comparator<RotatingLogFile>() {
-            public int compare(RotatingLogFile o1, RotatingLogFile o2) {
-                return o2.compareTo(o1);
+        Arrays.sort(logFiles, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                RotatingLogFile lf1 = (RotatingLogFile) o1;
+                RotatingLogFile lf2 = (RotatingLogFile) o2;
+                return lf2.compareTo(lf1);
             }
         });
         return logFiles;

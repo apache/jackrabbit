@@ -345,22 +345,28 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
             StringBuffer propPath = new StringBuffer();
             // only encode if not position function
-            PathQueryNode relPath = node.getRelativePath();
+            Path relPath = node.getRelativePath();
             if (relPath == null) {
                 propPath.append(".");
-            } else if (relPath.getNumOperands() > 0 && relPath.getPathSteps()[0].getNameTest().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
+            } else if (relPath.getNameElement().getName().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
                 propPath.append(resolver.getJCRName(XPathQueryBuilder.FN_POSITION_FULL));
             } else {
-                LocationStepQueryNode[] steps = relPath.getPathSteps();
+                Path.Element[] elements = relPath.getElements();
                 String slash = "";
-                for (int i = 0; i < steps.length; i++) {
+                for (int i = 0; i < elements.length; i++) {
                     propPath.append(slash);
                     slash = "/";
-                    if (i == steps.length - 1 && node.getOperation() != OPERATION_SIMILAR) {
-                        // last step
+                    if (i == elements.length - 1 && node.getOperation() != OPERATION_SIMILAR) {
                         propPath.append("@");
                     }
-                    visit(steps[i], propPath);
+                    if (elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
+                        propPath.append("*");
+                    } else {
+                        propPath.append(resolver.getJCRName(encode(elements[i].getName())));
+                    }
+                    if (elements[i].getIndex() != 0) {
+                        propPath.append("[").append(elements[i].getIndex()).append("]");
+                    }
                 }
             }
 
@@ -417,7 +423,6 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 sb.append(resolver.getJCRName(XPathQueryBuilder.REP_SIMILAR));
                 sb.append("(").append(propPath).append(", ");
                 appendValue(node, sb);
-                sb.append(")");
             } else if (node.getOperation() == OPERATION_SPELLCHECK) {
                 sb.append(resolver.getJCRName(XPathQueryBuilder.REP_SPELLCHECK));
                 sb.append("(");

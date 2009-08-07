@@ -16,27 +16,60 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.InternalFreeze;
+import org.apache.jackrabbit.core.version.InternalFrozenNode;
+import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
+import org.apache.jackrabbit.core.version.LabelVersionSelector;
+import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.util.ChildrenCollectorFilter;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.api.jsr283.Binary;
+import org.apache.jackrabbit.api.jsr283.version.VersionManager;
+import org.apache.jackrabbit.api.jsr283.lock.LockManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.InvalidLifecycleTransitionException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
+import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
@@ -51,68 +84,31 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
-import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
+import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionManager;
-
-import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.ItemDef;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.query.QueryManagerImpl;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.util.ChildrenCollectorFilter;
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ISCHECKEDOUT;
-import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LIFECYCLE_POLICY;
-import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_CURRENT_LIFECYCLE_STATE;
-import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_LIFECYCLE;
-import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_REFERENCEABLE;
+import javax.jcr.version.VersionIterator;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
  */
-public class NodeImpl extends ItemImpl implements Node {
+public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr283.Node {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
@@ -144,15 +140,6 @@ public class NodeImpl extends ItemImpl implements Node {
                     + state.getNodeTypeName() + "' of " + this);
             data.getNodeState().setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         }
-    }
-
-    /**
-     * Returns the node-state associated with this node.
-     *
-     * @return state associated with this node
-     */
-    NodeState getNodeState() {
-        return data.getNodeState();
     }
 
     /**
@@ -212,67 +199,41 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     protected NodeId resolveRelativeNodePath(String relPath)
             throws RepositoryException {
-
-        Path p = resolveRelativePath(relPath);
-        return getNodeId(p);
-    }
-
-    /**
-     * Resolve a relative path given as string into a <code>Path</code>. If
-     * a <code>NameException</code> occurs, it will be rethrown embedded
-     * into a <code>RepositoryException</code>
-     *
-     * @param relPath relative path
-     * @return <code>Path</code> object
-     * @throws RepositoryException if an error occurs
-     */
-    private Path resolveRelativePath(String relPath) throws RepositoryException {
         try {
-            return session.getQPath(relPath);
+            /**
+             * first check if relPath is just a name (in which case we don't
+             * have to build & resolve absolute path)
+             */
+            Path p = session.getQPath(relPath);
+            if (p.getLength() == 1) {
+                Path.Element pe = p.getNameElement();
+                if (pe.denotesName()) {
+                    // check if node entry exists
+                    NodeState thisState = data.getNodeState();
+                    int index = pe.getIndex();
+                    if (index == 0) {
+                        index = 1;
+                    }
+                    ChildNodeEntry cne =
+                            thisState.getChildNodeEntry(pe.getName(), index);
+                    if (cne != null) {
+                        return cne.getId();
+                    } else {
+                        // there's no child node with that name
+                        return null;
+                    }
+                }
+            }
+            /**
+             * build and resolve absolute path
+             */
+            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
+            return session.getHierarchyManager().resolveNodePath(p);
         } catch (NameException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + this;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
-    }
-
-    /**
-     * Returns the id of the node at <code>p</code> or <code>null</code>
-     * if no node exists at <code>p</code>.
-     * <p/>
-     * Note that access rights are not checked.
-     *
-     * @param p relative path of a (possible) node
-     * @return the id of the node at <code>p</code> or
-     *         <code>null</code> if no node exists at <code>p</code>
-     * @throws RepositoryException if <code>relPath</code> is not a valid
-     *                             relative path
-     */
-    private NodeId getNodeId(Path p) throws RepositoryException {
-        if (p.getLength() == 1) {
-            Path.Element pe = p.getNameElement();
-            if (pe.denotesName()) {
-                // check if node entry exists
-                NodeState thisState = data.getNodeState();
-                int index = pe.getIndex();
-                if (index == 0) {
-                    index = 1;
-                }
-                ChildNodeEntry cne =
-                        thisState.getChildNodeEntry(pe.getName(), index);
-                if (cne != null) {
-                    return cne.getId();
-                } else {
-                    // there's no child node with that name
-                    return null;
-                }
-            }
-        }
-        /**
-         * build and resolve absolute path
-         */
-        p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-        return session.getHierarchyManager().resolveNodePath(p);
     }
 
     /**
@@ -287,7 +248,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (isTransient()) {
             return true;
         }
-        Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
+        Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
         return iter.hasNext();
     }
 
@@ -311,6 +272,95 @@ public class NodeImpl extends ItemImpl implements Node {
             }
             return getItemState();
         }
+    }
+
+    /**
+     * Computes the values of well-known system (i.e. protected) properties.
+     * todo: duplicate code in BatchedItemOperations: consolidate and delegate to NodeTypeInstanceHandler
+     *
+     * @param name
+     * @param def
+     * @return
+     * @throws RepositoryException
+     */
+    protected InternalValue[] computeSystemGeneratedPropertyValues(Name name,
+                                                                   PropertyDefinitionImpl def)
+            throws RepositoryException {
+        InternalValue[] genValues = null;
+
+        /**
+         * todo: need to come up with some callback mechanism for applying system generated values
+         * (e.g. using a NodeTypeInstanceHandler interface)
+         */
+
+        NodeState thisState = data.getNodeState();
+
+        // compute system generated values
+        NodeTypeImpl nt = (NodeTypeImpl) def.getDeclaringNodeType();
+        // TODO JCR-2116: Built-In Node Types; => adapt to JCR 2.0 built-in node types (mix:created, etc)
+        if (nt.getQName().equals(NameConstants.MIX_REFERENCEABLE)) {
+            // mix:referenceable node type
+            if (name.equals(NameConstants.JCR_UUID)) {
+                // jcr:uuid property
+                genValues = new InternalValue[]{
+                        InternalValue.create(thisState.getNodeId().getUUID().toString())
+                };
+            }
+/*
+       todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
+       } else if (nt.getQName().equals(MIX_VERSIONABLE)) {
+           // mix:versionable node type
+           VersionHistory hist = session.getVersionManager().getOrCreateVersionHistory(this);
+           if (name.equals(JCR_VERSIONHISTORY)) {
+               // jcr:versionHistory property
+               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
+           } else if (name.equals(JCR_BASEVERSION)) {
+               // jcr:baseVersion property
+               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+           } else if (name.equals(JCR_ISCHECKEDOUT)) {
+               // jcr:isCheckedOut property
+               genValues = new InternalValue[]{InternalValue.create(true)};
+           } else if (name.equals(JCR_PREDECESSORS)) {
+               // jcr:predecessors property
+               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+           }
+*/
+        } else if (nt.getQName().equals(NameConstants.NT_HIERARCHYNODE)) {
+            // nt:hierarchyNode node type
+            if (name.equals(NameConstants.JCR_CREATED)) {
+                // jcr:created property
+                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
+            }
+        } else if (nt.getQName().equals(NameConstants.NT_RESOURCE)) {
+            // nt:resource node type
+            if (name.equals(NameConstants.JCR_LASTMODIFIED)) {
+                // jcr:lastModified property
+                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
+            }
+        } else if (nt.getQName().equals(NameConstants.NT_VERSION)) {
+            // nt:version node type
+            if (name.equals(NameConstants.JCR_CREATED)) {
+                // jcr:created property
+                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
+            }
+        } else if (nt.getQName().equals(NameConstants.NT_BASE)) {
+            // nt:base node type
+            if (name.equals(NameConstants.JCR_PRIMARYTYPE)) {
+                // jcr:primaryType property
+                genValues = new InternalValue[]{InternalValue.create(thisState.getNodeTypeName())};
+            } else if (name.equals(NameConstants.JCR_MIXINTYPES)) {
+                // jcr:mixinTypes property
+                Set mixins = thisState.getMixinTypeNames();
+                ArrayList values = new ArrayList(mixins.size());
+                Iterator iter = mixins.iterator();
+                while (iter.hasNext()) {
+                    values.add(InternalValue.create((Name) iter.next()));
+                }
+                genValues = (InternalValue[]) values.toArray(new InternalValue[values.size()]);
+            }
+        }
+
+        return genValues;
     }
 
     /**
@@ -411,21 +461,20 @@ public class NodeImpl extends ItemImpl implements Node {
         // create a new property state
         PropertyState propState;
         try {
-            PropDef propDef = def.unwrap();
             propState =
                     stateMgr.createTransientPropertyState(getNodeId(), name,
                             ItemState.STATUS_NEW);
             propState.setType(type);
-            propState.setMultiValued(propDef.isMultiple());
-            propState.setDefinitionId(propDef.getId());
+            propState.setMultiValued(def.isMultiple());
+            propState.setDefinitionId(def.unwrap().getId());
             // compute system generated values if necessary
-            InternalValue[] genValues = session.getNodeTypeInstanceHandler()
-                    .computeSystemGeneratedPropertyValues(data.getNodeState(), propDef);
-            if (genValues == null) {
-                genValues = propDef.getDefaultValues();
-            }
+            InternalValue[] genValues =
+                    computeSystemGeneratedPropertyValues(name, def);
+            InternalValue[] defValues = def.unwrap().getDefaultValues();
             if (genValues != null) {
                 propState.setValues(genValues);
+            } else if (defValues != null) {
+                propState.setValues(defValues);
             }
         } catch (ItemStateException ise) {
             String msg = "failed to add property " + name + " to " + this;
@@ -458,7 +507,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState nodeState;
         try {
             if (id == null) {
-                id = new NodeId();
+                id = new NodeId(UUID.randomUUID());
             }
             nodeState =
                     stateMgr.createTransientNodeState(id, nodeType.getQName(),
@@ -602,11 +651,11 @@ public class NodeImpl extends ItemImpl implements Node {
         if (thisState.hasChildNodeEntries()) {
             // remove child nodes
             // use temp array to avoid ConcurrentModificationException
-            ArrayList<ChildNodeEntry> tmp = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
+            ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
                 ChildNodeEntry entry =
-                        tmp.get(i);
+                        (ChildNodeEntry) tmp.get(i);
                 // recursively remove child node
                 NodeId childId = entry.getId();
                 //NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
@@ -619,8 +668,9 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // remove properties
         // use temp set to avoid ConcurrentModificationException
-        HashSet<Name> tmp = new HashSet<Name>(thisState.getPropertyNames());
-        for (Name propName : tmp) {
+        HashSet tmp = new HashSet(thisState.getPropertyNames());
+        for (Iterator iter = tmp.iterator(); iter.hasNext();) {
+            Name propName = (Name) iter.next();
             // remove the property entry
             thisState.removePropertyName(propName);
             // remove property
@@ -633,7 +683,126 @@ public class NodeImpl extends ItemImpl implements Node {
         setRemoved();
     }
 
-    private void setMixinTypesProperty(Set<Name> mixinNames) throws RepositoryException {
+    protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType)
+            throws ItemExistsException, PathNotFoundException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        return internalAddNode(relPath, nodeType, null);
+    }
+
+    protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType,
+                                       NodeId id)
+            throws ItemExistsException, PathNotFoundException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        Path nodePath;
+        Name nodeName;
+        Path parentPath;
+        try {
+            nodePath =
+                PathFactoryImpl.getInstance().create(getPrimaryPath(), session.getQPath(relPath), false)
+                .getCanonicalPath();
+            if (nodePath.getNameElement().getIndex() != 0) {
+                String msg = "illegal subscript specified: " + nodePath;
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+            nodeName = nodePath.getNameElement().getName();
+            parentPath = nodePath.getAncestor(1);
+        } catch (NameException e) {
+            String msg =
+                "failed to resolve path " + relPath + " relative to " + this;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        NodeImpl parentNode;
+        try {
+            Item parent = itemMgr.getItem(parentPath);
+            if (!parent.isNode()) {
+                String msg = "cannot add a node to property " + parentPath;
+                log.debug(msg);
+                throw new ConstraintViolationException(msg);
+            }
+            parentNode = (NodeImpl) parent;
+        } catch (AccessDeniedException ade) {
+            throw new PathNotFoundException(relPath);
+        }
+
+        // make sure that parent node is checked-out and not locked
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        session.getValidator().checkModify(parentNode, options, Permission.NONE);
+
+        // delegate the creation of the child node to the parent node
+        return parentNode.internalAddChildNode(nodeName, nodeType, id);
+    }
+
+    protected NodeImpl internalAddChildNode(Name nodeName,
+                                            NodeTypeImpl nodeType)
+            throws ItemExistsException, ConstraintViolationException,
+            RepositoryException {
+        return internalAddChildNode(nodeName, nodeType, null);
+    }
+
+    protected NodeImpl internalAddChildNode(Name nodeName,
+                                            NodeTypeImpl nodeType, NodeId id)
+            throws ItemExistsException, ConstraintViolationException,
+            RepositoryException {
+        Path nodePath;
+        try {
+            nodePath = PathFactoryImpl.getInstance().create(getPrimaryPath(), nodeName, true);
+        } catch (MalformedPathException e) {
+            // should never happen
+            String msg = "internal error: invalid path " + this;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        NodeDefinitionImpl def;
+        try {
+            Name nodeTypeName = null;
+            if (nodeType != null) {
+                nodeTypeName = nodeType.getQName();
+            }
+            def = getApplicableChildNodeDefinition(nodeName, nodeTypeName);
+        } catch (RepositoryException re) {
+            String msg = "no definition found in parent node's node type for new node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg, re);
+        }
+        if (nodeType == null) {
+            // use default node type
+            nodeType = (NodeTypeImpl) def.getDefaultPrimaryType();
+        } else {
+            // adding a node with explicit specifying the node type name
+            // requires the editing session to have nt_management privilege.
+            session.getAccessManager().checkPermission(nodePath, Permission.NODE_TYPE_MNGMT);
+        }
+
+        // check for name collisions
+        NodeState thisState = data.getNodeState();
+        ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
+        if (cne != null) {
+            // there's already a child node entry with that name;
+            // check same-name sibling setting of new node
+            if (!def.allowsSameNameSiblings()) {
+                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
+            }
+            // check same-name sibling setting of existing node
+            NodeId newId = cne.getId();
+            if (!((NodeImpl) itemMgr.getItem(newId)).getDefinition().allowsSameNameSiblings()) {
+                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
+            }
+        }
+
+        // check protected flag of parent (i.e. this) node and retention/hold
+        int options = ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD |
+                ItemValidator.CHECK_RETENTION;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+
+        // now do create the child node
+        return createChildNode(nodeName, def, nodeType, id);
+    }
+
+    private void setMixinTypesProperty(Set mixinNames) throws RepositoryException {
         NodeState thisState = data.getNodeState();
         // get or create jcr:mixinTypes property
         PropertyImpl prop;
@@ -655,10 +824,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // call internalSetValue for setting the jcr:mixinTypes property
         // to avoid checking of the 'protected' flag
         InternalValue[] vals = new InternalValue[mixinNames.size()];
-        Iterator<Name> iter = mixinNames.iterator();
+        Iterator iter = mixinNames.iterator();
         int cnt = 0;
         while (iter.hasNext()) {
-            vals[cnt++] = InternalValue.create(iter.next());
+            vals[cnt++] = InternalValue.create((Name) iter.next());
         }
         prop.internalSetValue(vals, PropertyType.NAME);
     }
@@ -668,7 +837,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return a set of the <code>Name</code>s of this node's mixin types.
      */
-    public Set<Name> getMixinTypeNames() {
+    public Set getMixinTypeNames() {
         return data.getNodeState().getMixinTypeNames();
     }
 
@@ -834,8 +1003,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
-                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:(simple)versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
@@ -864,7 +1033,7 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            Set<Name> mixins = new HashSet<Name>(data.getNodeState().getMixinTypeNames());
+            Set mixins = new HashSet(data.getNodeState().getMixinTypeNames());
 
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType(primaryTypeName, mixins);
@@ -887,7 +1056,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // modify the state of this node
             NodeState thisState = (NodeState) getOrCreateTransientItemState();
             // add mixin name
-            Set<Name> mixins = new HashSet<Name>(thisState.getMixinTypeNames());
+            Set mixins = new HashSet(thisState.getMixinTypeNames());
             mixins.add(mixinName);
             thisState.setMixinTypeNames(mixins);
 
@@ -940,8 +1109,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
-                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         session.getValidator().checkModify(this, options, permissions);
 
@@ -955,7 +1124,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
 
         // build effective node type of remaining mixin's & primary type
-        Set<Name> remainingMixins = new HashSet<Name>(state.getMixinTypeNames());
+        Set remainingMixins = new HashSet(state.getMixinTypeNames());
         // remove name of target mixin
         remainingMixins.remove(mixinName);
         EffectiveNodeType entResulting;
@@ -1017,8 +1186,9 @@ public class NodeImpl extends ItemImpl implements Node {
         boolean success = false;
         try {
             // use temp set to avoid ConcurrentModificationException
-            HashSet<Name> set = new HashSet<Name>(thisState.getPropertyNames());
-            for (Name propName : set) {
+            HashSet set = new HashSet(thisState.getPropertyNames());
+            for (Iterator iter = set.iterator(); iter.hasNext();) {
+                Name propName = (Name) iter.next();
                 PropertyState propState = (PropertyState) stateMgr.getItemState(new PropertyId(thisState.getNodeId(), propName));
                 // check if property has been defined by mixin type (or one of its supertypes)
                 PropertyDefinition def = ntMgr.getPropertyDefinition(propState.getDefinitionId());
@@ -1080,10 +1250,10 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             }
             // use temp array to avoid ConcurrentModificationException
-            ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
+            ArrayList list = new ArrayList(thisState.getChildNodeEntries());
             // start from tail to avoid problems with same-name siblings
             for (int i = list.size() - 1; i >= 0; i--) {
-                ChildNodeEntry entry = list.get(i);
+                ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
                 NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
                 // check if node has been defined by mixin type (or one of its supertypes)
@@ -1138,7 +1308,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (ntName.equals(primary)) {
             return true;
         }
-        Set<Name> mixins = data.getNodeState().getMixinTypeNames();
+        Set mixins = data.getNodeState().getMixinTypeNames();
         if (mixins.contains(ntName)) {
             return true;
         }
@@ -1155,6 +1325,15 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
+    }
+
+    /**
+     * Returns the (internal) uuid of this node.
+     *
+     * @return the uuid of this node
+     */
+    public UUID internalGetUUID() {
+        return ((NodeId) id).getUUID();
     }
 
     /**
@@ -1175,7 +1354,7 @@ public class NodeImpl extends ItemImpl implements Node {
     protected void checkSetProperty()
             throws VersionException, LockException, RepositoryException {
         // make sure this node is checked-out and is not locked
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
         session.getValidator().checkModify(this, options, Permission.NONE);
     }
 
@@ -1280,7 +1459,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns the child node of <code>this</code> node with the specified
      * <code>name</code>.
      *
-     * @param name The name of the child node to retrieve.
+     * @param name The qualified name of the child node to retrieve.
      * @return The child node with the specified <code>name</code>.
      * @throws ItemNotFoundException If no child node exists with the
      *                               specified name.
@@ -1294,7 +1473,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns the child node of <code>this</code> node with the specified
      * <code>name</code>.
      *
-     * @param name The name of the child node to retrieve.
+     * @param name  The qualified name of the child node to retrieve.
      * @param index The index of the child node to retrieve (in the case of same-name siblings).
      * @return The child node with the specified <code>name</code>.
      * @throws ItemNotFoundException If no child node exists with the
@@ -1326,7 +1505,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns <code>true</code> if the child node exists and <code>false</code>
      * otherwise.
      *
-     * @param name The name of the child node.
+     * @param name The qualified name of the child node.
      * @return <code>true</code> if the child node exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
      */
@@ -1339,7 +1518,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns <code>true</code> if the child node exists and <code>false</code>
      * otherwise.
      *
-     * @param name The name of the child node.
+     * @param name  The qualified name of the child node.
      * @param index The index of the child node (in the case of same-name siblings).
      * @return <code>true</code> if the child node exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
@@ -1363,7 +1542,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns the property of <code>this</code> node with the specified
      * <code>name</code>.
      *
-     * @param name The name of the property to retrieve.
+     * @param name The qualified name of the property to retrieve.
      * @return The property with the specified <code>name</code>.
      * @throws ItemNotFoundException If no property exists with the
      *                               specified name.
@@ -1387,7 +1566,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns <code>true</code> if the property exists and <code>false</code>
      * otherwise.
      *
-     * @param name The name of the property.
+     * @param name The qualified name of the property.
      * @return <code>true</code> if the property exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
      */
@@ -1416,84 +1595,32 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param nodeName     name of the new node
      * @param nodeTypeName name of the new node's node type or <code>null</code>
      *                     if it should be determined automatically
-     * @param id           id of the new node or <code>null</code> if a new
-     *                     id should be assigned
+     * @param uuid         uuid of the new node or <code>null</code> if a new
+     *                     uuid should be assigned
      * @return the newly added node
-     * @throws RepositoryException if the node can not added
+     * @throws ItemExistsException
+     * @throws NoSuchNodeTypeException
+     * @throws VersionException
+     * @throws ConstraintViolationException
+     * @throws LockException
+     * @throws RepositoryException
      */
-    public synchronized NodeImpl addNode(
-            Name nodeName, Name nodeTypeName, NodeId id)
-            throws RepositoryException {
+    public synchronized NodeImpl addNode(Name nodeName, Name nodeTypeName,
+                                         UUID uuid)
+            throws ItemExistsException, NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        Path nodePath = PathFactoryImpl.getInstance().create(
-                getPrimaryPath(), nodeName, true);
+        // make sure this node is checked-out and not locked by another session.
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
-        // Check the explicitly specified node type (if any)
         NodeTypeImpl nt = null;
         if (nodeTypeName != null) {
             nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
-            if (nt.isMixin()) {
-                throw new ConstraintViolationException(
-                        "Unable to add a node with a mixin node type: "
-                        + session.getJCRName(nodeTypeName));
-            } else if (nt.isAbstract()) {
-                throw new ConstraintViolationException(
-                        "Unable to add a node with an abstract node type: "
-                        + session.getJCRName(nodeTypeName));
-            } else {
-                // adding a node with explicit specifying the node type name
-                // requires the editing session to have nt_management privilege.
-                session.getAccessManager().checkPermission(
-                        nodePath, Permission.NODE_TYPE_MNGMT);
-            }
         }
-
-        // Get the applicable child node definition for this node.
-        NodeDefinitionImpl def;
-        try {
-            def = getApplicableChildNodeDefinition(nodeName, nodeTypeName);
-        } catch (RepositoryException e) {
-            throw new ConstraintViolationException(
-                    "No child node definition for "
-                    + session.getJCRName(nodeName) + " found in " + this, e);
-        }
-
-        // Use default node type from child node definition if needed
-        if (nt == null) {
-            nt = (NodeTypeImpl) def.getDefaultPrimaryType();
-        }
-
-        // check for name collisions
-        NodeState thisState = data.getNodeState();
-        ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
-        if (cne != null) {
-            // there's already a child node entry with that name;
-            // check same-name sibling setting of new node
-            if (!def.allowsSameNameSiblings()) {
-                throw new ItemExistsException(
-                        "This node already exists: "
-                        + itemMgr.safeGetJCRPath(nodePath));
-            }
-            // check same-name sibling setting of existing node
-            NodeImpl existing = itemMgr.getNode(cne.getId(), getNodeId());
-            if (!existing.getDefinition().allowsSameNameSiblings()) {
-                throw new ItemExistsException(
-                        "Same-name siblings not allowed for " + existing);
-            }
-        }
-
-        // check protected flag of parent (i.e. this) node and retention/hold
-        // make sure this node is checked-out and not locked by another session.
-        int options =
-            ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
-            | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD
-            | ItemValidator.CHECK_RETENTION;
-        session.getValidator().checkModify(this, options, Permission.NONE);
-
-        // now do create the child node
-        return createChildNode(nodeName, def, nt, id);
+        return internalAddChildNode(nodeName, nt, uuid == null ? null : new NodeId(uuid));
     }
 
     /**
@@ -1630,6 +1757,16 @@ public class NodeImpl extends ItemImpl implements Node {
         return prop;
     }
 
+    public Property setProperty(String name, BigDecimal value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-1609");
+    }
+
+    public Property setProperty(String name, Binary value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-1609");
+    }
+
     /**
      * @see ItemImpl#getQName()
      */
@@ -1717,14 +1854,14 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // make sure this node is checked-out and neither protected nor locked
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
-                | ItemValidator.CHECK_CONSTRAINTS;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
-        ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(data.getNodeState().getChildNodeEntries());
+        ArrayList list = new ArrayList(data.getNodeState().getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
-            ChildNodeEntry entry = list.get(i);
+            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             if (srcInd == -1) {
                 if (entry.getName().equals(srcName.getName())
                         && (entry.getIndex() == srcName.getIndex()
@@ -1817,13 +1954,13 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException(
                     this + ": no child node entry with id " + id);
         }
-        List<ChildNodeEntry> cneList = new ArrayList<ChildNodeEntry>(state.getChildNodeEntries());
+        List cneList = new ArrayList(state.getChildNodeEntries());
 
         // remove existing
         existing.remove();
 
         // create new child node
-        NodeImpl node = addNode(nodeName, nodeTypeName, id);
+        NodeImpl node = addNode(nodeName, nodeTypeName, id.getUUID());
         if (mixinNames != null) {
             for (int i = 0; i < mixinNames.length; i++) {
                 node.addMixin(mixinNames[i]);
@@ -1841,7 +1978,8 @@ public class NodeImpl extends ItemImpl implements Node {
             // replace child node entry with different name
             // but preserving original position
             state.removeAllChildNodeEntries();
-            for (ChildNodeEntry cne : cneList) {
+            for (Iterator iter = cneList.iterator(); iter.hasNext();) {
+                ChildNodeEntry cne = (ChildNodeEntry) iter.next();
                 if (cne.getId().equals(id)) {
                     // replace entry with different name
                     state.addChildNodeEntry(nodeName, id);
@@ -1886,7 +2024,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // (1) make sure that parent node is checked-out
         // (2) check lock status
         // (3) check protected flag of parent (i.e. this) node
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_CONSTRAINTS;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // (4) check for name collisions
@@ -1986,54 +2124,45 @@ public class NodeImpl extends ItemImpl implements Node {
         return (Node) itemMgr.getItem(parentId);
     }
 
-    //----------------------------------------------------------------< Node >
-
+    //-----------------------------------------------------------------< Node >
     /**
      * {@inheritDoc}
      */
-    public Node addNode(String relPath) throws RepositoryException {
+    public synchronized Node addNode(String relPath)
+            throws RepositoryException {
         return addNodeWithUuid(relPath, null, null);
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public Node addNode(String relPath, String nodeTypeName)
-            throws RepositoryException {
-        return addNodeWithUuid(relPath, nodeTypeName, null);
-    }
-
-    /**
-     * Adds a node with the given UUID. You can only add a node with a UUID
-     * that is not already assigned to another node in this workspace.
-     *
-     * @since Apache Jackrabbit 1.6
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-1972">JCR-1972</a>
-     * @see Node#addNode(String)
-     * @param relPath path of the new node
-     * @param uuid    UUID of the new node,
-     *                or <code>null</code> for a random new UUID
+     * Same as <code>{@link Node#addNode(String)}</code> except
+     * this method takes an additional <code>uuid</code> argument.
+     * <b>Important Notice:</b> Use this method with caution!
+     * @param relPath      path of the new node
+     * @param uuid         uuid of the new node or <code>null</code>
      * @return the newly added node
      * @throws RepositoryException if the node can not be added
      */
-    public Node addNodeWithUuid(String relPath, String uuid)
+    public synchronized Node addNodeWithUuid(String relPath, String uuid)
             throws RepositoryException {
         return addNodeWithUuid(relPath, null, uuid);
     }
 
     /**
-     * Adds a node with the given node type and UUID. You can only add a node
-     * with a UUID that is not already assigned to another node in this
-     * workspace.
-     *
-     * @since Apache Jackrabbit 1.6
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-1972">JCR-1972</a>
-     * @see Node#addNode(String, String)
+     * {@inheritDoc}
+     */
+    public synchronized Node addNode(String relPath, String nodeTypeName)
+            throws RepositoryException {
+        return addNodeWithUuid(relPath, nodeTypeName, null);
+    }
+
+    /**
+     * Same as <code>{@link Node#addNode(String, String)}</code> except
+     * this method takes an additional <code>uuid</code> argument.
+     * <b>Important Notice:</b> Use this method with caution!
      * @param relPath      path of the new node
-     * @param nodeTypeName name of the new node's node type,
-     *                     or <code>null</code> for automatic type assignment
-     * @param uuid         UUID of the new node,
-     *                     or <code>null</code> for a random new UUID
+     * @param nodeTypeName name of the new node's node type or <code>null</code>
+     *                     if it should be determined automatically
+     * @param uuid         uuid of the new node or <code>null</code>
      * @return the newly added node
      * @throws RepositoryException if the node can not be added
      */
@@ -2043,59 +2172,32 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // Get the canonical path of the new node
-        Path path;
-        try {
-            path = PathFactoryImpl.getInstance().create(
-                    getPrimaryPath(), session.getQPath(relPath), true);
-        } catch (NameException e) {
-            throw new RepositoryException(
-                    "Failed to resolve path " + relPath
-                    + " relative to " + this, e);
-        }
-
-        // Get the last path element and check that it's a simple name
-        Path.Element last = path.getNameElement();
-        if (!last.denotesName() || last.getIndex() != 0) {
-            throw new RepositoryException(
-                    "Invalid last path element for adding node "
-                    + relPath + " relative to " + this);
-        }
-
-        // Get the parent node instance
-        NodeImpl parentNode;
-        Path parentPath = path.getAncestor(1);
-        try {
-            parentNode = itemMgr.getNode(parentPath);
-        } catch (PathNotFoundException e) {
-            if (itemMgr.propertyExists(parentPath)) {
-                throw new ConstraintViolationException(
-                        "Unable to add a child node to property "
-                        + session.getJCRPath(parentPath));
-            }
-            throw e;
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(
-                    "Failed to resolve path " + relPath + " relative to " + this);
-        }
-
-        // Resolve node type name (if any)
-        Name typeName = null;
-        if (nodeTypeName != null) {
-            typeName = session.getQName(nodeTypeName);
-        }
-
-        // Check that the given UUID (if any) does not already exist
         NodeId id = null;
         if (uuid != null) {
-            id = new NodeId(uuid);
-            if (itemMgr.itemExists(id)) {
+            //if (!isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            //    throw new UnsupportedRepositoryOperationException();
+            //}
+            // Test for existing UUID
+            // @see SessionImporter.startNode(NodeInfo nodeInfo, List propInfos)
+            try {
+                session.getNodeByUUID(uuid);
                 throw new ItemExistsException(
-                        "A node with this UUID already exists: " + uuid);
+                    "A node with this UUID already exists: " + uuid);
+            } catch (ItemNotFoundException infe) {
+                id = new NodeId(new UUID(uuid));
             }
         }
 
-        return parentNode.addNode(last.getName(), typeName, id);
+        NodeType nt = null;
+        if (nodeTypeName != null) {
+            nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
+            if (nt.isMixin()) {
+                throw new RepositoryException(
+                    "Not a primary node type: " + nodeTypeName);
+            }
+        }
+
+        return internalAddNode(relPath, (NodeTypeImpl) nt, id);
     }
 
     /**
@@ -2574,28 +2676,17 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Node getNode(String relPath)
             throws PathNotFoundException, RepositoryException {
-
         // check state of this instance
         sanityCheck();
-
-        Path p = resolveRelativePath(relPath);
-        NodeId id = getNodeId(p);
+        NodeId id = resolveRelativeNodePath(relPath);
         if (id == null) {
             throw new PathNotFoundException(relPath);
         }
-
-        // determine parent as mandated by path
-        NodeId parentId = null;
-        if (!p.denotesRoot()) {
-            parentId = getNodeId(p.getAncestor(1));
-        }
         try {
-            if (parentId == null) {
-                return (NodeImpl) itemMgr.getItem(id);
+            if (data.getNodeState().hasChildNodeEntry(id)) {
+                return itemMgr.getNode(id, getNodeId());
             }
-            // if the node is shareable, it now returns the node with the right
-            // parent
-            return itemMgr.getNode(id, parentId);
+            return (NodeImpl) itemMgr.getItem(id);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(relPath);
         } catch (ItemNotFoundException infe) {
@@ -2755,15 +2846,15 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        Set<Name> mixinNames = data.getNodeState().getMixinTypeNames();
+        Set mixinNames = data.getNodeState().getMixinTypeNames();
         if (mixinNames.isEmpty()) {
             return new NodeType[0];
         }
         NodeType[] nta = new NodeType[mixinNames.size()];
-        Iterator<Name> iter = mixinNames.iterator();
+        Iterator iter = mixinNames.iterator();
         int i = 0;
         while (iter.hasNext()) {
-            nta[i++] = session.getNodeTypeManager().getNodeType(iter.next());
+            nta[i++] = session.getNodeTypeManager().getNodeType((Name) iter.next());
         }
         return nta;
     }
@@ -2810,15 +2901,15 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!mixin.isMixin()) {
             return false;
         }
-
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
-                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:(simple)versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
         // in addition.
         if (NameConstants.MIX_VERSIONABLE.equals(ntName)
-                || NameConstants.MIX_SIMPLE_VERSIONABLE.equals(ntName)) {
+                || NameConstants.MIX_SIMPLE_VERSIONABLE.equals(mixinName)) {
             permissions |= Permission.VERSION_MNGMT;
         }
         if (!session.getValidator().canModify(this, options, permissions)) {
@@ -2829,8 +2920,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
         if (primaryType.isDerivedFrom(ntName)) {
-            // mixin already inherited -> addMixin is allowed but has no effect.
-            return true;
+            return false;
         }
 
         // build effective node type of mixins & primary type
@@ -2839,14 +2929,12 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            Set<Name> mixins = new HashSet<Name>(data.getNodeState().getMixinTypeNames());
+            Set mixins = new HashSet(data.getNodeState().getMixinTypeNames());
 
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType(primaryTypeName, mixins);
             if (entExisting.includesNodeType(ntName)) {
-                // the existing mixins already include the mixin to be added.
-                // addMixin would succeed without modifying the node.
-                return true;
+                return false;
             }
 
             // add new mixin
@@ -2899,7 +2987,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        return ChildrenCollectorFilter.collectChildNodes(this, namePattern);
+        ArrayList nodes = new ArrayList();
+        // traverse children using a special filtering 'collector'
+        accept(new ChildrenCollectorFilter(namePattern, nodes, true, false, 1));
+        return new NodeIteratorAdapter(nodes);
     }
 
     /**
@@ -2910,7 +3001,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        return ChildrenCollectorFilter.collectProperties(this, namePattern);
+        ArrayList properties = new ArrayList();
+        // traverse children using a special filtering 'collector'
+        accept(new ChildrenCollectorFilter(namePattern, properties, false, true, 1));
+        return new PropertyIteratorAdapter(properties);
     }
 
     /**
@@ -2946,7 +3040,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new UnsupportedRepositoryOperationException();
         }
 
-        return getNodeId().toString();
+        return internalGetUUID().toString();
     }
 
     /**
@@ -2973,7 +3067,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // if root is common ancestor, corresponding path is same as ours
             if (m1.getDepth() == 0) {
                 // check existence
-                if (!srcSession.getItemManager().nodeExists(getPrimaryPath())) {
+                if (!srcSession.getItemManager().itemExists(getPrimaryPath())) {
                     throw new ItemNotFoundException("Node not found: " + this);
                 } else {
                     return getPath();
@@ -3055,13 +3149,15 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        ArrayList<NodeImpl> list = new ArrayList<NodeImpl>();
+        ArrayList list = new ArrayList();
 
         if (!isShareable()) {
             list.add(this);
         } else {
             NodeState state = data.getNodeState();
-            for (NodeId parentId : state.getSharedSet()) {
+            Iterator iter = state.getSharedSet().iterator();
+            while (iter.hasNext()) {
+                NodeId parentId = (NodeId) iter.next();
                 list.add(itemMgr.getNode(getNodeId(), parentId));
             }
         }
@@ -3094,7 +3190,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeIterator iter = getSharedSet();
         while (iter.hasNext()) {
-            iter.nextNode().removeShare();
+            ((NodeImpl) iter.nextNode()).removeShare();
         }
     }
 
@@ -3224,8 +3320,8 @@ public class NodeImpl extends ItemImpl implements Node {
         Path parentPath = parentNode.getPrimaryPath();
         PathBuilder builder = new PathBuilder(parentPath);
 
-        ChildNodeEntry entry =
-            parentNode.getNodeState().getChildNodeEntry(getNodeId());
+        ChildNodeEntry entry = ((NodeState) parentNode.getItemState()).
+                getChildNodeEntry(getNodeId());
         if (entry == null) {
             String msg = "failed to build path of " + id + ": "
                     + parentId + " has no child entry for "
@@ -3243,6 +3339,160 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     //------------------------------< versioning support: public Node methods >
+    /**
+     * {@inheritDoc}
+     */
+    public Version checkin() throws RepositoryException {
+        return checkin(null);
+    }
+
+    public Version checkin(Calendar cal) throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // check if versionable
+        boolean isFull = checkVersionable();
+
+        // check if checked out
+        if (!internalIsCheckedOut()) {
+            String msg = this + ": Node is already checked-in. ignoring.";
+            log.debug(msg);
+            return getBaseVersion();
+        }
+
+        // check lock status, holds and permissions
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
+        session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
+
+        Version v = session.getVersionManager().checkin(this, cal);
+        boolean success = false;
+        try {
+            internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
+            if (isFull) {
+                internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
+                internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+            }
+            save();
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    // TODO: need to revert changes made within the version manager as well.
+                    refresh(false);
+                } catch (RepositoryException e) {
+                    // cleanup failed
+                    log.error("Error while cleaning up after failed Node.checkin", e);
+                }
+            }
+        }
+        return v;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void checkout()
+            throws UnsupportedRepositoryOperationException, LockException,
+            RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // check if versionable
+        boolean isFull = checkVersionable();
+
+        // check checked-out status
+        if (internalIsCheckedOut()) {
+            String msg = this + ": Node is already checked-out. ignoring.";
+            log.debug(msg);
+            return;
+        }
+
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
+
+        boolean hasPendingChanges = hasPendingChanges();
+        Property[] props = new Property[2];
+        boolean success = false;
+        try {
+            props[0] = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+            if (isFull) {
+                props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
+                        new InternalValue[]{
+                                InternalValue.create(new UUID(getBaseVersion().getUUID()))
+                        });
+            }
+            if (hasPendingChanges) {
+                for (int i = 0; i < props.length; i++) {
+                    if (props[i] != null) {
+                        props[i].save();
+                    }
+                }
+            } else {
+                save();
+            }
+            success = true;
+        } finally {
+            if (!success) {
+                for (int i = 0; i < props.length; i++) {
+                    if (props[i] != null) {
+                        try {
+                            props[i].refresh(false);
+                        } catch (RepositoryException e) {
+                            log.error("Error while cleaning up after failed Node.checkout", e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void update(String srcWorkspaceName)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            LockException, InvalidItemStateException, RepositoryException {
+        internalMerge(srcWorkspaceName, null, false, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            VersionException, LockException, InvalidItemStateException,
+            RepositoryException {
+        return merge(srcWorkspace, bestEffort, false);
+    }
+
+    /**
+     * @see VersionManager#merge(String, String, boolean, boolean)
+     */
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort, boolean isShallow)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            VersionException, LockException, InvalidItemStateException,
+            RepositoryException {
+
+        List failedIds = new ArrayList();
+        internalMerge(srcWorkspace, failedIds, bestEffort, isShallow);
+
+        return new LazyItemIterator(itemMgr, failedIds);
+    }
+
+    public void cancelMerge(Version version)
+            throws VersionException, InvalidItemStateException,
+            UnsupportedRepositoryOperationException, RepositoryException {
+        internalFinishMerge(version, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void doneMerge(Version version) throws VersionException,
+            InvalidItemStateException, UnsupportedRepositoryOperationException,
+            RepositoryException {
+        internalFinishMerge(version, false);
+    }
 
     /**
      * {@inheritDoc}
@@ -3251,161 +3501,1075 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // try shortcut first:
-        // if current node is 'new' we can safely consider it checked-out since
-        // otherwise it would had been impossible to add it in the first place
-        if (isNew()) {
-            return true;
-        }
-
-        // search nearest ancestor that is versionable
-        // FIXME should not only rely on existence of jcr:isCheckedOut property
-        // but also verify that node.isNodeType("mix:versionable")==true;
-        // this would have a negative impact on performance though...
-        try {
-            NodeState state = getNodeState();
-            while (!state.hasPropertyName(JCR_ISCHECKEDOUT)) {
-                ItemId parentId = state.getParentId();
-                if (parentId == null) {
-                    // root reached or out of hierarchy
-                    return true;
-                }
-                state = (NodeState)
-                    session.getItemStateManager().getItemState(parentId);
-            }
-            PropertyId id = new PropertyId(state.getNodeId(), JCR_ISCHECKEDOUT);
-            PropertyState ps =
-                (PropertyState) session.getItemStateManager().getItemState(id);
-            return ps.getValues()[0].getBoolean();
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
-    }
-
-    /**
-     * Returns the version manager of this workspace.
-     */
-    private VersionManagerImpl getVersionManagerImpl() {
-        return session.getWorkspaceImpl().getVersionManagerImpl();
+        return internalIsCheckedOut();
     }
 
     /**
      * {@inheritDoc}
      */
-    public void update(String srcWorkspaceName) throws RepositoryException {
-        getVersionManagerImpl().update(this, srcWorkspaceName);
-    }
-
-    /**
-     * Use {@link VersionManager#checkin(String)} instead
-     */
-    @Deprecated
-    public Version checkin() throws RepositoryException {
-        return getVersionManagerImpl().checkin(getPath());
-    }
-
-    /**
-     * Use {@link VersionManagerImpl#checkin(String, Calendar)} instead
-     *
-     * @since Apache Jackrabbit 1.6
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-1972">JCR-1972</a>
-     */
-    @Deprecated
-    public Version checkin(Calendar created) throws RepositoryException {
-        return getVersionManagerImpl().checkin(getPath(), created);
-    }
-
-    /**
-     * Use {@link VersionManager#checkout(String)} instead
-     */
-    @Deprecated
-    public void checkout() throws RepositoryException {
-        getVersionManagerImpl().checkout(getPath());
-    }
-
-    /**
-     * Use {@link VersionManager#merge(String, String, boolean)} instead
-     */
-    @Deprecated
-    public NodeIterator merge(String srcWorkspace, boolean bestEffort)
-            throws RepositoryException {
-        return getVersionManagerImpl().merge(
-                getPath(), srcWorkspace, bestEffort);
-    }
-
-    /**
-     * Use {@link VersionManager#cancelMerge(String, Version)} instead
-     */
-    @Deprecated
-    public void cancelMerge(Version version) throws RepositoryException {
-        getVersionManagerImpl().cancelMerge(getPath(), version);
-    }
-
-    /**
-     * Use {@link VersionManager#doneMerge(String, Version)} instead
-     */
-    @Deprecated
-    public void doneMerge(Version version) throws RepositoryException {
-        getVersionManagerImpl().doneMerge(getPath(), version);
-    }
-
-    /**
-     * Use {@link VersionManager#restore(String, String, boolean)} instead
-     */
-    @Deprecated
     public void restore(String versionName, boolean removeExisting)
-            throws RepositoryException {
-        getVersionManagerImpl().restore(getPath(), versionName, removeExisting);
+            throws VersionException, ItemExistsException,
+            UnsupportedRepositoryOperationException, LockException,
+            InvalidItemStateException, RepositoryException {
+
+        // checks
+        sanityCheck();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+
+        Version v = getVersionHistory().getVersion(versionName);
+        DateVersionSelector gvs = new DateVersionSelector(v.getCreated());
+        internalRestore(v, gvs, removeExisting);
+        // session.save/revert is done in internal restore
     }
 
     /**
-     * Use {@link VersionManager#restore(String, Version, boolean)} instead
+     * {@inheritDoc}
      */
-    @Deprecated
     public void restore(Version version, boolean removeExisting)
-            throws RepositoryException {
-        getVersionManagerImpl().restore(this, version, removeExisting);
+            throws VersionException, ItemExistsException,
+            UnsupportedRepositoryOperationException, LockException,
+            RepositoryException {
+
+        // do checks
+        sanityCheck();
+        checkVersionable();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK| ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+
+        // check if 'own' version
+        if (!version.getContainingHistory().isSame(getVersionHistory())) {
+            throw new VersionException("Unable to restore version. Not same version history.");
+        }
+
+        internalRestore(version, new DateVersionSelector(version.getCreated()), removeExisting);
+        // session.save/revert is done in internal restore
     }
 
     /**
-     * Use {@link VersionManager#restore(String, Version, boolean)} instead
+     * {@inheritDoc}
      */
-    @Deprecated
     public void restore(Version version, String relPath, boolean removeExisting)
-            throws RepositoryException {
+            throws PathNotFoundException, ItemExistsException, VersionException,
+            ConstraintViolationException, UnsupportedRepositoryOperationException,
+            LockException, InvalidItemStateException, RepositoryException {
+
+        // do checks
+        sanityCheck();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+
+        // if node exists, do a 'normal' restore
         if (hasNode(relPath)) {
-            getVersionManagerImpl().restore((NodeImpl) getNode(relPath), version, removeExisting);
+            getNode(relPath).restore(version, removeExisting);
         } else {
-            getVersionManagerImpl().restore(
-                getPath() + "/" + relPath, version, removeExisting);
+            NodeImpl node;
+            try {
+                // check if versionable node exists
+                InternalFrozenNode fn = ((VersionImpl) version).getInternalFrozenNode();
+                node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
+                if (removeExisting) {
+                    try {
+                        Path relative = session.getQPath(relPath);
+                        Path dstPath =
+                            PathFactoryImpl.getInstance().create(getPrimaryPath(), relative, false)
+                            .getCanonicalPath();
+                        // move to respective location
+                        session.move(node.getPath(), session.getJCRPath(dstPath));
+                        // need to refetch ?
+                        node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
+                    } catch (NameException e) {
+                        throw new RepositoryException(e);
+                    }
+                } else {
+                    throw new ItemExistsException("Unable to restore version. Versionable node already exists.");
+                }
+            } catch (ItemNotFoundException e) {
+                // not found, create new one
+                node = addNode(relPath, ((VersionImpl) version).getInternalFrozenNode());
+            }
+
+            // recreate node from frozen state
+            node.internalRestore(version, new DateVersionSelector(version.getCreated()), removeExisting);
+            // session.save/revert is done in internal restore
         }
     }
 
     /**
-     * Use {@link VersionManager#restoreByLabel(String, String, boolean)}
-     * instead
+     * {@inheritDoc}
      */
-    @Deprecated
     public void restoreByLabel(String versionLabel, boolean removeExisting)
+            throws VersionException, ItemExistsException,
+            UnsupportedRepositoryOperationException, LockException,
+            InvalidItemStateException, RepositoryException {
+
+        // do checks
+        sanityCheck();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK| ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+
+        Version v = getVersionHistory().getVersionByLabel(versionLabel);
+        if (v == null) {
+            throw new VersionException("No version for label " + versionLabel + " found.");
+        }
+        internalRestore(v, new LabelVersionSelector(versionLabel), removeExisting);
+        // session.save/revert is done in internal restore
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public VersionHistory getVersionHistory()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        boolean isFull = checkVersionable();
+
+        InternalVersionHistory vh;
+        if (isFull) {
+            NodeId id = NodeId.valueOf(getProperty(NameConstants.JCR_VERSIONHISTORY).getString());
+            vh = session.getVersionManager().getVersionHistory(id);
+        } else {
+            vh = session.getVersionManager().getVersionHistoryOfNode((NodeId) id);
+        }
+        return (VersionHistory) session.getNodeById(vh.getId());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Version getBaseVersion()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        boolean isFull = checkVersionable();
+
+        InternalVersion v;
+        if (isFull) {
+            NodeId id = NodeId.valueOf(getProperty(NameConstants.JCR_BASEVERSION).getString());
+            v = session.getVersionManager().getVersion(id);
+        } else {
+            // note, that the method currently only works for linear version
+            // graphs (i.e. simple versioning)
+            v = session.getVersionManager().getHeadVersionOfNode(((NodeId) id));
+        }
+
+        return (Version) session.getNodeById(v.getId());
+    }
+
+    //-----------------------------------< versioning support: implementation >
+    /**
+     * Checks if this node is versionable, i.e. has 'mix:versionable' or a
+     * 'mix:simpleVersionable'.
+     * @return <code>true</code> if this node is full versionable, i.e. is
+     *         of nodetype mix:versionable
+     * @throws UnsupportedRepositoryOperationException
+     *          if this node is not versionable at all
+     */
+    private boolean checkVersionable()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        if (isNodeType(NameConstants.MIX_VERSIONABLE)) {
+            return true;
+        } else if (isNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
+            return false;
+        } else {
+            String msg = "Unable to perform a versioning operation on a " +
+                         "non versionable node: " + this;
+            log.debug(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
+        }
+    }
+
+    /**
+     * Returns the corresponding node in the workspace of the given session.
+     * <p/>
+     * Given a node N1 in workspace W1, its corresponding node N2 in workspace
+     * W2 is defined as follows:
+     * <ul>
+     * <li>If N1 is the root node of W1 then N2 is the root node of W2.
+     * <li>If N1 is referenceable (has a UUID) then N2 is the node in W2 with
+     * the same UUID.
+     * <li>If N1 is not referenceable (does not have a UUID) then there is some
+     * node M1 which is either the nearest ancestor of N1 that is
+     * referenceable, or is the root node of W1. If the corresponding node
+     * of M1 is M2 in W2, then N2 is the node with the same relative path
+     * from M2 as N1 has from M1.
+     * </ul>
+     *
+     * @param srcSession
+     * @return the corresponding node or <code>null</code> if no corresponding
+     *         node exists.
+     * @throws RepositoryException If another error occurs.
+     */
+    private NodeImpl getCorrespondingNode(SessionImpl srcSession)
+            throws AccessDeniedException, RepositoryException {
+
+        // search nearest ancestor that is referenceable
+        NodeImpl m1 = this;
+        while (!m1.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            if (m1.getDepth() == 0) {
+                // root node
+                try {
+                    return (NodeImpl) srcSession.getItem(getPath());
+                } catch (PathNotFoundException e) {
+                    return null;
+                }
+            }
+            m1 = (NodeImpl) m1.getParent();
+        }
+
+        try {
+            // get corresponding ancestor (might throw ItemNotFoundException)
+            NodeImpl m2 = (NodeImpl) srcSession.getNodeByUUID(m1.getUUID());
+
+            // return m2, if m1 == n1
+            if (m1 == this) {
+                return m2;
+            }
+
+            String relPath;
+            try {
+                Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
+                // use prefix mappings of srcSession
+                relPath = session.getJCRPath(p);
+            } catch (NameException be) {
+                // should never get here...
+                String msg = "internal error: failed to determine relative path";
+                log.error(msg, be);
+                throw new RepositoryException(msg, be);
+            }
+            if (!m2.hasNode(relPath)) {
+                return null;
+            } else {
+                return (NodeImpl) m2.getNode(relPath);
+            }
+        } catch (ItemNotFoundException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Performs the merge test. If the result is 'update', then the corresponding
+     * source node is returned. if the result is 'leave' or 'besteffort-fail'
+     * then <code>null</code> is returned. If the result of the merge test is
+     * 'fail' with bestEffort set to <code>false</code> a MergeException is
+     * thrown.
+     * <p/>
+     * jsr170 - 8.2.10 Merge:
+     * [...]
+     * <ul>
+     * <li>If N is currently checked-in then:</li>
+     * <ul>
+     * <li>If V' is a successor (to any degree) of V, then the merge result
+     *     for N is update.
+     * </li>
+     * <li>If V' is a predecessor (to any degree) of V or if V and
+     *     V' are identical (i.e., are actually the same version),
+     *     then the merge result for N is leave.
+     * </li>
+     * <li>If V is neither a successor of, predecessor of, nor
+     *     identical with V', then the merge result for N is failed.
+     *     This is the case where N and N' represent divergent
+     *     branches of the version graph, thus determining the
+     *     result of a merge is non-trivial.
+     * </li>
+     * </ul>
+     * <li>If N is currently checked-out then:</li>
+     * <ul>
+     * <li>If V' is a predecessor (to any degree) of V or if V and
+     *     V' are identical (i.e., are actually the same version),
+     *     then the merge result for N is leave.
+     * </li>
+     * <li>If any other relationship holds between V and V',
+     *     then the merge result for N is fail.
+     * </li>
+     * </ul>
+     * </ul>
+     *
+     * @param srcSession the source session
+     * @param failedIds the list to store the failed node ids.
+     * @param bestEffort the best effort flag
+     * @return the corresponding source node or <code>null</code>
+     * @throws RepositoryException if an error occurs.
+     * @throws AccessDeniedException if access is denied
+     */
+    private NodeImpl doMergeTest(SessionImpl srcSession, List failedIds, boolean bestEffort)
+            throws RepositoryException, AccessDeniedException {
+
+        // If N does not have a corresponding node then the merge result for N is leave.
+        NodeImpl srcNode = getCorrespondingNode(srcSession);
+        if (srcNode == null) {
+            return null;
+        }
+
+        // if not versionable, update
+        if (!isNodeType(NameConstants.MIX_VERSIONABLE) || failedIds == null) {
+            return srcNode;
+        }
+        // if source node is not versionable, leave
+        if (!srcNode.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+            return null;
+        }
+        // test versions
+        VersionImpl v = (VersionImpl) getBaseVersion();
+        VersionImpl vp = (VersionImpl) srcNode.getBaseVersion();
+        if (vp.isMoreRecent(v) && !isCheckedOut()) {
+            // I f V' is a successor (to any degree) of V, then the merge result for
+            // N is update. This case can be thought of as the case where N' is
+            // "newer" than N and therefore N should be updated to reflect N'.
+            return srcNode;
+        } else if (v.isSame(vp) || v.isMoreRecent(vp)) {
+            // If V' is a predecessor (to any degree) of V or if V and V' are
+            // identical (i.e., are actually the same version), then the merge
+            // result for N is leave. This case can be thought of as the case where
+            // N' is "older" or the "same age" as N and therefore N should be left alone.
+            return null;
+        } else {
+            // If V is neither a successor of, predecessor of, nor identical
+            // with V', then the merge result for N is failed. This is the case
+            // where N and N' represent divergent branches of the version graph,
+            // thus determining the result of a merge is non-trivial.
+            if (bestEffort) {
+                // add 'offending' version to jcr:mergeFailed property
+                Set set = internalGetMergeFailed();
+                set.add(srcNode.getBaseVersion().getUUID());
+                internalSetMergeFailed(set);
+                failedIds.add(id);
+                return null;
+            } else {
+                String msg =
+                    "Unable to merge nodes. Violating versions. " + this;
+                log.debug(msg);
+                throw new MergeException(msg);
+            }
+        }
+    }
+
+    /**
+     * Perform {@link Node#cancelMerge(Version)} or {@link Node#doneMerge(Version)}
+     * depending on the value of <code>cancel</code>.
+     */
+    private void internalFinishMerge(Version version, boolean cancel)
+            throws VersionException, InvalidItemStateException,
+            UnsupportedRepositoryOperationException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // check versionable
+        checkVersionable();
+
+        // check lock, permissions and checkout-status
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
+
+        // check if version is in mergeFailed list
+        Set failed = internalGetMergeFailed();
+        if (!failed.remove(version.getUUID())) {
+            String msg =
+                "Unable to finish merge. Specified version is not in"
+                + " jcr:mergeFailed property: " + this;
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+
+        boolean success = false;
+        try {
+            // remove version from mergeFailed list
+            internalSetMergeFailed(failed);
+
+            if (!cancel) {
+                // add version to jcr:predecessors list
+                Value[] vals = getProperty(NameConstants.JCR_PREDECESSORS).getValues();
+                InternalValue[] v = new InternalValue[vals.length + 1];
+                for (int i = 0; i < vals.length; i++) {
+                    v[i] = InternalValue.create(UUID.fromString(vals[i].getString()));
+                }
+                v[vals.length] = InternalValue.create(UUID.fromString(version.getUUID()));
+                internalSetProperty(NameConstants.JCR_PREDECESSORS, v);
+            }
+
+            save();
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while reverting changes upon failed Node.doneMerge or Node.cancelMerge, respectively.", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * @return
+     * @throws RepositoryException
+     */
+    private Set internalGetMergeFailed() throws RepositoryException {
+        HashSet set = new HashSet();
+        if (hasProperty(NameConstants.JCR_MERGEFAILED)) {
+            Value[] vals = getProperty(NameConstants.JCR_MERGEFAILED).getValues();
+            for (int i = 0; i < vals.length; i++) {
+                set.add(vals[i].getString());
+            }
+        }
+        return set;
+    }
+
+    /**
+     * @param set
+     * @throws RepositoryException
+     */
+    private void internalSetMergeFailed(Set set) throws RepositoryException {
+        if (set.isEmpty()) {
+            internalSetProperty(NameConstants.JCR_MERGEFAILED, (InternalValue[]) null);
+        } else {
+            InternalValue[] vals = new InternalValue[set.size()];
+            Iterator iter = set.iterator();
+            int i = 0;
+            while (iter.hasNext()) {
+                String uuid = (String) iter.next();
+                vals[i++] = InternalValue.create(UUID.fromString(uuid));
+            }
+            internalSetProperty(NameConstants.JCR_MERGEFAILED, vals);
+        }
+    }
+
+    /**
+     * Determines the checked-out status of this node.
+     * <p/>
+     * A node is considered <i>checked-out</i> if it is versionable and
+     * checked-out, or is non-versionable but its nearest versionable ancestor
+     * is checked-out, or is non-versionable and there are no versionable
+     * ancestors.
+     *
+     * @return a boolean
+     * @see Node#isCheckedOut()
+     */
+    protected boolean internalIsCheckedOut() throws RepositoryException {
+        /**
+         * try shortcut first:
+         * if current node is 'new' we can safely consider it checked-out
+         * since otherwise it would had been impossible to add it in the first
+         * place
+         */
+        if (isNew()) {
+            return true;
+        }
+
+        // search nearest ancestor that is versionable
+        /**
+         * FIXME should not only rely on existence of jcr:isCheckedOut property
+         * but also verify that node.isNodeType("mix:versionable")==true;
+         * this would have a negative impact on performance though...
+         */
+        try {
+            NodeState state = (NodeState) getItemState();
+            while (!state.hasPropertyName(NameConstants.JCR_ISCHECKEDOUT)) {
+                ItemId parentId = state.getParentId();
+                if (parentId == null) {
+                    // root reached or out of hierarchy
+                    return true;
+                }
+                state = (NodeState) session.getItemStateManager().getItemState(parentId);
+            }
+            PropertyState ps = (PropertyState) session.getItemStateManager().getItemState(new PropertyId(state.getNodeId(), NameConstants.JCR_ISCHECKEDOUT));
+            return ps.getValues()[0].getBoolean();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e.getMessage());
+        }
+    }
+
+    /**
+     * Creates a new node at <code>relPath</code> of the node type, uuid and
+     * eventual mixin types stored in the frozen node. The same as
+     * <code>{@link #addNode(String relPath)}</code> except that the primary
+     * node type type, the uuid and evt. mixin type of the new node is
+     * explictly specified in the nt:frozen node.
+     * <p/>
+     *
+     * @param name   The name of the new <code>Node</code> that is to be created.
+     * @param frozen The frozen node that contains the creation information
+     * @return The node that was added.
+     * @throws ItemExistsException          If an item at the
+     *                                      specified path already exists(and same-name siblings are not allowed).
+     * @throws PathNotFoundException        If specified path implies intermediary
+     *                                      <code>Node</code>s that do not exist.
+     * @throws NoSuchNodeTypeException      If the specified <code>nodeTypeName</code>
+     *                                      is not recognized.
+     * @throws ConstraintViolationException If an attempt is made to add a node as the
+     *                                      child of a <code>Property</code>
+     * @throws RepositoryException          if another error occurs.
+     */
+    private NodeImpl addNode(Name name, InternalFrozenNode frozen)
+            throws ItemExistsException, PathNotFoundException,
+            ConstraintViolationException, NoSuchNodeTypeException,
+            RepositoryException {
+
+        // get frozen node type
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
+
+        // get frozen uuid
+        UUID uuid = frozen.getFrozenUUID();
+
+        NodeImpl node = internalAddChildNode(name, nt, new NodeId(uuid));
+
+        // get frozen mixin
+        // todo: also respect mixing types on creation?
+        Name[] mxNames = frozen.getFrozenMixinTypes();
+        for (int i = 0; i < mxNames.length; i++) {
+            node.addMixin(mxNames[i]);
+        }
+        return node;
+    }
+
+    /**
+     * Creates a new node at <code>relPath</code> of the node type, uuid and
+     * eventual mixin types stored in the frozen node. The same as
+     * <code>{@link #addNode(String relPath)}</code> except that the primary
+     * node type type, the uuid and evt. mixin type of the new node is
+     * explicitly specified in the nt:frozen node.
+     * <p/>
+     *
+     * @param relPath The path of the new <code>Node</code> that is to be created.
+     * @param frozen  The frozen node that contains the creation information
+     * @return The node that was added.
+     * @throws ItemExistsException          If an item at the
+     *                                      specified path already exists(and same-name siblings are not allowed).
+     * @throws PathNotFoundException        If specified path implies intermediary
+     *                                      <code>Node</code>s that do not exist.
+     * @throws NoSuchNodeTypeException      If the specified <code>nodeTypeName</code>
+     *                                      is not recognized.
+     * @throws ConstraintViolationException If an attempt is made to add a node as the
+     *                                      child of a <code>Property</code>
+     * @throws RepositoryException          if another error occurs.
+     */
+    private NodeImpl addNode(String relPath, InternalFrozenNode frozen)
+            throws ItemExistsException, PathNotFoundException,
+            ConstraintViolationException, NoSuchNodeTypeException,
+            RepositoryException {
+
+        // get frozen node type
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
+
+        // get frozen uuid
+        UUID uuid = frozen.getFrozenUUID();
+
+        NodeImpl node = internalAddNode(relPath, nt, new NodeId(uuid));
+
+        // get frozen mixin
+        // todo: also respect mixing types on creation?
+        Name[] mxNames = frozen.getFrozenMixinTypes();
+        for (int i = 0; i < mxNames.length; i++) {
+            node.addMixin(mxNames[i]);
+        }
+        return node;
+    }
+
+    /**
+     * Executes the Node#update or Node#merge call.
+     *
+     * @param srcWorkspaceName Name of the source workspace as passed to
+     * {@link Node#merge(String, boolean)} or {@link Node#update(String)}.
+     * @param failedIds List to place the failed ids or <code>null</code> if
+     * {@link Node#update(String)} should be executed.
+     * @param bestEffort Flag passed to {@link Node#merge(String, boolean)} or
+     * false if {@link Node#update(String)} should be executed.
+     * @throws NoSuchWorkspaceException
+     * @throws AccessDeniedException
+     * @throws LockException
+     * @throws InvalidItemStateException
+     * @throws RepositoryException
+     */
+    private void internalMerge(String srcWorkspaceName,
+                               List failedIds, boolean bestEffort,
+                               boolean shallow)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            LockException, InvalidItemStateException, RepositoryException {
+
+        // might be added in future releases
+        boolean removeExisting = true;
+        boolean replaceExisting = false;
+
+        // do checks
+        sanityCheck();
+        session.getValidator().checkModify(this, ItemValidator.CHECK_PENDING_CHANGES, Permission.VERSION_MNGMT);
+
+        // if same workspace, ignore
+        if (srcWorkspaceName.equals(session.getWorkspace().getName())) {
+            return;
+        }
+
+        SessionImpl srcSession = null;
+        boolean success = false;
+        try {
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspaceName);
+            internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting, shallow);
+            session.save();
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    session.refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while cleaning up after failed merge/update", e);
+                }
+            }
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
+        }
+    }
+
+    /**
+     * Merges/Updates this node with its corresponding ones
+     *
+     * @param srcSession
+     * @param failedIds
+     * @param bestEffort
+     * @param removeExisting
+     * @param replaceExisting
+     * @throws LockException
+     * @throws RepositoryException
+     */
+    private void internalMerge(SessionImpl srcSession, List failedIds,
+                               boolean bestEffort, boolean removeExisting,
+                               boolean replaceExisting, boolean shallow)
+            throws LockException, RepositoryException {
+
+        if (shallow) {
+            throw new UnsupportedRepositoryOperationException("Shallow merge not supported yet");
+        }
+
+        NodeImpl srcNode = doMergeTest(srcSession, failedIds, bestEffort);
+        if (srcNode == null) {
+            // leave, iterate over children, but ignore non-versionable child
+            // nodes (see JCR-1046)
+            NodeIterator iter = getNodes();
+            while (iter.hasNext()) {
+                NodeImpl n = (NodeImpl) iter.nextNode();
+                if (n.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+                    n.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting, shallow);
+                }
+            }
+            return;
+        }
+
+        // check lock and hold status
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+
+        // update the properties
+        PropertyIterator iter = getProperties();
+        while (iter.hasNext()) {
+            PropertyImpl p = (PropertyImpl) iter.nextProperty();
+            if (!srcNode.hasProperty(p.getQName())) {
+                p.internalRemove(true);
+            }
+        }
+        iter = srcNode.getProperties();
+        while (iter.hasNext()) {
+            PropertyImpl p = (PropertyImpl) iter.nextProperty();
+            // ignore system types
+            if (p.getQName().equals(NameConstants.JCR_PRIMARYTYPE)
+                    || p.getQName().equals(NameConstants.JCR_MIXINTYPES)
+                    || p.getQName().equals(NameConstants.JCR_UUID)) {
+                continue;
+            }
+            if (p.getDefinition().isMultiple()) {
+                internalSetProperty(p.getQName(), p.internalGetValues());
+            } else {
+                internalSetProperty(p.getQName(), p.internalGetValue());
+            }
+        }
+        // todo: add/remove mixins ?
+
+        // update the nodes. remove non existing ones
+        NodeIterator niter = getNodes();
+        while (niter.hasNext()) {
+            NodeImpl n = (NodeImpl) niter.nextNode();
+            Path.Element name = n.getPrimaryPath().getNameElement();
+            int idx = name.getIndex();
+            if (idx == 0) {
+                idx = 1;
+            }
+            if (!srcNode.hasNode(name.getName(), idx)) {
+                n.internalRemove(true);
+            }
+        }
+
+        // add source ones
+        niter = srcNode.getNodes();
+        while (niter.hasNext()) {
+            NodeImpl child = (NodeImpl) niter.nextNode();
+            NodeImpl dstNode = null;
+            NodeId childId = child.getNodeId();
+            Path.Element name = child.getPrimaryPath().getNameElement();
+            int idx = name.getIndex();
+            if (idx == 0) {
+                idx = 1;
+            }
+
+            if (child.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+                // check if correspondance exist in
+                // this workspace
+                try {
+                    dstNode = session.getNodeById(childId);
+                    // check if same parent
+                    if (!isSame(dstNode.getParent())) {
+                        if (removeExisting) {
+                            dstNode.internalRemove(false);
+                            dstNode = null;
+                        } else if (replaceExisting) {
+                            // node exists outside of this update tree, so continue there
+                        } else {
+                            throw new ItemExistsException("Unable to update item: " + dstNode);
+                        }
+                    }
+
+                } catch (ItemNotFoundException e) {
+                    // does not exist
+                }
+            } else {
+                // if child is not referenceable, clear uuid
+                childId = null;
+            }
+            if (dstNode == null && hasNode(name.getName(), idx)) {
+                // the exact behaviour for SNS is not specified by the spec
+                // so we just try to find the corresponding one.
+                dstNode = getNode(name.getName(), idx);
+            }
+            if (dstNode == null) {
+                dstNode = internalAddChildNode(name.getName(), (NodeTypeImpl) child.getPrimaryNodeType(), childId);
+                // add mixins
+                NodeType[] mixins = child.getMixinNodeTypes();
+                for (int i = 0; i < mixins.length; i++) {
+                    dstNode.addMixin(mixins[i].getName());
+                }
+                dstNode.internalMerge(srcSession, null, bestEffort, removeExisting, replaceExisting, shallow);
+            } else {
+                dstNode.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting, shallow);
+            }
+        }
+    }
+
+    /**
+     * Internal method to restore a version.
+     *
+     * @param version
+     * @param vsel    the version selector that will select the correct version for
+     *                OPV=Version child nodes.
+     * @throws UnsupportedRepositoryOperationException
+     *
+     * @throws RepositoryException
+     */
+    private void internalRestore(Version version, VersionSelector vsel, boolean removeExisting)
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+
+        boolean success = false;
+        try {
+            internalRestore((VersionImpl) version, vsel, removeExisting);
+            session.save();
+            success = true;
+        } finally {
+            if (!success) {
+                // revert session
+                try {
+                    log.debug("reverting changes applied during restore...");
+                    session.refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while reverting changes applied during restore.", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Internal method to restore a version.
+     *
+     * @param version
+     * @param vsel           the version selector that will select the correct version for
+     *                       OPV=Version child nodes.
+     * @param removeExisting
+     * @throws RepositoryException
+     */
+    protected Version[] internalRestore(VersionImpl version, VersionSelector vsel,
+                                        boolean removeExisting)
             throws RepositoryException {
-        getVersionManagerImpl().restoreByLabel(
-                getPath(), versionLabel, removeExisting);
+
+        // fail if root version
+        if (version.isRootVersion()) {
+            throw new VersionException("Restore of root version not allowed.");
+        }
+
+        boolean isFull = checkVersionable();
+
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
+
+        // set jcr:isCheckedOut property to true, in order to avoid any conflicts
+        internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+
+        // 1. The child node and properties of N will be changed, removed or
+        //    added to, depending on their corresponding copies in V and their
+        //    own OnParentVersion attributes (see 7.2.8, below, for details).
+        HashSet restored = new HashSet();
+        restoreFrozenState(version.getInternalFrozenNode(), vsel, restored, removeExisting);
+        restored.add(version);
+
+        if (isFull) {
+            // 2. N's jcr:baseVersion property will be changed to point to V.
+            UUID uuid = ((NodeId) version.getId()).getUUID();
+            internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(uuid));
+
+            // 4. N's jcr:predecessor property is set to null
+            internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+
+            // also clear mergeFailed
+            internalSetProperty(NameConstants.JCR_MERGEFAILED, (InternalValue[]) null);
+
+        } else {
+            // with simple versioning, the node is checked in automatically,
+            // thus not allowing any branches
+            session.getVersionManager().checkin(this, null);
+        }
+        // 3. N's jcr:isCheckedOut property is set to false.
+        internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
+
+        return (Version[]) restored.toArray(new Version[restored.size()]);
     }
 
     /**
-     * Use {@link VersionManager#getVersionHistory(String)} instead
+     * Restores the properties and child nodes from the frozen state.
+     *
+     * @param freeze
+     * @param vsel
+     * @param removeExisting
+     * @throws RepositoryException
      */
-    @Deprecated
-    public VersionHistory getVersionHistory() throws RepositoryException {
-        return getVersionManagerImpl().getVersionHistory(getPath());
+    void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, Set restored, boolean removeExisting)
+            throws RepositoryException {
+
+        // check uuid
+        if (isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            UUID uuid = freeze.getFrozenUUID();
+            if (!internalGetUUID().equals(uuid)) {
+                throw new ItemExistsException("Unable to restore version of " + this + ". UUID changed.");
+            }
+        }
+
+        // check primary type
+        if (!freeze.getFrozenPrimaryType().equals(data.getNodeState().getNodeTypeName())) {
+            // todo: check with spec what should happen here
+            throw new ItemExistsException("Unable to restore version of " + this + ". PrimaryType changed.");
+        }
+
+        // adjust mixins
+        Name[] mixinNames = freeze.getFrozenMixinTypes();
+        setMixinTypesProperty(new HashSet(Arrays.asList(mixinNames)));
+
+        // copy frozen properties
+        PropertyState[] props = freeze.getFrozenProperties();
+        HashSet propNames = new HashSet();
+        for (int i = 0; i < props.length; i++) {
+            PropertyState prop = props[i];
+            propNames.add(prop.getName());
+            if (prop.isMultiValued()) {
+                internalSetProperty(
+                        props[i].getName(), prop.getValues(), prop.getType());
+            } else {
+                internalSetProperty(props[i].getName(), prop.getValues()[0]);
+            }
+        }
+        // remove properties that do not exist in the frozen representation
+        PropertyIterator piter = getProperties();
+        while (piter.hasNext()) {
+            PropertyImpl prop = (PropertyImpl) piter.nextProperty();
+            // ignore some props that are not well guarded by the OPV
+            if (prop.getQName().equals(NameConstants.JCR_VERSIONHISTORY)) {
+                continue;
+            } else if (prop.getQName().equals(NameConstants.JCR_PREDECESSORS)) {
+                continue;
+            }
+            if (prop.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY
+                    || prop.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
+                if (!propNames.contains(prop.getQName())) {
+                    removeChildProperty(prop.getQName());
+                }
+            }
+        }
+
+        // add 'auto-create' properties that do not exist yet
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        for (int j = 0; j < mixinNames.length; j++) {
+            NodeTypeImpl mixin = ntMgr.getNodeType(mixinNames[j]);
+            PropertyDefinition[] pda = mixin.getAutoCreatedPropertyDefinitions();
+            for (int i = 0; i < pda.length; i++) {
+                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
+                if (!hasProperty(pd.getQName())) {
+                    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+                }
+            }
+        }
+
+        // first delete some of the version histories
+        NodeIterator iter = getNodes();
+        while (iter.hasNext()) {
+            NodeImpl n = (NodeImpl) iter.nextNode();
+            if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY) {
+                // only remove OPV=Copy nodes
+                n.internalRemove(true);
+            } else if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
+                // only remove, if node to be restored does not contain child,
+                // or if restored child is not versionable
+                UUID vhUUID = n.hasProperty(NameConstants.JCR_VERSIONHISTORY)
+                        ? new UUID(n.getProperty(NameConstants.JCR_VERSIONHISTORY).getString())
+                        : null;
+                if (vhUUID == null || !freeze.hasFrozenHistory(vhUUID)) {
+                    n.internalRemove(true);
+                }
+            }
+        }
+
+        // restore the frozen nodes
+        InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
+        for (int i = 0; i < frozenNodes.length; i++) {
+            InternalFreeze child = frozenNodes[i];
+            NodeImpl restoredChild = null;
+            if (child instanceof InternalFrozenNode) {
+                InternalFrozenNode f = (InternalFrozenNode) child;
+                // check for existing
+                if (f.getFrozenUUID() != null) {
+                    try {
+                        NodeImpl existing = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
+                        // check if one of this restoretrees node
+                        if (removeExisting) {
+                            existing.remove();
+                        } else if (existing.isShareable()) {
+                            // if existing node is shareable, then clone it
+                            restoredChild = clone(existing, f.getName());
+                        } else {
+                            // since we delete the OPV=Copy children beforehand, all
+                            // found nodes must be outside of this tree
+                            throw new ItemExistsException(
+                                    "Unable to restore node, item already"
+                                    + " exists outside of restored tree: "
+                                    + existing);
+                        }
+                    } catch (ItemNotFoundException e) {
+                        // ignore, item with uuid does not exist
+                    }
+                }
+                if (restoredChild == null) {
+                    restoredChild = addNode(f.getName(), f);
+                    restoredChild.restoreFrozenState(f, vsel, restored, removeExisting);
+                }
+
+            } else if (child instanceof InternalFrozenVersionHistory) {
+                InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
+                VersionHistory history = (VersionHistory) session.getNodeById(f.getVersionHistoryId());
+                NodeId nodeId = NodeId.valueOf(history.getVersionableUUID());
+                String oldVersion = "jcr:dummy";
+
+                // check if representing versionable already exists somewhere
+                if (itemMgr.itemExists(nodeId)) {
+                    NodeImpl n = session.getNodeById(nodeId);
+                    if (removeExisting) {
+                        String dstPath = getPath() + "/" + n.getName();
+                        if (!n.getPath().equals(dstPath)) {
+                            session.move(n.getPath(), dstPath);
+                        }
+                        oldVersion = n.getBaseVersion().getName();
+                    } else if (n.getParent().isSame(this)) {
+                        n.internalRemove(true);
+                    } else {
+                        // since we delete the OPV=Copy children beforehand, all
+                        // found nodes must be outside of this tree
+                        throw new ItemExistsException(
+                                "Unable to restore node, item already exists"
+                                + " outside of restored tree: " + n);
+                    }
+                }
+                // get desired version from version selector
+                VersionImpl v = (VersionImpl) vsel.select(history);
+
+                // check existing version of item exists
+                if (!itemMgr.itemExists(nodeId)) {
+                    if (v == null) {
+                        // if version selector was unable to select version,
+                        // choose the initial one
+                        Version[] vs = history.getRootVersion().getSuccessors();
+                        if (vs.length == 0) {
+                            String msg = "Unable to select appropariate version for "
+                                + child.getName() + " using " + vsel;
+                            log.error(msg);
+                            throw new VersionException(msg);
+                        }
+                        v = (VersionImpl) vs[0];
+                    }
+                    restoredChild = addNode(child.getName(), v.getInternalFrozenNode());
+                } else {
+                    restoredChild = session.getNodeById(nodeId);
+                    if (v == null || oldVersion == null || v.getName().equals(oldVersion)) {
+                        v = null;
+                    }
+                }
+                if (v != null) {
+                    try {
+                        restoredChild.internalRestore(v, vsel, removeExisting);
+                    } catch (RepositoryException e) {
+                        log.error("Error while restoring node: " + e);
+                        log.error("  child path: " + restoredChild);
+                        log.error("  selected version: " + v.getName());
+                        StringBuffer avail = new StringBuffer();
+                        VersionIterator vi = history.getAllVersions();
+                        while (vi.hasNext()) {
+                            avail.append(vi.nextVersion().getName());
+                            if (vi.hasNext()) {
+                                avail.append(", ");
+                            }
+                        }
+                        log.error("  available versions: " + avail);
+                        log.error("  versionselector: " + vsel);
+                        throw e;
+                    }
+                    // add this version to set
+                    restored.add(v);
+                }
+            }
+            // ensure proper odering (issue JCR-469)
+            if (restoredChild != null
+                    && getPrimaryNodeType().hasOrderableChildNodes()) {
+                orderBefore(restoredChild.getPrimaryPath().getNameElement(), null);
+            }
+        }
     }
 
     /**
-     * Use {@link VersionManager#getBaseVersion(String)} instead
+     * Copies a property to this node
+     *
+     * @param prop
+     * @throws RepositoryException
      */
-    @Deprecated
-    public Version getBaseVersion() throws RepositoryException {
-        return getVersionManagerImpl().getBaseVersion(getPath());
+    protected void internalCopyPropertyFrom(PropertyImpl prop) throws RepositoryException {
+        if (prop.getDefinition().isMultiple()) {
+            Value[] values = prop.getValues();
+            InternalValue[] ivalues = new InternalValue[values.length];
+            for (int i = 0; i < values.length; i++) {
+                ivalues[i] = InternalValue.create(values[i], session, rep.getDataStore());
+            }
+            internalSetProperty(prop.getQName(), ivalues);
+        } else {
+            InternalValue value = InternalValue.create(prop.getValue(), session, rep.getDataStore());
+            internalSetProperty(prop.getQName(), value);
+        }
     }
 
     //------------------------------------------------------< locking support >
@@ -3418,7 +4582,7 @@ public class NodeImpl extends ItemImpl implements Node {
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.lock(getPath(), isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
@@ -3430,7 +4594,7 @@ public class NodeImpl extends ItemImpl implements Node {
             AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.getLock(getPath());
     }
 
@@ -3443,7 +4607,7 @@ public class NodeImpl extends ItemImpl implements Node {
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         lockMgr.unlock(getPath());
     }
 
@@ -3453,7 +4617,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean holdsLock() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.holdsLock(getPath());
     }
 
@@ -3463,7 +4627,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isLocked() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.isLocked(getPath());
     }
 
@@ -3484,14 +4648,16 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * {@inheritDoc}
+     * @see org.apache.jackrabbit.api.jsr283.Node#getIdentifier()
+     * @since JCR 2.0
      */
     public String getIdentifier() throws RepositoryException {
         return ((NodeId) id).toString();
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.apache.jackrabbit.api.jsr283.Node#getReferences(String)
+     * @since JCR 2.0
      */
     public PropertyIterator getReferences(String name)
             throws RepositoryException {
@@ -3499,10 +4665,11 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         try {
-            if (stateMgr.hasNodeReferences(getNodeId())) {
-                NodeReferences refs = stateMgr.getNodeReferences(getNodeId());
+            NodeReferencesId targetId = new NodeReferencesId((NodeId) id);
+            if (stateMgr.hasNodeReferences(targetId)) {
+                NodeReferences refs = stateMgr.getNodeReferences(targetId);
                 // refs.getReferences() returns a list of PropertyId's
-                List<PropertyId> idList = refs.getReferences();
+                List idList = refs.getReferences();
                 if (name != null) {
                     Name qName;
                     try {
@@ -3510,8 +4677,9 @@ public class NodeImpl extends ItemImpl implements Node {
                     } catch (NameException e) {
                         throw new RepositoryException("invalid property name: " + name, e);
                     }
-                    ArrayList<PropertyId> filteredList = new ArrayList<PropertyId>(idList.size());
-                    for (PropertyId propId : idList) {
+                    ArrayList filteredList = new ArrayList(idList.size());
+                    for (Iterator iter = idList.iterator(); iter.hasNext();) {
+                        PropertyId propId = (PropertyId) iter.next();
                         if (propId.getName().equals(qName)) {
                             filteredList.add(propId);
                         }
@@ -3530,104 +4698,19 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public PropertyIterator getWeakReferences() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // shortcut if node isn't referenceable
-        if (!isNodeType(NameConstants.MIX_REFERENCEABLE)) {
-            return PropertyIteratorAdapter.EMPTY;
-        }
-
-        Value ref = getSession().getValueFactory().createValue(this, true);
-        List<Property> props = new ArrayList<Property>();
-        QueryManagerImpl qm = (QueryManagerImpl) session.getWorkspace().getQueryManager();
-        for (Node n : qm.getWeaklyReferringNodes(this)) {
-            for (PropertyIterator it = n.getProperties(); it.hasNext(); ) {
-                Property p = it.nextProperty();
-                if (p.getType() == PropertyType.WEAKREFERENCE) {
-                    Collection<Value> refs;
-                    if (p.isMultiple()) {
-                        refs = Arrays.asList(p.getValues());
-                    } else {
-                        refs = Collections.singleton(p.getValue());
-                    }
-                    if (refs.contains(ref)) {
-                        props.add(p);
-                    }
-                }
-            }
-        }
-        return new PropertyIteratorAdapter(props);
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2061");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public PropertyIterator getWeakReferences(String name) throws RepositoryException {
-        if (name == null) {
-            return getWeakReferences();
-        }
-
-        // check state of this instance
-        sanityCheck();
-
-        // shortcut if node isn't referenceable
-        if (!isNodeType(NameConstants.MIX_REFERENCEABLE)) {
-            return PropertyIteratorAdapter.EMPTY;
-        }
-        
-        try {
-            StringBuilder stmt = new StringBuilder();
-            stmt.append("//*[@").append(ISO9075.encode(name));
-            stmt.append(" = '").append(data.getId()).append("']");
-            Query q = session.getWorkspace().getQueryManager().createQuery(
-                    stmt.toString(), Query.XPATH);
-            QueryResult result = q.execute();
-            ArrayList<Property> l = new ArrayList<Property>();
-            for (NodeIterator nit = result.getNodes(); nit.hasNext();) {
-                Node n = nit.nextNode();
-                l.add(n.getProperty(name));
-            }
-            if (l.isEmpty()) {
-                return PropertyIteratorAdapter.EMPTY;
-            } else {
-                return new PropertyIteratorAdapter(l);
-            }
-        } catch (RepositoryException e) {
-            String msg = "Unable to retrieve WEAKREFERENCE properties that refer to " + id;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2061");
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public NodeIterator getNodes(String[] nameGlobs)
-            throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        return ChildrenCollectorFilter.collectChildNodes(this, nameGlobs);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public PropertyIterator getProperties(String[] nameGlobs)
-            throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        return ChildrenCollectorFilter.collectProperties(this, nameGlobs);
-    }
-
-    /**
-     * {@inheritDoc}
+     * @see org.apache.jackrabbit.api.jsr283.Node#setPrimaryType(String) 
+     * @since JCR 2.0
      */
     public void setPrimaryType(String nodeTypeName)
             throws NoSuchNodeTypeException, VersionException,
@@ -3637,8 +4720,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // make sure this node is checked-out, neither protected nor locked and
         // the editing session has sufficient permission to change the primary type.
-        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK
-                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         session.getValidator().checkModify(this, options, Permission.NODE_TYPE_MNGMT);
 
         final NodeState state = data.getNodeState();
@@ -3655,11 +4738,8 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeType nt = ntMgr.getNodeType(ntName);
-        if (nt.isMixin()) {
-            throw new ConstraintViolationException(nodeTypeName + ": not a primary node type.");
-        } else if (nt.isAbstract()) {
-            throw new ConstraintViolationException(nodeTypeName + ": is an abstract node type.");
+        if (ntMgr.getNodeType(ntName).isMixin()) {
+            throw new RepositoryException(nodeTypeName + ": not a primary node type");
         }
 
         // build effective node type of new primary type & existing mixin's
@@ -3691,12 +4771,12 @@ public class NodeImpl extends ItemImpl implements Node {
             onRedefine(defId);
         }
 
-        Set<ItemDef> oldDefs = new HashSet<ItemDef>(Arrays.asList(entOld.getAllItemDefs()));
-        Set<ItemDef> newDefs = new HashSet<ItemDef>(Arrays.asList(entNew.getAllItemDefs()));
-        Set<ItemDef> allDefs = new HashSet<ItemDef>(Arrays.asList(entAll.getAllItemDefs()));
+        Set oldDefs = new HashSet(Arrays.asList(entOld.getAllItemDefs()));
+        Set newDefs = new HashSet(Arrays.asList(entNew.getAllItemDefs()));
+        Set allDefs = new HashSet(Arrays.asList(entAll.getAllItemDefs()));
 
         // added child item definitions
-        Set<ItemDef> addedDefs = new HashSet<ItemDef>(newDefs);
+        Set addedDefs = new HashSet(newDefs);
         addedDefs.removeAll(oldDefs);
 
         // referential integrity check
@@ -3726,8 +4806,9 @@ public class NodeImpl extends ItemImpl implements Node {
         // walk through properties and child nodes and change definition as necessary
 
         // use temp set to avoid ConcurrentModificationException
-        HashSet<Name> set = new HashSet<Name>(thisState.getPropertyNames());
-        for (Name propName : set) {
+        HashSet set = new HashSet(thisState.getPropertyNames());
+        for (Iterator iter = set.iterator(); iter.hasNext();) {
+            Name propName = (Name) iter.next();
             try {
                 PropertyState propState =
                         (PropertyState) stateMgr.getItemState(
@@ -3794,10 +4875,10 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // use temp array to avoid ConcurrentModificationException
-        ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
+        ArrayList list = new ArrayList(thisState.getChildNodeEntries());
         // start from tail to avoid problems with same-name siblings
         for (int i = list.size() - 1; i >= 0; i--) {
-            ChildNodeEntry entry = list.get(i);
+            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             try {
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
                 if (!allDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
@@ -3832,8 +4913,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // create items that are defined as auto-created by the new primary node
         // type and at the same time were not present with the old nt
-        for (Iterator<ItemDef> iter = addedDefs.iterator(); iter.hasNext();) {
-            ItemDef def = iter.next();
+        for (Iterator iter = addedDefs.iterator(); iter.hasNext();) {
+            ItemDef def = (ItemDef) iter.next();
             if (def.isAutoCreated()) {
                 if (def.definesNode()) {
                     NodeDefinitionImpl ndi = ntMgr.getNodeDefinition(((NodeDef) def).getId());
@@ -3846,172 +4927,28 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Property setProperty(String name, BigDecimal value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property
-        checkSetProperty();
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(
-                name, PropertyType.DECIMAL, false, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
-        return prop;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Property setProperty(String name, Binary value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property
-        checkSetProperty();
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(
-                name, PropertyType.BINARY, false, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
-        return prop;
-    }
-
-    /**
-     * Returns all allowed transitions from the current lifecycle state of
-     * this node.
-     * <p>
-     * The lifecycle policy node referenced by the "jcr:lifecyclePolicy"
-     * property is expected to contain a "transitions" node with a list of
-     * child nodes, one for each transition. These transition nodes must
-     * have single-valued string "from" and "to" properties that identify
-     * the allowed source and target states of each transition.
-     * <p>
-     * Note that future versions of Apache Jackrabbit may well use different
-     * lifecycle policy implementations.
-     *
-     * @since Apache Jackrabbit 2.0
-     * @return allowed transitions for the current lifecycle state of this node
-     * @throws UnsupportedRepositoryOperationException
-     *             if this node does not have the mix:lifecycle mixin node type
-     * @throws RepositoryException if a repository error occurs
-     */
+    // TODO: JCR-1565 JSR 283 lifecycle management
     public String[] getAllowedLifecycleTransistions()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+            throws RepositoryException {
         if (isNodeType(NameConstants.MIX_LIFECYCLE)) {
-            Node policy = getProperty(JCR_LIFECYCLE_POLICY).getNode();
-            String state = getProperty(JCR_CURRENT_LIFECYCLE_STATE).getString();
-
-            List<String> targetStates = new ArrayList<String>();
-            if (policy.hasNode("transitions")) {
-                Node transitions = policy.getNode("transitions");
-                for (Node transition : JcrUtils.getChildNodes(transitions)) {
-                    String from = transition.getProperty("from").getString();
-                    if (from.equals(state)) {
-                        String to = transition.getProperty("to").getString();
-                        targetStates.add(to);
-                    }
-                }
-            }
-
-            return targetStates.toArray(new String[targetStates.size()]);
+            throw new UnsupportedRepositoryOperationException();
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "Only nodes with mixin node type mix:lifecycle"
-                    + " may participate in a lifecycle: " + this);
+                    + " may participate in a lifecycle.");
         }
     }
 
-    /**
-     * Transitions this node through its lifecycle to the given target state.
-     *
-     * @since Apache Jackrabbit 2.0
-     * @see #getAllowedLifecycleTransistions()
-     * @param transition target lifecycle state
-     * @throws UnsupportedRepositoryOperationException
-     *             if this node does not have the mix:lifecycle mixin node type
-     * @throws InvalidLifecycleTransitionException
-     *             if the given target state is not among the allowed
-     *             transitions from the current lifecycle state of this node
-     * @throws RepositoryException if a repository error occurs
-     */
+    // TODO: JCR-1565 JSR 283 lifecycle management
     public void followLifecycleTransition(String transition)
-            throws UnsupportedRepositoryOperationException,
-            InvalidLifecycleTransitionException, RepositoryException {
-        // getAllowedLifecycleTransitions checks for the mix:lifecycle mixin
-        for (String target : getAllowedLifecycleTransistions()) {
-            if (target.equals(transition)) {
-                PropertyImpl property = getProperty(JCR_CURRENT_LIFECYCLE_STATE);
-                property.internalSetValue(
-                        new InternalValue[] { InternalValue.create(target) },
-                        PropertyType.STRING);
-                property.save();
-                return;
-            }
-        }
-
-        // No valid transition found
-        throw new InvalidLifecycleTransitionException(
-                "Invalid lifecycle transition \""
-                + transition  + "\" for " + this);
-    }
-
-    /**
-     * Assigns the given lifecycle policy to this node and sets the
-     * current state to the one given.
-     * <p>
-     * Note that currently no special checks are made against the given
-     * arguments, and that you will need to explicitly persist these changes
-     * by calling save().
-     * <p>
-     * Note that future versions of Apache Jackrabbit may well use different
-     * lifecycle policy implementations.
-     *
-     * @param policy lifecycle policy node
-     * @param state current lifecycle state
-     * @throws RepositoryException if a repository error occurs
-     */
-    public void assignLifecyclePolicy(Node policy, String state)
             throws RepositoryException {
-        if (!(policy instanceof NodeImpl)
-                || !((NodeImpl) policy).isNodeType(MIX_REFERENCEABLE)) {
-            throw new RepositoryException(
-                    policy + " is not referenceable, so it can not be"
-                    + " used as a lifecycle policy");
+        if (isNodeType(NameConstants.MIX_LIFECYCLE)) {
+            throw new UnsupportedRepositoryOperationException();
+        } else {
+            throw new UnsupportedRepositoryOperationException(
+                    "Only nodes with mixin node type mix:lifecycle"
+                    + " may participate in a lifecycle.");
         }
-
-        addMixin(MIX_LIFECYCLE);
-        internalSetProperty(
-                JCR_LIFECYCLE_POLICY,
-                InternalValue.create(((NodeImpl) policy).getNodeId()));
-        internalSetProperty(
-                JCR_CURRENT_LIFECYCLE_STATE,
-                InternalValue.create(state));
     }
 
     //--------------------------------------------------------------< Object >
@@ -4024,5 +4961,4 @@ public class NodeImpl extends ItemImpl implements Node {
     public String toString() {
         return "node " + super.toString();
     }
-
 }

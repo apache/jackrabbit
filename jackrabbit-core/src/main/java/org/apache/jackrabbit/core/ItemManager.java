@@ -16,10 +16,29 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateListener;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.version.VersionHistoryImpl;
+import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -31,33 +50,10 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
-
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.version.VersionHistoryImpl;
-import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * There's one <code>ItemManager</code> instance per <code>Session</code>
@@ -97,7 +93,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * A cache for item instances created by this <code>ItemManager</code>
      */
-    private final Map<ItemId, ItemData> itemCache;
+    private final Map itemCache;
 
     /**
      * Shareable node cache.
@@ -177,7 +173,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
             // fallback: try finding applicable definition
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
-            NodeState parentState = parent.getNodeState();
+            NodeState parentState = (NodeState) parent.getItemState();
             ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
             def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
             state.setDefinitionId(def.unwrap().getId());
@@ -226,7 +222,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             if (!itemStateProvider.hasItemState(itemId)) {
                 return false;
             }
-            getItemData(itemId, path, true);
+            ItemData data = getItemData(itemId, path, true);
             return true;
         } catch (RepositoryException re) {
             return false;
@@ -456,19 +452,14 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public ItemImpl getItem(Path path) throws PathNotFoundException,
-            AccessDeniedException, RepositoryException {
+    public ItemImpl getItem(Path path)
+            throws PathNotFoundException, AccessDeniedException, RepositoryException {
         ItemId id = hierMgr.resolvePath(path);
         if (id == null) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
         try {
-            ItemImpl item = getItem(id, path);
-            // Test, if this item is a shareable node.
-            if (item.isNode() && ((NodeImpl) item).isShareable()) {
-                return getNode(path);
-            }
-            return item;
+            return getItem(id, path);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
@@ -481,23 +472,14 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public NodeImpl getNode(Path path) throws PathNotFoundException,
-            AccessDeniedException, RepositoryException {
+    public NodeImpl getNode(Path path)
+            throws PathNotFoundException, AccessDeniedException, RepositoryException {
         NodeId id = hierMgr.resolveNodePath(path);
         if (id == null) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
-        NodeId parentId = null;
-        if (!path.denotesRoot()) {
-            parentId = hierMgr.resolveNodePath(path.getAncestor(1));
-        }
         try {
-            if (parentId == null) {
-                return (NodeImpl) getItem(id, path);
-            }
-            // if the node is shareable, it now returns the node with the right
-            // parent
-            return getNode(id, parentId);
+            return (NodeImpl) getItem(id, path);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
@@ -599,9 +581,10 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
+        Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
-        NodeState state = (NodeState) data.getState();
-        for (ChildNodeEntry entry : state.getChildNodeEntries()) {
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             // make sure any of the properties can be read.
             if (canRead(entry.getId())) {
                 return true;
@@ -628,11 +611,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        ArrayList<ItemId> childIds = new ArrayList<ItemId>();
-        Iterator<ChildNodeEntry> iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
+        ArrayList childIds = new ArrayList();
+        Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
-            ChildNodeEntry entry = iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             // delay check for read-access until item is being built
             // thus avoid duplicate check
             childIds.add(entry.getId());
@@ -659,10 +642,10 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        Iterator<Name> iter = ((NodeState) data.getState()).getPropertyNames().iterator();
+        Iterator iter = ((NodeState) data.getState()).getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            Name propName = iter.next();
+            Name propName = (Name) iter.next();
             // make sure any of the properties can be read.
             if (canRead(new PropertyId(parentId, propName))) {
                 return true;
@@ -690,11 +673,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        ArrayList<PropertyId> childIds = new ArrayList<PropertyId>();
-        Iterator<Name> iter = ((NodeState) data.getState()).getPropertyNames().iterator();
+        ArrayList childIds = new ArrayList();
+        Iterator iter = ((NodeState) data.getState()).getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            Name propName = iter.next();
+            Name propName = (Name) iter.next();
             PropertyId id = new PropertyId(parentId, propName);
             // delay check for read-access until item is being built
             // thus avoid duplicate check
@@ -777,7 +760,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     private ItemData retrieveItem(ItemId id) {
         synchronized (itemCache) {
-            ItemData data = itemCache.get(id);
+            ItemData data = (ItemData) itemCache.get(id);
             if (data == null && id.denotesNode()) {
                 data = shareableNodesCache.retrieveFirst((NodeId) id);
             }
@@ -860,7 +843,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             if (data.isNode()) {
                 shareableNodesCache.evict((AbstractNodeData) data);
             }
-            ItemData cached = itemCache.get(data.getId());
+            ItemData cached = (ItemData) itemCache.get(data.getId());
             if (cached == data) {
                 itemCache.remove(data.getId());
             }
@@ -938,8 +921,10 @@ public class ItemManager implements Dumpable, ItemStateListener {
         ps.println("Items in cache:");
         ps.println();
         synchronized (itemCache) {
-            for (ItemId id : itemCache.keySet()) {
-                ItemData item = itemCache.get(id);
+            Iterator iter = itemCache.keySet().iterator();
+            while (iter.hasNext()) {
+                ItemId id = (ItemId) iter.next();
+                ItemData item = (ItemData) itemCache.get(id);
                 if (item.isNode()) {
                     ps.print("Node: ");
                 } else {
@@ -1107,10 +1092,10 @@ public class ItemManager implements Dumpable, ItemStateListener {
         public AbstractNodeData retrieveFirst(NodeId id) {
             ReferenceMap map = (ReferenceMap) cache.get(id);
             if (map != null) {
-                Iterator<AbstractNodeData> iter = map.values().iterator();
+                Iterator iter = map.values().iterator();
                 try {
                     while (iter.hasNext()) {
-                        AbstractNodeData data = iter.next();
+                        AbstractNodeData data = (AbstractNodeData) iter.next();
                         if (data != null) {
                             return data;
                         }

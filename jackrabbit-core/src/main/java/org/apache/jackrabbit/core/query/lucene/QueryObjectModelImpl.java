@@ -16,29 +16,25 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.List;
-import java.util.ArrayList;
+import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
+import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
+import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.QueryResult;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
-import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
-import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 
 /**
  * <code>QueryObjectModelImpl</code>...
@@ -58,17 +54,14 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
      * @param index   the search index.
      * @param propReg the property type registry.
      * @param qomTree the query object model tree.
-     * @throws InvalidQueryException if the QOM tree is invalid.
      */
     public QueryObjectModelImpl(SessionImpl session,
                                 ItemManager itemMgr,
                                 SearchIndex index,
                                 PropertyTypeRegistry propReg,
-                                QueryObjectModelTree qomTree)
-            throws InvalidQueryException {
+                                QueryObjectModelTree qomTree) {
         super(session, itemMgr, index, propReg);
         this.qomTree = qomTree;
-        checkNodeTypes();
         extractBindVariableNames();
     }
 
@@ -113,33 +106,30 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         }
 
 
-        List<ColumnImpl> columns = new ArrayList<ColumnImpl>();
-        // expand columns without name
-        for (ColumnImpl column : qomTree.getColumns()) {
-            if (column.getColumnName() == null) {
-                QueryObjectModelFactory qomFactory = getQOMFactory();
-                NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-                SelectorImpl selector = qomTree.getSelector(column.getSelectorQName());
-                NodeTypeImpl nt = ntMgr.getNodeType(selector.getNodeTypeQName());
-                for (PropertyDefinition pd : nt.getPropertyDefinitions()) {
-                    PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) pd;
-                    if (!propDef.definesResidual() && !propDef.isMultiple()) {
-                        String sn = selector.getSelectorName();
-                        String pn = propDef.getName();
-                        columns.add((ColumnImpl) qomFactory.column(sn, pn, sn + "." + pn));
-                    }
-                }
-            } else {
-                columns.add(column);
-            }
+        ColumnImpl[] columns = qomTree.getColumns();
+        Name[] selectProps = new Name[columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            selectProps[i] = columns[i].getPropertyQName();
         }
         OrderingImpl[] orderings = qomTree.getOrderings();
+        // TODO: there are many kinds of DynamicOperand that can be ordered by
+        Path[] orderProps = new Path[orderings.length];
+        boolean[] orderSpecs = new boolean[orderings.length];
+        for (int i = 0; i < orderings.length; i++) {
+            orderSpecs[i] = orderings[i].getOrder() == QueryObjectModelConstants.ORDER_ASCENDING;
+            if (orderings[i].getOperand() instanceof PropertyValue) {
+                PropertyValue pv = (PropertyValue) orderings[i].getOperand();
+                orderProps[i] = PathFactoryImpl.getInstance().create(pv.getPropertyName());
+            } else {
+                throw new UnsupportedRepositoryOperationException("order by with" +
+                        orderings[i].getOperand() + " not yet implemented");
+            }
+        }
         return new MultiColumnQueryResult(index, itemMgr,
                 session, session.getAccessManager(),
                 // TODO: spell suggestion missing
-                this, query, null, columns.toArray(new ColumnImpl[columns.size()]),
-                orderings, orderings.length == 0 && getRespectDocumentOrder(),
-                offset, limit);
+                this, query, null, selectProps, orderProps, orderSpecs,
+                getRespectDocumentOrder(), offset, limit);
     }
 
     //--------------------------< internal >------------------------------------
@@ -158,28 +148,6 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
             }, null);
         } catch (Exception e) {
             // will never happen
-        }
-    }
-
-    /**
-     * Checks if the selector node types are valid.
-     *
-     * @throws InvalidQueryException if one of the selector node types is
-     *                               unknown.
-     */
-    private void checkNodeTypes() throws InvalidQueryException {
-        try {
-            qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
-                public Object visit(SelectorImpl node, Object data) throws Exception {
-                    String ntName = node.getNodeTypeName();
-                    if (!session.getNodeTypeManager().hasNodeType(ntName)) {
-                        throw new Exception(ntName + " is not a known node type");
-                    }
-                    return super.visit(node, data);
-                }
-            }, null);
-        } catch (Exception e) {
-            throw new InvalidQueryException(e.getMessage());
         }
     }
 }

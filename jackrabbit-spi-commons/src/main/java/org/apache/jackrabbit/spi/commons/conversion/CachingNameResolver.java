@@ -60,41 +60,41 @@ public class CachingNameResolver implements NameResolver {
 
     //-------------------------------------------------------< NameResolver >---
     /**
-     * Returns a <code>Name</code> for the given prefixed JCR name. The name
+     * Returns the qualified name for the given prefixed JCR name. The name
      * is first looked up form the generational cache and the call gets
      * delegated to the decorated name resolver only if the cache misses.
      *
-     * @param jcrName A JCR name String.
-     * @return A <code>Name</code> object.
+     * @param name prefixed JCR name
+     * @return qualified name
      * @throws IllegalNameException if the JCR name format is invalid
      * @throws NamespaceException if the namespace prefix can not be resolved
      */
-    public Name getQName(String jcrName)
+    public Name getQName(String name)
             throws IllegalNameException, NamespaceException {
-        Name name = (Name) cache.get(jcrName);
-        if (name == null) {
-            name = resolver.getQName(jcrName);
-            cache.put(jcrName, name);
+        Name qname = (Name) cache.get(name);
+        if (qname == null) {
+            qname = resolver.getQName(name);
+            cache.put(name, qname);
         }
-        return name;
+        return qname;
     }
 
 
     /**
-     * Returns the prefixed JCR name for the given <code>Name</code>. The name
+     * Returns the prefixed JCR name for the given qualified name. The name
      * is first looked up form the generational cache and the call gets
      * delegated to the decorated name resolver only if the cache misses.
      *
-     * @param name The name object.
-     * @return qualified JCR name in the form <code>prefix:localName</code>.
+     * @param qname qualified name
+     * @return prefixed JCR name
      * @throws NamespaceException if the namespace URI can not be resolved
      */
-    public String getJCRName(Name name) throws NamespaceException {
-        String jcrName = (String) cache.get(name);
-        if (jcrName == null) {
-            jcrName = resolver.getJCRName(name);
-            cache.put(name, jcrName);
+    public String getJCRName(Name qname) throws NamespaceException {
+        String name = (String) cache.get(qname);
+        if (name == null) {
+            name = resolver.getJCRName(qname);
+            cache.put(qname, name);
         }
-        return jcrName;
+        return name;
     }
 }

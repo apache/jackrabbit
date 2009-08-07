@@ -92,8 +92,7 @@ public class NodeUUIDTest extends AbstractJCRTest {
     /**
      * Moves a referencable node using {@link javax.jcr.Session#move(String,
      * String)} with one session and saves afterward changes made with a second
-     * session to the moved node using {@link Node#save()}.
-     * <p>
+     * session to the moved node using {@link Node#save()}.<br/> <br/>
      * Procedure: <ul> <li>Creates node 1 and node 2 with session 1</li>
      * <li>Gets reference to node 1 using session 2</li> <li>Session 1 moves
      * node 1 under node 2, saves changes</li> <li>Session 2 modifes node 1,
@@ -122,7 +121,7 @@ public class NodeUUIDTest extends AbstractJCRTest {
         superuser.save();
 
         // get the moving node with session 2
-        Session testSession = getHelper().getReadWriteSession();
+        Session testSession = helper.getReadWriteSession();
         try {
             Node refTargetNodeSession2 = (Node) testSession.getItem(refTargetNode.getPath());
 

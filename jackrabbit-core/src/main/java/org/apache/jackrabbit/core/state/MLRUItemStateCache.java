@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.state;
 import java.util.Iterator;
 
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,10 +47,10 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     private long maxMem;
 
     /** the number of writes */
-    private long numWrites;
+    private long numWrites = 0;
 
     /** the access count */
-    private long accessCount;
+    private long accessCount = 0;
 
     /** the cache access listeners */
     private CacheAccessListener accessListener;

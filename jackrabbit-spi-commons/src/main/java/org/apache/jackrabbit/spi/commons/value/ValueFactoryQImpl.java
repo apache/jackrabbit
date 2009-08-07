@@ -18,10 +18,8 @@ package org.apache.jackrabbit.spi.commons.value;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.util.Calendar;
 
-import javax.jcr.Binary;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
@@ -37,7 +35,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.util.ISO8601;
 
 /**
  * This class implements the <code>ValueFactory</code> interface,
@@ -62,16 +59,6 @@ public class ValueFactoryQImpl implements ValueFactory {
     public ValueFactoryQImpl(QValueFactory qfactory, NamePathResolver resolver) {
         this.qfactory = qfactory;
         this.resolver = resolver;
-    }
-
-    /**
-     * The <code>QValueFactory</code> that is wrapped by this <code>ValueFactory</code>
-     * instance.
-     *
-     * @return qfactory The <code>QValueFactory</code> wrapped by this instance.
-     */
-    public QValueFactory getQValueFactory() {
-        return qfactory;
     }
 
     /**
@@ -139,7 +126,6 @@ public class ValueFactoryQImpl implements ValueFactory {
      */
     public Value createValue(Calendar value) {
         try {
-            ISO8601.getYear(value);
             QValue qvalue = qfactory.create(value);
             return new QValueValue(qvalue, resolver);
         } catch (RepositoryException ex) {
@@ -165,7 +151,8 @@ public class ValueFactoryQImpl implements ValueFactory {
      * {@inheritDoc}
      */
     public Value createValue(Node value) throws RepositoryException {
-        return createValue(value, false);
+        QValue qvalue = qfactory.create(value.getUUID(), PropertyType.REFERENCE);
+        return new QValueValue(qvalue, resolver);
     }
 
     /**
@@ -179,7 +166,7 @@ public class ValueFactoryQImpl implements ValueFactory {
                 Name name = resolver.getQName(value);
                 qvalue = qfactory.create(name);
             } else if (type == PropertyType.PATH) {
-                Path path = resolver.getQPath(value, false);
+                Path path = resolver.getQPath(value);
                 qvalue = qfactory.create(path);
             } else {
                 qvalue = qfactory.create(value, type);
@@ -197,40 +184,5 @@ public class ValueFactoryQImpl implements ValueFactory {
         } catch (RepositoryException ex) {
             throw new ValueFormatException(ex);
         }
-    }
-
-    public Binary createBinary(InputStream stream) throws RepositoryException {
-        // TODO review/optimize/refactor
-        try {
-            QValue qvalue = qfactory.create(stream);
-            return qvalue.getBinary();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } catch (RepositoryException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public Value createValue(Binary value) {
-        // TODO review/optimize/refactor
-        try {
-            return createValue(value.getStream());
-        } catch (RepositoryException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public Value createValue(BigDecimal value) {
-        try {
-            QValue qvalue = qfactory.create(value);
-            return new QValueValue(qvalue, resolver);
-        } catch (RepositoryException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public Value createValue(Node value, boolean weak) throws RepositoryException {
-        QValue qvalue = qfactory.create(value.getUUID(), weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE);
-        return new QValueValue(qvalue, resolver);
     }
 }

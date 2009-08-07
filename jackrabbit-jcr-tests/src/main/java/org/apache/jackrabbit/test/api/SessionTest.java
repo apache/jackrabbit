@@ -43,11 +43,9 @@ import javax.jcr.lock.LockException;
 public class SessionTest extends AbstractJCRTest {
 
     /**
-     * Tries to move a node using {@link javax.jcr.Session#move(String src, String dest)}
-     * to a location where a node already exists with
-     * same name.
-     * <p>
-     * Prerequisites:
+     * Tries to move a node using <code>{@link javax.jcr.Session#move(String src, String dest)}
+     * </code> to a location where a node already exists with
+     * same name.<br/> <br/> Prerequisites:
      * <ul>
      * <li><code>javax.jcr.tck.SessionTest.testMoveItemExistsException.nodetype2</code>
      * must contain name of a nodetype that does not allow same name sibling
@@ -55,9 +53,7 @@ public class SessionTest extends AbstractJCRTest {
      * <li><code>javax.jcr.tck.SessionTest.testMoveItemExistsException.nodetype3</code>
      * must contain name of a valid nodetype that can be added as a child of
      * <code>nodetype2</code></li>
-     * </ul>
-     * <p>
-     * This should throw an {@link javax.jcr.ItemExistsException}.
+     * </ul> This should throw an <code>{@link javax.jcr.ItemExistsException}</code>.
      */
     public void testMoveItemExistsException() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -87,10 +83,9 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Calls {@link javax.jcr.Session#move(String src, String dest)}
-     * with invalid destination path.
-     * <p>
-     * Should throw a {@link javax.jcr.PathNotFoundException}.
+     * Calls <code>{@link javax.jcr.Session#move(String src, String dest)}</code>
+     * with invalid destination path.<br/> <br/> Should throw
+     * <code{@link javax.jcr.PathNotFoundException}</code>.
      */
     public void testMovePathNotFoundExceptionDestInvalid() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -114,10 +109,9 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Calls {@link javax.jcr.Session#move(String src, String dest)} with
-     * invalid source path.
-     * <p>
-     * Should throw a {@link javax.jcr.PathNotFoundException}.
+     * Calls <code>{@link javax.jcr.Session#move(String src, String dest)} with
+     * invalid source path.<br/> <br/> Should throw an <code>{@link
+     * javax.jcr.PathNotFoundException}.
      */
     public void testMovePathNotFoundExceptionSrcInvalid() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -139,10 +133,9 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Calls {@link javax.jcr.Session#move(String src, String dest)}
-     * with a destination path that has an index postfixed.
-     * <p>
-     * This should throw a {@link javax.jcr.RepositoryException}.
+     * Calls <code>{@link javax.jcr.Session#move(String src, String dest)}
+     * </code> with a destination path that has an index postfixed.<br/>
+     * <br/> This should throw an <code>{@link javax.jcr.RepositoryException}</code>.
      */
     public void testMoveRepositoryException() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -169,12 +162,10 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Moves a node using {@link javax.jcr.Session#move(String src, String dest)},
-     * afterwards it tries to only save the old parent node.
-     * <p>
-     * This should throw {@link javax.jcr.nodetype.ConstraintViolationException}.
-     * <p>
-     * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
+     * Moves a node using <code>{@link javax.jcr.Session#move(String src, String dest)}
+     * </code>, afterwards it tries to only save the old parent node.<br>
+     * <br> This should throw <code>{@link javax.jcr.nodetype.ConstraintViolationException}</code>.
+     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
      * must accept children of same nodetype</li> </ul>
      */
     public void testMoveConstraintViolationExceptionSrc() throws RepositoryException {
@@ -205,13 +196,10 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Moves a node using {@link javax.jcr.Session#move(String src, String dest)},
-     * afterwards it tries to only save the destination parent
-     * node.
-     * <p>
-     * This should throw a {@link javax.jcr.nodetype.ConstraintViolationException}.
-     * <p>
-     * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
+     * Moves a node using <code>{@link javax.jcr.Session#move(String src, String dest)}
+     * </code>, afterwards it tries to only save the destination parent
+     * node.<br> <br> This should throw <code>{@link javax.jcr.nodetype.ConstraintViolationException}</code>.
+     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
      * must accept children of same nodetype</li> </ul>
      */
     public void testMoveConstraintViolationExceptionDest() throws RepositoryException {
@@ -242,10 +230,9 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Calls {@link javax.jcr.Session#move(String src, String dest)} where
-     * the parent node of src is locked.
-     * <p>
-     * Should throw a {@link LockException} immediately or on save.
+     * Calls <code>{@link javax.jcr.Session#move(String src, String dest)} where
+     * the parent node of src is locked.<br/> <br/> Should throw a <code>{@link
+     * LockException} immediately or on save.
      */
     public void testMoveLockException()
         throws NotExecutableException, RepositoryException {
@@ -259,7 +246,14 @@ public class SessionTest extends AbstractJCRTest {
         // create a node that is lockable
         Node lockableNode = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        ensureMixinType(lockableNode, mixLockable);
+        if (!lockableNode.isNodeType(mixLockable)) {
+            if (lockableNode.canAddMixin(mixLockable)) {
+                lockableNode.addMixin(mixLockable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
+                        "allow to add mix:lockable");
+            }
+        }
 
         // add a sub node (the one that is tried to move later on)
         Node srcNode = lockableNode.addNode(nodeName1, testNodeType);
@@ -270,7 +264,7 @@ public class SessionTest extends AbstractJCRTest {
         String pathRelToRoot = lockableNode.getPath().substring(1);
 
         // access node through another session to lock it
-        Session session2 = getHelper().getSuperuserSession();
+        Session session2 = helper.getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);
@@ -290,11 +284,10 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks if {@link javax.jcr.Session#move(String src, String dest)}
-     * works properly. To verify if node has been moved properly
+     * Checks if <code>{@link javax.jcr.Session#move(String src, String dest)}
+     * </code> works properly. To verify if node has been moved properly
      * it uses a second session to retrieve the moved node.
-     * <p>
-     * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
+     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
      * must accept children of same nodetype</li> </ul>
      */
     public void testMoveNode() throws RepositoryException {
@@ -318,7 +311,7 @@ public class SessionTest extends AbstractJCRTest {
         superuser.save();
 
         // get moved tree root node with session 2
-        Session testSession = getHelper().getReadWriteSession();
+        Session testSession = helper.getReadWriteSession();
         try {
             testSession.getItem(destParentNode.getPath() + "/" + nodeName2);
             // node found
@@ -329,9 +322,7 @@ public class SessionTest extends AbstractJCRTest {
 
     /**
      * Checks if a newly created node gets properly saved using <code{@link
-     * javax.jcr.Session#save()}</code>.
-     * <p>
-     * It creates a new node, saves
+     * javax.jcr.Session#save()}</code>.<br/> <br/> It creates a new node, saves
      * it using <code>session.save()</code> then uses a different session to
      * verify if the node has been properly saved.
      */
@@ -346,7 +337,7 @@ public class SessionTest extends AbstractJCRTest {
         superuser.save();
 
         // use a different session to verify if the node is there
-        Session s = getHelper().getReadOnlySession();
+        Session s = helper.getReadOnlySession();
         try {
             s.getItem(newNode.getPath());
             // throws PathNotFoundException if item was not saved
@@ -357,14 +348,10 @@ public class SessionTest extends AbstractJCRTest {
 
     /**
      * Checks if a modified node gets properly saved using <code{@link
-     * javax.jcr.Session#save()}</code>.
-     * <p>
-     * It creates a new node, saves
+     * javax.jcr.Session#save()}</code>.<br/> <br/> It creates a new node, saves
      * it using <code>session.save()</code>, modifies the node by adding a child
      * node, saves again and finally verifies with a different session if
-     * changes have been stored properly.
-     * <p>
-     * Prerequisites: <ul>
+     * changes have been stored properly.<br/> <br/> Prerequisites: <ul>
      * <li><code>javax.jcr.tck.nodetype</code> must accept children of same
      * nodetype</li> </ul>
      */
@@ -387,7 +374,7 @@ public class SessionTest extends AbstractJCRTest {
         // check if the child node was created properly
 
         // get a reference with a second session to the modified node
-        Session s = getHelper().getReadOnlySession();
+        Session s = helper.getReadOnlySession();
         try {
             Node newNodeSession2 = (Node) s.getItem(newNode.getPath());
             // check if child is there
@@ -399,8 +386,7 @@ public class SessionTest extends AbstractJCRTest {
 
     /**
      * Tries to create and save a node using {@link javax.jcr.Session#save()}
-     * with an mandatory property that is not set on saving time.
-     * <p>
+     * with an mandatory property that is not set on saving time.<br/> <br/>
      * Prerequisites: <ul> <li><code>javax.jcr.tck.SessionTest.testSaveContstraintViolationException.nodetype2</code>
      * must reference a nodetype that has one at least one property that is
      * mandatory but not autocreated</li> </ul>
@@ -423,15 +409,11 @@ public class SessionTest extends AbstractJCRTest {
 
     /**
      * Tries to save a node using {@link javax.jcr.Session#save()} that was
-     * already deleted by an other session.
-     * <p>
-     * Procedure: <ul>
+     * already deleted by an other session.<br/> <br/> Procedure: <ul>
      * <li>Creates a new node with session 1, saves it, adds a child node.</li>
      * <li>Access new node with session 2,deletes the node, saves it.</li>
      * <li>session 1 tries to save modifications .</li> </ul> This should throw
-     * an {@link javax.jcr.InvalidItemStateException}.
-     * <p>
-     * Prerequisites:
+     * an {@link javax.jcr.InvalidItemStateException}. <br/><br/>Prerequisites:
      * <ul> <li><code>javax.jcr.tck.nodetype</code> must accept children of same
      * nodetype</li> </ul>
      */
@@ -449,7 +431,7 @@ public class SessionTest extends AbstractJCRTest {
         nodeSession1.addNode(nodeName2, testNodeType);
 
         // get the new node with a different session
-        Session testSession = getHelper().getReadWriteSession();
+        Session testSession = helper.getReadWriteSession();
         try {
             Node nodeSession2 = (Node) testSession.getItem(nodeSession1.getPath());
 
@@ -473,17 +455,14 @@ public class SessionTest extends AbstractJCRTest {
 
     /**
      * Checks if {@link javax.jcr.Session#refresh(boolean refresh)} works
-     * properly with <code>refresh</code> set to <code>false</code>.
-     * <p>
+     * properly with <code>refresh</code> set to <code>false</code>.<br/> <br/>
      * Procedure: <ul> <li>Creates two nodes with session 1</li> <li>Modifies
      * node 1 with session 1 by adding a child node</li> <li>Get node 2 with
      * session 2</li> <li>Modifies node 2 with session 2 by adding a child
      * node</li> <li>saves session 2 changes using {@link
      * javax.jcr.Session#save()}</li> <li>calls <code>Session.refresh(false)</code>
      * on session 1</li> </ul> Session 1 changes should be cleared and session 2
-     * changes should now be visible to session 1.
-     * <p>
-     * Prerequisites: <ul>
+     * changes should now be visible to session 1. <br/><br/>Prerequisites: <ul>
      * <li><code>javax.jcr.tck.nodetype</code> must accept children of same
      * nodetype</li> </ul>
      */
@@ -503,7 +482,7 @@ public class SessionTest extends AbstractJCRTest {
         testNode1Session1.addNode(nodeName2, testNodeType);
 
         // get session 2
-        Session session2 = getHelper().getReadWriteSession();
+        Session session2 = helper.getReadWriteSession();
 
         try {
             // get the second node
@@ -533,17 +512,14 @@ public class SessionTest extends AbstractJCRTest {
 
     /**
      * Checks if {@link javax.jcr.Session#refresh(boolean refresh)} works
-     * properly with <code>refresh</code> set to <code>true</code>.
-     * <p>
+     * properly with <code>refresh</code> set to <code>true</code>.<br/> <br/>
      * Procedure: <ul> <li>Creates two nodes with session 1</li> <li>Modifies
      * node 1 with session 1 by adding a child node</li> <li>Get node 2 with
      * session 2</li> <li>Modifies node 2 with session 2 by adding a child
      * node</li> <li>saves session 2 changes using {@link
      * javax.jcr.Session#save()}</li> <li>calls <code>Session.refresh(true)</code>
      * on session 1</li> </ul> Session 1 changes and session 2 changes now be
-     * visible to session 1. 
-     * <p>
-     * Prerequisites: <ul>
+     * visible to session 1. <br/><br/>Prerequisites: <ul>
      * <li><code>javax.jcr.tck.nodetype</code> must accept children of same
      * nodetype</li> </ul>
      */
@@ -563,7 +539,7 @@ public class SessionTest extends AbstractJCRTest {
         testNode1Session1.addNode(nodeName2, testNodeType);
 
         // get session 2
-        Session session2 = getHelper().getReadWriteSession();
+        Session session2 = helper.getReadWriteSession();
 
         try {
             // get the second node
@@ -593,10 +569,7 @@ public class SessionTest extends AbstractJCRTest {
 
     /**
      * Checks if {@link javax.jcr.Session#hasPendingChanges()}  works
-     * properly.
-     * <p>
-     * Procedure:
-     * <ul> <li>Gets a session, checks
+     * properly.<br/> <br/> Procedure:<br/> <ul> <li>Gets a session, checks
      * inital flag setting</li> <li>Adds a node, checks flag</li> <li>Saves on
      * session, checks flag</li> <li>Adds a property, checks flag</li> <li>Saves
      * on session, checks flag</li> <li>Adds a child node, checks flag</li>
@@ -667,38 +640,4 @@ public class SessionTest extends AbstractJCRTest {
         assertFalse("Session should have no pending changes recorded after property has been removed and saved!", superuser.hasPendingChanges());
 
     }
-
-    /**
-     * Checks if {@link javax.jcr.Session#hasCapability(String, Object, Object[])}
-     * works as specified.
-     * <p/>
-     *
-     * @throws RepositoryException
-     */
-    public void testHasCapability() throws RepositoryException {
-        Session roSession = getHelper().getReadOnlySession();
-        try {
-            Node root = roSession.getRootNode();
-            Object[] args = new Object[] { "foo" };
-            if (!roSession.hasCapability("addNode",  root, args)) {
-                // if hasCapability() returns false, the actual method call
-                // is expected to fail
-                try {
-                    root.addNode("foo");
-                    fail("Node.addNode() should fail according to Session.hasCapability()");
-                } catch (RepositoryException e) {
-                    // expected 
-                }
-            } else {
-                // hasCapability() returning true doesn't guarantee that the
-                // actual method call succeeds, it's just a best-effort.
-                // therefore nothing to test here...
-            }
-
-        } finally {
-            roSession.logout();
-        }
-
-    }
-
 }

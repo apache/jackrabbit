@@ -30,10 +30,10 @@ import javax.jcr.Session;
 /**
  * <code>NodeOrderableChildNodesTest</code> contains all node writing tests (LEVEL 2) that require a node
  * that allows child node ordering (tests therefore are optional).
- * <p>
+ * <p/>
  * If the repository does not support a node type with orderable child nodes
  * a {@link NotExecutableException} exception is thrown.
- * <p>
+ * <p/>
  * Prerequisites:
  * <ul>
  * <li><code>javax.jcr.tck.NodeOrderableChildNodesTest.nodetype2</code>Name of a
@@ -73,9 +73,8 @@ public class NodeOrderableChildNodesTest extends AbstractJCRTest {
 
     /**
      * Tries to reorder child nodes using {@link Node#orderBefore(String, String)}
-     * with an invalid destination reference.
-     * <p>
-     * This should throw an {@link ItemNotFoundException}.
+     * with an invalid destination reference. <br/><br/> This should
+     * throw an {@link ItemNotFoundException}.
      */
     public void testOrderBeforeInvalidDest()
             throws RepositoryException, NotExecutableException {
@@ -94,9 +93,8 @@ public class NodeOrderableChildNodesTest extends AbstractJCRTest {
 
     /**
      * Tries to reorder child nodes using {@link Node#orderBefore(String,
-     * String)} with an invalid source reference.
-     * <p>
-     * This should throw an {@link ItemNotFoundException}.
+            * String)}  with an invalid source reference. <br/><br/> This should throw
+     * an {@link ItemNotFoundException}.
      */
     public void testOrderBeforeInvalidSrc()
             throws RepositoryException, NotExecutableException {
@@ -115,9 +113,7 @@ public class NodeOrderableChildNodesTest extends AbstractJCRTest {
 
     /**
      * Tries to reorder on a node using {@link Node#orderBefore(String, String)}
-     * that does not support child reordering.
-     * <p>
-     * This should throw and
+     * that does not support child reordering. <br/><br/> This should throw and
      * {@link UnsupportedRepositoryOperationException}. Prequisites: <ul>
      * <li>javax.jcr.tck.NodeOrderableChildNodesTest.testOrderBeforeUnsupportedRepositoryOperationException.nodetype2</li>
      * A valid node type that does not support child node ordering.</li>

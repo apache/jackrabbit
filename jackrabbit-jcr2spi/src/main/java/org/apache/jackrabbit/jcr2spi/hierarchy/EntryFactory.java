@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>EntryFactory</code>...
@@ -58,11 +58,6 @@ public class EntryFactory {
     private NamePathResolver resolver;
 
     /**
-     * Strategy used for item state invalidation (refresh)
-     */
-    private final InvalidationStrategy invalidationStrategy;
-
-    /**
      * Create a new instance of the <code>EntryFactory</code>.
      *
      * @param isf
@@ -76,10 +71,6 @@ public class EntryFactory {
         this.pathFactory = pathFactory;
         this.isf = isf;
         this.listener = listener;
-
-        // todo: make this configurable if necessary
-        // this.invalidationStrategy = new NodeEntryImpl.EagerInvalidation();
-        this.invalidationStrategy = new NodeEntryImpl.LazyInvalidation();
         this.rootEntry = NodeEntryImpl.createRootEntry(this);
     }
 
@@ -124,13 +115,6 @@ public class EntryFactory {
         listener.uniqueIdChanged(entry, previousUniqueID);
     }
 
-    /**
-     * @return  the strategy used for item state invalidation (refresh)
-     */
-    public InvalidationStrategy getInvalidationStrategy() {
-        return invalidationStrategy;
-    }
-
     //--------------------------------------------------------------------------
     /**
      * @param resolver
@@ -150,40 +134,12 @@ public class EntryFactory {
             return LogUtil.safeGetJCRPath(path, resolver);
         }
     }
-
-    //--------------------------------------------------< NodeEntryListener >---
+    
+    //--------------------------------------------------------------------------
     public interface NodeEntryListener {
 
         public void entryCreated(NodeEntry entry);
 
         public void uniqueIdChanged (NodeEntry entry, String previousUniqueID);
-    }
-
-    // ----------------------------------------------< InvalidationStrategy >---
-    /**
-     * Strategy for invalidating item states
-     */
-    public interface InvalidationStrategy {
-
-        /**
-         * Invalidate underlying {@link org.apache.jackrabbit.jcr2spi.state.ItemState} of this
-         * <code>entry</code>. Implementors may choose to delay the actual call to
-         * {@link org.apache.jackrabbit.jcr2spi.state.ItemState#invalidate()} for this
-         * <code>entry</code> and for any of its child entries. They need to ensure however that
-         * {@link #applyPending(NodeEntry)} properly invalidates the respective state when called.
-         *
-         * @param entry The <code>NodeEntry</code> to invalidate.
-         * @param recursive Invalidate state of child entries if <code>true</code>.
-         */
-        public void invalidate(NodeEntry entry, boolean recursive);
-
-        /**
-         * Apply any pending {@link org.apache.jackrabbit.jcr2spi.state.ItemState#invalidate()
-         * invalidation} of the underyling {@link org.apache.jackrabbit.jcr2spi.state.ItemState} of
-         * this <code>entry</code>.
-         *
-         * @param entry The affected <code>NodeEntry</code>.
-         */
-        public void applyPending(NodeEntry entry);
     }
 }

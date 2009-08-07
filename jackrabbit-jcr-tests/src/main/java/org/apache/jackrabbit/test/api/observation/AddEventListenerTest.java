@@ -25,14 +25,13 @@ import javax.jcr.Session;
 
 /**
  * Tests the options for addEventListener().
- * <p>
- * Configuration requirements:
- * <p>
+ * <p/>
+ * Configuration requirements are:<br/>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child nodes that are created will be named {@link #nodeName1} and
  * {@link #nodeName2}. Furthermore {@link #testNodeType} must allow to add
  * child nodes of the same type ({@link #testNodeType}).
- * <p>
+ * <p/>
  * Certain test require that {@link #testNodeType} is mix:referenceable or
  * allows to add that mixin. If the repository does not support mix:referenceable
  * a {@link org.apache.jackrabbit.test.NotExecutableException} is thrown
@@ -131,7 +130,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
                 Event.PROPERTY_ADDED,
                 testRoot,
                 true,
-                new String[]{n1.getIdentifier()},
+                new String[]{n1.getUUID()},
                 null,
                 false);
         n1.setProperty(propertyName1, "foo");
@@ -158,10 +157,10 @@ public class AddEventListenerTest extends AbstractObservationTest {
                 null,
                 new String[]{testNodeType},
                 false);
-        Session s = getHelper().getSuperuserSession();
+        Session s = helper.getSuperuserSession();
         try {
             Node n = (Node) s.getItem(n1.getPath());
-            n.addNode(nodeName3, testNodeType);
+            n.addNode(nodeName3, ntBase);
             n = (Node) s.getItem(n2.getPath());
             n.addNode(nodeName3, nodetype2);
             n = (Node) s.getItem(testRoot);
@@ -188,10 +187,13 @@ public class AddEventListenerTest extends AbstractObservationTest {
      * @throws RepositoryException if node creation fails.
      */
     private Node createReferenceable(String nodeName, String nodeType)
-            throws RepositoryException, NotExecutableException {
+            throws RepositoryException {
         Node n = testRootNode.addNode(nodeName, nodeType);
-        ensureMixinType(n, mixReferenceable);
-        testRootNode.save();
+        if (needsMixin(n, mixReferenceable)) {
+            n.addMixin(mixReferenceable);
+            // some implementations may require a save after addMixin()
+            testRootNode.save();
+        }
         return n;
     }
 }

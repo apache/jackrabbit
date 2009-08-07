@@ -22,16 +22,11 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
-import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.Ordering;
-import javax.jcr.query.qom.DynamicOperand;
-
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
-import java.math.BigDecimal;
 
 /**
  * Abstract base class for all order by tests. Provides utility methods.
@@ -60,24 +55,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        superuser.save();
-    }
-
-    /**
-     * Populates the workspace with child nodes under <code>testroot</code> with
-     * each node has a value set in property with name
-     * <code>propertyname1</code>. The actual value is created by using the
-     * sessions value factory and the given <code>type</code>.
-     *
-     * @param values the String values.
-     * @param type a JCR property type.
-     */
-    protected void populate(String[] values, int type) throws RepositoryException {
-        for (int i = 0; i < values.length; i++) {
-            Node node = testRootNode.addNode(nodeNames[i], testNodeType);
-            node.setProperty(propertyName1, vf.createValue(values[i], type));
-        }
-        superuser.save();
+        testRootNode.save();
     }
 
     /**
@@ -91,7 +69,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        superuser.save();
+        testRootNode.save();
     }
 
     /**
@@ -105,7 +83,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        superuser.save();
+        testRootNode.save();
     }
 
     /**
@@ -119,21 +97,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        superuser.save();
-    }
-
-    /**
-     * Populates the workspace with child nodes under <code>testroot</code> with
-     * each node has a decimal value set in property with name
-     * <code>propertyname1</code>.
-     * @param values the decimal values.
-     */
-    protected void populate(BigDecimal[] values) throws RepositoryException {
-        for (int i = 0; i < values.length; i++) {
-            Node node = testRootNode.addNode(nodeNames[i], testNodeType);
-            node.setProperty(propertyName1, values[i]);
-        }
-        superuser.save();
+        testRootNode.save();
     }
 
     /**
@@ -144,42 +108,31 @@ class AbstractOrderByTest extends AbstractQueryTest {
     protected void checkOrder(String[] nodeNames) throws RepositoryException {
         // first check ascending
 
-        String sql = createSQL();
-        String xpath = createXPath();
+        String sql = "SELECT " + escapeIdentifierForSQL(propertyName1) + " FROM " + escapeIdentifierForSQL(testNodeType) + " WHERE " +
+                    jcrPath + " LIKE '" + testRoot + "/%' ORDER BY " + escapeIdentifierForSQL(propertyName1);
+        String xpath = "/" + jcrRoot + testRoot + "/*[@jcr:primaryType='" + testNodeType + "'] order by @" + propertyName1;
         Query q;
         QueryResult result;
-        if (sql != null) {
+        if (checkSQL) {
             q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
             result = q.execute();
             checkResultOrder(result, nodeNames);
         }
 
-        if (xpath != null) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
-            result = q.execute();
-            checkResultOrder(result, nodeNames);
-        }
-
-        q = createQOM(true);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResultOrder(result, nodeNames);
 
         // then check descending
         Collections.reverse(Arrays.asList(nodeNames));
 
-        if (sql != null) {
+        if (checkSQL) {
             q = superuser.getWorkspace().getQueryManager().createQuery(sql + " DESC", Query.SQL);
             result = q.execute();
             checkResultOrder(result, nodeNames);
         }
 
-        if (xpath != null) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(xpath + " descending", Query.XPATH);
-            result = q.execute();
-            checkResultOrder(result, nodeNames);
-        }
-
-        q = createQOM(false);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath + " descending", Query.XPATH);
         result = q.execute();
         checkResultOrder(result, nodeNames);
     }
@@ -201,66 +154,6 @@ class AbstractOrderByTest extends AbstractQueryTest {
         for (int i = 0; i < nodeNames.length; i++) {
             String name = ((Node) nodes.get(i)).getName();
             assertEquals("Wrong order of nodes:", nodeNames[i], name);
-        }
-    }
-
-    /**
-     * @return a basic QOM to test order by queries.
-     * @throws RepositoryException if an error occurs.
-     */
-    protected QueryObjectModel createQOM(boolean ascending)
-            throws RepositoryException {
-        DynamicOperand op = createOrderingOperand();
-        Ordering ordering;
-        if (ascending) {
-            ordering = qf.ascending(op);
-        } else {
-            ordering = qf.descending(op);
-        }
-        return qf.createQuery(
-                qf.selector(testNodeType, "s"),
-                qf.descendantNode("s", testRoot),
-                new Ordering[]{ordering},
-                null
-        );
-    }
-
-    /**
-     * @return a dynamic operand that is used in the QOM created by
-     *         {@link #createQOM(boolean)}.
-     * @throws RepositoryException if an error occurs.
-     */
-    protected DynamicOperand createOrderingOperand()
-            throws RepositoryException {
-        return qf.propertyValue("s", propertyName1);
-    }
-
-    /**
-     * @return a basic SQL statement to test order by queries. Returns
-     *         <code>null</code> if SQL is not supported.
-     */
-    protected String createSQL() {
-        if (checkSQL) {
-            return "SELECT " + escapeIdentifierForSQL(propertyName1) +
-                    " FROM "+ escapeIdentifierForSQL(testNodeType) + " WHERE " +
-                    jcrPath + " LIKE '" + testRoot + "/%' ORDER BY " +
-                    escapeIdentifierForSQL(propertyName1);
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * @return a basic XPath statement to test order by queries. Returns
-     *         <code>null</code> is XPath is not supported.
-     * @throws RepositoryException if an error occurs.
-     */
-    protected String createXPath() throws RepositoryException {
-        List languages = Arrays.asList(superuser.getWorkspace().getQueryManager().getSupportedQueryLanguages());
-        if (languages.contains(Query.XPATH)) {
-            return xpathRoot + "/*[@jcr:primaryType='" + testNodeType + "'] order by @" + propertyName1;
-        } else {
-            return null;
         }
     }
 

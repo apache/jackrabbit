@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core.retention;
 
 import org.apache.commons.io.IOUtils;
-import javax.jcr.retention.Hold;
-import javax.jcr.retention.RetentionPolicy;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.api.jsr283.retention.Hold;
+import org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -69,10 +69,10 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
     private final SessionImpl session;
     private final FileSystemResource retentionFile;
 
-    private long holdCnt;
-    private long retentionCnt;
-
-    private boolean initialized;
+    private long holdCnt = 0;
+    private long retentionCnt = 0;
+    
+    private boolean initialized = false;
 
     public RetentionRegistryImpl(SessionImpl session, FileSystem fs) throws RepositoryException {
         this.session = session;
@@ -107,7 +107,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
      * node, that entry will be ignored. Upon {@link #close()} of this
      * manager, the file will be updated to reflect the actual set of holds/
      * retentions present and effective in the content.
-     *
+     * 
      * @throws IOException
      * @throws FileSystemException
      */
@@ -194,12 +194,12 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
         writeRetentionFile();
         initialized = false;
     }
-
+    
     private void addHolds(Path nodePath, PropertyImpl p) throws RepositoryException {
         synchronized (holdMap) {
             Hold[] holds = HoldImpl.createFromProperty(p, ((PropertyId) p.getId()).getParentId());
             holdMap.put(nodePath, Arrays.asList(holds));
-            holdCnt++;
+            holdCnt++;            
         }
     }
 
@@ -284,7 +284,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
         if (element != null) {
             rp = (RetentionPolicy) element.get();
         }
-        if (rp == null && checkParent) {
+        if (rp == null && checkParent ) {
             element = retentionMap.map(nodePath.getAncestor(1), true);
             if (element != null) {
                 rp = (RetentionPolicy) element.get();
@@ -341,7 +341,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
                 // else: not interested in any other property -> ignore.
 
             } catch (RepositoryException e) {
-                log.warn("Internal error while processing event.", e.getMessage());
+                log.warn("Internal error while processing event.",e.getMessage());
                 // ignore.
             }
         }

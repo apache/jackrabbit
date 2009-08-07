@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Literal;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.Value;
-import javax.jcr.query.qom.Literal;
 
 /**
  * <code>LiteralImpl</code>...
@@ -36,7 +36,7 @@ public class LiteralImpl extends StaticOperandImpl implements Literal {
     /**
      * @return the value of this literal.
      */
-    public Value getLiteralValue() {
+    public Value getValue() {
         return value;
     }
 

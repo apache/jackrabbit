@@ -33,7 +33,7 @@ PropertyDefinition
   DefaultValues null
   AutoCreated false
   Mandatory false
-  OnParentVersion IGNORE
+  OnParentVersion COPY
   Protected true
   Multiple false
 PropertyDefinition
@@ -51,7 +51,7 @@ PropertyDefinition
   DefaultValues null
   AutoCreated false
   Mandatory true
-  OnParentVersion IGNORE
+  OnParentVersion COPY
   Protected true
   Multiple true
 PropertyDefinition
@@ -60,6 +60,6 @@ PropertyDefinition
   DefaultValues null
   AutoCreated false
   Mandatory true
-  OnParentVersion IGNORE
+  OnParentVersion COPY
   Protected true
   Multiple false

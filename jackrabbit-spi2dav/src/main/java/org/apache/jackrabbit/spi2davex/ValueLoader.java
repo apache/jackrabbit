@@ -54,7 +54,7 @@ class ValueLoader {
             if (statusCode == DavServletResponse.SC_OK) {
                 target.setStream(method.getResponseBodyAsStream());
             } else {
-                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load binary at " + uri + " - Status line = " + method.getStatusLine().toString())));
+                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load binary. Status line = " + method.getStatusLine().toString())));
             }
         } finally {
             method.releaseConnection();

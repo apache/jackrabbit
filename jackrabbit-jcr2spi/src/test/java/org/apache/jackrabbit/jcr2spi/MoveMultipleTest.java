@@ -246,7 +246,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
         Node childNode = moveNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
-        Session otherSession = getHelper().getReadWriteSession();
+        Session otherSession = helper.getReadWriteSession();
         try {
             otherSession.move(originalPath, destinationPath);
             Node mv = (Node) otherSession.getItem(destinationPath);

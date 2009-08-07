@@ -62,13 +62,6 @@ public interface VersionManager {
 
     /**
      * @param nodeState
-     * @throws RepositoryException
-     * @see javax.jcr.version.VersionManager#checkpoint(String)
-     */
-    public NodeEntry checkpoint(NodeState nodeState) throws RepositoryException;
-
-    /**
-     * @param nodeState
      * @return
      * @throws RepositoryException
      * @see javax.jcr.Node#isCheckedOut()
@@ -167,25 +160,6 @@ public interface VersionManager {
 
     /**
      * @param nodeState
-     * @param workspaceName
-     * @param bestEffort
-     * @param isShallow
-     * @return An Iterator over <code>NodeId</code>s of all <code>Node</code>s
-     * that failed to be merged and need manual resolution by the user of the API.
-     * @throws NoSuchWorkspaceException
-     * @throws AccessDeniedException
-     * @throws MergeException
-     * @throws LockException
-     * @throws InvalidItemStateException
-     * @throws RepositoryException
-     * @see #resolveMergeConflict(NodeState,NodeState,boolean)
-     * @see javax.jcr.Node#merge(String, boolean)
-     */
-    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
-
-
-    /**
-     * @param nodeState
      * @param versionState
      * @param done
      * @throws VersionException
@@ -196,41 +170,6 @@ public interface VersionManager {
      * @see javax.jcr.Node#doneMerge(Version)
      */
     public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     *
-     * @param nodeState
-     * @return
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     */
-    public NodeEntry createConfiguration(NodeState nodeState) throws UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     *
-     * @param title
-     * @return
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     */
-    public NodeEntry createActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     *
-     * @param activityState
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     */
-    public void removeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * 
-     * @param activityState
-     * @return
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     */
-    public Iterator mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      *

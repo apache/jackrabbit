@@ -49,7 +49,7 @@ public abstract class AbstractCopy extends AbstractOperation {
         throws RepositoryException {
 
         NodeState srcItemState = getNodeState(srcPath, srcMgrProvider.getHierarchyManager());
-        this.srcState = srcItemState;
+        this.srcState = (NodeState)srcItemState;
         this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager());
 
         // check for illegal index present in destination path

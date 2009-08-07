@@ -60,7 +60,6 @@ public class GCThread implements Runnable, ScanEventListener {
                 LOG.debug("Waiting...");
                 Thread.sleep(10);
             }
-            gc.close();
         } catch (Exception ex) {
             LOG.error("Error scanning", ex);
             exception = ex;
@@ -76,10 +75,10 @@ public class GCThread implements Runnable, ScanEventListener {
     }
 
     private int listIdentifiers(GarbageCollector gc) throws DataStoreException {
-        Iterator<DataIdentifier> it = gc.getDataStore().getAllIdentifiers();
+        Iterator it = gc.getDataStore().getAllIdentifiers();
         int count = 0;
         while (it.hasNext()) {
-            DataIdentifier id = it.next();
+            DataIdentifier id = (DataIdentifier) it.next();
             LOG.debug("  " + id);
             count++;
         }

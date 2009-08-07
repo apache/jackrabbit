@@ -47,7 +47,7 @@ public interface Importer {
      *                  (list of {@link PropInfo} instances)
      * @throws RepositoryException on a repository error
      */
-    void startNode(NodeInfo nodeInfo, List<PropInfo> propInfos)
+    void startNode(NodeInfo nodeInfo, List propInfos)
             throws RepositoryException;
 
     /**

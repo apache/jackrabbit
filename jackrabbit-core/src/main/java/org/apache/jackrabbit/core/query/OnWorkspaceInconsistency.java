@@ -58,16 +58,15 @@ public abstract class OnWorkspaceInconsistency {
             log.error("Node {} ({}) has missing child '{}' ({})",
                     new Object[]{
                         resolver.getJCRPath(path),
-                        node.getNodeId(),
+                        node.getNodeId().getUUID().toString(),
                         resolver.getJCRName(child.getName()),
-                        child.getId()
+                        child.getId().getUUID().toString()
                     });
             throw exception;
         }
     };
 
-    protected static final Map<String, OnWorkspaceInconsistency> INSTANCES
-            = new HashMap<String, OnWorkspaceInconsistency>();
+    protected static final Map INSTANCES = new HashMap();
 
     static {
         INSTANCES.put(FAIL.name, FAIL);
@@ -80,8 +79,6 @@ public abstract class OnWorkspaceInconsistency {
 
     /**
      * Protected constructor.
-     *
-     * @param name a unique name for this handler.
      */
     protected OnWorkspaceInconsistency(String name) {
         this.name = name;
@@ -106,7 +103,7 @@ public abstract class OnWorkspaceInconsistency {
      */
     public static OnWorkspaceInconsistency fromString(String name)
             throws IllegalArgumentException {
-        OnWorkspaceInconsistency handler = INSTANCES.get(name.toLowerCase());
+        OnWorkspaceInconsistency handler = (OnWorkspaceInconsistency) INSTANCES.get(name.toLowerCase());
         if (handler == null) {
             throw new IllegalArgumentException("Unknown name: " + name);
         } else {

@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.SameNodeJoinCondition;
-
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNodeJoinCondition;
 
 /**
  * <code>SameNodeJoinConditionImpl</code>...

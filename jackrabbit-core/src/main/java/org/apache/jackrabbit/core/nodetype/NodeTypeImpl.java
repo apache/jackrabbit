@@ -16,8 +16,15 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -28,30 +35,21 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
-
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * A <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeTypeDefinition {
+public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
     private final NodeTypeDef ntd;
     private final EffectiveNodeType ent;
     private final NodeTypeManagerImpl ntMgr;
-    // resolver used to translate translate <code>Name</code>s to JCR name strings.
+    // resolver used to translate qualified names to JCR names
     private final NamePathResolver resolver;
     // value factory used for type conversion
     private final ValueFactory valueFactory;
@@ -72,7 +70,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     NodeTypeImpl(EffectiveNodeType ent, NodeTypeDef ntd,
                  NodeTypeManagerImpl ntMgr, NamePathResolver resolver,
                  ValueFactory valueFactory, DataStore store) {
-        super(ntMgr);
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.resolver = resolver;
@@ -186,9 +183,9 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     }
 
     /**
-     * Returns the <code>Name</code> of this node type.
+     * Returns the 'internal', i.e. the fully qualified name.
      *
-     * @return the name
+     * @return the qualified name
      */
     public Name getQName() {
         return ntd.getName();
@@ -228,7 +225,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
         return (NodeType[]) inherited.toArray(new NodeType[inherited.size()]);
     }
 
-
     //---------------------------------------------------< NodeTypeDefinition >
     /**
      * {@inheritDoc}
@@ -260,11 +256,11 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
         String[] supertypes = new String[ntNames.length];
         for (int i = 0; i < ntNames.length; i++) {
             try {
-                supertypes[i] = resolver.getJCRName(ntNames[i]);
+                supertypes[i] = resolver.getJCRName(ntd.getName());
             } catch (NamespaceException e) {
                 // should never get here
                 log.error("encountered unregistered namespace in node type name", e);
-                supertypes[i] = ntNames[i].toString();
+                supertypes[i] = ntd.getName().toString();
             }
         }
         return supertypes;
@@ -297,22 +293,17 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
         return ntd.isMixin();
     }
 
-    public boolean isQueryable() {
-        return ntd.isQueryable();
-    }
-
     /**
      * {@inheritDoc}
      */
     public boolean hasOrderableChildNodes() {
-        return ent.hasOrderableChildNodes();
+        return ntd.hasOrderableChildNodes();
     }
 
     /**
      * {@inheritDoc}
      */
     public String getPrimaryItemName() {
-        // TODO JCR-1947: JSR 283: Node Type Attribute Subtyping Rules
         try {
             Name piName = ntd.getPrimaryItemName();
             if (piName != null) {

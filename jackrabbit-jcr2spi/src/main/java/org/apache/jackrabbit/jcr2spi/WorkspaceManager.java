@@ -56,11 +56,6 @@ import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
-import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
-import org.apache.jackrabbit.jcr2spi.operation.CreateActivity;
-import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
-import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
@@ -100,6 +95,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.MergeException;
+import javax.jcr.Session;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
@@ -210,15 +206,15 @@ public class WorkspaceManager
         return service.getWorkspaceNames(sessionInfo);
     }
 
-    public IdFactory getIdFactory() {
+    public IdFactory getIdFactory() throws RepositoryException {
         return idFactory;
     }
 
-    public NameFactory getNameFactory() {
+    public NameFactory getNameFactory() throws RepositoryException {
         return nameFactory;
     }
 
-    public PathFactory getPathFactory()  {
+    public PathFactory getPathFactory() throws RepositoryException {
         return pathFactory;
     }
 
@@ -230,42 +226,44 @@ public class WorkspaceManager
         return service.getLockInfo(sessionInfo, nodeId);
     }
 
-    /**
-     * Returns the lock tokens present with the <code>SessionInfo</code>.
-     *
-     * @return lock tokens present with the <code>SessionInfo</code>.
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     * @see org.apache.jackrabbit.spi.SessionInfo#getLockTokens() 
-     */
-    public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException {
+    public String[] getLockTokens() {
         return sessionInfo.getLockTokens();
     }
 
     /**
-     * This method succeeds if the lock tokens could be added to the
-     * <code>SessionInfo</code>.
+     * This method always succeeds.
+     * This is not compliant to the requirements for {@link Session#addLockToken(String)}
+     * as defined by JSR170, which defines that at most one single <code>Session</code>
+     * may contain the same lock token. However, with SPI it is not possible
+     * to determine, whether another session holds the lock, nor can the client
+     * determine, which lock this token belongs to. The latter would be
+     * necessary in order to build the 'Lock' object properly.
      *
      * @param lt
-     * @throws UnsupportedRepositoryOperationException
      * @throws LockException
      * @throws RepositoryException
-     * @see SessionInfo#addLockToken(String)
      */
-    public void addLockToken(String lt) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+    public void addLockToken(String lt) throws LockException, RepositoryException {
         sessionInfo.addLockToken(lt);
+        /*
+        // TODO: JSR170 defines that a token can be present with one session only.
+        //       however, we cannot find out about another session holding the lock.
+        //       and neither knows the server, which session is holding a lock token.
+        */
     }
 
     /**
-     * Tries to remove the given token from the <code>SessionInfo</code>.
+     * Tries to remove the given token from the <code>SessionInfo</code>. If the
+     * SessionInfo does not contains the specified token, this method returns
+     * silently.<br>
+     * Note, that any restriction regarding removal of lock tokens must be asserted
+     * before this method is called.
      *
      * @param lt
-     * @throws UnsupportedRepositoryOperationException
      * @throws LockException
      * @throws RepositoryException
-     * @see SessionInfo#removeLockToken(String)
      */
-    public void removeLockToken(String lt) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+    public void removeLockToken(String lt) throws LockException, RepositoryException {
         String[] tokems = sessionInfo.getLockTokens();
         for (int i = 0; i < tokems.length; i++) {
             if (tokems[i].equals(lt)) {
@@ -275,7 +273,7 @@ public class WorkspaceManager
         }
         // sessionInfo doesn't contain the given lock token and is therefore
         // not the lock holder
-        throw new LockException("Unable to remove locktoken '" + lt + "' from Session.");
+        throw new RepositoryException("Unable to remove locktoken '" + lt + "' from Session.");
     }
 
     /**
@@ -294,16 +292,15 @@ public class WorkspaceManager
      * @param language   the query language.
      * @param namespaces the locally remapped namespaces which might be used in
      *                   the query statement.
-     * @return the bind variable names.
      * @throws InvalidQueryException if the query statement is invalid.
      * @throws RepositoryException   if an error occurs while checking the query
      *                               statement.
      */
-    public String[] checkQueryStatement(String statement,
-                                        String language,
-                                        Map namespaces)
+    public void checkQueryStatement(String statement,
+                                    String language,
+                                    Map namespaces)
             throws InvalidQueryException, RepositoryException {
-        return service.checkQueryStatement(sessionInfo, statement, language, namespaces);
+        service.checkQueryStatement(sessionInfo, statement, language, namespaces);
     }
 
     /**
@@ -311,15 +308,12 @@ public class WorkspaceManager
      * @param language   the query language.
      * @param namespaces the locally remapped namespaces which might be used in
      *                   the query statement.
-     * @param limit
-     * @param offset
-     * @param boundValues
      * @return
      * @throws RepositoryException
      */
-    public QueryInfo executeQuery(String statement, String language, Map namespaces,
-                                  long limit, long offset, Map<String, QValue> boundValues) throws RepositoryException {
-        return service.executeQuery(sessionInfo, statement, language, namespaces, limit, offset, boundValues);
+    public QueryInfo executeQuery(String statement, String language, Map namespaces)
+            throws RepositoryException {
+        return service.executeQuery(sessionInfo, statement, language, namespaces);
     }
 
     /**
@@ -393,31 +387,6 @@ public class WorkspaceManager
         throws UnsupportedRepositoryOperationException, RepositoryException {
         return service.createEventFilter(sessionInfo, eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
     }
-
-    /**
-     * Returns the events from the journal that occurred after a given date.
-     *
-     * @param filter the event filter to apply.
-     * @param after  a date in milliseconds.
-     * @return the events as a bundle.
-     * @throws RepositoryException if an error occurs.
-     * @throws UnsupportedRepositoryOperationException
-     *                             if the implementation does not support
-     *                             journaled observation.
-     */
-    public EventBundle getEvents(EventFilter filter, long after)
-            throws RepositoryException, UnsupportedRepositoryOperationException {
-        return service.getEvents(sessionInfo, filter, after);
-    }
-
-    /**
-     *
-     * @param userData
-     * @throws RepositoryException
-     */
-    public void setUserData(String userData) throws RepositoryException {
-        sessionInfo.setUserData(userData);
-    }
     //--------------------------------------------------------------------------
 
     /**
@@ -470,11 +439,14 @@ public class WorkspaceManager
             public Iterator getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo, nodeTypeNames);
             }
-            public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs, boolean allowUpdate) throws RepositoryException {
-                service.registerNodeTypes(sessionInfo, nodeTypeDefs, allowUpdate);
+            public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
+                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
+            }
+            public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
+                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
             public void unregisterNodeTypes(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
-                service.unregisterNodeTypes(sessionInfo, nodeTypeNames);
+                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
         };
         NodeTypeCache ntCache = NodeTypeCache.getInstance(service, sessionInfo.getUserID());
@@ -508,32 +480,6 @@ public class WorkspaceManager
             t.start();
         }
         return t;
-    }
-
-    //-----------------------------------------------------< wsp management >---
-    /**
-     * Create a new workspace with the specified <code>name</code>. If
-     * <code>srcWorkspaceName</code> isn't <code>null</code> the content of
-     * that workspace is used as inital content, otherwise an empty workspace
-     * will be created.
-     *
-     * @param name The name of the workspace to be created.
-     * @param srcWorkspaceName The name of the workspace from which the initial
-     * content of the new workspace will be 'cloned'.
-     * @throws RepositoryException If an exception occurs.
-     */
-    void createWorkspace(String name, String srcWorkspaceName) throws RepositoryException {
-        service.createWorkspace(sessionInfo, name, srcWorkspaceName);
-    }
-
-    /**
-     * Deletes the workspace with the specified <code>name</code>.
-     * 
-     * @param name
-     * @throws RepositoryException
-     */
-    void deleteWorkspace(String name) throws RepositoryException {
-        service.deleteWorkspace(sessionInfo, name);
     }
 
     //------------------------------------------< UpdatableItemStateManager >---
@@ -606,7 +552,6 @@ public class WorkspaceManager
         }
         ntRegistry.dispose();
     }
-
     //------------------------------------------------------< AccessManager >---
     /**
      * @see AccessManager#isGranted(NodeState, Path, String[])
@@ -741,12 +686,6 @@ public class WorkspaceManager
                             break;
                         case Event.PROPERTY_REMOVED:
                             type = "PropertyRemoved";
-                            break;
-                        case Event.NODE_MOVED:
-                            type = "NodeMoved";
-                            break;
-                        case Event.PERSIST:
-                            type = "Persist";
                             break;
                         default:
                             type = "Unknown";
@@ -921,14 +860,6 @@ public class WorkspaceManager
 
         /**
          * @inheritDoc
-         * @see OperationVisitor#visit(SetPrimaryType)
-         */
-        public void visit(SetPrimaryType operation) throws RepositoryException {
-            batch.setPrimaryType(operation.getNodeId(), operation.getPrimaryTypeName());
-        }
-
-        /**
-         * @inheritDoc
          * @see OperationVisitor#visit(SetPropertyValue)
          */
         public void visit(SetPropertyValue operation) throws RepositoryException {
@@ -970,15 +901,6 @@ public class WorkspaceManager
 
         /**
          * @inheritDoc
-         * @see OperationVisitor#visit(Checkpoint)
-         */
-        public void visit(Checkpoint operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-            NodeId newId = service.checkpoint(sessionInfo, operation.getNodeId());
-            operation.setNewVersionId(newId);
-        }
-
-        /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Restore)
          */
         public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -1004,12 +926,7 @@ public class WorkspaceManager
          */
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeId();
-            Iterator failed;
-            if (operation.isActivityMerge()) {
-                failed = service.mergeActivity(sessionInfo, nId);
-            } else {
-                failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort(), operation.isShallow());
-            }
+            Iterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
             operation.setFailedIds(failed);
         }
 
@@ -1085,29 +1002,6 @@ public class WorkspaceManager
          */
         public void visit(WorkspaceImport operation) throws RepositoryException {
             service.importXml(sessionInfo, operation.getNodeId(), operation.getXmlStream(), operation.getUuidBehaviour());
-        }
-
-        /**
-         * @see OperationVisitor#visit(CreateActivity)
-         */
-        public void visit(CreateActivity operation) throws RepositoryException {
-            NodeId activityId = service.createActivity(sessionInfo, operation.getTitle());
-            operation.setNewActivityId(activityId);
-        }
-
-        /**
-         * @see OperationVisitor#visit(RemoveActivity)
-         */
-        public void visit(RemoveActivity operation) throws RepositoryException {
-            service.removeActivity(sessionInfo, (NodeId) operation.getRemoveId());
-        }
-
-        /**
-         * @see OperationVisitor#visit(CreateConfiguration)
-         */
-        public void visit(CreateConfiguration operation) throws RepositoryException {
-            NodeId configId = service.createConfiguration(sessionInfo, operation.getNodeId());
-            operation.setNewConfigurationId(configId);
         }
     }
 

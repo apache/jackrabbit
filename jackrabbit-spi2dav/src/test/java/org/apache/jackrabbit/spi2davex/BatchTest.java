@@ -34,6 +34,7 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceException;
@@ -46,7 +47,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * <code>ConnectionTest</code>...

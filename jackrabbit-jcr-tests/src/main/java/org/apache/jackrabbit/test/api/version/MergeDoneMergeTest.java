@@ -21,7 +21,6 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 
 /**
  * <code>MergeDoneMergeTest</code> contains test dealing with nodes on which
@@ -43,8 +42,7 @@ public class MergeDoneMergeTest extends AbstractMergeTest {
 
         nodeToMerge = testRootNodeW2.getNode(nodeName1);
         // node has to be checked out while merging
-        VersionManager versionManager = nodeToMerge.getSession().getWorkspace().getVersionManager();
-        versionManager.checkout(nodeToMerge.getPath());
+        nodeToMerge.checkout();
 
     }
 
@@ -94,66 +92,18 @@ public class MergeDoneMergeTest extends AbstractMergeTest {
     }
 
     /**
-     * VersionManager.doneMerge(V) throws VersionException if V is not among the Vs in the
-     * jcr:mergeFailed prop. <br> with adding it to jcr:predecessors.<br>
-     * Branches will be joined.<br>
-     */
-    public void testMergeNodeDoneMergeJcr2() throws RepositoryException {
-        // create 2 independent versions for a node and its corresponding node
-        // so merge fails for this node
-
-        // default workspace
-        Node originalNode = testRootNode.getNode(nodeName1);
-        VersionManager vmWsp1 = originalNode.getSession().getWorkspace().getVersionManager();
-        String originalPath = originalNode.getPath();
-        vmWsp1.checkout(originalPath);
-        vmWsp1.checkin(originalPath);
-
-        // second workspace
-        VersionManager vmWsp2 = nodeToMerge.getSession().getWorkspace().getVersionManager();
-        String path = nodeToMerge.getPath();
-        vmWsp2.checkin(path);
-
-        // "merge" the clonedNode with the newNode from the default workspace
-        vmWsp2.checkout(path);
-        vmWsp2.merge(path, workspace.getName(), true);
-
-        // get predecessors
-        Version[] predecessors = nodeToMerge.getBaseVersion().getPredecessors();
-        // get mergeFailed property
-        Property mergeFailedProperty = nodeToMerge.getProperty(jcrMergeFailed);
-        Value[] mergeFailedReferences = mergeFailedProperty.getValues();
-
-        for (int i = 0; i < mergeFailedReferences.length; i++) {
-            String id = mergeFailedReferences[i].getString();
-            vmWsp2.doneMerge(path, (Version) superuser.getNodeByIdentifier(id));
-        }
-
-        // check mergeFailed property - reference moved to predecessor
-        if (nodeToMerge.hasProperty(jcrMergeFailed)) {
-            Property mergeFailedPropertyAfterCancelMerge = nodeToMerge.getProperty(jcrMergeFailed);
-            Value[] mergeFailedReferencesAfterCancelMerge = mergeFailedPropertyAfterCancelMerge.getValues();
-            assertTrue(mergeFailedReferences.length > mergeFailedReferencesAfterCancelMerge.length);
-        }
-    }
-
-    /**
      * initialize a versionable node on default and second workspace
      */
     protected void initNodes() throws RepositoryException {
-
-        VersionManager versionManager = testRootNode.getSession().getWorkspace().getVersionManager();
-
         // create a versionable node
         // nodeName1
         Node topVNode = testRootNode.addNode(nodeName1, versionableNodeType);
         topVNode.setProperty(propertyName1, topVNode.getName());
-        String path = topVNode.getPath();
 
         // save default workspace
-        testRootNode.getSession().save();
-        versionManager.checkin(path);
-        versionManager.checkout(path);
+        testRootNode.save();
+        topVNode.checkin();
+        topVNode.checkout();
 
         log.println("test nodes created successfully on " + workspace.getName());
 

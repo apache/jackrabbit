@@ -18,29 +18,56 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
+
+import org.apache.jackrabbit.core.query.AbstractQueryHandler;
+import org.apache.jackrabbit.core.query.ExecutableQuery;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>SlowQueryHandler</code> implements a dummy query handler for testing
  * purpose.
  */
-public class SlowQueryHandler extends SearchIndex {
-
-    private static long INITIALIZATION_DELAY = 0;
+public class SlowQueryHandler extends AbstractQueryHandler {
 
     protected void doInit() throws IOException {
         // sleep for 10 seconds then try to read from the item state manager
         // the repository.xml is configured with a 5 second maxIdleTime
         try {
-            Thread.sleep(INITIALIZATION_DELAY);
+            Thread.sleep(10 * 1000);
         } catch (InterruptedException e) {
             // ignore
         }
-        getContext().getItemStateManager().hasItemState(new NodeId());
-        super.doInit();
+        NodeId id = new NodeId(UUID.randomUUID());
+        getContext().getItemStateManager().hasItemState(id);
     }
 
-    public static void setInitializationDelay(long delay) {
-        INITIALIZATION_DELAY = delay;
+    public void addNode(NodeState node) throws RepositoryException, IOException {
+    }
+
+    public void deleteNode(NodeId id) throws IOException {
+    }
+
+    public void close() throws IOException {
+    }
+
+    public ExecutableQuery createExecutableQuery(SessionImpl session,
+                                                 ItemManager itemMgr, String statement,
+                                                 String language)
+            throws InvalidQueryException {
+        return null;
+    }
+
+    public ExecutableQuery createExecutableQuery(SessionImpl session,
+                                                 ItemManager itemMgr,
+                                                 QueryObjectModelTree qomTree)
+            throws InvalidQueryException {
+        return null;
     }
 }

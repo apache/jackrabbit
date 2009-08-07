@@ -17,30 +17,29 @@
 package org.apache.jackrabbit.core.query.lucene.join;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 
-import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.query.lucene.HierarchyResolver;
 import org.apache.jackrabbit.core.query.lucene.MultiColumnQueryHits;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
+import org.apache.jackrabbit.core.query.lucene.HierarchyResolver;
+import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
+import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
-import org.apache.lucene.index.IndexReader;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.lucene.search.SortComparatorSource;
+import org.apache.lucene.index.IndexReader;
 
 /**
  * <code>Join</code> implements the result of a join.
  */
-public class Join implements MultiColumnQueryHits {
+public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
 
     /**
      * The outer query hits.
@@ -75,7 +74,7 @@ public class Join implements MultiColumnQueryHits {
     /**
      * A buffer for joined score node rows.
      */
-    protected final List<ScoreNode[]> buffer = new LinkedList<ScoreNode[]>();
+    protected final List buffer = new LinkedList();
 
     /**
      * Creates a new join.
@@ -120,7 +119,7 @@ public class Join implements MultiColumnQueryHits {
      */
     public static Join create(final MultiColumnQueryHits left,
                               final MultiColumnQueryHits right,
-                              final JoinType joinType,
+                              final int joinType,
                               final JoinConditionImpl condition,
                               final IndexReader reader,
                               final HierarchyResolver resolver,
@@ -130,7 +129,7 @@ public class Join implements MultiColumnQueryHits {
         try {
             return (Join) condition.accept(new DefaultQOMTreeVisitor() {
 
-                private boolean isInner = JoinType.INNER == joinType;
+                private boolean isInner = joinType == JOIN_TYPE_INNER;
                 private MultiColumnQueryHits outer;
                 private int outerIdx;
 
@@ -139,9 +138,8 @@ public class Join implements MultiColumnQueryHits {
                     MultiColumnQueryHits ancestor = getSourceWithName(node.getAncestorSelectorQName(), left, right);
                     MultiColumnQueryHits descendant = getSourceWithName(node.getDescendantSelectorQName(), left, right);
                     Condition c;
-                    if (isInner
-                            || descendant == left && JoinType.LEFT == joinType
-                            || descendant == right && JoinType.RIGHT == joinType) {
+                    if (isInner || descendant == left && joinType == JOIN_TYPE_LEFT_OUTER
+                            || descendant == right && joinType == JOIN_TYPE_RIGHT_OUTER) {
                         // also applies to inner join
                         // assumption: DescendantNodeJoin is more
                         // efficient than AncestorNodeJoin, TODO: verify
@@ -165,9 +163,8 @@ public class Join implements MultiColumnQueryHits {
                     Name innerName;
                     Name innerPropName;
                     Name outerPropName;
-                    if (isInner
-                            || src1 == left && JoinType.LEFT == joinType
-                            || src1 == right && JoinType.RIGHT == joinType) {
+                    if (isInner || src1 == left && joinType == JOIN_TYPE_LEFT_OUTER
+                            || src1 == right && joinType == JOIN_TYPE_RIGHT_OUTER) {
                         outer = src1;
                         outerIdx = getIndex(outer, node.getSelector1QName());
                         inner = src2;
@@ -193,8 +190,8 @@ public class Join implements MultiColumnQueryHits {
                     MultiColumnQueryHits child = getSourceWithName(node.getChildSelectorQName(), left, right);
                     MultiColumnQueryHits parent = getSourceWithName(node.getParentSelectorQName(), left, right);
                     Condition c;
-                    if (child == left && JoinType.LEFT == joinType
-                            || child == right && JoinType.RIGHT == joinType) {
+                    if (child == left && joinType == JOIN_TYPE_LEFT_OUTER
+                            || child == right && joinType == JOIN_TYPE_RIGHT_OUTER) {
                         outer = child;
                         outerIdx = getIndex(outer, node.getChildSelectorQName());
                         c = new ChildNodeJoin(parent, reader, resolver, node);
@@ -214,27 +211,24 @@ public class Join implements MultiColumnQueryHits {
                     MultiColumnQueryHits src1 = getSourceWithName(node.getSelector1QName(), left, right);
                     MultiColumnQueryHits src2 = getSourceWithName(node.getSelector2QName(), left, right);
                     Condition c;
-                    if (isInner
-                            || src1 == left && JoinType.LEFT == joinType
-                            || src1 == right && JoinType.RIGHT == joinType) {
+                    if (isInner || src1 == left && joinType == JOIN_TYPE_LEFT_OUTER
+                            || src1 == right && joinType == JOIN_TYPE_RIGHT_OUTER) {
                         outer = src1;
                         outerIdx = getIndex(outer, node.getSelector1QName());
-                        Path selector2Path = node.getSelector2QPath();
-                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.getNameElement().denotesCurrent())) {
-                            c = new SameNodeJoin(src2, node.getSelector2QName(), reader);
-                        } else {
+                        if (node.getSelector2QPath() != null) {
                             c = new DescendantPathNodeJoin(src2, node.getSelector2QName(),
                                     node.getSelector2QPath(), hmgr);
+                        } else {
+                            c = new SameNodeJoin(src2, node.getSelector2QName(), reader);
                         }
                     } else {
                         outer = src2;
                         outerIdx = getIndex(outer, node.getSelector2QName());
-                        Path selector2Path = node.getSelector2QPath();
-                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.getNameElement().denotesCurrent())) {
-                            c = new SameNodeJoin(src1, node.getSelector1QName(), reader);
-                        } else {
+                        if (node.getSelector2QPath() != null) {
                             c = new AncestorPathNodeJoin(src1, node.getSelector1QName(),
                                     node.getSelector2QPath(), hmgr);
+                        } else {
+                            c = new SameNodeJoin(src1, node.getSelector1QName(), reader);
                         }
                     }
                     return new Join(outer, outerIdx, isInner, c);
@@ -254,7 +248,7 @@ public class Join implements MultiColumnQueryHits {
      */
     public ScoreNode[] nextScoreNodes() throws IOException {
         if (!buffer.isEmpty()) {
-            return buffer.remove(0);
+            return (ScoreNode[]) buffer.remove(0);
         }
         do {
             // refill buffer
@@ -264,7 +258,8 @@ public class Join implements MultiColumnQueryHits {
             }
             ScoreNode[][] nodes = condition.getMatchingScoreNodes(sn[outerScoreNodeIndex]);
             if (nodes != null) {
-                for (ScoreNode[] node : nodes) {
+                for (int i = 0; i < nodes.length; i++) {
+                    ScoreNode[] node = nodes[i];
                     // create array with both outer and inner
                     ScoreNode[] tmp = new ScoreNode[sn.length + node.length];
                     System.arraycopy(sn, 0, tmp, 0, sn.length);
@@ -280,7 +275,7 @@ public class Join implements MultiColumnQueryHits {
             }
         } while (buffer.isEmpty());
 
-        return buffer.remove(0);
+        return (ScoreNode[]) buffer.remove(0);
     }
 
     /**

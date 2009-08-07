@@ -22,7 +22,7 @@ import javax.jcr.RepositoryException;
  * Implements a query node that defines an AND operation between arbitrary
  * other {@link QueryNode}s.
  */
-public class AndQueryNode extends NAryQueryNode<QueryNode> {
+public class AndQueryNode extends NAryQueryNode {
 
     /**
      * Creates a new <code>AndQueryNode</code> with a <code>parent</code>

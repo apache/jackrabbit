@@ -16,31 +16,39 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SearchManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.spi.commons.query.QueryTreeBuilderRegistry;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
-import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SearchManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This class implements the {@link QueryManager} interface.
  */
 public class QueryManagerImpl implements QueryManager {
+
+    /**
+     * Defines all supported query languages
+     */
+    private static final String[] SUPPORTED_QUERIES = QueryTreeBuilderRegistry.getSupportedLanguages();
+
+    /**
+     * List of all supported query languages
+     */
+    private static final List SUPPORTED_QUERIES_LIST
+            = Collections.unmodifiableList(Arrays.asList(SUPPORTED_QUERIES));
 
     /**
      * The <code>Session</code> for this QueryManager.
@@ -66,16 +74,13 @@ public class QueryManagerImpl implements QueryManager {
      * Creates a new <code>QueryManagerImpl</code> for the passed
      * <code>session</code>
      *
-     * @param session   the session for this query manager.
-     * @param itemMgr   the item manager of the session.
-     * @param searchMgr the search manager of this workspace.
-     * @throws RepositoryException if an error occurs while initializing the
-     *                             query manager.
+     * @param session
+     * @param itemMgr
+     * @param searchMgr
      */
     public QueryManagerImpl(final SessionImpl session,
                             final ItemManager itemMgr,
-                            final SearchManager searchMgr)
-            throws RepositoryException {
+                            final SearchManager searchMgr) {
         this.session = session;
         this.itemMgr = itemMgr;
         this.searchMgr = searchMgr;
@@ -83,7 +88,7 @@ public class QueryManagerImpl implements QueryManager {
             protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
                     throws InvalidQueryException, RepositoryException {
                 return searchMgr.createQueryObjectModel(
-                        session, qomTree, Query.JCR_JQOM, null);
+                        session, qomTree, QueryImpl.JCR_SQL2);
             }
         };
     }
@@ -94,8 +99,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
         sanityCheck();
-        QueryFactory qf = new QueryFactoryImpl(language);
-        return qf.createQuery(statement, language);
+        return searchMgr.createQuery(session, itemMgr, statement, language);
     }
 
     /**
@@ -104,22 +108,14 @@ public class QueryManagerImpl implements QueryManager {
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
         sanityCheck();
-        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
-            throw new InvalidQueryException("node is not of type nt:query");
-        }
-        String statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
-        String language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
-
-        QueryFactory qf = new QueryFactoryImpl(node, language);
-        return qf.createQuery(statement, language);
+        return searchMgr.createQuery(session, itemMgr, node);
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
-        List<String> languages = new QueryFactoryImpl(Query.JCR_JQOM).getSupportedLanguages();
-        return languages.toArray(new String[languages.size()]);
+        return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
     }
 
     //---------------------------< JSR 283 >------------------------------------
@@ -133,31 +129,6 @@ public class QueryManagerImpl implements QueryManager {
      */
     public QueryObjectModelFactory getQOMFactory() {
         return qomFactory;
-    }
-
-    //-------------------------< Jackrabbit internal >--------------------------
-
-    /**
-     * Returns the ids of the nodes that refer to the <code>node</code> by weak
-     * references.
-     *
-     * @param node the target node.
-     * @return the referring nodes.
-     * @throws RepositoryException if an error occurs.
-     */
-    public Iterable<Node> getWeaklyReferringNodes(Node node)
-            throws RepositoryException {
-        sanityCheck();
-        List<Node> nodes = new ArrayList<Node>();
-        try {
-            NodeId nodeId = new NodeId(node.getIdentifier());
-            for (NodeId id : searchMgr.getWeaklyReferringNodes(nodeId)) {
-                nodes.add(session.getNodeById(id));
-            }
-        } catch (IOException e) {
-            throw new RepositoryException(e);
-        }
-        return nodes;
     }
 
     //------------------------< testing only >----------------------------------
@@ -181,31 +152,6 @@ public class QueryManagerImpl implements QueryManager {
     private void sanityCheck() throws RepositoryException {
         if (!session.isLive()) {
             throw new RepositoryException("corresponding session has been closed");
-        }
-    }
-
-    private class QueryFactoryImpl extends CompoundQueryFactory {
-
-        public QueryFactoryImpl(String language) {
-            this(null, language);
-        }
-
-        public QueryFactoryImpl(final Node node, final String language) {
-            super(Arrays.asList(
-                new QOMQueryFactory(new QueryObjectModelFactoryImpl(session) {
-                    protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
-                            throws InvalidQueryException, RepositoryException {
-                        return searchMgr.createQueryObjectModel(
-                                session, qomTree, language, node);
-                    }
-                }, session.getValueFactory()),
-                new AQTQueryFactory() {
-                    public Query createQuery(String statement,
-                                             String language)
-                            throws InvalidQueryException, RepositoryException {
-                        return searchMgr.createQuery(session, itemMgr, statement, language, node);
-                    }
-                }));
         }
     }
 }

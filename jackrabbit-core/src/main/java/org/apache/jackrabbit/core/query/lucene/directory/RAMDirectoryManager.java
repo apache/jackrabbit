@@ -33,7 +33,7 @@ public class RAMDirectoryManager implements DirectoryManager {
     /**
      * Map of directories. Key=String(directory name), Value=Directory.
      */
-    private final Map<String, Directory> directories = new HashMap<String, Directory>();
+    private final Map directories = new HashMap();
 
     /**
      * {@inheritDoc}
@@ -55,7 +55,7 @@ public class RAMDirectoryManager implements DirectoryManager {
      */
     public Directory getDirectory(String name) {
         synchronized (directories) {
-            Directory dir = directories.get(name);
+            Directory dir = (Directory) directories.get(name);
             if (dir == null) {
                 dir = new RAMDirectory();
                 directories.put(name, dir);
@@ -69,7 +69,7 @@ public class RAMDirectoryManager implements DirectoryManager {
      */
     public String[] getDirectoryNames() throws IOException {
         synchronized (directories) {
-            return directories.keySet().toArray(
+            return (String[]) directories.keySet().toArray(
                     new String[directories.size()]);
         }
     }
@@ -92,7 +92,7 @@ public class RAMDirectoryManager implements DirectoryManager {
             if (directories.containsKey(to)) {
                 return false;
             }
-            Directory dir = directories.remove(from);
+            Directory dir = (Directory) directories.remove(from);
             if (dir == null) {
                 return false;
             }

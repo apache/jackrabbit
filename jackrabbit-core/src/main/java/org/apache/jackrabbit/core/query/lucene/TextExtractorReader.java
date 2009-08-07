@@ -20,11 +20,19 @@ import java.io.Reader;
 import java.io.IOException;
 import java.io.StringReader;
 
+import EDU.oswego.cs.dl.util.concurrent.Executor;
+import EDU.oswego.cs.dl.util.concurrent.DirectExecutor;
+
 /**
  * <code>TextExtractorReader</code> implements a specialized reader that runs
  * the text extractor in a background thread.
  */
 class TextExtractorReader extends Reader {
+
+    /**
+     * A direct executor in case text extraction is requested for immediate use.
+     */
+    private static final Executor DIRECT_EXECUTOR = new DirectExecutor();
 
     /**
      * Reference to the extracted text. This reference is initially
@@ -39,20 +47,33 @@ class TextExtractorReader extends Reader {
     private TextExtractorJob job;
 
     /**
+     * The pooled executor.
+     */
+    private final Executor executor;
+
+    /**
      * The timeout in milliseconds to wait at most for the text extractor
      * when {@link #isExtractorFinished()} is called.
      */
     private final long timeout;
 
     /**
+     * Set to <code>true</code> when the text extractor job has been started
+     * and is running.
+     */
+    private boolean jobStarted = false;
+
+    /**
      * Creates a new <code>TextExtractorReader</code> with the given
      * <code>job</code>.
      *
      * @param job      the extractor job.
+     * @param executor the executor to use when text extraction is requested.
      * @param timeout  the timeout to wait at most for the text extractor.
      */
-    TextExtractorReader(TextExtractorJob job, long timeout) {
+    TextExtractorReader(TextExtractorJob job, Executor executor, long timeout) {
         this.job = job;
+        this.executor = executor;
         this.timeout = timeout;
     }
 
@@ -65,6 +86,9 @@ class TextExtractorReader extends Reader {
         if (extractedText != null) {
             extractedText.close();
         }
+        if (jobStarted) {
+            job.discard();
+        }
     }
 
     /**
@@ -72,11 +96,26 @@ class TextExtractorReader extends Reader {
      */
     public int read(char[] cbuf, int off, int len) throws IOException {
         if (extractedText == null) {
-            String text = job.getExtractedText(timeout);
-            if (text == null) {
-                text = "";
+            // no reader present
+            // check if job is started already
+            if (jobStarted) {
+                // wait until available
+                extractedText = job.getReader(Long.MAX_VALUE);
+            } else {
+                // execute with current thread
+                try {
+                    DIRECT_EXECUTOR.execute(job);
+                } catch (InterruptedException e) {
+                    // current thread is in interrupted state
+                    // -> ignore (job will not return a reader, which is fine)
+                }
+                extractedText = job.getReader(0);
             }
-            extractedText = new StringReader(text);
+
+            if (extractedText == null) {
+                // exception occurred
+                extractedText = new StringReader("");
+            }
         }
         return extractedText.read(cbuf, off, len);
     }
@@ -86,6 +125,25 @@ class TextExtractorReader extends Reader {
      *         finished its work and this reader will return extracted text.
      */
     public boolean isExtractorFinished() {
-        return job.hasExtractedText();
+        if (!jobStarted) {
+            try {
+                executor.execute(job);
+                jobStarted = true;
+            } catch (InterruptedException e) {
+                // this thread is in interrupted state
+                return false;
+            }
+            extractedText = job.getReader(timeout);
+        } else {
+            // job is already running, check for immediate result
+            extractedText = job.getReader(0);
+        }
+
+        if (extractedText == null && job.getException() != null) {
+            // exception occurred
+            extractedText = new StringReader("");
+        }
+
+        return extractedText != null;
     }
 }

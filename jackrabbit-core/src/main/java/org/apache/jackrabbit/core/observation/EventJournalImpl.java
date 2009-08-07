@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -30,7 +31,7 @@ import java.text.DateFormat;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
-import javax.jcr.observation.EventJournal;
+import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.RecordIterator;
 import org.apache.jackrabbit.core.journal.JournalException;
@@ -67,7 +68,7 @@ public class EventJournalImpl implements EventJournal {
      * Each sorted map has the following structure:
      * Key=Long (timestamp), Value=Long (revision)
      */
-    private static final Map<Journal, SortedMap<Long, Long>> REVISION_SKIP_MAPS = new WeakHashMap<Journal, SortedMap<Long, Long>>();
+    private static final Map REVISION_SKIP_MAPS = new WeakHashMap();
 
     /**
      * Last revision seen by this event journal.
@@ -97,7 +98,7 @@ public class EventJournalImpl implements EventJournal {
     /**
      * Buffer of {@link EventBundle}s.
      */
-    private final List<EventBundle> eventBundleBuffer = new LinkedList<EventBundle>();
+    private final List eventBundleBuffer = new LinkedList();
 
     /**
      * The current position of this iterator.
@@ -129,12 +130,12 @@ public class EventJournalImpl implements EventJournal {
         long time = System.currentTimeMillis();
 
         // get skip map for this journal
-        SortedMap<Long, Long> skipMap = getSkipMap();
+        SortedMap skipMap = getSkipMap();
         synchronized (skipMap) {
-            SortedMap<Long, Long> head = skipMap.headMap(new Long(time));
+            SortedMap head = skipMap.headMap(new Long(time));
             if (!head.isEmpty()) {
                 eventBundleBuffer.clear();
-                lastRevision = head.get(head.lastKey());
+                lastRevision = (Long) head.get(head.lastKey());
             }
         }
 
@@ -174,6 +175,10 @@ public class EventJournalImpl implements EventJournal {
         }
         position++;
         return next;
+    }
+
+    public Calendar getDate() {
+        throw new RuntimeException("Not implemented yet, see JCR-2086");
     }
 
     //------------------------< RangeIterator >---------------------------------
@@ -267,7 +272,7 @@ public class EventJournalImpl implements EventJournal {
          * {@inheritDoc}
          */
         public void process(ChangeLogRecord record) {
-            List<EventState> events = record.getEvents();
+            List events = record.getEvents();
             if (!events.isEmpty()) {
                 EventBundle bundle = new EventBundle(events,
                         record.getTimestamp(), record.getUserData(), filter);
@@ -304,7 +309,7 @@ public class EventJournalImpl implements EventJournal {
      */
     private EventBundle getCurrentBundle() {
         while (!eventBundleBuffer.isEmpty()) {
-            EventBundle bundle = eventBundleBuffer.get(0);
+            EventBundle bundle = (EventBundle) eventBundleBuffer.get(0);
             if (bundle.events.hasNext()) {
                 return bundle;
             } else {
@@ -346,7 +351,7 @@ public class EventJournalImpl implements EventJournal {
 
                 if (processor.getNumEvents() >= MIN_BUFFER_SIZE) {
                     // remember in skip map
-                    SortedMap<Long, Long> skipMap = getSkipMap();
+                    SortedMap skipMap = getSkipMap();
                     Long timestamp = new Long(processor.getLastTimestamp());
                     synchronized (skipMap) {
                         if (log.isDebugEnabled()) {
@@ -369,11 +374,11 @@ public class EventJournalImpl implements EventJournal {
     /**
      * @return the revision skip map for this journal.
      */
-    private SortedMap<Long, Long> getSkipMap() {
+    private SortedMap getSkipMap() {
         synchronized (REVISION_SKIP_MAPS) {
-            SortedMap<Long, Long> map = REVISION_SKIP_MAPS.get(journal);
+            SortedMap map = (SortedMap) REVISION_SKIP_MAPS.get(journal);
             if (map == null) {
-                map = new TreeMap<Long, Long>();
+                map = new TreeMap();
                 REVISION_SKIP_MAPS.put(journal, map);
             }
             return map;
@@ -403,7 +408,7 @@ public class EventJournalImpl implements EventJournal {
          * @param userData the user data associated with this event.
          * @param filter the event filter.
          */
-        private EventBundle(List<EventState> eventStates,
+        private EventBundle(List eventStates,
                             long timestamp,
                             String userData,
                             EventFilter filter) {

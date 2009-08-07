@@ -23,13 +23,14 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefDiff;
-
-import junit.framework.TestCase;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 public class CompactNodeTypeDefTest extends TestCase {
 
@@ -39,27 +40,29 @@ public class CompactNodeTypeDefTest extends TestCase {
 
         // Read in node type def from test file
         Reader reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream(TEST_FILE));
-        CompactNodeTypeDefReader cndReader = new CompactNodeTypeDefReader(reader, TEST_FILE);
+        CompactNodeTypeDefReader cndReader = new CompactNodeTypeDefReader(reader, TEST_FILE,
+                new QNodeTypeDefinitionsBuilderImpl());
 
-        List<QNodeTypeDefinition> ntdList1 = cndReader.getNodeTypeDefinitions();
+        List ntdList1 = cndReader.getNodeTypeDefs();
         NamespaceMapping nsm = cndReader.getNamespaceMapping();
         NamePathResolver resolver = new DefaultNamePathResolver(nsm);
 
         // Put imported node type def back into CND form with CND writer
         StringWriter sw = new StringWriter();
-        CompactNodeTypeDefWriter.write(ntdList1, nsm, resolver, sw);
+        CompactNodeTypeDefWriter.write(ntdList1, nsm, resolver, ValueFactoryImpl.getInstance(), sw);
 
         // Rerun the reader on the product of the writer
-        cndReader = new CompactNodeTypeDefReader(new StringReader(sw.toString()), TEST_FILE);
+        cndReader = new CompactNodeTypeDefReader(new StringReader(sw.toString()), TEST_FILE,
+                new QNodeTypeDefinitionsBuilderImpl());
 
-        List<QNodeTypeDefinition> ntdList2 = cndReader.getNodeTypeDefinitions();
+        List ntdList2 = cndReader.getNodeTypeDefs();
 
         if (ntdList1.size() == 0 || ntdList1.size() != ntdList2.size()) {
             fail("Exported node type definition was not successfully read back in");
         } else {
             for(int k = 0; k < ntdList1.size(); k++) {
-                QNodeTypeDefinition ntd1 = ntdList1.get(k);
-                QNodeTypeDefinition ntd2 = ntdList2.get(k);
+                QNodeTypeDefinition ntd1 = (QNodeTypeDefinition) ntdList1.get(k);
+                QNodeTypeDefinition ntd2 = (QNodeTypeDefinition) ntdList2.get(k);
 
                 NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntd1, ntd2);
                 if (diff.isModified() && !diff.isTrivial()){

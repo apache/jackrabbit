@@ -19,17 +19,17 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Implements a <code>InternalVersion</code>
@@ -45,7 +45,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * the set of version labes of this history (values == String)
      */
-    private HashSet<Name> labelCache = null;
+    private HashSet labelCache = null;
 
     /**
      * specifies if this is the root version
@@ -145,7 +145,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
             if (values != null) {
                 InternalVersion[] versions = new InternalVersion[values.length];
                 for (int i = 0; i < values.length; i++) {
-                    versions[i] = versionHistory.getVersion(values[i].getNodeId());
+                    NodeId vId = new NodeId(values[i].getUUID());
+                    versions[i] = versionHistory.getVersion(vId);
                 }
                 return versions;
             } else {
@@ -178,7 +179,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
         if (values != null) {
             InternalVersion[] versions = new InternalVersion[values.length];
             for (int i = 0; i < values.length; i++) {
-                versions[i] = versionHistory.getVersion(values[i].getNodeId());
+                NodeId vId = new NodeId(values[i].getUUID());
+                versions[i] = versionHistory.getVersion(vId);
             }
             return versions;
         } else {
@@ -194,7 +196,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
     public InternalVersion getLinearPredecessor() {
         InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
         if (values != null && values.length > 0) {
-            return versionHistory.getVersion(values[0].getNodeId());
+            NodeId vId = new NodeId(values[0].getUUID());
+            return versionHistory.getVersion(vId);
         } else {
             return null;
         }
@@ -205,7 +208,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     public boolean isMoreRecent(InternalVersion v) {
         InternalVersion[] preds = getPredecessors();
-        for (InternalVersion pred : preds) {
+        for (int i = 0; i < preds.length; i++) {
+            InternalVersion pred = preds[i];
             if (pred.equals(v) || pred.isMoreRecent(v)) {
                 return true;
             }
@@ -256,13 +260,14 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param store if <code>true</code> the node is stored
      * @throws RepositoryException if a repository error occurs
      */
-    private void storeXCessors(List<InternalVersion> cessors, Name propname, boolean store)
+    private void storeXCessors(List/*<InternalVersion>*/ cessors, Name propname, boolean store)
             throws RepositoryException {
         InternalValue[] values = new InternalValue[cessors.size()];
         for (int i = 0; i < values.length; i++) {
-            values[i] = InternalValue.create((cessors.get(i)).getId());
+            values[i] = InternalValue.create(
+                    ((InternalVersion) cessors.get(i)).getId().getUUID());
         }
-        node.setPropertyValues(propname, PropertyType.REFERENCE, values);
+        node.setPropertyValues(propname, PropertyType.STRING, values);
         if (store) {
             node.store();
         }
@@ -276,14 +281,14 @@ class InternalVersionImpl extends InternalVersionItemImpl
     void internalDetach() throws RepositoryException {
         // detach this from all successors
         InternalVersion[] succ = getSuccessors();
-        for (InternalVersion aSucc : succ) {
-            ((InternalVersionImpl) aSucc).internalDetachPredecessor(this, true);
+        for (int i = 0; i < succ.length; i++) {
+            ((InternalVersionImpl) succ[i]).internalDetachPredecessor(this, true);
         }
 
         // detach cached successors from predecessors
         InternalVersion[] preds = getPredecessors();
-        for (InternalVersion pred : preds) {
-            ((InternalVersionImpl) pred).internalDetachSuccessor(this, true);
+        for (int i = 0; i < preds.length; i++) {
+            ((InternalVersionImpl) preds[i]).internalDetachSuccessor(this, true);
         }
 
         // clear properties
@@ -298,8 +303,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     void internalAttach() throws RepositoryException {
         InternalVersion[] preds = getPredecessors();
-        for (InternalVersion pred : preds) {
-            ((InternalVersionImpl) pred).internalAddSuccessor(this, true);
+        for (int i = 0; i < preds.length; i++) {
+            ((InternalVersionImpl) preds[i]).internalAddSuccessor(this, true);
         }
     }
 
@@ -312,7 +317,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     private void internalAddSuccessor(InternalVersionImpl succ, boolean store)
             throws RepositoryException {
-        List<InternalVersion> l = new ArrayList<InternalVersion>(Arrays.asList(getSuccessors()));
+        List l = new ArrayList(Arrays.asList(getSuccessors()));
         if (!l.contains(succ)) {
             l.add(succ);
             storeXCessors(l, NameConstants.JCR_SUCCESSORS, store);
@@ -332,7 +337,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     private void internalDetachPredecessor(InternalVersionImpl v, boolean store)
             throws RepositoryException {
         // remove 'v' from predecessor list
-        List<InternalVersion> l = new ArrayList<InternalVersion>(Arrays.asList(getPredecessors()));
+        List l = new ArrayList(Arrays.asList(getPredecessors()));
         l.remove(v);
 
         // attach V's predecessors
@@ -353,7 +358,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     private void internalDetachSuccessor(InternalVersionImpl v, boolean store)
             throws RepositoryException {
         // remove 'v' from successors list
-        List<InternalVersion> l = new ArrayList<InternalVersion>(Arrays.asList(getSuccessors()));
+        List l = new ArrayList(Arrays.asList(getSuccessors()));
         l.remove(v);
 
         // attach V's successors
@@ -369,7 +374,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     boolean internalAddLabel(Name label) {
         if (labelCache == null) {
-            labelCache = new HashSet<Name>();
+            labelCache = new HashSet();
         }
         return labelCache.add(label);
     }
@@ -403,7 +408,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         if (labelCache == null) {
             return new Name[0];
         } else {
-            return labelCache.toArray(new Name[labelCache.size()]);
+            return (Name[]) labelCache.toArray(new Name[labelCache.size()]);
         }
     }
 
@@ -422,9 +427,9 @@ class InternalVersionImpl extends InternalVersionItemImpl
     void legacyResolveSuccessors() throws RepositoryException {
         InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
         if (values != null) {
-            for (InternalValue value : values) {
-                InternalVersionImpl v = (InternalVersionImpl)
-                        versionHistory.getVersion(value.getNodeId());
+            for (int i = 0; i < values.length; i++) {
+                NodeId vId = new NodeId(values[i].getUUID());
+                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(vId);
                 v.internalAddSuccessor(this, false);
             }
         }
@@ -450,19 +455,4 @@ class InternalVersionImpl extends InternalVersionItemImpl
     public int hashCode() {
         return getId().hashCode();
     }
-
-    /**
-     * Returns the activity of this version or <code>null</code> if not defined
-     * @return the activity or <code>null</code>
-     * @throws RepositoryException if an error occurs
-     */
-    public InternalActivityImpl getActivity() throws RepositoryException {
-        if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
-            InternalValue value = node.getPropertyValue(NameConstants.JCR_ACTIVITY);
-            return (InternalActivityImpl) vMgr.getItem(value.getNodeId());
-        } else {
-            return null;
-        }
-    }
-
 }

@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
-import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
-
 /**
  * This principal represents the admin user as a distinct principal having all
  * the access rights and is being authenticated (in contrast to the

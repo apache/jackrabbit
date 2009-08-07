@@ -79,7 +79,7 @@ public class RefreshMovedTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testRefreshOtherSession() throws RepositoryException {
-        Session readSession = getHelper().getReadOnlySession();
+        Session readSession = helper.getReadOnlySession();
         try {
             Node anotherNode = (Node) readSession.getItem(srcPath);
             // workspace move

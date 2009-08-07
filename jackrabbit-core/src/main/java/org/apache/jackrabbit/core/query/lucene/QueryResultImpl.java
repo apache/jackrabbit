@@ -16,26 +16,24 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.query.QueryResult;
-import javax.jcr.query.RowIterator;
-
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.RowIterator;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Implements the <code>QueryResult</code> interface.
@@ -78,9 +76,19 @@ public abstract class QueryResultImpl implements QueryResult {
     protected final SpellSuggestion spellSuggestion;
 
     /**
-     * The columns to select.
+     * The select properties
      */
-    protected final Map<String, ColumnImpl> columns = new LinkedHashMap<String, ColumnImpl>();
+    protected final Name[] selectProps;
+
+    /**
+     * The relative paths of properties to use for ordering the result set.
+     */
+    protected final Path[] orderProps;
+
+    /**
+     * The order specifier for each of the order properties.
+     */
+    protected final boolean[] orderSpecs;
 
     /**
      * The result nodes including their score. This list is populated on a lazy
@@ -88,7 +96,7 @@ public abstract class QueryResultImpl implements QueryResult {
      * <p/>
      * The exact type is: <code>List&lt;ScoreNode[]></code>
      */
-    private final List<ScoreNode[]> resultNodes = new ArrayList<ScoreNode[]>();
+    private final List resultNodes = new ArrayList();
 
     /**
      * This is the raw number of results that matched the query. This number
@@ -125,7 +133,7 @@ public abstract class QueryResultImpl implements QueryResult {
     private final long offset;
 
     /**
-     * The maximum size of this result if limit >= 0
+     * The maximum size of this result if limit > 0
      */
     private final long limit;
 
@@ -143,15 +151,16 @@ public abstract class QueryResultImpl implements QueryResult {
      *                        result.
      * @param spellSuggestion the spell suggestion or <code>null</code> if none
      *                        is available.
-     * @param columns         the select properties of the query.
+     * @param selectProps     the select properties of the query.
+     * @param orderProps      the relative paths of the order properties.
+     * @param orderSpecs      the order specs, one for each order property
+     *                        name.
      * @param documentOrder   if <code>true</code> the result is returned in
      *                        document order.
      * @param limit           the maximum result size
      * @param offset          the offset in the total result set
      * @throws RepositoryException if an error occurs while reading from the
      *                             repository.
-     * @throws IllegalArgumentException if any of the columns does not have a
-     *                                  column name.
      */
     public QueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
@@ -159,7 +168,9 @@ public abstract class QueryResultImpl implements QueryResult {
                            AccessManager accessMgr,
                            AbstractQueryImpl queryImpl,
                            SpellSuggestion spellSuggestion,
-                           ColumnImpl[] columns,
+                           Name[] selectProps,
+                           Path[] orderProps,
+                           boolean[] orderSpecs,
                            boolean documentOrder,
                            long offset,
                            long limit) throws RepositoryException {
@@ -169,35 +180,29 @@ public abstract class QueryResultImpl implements QueryResult {
         this.accessMgr = accessMgr;
         this.queryImpl = queryImpl;
         this.spellSuggestion = spellSuggestion;
-        this.docOrder = documentOrder;
+        this.selectProps = selectProps;
+        this.orderProps = orderProps;
+        this.orderSpecs = orderSpecs;
+        this.docOrder = orderProps.length == 0 && documentOrder;
         this.offset = offset;
         this.limit = limit;
-        for (ColumnImpl column : columns) {
-            String cn = column.getColumnName();
-            if (cn == null) {
-                String msg = column + " does not have a column name";
-                throw new IllegalArgumentException(msg);
-            }
-            this.columns.put(cn, column);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String[] getSelectorNames() throws RepositoryException {
-        String[] names = new String[selectorNames.length];
-        for (int i = 0; i < selectorNames.length; i++) {
-            names[i] = session.getJCRName(selectorNames[i]);
-        }
-        return names;
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getColumnNames() throws RepositoryException {
-        return columns.keySet().toArray(new String[columns.size()]);
+        try {
+            String[] propNames = new String[selectProps.length];
+            for (int i = 0; i < selectProps.length; i++) {
+                propNames[i] = session.getJCRName(selectProps[i]);
+            }
+            return propNames;
+        } catch (NamespaceException npde) {
+            String msg = "encountered invalid property name";
+            log.debug(msg);
+            throw new RepositoryException(msg, npde);
+        }
     }
 
     /**
@@ -218,9 +223,9 @@ public abstract class QueryResultImpl implements QueryResult {
                 throw new RepositoryException(e);
             }
         }
-        return new RowIteratorImpl(getScoreNodes(), columns,
+        return new RowIteratorImpl(getScoreNodes(), selectProps,
                 selectorNames, itemMgr,
-                index.getContext().getHierarchyManager(), session, session.getValueFactory(),
+                index.getContext().getHierarchyManager(), session,
                 excerptProvider, spellSuggestion);
     }
 
@@ -271,17 +276,17 @@ public abstract class QueryResultImpl implements QueryResult {
      */
     protected void getResults(long size) throws RepositoryException {
         if (log.isDebugEnabled()) {
-            log.debug("getResults({}) limit={}", size, limit);
+            log.debug("getResults({}) limit={}", new Long(size), new Long(limit));
         }
 
         long maxResultSize = size;
 
         // is there any limit?
-        if (limit >= 0) {
+        if (limit > 0) {
             maxResultSize = limit;
         }
 
-        if (resultNodes.size() >= maxResultSize && selectorNames != null) {
+        if (resultNodes.size() >= maxResultSize) {
             // we already have them all
             return;
         }
@@ -292,13 +297,13 @@ public abstract class QueryResultImpl implements QueryResult {
             long time = System.currentTimeMillis();
             result = executeQuery(maxResultSize);
             log.debug("query executed in {} ms",
-                    System.currentTimeMillis() - time);
+                    new Long(System.currentTimeMillis() - time));
             // set selector names
             selectorNames = result.getSelectorNames();
 
             if (resultNodes.isEmpty() && offset > 0) {
                 // collect result offset into dummy list
-                collectScoreNodes(result, new ArrayList<ScoreNode[]>(), offset);
+                collectScoreNodes(result, new ArrayList(), offset);
             } else {
                 int start = resultNodes.size() + invalid + (int) offset;
                 result.skip(start);
@@ -307,7 +312,7 @@ public abstract class QueryResultImpl implements QueryResult {
             time = System.currentTimeMillis();
             collectScoreNodes(result, resultNodes, maxResultSize);
             log.debug("retrieved ScoreNodes in {} ms",
-                    System.currentTimeMillis() - time);
+                    new Long(System.currentTimeMillis() - time));
 
             // update numResults
             numResults = result.getSize();
@@ -337,7 +342,7 @@ public abstract class QueryResultImpl implements QueryResult {
      * @throws RepositoryException if an error occurs while checking access rights.
      */
     private void collectScoreNodes(MultiColumnQueryHits hits,
-                                   List<ScoreNode[]> collector,
+                                   List collector,
                                    long maxResults)
             throws IOException, RepositoryException {
         while (collector.size() < maxResults) {
@@ -366,10 +371,10 @@ public abstract class QueryResultImpl implements QueryResult {
      */
     private boolean isAccessGranted(ScoreNode[] nodes)
             throws RepositoryException {
-        for (ScoreNode node : nodes) {
+        for (int i = 0; i < nodes.length; i++) {
             try {
                 // TODO: rather use AccessManager.canRead(Path)
-                if (node != null && !accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
+                if (nodes[i] != null && !accessMgr.isGranted(nodes[i].getNodeId(), AccessManager.READ)) {
                     return false;
                 }
             } catch (ItemNotFoundException e) {
@@ -454,7 +459,7 @@ public abstract class QueryResultImpl implements QueryResult {
                 return -1;
             }
             long size = total - offset;
-            if (limit >= 0 && size > limit) {
+            if (limit > 0 && size > limit) {
                 return limit;
             } else {
                 return size;
@@ -535,7 +540,7 @@ public abstract class QueryResultImpl implements QueryResult {
                         break;
                     }
                 }
-                next = resultNodes.get(nextPos);
+                next = (ScoreNode[]) resultNodes.get(nextPos);
             }
             position++;
         }

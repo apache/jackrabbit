@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
@@ -99,15 +99,16 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
         Node child = (Node) superuser.getItem(childNode.getPath());
         String ntName = child.getPrimaryNodeType().getName();
 
+        // TODO: remove casts once jsr 283 is released.        
         String changedNtName = "nt:folder";
-        child.setPrimaryType(changedNtName);
+        ((org.apache.jackrabbit.api.jsr283.Node) child).setPrimaryType(changedNtName);
         child.save();
 
         try {
             checkReadOnly(childNode.getPath());
 
             try {
-                childNode.setPrimaryType(ntName);
+                ((org.apache.jackrabbit.api.jsr283.Node) childNode).setPrimaryType(ntName);
                 childNode.save();
                 fail("TestSession does not have sufficient privileges to change the primary type.");
             } catch (AccessDeniedException e) {
@@ -115,13 +116,28 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
                 getTestSession().refresh(false); // TODO: see JCR-1916
             }
 
+            /* for nt:folder set_property permission is required in addition
+               in order to be able to create jcr:created
+               TODO: check again with jsr 283 jcr:created was redesigned
+             */
             modifyPrivileges(childNode.getPath(), Privilege.JCR_NODE_TYPE_MANAGEMENT, true);
-            childNode.setPrimaryType(ntName);
+            try {
+                ((org.apache.jackrabbit.api.jsr283.Node) childNode).setPrimaryType(ntName);
+                childNode.save();
+                fail("TestSession does not have sufficient privileges to change the primary type.");
+            } catch (AccessDeniedException e) {
+                // success
+                getTestSession().refresh(false); // TODO: see JCR-1916
+            }
+
+            // with complete write permission the call must succeed.
+            modifyPrivileges(childNode.getPath(), Privilege.JCR_MODIFY_PROPERTIES, true);
+            ((org.apache.jackrabbit.api.jsr283.Node) childNode).setPrimaryType(ntName);
             childNode.save();
 
         } finally {
             if (!ntName.equals(child.getPrimaryNodeType().getName())) {
-                child.setPrimaryType(ntName);
+                ((org.apache.jackrabbit.api.jsr283.Node) child).setPrimaryType(ntName);
                 child.save();
             }
         }

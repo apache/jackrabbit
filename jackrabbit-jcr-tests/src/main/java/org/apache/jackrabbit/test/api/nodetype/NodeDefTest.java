@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -65,7 +61,7 @@ public class NodeDefTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
         // re-fetch testRootNode with read-only session
         testRootNode = (Node) session.getItem(testRoot);
@@ -146,7 +142,7 @@ public class NodeDefTest extends AbstractJCRTest {
     /**
      * This test checks if item definitions with mandatory constraints are
      * respected.
-     * <p>
+     * <p/>
      * If the default workspace does not contain a node with a node type
      * definition that specifies a mandatory child node a {@link
      * org.apache.jackrabbit.test.NotExecutableException} is thrown.
@@ -166,11 +162,12 @@ public class NodeDefTest extends AbstractJCRTest {
     public void testGetRequiredPrimaryTypes()
             throws RepositoryException {
 
+        NodeTypeIterator types = manager.getAllNodeTypes();
         // loop all node types
-        for (NodeTypeIterator types = manager.getAllNodeTypes(); types.hasNext(); ) {
+        while (types.hasNext()) {
             NodeType type = types.nextNodeType();
             NodeDefinition defs[] = type.getChildNodeDefinitions();
-            
+
             for (int i = 0; i < defs.length; i++) {
                 assertTrue("getRequiredPrimaryTypes() must never return an " +
                         "empty array.",
@@ -179,45 +176,17 @@ public class NodeDefTest extends AbstractJCRTest {
         }
     }
 
-    /**
-     * Tests that the information from getRequiredPrimaryTypeNames()
-     * matches getRequiredPrimaryTypes().
-     * 
-     * @since JCR 2.0
-     */
-    public void testGetRequiredPrimaryTypeNames()
-            throws RepositoryException {
-
-        // loop all node types
-        for (NodeTypeIterator types = manager.getAllNodeTypes(); types.hasNext(); ) {
-            NodeType type = types.nextNodeType();
-            NodeDefinition defs[] = type.getChildNodeDefinitions();
-            
-            for (int i = 0; i < defs.length; i++) {
-                NodeType requiredPrimaryTypes[] = defs[i].getRequiredPrimaryTypes();
-                Set rptnames = new HashSet();
-                for (int j = 0; j < requiredPrimaryTypes.length; j++) {
-                    rptnames.add(requiredPrimaryTypes[j].getName());
-                }
-                
-                Set rptnames2 = new HashSet(Arrays.asList(defs[i].getRequiredPrimaryTypeNames()));
-                assertEquals("names returned from getRequiredPrimaryTypeNames should match types returned from getRequiredPrimaryTypes", rptnames, rptnames2);
-            }
-        }
-    }
 
     /**
      * Tests if the default primary type is of the same or a sub node type as the
-     * the required primary types. Test runs for all existing node types. Also
-     * tests the string based access ({@link NodeDefinition#getDefaultPrimaryTypeName()}.
-     * 
-     * @since JCR 2.0
+     * the required primary types. Test runs for all existing node types.
      */
     public void testGetDefaultPrimaryTypes()
             throws RepositoryException {
 
+        NodeTypeIterator types = manager.getAllNodeTypes();
         // loop all node types
-        for (NodeTypeIterator types = manager.getAllNodeTypes(); types.hasNext(); ) {
+        while (types.hasNext()) {
             NodeType type = types.nextNodeType();
             NodeDefinition defs[] = type.getChildNodeDefinitions();
 
@@ -225,7 +194,6 @@ public class NodeDefTest extends AbstractJCRTest {
 
                 NodeDefinition def = defs[i];
                 NodeType defaultType = def.getDefaultPrimaryType();
-                String defaultTypeName = def.getDefaultPrimaryTypeName();
                 if (defaultType != null) {
 
                     NodeType requiredTypes[] =
@@ -243,13 +211,6 @@ public class NodeDefTest extends AbstractJCRTest {
                                 "returned by getRequiredPrimaryTypes()",
                                 isSubType);
                     }
-
-                    assertEquals("type names obtained from getDefaultPrimaryType and getDefaultPrimaryTypeName should match", defaultType.getName(), defaultTypeName);
-                    NodeType tmpType = manager.getNodeType(defaultTypeName);
-                    assertEquals(tmpType.getName(), defaultTypeName);
-                }
-                else {
-                    assertNull("getDefaultPrimaryTypeName should return null when getDefaultPrimaryType does", defaultTypeName);
                 }
             }
         }

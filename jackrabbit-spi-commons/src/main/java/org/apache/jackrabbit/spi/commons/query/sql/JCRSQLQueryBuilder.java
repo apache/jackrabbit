@@ -50,7 +50,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -839,8 +838,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
          * @param validJcrSystemNodeTypeNames names of valid node types under
          *        /jcr:system.
          */
-        MergingPathQueryNode(
-                int operation, Collection<Name> validJcrSystemNodeTypeNames) {
+        MergingPathQueryNode(int operation, List validJcrSystemNodeTypeNames) {
             super(null, validJcrSystemNodeTypeNames);
             if (operation != QueryNode.TYPE_OR && operation != QueryNode.TYPE_AND && operation != QueryNode.TYPE_NOT) {
                 throw new IllegalArgumentException("operation");

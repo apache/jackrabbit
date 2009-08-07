@@ -29,7 +29,7 @@ import java.util.HashSet;
  * means this implementation will throw a {@link UnsupportedOperationException}
  * for all modifying methods specified by the {@link Set} interface.
  */
-final class NameSet implements Set<Name>, Cloneable {
+final class NameSet implements Set, Cloneable {
 
     /**
      * The name set cache instance.
@@ -60,7 +60,7 @@ final class NameSet implements Set<Name>, Cloneable {
      * @return <code>true</code> if the name is already present,
      *         <code>false</code> otherwise.
      */
-    public boolean add(Name name) {
+    boolean add(Name name) {
         if (names.size() > NUM_NAMES_THRESHOLD) {
             ensureModifiable();
             return names.add(name);
@@ -175,6 +175,13 @@ final class NameSet implements Set<Name>, Cloneable {
      */
     public Object[] toArray(Object[] a) {
         return names.toArray(a);
+    }
+
+    /**
+     * @throws UnsupportedOperationException always.
+     */
+    public boolean add(Object o) {
+        throw new UnsupportedOperationException();
     }
 
     /**

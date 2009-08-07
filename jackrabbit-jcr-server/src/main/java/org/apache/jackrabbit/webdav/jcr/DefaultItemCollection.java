@@ -80,6 +80,8 @@ import org.apache.jackrabbit.webdav.ordering.OrderingType;
 import org.apache.jackrabbit.webdav.ordering.Position;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -218,14 +220,14 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param property
      * @throws DavException
      * @see #setProperty(DavProperty)
+     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
      */
     private void internalSetProperty(DavProperty property) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        DavPropertyName propName = property.getName();
-        if (JCR_MIXINNODETYPES.equals(propName)) {
-            Node n = (Node) item;
+        if (property.getName().equals(JCR_MIXINNODETYPES)) {
+            Node n = (Node)item;
             try {
                 NodeType[] existingMixin = n.getMixinNodeTypes();
                 NodeTypeProperty mix = new NodeTypeProperty(property);
@@ -250,23 +252,8 @@ public class DefaultItemCollection extends AbstractItemResource
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
-        } else if (JCR_PRIMARYNODETYPE.equals(propName)) {
-            Node n = (Node) item;
-            try {
-                NodeTypeProperty ntProp = new NodeTypeProperty(property);
-                Set names = ntProp.getNodeTypeNames();
-                if (names.size() == 1) {
-                    String ntName = names.iterator().next().toString();
-                    n.setPrimaryType(ntName);
-                } else {
-                    // only a single node type can be primary node type.
-                    throw new DavException(DavServletResponse.SC_BAD_REQUEST);
-                }
-            } catch (RepositoryException e) {
-                throw new JcrDavException(e);
-            }
         } else {
-            // all props except for mixinnodetypes and primaryType are read-only
+            // all props except for mixinnodetypes are read-only
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
     }
@@ -291,6 +278,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param propertyName
      * @throws DavException
      * @see #removeProperty(DavPropertyName)
+     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
      */
     private void internalRemoveProperty(DavPropertyName propertyName) throws DavException {
         if (!exists()) {
@@ -327,6 +315,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param changeList
      * @return
      * @throws DavException
+     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
     public MultiStatusResponse alterProperties(List changeList) throws DavException {
         Iterator it = changeList.iterator();
@@ -893,12 +882,11 @@ public class DefaultItemCollection extends AbstractItemResource
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
                 properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex()), true));
                 addHrefProperty(JCR_REFERENCES, n.getReferences(), true);
-                addHrefProperty(JCR_WEAK_REFERENCES, n.getWeakReferences(), true);
                 if (n.isNodeType(JcrConstants.MIX_REFERENCEABLE)) {
                     properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID(), true));
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to retrieve node-specific property: " + e);
+                log.error("Failed to retrieve primary nodetype property: " + e.getMessage());
             }
             try {
                 Item primaryItem = n.getPrimaryItem();

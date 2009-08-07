@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 
 import javax.jcr.Session;
 import java.security.Principal;
+import java.security.acl.Group;
 import java.util.Properties;
 
 /**
@@ -28,7 +30,7 @@ import java.util.Properties;
  * sources for authorization and authentication, as may be used by a custom
  * {@link javax.security.auth.spi.LoginModule} for example.
  *
- * @see org.apache.jackrabbit.api.security.principal.PrincipalManager for more details about principals, users and groups.
+ * @see PrincipalManager for more details about principals, users and groups.
  */
 public interface PrincipalProvider {
 
@@ -56,9 +58,9 @@ public interface PrincipalProvider {
      * @param simpleFilter
      * @param searchType searchType Any of the following constants:
      * <ul>
-     * <li>{@link org.apache.jackrabbit.api.security.principal.PrincipalManager#SEARCH_TYPE_ALL}</li>
-     * <li>{@link org.apache.jackrabbit.api.security.principal.PrincipalManager#SEARCH_TYPE_GROUP}</li>
-     * <li>{@link org.apache.jackrabbit.api.security.principal.PrincipalManager#SEARCH_TYPE_NOT_GROUP}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_ALL}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_GROUP}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_NOT_GROUP}</li>
      * </ul>
      * @return
      * @see #findPrincipals(String)
@@ -71,9 +73,9 @@ public interface PrincipalProvider {
      * @return an iterator over all principals that match the given search type.
      * @param searchType searchType Any of the following constants:
      * <ul>
-     * <li>{@link org.apache.jackrabbit.api.security.principal.PrincipalManager#SEARCH_TYPE_ALL}</li>
-     * <li>{@link org.apache.jackrabbit.api.security.principal.PrincipalManager#SEARCH_TYPE_GROUP}</li>
-     * <li>{@link org.apache.jackrabbit.api.security.principal.PrincipalManager#SEARCH_TYPE_NOT_GROUP}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_ALL}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_GROUP}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_NOT_GROUP}</li>
      * </ul>
      */
     PrincipalIterator getPrincipals(int searchType);
@@ -81,7 +83,7 @@ public interface PrincipalProvider {
     /**
      * Returns an iterator over all group principals for which the given
      * principal is either direct or indirect member of. If a principal is
-     * a direct member of a group, then <code>{@link java.security.acl.Group#isMember(Principal)}</code>
+     * a direct member of a group, then <code>{@link Group#isMember(Principal)}</code>
      * evaluates to <code>true</code>. A principal is an indirect member of a
      * group if any of its groups (to any degree of separation) is direct memeber
      * of the group.

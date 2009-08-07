@@ -20,8 +20,8 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.ValueFactory;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -63,12 +62,12 @@ class BufferedStringValue implements TextValue {
      * The maximum size for buffering data in memory.
      */
     private static final int MAX_BUFFER_SIZE = 0x10000;
-
+    
     /**
      * The in-memory buffer.
      */
     private StringWriter buffer;
-
+    
     /**
      * The number of characters written so far.
      * If the in-memory buffer is used, this is position within buffer (size of actual data in buffer)
@@ -80,15 +79,14 @@ class BufferedStringValue implements TextValue {
      * MAX_BUFFER_SIZE.
      */
     private File tmpFile;
-
+    
     /**
      * Writer used to write to tmpFile.
      */
     private Writer writer;
 
     private final NamePathResolver nsContext;
-    private final ValueFactory valueFactory;
-
+    
     /**
      * Whether the value is base64 encoded.
      */
@@ -98,13 +96,12 @@ class BufferedStringValue implements TextValue {
      * Constructs a new empty <code>BufferedStringValue</code>.
      * @param nsContext
      */
-    protected BufferedStringValue(NamePathResolver nsContext, ValueFactory valueFactory) {
+    protected BufferedStringValue(NamePathResolver nsContext) {
         buffer = new StringWriter();
         length = 0;
         tmpFile = null;
         writer = null;
         this.nsContext = nsContext;
-        this.valueFactory = valueFactory;
     }
 
     /**
@@ -116,7 +113,7 @@ class BufferedStringValue implements TextValue {
     public long length() throws IOException {
         return length;
     }
-
+    
     private String retrieveString() throws IOException {
         String value = retrieve();
         if (base64) {
@@ -158,7 +155,7 @@ class BufferedStringValue implements TextValue {
             throw new IOException("this instance has already been disposed");
         }
     }
-
+    
     private Reader openReader() throws IOException {
         return new InputStreamReader(
                 new BufferedInputStream(new FileInputStream(tmpFile)), "UTF-8");
@@ -246,26 +243,26 @@ class BufferedStringValue implements TextValue {
                 // current namespace context of xml document
                 InternalValue ival =
                     InternalValue.create(ValueHelper.convert(
-                            retrieve(), targetType, valueFactory), nsContext);
+                            retrieve(), targetType, ValueFactoryImpl.getInstance()), nsContext);
                 // convert InternalValue to Value using this
                 // session's namespace mappings
-                return ValueFormat.getJCRValue(ival, resolver, valueFactory);
+                return ival.toJCRValue(resolver);
             } else if (targetType == PropertyType.BINARY) {
                 if (length() < 0x10000) {
                     // < 65kb: deserialize BINARY type using String
-                    return ValueHelper.deserialize(retrieve(), targetType, false, valueFactory);
+                    return ValueHelper.deserialize(retrieve(), targetType, false, ValueFactoryImpl.getInstance());
                 } else {
                     // >= 65kb: deserialize BINARY type using Reader
                     Reader reader = reader();
                     try {
-                        return ValueHelper.deserialize(reader, targetType, false, valueFactory);
+                        return ValueHelper.deserialize(reader, targetType, false, ValueFactoryImpl.getInstance());
                     } finally {
                         reader.close();
                     }
                 }
             } else {
                 // all other types
-                return ValueHelper.deserialize(retrieveString(), targetType, false, valueFactory);
+                return ValueHelper.deserialize(retrieveString(), targetType, false, ValueFactoryImpl.getInstance());
             }
         } catch (IOException e) {
             String msg = "failed to retrieve serialized value";
@@ -290,14 +287,27 @@ class BufferedStringValue implements TextValue {
                 } else {
                     // >= 65kb: deserialize BINARY type
                     // using Reader and temporary file
-                    Base64ReaderInputStream in = new Base64ReaderInputStream(reader());
-                    return InternalValue.createTemporary(in);
+                    if (InternalValue.USE_DATA_STORE) {
+                        Base64ReaderInputStream in = new Base64ReaderInputStream(reader());
+                        return InternalValue.createTemporary(in);
+                    }
+                    TransientFileFactory fileFactory = TransientFileFactory.getInstance();
+                    File tmpFile = fileFactory.createTransientFile("bin", null, null);
+                    FileOutputStream out = new FileOutputStream(tmpFile);
+                    Reader reader = reader();
+                    try {
+                        Base64.decode(reader, out);
+                    } finally {
+                        reader.close();
+                        out.close();
+                    }
+                    return InternalValue.create(tmpFile);
                 }
             } else {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
                 return InternalValue.create(ValueHelper.convert(
-                        retrieveString(), type, valueFactory), nsContext);
+                        retrieveString(), type, ValueFactoryImpl.getInstance()), nsContext);
             }
         } catch (IOException e) {
             throw new RepositoryException("Error accessing property value", e);
@@ -370,7 +380,7 @@ class BufferedStringValue implements TextValue {
 
     /**
      * Whether this value is base64 encoded
-     *
+     * 
      * @param base64 the flag
      */
     public void setBase64(boolean base64) {

@@ -21,7 +21,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
 import java.util.Date;
-import java.math.BigDecimal;
 
 /**
  * A <code>DoubleValue</code> provides an implementation
@@ -50,7 +49,7 @@ public class DoubleValue extends BaseValue {
      */
     public DoubleValue(double dbl) {
         super(TYPE);
-        this.dblNumber = dbl;
+        this.dblNumber = new Double(dbl);
     }
 
     /**
@@ -127,6 +126,8 @@ public class DoubleValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (dblNumber != null) {
             // loosing timezone information...
             Calendar cal = Calendar.getInstance();
@@ -143,6 +144,8 @@ public class DoubleValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         if (dblNumber != null) {
             return dblNumber.longValue();
         } else {
@@ -156,6 +159,8 @@ public class DoubleValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to boolean failed: inconvertible types");
     }
 
@@ -165,21 +170,10 @@ public class DoubleValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        if (dblNumber != null) {
-            return dblNumber;
-        } else {
-            throw new ValueFormatException("empty value");
-        }
-    }
+        setValueConsumed();
 
-    /**
-     * {@inheritDoc}
-     */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
         if (dblNumber != null) {
-            return new BigDecimal(dblNumber);
+            return dblNumber.doubleValue();
         } else {
             throw new ValueFormatException("empty value");
         }

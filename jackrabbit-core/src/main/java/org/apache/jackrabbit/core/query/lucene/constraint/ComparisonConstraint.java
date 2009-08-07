@@ -18,19 +18,20 @@ package org.apache.jackrabbit.core.query.lucene.constraint;
 
 import java.io.IOException;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.query.lucene.Util;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 
 /**
  * <code>ComparisonConstraint</code> implements a comparison constraint.
  */
-public class ComparisonConstraint extends SelectorBasedConstraint {
+public class ComparisonConstraint extends SelectorBasedConstraint
+        implements QueryObjectModelConstants {
 
     /**
      * The dynamic operand.
@@ -40,7 +41,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint {
     /**
      * The operator.
      */
-    private final Operator operator;
+    private final int operator;
 
     /**
      * The static operand.
@@ -48,7 +49,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint {
     private final Value operand2;
 
     /**
-     * Creates a new comparison constraint.
+     * Creates a new comparision constraint.
      *
      * @param operand1 the dynamic operand.
      * @param operator the operator.
@@ -56,7 +57,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint {
      * @param selector the selector for this constraint.
      */
     public ComparisonConstraint(DynamicOperand operand1,
-                                Operator operator,
+                                int operator,
                                 Value operand2,
                                 SelectorImpl selector) {
         super(selector);
@@ -76,10 +77,10 @@ public class ComparisonConstraint extends SelectorBasedConstraint {
         if (sn == null) {
             return false;
         }
+        Value[] values = operand1.getValues(sn, context);
         try {
-            Value[] values = operand1.getValues(sn, context);
-            for (Value value : values) {
-                if (evaluate(value)) {
+            for (int i = 0; i < values.length; i++) {
+                if (evaluate(values[i])) {
                     return true;
                 }
             }
@@ -100,21 +101,21 @@ public class ComparisonConstraint extends SelectorBasedConstraint {
      */
     protected boolean evaluate(Value op1) throws RepositoryException {
         int c = Util.compare(op1, operand2);
-        if (operator == Operator.EQ) {
-            return c == 0;
-        } else if (operator == Operator.GT) {
-            return c > 0;
-        } else if (operator == Operator.GE) {
-            return c >= 0;
-        } else if (operator == Operator.LT) {
-            return c < 0;
-        } else if (operator == Operator.LE) {
-            return c <= 0;
-        } else if (operator == Operator.NE) {
-            return c != 0;
-        } else {
-            throw new UnsupportedOperationException(
-                    "Unsupported comparison operator: " + operator);
+        switch (operator) {
+            case OPERATOR_EQUAL_TO:
+                return c == 0;
+            case OPERATOR_GREATER_THAN:
+                return c > 0;
+            case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
+                return c >= 0;
+            case OPERATOR_LESS_THAN:
+                return c < 0;
+            case OPERATOR_LESS_THAN_OR_EQUAL_TO:
+                return c <= 0;
+            case OPERATOR_NOT_EQUAL_TO:
+                return c != 0;
+            default:
+                throw new IllegalStateException("unsupported operation: " + operator);
         }
     }
 }

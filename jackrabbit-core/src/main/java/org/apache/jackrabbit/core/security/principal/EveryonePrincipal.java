@@ -27,12 +27,12 @@ public final class EveryonePrincipal implements java.security.acl.Group {
     private static final String NAME = "everyone";
     private static final EveryonePrincipal INSTANCE = new EveryonePrincipal();
 
-    private EveryonePrincipal() { }
+    private EveryonePrincipal() {}
 
     public static EveryonePrincipal getInstance() {
         return INSTANCE;
     }
-
+    
     //----------------------------------------------------------< Principal >---
     public String getName() {
         return NAME;

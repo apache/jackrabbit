@@ -24,28 +24,40 @@ import org.apache.jackrabbit.value.BinaryValue;
 /**
  * Represents a binary value that is backed by a blob file value.
  */
-class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
-
+public class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
+    
     private final BLOBFileValue blob;
 
     /**
      * Construct a new object from the given blob.
-     *
+     * 
      * @param blob the blob
      */
     BinaryValueImpl(BLOBFileValue blob) throws RepositoryException {
-        super(blob);
+        super(blob.getStream());
         this.blob = blob;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getContentIdentity() {
         DataIdentifier id = blob.getDataIdentifier();
         return id == null ? null : id.toString();
     }
 
     /**
+     * Get the wrapped blob file value
+     * 
+     * @return the blob file value
+     */
+    BLOBFileValue getBlob() {
+        return blob;
+    }
+    
+    /**
      * Get the data identifier if one is available.
-     *
+     * 
      * @return the data identifier or null
      */
     DataIdentifier getDataIdentifier() {

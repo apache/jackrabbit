@@ -45,14 +45,14 @@ public class TransientFileFactory {
      * Queue where <code>MoribundFileReference</code> instances will be enqueued
      * once the associated target <code>File</code> objects have been gc'ed.
      */
-    private final ReferenceQueue<File> phantomRefQueue = new ReferenceQueue<File>();
+    private final ReferenceQueue phantomRefQueue = new ReferenceQueue();
 
     /**
      * Collection of <code>MoribundFileReference</code> instances currently
      * being tracked.
      */
-    private final Collection<MoribundFileReference> trackedRefs =
-        Collections.synchronizedList(new ArrayList<MoribundFileReference>());
+    private final Collection trackedRefs =
+        Collections.synchronizedList(new ArrayList());
 
     /**
      * The reaper thread responsible for removing files awaiting deletion
@@ -150,8 +150,8 @@ public class TransientFileFactory {
         // to avoid ConcurrentModificationException (JCR-549)
         // @see java.lang.util.Collections.synchronizedList(java.util.List)
         synchronized(trackedRefs) {
-            for (Iterator<MoribundFileReference> it = trackedRefs.iterator(); it.hasNext();) {
-                it.next().delete();
+            for (Iterator it = trackedRefs.iterator(); it.hasNext();) {
+                ((MoribundFileReference) it.next()).delete();
             }
 
         }
@@ -217,7 +217,7 @@ public class TransientFileFactory {
     /**
      * Tracker object for a file pending deletion.
      */
-    private class MoribundFileReference extends PhantomReference<File> {
+    private class MoribundFileReference extends PhantomReference {
 
         /**
          * The full path to the file being tracked.
@@ -230,7 +230,7 @@ public class TransientFileFactory {
          * @param file  The file to be tracked.
          * @param queue The queue on to which the tracker will be pushed.
          */
-        MoribundFileReference(File file, ReferenceQueue<File> queue) {
+        MoribundFileReference(File file, ReferenceQueue queue) {
             super(file, queue);
             this.path = file.getPath();
         }

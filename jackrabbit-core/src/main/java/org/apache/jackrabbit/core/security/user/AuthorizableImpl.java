@@ -16,10 +16,9 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -28,13 +27,13 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
@@ -305,7 +304,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     boolean addToGroup(GroupImpl group) throws RepositoryException {
         try {
             Value[] values;
-            Value added = getSession().getValueFactory().createValue(group.getNode(), true);
+            // TODO: replace by weak-refs
+            Value added = getSession().getValueFactory().createValue(group.getNode());
             NodeImpl node = getNode();
             if (node.hasProperty(P_GROUPS)) {
                 Value[] old = node.getProperty(P_GROUPS).getValues();
@@ -319,6 +319,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             return true;
         } catch (RepositoryException e) {
             // revert all pending changes and rethrow.
+            log.warn("Error while editing group membership:", e.getMessage());
             getSession().refresh(false);
             throw e;
         }
@@ -332,7 +333,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             return false;
         }
 
-        Value toRemove = getSession().getValueFactory().createValue(group.getNode(), true);
+        Value toRemove = getSession().getValueFactory().createValue(group.getNode());
         PropertyImpl property = node.getProperty(P_GROUPS);
         List valList = new ArrayList(Arrays.asList(property.getValues()));
         if (valList.remove(toRemove)) {
@@ -363,16 +364,10 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         }
         Value[] refs = node.getProperty(P_GROUPS).getValues();
         for (int i = 0; i < refs.length; i++) {
-            try {
-                NodeImpl groupNode = (NodeImpl) getSession().getNodeByUUID(refs[i].getString());
-                Group group = GroupImpl.create(groupNode, userManager);
-                if (groups.add(group) && includedIndirect) {
-                    ((AuthorizableImpl) group).collectMembership(groups, true);
-                }
-            } catch (ItemNotFoundException e) {
-                // groupNode doesn't exist any more
-                log.warn("Group node referenced by " + getID() + " doesn't exist anymore -> Ignored from membership list.");
-                // TODO: ev. clean up list of group memberships
+            NodeImpl groupNode = (NodeImpl) getSession().getNodeByUUID(refs[i].getString());
+            Group group = GroupImpl.create(groupNode, userManager);
+            if (groups.add(group) && includedIndirect) {
+                ((AuthorizableImpl) group).collectMembership(groups, true);
             }
         }
     }

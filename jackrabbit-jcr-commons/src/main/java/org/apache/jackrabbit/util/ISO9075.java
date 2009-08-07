@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.util;
 
+import org.apache.jackrabbit.name.QName;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +25,11 @@ import java.util.regex.Pattern;
  * Implements the encode and decode routines as specified for XML name to SQL
  * identifier conversion in ISO 9075-14:2003.<br/>
  * If a character <code>c</code> is not valid at a certain position in an XML 1.0
- * NCName it is encoded in the form: '_x' + hexValueOf(c) + '_'.
+ * NCName it is encoded in the form: '_x' + hexValueOf(c) + '_'
+ * <p/>
+ * Note that only the local part of a {@link org.apache.jackrabbit.name.QName}
+ * is encoded / decoded. A URI namespace will always be valid and does not
+ * need encoding.
  */
 public class ISO9075 {
 
@@ -38,6 +44,21 @@ public class ISO9075 {
 
     /** All the possible hex digits */
     private static final String HEX_DIGITS = "0123456789abcdefABCDEF";
+
+    /**
+     * Encodes the local part of <code>name</code> as specified in ISO 9075.
+     * @param name the <code>QName</code> to encode.
+     * @return the encoded <code>QName</code> or <code>name</code> if it does
+     *   not need encoding.
+     */
+    public static QName encode(QName name) {
+        String encoded = encode(name.getLocalName());
+        if (encoded == name.getLocalName()) {
+            return name;
+        } else {
+            return new QName(name.getNamespaceURI(), encoded);
+        }
+    }
 
     /**
      * Encodes <code>name</code> as specified in ISO 9075.
@@ -113,6 +134,20 @@ public class ISO9075 {
             }
         }
         return encoded.toString();
+    }
+
+    /**
+     * Decodes the <code>name</code>.
+     * @param name the <code>QName</code> to decode.
+     * @return the decoded <code>QName</code>.
+     */
+    public static QName decode(QName name) {
+        String decoded = decode(name.getLocalName());
+        if (decoded == name.getLocalName()) {
+            return name;
+        } else {
+            return new QName(name.getNamespaceURI(), decoded);
+        }
     }
 
     /**

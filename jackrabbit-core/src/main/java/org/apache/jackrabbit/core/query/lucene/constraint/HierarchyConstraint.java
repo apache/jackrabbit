@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query.lucene.constraint;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 
 /**

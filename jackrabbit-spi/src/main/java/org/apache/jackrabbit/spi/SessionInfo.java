@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
-
 /**
  * <code>SessionInfo</code> is created upon
  * {@link RepositoryService#obtain(javax.jcr.Credentials, String)} or
@@ -55,10 +51,8 @@ public interface SessionInfo {
      * Returns the lock tokens present on this <code>SessionInfo</code>.
      *
      * @return lock tokens present on this <code>SessionInfo</code>.
-     * @throws UnsupportedRepositoryOperationException If locking is not supported.
-     * @throws RepositoryException If another error occurs.
      */
-    public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException;
+    public String[] getLockTokens();
 
     /**
      * Add the given lock token to this <code>SessionInfo</code>. The token will
@@ -66,12 +60,8 @@ public interface SessionInfo {
      * lock identified by the given token.
      *
      * @param lockToken to be added.
-     * @param lockToken
-     * @throws UnsupportedRepositoryOperationException If locking is not supported.
-     * @throws LockException If the token cannot be added.
-     * @throws RepositoryException If another error occurs.
      */
-    public void addLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
+    public void addLockToken(String lockToken);
 
     /**
      * Removes the given lock token from this <code>SessionInfo</code>.
@@ -82,18 +72,6 @@ public interface SessionInfo {
      * with LockException provided the lock hasn't been released.
      *
      * @param lockToken to be removed.
-     * @throws UnsupportedRepositoryOperationException If locking is not supported.
-     * @throws LockException If the token cannot be removed.
-     * @throws RepositoryException If another error occurs.
      */
-    public void removeLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
-
-    /**
-     * Sets the user data used for {@link org.apache.jackrabbit.spi.Event#getUserData()}.
-     *
-     * @param userData
-     * @throws RepositoryException
-     * @see javax.jcr.observation.ObservationManager#setUserData(String)
-     */
-    public void setUserData(String userData) throws RepositoryException;
+    public void removeLockToken(String lockToken);
 }

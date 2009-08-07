@@ -58,13 +58,6 @@ public class StateUtility {
         }
     }
 
-    public static Name getPrimaryTypeName(PropertyState ps) throws RepositoryException {
-        if (!NameConstants.JCR_PRIMARYTYPE.equals(ps.getName())) {
-            throw new IllegalArgumentException();
-        }
-        QValue[] values = ps.getValues();
-        return values[0].getName();
-    }
 
     public static boolean isUuidOrMixin(Name propName) {
         return NameConstants.JCR_UUID.equals(propName) || NameConstants.JCR_MIXINTYPES.equals(propName);

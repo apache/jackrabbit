@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-class FilteredEventIterator implements javax.jcr.observation.EventIterator {
+class FilteredEventIterator implements org.apache.jackrabbit.api.jsr283.observation.EventIterator {
 
     /**
      * Logger instance for this class
@@ -59,7 +60,7 @@ class FilteredEventIterator implements javax.jcr.observation.EventIterator {
     /**
      * Current position
      */
-    private long pos;
+    private long pos = 0;
 
     /**
      * The timestamp when the events occured.
@@ -123,6 +124,11 @@ class FilteredEventIterator implements javax.jcr.observation.EventIterator {
         while (skipNum-- > 0) {
             next();
         }
+    }
+
+    public Calendar getDate() {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2086");
     }
 
     /**

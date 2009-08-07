@@ -63,7 +63,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
      */
     private static Logger log = LoggerFactory.getLogger(Oracle9PersistenceManager.class);
 
-    private Class< ? > blobClass;
+    private Class blobClass;
     private Integer duractionSessionConstant;
     private Integer modeReadWriteConstant;
 
@@ -116,7 +116,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
 
             String sql = bundle.isNew() ? bundleInsertSQL : bundleUpdateSQL;
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            Object[] params = createParams(bundle.getId(), blob, true);
+            Object[] params = createParams(bundle.getId().getUUID(), blob, true);
             connectionManager.executeStmt(sql, params);
         } catch (Exception e) {
             String msg = "failed to write bundle: " + bundle.getId();
@@ -144,7 +144,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
         Blob blob = null;
         try {
             // check if insert or update
-            boolean update = existsReferencesTo(refs.getTargetId());
+            boolean update = exists(refs.getId());
             String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
             ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
@@ -155,13 +155,13 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             // not have to additionally synchronize on the preparedStatement
 
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            Object[] params = createParams(refs.getTargetId(), blob, true);
+            Object[] params = createParams(refs.getTargetId().getUUID(), blob, true);
             connectionManager.executeStmt(sql, params);
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write " + refs;
+            String msg = "failed to write property state: " + refs.getTargetId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
@@ -197,7 +197,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
         Method open = blobClass.getMethod("open", new Class[]{Integer.TYPE});
         open.invoke(blob, new Object[]{modeReadWriteConstant});
         Method getBinaryOutputStream = blobClass.getMethod("getBinaryOutputStream", new Class[0]);
-        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob);
+        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
         try {
             IOUtils.copy(in, out);
         } finally {
@@ -208,7 +208,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             out.close();
         }
         Method close = blobClass.getMethod("close", new Class[0]);
-        close.invoke(blob);
+        close.invoke(blob, null);
         return (Blob) blob;
     }
 
@@ -218,12 +218,10 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
     protected void freeTemporaryBlob(Object blob) throws Exception {
         // blob.freeTemporary();
         Method freeTemporary = blobClass.getMethod("freeTemporary", new Class[0]);
-        freeTemporary.invoke(blob);
+        freeTemporary.invoke(blob, null);
     }
 
-    /**
-     * A blob store specially for Oracle 9.
-     */
+    //--------------------------------------------------------< inner classes >
     class OracleBLOBStore extends DbBlobStore {
 
         public OracleBLOBStore() throws SQLException {

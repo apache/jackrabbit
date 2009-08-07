@@ -16,26 +16,22 @@
  */
 package org.apache.jackrabbit.test;
 
+import javax.jcr.Credentials;
+import javax.jcr.Repository;
+import javax.jcr.SimpleCredentials;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.security.Principal;
-import java.util.Map;
 import java.util.Properties;
-
-import javax.jcr.Credentials;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
+import java.util.Map;
 
 /**
  * The <code>RepositoryStub</code> is the entry point to the JCR Repository
  * for the TCK Test harness.
- * <p>
+ * <p/>
  * Implementors of the JCR specification need to provide an implementation
  * for the abstract methods defined in this class.
  */
@@ -117,8 +113,6 @@ public abstract class RepositoryStub {
      * @since JCR 2.0
      */
     public static final String PROP_HOLD_NAME = "holdname";
-    
-    public static final String RETENTION_POLICY_HOLDER = "retentionpolicyholder";
 
     /**
      * @since JCR 2.0
@@ -154,7 +148,7 @@ public abstract class RepositoryStub {
     /**
      * Creates and/or returns the configured <code>RepositryStub</code>
      * implementation.
-     * <p>
+     * <p/>
      * The property file is located in the following sequence:
      * <ol>
      * <li>If the system property <code>-Djavax.jcr.tck.properties</code> is
@@ -170,7 +164,7 @@ public abstract class RepositoryStub {
      * @return a <code>RepositoryStub</code> implementation.
      * @throws RepositoryStubException
      */
-    public static synchronized RepositoryStub getInstance(Map configuration)
+    static synchronized RepositoryStub getInstance(Map configuration)
         throws RepositoryStubException {
         Properties props = null;
         RepositoryStub stub = null;
@@ -242,7 +236,7 @@ public abstract class RepositoryStub {
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p>
+     * <p/>
      * The <code>Credentials</code> returned has 'superuser' rights. That
      * is, the <code>Session</code> object returned by {@link Repository#login(Credentials)}
      * has read write access to the whole Content Repository.
@@ -257,12 +251,12 @@ public abstract class RepositoryStub {
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p>
+     * <p/>
      * The <code>Credentials</code> returned has read/write rights. That
      * is, the <code>Session</code> object returned by {@link Repository#login(Credentials)}
      * has read write access to the <code>Node</code> configured in the
      * JCR TCK Interview.
-     * <p>
+     * <p/>
      * For details, see: JCR TCK User Guide.
      *
      * @return a <code>Credentials</code> object, that allows to login to the
@@ -275,12 +269,12 @@ public abstract class RepositoryStub {
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p>
+     * <p/>
      * The <code>Credentials</code> returned must have read-only rights. That
      * is, the <code>Session</code> object returned by {@link Repository#login()}
      * has read-only access to the <code>Node</code> configured in the
      * JCR TCK Interview.
-     * <p>
+     * <p/>
      * For details, see: JCR TCK User Guide.
      *
      * @return a <code>Credentials</code> object, that allows to login to the
@@ -301,18 +295,4 @@ public abstract class RepositoryStub {
     public String getProperty(String name) {
         return environment.getProperty(name);
     }
-    
-    /**
-     * Returns a {@link Principal} identifiying a known user (not group)
-     * @param session
-     */
-    public abstract Principal getKnownPrincipal(Session session) throws RepositoryException;
-
-    /**
-     * Returns a {@link Principal} identifiying an unknown user.
-     * @param session
-     * @throws NotExecutableException if the implementation can not provide an
-     * instance of Principal for unkwnown users
-     */
-    public abstract Principal getUnknownPrincipal(Session session) throws RepositoryException, NotExecutableException;
 }

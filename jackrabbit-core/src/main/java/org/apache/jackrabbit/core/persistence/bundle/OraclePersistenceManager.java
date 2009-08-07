@@ -95,8 +95,8 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
         if (getUrl() == null) {
             setUrl("jdbc:oracle:thin:@127.0.0.1:1521:xe");
         }
-        if (getDatabaseType() == null) {
-            setDatabaseType("oracle");
+        if (getSchema() == null) {
+            setSchema("oracle");
         }
         if (getSchemaObjectPrefix() == null) {
             setSchemaObjectPrefix(context.getHomeDir().getName() + "_");

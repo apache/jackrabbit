@@ -18,14 +18,11 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.NodeIterator;
 
 /** <code>IndexNodeResolver</code>... */
 public class IndexNodeResolverTest extends NodeResolverTest {
@@ -37,31 +34,5 @@ public class IndexNodeResolverTest extends NodeResolverTest {
             throw new NotExecutableException();
         }
         return new IndexNodeResolver(session, (SessionImpl) session);
-    }
-
-
-    /**
-     * If query value contains backslash the non-exact findNodes method should
-     * return the desired result.
-     *
-     * @throws NotExecutableException
-     * @throws RepositoryException
-     */
-    public void testFindNodesNonExact() throws NotExecutableException, RepositoryException {
-        UserImpl currentUser = getCurrentUser(superuser);
-        Value vs = superuser.getValueFactory().createValue("value \\, containing backslash");
-        currentUser.setProperty(propertyName1, vs);
-
-        Name propName = ((SessionImpl) superuser).getQName(propertyName1);
-        try {
-            NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
-
-            NodeIterator result = nr.findNodes(propName, "value \\, containing backslash", UserConstants.NT_REP_USER, false);
-            assertTrue("expected result", result.hasNext());
-            assertEquals(currentUser.getNode().getPath(), result.nextNode().getPath());
-            assertFalse("expected no more results", result.hasNext());
-        } finally {
-            currentUser.removeProperty(propertyName1);
-        }
     }
 }

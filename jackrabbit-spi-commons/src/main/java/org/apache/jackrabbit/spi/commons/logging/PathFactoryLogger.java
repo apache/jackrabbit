@@ -117,13 +117,6 @@ public class PathFactoryLogger extends AbstractLogger implements PathFactory {
             }}, "createElement(Name)", new Object[]{name, new Integer(index)});
     }
 
-    public Element createElement(final String identifier) throws IllegalArgumentException {
-        return (Element) execute(new SafeCallable() {
-            public Object call() {
-                return pathFactory.createElement(identifier);
-            }}, "createElement(String)", new Object[]{identifier});
-    }
-
     public Element getCurrentElement() {
         return (Element) execute(new SafeCallable() {
             public Object call() {

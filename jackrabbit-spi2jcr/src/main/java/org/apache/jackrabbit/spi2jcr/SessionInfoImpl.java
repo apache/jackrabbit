@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
@@ -36,8 +35,6 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
 import java.io.ObjectInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectOutputStream;
@@ -154,16 +151,15 @@ class SessionInfoImpl implements SessionInfo {
      * Creates a subscriptions for this session info.
      *
      * @param idFactory the id factory.
-     * @param qValueFactory
      * @param filters the initial list of filters.
      * @return a subscription.
      * @throws RepositoryException
      */
-    Subscription createSubscription(IdFactory idFactory, QValueFactory qValueFactory, EventFilter[] filters)
+    Subscription createSubscription(IdFactory idFactory, EventFilter[] filters)
             throws RepositoryException {
         synchronized (subscriptionChange) {
             List tmp = new ArrayList(subscriptions);
-            EventSubscription s = new EventSubscription(idFactory, qValueFactory, this, filters);
+            EventSubscription s = new EventSubscription(idFactory, this, filters);
             tmp.add(s);
             subscriptions = Collections.unmodifiableList(tmp);
             return s;
@@ -229,25 +225,21 @@ class SessionInfoImpl implements SessionInfo {
     /**
      * @inheritDoc
      */
-    public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException {
-        return session.getWorkspace().getLockManager().getLockTokens();
+    public String[] getLockTokens() {
+        return session.getLockTokens();
     }
 
     /**
      * @inheritDoc
      */
-    public void addLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        session.getWorkspace().getLockManager().addLockToken(lockToken);
+    public void addLockToken(String lockToken) {
+        session.addLockToken(lockToken);
     }
 
     /**
      * @inheritDoc
      */
-    public void removeLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        session.getWorkspace().getLockManager().removeLockToken(lockToken);
-    }
-
-    public void setUserData(String userData) throws RepositoryException {
-        session.getWorkspace().getObservationManager().setUserData(userData);
+    public void removeLockToken(String lockToken) {
+        session.removeLockToken(lockToken);
     }
 }

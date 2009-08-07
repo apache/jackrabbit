@@ -16,17 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.value;
 
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.util.TransientFileFactory;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
-import javax.jcr.Binary;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,19 +29,42 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.TimeZone;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.util.TransientFileFactory;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>QValueFactoryImpl</code>...
  */
-public final class QValueFactoryImpl extends AbstractQValueFactory {
+public final class QValueFactoryImpl implements QValueFactory {
 
     private static final QValueFactory INSTANCE = new QValueFactoryImpl();
+
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
+
+    /**
+     * the default encoding
+     */
+    private static final String DEFAULT_ENCODING = "UTF-8";
 
     private QValueFactoryImpl() {
     }
@@ -87,17 +99,12 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
                     return new QValueImpl(Double.valueOf(value));
                 case PropertyType.LONG:
                     return new QValueImpl(Long.valueOf(value));
-                case PropertyType.DECIMAL:
-                    return new QValueImpl(new BigDecimal(value));
-                case PropertyType.URI:
-                    return new QValueImpl(URI.create(value));
                 case PropertyType.PATH:
                     return new QValueImpl(PATH_FACTORY.create(value));
                 case PropertyType.NAME:
                     return new QValueImpl(NAME_FACTORY.create(value));
                 case PropertyType.STRING:
                 case PropertyType.REFERENCE:
-                case PropertyType.WEAKREFERENCE:
                     return new QValueImpl(value, type);
                 case PropertyType.BINARY:
                     return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
@@ -129,14 +136,14 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
      * @see QValueFactory#create(double)
      */
     public QValue create(double value) {
-        return new QValueImpl(Double.valueOf(value));
+        return new QValueImpl(new Double(value));
     }
 
     /**
      * @see QValueFactory#create(long)
      */
     public QValue create(long value) {
-        return new QValueImpl(Long.valueOf(value));
+        return new QValueImpl(new Long(value));
     }
 
     /**
@@ -164,26 +171,6 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
      * @see QValueFactory#create(Path)
      */
     public QValue create(Path value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        return new QValueImpl(value);
-    }
-
-    /**
-     * @see QValueFactory#create(URI)
-     */
-    public QValue create(URI value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        return new QValueImpl(value);
-    }
-
-    /**
-     * @see QValueFactory#create(URI)
-     */
-    public QValue create(BigDecimal value) {
         if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
@@ -220,91 +207,97 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
         return new BinaryQValue(value);
     }
 
+    /**
+     * @see QValueFactory#computeAutoValues(QPropertyDefinition)
+     */
+    public QValue[] computeAutoValues(QPropertyDefinition propertyDefinition) throws RepositoryException {
+        Name nodeType = propertyDefinition.getDeclaringNodeType();
+        Name name = propertyDefinition.getName();
+
+        if (NameConstants.NT_HIERARCHYNODE.equals(nodeType) && NameConstants.JCR_CREATED.equals(name)) {
+            return new QValue[] { create(Calendar.getInstance()) };
+        } else if (NameConstants.NT_RESOURCE.equals(nodeType) && NameConstants.JCR_LASTMODIFIED.equals(name)) {
+            return new QValue[] { create(Calendar.getInstance()) };
+        } else if (NameConstants.MIX_REFERENCEABLE.equals(nodeType) && NameConstants.JCR_UUID.equals(name)) {
+            return new QValue[] { create(UUID.randomUUID().toString(), PropertyType.STRING) };
+        } else {
+            throw new RepositoryException("createFromDefinition not implemented for: " + name);
+        }
+    }
 
     //--------------------------------------------------------< Inner Class >---
     /**
      * <code>QValue</code> implementation for all valid <code>PropertyType</code>s
-     * except for BINARY and DATE.
+     * except for BINARY.
      * @see QValueFactoryImpl.BinaryQValue
      */
-    private static class QValueImpl extends AbstractQValue implements Serializable {
+    private static class QValueImpl implements QValue, Serializable {
 
         private static final QValue TRUE = new QValueImpl(Boolean.TRUE);
+
         private static final QValue FALSE = new QValueImpl(Boolean.FALSE);
 
+        private final Object val;
+        private final int type;
 
         private QValueImpl(Object value, int type) {
-            super(value, type);
+            val = value;
+            this.type = type;
         }
 
         private QValueImpl(String value, int type) {
-            super(value, type);
+            if (!(type == PropertyType.STRING || type == PropertyType.REFERENCE)) {
+                throw new IllegalArgumentException();
+            }
+            val = value;
+            this.type = type;
         }
 
         private QValueImpl(Long value) {
-            super(value);
+            val = value;
+            type = PropertyType.LONG;
         }
 
         private QValueImpl(Double value) {
-            super(value);
-        }
-
-        private QValueImpl(BigDecimal value) {
-            super(value);
+            val = value;
+            type = PropertyType.DOUBLE;
         }
 
         private QValueImpl(Boolean value) {
-            super(value);
+            val = value;
+            type = PropertyType.BOOLEAN;
         }
 
         private QValueImpl(Name value) {
-            super(value);
+            val = value;
+            type = PropertyType.NAME;
         }
 
         private QValueImpl(Path value) {
-            super(value);
-        }
-
-        private QValueImpl(URI value) {
-            super(value);
+            val = value;
+            type = PropertyType.PATH;
         }
 
         //---------------------------------------------------------< QValue >---
         /**
-         * @see QValue#getString()
+         * @see QValue#getType()
          */
-        public String getString() {
-            return val.toString();
+        public int getType() {
+            return type;
         }
 
         /**
-         * @see QValue#getBinary()
+         * @see QValue#getLength()
          */
-        public Binary getBinary() throws RepositoryException {
-            // TODO FIXME consolidate Binary implementations
-            return new Binary() {
-                public InputStream getStream() throws RepositoryException {
-                    return QValueImpl.this.getStream();
-                }
+        public long getLength() throws RepositoryException {
+            return getString().length();
+        }
 
-                public int read(byte[] b, long position) throws IOException, RepositoryException {
-                    InputStream in = getStream();
-                    try {
-                        in.skip(position);
-                        return in.read(b);
-                    } finally {
-                        in.close();
-                    }
-                }
-
-                public long getSize() throws RepositoryException {
-                    return getLength();
-                }
-
-                public void dispose() {
-                }
-
-            };
+        /**
+         * @see QValue#getString()
+         */
+        public String getString() throws RepositoryException {
+            return val.toString();
         }
 
         /**
@@ -313,11 +306,156 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
         public InputStream getStream() throws RepositoryException {
             try {
                 // convert via string
-                return new ByteArrayInputStream(getString().getBytes(DEFAULT_ENCODING));
+                return new ByteArrayInputStream(getString().getBytes(QValueFactoryImpl.DEFAULT_ENCODING));
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException(QValueFactoryImpl.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
             }
-    }
+        }
+
+        /**
+         * @see QValue#getName()
+         */
+        public Name getName() throws RepositoryException {
+            if (type == PropertyType.NAME) {
+                return (Name) val;
+            } else {
+                try {
+                    return NAME_FACTORY.create(getString());
+                } catch (IllegalArgumentException e) {
+                    throw new ValueFormatException("not a valid Name value: " + getString(), e);
+                }
+            }
+        }
+
+        /**
+         * @see QValue#getCalendar()
+         */
+        public Calendar getCalendar() throws RepositoryException {
+            if (type == PropertyType.DATE) {
+                return (Calendar) ((Calendar) val).clone();
+            } else if (type == PropertyType.DOUBLE) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
+                cal.setTimeInMillis(((Double) val).longValue());
+                return cal;
+            } else if (type == PropertyType.LONG) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
+                cal.setTimeInMillis(((Long) val).longValue());
+                return cal;
+            } else {
+                Calendar cal = ISO8601.parse(getString());
+                if (cal == null) {
+                    throw new ValueFormatException("not a date string: " + getString());
+                }
+                else {
+                    return cal;
+                }
+            }
+        }
+
+        /**
+         * @see QValue#getDouble()
+         */
+        public double getDouble() throws RepositoryException {
+            if (type == PropertyType.DOUBLE) {
+                return ((Double) val).doubleValue();
+            } else if (type == PropertyType.DATE) {
+                return ((Calendar) val).getTimeInMillis();
+            } else {
+                try {
+                    return Double.parseDouble(getString());
+                } catch (NumberFormatException ex) {
+                    throw new ValueFormatException("not a double: " + getString(), ex);
+                }
+            }
+        }
+
+        /**
+         * @see QValue#getLong()
+         */
+        public long getLong() throws RepositoryException {
+            if (type == PropertyType.LONG) {
+                return ((Long) val).longValue();
+            } else if (type == PropertyType.DOUBLE) {
+                return ((Double) val).longValue();
+            } else if (type == PropertyType.DATE) {
+                return ((Calendar) val).getTimeInMillis();
+            } else {
+                try {
+                    return Long.parseLong(getString());
+                } catch (NumberFormatException ex) {
+                    throw new ValueFormatException("not a long: " + getString(), ex);
+                }
+            }
+        }
+
+        /**
+         * @throws RepositoryException
+         * @see QValue#getBoolean()
+         */
+        public boolean getBoolean() throws RepositoryException {
+            if (type == PropertyType.BOOLEAN) {
+                return ((Boolean) val).booleanValue();
+            } else {
+                return Boolean.valueOf(getString()).booleanValue();
+            }
+        }
+
+        /**
+         * @see QValue#getPath()
+         */
+        public Path getPath() throws RepositoryException {
+            if (type == PropertyType.PATH) {
+                return (Path) val;
+            } else {
+                try {
+                    return PATH_FACTORY.create(getString());
+                } catch (IllegalArgumentException e) {
+                    throw new ValueFormatException("not a valid Path: " + getString(), e);
+                }
+            }
+        }
+
+        /**
+         * @see QValue#discard()
+         */
+        public void discard() {
+            // nothing to do
+        }
+
+        //---------------------------------------------------------< Object >---
+        /**
+         * Returns the string representation of this internal value.
+         *
+         * @return string representation of this internal value
+         */
+        public String toString() {
+            return val.toString();
+        }
+
+        /**
+         *
+         * @param obj
+         * @see Object#equals(Object)
+         */
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof QValueImpl) {
+                QValueImpl other = (QValueImpl) obj;
+                return type == other.type && val.equals(other.val);
+            }
+            return false;
+        }
+
+        /**
+         * @return the hashCode of the internal value object.
+         * @see Object#hashCode()
+         */
+        public int hashCode() {
+            return val.hashCode();
+        }
+
     }
 
     //--------------------------------------------------------< Inner Class >---
@@ -335,10 +473,11 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
 
         /**
          * @return The formatted String of the internal Calendar value.
+         * @throws RepositoryException
          * @see QValue#getString()
          * @see ISO8601#format(Calendar)
          */
-        public String getString() {
+        public String getString() throws RepositoryException {
             return formattedStr;
         }
 
@@ -375,7 +514,7 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
      * state, i.e. the <code>getStream()</code> method always returns a fresh
      * <code>InputStream</code> instance.
      */
-    private static class BinaryQValue implements QValue, Binary, Serializable {
+    private static class BinaryQValue implements QValue, Serializable {
         /**
          * empty array
          */
@@ -640,7 +779,7 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
          * @see QValue#getBoolean()
          */
         public boolean getBoolean() throws RepositoryException {
-            return Boolean.valueOf(getString());
+            return Boolean.valueOf(getString()).booleanValue();
         }
 
         /**
@@ -648,35 +787,6 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
          */
         public Path getPath() throws RepositoryException {
             throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @see QValue#getDecimal()
-         */
-        public BigDecimal getDecimal() throws RepositoryException {
-            try {
-                return new BigDecimal(getString());
-            } catch (NumberFormatException ex) {
-                throw new ValueFormatException(ex);
-            }
-        }
-
-        /**
-         * @see QValue#getURI()
-         */
-        public URI getURI() throws RepositoryException {
-            try {
-                return new URI(getString());
-            } catch (URISyntaxException ex) {
-                throw new ValueFormatException(ex);
-            }
-        }
-
-        /**
-         * @see QValue#getBinary()
-         */
-        public Binary getBinary() throws RepositoryException {
-            return this;
         }
 
         /**
@@ -698,10 +808,6 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
                 // this instance is backed by an in-memory buffer
                 buffer = EMPTY_BYTE_ARRAY;
             }
-        }
-
-        public void dispose() {
-            discard();
         }
 
         //-----------------------------------------------< java.lang.Object >---
@@ -786,35 +892,6 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
                 } catch (IOException ignore) {
                 }
             }
-        }
-
-        //-----------------------------< javx.jcr.Binary >----------------------
-        /**
-         * {@inheritDoc}
-         */
-        public int read(byte[] b, long position) throws IOException, RepositoryException {
-            if (file != null) {
-                // this instance is backed by a temp file
-                RandomAccessFile raf = new RandomAccessFile(file, "r");
-                raf.seek(position);
-                return raf.read(b);
-            } else {
-                // this instance is backed by an in-memory buffer
-                int length = Math.min(b.length, buffer.length - (int) position);
-                if (length > 0) {
-                    System.arraycopy(buffer, (int) position, b, 0, length);
-                    return length;
-                } else {
-                    return -1;
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public long getSize() throws RepositoryException {
-            return getLength();
         }
 
         //-----------------------------< Serializable >-------------------------

@@ -52,17 +52,7 @@ class RedoLog {
     /**
      * Default name of the redo log file
      */
-    static final String REDO_LOG = "redo.log";
-
-    /**
-     * Prefix of the redo log files.
-     */
-    static final String REDO_LOG_PREFIX = "redo_";
-
-    /**
-     * The .log extension.
-     */
-    static final String DOT_LOG = ".log";
+    private static final String REDO_LOG = "redo.log";
 
     /**
      * Implements a {@link ActionCollector} that counts all entries and sets
@@ -80,11 +70,6 @@ class RedoLog {
     private final Directory dir;
 
     /**
-     * The name of the log file.
-     */
-    private final String fileName;
-
-    /**
      * The number of log entries in the log file
      */
     private int entryCount = 0;
@@ -99,33 +84,11 @@ class RedoLog {
      * given directory.
      *
      * @param dir the directory where the redo log file is located.
-     * @param fileName the name of the redo log file.
      * @throws IOException if an error occurs while reading the redo log.
      */
-    private RedoLog(Directory dir, String fileName) throws IOException {
+    RedoLog(Directory dir) throws IOException {
         this.dir = dir;
-        this.fileName = fileName;
         read(ENTRY_COUNTER);
-    }
-
-    /**
-     * Creates a new <code>RedoLog</code> instance, which stores its log in the
-     * given directory.
-     *
-     * @param dir        the directory where the redo log file is located.
-     * @param generation the redo log generation number.
-     * @return the redo log.
-     * @throws IOException if the redo log cannot be created.
-     */
-    static RedoLog create(Directory dir, long generation) throws IOException {
-        String fileName;
-        if (generation == 0) {
-            fileName = RedoLog.REDO_LOG;
-        } else {
-            fileName = RedoLog.REDO_LOG_PREFIX + Long.toString(
-                    generation, Character.MAX_RADIX) + RedoLog.DOT_LOG;
-        }
-        return new RedoLog(dir, fileName);
     }
 
     /**
@@ -154,8 +117,8 @@ class RedoLog {
      *         redo log.
      * @throws IOException if an error occurs while reading from the redo log.
      */
-    List<MultiIndex.Action> getActions() throws IOException {
-        final List<MultiIndex.Action> actions = new ArrayList<MultiIndex.Action>();
+    List getActions() throws IOException {
+        final List actions = new ArrayList();
         read(new ActionCollector() {
             public void collect(MultiIndex.Action a) {
                 actions.add(a);
@@ -196,20 +159,8 @@ class RedoLog {
             out.close();
             out = null;
         }
-        dir.deleteFile(fileName);
+        dir.deleteFile(REDO_LOG);
         entryCount = 0;
-    }
-
-    /**
-     * Closes this redo log.
-     *
-     * @throws IOException if an error occurs while flushing pending writes.
-     */
-    void close() throws IOException {
-        if (out != null) {
-            out.close();
-            out = null;
-        }
     }
 
     /**
@@ -219,7 +170,7 @@ class RedoLog {
      */
     private void initOut() throws IOException {
         if (out == null) {
-            OutputStream os = new IndexOutputStream(dir.createOutput(fileName));
+            OutputStream os = new IndexOutputStream(dir.createOutput(REDO_LOG));
             out = new BufferedWriter(new OutputStreamWriter(os));
         }
     }
@@ -232,10 +183,10 @@ class RedoLog {
      * log file.
      */
     private void read(ActionCollector collector) throws IOException {
-        if (!dir.fileExists(fileName)) {
+        if (!dir.fileExists(REDO_LOG)) {
             return;
         }
-        InputStream in = new IndexInputStream(dir.openInput(fileName));
+        InputStream in = new IndexInputStream(dir.openInput(REDO_LOG));
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line;

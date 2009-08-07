@@ -18,15 +18,12 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.NotExecutableException;
 
+import javax.jcr.PropertyType;
+import javax.jcr.Value;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-
-import javax.jcr.Binary;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 
 /**
  * Tests a binary property. If the workspace does not contain a node with a
@@ -92,42 +89,6 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests that when Binary.getStream() is called a second time a new stream
-     * object is returned.
-     */
-    public void testSameStreamJcr2() throws RepositoryException, IOException {
-        Value val = PropertyUtil.getValue(prop);
-        Binary bin = val.getBinary();
-        try {
-            InputStream in = bin.getStream();
-            InputStream in2 = bin.getStream();
-            try {
-                assertNotSame("Value.getStream() called on a new value " +
-                        "object should return a different Stream object.", in, in2);
-                //check if both streams can be read independently but contain the same bytes
-                int n,n2;
-                while ((n = in.read()) != -1) {
-                    n2 = in2.read();
-                    assertEquals("streams from the same binary object should have identical content", n, n2);
-                }
-                assertEquals("streams from the same binary object should have identical content", -1, in2.read());
-            } finally {
-                // cleaning up
-                try {
-                    in.close();
-                } catch (IOException ignore) {}
-                if (in2 != in) {
-                    try {
-                        in2.close();
-                    } catch (IOException ignore) {}
-                }
-            }
-        } finally {
-            bin.dispose();
-        }
-    }
-
-    /**
      * Tests the failure of calling Property.getStream() on a multivalue
      * property.
      */
@@ -144,22 +105,6 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
                 if (in != null) {
                     in.close();
                 }
-            }
-        }
-    }
-
-    /**
-     * Tests the failure of calling Property.getBinary() on a multivalue
-     * property.
-     */
-    public void testMultiValueJcr2() throws RepositoryException, IOException {
-        if (multiple) {
-            try {
-                prop.getBinary();
-                fail("Calling getStream() on a multivalue property " +
-                        "should throw a ValueFormatException.");
-            } catch (ValueFormatException vfe) {
-                // ok
             }
         }
     }
@@ -196,40 +141,6 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
             try {
                 in2.close();
             } catch (IOException ignore) {}
-        }
-    }
-
-    /**
-     * Tests that Value.getStream() delivers the same as Value.getBinary.getStream().
-     * We check this by reading each byte of the two streams and assuring that
-     * they are equal.
-     */
-    public void testValueJcr2() throws IOException, RepositoryException {
-        Value val = PropertyUtil.getValue(prop);
-        InputStream in = val.getStream();
-        Binary bin = val.getBinary();
-        try {
-            InputStream in2 = bin.getStream();
-            try {
-                int b = in.read();
-                while (b != -1) {
-                    int b2 = in2.read();
-                    assertEquals("Value.getStream() and Value.getBinary().getStream() " +
-                            "return different values.", b, b2);
-                    b = in.read();
-                }
-                assertEquals("Value.getStream() and Value.getBinary().getStream() " +
-                        "return different values.", -1, in2.read());
-            } finally {
-                try {
-                    in.close();
-                } catch (IOException ignore) {}
-                try {
-                    in2.close();
-                } catch (IOException ignore) {}
-            }
-        } finally {
-            bin.dispose();
         }
     }
 
@@ -322,10 +233,10 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests the conversion from Binary type to Reference or Path type. This conversion
+     * Tests the conversion from Binary type to Reference type. This conversion
      * passes through previous String conversion.
      */
-    public void testGetNode() throws RepositoryException, NotExecutableException {
+    public void testAsReference() throws RepositoryException, NotExecutableException {
         if (!multiple) {
             // not testable since format of ID is implementation specific
         } else {
@@ -339,24 +250,6 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
         }
     }
 
-    /**
-     * Tests the conversion from Binary type to Path type. This conversion
-     * passes through previous String conversion.
-     */
-    public void testGetProperty() throws RepositoryException, NotExecutableException {
-        if (!multiple) {
-            // not testable since format of ID is implementation specific
-        } else {
-            try {
-                prop.getNode();
-                fail("Property.getProperty() called on a multivalue property " +
-                        "should throw a ValueFormatException.");
-            } catch (ValueFormatException vfe) {
-                // ok
-            }
-        }
-    }
-    
     /**
      * Tests the Property.getLength() method.
      */
@@ -380,25 +273,6 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
                 }
 
             }
-        }
-    }
-
-    /**
-     * Tests the Binary.getSize() method.
-     */
-    public void testGetLengthJcr2() throws RepositoryException {
-        Value val = PropertyUtil.getValue(prop);
-        Binary binary = val.getBinary();
-        long length;
-        try {
-            length = binary.getSize();
-        } finally {
-            binary.dispose();
-        }
-        long bytes = PropertyUtil.countBytes(prop.getValue());
-        if (bytes != -1) {
-            assertEquals("Binary.getSize() returns wrong number of bytes.",
-                    bytes, length);
         }
     }
 
@@ -427,55 +301,4 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
             }
         }
     }
-
-    /**
-     * Tests the Binary.read() method.
-     */
-    public void testRandomAccess() throws RepositoryException, IOException {
-        Value val = PropertyUtil.getValue(prop);
-        Binary bin = val.getBinary();
-        try {
-            byte[] buf = new byte[0x1000];
-
-            //verify that reading behind EOF returns -1
-            assertEquals("reading behind EOF must return -1", -1, bin.read(buf, bin.getSize()));
-
-            //read content using Binary.read()
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            for (int cnt, pos = 0; (cnt = bin.read(buf, pos)) > 0; pos += cnt) {
-                out.write(buf, 0, cnt);
-            }
-            byte[] content = out.toByteArray();
-            assertEquals("unexpected content length", bin.getSize(), content.length);
-
-            //verify against stream
-            InputStream in = val.getStream();
-            try {
-                int k = 0;
-                for (int b; (b = in.read()) != -1; k++) {
-                    assertEquals("Value.getStream().read() and Value.getBinary().read() " +
-                            "return different values.", (byte) b, content[k]);
-                }
-                assertEquals("unexpected content length", k, content.length);
-            } finally {
-                try {
-                    in.close();
-                } catch (IOException ignore) {}
-            }
-
-            //verify random access
-            buf = new byte[1];
-            assertTrue("unexpected result of Value.getBinary.read()", -1 != bin.read(buf, 0));
-            assertEquals("unexpected result of Value.getBinary.read()", content[0], buf[0]);
-            if (content.length > 0) {
-                assertTrue("unexpected result of Value.getBinary.read()", -1 != bin.read(buf, content.length - 1));
-                assertEquals("unexpected result of Value.getBinary.read()", content[content.length - 1], buf[0]);
-                assertTrue("unexpected result of Value.getBinary.read()", -1 != bin.read(buf, 0));
-                assertEquals("unexpected result of Value.getBinary.read()", content[0], buf[0]);
-            }
-        } finally {
-            bin.dispose();
-        }
-    }
-    
 }

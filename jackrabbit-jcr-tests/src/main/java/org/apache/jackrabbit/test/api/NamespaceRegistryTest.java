@@ -29,7 +29,7 @@ import java.util.Set;
 /**
  * <code>NamespaceRegistryTest</code> tests whether the repository registers and
  * unregisters namespaces correctly. This is a level 2 feature.
- * <p>
+ * <p/>
  * NOTE: Implementations are free to not support unregistering. In other words:
  * Even a repository that supports namespaces may always legally throw an
  * exception when you try to unregister.

@@ -39,7 +39,7 @@ public class GetStatementTest extends AbstractQueryTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         testRootNode = session.getRootNode().getNode(testPath);
     }
 

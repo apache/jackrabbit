@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.Not;
-
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
 
 /**
  * <code>NotImpl</code>...

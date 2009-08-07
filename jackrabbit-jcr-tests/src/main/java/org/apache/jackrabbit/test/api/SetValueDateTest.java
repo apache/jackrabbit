@@ -28,10 +28,8 @@ import java.util.Calendar;
 
 /**
  * Tests the various {@link Property#setValue(Value)} methods.
- * <p>
- * Configuration requirements:
- * <p>
- * The node at {@link #testRoot} must allow a
+ * <p/>
+ * Configuration requirements:<br/> The node at {@link #testRoot} must allow a
  * child node of type {@link #testNodeType} with name {@link #nodeName1}. The
  * node type {@link #testNodeType} must define a single value date property
  * with name {@link #propertyName1}.

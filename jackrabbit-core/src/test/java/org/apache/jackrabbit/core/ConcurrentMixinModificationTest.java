@@ -25,11 +25,15 @@ import javax.jcr.InvalidItemStateException;
  */
 public class ConcurrentMixinModificationTest extends ConcurrentModificationBase {
 
+    private Node getNode(String path) throws Exception {
+        return (Node) session.getItem(path);
+    }
+
     public void testMixin() throws Exception {
         Node n = testRootNode.addNode(nodeName1);
         superuser.save();
         n.addMixin(mixReferenceable);
-        session.getNode(testRoot).getNode(nodeName1).addMixin(mixLockable);
+        getNode(testRoot).getNode(nodeName1).addMixin(mixLockable);
         superuser.save();
         try {
             session.save();

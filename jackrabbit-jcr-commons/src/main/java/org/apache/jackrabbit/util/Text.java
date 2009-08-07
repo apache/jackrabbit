@@ -453,12 +453,12 @@ public class Text {
      * QName EBNF:<br>
      * <xmp>
      * simplename ::= onecharsimplename | twocharsimplename | threeormorecharname
-     * onecharsimplename ::= (* Any Unicode character except: '.', '/', ':', '[', ']', '*', '|' or any whitespace character *)
+     * onecharsimplename ::= (* Any Unicode character except: '.', '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
      * twocharsimplename ::= '.' onecharsimplename | onecharsimplename '.' | onecharsimplename onecharsimplename
      * threeormorecharname ::= nonspace string nonspace
      * string ::= char | string char
      * char ::= nonspace | ' '
-     * nonspace ::= (* Any Unicode character except: '/', ':', '[', ']', '*', '|' or any whitespace character *)
+     * nonspace ::= (* Any Unicode character except: '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
      * </xmp>
      *
      * @param name the name to escape
@@ -469,7 +469,7 @@ public class Text {
         for (int i = 0; i < name.length(); i++) {
             char ch = name.charAt(i);
             if (ch == '%' || ch == '/' || ch == ':' || ch == '[' || ch == ']'
-                || ch == '*' || ch == '|'
+                || ch == '*' || ch == '\'' || ch == '"' || ch == '|'
                 || (ch == '.' && name.length() < 3)
                 || (ch == ' ' && (i == 0 || i == name.length() - 1))
                 || ch == '\t' || ch == '\r' || ch == '\n') {
@@ -483,8 +483,7 @@ public class Text {
         return buffer.toString();
     }
 
-    /**
-     * Escapes all illegal XPath search characters of a string.
+    /** Escapes all illegal XPath search characters of a string.
      * <p>Example:<br>
      * A search string like 'test?' will run into a ParseException
      * documented in http://issues.apache.org/jira/browse/JCR-1248

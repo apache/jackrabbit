@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
+import java.io.IOException;
+
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
+import org.apache.jackrabbit.core.query.lucene.Util;
 
 /**
  * <code>UpperCaseOperand</code> implements an upper case operand.
@@ -46,12 +49,16 @@ public class UpperCaseOperand extends DynamicOperand {
      * {@inheritDoc}
      */
     public Value[] getValues(ScoreNode sn, EvaluationContext context)
-            throws RepositoryException {
-        ValueFactory vf = context.getSession().getValueFactory();
-        Value[] values = operand.getValues(sn, context);
-        for (int i = 0; i < values.length; i++) {
-            values[i] = vf.createValue(values[i].getString().toUpperCase());
+            throws IOException {
+        try {
+            ValueFactory vf = context.getSession().getValueFactory();
+            Value[] values = operand.getValues(sn, context);
+            for (int i = 0; i < values.length; i++) {
+                values[i] = vf.createValue(values[i].getString().toUpperCase());
+            }
+            return values;
+        } catch (RepositoryException e) {
+            throw Util.createIOException(e);
         }
-        return values;
     }
 }

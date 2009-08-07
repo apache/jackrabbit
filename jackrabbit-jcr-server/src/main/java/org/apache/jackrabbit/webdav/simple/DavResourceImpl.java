@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.server.io.AbstractExportContext;
 import org.apache.jackrabbit.server.io.DefaultIOListener;
 import org.apache.jackrabbit.server.io.ExportContext;
@@ -41,8 +42,8 @@ import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.bind.BindConstants;
 import org.apache.jackrabbit.webdav.bind.BindableResource;
-import org.apache.jackrabbit.webdav.bind.ParentElement;
 import org.apache.jackrabbit.webdav.bind.ParentSet;
+import org.apache.jackrabbit.webdav.bind.ParentElement;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
@@ -56,7 +57,10 @@ import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.SupportedLock;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
@@ -77,12 +81,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
+import java.util.HashSet;
 
 /**
  * DavResourceImpl implements a DavResource.
@@ -118,6 +121,42 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     
     private ResourceConfig config;
     private long modificationTime = IOUtil.UNDEFINED_TIME;
+
+    /**
+     * Create a new {@link DavResource}.
+     *
+     * @param locator
+     * @param factory
+     * @param session
+     * @deprecated
+     */
+    public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
+                           DavSession session, ResourceConfig config) throws DavException {
+        JcrDavSession.checkImplementation(session);
+        this.session = (JcrDavSession)session;
+        this.factory = factory;
+        this.locator = locator;
+        this.config = config;
+
+        if (locator != null && locator.getRepositoryPath() != null) {
+            try {
+                Item item = getJcrSession().getItem(locator.getRepositoryPath());
+                if (item != null && item.isNode()) {
+                    node = (Node) item;
+                    // define what is a collection in webdav
+                    isCollection = config.isCollectionResource(node);
+                    initRfc4122Uri();
+                }
+            } catch (PathNotFoundException e) {
+                // ignore: exists field evaluates to false
+            } catch (RepositoryException e) {
+                // some other error
+                throw new JcrDavException(e);
+            }
+        } else {
+            throw new DavException(DavServletResponse.SC_NOT_FOUND);
+        }
+    }
 
     /**
      * Create a new {@link DavResource}.
@@ -217,6 +256,17 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      */
     public boolean isCollection() {
         return isCollection;
+    }
+
+    /**
+     * Package protected method that allows to define whether this resource
+     * represents a collection or not.
+     *
+     * @param isCollection
+     * @deprecated Use the constructor taking a boolean flag instead.
+     */
+    void setIsCollection(boolean isCollection) {
+        this.isCollection = isCollection;
     }
 
     /**
@@ -406,6 +456,28 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         }
     }
 
+    /**
+     * @see DavResource#alterProperties(DavPropertySet, DavPropertyNameSet)
+     */
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
+                                               DavPropertyNameSet removePropertyNames)
+            throws DavException {
+        List changeList = new ArrayList();
+        if (removePropertyNames != null) {
+            DavPropertyNameIterator it = removePropertyNames.iterator();
+            while (it.hasNext()) {
+                changeList.add(it.next());
+            }
+        }
+        if (setProperties != null) {
+            DavPropertyIterator it = setProperties.iterator();
+            while (it.hasNext()) {
+                changeList.add(it.next());
+            }
+        }
+        return alterProperties(changeList);
+    }
+
     public MultiStatusResponse alterProperties(List changeList) throws DavException {
         if (isLocked(this)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
@@ -563,8 +635,10 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         try {
             String itemPath = member.getLocator().getRepositoryPath();
             Item memItem = getJcrSession().getItem(itemPath);
-            if (memItem instanceof Node) {
-                ((Node)memItem).removeShare();
+            //TODO once jcr2 is out: simply call removeShare()
+            if (memItem instanceof org.apache.jackrabbit.api.jsr283.Node) {
+                org.apache.jackrabbit.api.jsr283.Node n = (org.apache.jackrabbit.api.jsr283.Node) memItem;
+                n.removeShare();
             } else {
                 memItem.remove();
             }
@@ -863,8 +937,14 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     public Set getParentElements() {
         try {
             if (node.getDepth() > 0) {
+                //TODO remove this check once jcr2 is out
+                if (!(node instanceof org.apache.jackrabbit.api.jsr283.Node)) {
+                    DavResourceLocator loc = locator.getFactory().createResourceLocator(
+                            locator.getPrefix(), locator.getWorkspacePath(), node.getParent().getPath(), false);
+                    return Collections.singleton(new ParentElement(loc.getHref(true), node.getName()));
+                }
                 Set ps = new HashSet();
-                NodeIterator sharedSetIterator = node.getSharedSet();
+                NodeIterator sharedSetIterator = ((org.apache.jackrabbit.api.jsr283.Node) node).getSharedSet();
                 while (sharedSetIterator.hasNext()) {
                     Node sharednode = sharedSetIterator.nextNode();
                     DavResourceLocator loc = locator.getFactory().createResourceLocator(

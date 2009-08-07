@@ -81,7 +81,7 @@ public class OracleFileSystem extends DbFileSystem {
      */
     private static Logger log = LoggerFactory.getLogger(OracleFileSystem.class);
 
-    private Class< ? > blobClass;
+    private Class blobClass;
     private Integer durationSessionConstant;
     private Integer modeReadWriteConstant;
 
@@ -574,7 +574,7 @@ public class OracleFileSystem extends DbFileSystem {
         open.invoke(blob, new Object[]{modeReadWriteConstant});
         Method getBinaryOutputStream =
                 blobClass.getMethod("getBinaryOutputStream", new Class[0]);
-        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob);
+        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
         try {
             IOUtils.copy(in, out);
         } finally {
@@ -585,7 +585,7 @@ public class OracleFileSystem extends DbFileSystem {
             out.close();
         }
         Method close = blobClass.getMethod("close", new Class[0]);
-        close.invoke(blob);
+        close.invoke(blob, null);
         return (Blob) blob;
     }
 
@@ -595,6 +595,6 @@ public class OracleFileSystem extends DbFileSystem {
     protected void freeTemporaryBlob(Object blob) throws Exception {
         // blob.freeTemporary();
         Method freeTemporary = blobClass.getMethod("freeTemporary", new Class[0]);
-        freeTemporary.invoke(blob);
+        freeTemporary.invoke(blob, null);
     }
 }

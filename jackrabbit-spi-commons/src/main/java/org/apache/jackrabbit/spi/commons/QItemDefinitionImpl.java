@@ -175,7 +175,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
     /**
      * See {@link QNodeDefinition#hashCode()} and {@link QPropertyDefinition#hashCode()}.
      *
-     * @return the hashcode
+     * @return
      */
     public abstract int hashCode();
 }

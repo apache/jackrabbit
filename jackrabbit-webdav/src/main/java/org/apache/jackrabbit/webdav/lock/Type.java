@@ -104,7 +104,7 @@ public class Type implements XmlSerializable {
      * @return <code>Type</code> object.
      */
     public static Type create(String localName, Namespace namespace) {
-        String key = DomUtil.getExpandedName(localName, namespace);
+        String key = DomUtil.getQualifiedName(localName, namespace);
         if (types.containsKey(key)) {
             return (Type) types.get(key);
         } else {

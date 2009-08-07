@@ -61,14 +61,10 @@ public interface NodeInfo extends ItemInfo {
     public Name[] getMixins();
 
     /**
-     * Return the {@link PropertyId Id}s of the properties that are referencing the
-     * node based on this info object.
-     * 
      * @return {@link PropertyId Id}s of the properties that are referencing the
      * node based on this info object or an empty array if the node is not
      * referenceable or no references exist.
      * @see PropertyInfo#getId()
-     * @deprecated Use {@link RepositoryService#getReferences(SessionInfo, NodeId, Name, boolean)} instead.
      */
     public PropertyId[] getReferences();
 
@@ -76,7 +72,7 @@ public interface NodeInfo extends ItemInfo {
      * @return {@link PropertyId Id}s of children properties
      * @see PropertyInfo#getId()
      */
-    public Iterator<PropertyId> getPropertyIds();
+    public Iterator getPropertyIds();
 
     /**
      * Return the all <code>ChildInfo</code>s of the node represent by
@@ -94,5 +90,5 @@ public interface NodeInfo extends ItemInfo {
      * case {@link RepositoryService#getChildInfos(SessionInfo, NodeId)} will
      * be used to load the <code>ChildInfo</code>s.
      */
-    public Iterator<ChildInfo> getChildInfos();
+    public Iterator getChildInfos();
 }

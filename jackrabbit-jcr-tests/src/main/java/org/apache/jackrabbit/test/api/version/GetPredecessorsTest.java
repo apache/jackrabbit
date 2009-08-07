@@ -18,12 +18,10 @@ package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionManager;
 
 /**
  * <code>GetPredecessorsTest</code>  provides test methods covering {@link
- * Version#getPredecessors()}, {@link Version#getLinearPredecessor()} and
- * {@link Version#getLinearSuccessor()}.
+ * javax.jcr.version.Version#getPredecessors()}.
  *
  * @test
  * @sources GetPredecessorsTest.java
@@ -45,38 +43,4 @@ public class GetPredecessorsTest extends AbstractVersionTest {
 
         assertTrue("Version should have at minimum one predecessor version.", version.getPredecessors().length > 0);
     }
-    
-    /**
-     * Checks ontaining the linear predecessor.
-     * @since JCR 2.0
-     */
-    public void testGetLinearPredecessorSuccessor() throws RepositoryException {
-
-        String path = versionableNode.getPath();
-        
-        VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
-        
-        // get the previous version
-        Version pred = vm.getBaseVersion(path);
-
-        // shouldn't have a successor yet
-        assertNull(pred.getLinearSuccessor());
-        
-        // check root version
-        Version root = vm.getVersionHistory(path).getRootVersion();
-        assertNull(root.getLinearSuccessor());
-        
-        // create a new version
-        vm.checkout(path);
-        Version version = vm.checkin(path);
-        
-        // refresh the predecessor
-        pred = (Version)versionableNode.getSession().getNode(pred.getPath());
-
-        assertTrue("linear predecessor of new version should be previous version",
-                version.getLinearPredecessor().isSame(pred));
-        assertTrue("linear successor of previous version should be new version",
-                pred.getLinearSuccessor().isSame(version));
-    }
-
 }

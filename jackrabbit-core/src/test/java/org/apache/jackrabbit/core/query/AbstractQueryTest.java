@@ -16,27 +16,25 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
-import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
-import javax.jcr.query.RowIterator;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-import org.apache.jackrabbit.core.query.lucene.SearchIndex;
-import org.apache.jackrabbit.test.AbstractJCRTest;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.Value;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Abstract base class for query test cases.
@@ -50,7 +48,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         qm = superuser.getWorkspace().getQueryManager();
-        qomFactory = qm.getQOMFactory();
+        qomFactory = ((QueryManagerImpl) qm).getQOMFactory();
     }
 
     protected void tearDown() throws Exception {
@@ -140,7 +138,6 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeXPathQuery(String xpath, Node[] nodes)
             throws RepositoryException {
-        getSearchIndex().flush();
         QueryResult res = qm.createQuery(xpath, Query.XPATH).execute();
         checkResult(res, nodes);
     }
@@ -155,7 +152,6 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeSQLQuery(String sql, Node[] nodes)
             throws RepositoryException {
-        getSearchIndex().flush();
         QueryResult res = qm.createQuery(sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
@@ -256,11 +252,9 @@ public class AbstractQueryTest extends AbstractJCRTest {
     }
 
     /**
-     * Returns a reference to the underlying search index.
-     *
      * @return the query handler inside the {@link #qm query manager}.
      */
-    protected SearchIndex getSearchIndex() {
-        return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
+    protected QueryHandler getQueryHandler() {
+        return ((QueryManagerImpl) qm).getQueryHandler();
     }
 }

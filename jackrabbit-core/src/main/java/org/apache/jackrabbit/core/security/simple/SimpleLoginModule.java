@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.simple;
 
 import org.apache.jackrabbit.core.security.authentication.AbstractLoginModule;
 import org.apache.jackrabbit.core.security.authentication.Authentication;
+import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,8 +76,8 @@ public class SimpleLoginModule extends AbstractLoginModule {
     }
 
     /**
-     * Uses the configured {@link org.apache.jackrabbit.core.security.principal.PrincipalProvider} to retrieve the principal.
-     * It takes the {@link org.apache.jackrabbit.core.security.principal.PrincipalProvider#getPrincipal(String)} for the User-ID
+     * Uses the configured {@link PrincipalProvider} to retrieve the principal.
+     * It takes the {@link PrincipalProvider#getPrincipal(String)} for the User-ID
      * resolved by  {@link #getUserID(Credentials)}, assuming that
      * User-ID and the corresponding principal name are always identical.
      *
@@ -84,7 +85,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
      * @return principal or <code>null</code> if the principal provider does
      * not contain a user-principal with the given userID/principal name.
      *
-     * @see AbstractLoginModule#getPrincipal(Credentials)
+     * @see AbstractLoginModule#getPrincipal(Credentials) 
      */
     protected Principal getPrincipal(Credentials credentials) {
         String userId = getUserID(credentials);

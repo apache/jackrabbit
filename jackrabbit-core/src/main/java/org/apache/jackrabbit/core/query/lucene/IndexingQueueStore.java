@@ -65,7 +65,7 @@ class IndexingQueueStore {
     /**
      * The UUID Strings of the pending documents.
      */
-    private final Set<String> pending = new HashSet<String>();
+    private final Set pending = new HashSet();
 
     /**
      * The directory from where to read pending document UUIDs.
@@ -87,7 +87,7 @@ class IndexingQueueStore {
      * @return the UUIDs of the pending text extraction jobs.
      */
     public String[] getPending() {
-        return pending.toArray(new String[pending.size()]);
+        return (String[]) pending.toArray(new String[pending.size()]);
     }
 
     /**

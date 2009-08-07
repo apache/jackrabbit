@@ -29,7 +29,7 @@ import java.io.PrintWriter;
 /**
  * Utility class for <code>Event</code> retrieval with an
  * <code>EventListener</code>.
- * <p>
+ * <p/>
  * The {@link #getEventIterator(long)} and {@link #getEvents(long)} methods
  * will block until an event is delivered and then return the events. Note, that
  * only one of the methods can be called for an expected event delivery. Calling
@@ -70,7 +70,7 @@ public class EventResult implements EventListener {
     /**
      * Gets the events from the EventListener. Waits at most <code>wait</code>
      * milliseconds for the events.
-     * <p>
+     * <p/>
      * If the events are not delivered within <code>wait</code> time an empty
      * array is returned and a log message is written.
      *
@@ -89,7 +89,7 @@ public class EventResult implements EventListener {
     /**
      * Gets the events from the EventListener. Waits at most <code>wait</code>
      * milliseconds for the events.
-     * <p>
+     * <p/>
      * If the events are not delivered within <code>wait</code> time
      * <code>null</code> is returned and a log message is written.
      * @param wait time in milliseconds to wait at most for

@@ -16,15 +16,13 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.PropertyId;
 
 import java.io.InputStream;
 
 /**
  * <code>BLOBStore</code> represents an abstract store for binary property
  * values (BLOBs).
- *
- * @deprecated the DataStore should be used instead
  *
  * @see ResourceBasedBLOBStore
  */

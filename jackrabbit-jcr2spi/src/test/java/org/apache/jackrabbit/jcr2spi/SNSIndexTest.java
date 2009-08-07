@@ -86,7 +86,7 @@ public class SNSIndexTest extends AbstractJCRTest {
      * by another session.
      */
     public void testIndexByOtherSession() throws RepositoryException {
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             for (int index = Path.INDEX_DEFAULT; index < 4; index++) {
                 Node sns = (Node) otherSession.getItem(buildPath(index));
@@ -123,7 +123,7 @@ public class SNSIndexTest extends AbstractJCRTest {
      * without loading SNSs with lower index before
      */
     public void testNodeEntriesFilledCorrectly() throws RepositoryException {
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Node sns = (Node) otherSession.getItem(buildPath(3));
             checkIndex(sns, 3);
@@ -168,7 +168,7 @@ public class SNSIndexTest extends AbstractJCRTest {
      * Test if accessing the created nodes by name really returns all nodes.
      */
     public void testGetNodesByNameByOtherSession() throws RepositoryException {
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             NodeIterator it = ((Node) otherSession.getItem(parent.getPath())).getNodes(snsName);
             long size = it.getSize();

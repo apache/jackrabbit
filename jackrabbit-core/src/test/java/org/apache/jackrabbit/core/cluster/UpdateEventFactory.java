@@ -23,8 +23,8 @@ import java.util.List;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.UpdateEvent;
 import org.apache.jackrabbit.core.observation.EventState;
@@ -37,6 +37,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Simplistic factory that produces update events, consisting of node identifiers,
@@ -156,7 +157,7 @@ public class UpdateEventFactory {
     protected NodeState createNodeState() {
         Name ntName = nameFactory.create("{}testnt");
         NodeState n = new NodeState(
-                new NodeId(), ntName,
+                new NodeId(UUID.randomUUID()), ntName,
                 ROOT_NODE_ID, NodeState.STATUS_EXISTING, false);
         n.setMixinTypeNames(Collections.EMPTY_SET);
         return n;

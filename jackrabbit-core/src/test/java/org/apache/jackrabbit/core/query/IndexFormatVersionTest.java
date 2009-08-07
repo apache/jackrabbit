@@ -45,7 +45,7 @@ public class IndexFormatVersionTest extends AbstractJCRTest {
     private void checkIndexFormatVersion(String wspName,
                                          IndexFormatVersion version)
             throws RepositoryException {
-        Session session = getHelper().getSuperuserSession(wspName);
+        Session session = helper.getSuperuserSession(wspName);
         try {
             QueryManager qm = session.getWorkspace().getQueryManager();
             QueryHandler handler = ((QueryManagerImpl) qm).getQueryHandler();

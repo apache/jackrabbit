@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
@@ -29,15 +29,13 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import EDU.oswego.cs.dl.util.concurrent.SynchronizedBoolean;
 
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -72,9 +70,6 @@ import javax.jcr.observation.ObservationManager;
  */
 public class GarbageCollector {
 
-    /** logger instance */
-    private static final Logger LOG = LoggerFactory.getLogger(GarbageCollector.class);
-
     private ScanEventListener callback;
 
     private int sleepBetweenNodes;
@@ -85,14 +80,14 @@ public class GarbageCollector {
 
     private long startScanTimestamp;
 
-    private final ArrayList<Listener> listeners = new ArrayList<Listener>();
+    private final ArrayList listeners = new ArrayList();
 
     private final IterablePersistenceManager[] pmList;
 
     private final Session[] sessionList;
     private final SessionListener sessionListener;
-
-    private final AtomicBoolean closed = new AtomicBoolean();
+    
+    private final SynchronizedBoolean closed = new SynchronizedBoolean(false);
 
     private boolean persistenceManagerScan;
 
@@ -179,8 +174,8 @@ public class GarbageCollector {
         }
 
         if (pmList == null || !persistenceManagerScan) {
-            for (Session s : sessionList) {
-                scanNodes(s);
+            for (int i = 0; i < sessionList.length; i++) {
+                scanNodes(sessionList[i]);
             }
         } else {
             scanPersistenceManagers();
@@ -221,22 +216,26 @@ public class GarbageCollector {
     }
 
     private void scanPersistenceManagers() throws ItemStateException, RepositoryException {
-        for (IterablePersistenceManager pm : pmList) {
-            for (NodeId id : pm.getAllNodeIds(null, 0)) {
+        for (int i = 0; i < pmList.length; i++) {
+            IterablePersistenceManager pm = pmList[i];
+            Iterator it = pm.getAllNodeIds(null, 0);
+            while (it.hasNext()) {
+                NodeId id = (NodeId) it.next();
                 if (callback != null) {
                     callback.beforeScanning(null);
                 }
                 try {
                     NodeState state = pm.load(id);
-                    Set<Name> propertyNames = state.getPropertyNames();
-                    for (Name name : propertyNames) {
+                    Set propertyNames = state.getPropertyNames();
+                    for (Iterator nameIt = propertyNames.iterator(); nameIt
+                            .hasNext();) {
+                        Name name = (Name) nameIt.next();
                         PropertyId pid = new PropertyId(id, name);
                         PropertyState ps = pm.load(pid);
                         if (ps.getType() == PropertyType.BINARY) {
-                            for (InternalValue v : ps.getValues()) {
-                                // getLength will update the last modified date
-                                // if the persistence manager scan is running
-                                v.getLength();
+                            InternalValue[] values = ps.getValues();
+                            for (int j = 0; j < values.length; j++) {
+                                values[j].getBLOBFileValue().getLength();
                             }
                         }
                     }
@@ -257,7 +256,8 @@ public class GarbageCollector {
      */
     public void stopScan() throws RepositoryException {
         checkScanStarted();
-        for (Listener listener : listeners) {
+        for (int i = 0; i < listeners.size(); i++) {
+            Listener listener = (Listener) listeners.get(i);
             try {
                 listener.stop();
             } catch (Exception e) {
@@ -269,7 +269,7 @@ public class GarbageCollector {
 
     /**
      * Delete all unused items in the data store.
-     *
+     * 
      * @return the number of deleted items
      */
     public int deleteUnused() throws RepositoryException {
@@ -292,7 +292,7 @@ public class GarbageCollector {
 
     /**
      * Get the data store if one is used.
-     *
+     * 
      * @return the data store, or null
      */
     public DataStore getDataStore() {
@@ -311,38 +311,26 @@ public class GarbageCollector {
         if (callback != null) {
             callback.beforeScanning(n);
         }
-        try {
-            for (PropertyIterator it = n.getProperties(); it.hasNext();) {
-                Property p = it.nextProperty();
-                try {
-                    if (p.getType() == PropertyType.BINARY) {
-                        if (n.hasProperty("jcr:uuid")) {
-                            rememberNode(n.getProperty("jcr:uuid").getString());
-                        } else {
-                            rememberNode(n.getPath());
-                        }
-                        if (p.getDefinition().isMultiple()) {
-                            p.getLengths();
-                        } else {
-                            p.getLength();
-                        }
-                    }
-                } catch (InvalidItemStateException e) {
-                    LOG.debug("Property removed concurrently - ignoring", e);
+        for (PropertyIterator it = n.getProperties(); it.hasNext();) {
+            Property p = it.nextProperty();
+            if (p.getType() == PropertyType.BINARY) {
+                if (n.hasProperty("jcr:uuid")) {
+                    rememberNode(n.getProperty("jcr:uuid").getString());
+                } else {
+                    rememberNode(n.getPath());
+                }
+                if (p.getDefinition().isMultiple()) {
+                    p.getLengths();
+                } else {
+                    p.getLength();
                 }
             }
-        } catch (InvalidItemStateException e) {
-            LOG.debug("Node removed concurrently - ignoring", e);
         }
         if (callback != null) {
             callback.afterScanning(n);
         }
-        try {
-            for (NodeIterator it = n.getNodes(); it.hasNext();) {
-                recurse(it.nextNode(), sleep);
-            }
-        } catch (InvalidItemStateException e) {
-            LOG.debug("Node removed concurrently - ignoring", e);
+        for (NodeIterator it = n.getNodes(); it.hasNext();) {
+            recurse(it.nextNode(), sleep);
         }
     }
 
@@ -375,20 +363,20 @@ public class GarbageCollector {
          *
          * We can't use node path for this, UUIDs are required as nodes could be
          * moved around.
-         *
-         * This mechanism requires that all data stores update the last modified
+         * 
+         * This mechanism requires that all data stores update the last modified 
          * date when calling addRecord and that record already exists.
          *
          */
     }
-
+    
     /**
      * Cleanup resources used internally by this instance.
      */
     public void close() {
-        if (!closed.getAndSet(true)) {
-            for (Session s : sessionList) {
-                s.logout();
+        if (!closed.set(true)) {
+            for (int i = 0; i < sessionList.length; i++) {
+                sessionList[i].logout();
             }
         }
     }

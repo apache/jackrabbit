@@ -60,7 +60,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     protected abstract Result buildResult(Path absPath) throws RepositoryException;
 
     /**
-     * Removes all entries from the cache.
+     *
      */
     protected void clearCache() {
         synchronized (cache) {

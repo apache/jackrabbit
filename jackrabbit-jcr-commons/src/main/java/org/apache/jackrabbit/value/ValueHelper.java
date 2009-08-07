@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.io.FilterInputStream;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
-import java.net.URI;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>
@@ -49,6 +48,22 @@ public class ValueHelper {
      * empty private constructor
      */
     private ValueHelper() {
+    }
+
+    /**
+     * Same as {@link #convert(String, int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValue
+     * @param targetType
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(String, int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value convert(String srcValue, int targetType)
+            throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -69,6 +84,21 @@ public class ValueHelper {
     }
 
     /**
+     * Same as {@link #convert(InputStream, int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValue
+     * @param targetType
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(InputStream, int, ValueFactory)} instead.
+     */
+    public static Value convert(InputStream srcValue, int targetType)
+            throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
+    }
+
+    /**
      * @param srcValue
      * @param targetType
      * @param factory
@@ -82,6 +112,22 @@ public class ValueHelper {
         } else {
             return convert(factory.createValue(srcValue), targetType, factory);
         }
+    }
+
+    /**
+     * Same as {@link #convert(String[], int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValues
+     * @param targetType
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(String[], int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value[] convert(String[] srcValues, int targetType)
+            throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValues, targetType, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -127,6 +173,22 @@ public class ValueHelper {
     }
 
     /**
+     * Same as {@link #convert(Value[], int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValues
+     * @param targetType
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(Value[], int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value[] convert(Value[] srcValues, int targetType)
+        throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValues, targetType, ValueFactoryImpl.getInstance());
+    }
+
+    /**
      * @param srcValues
      * @param targetType
      * @param factory
@@ -163,9 +225,27 @@ public class ValueHelper {
     }
 
     /**
+     * Same as {@link #convert(Value, int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+
+     * @param srcValue
+     * @param targetType
+     * @throws ValueFormatException
+     * @throws IllegalStateException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(Value, int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value convert(Value srcValue, int targetType)
+        throws ValueFormatException, IllegalStateException,
+        IllegalArgumentException {
+        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
+    }
+
+    /**
      * Converts the given value to a value of the specified target type.
      * The conversion is performed according to the rules described in
-     * "3.6.4 Property Type Conversion" in the JSR 283 specification.
+     * "6.2.6 Property Type Conversion" in the JSR 170 specification.
      *
      * @param srcValue
      * @param targetType
@@ -204,7 +284,7 @@ public class ValueHelper {
             case PropertyType.BINARY:
                 // convert to BINARY
                 try {
-                    val = factory.createValue(srcValue.getBinary());
+                    val = factory.createValue(srcValue.getStream());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -256,17 +336,6 @@ public class ValueHelper {
                 }
                 break;
 
-            case PropertyType.DECIMAL:
-                // convert to DECIMAL
-                try {
-                    val = factory.createValue(srcValue.getDecimal());
-                } catch (RepositoryException re) {
-                    throw new ValueFormatException("conversion failed: "
-                            + PropertyType.nameFromValue(srcType) + " to "
-                            + PropertyType.nameFromValue(targetType), re);
-                }
-                break;
-
             case PropertyType.PATH:
                 // convert to PATH
                 switch (srcType) {
@@ -288,42 +357,14 @@ public class ValueHelper {
                             throw new ValueFormatException("failed to convert source value to PATH value",
                                     re);
                         }
-                        // the following call will throw ValueFormatException
-                        // if p is not a valid PATH
                         val = factory.createValue(path, targetType);
-                        break;
-
-                    case PropertyType.URI:
-                        URI uri;
-                        try {
-                            uri = URI.create(srcValue.getString());
-                        } catch (RepositoryException re) {
-                            // should never happen
-                            throw new ValueFormatException("failed to convert source value to PATH value",
-                                    re);
-                        }
-                        if (uri.isAbsolute()) {
-                            // uri contains scheme...
-                            throw new ValueFormatException("failed to convert URI value to PATH value");
-                        }
-                        String p = uri.getPath();
-
-                        if (p.startsWith("./")) {
-                            p = p.substring(2);
-                        }
-
-                        // the following call will throw ValueFormatException
-                        // if p is not a valid PATH
-                        val = factory.createValue(p, targetType);
                         break;
 
                     case PropertyType.BOOLEAN:
                     case PropertyType.DATE:
                     case PropertyType.DOUBLE:
-                    case PropertyType.DECIMAL:
                     case PropertyType.LONG:
                     case PropertyType.REFERENCE:
-                    case PropertyType.WEAKREFERENCE:
                         throw new ValueFormatException("conversion failed: "
                                 + PropertyType.nameFromValue(srcType) + " to "
                                 + PropertyType.nameFromValue(targetType));
@@ -354,42 +395,14 @@ public class ValueHelper {
                             throw new ValueFormatException("failed to convert source value to NAME value",
                                     re);
                         }
-                        // the following call will throw ValueFormatException
-                        // if p is not a valid NAME
                         val = factory.createValue(name, targetType);
-                        break;
-
-                    case PropertyType.URI:
-                        URI uri;
-                        try {
-                            uri = URI.create(srcValue.getString());
-                        } catch (RepositoryException re) {
-                            // should never happen
-                            throw new ValueFormatException("failed to convert source value to NAME value",
-                                    re);
-                        }
-                        if (uri.isAbsolute()) {
-                            // uri contains scheme...
-                            throw new ValueFormatException("failed to convert URI value to NAME value");
-                        }
-                        String p = uri.getPath();
-
-                        if (p.startsWith("./")) {
-                            p = p.substring(2);
-                        }
-
-                        // the following call will throw ValueFormatException
-                        // if p is not a valid NAME
-                        val = factory.createValue(p, targetType);
                         break;
 
                     case PropertyType.BOOLEAN:
                     case PropertyType.DATE:
                     case PropertyType.DOUBLE:
-                    case PropertyType.DECIMAL:
                     case PropertyType.LONG:
                     case PropertyType.REFERENCE:
-                    case PropertyType.WEAKREFERENCE:
                         throw new ValueFormatException("conversion failed: "
                                 + PropertyType.nameFromValue(srcType) + " to "
                                 + PropertyType.nameFromValue(targetType));
@@ -409,7 +422,6 @@ public class ValueHelper {
 
                     case PropertyType.BINARY:
                     case PropertyType.STRING:
-                    case PropertyType.WEAKREFERENCE:
                         // try conversion via string
                         String uuid;
                         try {
@@ -426,117 +438,8 @@ public class ValueHelper {
                     case PropertyType.DATE:
                     case PropertyType.DOUBLE:
                     case PropertyType.LONG:
-                    case PropertyType.DECIMAL:
-                    case PropertyType.PATH:
-                    case PropertyType.URI:
-                    case PropertyType.NAME:
-                        throw new ValueFormatException("conversion failed: "
-                                + PropertyType.nameFromValue(srcType) + " to "
-                                + PropertyType.nameFromValue(targetType));
-
-                    default:
-                        throw new IllegalArgumentException("not a valid type constant: " + srcType);
-                }
-                break;
-
-            case PropertyType.WEAKREFERENCE:
-                // convert to WEAKREFERENCE
-                switch (srcType) {
-                    case PropertyType.WEAKREFERENCE:
-                        // no conversion needed, return original value
-                        // (redundant code, just here for the sake of clarity)
-                        return srcValue;
-
-                    case PropertyType.BINARY:
-                    case PropertyType.STRING:
-                    case PropertyType.REFERENCE:
-                        // try conversion via string
-                        String uuid;
-                        try {
-                            // get string value
-                            uuid = srcValue.getString();
-                        } catch (RepositoryException re) {
-                            // should never happen
-                            throw new ValueFormatException("failed to convert source value to WEAKREFERENCE value", re);
-                        }
-                        val = factory.createValue(uuid, targetType);
-                        break;
-
-                    case PropertyType.BOOLEAN:
-                    case PropertyType.DATE:
-                    case PropertyType.DOUBLE:
-                    case PropertyType.LONG:
-                    case PropertyType.DECIMAL:
-                    case PropertyType.URI:
                     case PropertyType.PATH:
                     case PropertyType.NAME:
-                        throw new ValueFormatException("conversion failed: "
-                                + PropertyType.nameFromValue(srcType) + " to "
-                                + PropertyType.nameFromValue(targetType));
-
-                    default:
-                        throw new IllegalArgumentException("not a valid type constant: " + srcType);
-                }
-                break;
-
-            case PropertyType.URI:
-                // convert to URI
-                switch (srcType) {
-                    case PropertyType.URI:
-                        // no conversion needed, return original value
-                        // (redundant code, just here for the sake of clarity)
-                        return srcValue;
-
-                    case PropertyType.BINARY:
-                    case PropertyType.STRING:
-                        // try conversion via string
-                        String uuid;
-                        try {
-                            // get string value
-                            uuid = srcValue.getString();
-                        } catch (RepositoryException re) {
-                            // should never happen
-                            throw new ValueFormatException("failed to convert source value to URI value", re);
-                        }
-                        val = factory.createValue(uuid, targetType);
-                        break;
-
-                    case PropertyType.NAME:
-                        String name;
-                        try {
-                            // get string value
-                            name = srcValue.getString();
-                        } catch (RepositoryException re) {
-                            // should never happen
-                            throw new ValueFormatException("failed to convert source value to URI value", re);
-                        }
-                        // prefix name with "./" (jsr 283 spec 3.6.4.8)
-                        val = factory.createValue("./" + name, targetType);
-                        break;
-
-                    case PropertyType.PATH:
-                        String path;
-                        try {
-                            // get string value
-                            path = srcValue.getString();
-                        } catch (RepositoryException re) {
-                            // should never happen
-                            throw new ValueFormatException("failed to convert source value to URI value", re);
-                        }
-                        if (!path.startsWith("/")) {
-                            // prefix non-absolute path with "./" (jsr 283 spec 3.6.4.9)
-                            path = "./" + path;
-                        }
-                        val = factory.createValue(path, targetType);
-                        break;
-
-                    case PropertyType.BOOLEAN:
-                    case PropertyType.DATE:
-                    case PropertyType.DOUBLE:
-                    case PropertyType.LONG:
-                    case PropertyType.DECIMAL:
-                    case PropertyType.REFERENCE:
-                    case PropertyType.WEAKREFERENCE:
                         throw new ValueFormatException("conversion failed: "
                                 + PropertyType.nameFromValue(srcType) + " to "
                                 + PropertyType.nameFromValue(targetType));
@@ -551,6 +454,17 @@ public class ValueHelper {
         }
 
         return val;
+    }
+
+    /**
+     * Same as {@link #copy(Value, ValueFactory)} using <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValue
+     * @throws IllegalStateException
+     * @deprecated Use {@link #copy(Value, ValueFactory)} instead.
+     */
+    public static Value copy(Value srcValue) throws IllegalStateException {
+        return copy(srcValue, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -588,15 +502,9 @@ public class ValueHelper {
                     newVal = factory.createValue(srcValue.getLong());
                     break;
 
-                case PropertyType.DECIMAL:
-                    newVal = factory.createValue(srcValue.getDecimal());
-                    break;
-
                 case PropertyType.PATH:
                 case PropertyType.NAME:
                 case PropertyType.REFERENCE:
-                case PropertyType.WEAKREFERENCE:
-                case PropertyType.URI:
                     newVal = factory.createValue(srcValue.getString(), srcValue.getType());
                     break;
 
@@ -608,6 +516,17 @@ public class ValueHelper {
             // should never get here
         }
         return newVal;
+    }
+
+    /**
+     * Same as {@link #copy(Value[], ValueFactory)} using <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValues
+     * @throws IllegalStateException
+     * @deprecated Use {@link #copy(Value[], ValueFactory)} instead.
+     */
+    public static Value[] copy(Value[] srcValues) throws IllegalStateException {
+        return copy(srcValues, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -654,6 +573,15 @@ public class ValueHelper {
     }
 
     /**
+     * @deprecated use {@link #serialize(Value, boolean, boolean, Writer)} instead
+     */
+    public static void serialize(Value value, boolean encodeBlanks,
+        Writer writer)
+        throws IllegalStateException, IOException, RepositoryException {
+        serialize(value, encodeBlanks, false, writer);
+    }
+
+      /**
      * Outputs the serialized value to a <code>Writer</code>. The serialization
      * format is the same as used by Document & System View XML, i.e.
      * binary values will be Base64-encoded whereas for all others
@@ -706,6 +634,30 @@ public class ValueHelper {
 
     /**
      * Deserializes the given string to a <code>Value</code> of the given type.
+     * Same as {@link #deserialize(String, int, boolean, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param value        string to be deserialized
+     * @param type         type of value
+     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
+     *                     character sequences will be decoded to single space
+     *                     characters each.
+     * @return the deserialized <code>Value</code>
+     * @throws ValueFormatException if the string data is not of the required
+     *                              format
+     * @throws RepositoryException  if an error occured during the
+     *                              deserialization.
+     * @deprecated Use {@link #deserialize(String, int, boolean, ValueFactory)}
+     * instead.
+     */
+    public static Value deserialize(String value, int type,
+                                    boolean decodeBlanks)
+            throws ValueFormatException, RepositoryException {
+        return deserialize(value, type, decodeBlanks, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * Deserializes the given string to a <code>Value</code> of the given type.
      *
      * @param value        string to be deserialized
      * @param type         type of value
@@ -746,6 +698,33 @@ public class ValueHelper {
             }
             return convert(value, type, factory);
         }
+    }
+
+    /**
+     * Deserializes the string data read from the given reader to a
+     * <code>Value</code> of the given type. Same as
+     * {@link #deserialize(Reader, int, boolean, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param reader       reader for the string data to be deserialized
+     * @param type         type of value
+     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
+     *                     character sequences will be decoded to single space
+     *                     characters each.
+     * @return the deserialized <code>Value</code>
+     * @throws IOException          if an i/o error occured during the
+     *                              serialization
+     * @throws ValueFormatException if the string data is not of the required
+     *                              format
+     * @throws RepositoryException  if an error occured during the
+     *                              deserialization.
+     * @deprecated Use {@link #deserialize(Reader, int, boolean, ValueFactory)}
+     * instead.
+     */
+    public static Value deserialize(Reader reader, int type,
+                                    boolean decodeBlanks)
+            throws IOException, ValueFormatException, RepositoryException {
+        return deserialize(reader, type, decodeBlanks, ValueFactoryImpl.getInstance());
     }
 
     /**

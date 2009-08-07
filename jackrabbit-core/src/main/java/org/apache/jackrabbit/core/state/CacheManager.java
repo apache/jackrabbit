@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class CacheManager implements CacheAccessListener {
     private static final long DEFAULT_MAX_MEMORY_PER_CACHE = 4 * 1024 * 1024;
 
     /** The set of caches (weakly referenced). */
-    private WeakHashMap<Cache, Object> caches = new WeakHashMap<Cache, Object>();
+    private WeakHashMap caches = new WeakHashMap();
 
     /** The default minimum resize interval (in ms). */
     private static final int DEFAULT_MIN_RESIZE_INTERVAL = 1000;
@@ -138,10 +139,10 @@ public class CacheManager implements CacheAccessListener {
         // entries in a weak hash map may disappear any time
         // so can't use size() / keySet() directly
         // only using the iterator guarantees that we don't get null references
-        ArrayList<Cache> list = new ArrayList<Cache>();
+        ArrayList list = new ArrayList();
         synchronized (caches) {
-            for (Cache c: caches.keySet()) {
-                list.add(c);
+            for (Iterator it = caches.keySet().iterator(); it.hasNext();) {
+                list.add(it.next());
             }
         }
         if (list.size() == 0) {
@@ -155,9 +156,9 @@ public class CacheManager implements CacheAccessListener {
         // calculate the total access count and memory used
         long totalAccessCount = 0;
         long totalMemoryUsed = 0;
-        for (CacheInfo info : infos) {
-            totalAccessCount += info.getAccessCount();
-            totalMemoryUsed += info.getMemoryUsed();
+        for (int i = 0; i < infos.length; i++) {
+            totalAccessCount += infos[i].getAccessCount();
+            totalMemoryUsed += infos[i].getMemoryUsed();
         }
         // try to distribute the memory based on the access count
         // and memory used (higher numbers - more memory)
@@ -169,7 +170,8 @@ public class CacheManager implements CacheAccessListener {
         double memoryPerUsed = (double) maxMemory / 2.
                 / Math.max(1., (double) totalMemoryUsed);
         int fullCacheCount = 0;
-        for (CacheInfo info : infos) {
+        for (int i = 0; i < infos.length; i++) {
+            CacheInfo info = infos[i];
             long mem = (long) (memoryPerAccess * info.getAccessCount());
             mem += (long) (memoryPerUsed * info.getMemoryUsed());
             mem = Math.min(mem, maxMemoryPerCache);
@@ -184,12 +186,13 @@ public class CacheManager implements CacheAccessListener {
         }
         // calculate the unused memory
         long unusedMemory = maxMemory;
-        for (CacheInfo info : infos) {
-            unusedMemory -= info.getMemory();
+        for (int i = 0; i < infos.length; i++) {
+            unusedMemory -= infos[i].getMemory();
         }
         // distribute the remaining memory evenly across the full caches
         if (unusedMemory > 0 && fullCacheCount > 0) {
-            for (CacheInfo info : infos) {
+            for (int i = 0; i < infos.length; i++) {
+                CacheInfo info = infos[i];
                 if (info.wasFull()) {
                     info.setMemory(info.getMemory() + unusedMemory
                             / fullCacheCount);
@@ -197,7 +200,8 @@ public class CacheManager implements CacheAccessListener {
             }
         }
         // set the new limit
-        for (CacheInfo info : infos) {
+        for (int i = 0; i < infos.length; i++) {
+            CacheInfo info = infos[i];
             Cache cache = info.getCache();
             if (log.isDebugEnabled()) {
                 log.debug(cache + " now:" + cache.getMaxMemorySize() + " used:"

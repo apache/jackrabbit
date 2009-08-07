@@ -26,6 +26,7 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
  * @see javax.jcr.nodetype.NodeType
  */
 public interface NodeTypeConstants {
+    //todo: intercaps only for consistency with jackrabbit... webdav rfcs never use intercaps.
 
     public static final Namespace NAMESPACE = ItemResourceConstants.NAMESPACE;
 
@@ -56,18 +57,6 @@ public interface NodeTypeConstants {
 
     /** Name of the <code>hasOrderableChildNodes</code> attribute. */
     String HASORDERABLECHILDNODES_ATTRIBUTE = "hasOrderableChildNodes";
-
-    /**
-     * Name of the <code>isAbstract</code> attribute.
-     * @since JCR 2.0
-     */
-    String ISABSTRACT_ATTRIBUTE = "isAbstract";
-
-    /**
-     * Name of the <code>isQueryable</code> attribute.
-     * @since JCR 2.0
-     */
-    String ISQUERYABLE_ATTRIBUTE = "isQueryable";
 
     /** Name of the primary item name attribute. */
     String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
@@ -122,30 +111,6 @@ public interface NodeTypeConstants {
 
     /** Name of the <code>sameNameSiblings</code> attribute. */
     String SAMENAMESIBLINGS_ATTRIBUTE = "sameNameSiblings";
-
-    /**
-     * Name of the availableQueryOperators element.
-     * @since JCR 2.0
-     */
-    String AVAILABLE_QUERY_OPERATORS_ELEMENT = "availableQueryOperators";
-
-    /**
-     * Name of the availableQueryOperator element.
-     * @since JCR 2.0
-     */
-    String AVAILABLE_QUERY_OPERATOR_ELEMENT = "availableQueryOperator";
-
-    /**
-     * Name of the fullTextSearchable attribute.
-     * @since JCR 2.0
-     */
-    String FULL_TEXT_SEARCHABLE_ATTRIBUTE = "fullTextSearchable";
-
-    /**
-     * Name of the queryOrderable attribute.
-     * @since JCR 2.0
-     */
-    String QUERY_ORDERABLE_ATTRIBUTE = "queryOrderable";
 
     //----------< attr. not defined by copied from o.a.j.core.n.x.Constants >---
     /**

@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -36,7 +37,6 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * <code>AbstractUserTest</code>...

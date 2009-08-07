@@ -50,7 +50,7 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
     }
 
     /**
@@ -126,19 +126,6 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
         assertTrue("Node retrieved with session.getNodeByUUID is not the same " +
                 "as the node having the given uuid.",
                 referenced.isSame(node));
-    }
-
-    /**
-     * Tests session.getNodeByIdentifier()
-     * 
-     * @since JCR 2.0
-     */
-    public void testGetNodeByIdentifier() throws RepositoryException, NotExecutableException {
-        String identifier = testRootNode.getIdentifier();
-        Node node = session.getNodeByIdentifier(identifier);
-        assertTrue("Node retrieved with session.getNodeByIdentifier is not the same " +
-                "as the node having the given identifier.",
-                testRootNode.isSame(node));
     }
 
     /**

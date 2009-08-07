@@ -21,9 +21,6 @@ import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.NodeType;
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * Utility class to locate mixins in the NodeTyeManager.
@@ -44,20 +41,6 @@ public class NodeMixinUtil {
             String name = mixins.nextNodeType().getName();
             if (node.canAddMixin(name)) {
                 return name;
-            }
-        }
-        return null;
-    }
-
-    public static String getNotAssignedMixinName(Session session, Node node) throws RepositoryException {
-        NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
-        NodeTypeIterator mixins = manager.getMixinNodeTypes();
-        List existingMixins = Arrays.asList(node.getMixinNodeTypes());
-
-        while (mixins.hasNext()) {
-            NodeType nt = mixins.nextNodeType();
-            if (!existingMixins.contains(nt)) {
-                return nt.getName();
             }
         }
         return null;

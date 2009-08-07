@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Implements default behaviour for some methods of {@link QueryHandler}.
@@ -96,14 +95,13 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      * @throws RepositoryException if an error occurs while indexing a node.
      * @throws IOException if an error occurs while updating the index.
      */
-    public synchronized void updateNodes(
-            Iterator<NodeId> remove, Iterator<NodeState> add)
+    public synchronized void updateNodes(NodeIdIterator remove, NodeStateIterator add)
             throws RepositoryException, IOException {
         while (remove.hasNext()) {
-            deleteNode(remove.next());
+            deleteNode(remove.nextNodeId());
         }
         while (add.hasNext()) {
-            addNode(add.next());
+            addNode(add.nextNodeState());
         }
     }
 

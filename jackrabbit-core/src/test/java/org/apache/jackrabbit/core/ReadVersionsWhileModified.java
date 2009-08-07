@@ -37,7 +37,7 @@ public class ReadVersionsWhileModified extends AbstractConcurrencyTest {
         final Node n = testRootNode.addNode(nodeName1);
         n.addMixin(mixVersionable);
         testRootNode.save();
-        final Session s = getHelper().getSuperuserSession();
+        final Session s = helper.getSuperuserSession();
         Thread t = new Thread(new Runnable() {
             public void run() {
                 long end = System.currentTimeMillis() + RUN_NUM_SECONDS * 1000;

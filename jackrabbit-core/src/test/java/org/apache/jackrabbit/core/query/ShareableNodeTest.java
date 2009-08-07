@@ -66,7 +66,7 @@ public class ShareableNodeTest extends AbstractQueryTest {
         assertTrue("wrong node", n4.isSame(nodes.nextNode()));
 
         // remove a node from the shared set
-        s.removeShare();
+        ((NodeImpl) s).removeShare();
         testRootNode.save();
 
         s = n2.getNode(nodeName3);
@@ -88,7 +88,7 @@ public class ShareableNodeTest extends AbstractQueryTest {
         assertTrue("wrong node", s.isSame(nodes.nextNode()));
 
         // remove remaining node from the shared set
-        s.removeShare();
+        ((NodeImpl) s).removeShare();
         testRootNode.save();
 
         stmt = testPath + "/" + nodeName1 + "/*[@" + propertyName1 + "='value']";
@@ -127,7 +127,7 @@ public class ShareableNodeTest extends AbstractQueryTest {
         assertTrue("wrong node", s.isSame(nodes.nextNode()));
 
         // remove a node from the shared set
-        s.removeShare();
+        ((NodeImpl) s).removeShare();
         testRootNode.save();
 
         s = n2.getNode(nodeName4);
@@ -143,7 +143,7 @@ public class ShareableNodeTest extends AbstractQueryTest {
         assertTrue("wrong node", s.isSame(nodes.nextNode()));
 
         // remove remaining node from the shared set
-        s.removeShare();
+        ((NodeImpl) s).removeShare();
         testRootNode.save();
 
         stmt = testPath + "//" + nodeName3;

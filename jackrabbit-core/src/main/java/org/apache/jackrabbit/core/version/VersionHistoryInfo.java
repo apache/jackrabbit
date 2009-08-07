@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 /**
  * Simple data object that carries the identifiers of a version history node

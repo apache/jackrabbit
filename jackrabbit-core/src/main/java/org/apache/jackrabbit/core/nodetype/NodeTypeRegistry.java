@@ -16,29 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.Reader;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeSet;
-
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.version.OnParentVersionAction;
-
+import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.cluster.NodeTypeEventChannel;
@@ -49,13 +27,31 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.OnParentVersionAction;
 
 /**
  * A <code>NodeTypeRegistry</code> ...
@@ -86,15 +82,15 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private EffectiveNodeTypeCache entCache;
 
     // map of node type names and node type definitions
-    private final Map<Name, NodeTypeDef> registeredNTDefs;
+    private final ConcurrentReaderHashMap registeredNTDefs;
 
     // definition of the root node
     private final NodeDef rootNodeDef;
 
     // map of id's and property definitions
-    private final Map<PropDefId, PropDef> propDefs;
+    private final ConcurrentReaderHashMap propDefs;
     // map of id's and node definitions
-    private final Map<NodeDefId, NodeDef> nodeDefs;
+    private final ConcurrentReaderHashMap nodeDefs;
 
     /**
      * namespace registry for resolving prefixes and namespace URI's;
@@ -105,7 +101,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Listeners (soft references)
      */
-    private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners =
+    private final Map listeners =
             Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     /**
@@ -116,10 +112,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Create a new <code>NodeTypeRegistry</codes>
      *
-     * @param nsReg namespace registry
-     * @param ntStore node type store
+     * @param nsReg
+     * @param ntStore
      * @return <code>NodeTypeRegistry</codes> object
-     * @throws RepositoryException if an error occurs
+     * @throws RepositoryException
      */
     public static NodeTypeRegistry create(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
@@ -135,7 +131,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @return the names of all registered node types.
      */
     public Name[] getRegisteredNodeTypes() {
-        return registeredNTDefs.keySet().toArray(new Name[registeredNTDefs.size()]);
+        return (Name[]) registeredNTDefs.keySet().toArray(new Name[registeredNTDefs.size()]);
     }
 
     /**
@@ -185,7 +181,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         persistCustomNodeTypeDefs(customNTDefs);
 
         if (eventChannel != null) {
-            Set<NodeTypeDef> ntDefs = new HashSet<NodeTypeDef>();
+            HashSet ntDefs = new HashSet();
             ntDefs.add(ntd);
             eventChannel.registered(ntDefs);
         }
@@ -208,7 +204,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    public void registerNodeTypes(Collection<NodeTypeDef> ntDefs)
+    public void registerNodeTypes(Collection ntDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
 
         registerNodeTypes(ntDefs, false);
@@ -222,14 +218,14 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    private synchronized void registerNodeTypes(Collection<NodeTypeDef> ntDefs,
-                                                boolean external)
+    private synchronized void registerNodeTypes(Collection ntDefs, boolean external)
             throws InvalidNodeTypeDefException, RepositoryException {
 
         // validate and register new node type definitions
         internalRegister(ntDefs);
         // persist new node type definitions
-        for (NodeTypeDef ntDef: ntDefs) {
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
             customNTDefs.add(ntDef);
         }
         persistCustomNodeTypeDefs(customNTDefs);
@@ -240,7 +236,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // notify listeners
-        for (NodeTypeDef ntDef : ntDefs) {
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
             notifyRegistered(ntDef.getName());
         }
     }
@@ -259,7 +256,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws RepositoryException if another error occurs
      * @see #unregisterNodeType(Name)
      */
-    public void unregisterNodeTypes(Collection<Name> ntNames)
+    public void unregisterNodeTypes(Collection ntNames)
             throws NoSuchNodeTypeException, RepositoryException {
 
         unregisterNodeTypes(ntNames, false);
@@ -275,11 +272,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *                                 denote a registered node type.
      * @throws RepositoryException if another error occurs
      */
-    private synchronized void unregisterNodeTypes(Collection<Name> ntNames, boolean external)
+    private synchronized void unregisterNodeTypes(Collection ntNames, boolean external)
             throws NoSuchNodeTypeException, RepositoryException {
 
         // do some preliminary checks
-        for (Name ntName: ntNames) {
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            Name ntName = (Name) iter.next();
             if (!registeredNTDefs.containsKey(ntName)) {
                 throw new NoSuchNodeTypeException(ntName.toString());
             }
@@ -289,13 +287,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             }
             // check for node types other than those to be unregistered
             // that depend on the given node types
-            Set<Name> dependents = getDependentNodeTypes(ntName);
+            Set dependents = getDependentNodeTypes(ntName);
             dependents.removeAll(ntNames);
             if (dependents.size() > 0) {
                 StringBuffer msg = new StringBuffer();
                 msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
-                for (Name dependent : dependents) {
-                    msg.append(dependent);
+                for (Iterator depIter = dependents.iterator(); depIter.hasNext();) {
+                    msg.append(depIter.next());
                     msg.append(" ");
                 }
                 throw new RepositoryException(msg.toString());
@@ -303,7 +301,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // make sure node types are not currently in use
-        for (Name ntName : ntNames) {
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            Name ntName = (Name) iter.next();
             checkForReferencesInContent(ntName);
         }
 
@@ -316,7 +315,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // persist removal of node type definitions & notify listeners
-        for (Name ntName : ntNames) {
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            Name ntName = (Name) iter.next();
             customNTDefs.remove(ntName);
             notifyUnregistered(ntName);
         }
@@ -342,7 +342,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     public void unregisterNodeType(Name ntName)
             throws NoSuchNodeTypeException, RepositoryException {
-        HashSet<Name> ntNames = new HashSet<Name>();
+        HashSet ntNames = new HashSet();
         ntNames.add(ntName);
         unregisterNodeTypes(ntNames);
     }
@@ -393,13 +393,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         /**
          * validate new node type definition
          */
-        checkNtBaseSubtyping(ntd, registeredNTDefs);
         validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
 
         /**
          * build diff of current and new definition and determine type of change
          */
-        NodeTypeDef ntdOld = registeredNTDefs.get(name);
+        NodeTypeDef ntdOld = (NodeTypeDef) registeredNTDefs.get(name);
         NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
         if (!diff.isModified()) {
             // the definition has not been modified, there's nothing to do here...
@@ -463,9 +462,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param ntName name
-     * @return effective node type
-     * @throws NoSuchNodeTypeException if node type does not exist
+     * @param ntName
+     * @return
+     * @throws NoSuchNodeTypeException
      */
     public EffectiveNodeType getEffectiveNodeType(Name ntName)
             throws NoSuchNodeTypeException {
@@ -482,7 +481,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws NodeTypeConflictException if the given types are conflicting
      * @throws NoSuchNodeTypeException if one of the given types is not found
      */
-    public EffectiveNodeType getEffectiveNodeType(Name primary, Set<Name> mixins)
+    public EffectiveNodeType getEffectiveNodeType(Name primary, Set mixins)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         if (mixins.isEmpty()) {
             return getEffectiveNodeType(primary);
@@ -500,9 +499,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *
      * @param nodeTypeName node type name
      * @return a set of node type <code>Name</code>s
-     * @throws NoSuchNodeTypeException if node type does not exist
+     * @throws NoSuchNodeTypeException
      */
-    public Set<Name> getDependentNodeTypes(Name nodeTypeName)
+    public Set getDependentNodeTypes(Name nodeTypeName)
             throws NoSuchNodeTypeException {
         if (!registeredNTDefs.containsKey(nodeTypeName)) {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
@@ -512,8 +511,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
          * collect names of those node types that have dependencies on the given
          * node type
          */
-        HashSet<Name> names = new HashSet<Name>();
-        for (NodeTypeDef ntd : registeredNTDefs.values()) {
+        HashSet names = new HashSet();
+        Iterator iter = registeredNTDefs.values().iterator();
+        while (iter.hasNext()) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
             if (ntd.getDependencies().contains(nodeTypeName)) {
                 names.add(ntd.getName());
             }
@@ -531,7 +532,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     public NodeTypeDef getNodeTypeDef(Name nodeTypeName)
             throws NoSuchNodeTypeException {
-        NodeTypeDef def = registeredNTDefs.get(nodeTypeName);
+        NodeTypeDef def = (NodeTypeDef) registeredNTDefs.get(nodeTypeName);
         if (def == null) {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
         }
@@ -540,7 +541,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param nodeTypeName node type name
+     * @param nodeTypeName
      * @return <code>true</code> if the specified node type is registered;
      *         <code>false</code> otherwise.
      */
@@ -549,7 +550,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param nodeTypeName node type name
+     * @param nodeTypeName
      * @return <code>true</code> if the specified node type is built-in;
      *         <code>false</code> otherwise.
      */
@@ -558,19 +559,19 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param id node def id
+     * @param id
      * @return the node definition for the given id.
      */
     public NodeDef getNodeDef(NodeDefId id) {
-        return nodeDefs.get(id);
+        return (NodeDef) nodeDefs.get(id);
     }
 
     /**
-     * @param id property def id
+     * @param id
      * @return the property definition for the given id.
      */
     public PropDef getPropDef(PropDefId id) {
-        return propDefs.get(id);
+        return (PropDef) propDefs.get(id);
     }
 
     /**
@@ -603,75 +604,77 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         ps.println();
         ps.println("Registered NodeTypes:");
         ps.println();
-        for (NodeTypeDef ntd : registeredNTDefs.values()) {
+        Iterator iter = registeredNTDefs.values().iterator();
+        while (iter.hasNext()) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
             ps.println(ntd.getName());
             Name[] supertypes = ntd.getSupertypes();
             ps.println("\tSupertypes");
-            for (Name supertype : supertypes) {
-                ps.println("\t\t" + supertype);
+            for (int i = 0; i < supertypes.length; i++) {
+                ps.println("\t\t" + supertypes[i]);
             }
             ps.println("\tMixin\t" + ntd.isMixin());
             ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
             ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
             PropDef[] pd = ntd.getPropertyDefs();
-            for (PropDef aPd : pd) {
+            for (int i = 0; i < pd.length; i++) {
                 ps.print("\tPropertyDefinition");
-                ps.println(" (declared in " + aPd.getDeclaringNodeType() + ") id=" + aPd.getId());
-                ps.println("\t\tName\t\t" + (aPd.definesResidual() ? "*" : aPd.getName().toString()));
-                String type = aPd.getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(aPd.getRequiredType());
+                ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + pd[i].getId());
+                ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
+                String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
                 ps.println("\t\tRequiredType\t" + type);
-                QValueConstraint[] vca = aPd.getValueConstraints();
+                ValueConstraint[] vca = pd[i].getValueConstraints();
                 StringBuffer constraints = new StringBuffer();
                 if (vca == null) {
                     constraints.append("<null>");
                 } else {
-                    for (QValueConstraint aVca : vca) {
+                    for (int n = 0; n < vca.length; n++) {
                         if (constraints.length() > 0) {
                             constraints.append(", ");
                         }
-                        constraints.append(aVca.getString());
+                        constraints.append(vca[n].getDefinition());
                     }
                 }
                 ps.println("\t\tValueConstraints\t" + constraints.toString());
-                InternalValue[] defVals = aPd.getDefaultValues();
+                InternalValue[] defVals = pd[i].getDefaultValues();
                 StringBuffer defaultValues = new StringBuffer();
                 if (defVals == null) {
                     defaultValues.append("<null>");
                 } else {
-                    for (InternalValue defVal : defVals) {
+                    for (int n = 0; n < defVals.length; n++) {
                         if (defaultValues.length() > 0) {
                             defaultValues.append(", ");
                         }
-                        defaultValues.append(defVal.toString());
+                        defaultValues.append(defVals[n].toString());
                     }
                 }
                 ps.println("\t\tDefaultValue\t" + defaultValues.toString());
-                ps.println("\t\tAutoCreated\t" + aPd.isAutoCreated());
-                ps.println("\t\tMandatory\t" + aPd.isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aPd.getOnParentVersion()));
-                ps.println("\t\tProtected\t" + aPd.isProtected());
-                ps.println("\t\tMultiple\t" + aPd.isMultiple());
+                ps.println("\t\tAutoCreated\t" + pd[i].isAutoCreated());
+                ps.println("\t\tMandatory\t" + pd[i].isMandatory());
+                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
+                ps.println("\t\tProtected\t" + pd[i].isProtected());
+                ps.println("\t\tMultiple\t" + pd[i].isMultiple());
             }
             NodeDef[] nd = ntd.getChildNodeDefs();
-            for (NodeDef aNd : nd) {
+            for (int i = 0; i < nd.length; i++) {
                 ps.print("\tNodeDefinition");
-                ps.println(" (declared in " + aNd.getDeclaringNodeType() + ") id=" + aNd.getId());
-                ps.println("\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()));
-                Name[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
+                ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + nd[i].getId());
+                ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
+                Name[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
                 if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
-                    for (Name reqPrimaryType : reqPrimaryTypes) {
-                        ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryType);
+                    for (int n = 0; n < reqPrimaryTypes.length; n++) {
+                        ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
                     }
                 }
-                Name defPrimaryType = aNd.getDefaultPrimaryType();
+                Name defPrimaryType = nd[i].getDefaultPrimaryType();
                 if (defPrimaryType != null) {
                     ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
                 }
-                ps.println("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
-                ps.println("\t\tMandatory\t" + aNd.isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
-                ps.println("\t\tProtected\t" + aNd.isProtected());
-                ps.println("\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
+                ps.println("\n\t\tAutoCreated\t" + nd[i].isAutoCreated());
+                ps.println("\t\tMandatory\t" + nd[i].isMandatory());
+                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
+                ps.println("\t\tProtected\t" + nd[i].isProtected());
+                ps.println("\t\tAllowsSameNameSiblings\t" + nd[i].allowsSameNameSiblings());
             }
         }
         ps.println();
@@ -713,11 +716,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Protected constructor
      *
-     * @param nsReg name space registry
-     * @param ntStore store
-     * @throws RepositoryException if an error occurs
+     * @param nsReg
+     * @param ntStore
+     * @throws RepositoryException
      */
-    @SuppressWarnings("unchecked")
     protected NodeTypeRegistry(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
         this.nsReg = nsReg;
@@ -994,16 +996,20 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param ntName node type name
+     * @param ntName
+     * @param entCache
+     * @param ntdCache
+     * @return
+     * @throws NoSuchNodeTypeException
      * @param entCache cache of already-built effective node types
      * @param ntdCache cache of node type definitions
-     * @return the effective node type
+     * @return
      * @throws NoSuchNodeTypeException if a node type reference (e.g. a supertype)
      *                                 could not be resolved.
      */
     static EffectiveNodeType getEffectiveNodeType(Name ntName,
                                                   EffectiveNodeTypeCache entCache,
-                                                  Map<Name, NodeTypeDef> ntdCache)
+                                                  Map ntdCache)
             throws NoSuchNodeTypeException {
         // 1. check if effective node type has already been built
         EffectiveNodeTypeCache.Key key = entCache.getKey(new Name[]{ntName});
@@ -1013,7 +1019,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // 2. make sure we've got the definition of the specified node type
-        NodeTypeDef ntd = ntdCache.get(ntName);
+        NodeTypeDef ntd = (NodeTypeDef) ntdCache.get(ntName);
         if (ntd == null) {
             throw new NoSuchNodeTypeException(ntName.toString());
         }
@@ -1049,7 +1055,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     static EffectiveNodeType getEffectiveNodeType(Name[] ntNames,
                                                   EffectiveNodeTypeCache entCache,
-                                                  Map<Name, NodeTypeDef> ntdCache)
+                                                  Map ntdCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
 
         EffectiveNodeTypeCache.Key key = entCache.getKey(ntNames);
@@ -1060,9 +1066,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // 2. make sure we've got the definitions of the specified node types
-        for (Name ntName : ntNames) {
-            if (!ntdCache.containsKey(ntName)) {
-                throw new NoSuchNodeTypeException(ntName.toString());
+        for (int i = 0; i < ntNames.length; i++) {
+            if (!ntdCache.containsKey(ntNames[i])) {
+                throw new NoSuchNodeTypeException(ntNames[i].toString());
             }
         }
 
@@ -1091,8 +1097,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                      * build aggregate of remaining node types through iteration
                      */
                     Name[] remainder = key.getNames();
-                    for (Name aRemainder : remainder) {
-                        NodeTypeDef ntd = ntdCache.get(aRemainder);
+                    for (int i = 0; i < remainder.length; i++) {
+                        NodeTypeDef ntd = (NodeTypeDef) ntdCache.get(remainder[i]);
                         EffectiveNodeType ent =
                                 EffectiveNodeType.create(ntd, entCache, ntdCache);
                         // store new effective node type
@@ -1119,10 +1125,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     static void checkForCircularInheritance(Name[] supertypes,
-                                            Stack<Name> inheritanceChain,
-                                            Map<Name, NodeTypeDef> ntDefCache)
+                                            Stack inheritanceChain,
+                                            Map ntDefCache)
             throws InvalidNodeTypeDefException, RepositoryException {
-        for (Name nt : supertypes) {
+        for (int i = 0; i < supertypes.length; i++) {
+            Name nt = supertypes[i];
             int pos = inheritanceChain.lastIndexOf(nt);
             if (pos >= 0) {
                 StringBuffer buf = new StringBuffer();
@@ -1139,7 +1146,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             }
 
             try {
-                NodeTypeDef ntd = ntDefCache.get(nt);
+
+                NodeTypeDef ntd = (NodeTypeDef) ntDefCache.get(nt);
                 Name[] sta = ntd.getSupertypes();
                 if (sta.length > 0) {
                     // check recursively
@@ -1156,14 +1164,15 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     static void checkForCircularNodeAutoCreation(EffectiveNodeType childNodeENT,
-                                                 Stack<Name> definingParentNTs,
+                                                 Stack definingParentNTs,
                                                  EffectiveNodeTypeCache anEntCache,
-                                                 Map<Name, NodeTypeDef> ntDefCache)
+                                                 Map ntDefCache)
             throws InvalidNodeTypeDefException {
         // check for circularity through default node types of auto-created child nodes
         // (node type 'a' defines auto-created child node with default node type 'a')
         Name[] childNodeNTs = childNodeENT.getAllNodeTypes();
-        for (Name nt : childNodeNTs) {
+        for (int i = 0; i < childNodeNTs.length; i++) {
+            Name nt = childNodeNTs[i];
             int pos = definingParentNTs.lastIndexOf(nt);
             if (pos >= 0) {
                 StringBuffer buf = new StringBuffer();
@@ -1184,9 +1193,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         NodeDef[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
-        for (NodeDef nodeDef : nodeDefs) {
-            Name dnt = nodeDef.getDefaultPrimaryType();
-            Name definingNT = nodeDef.getDeclaringNodeType();
+        for (int i = 0; i < nodeDefs.length; i++) {
+            Name dnt = nodeDefs[i].getDefaultPrimaryType();
+            Name definingNT = nodeDefs[i].getDeclaringNodeType();
             try {
                 if (dnt != null) {
                     // check recursively
@@ -1197,7 +1206,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                 }
             } catch (NoSuchNodeTypeException nsnte) {
                 String msg = definingNT
-                        + " defines invalid default node type for child node " + nodeDef.getName();
+                        + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, nsnte);
             }
@@ -1213,7 +1222,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             throw new InvalidNodeTypeDefException(msg);
         }
 
-        checkNtBaseSubtyping(ntd, registeredNTDefs);
         EffectiveNodeType ent =
                 validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
 
@@ -1226,12 +1234,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // store property & child node definitions of new node type by id
         PropDef[] pda = ntd.getPropertyDefs();
-        for (PropDef aPda : pda) {
-            propDefs.put(aPda.getId(), aPda);
+        for (int i = 0; i < pda.length; i++) {
+            propDefs.put(pda[i].getId(), pda[i]);
         }
         NodeDef[] nda = ntd.getChildNodeDefs();
-        for (NodeDef aNda : nda) {
-            nodeDefs.put(aNda.getId(), aNda);
+        for (int i = 0; i < nda.length; i++) {
+            nodeDefs.put(nda[i].getId(), nda[i]);
         }
 
         return ent;
@@ -1246,11 +1254,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * eventually registered.
      *
      * @param ntDefs collection of <code>NodeTypeDef</code> objects
-     * @throws InvalidNodeTypeDefException if the node type is not valid
-     * @throws RepositoryException if an error occurs
+     * @throws InvalidNodeTypeDefException
+     * @throws RepositoryException
      * @see #registerNodeType
      */
-    private void internalRegister(Collection<NodeTypeDef> ntDefs)
+    private void internalRegister(Collection ntDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
         internalRegister(ntDefs, false);
     }
@@ -1265,15 +1273,19 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * that can be exposed in a property definition because it is
      * system-generated (such as jcr:primaryType in nt:base).
      */
-    private void internalRegister(Collection<NodeTypeDef> ntDefs, boolean lenient)
+    private void internalRegister(Collection ntDefs, boolean lenient)
             throws InvalidNodeTypeDefException, RepositoryException {
 
+        // create working copies of current ent & ntd caches:
+        // cache of pre-built aggregations of node types
+        EffectiveNodeTypeCache tmpENTCache = (EffectiveNodeTypeCache) entCache.clone();
         // map of node type names and node type definitions
-        Map<Name, NodeTypeDef> tmpNTDefCache = new HashMap<Name, NodeTypeDef>(registeredNTDefs);
+        Map tmpNTDefCache = new HashMap(registeredNTDefs);
 
         // temporarily register the node type definition
         // and do some preliminary checks
-        for (NodeTypeDef ntd : ntDefs) {
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
             Name name = ntd.getName();
             if (name != null && registeredNTDefs.containsKey(name)) {
                 String msg = name + " already exists";
@@ -1284,17 +1296,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             tmpNTDefCache.put(ntd.getName(), ntd);
         }
 
-        // check if all node type defs have proper nt:base subtyping
-        for (NodeTypeDef ntd : ntDefs) {
-            checkNtBaseSubtyping(ntd, tmpNTDefCache);
-        }
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
 
-        // create working copies of current ent & ntd caches:
-        // cache of pre-built aggregations of node types
-        EffectiveNodeTypeCache tmpENTCache = (EffectiveNodeTypeCache) entCache.clone();
-        for (NodeTypeDef ntd : ntDefs) {
-            EffectiveNodeType ent = validateNodeTypeDef(ntd, tmpENTCache,
-                    tmpNTDefCache, nsReg, lenient);
+            EffectiveNodeType ent =
+                    validateNodeTypeDef(ntd, tmpENTCache, tmpNTDefCache, nsReg,
+                            lenient);
 
             // store new effective node type instance
             tmpENTCache.put(ent);
@@ -1302,18 +1309,20 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // since no exception was thrown so far the definitions are assumed to
         // be valid
-        for (NodeTypeDef ntd : ntDefs) {
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
+
             // register clone of node type definition
             ntd = (NodeTypeDef) ntd.clone();
             registeredNTDefs.put(ntd.getName(), ntd);
             // store property & child node definitions of new node type by id
             PropDef[] pda = ntd.getPropertyDefs();
-            for (PropDef aPda : pda) {
-                propDefs.put(aPda.getId(), aPda);
+            for (int i = 0; i < pda.length; i++) {
+                propDefs.put(pda[i].getId(), pda[i]);
             }
             NodeDef[] nda = ntd.getChildNodeDefs();
-            for (NodeDef aNda : nda) {
-                nodeDefs.put(aNda.getId(), aNda);
+            for (int i = 0; i < nda.length; i++) {
+                nodeDefs.put(nda[i].getId(), nda[i]);
             }
         }
 
@@ -1322,7 +1331,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     private void internalUnregister(Name name) throws NoSuchNodeTypeException {
-        NodeTypeDef ntd = registeredNTDefs.get(name);
+        NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
         if (ntd == null) {
             throw new NoSuchNodeTypeException(name.toString());
         }
@@ -1331,18 +1340,19 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // remove property & child node definitions
         PropDef[] pda = ntd.getPropertyDefs();
-        for (PropDef aPda : pda) {
-            propDefs.remove(aPda.getId());
+        for (int i = 0; i < pda.length; i++) {
+            propDefs.remove(pda[i].getId());
         }
         NodeDef[] nda = ntd.getChildNodeDefs();
-        for (NodeDef aNda : nda) {
-            nodeDefs.remove(aNda.getId());
+        for (int i = 0; i < nda.length; i++) {
+            nodeDefs.remove(nda[i].getId());
         }
     }
 
-    private void internalUnregister(Collection<Name> ntNames)
+    private void internalUnregister(Collection ntNames)
             throws NoSuchNodeTypeException {
-        for (Name name : ntNames) {
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            Name name = (Name) iter.next();
             internalUnregister(name);
         }
     }
@@ -1365,72 +1375,21 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * Checks if the given node type def has the correct supertypes in respect
-     * to nt:base. all mixin nodetypes must not have a nt:base, the primary
-     * ones only if they don't inherit it from another supertype.
-     *
-     * @param ntd the node type def to check
-     * @param ntdCache cache for lookup
-     * @return <code>true</code> if the ntd was modified
-     */
-    private static boolean checkNtBaseSubtyping(NodeTypeDef ntd, Map<Name, NodeTypeDef> ntdCache) {
-        if (NameConstants.NT_BASE.equals(ntd.getName())) {
-            return false;
-        }
-        Set<Name> supertypes = new TreeSet<Name>(Arrays.asList(ntd.getSupertypes()));
-        if (supertypes.isEmpty()) {
-            return false;
-        }
-        boolean modified;
-        if (ntd.isMixin()) {
-            // if mixin, remove possible nt:base supertype
-            modified = supertypes.remove(NameConstants.NT_BASE);
-        } else {
-            // check if all supertypes (except nt:base) are mixins
-            boolean allMixins = true;
-            for (Name name: supertypes) {
-                if (!name.equals(NameConstants.NT_BASE)) {
-                    NodeTypeDef def = ntdCache.get(name);
-                    if (def != null && !def.isMixin()) {
-                        allMixins = false;
-                        break;
-                    }
-                }
-            }
-            if (allMixins) {
-                // ntd is a primary node type and has only mixins as supertypes,
-                // so it needs a nt:base
-                modified = supertypes.add(NameConstants.NT_BASE);
-            } else {
-                // ntd is a primary node type and at least one of the supertypes
-                // is too, so ensure that no nt:base is added. note that the
-                // trivial case, where there would be no supertype left is handled
-                // in the NodeTypeDef directly
-                modified = supertypes.remove(NameConstants.NT_BASE);
-            }
-        }
-        if (modified) {
-            ntd.setSupertypes(supertypes.toArray(new Name[supertypes.size()]));
-        }
-        return modified;
-    }
-
-    /**
      * Validates the specified <code>NodeTypeDef</code> within the context of
      * the two other given collections and returns an <code>EffectiveNodeType</code>.
      *
-     * @param ntd node type definition
-     * @param entCache effective node type cache
+     * @param ntd
+     * @param entCache
      * @param ntdCache cache of 'known' node type definitions, used to resolve dependencies
-     * @param nsReg    namespace registry used for validatingatch names
+     * @param nsReg    namespace registry used for validating qualified names
      * @param lenient flag governing whether validation can be lenient or has to be strict
      * @return an effective node type representation of the specified <code>NodeTypeDef</code>
-     * @throws InvalidNodeTypeDefException if the node type is not valid
+     * @throws InvalidNodeTypeDefException
      * @throws RepositoryException         if another error occurs
      */
     private static EffectiveNodeType validateNodeTypeDef(NodeTypeDef ntd,
                                                          EffectiveNodeTypeCache entCache,
-                                                         Map<Name, NodeTypeDef> ntdCache,
+                                                         Map ntdCache,
                                                          NamespaceRegistry nsReg,
                                                          boolean lenient)
             throws InvalidNodeTypeDefException, RepositoryException {
@@ -1456,21 +1415,21 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // validate supertypes
         Name[] supertypes = ntd.getSupertypes();
         if (supertypes.length > 0) {
-            for (Name supertype : supertypes) {
-                checkNamespace(supertype, nsReg);
+            for (int i = 0; i < supertypes.length; i++) {
+                checkNamespace(supertypes[i], nsReg);
                 /**
                  * simple check for infinite recursion
                  * (won't trap recursion on a deeper inheritance level)
                  */
-                if (name.equals(supertype)) {
+                if (name.equals(supertypes[i])) {
                     String msg = "[" + name + "] invalid supertype: "
-                            + supertype + " (infinite recursion))";
+                            + supertypes[i] + " (infinite recursion))";
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
-                if (!ntdCache.containsKey(supertype)) {
+                if (!ntdCache.containsKey(supertypes[i])) {
                     String msg = "[" + name + "] invalid supertype: "
-                            + supertype;
+                            + supertypes[i];
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
@@ -1480,7 +1439,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
              * check for circularity in inheritance chain
              * ('a' extends 'b' extends 'a')
              */
-            Stack<Name> inheritanceChain = new Stack<Name>();
+            Stack inheritanceChain = new Stack();
             inheritanceChain.push(name);
             checkForCircularInheritance(supertypes, inheritanceChain, ntdCache);
         }
@@ -1499,14 +1458,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         if (supertypes.length > 0) {
             try {
                 EffectiveNodeType est = getEffectiveNodeType(supertypes, entCache, ntdCache);
-                // check whether specified node type definition overrides
-                // a supertypes's primaryItem -> illegal (JCR-1947)
-                if (ntd.getPrimaryItemName() != null
-                        && est.getPrimaryItemName() != null) {
-                    String msg = "[" + name + "] primaryItemName is already specified by a supertype and must therefore not be overridden.";
+                // make sure that all primary types except nt:base extend from nt:base
+                if (!ntd.isMixin() && !NameConstants.NT_BASE.equals(ntd.getName())
+                        && !est.includesNodeType(NameConstants.NT_BASE)) {
+                    String msg = "[" + name + "] all primary node types except"
+                            + " nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
-
                 }
             } catch (NodeTypeConflictException ntce) {
                 String msg = "[" + name + "] failed to validate supertypes";
@@ -1523,7 +1481,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // validate property definitions
         PropDef[] pda = ntd.getPropertyDefs();
-        for (PropDef pd : pda) {
+        for (int i = 0; i < pda.length; i++) {
+            PropDef pd = pda[i];
             /**
              * sanity check:
              * make sure declaring node type matches name of node type definition
@@ -1557,11 +1516,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             InternalValue[] defVals = pd.getDefaultValues();
             if (defVals != null && defVals.length != 0) {
                 int reqType = pd.getRequiredType();
-                for (InternalValue defVal : defVals) {
+                for (int j = 0; j < defVals.length; j++) {
                     if (reqType == PropertyType.UNDEFINED) {
-                        reqType = defVal.getType();
+                        reqType = defVals[j].getType();
                     } else {
-                        if (defVal.getType() != reqType) {
+                        if (defVals[j].getType() != reqType) {
                             String msg = "[" + name + "#" + pd.getName()
                                     + "] type of default value(s) is not consistent with required property type";
                             log.debug(msg);
@@ -1583,22 +1542,23 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             }
 
             // check that default values satisfy value constraints
-            QValueConstraint[] constraints = pd.getValueConstraints();
+            ValueConstraint[] constraints = pd.getValueConstraints();
             if (constraints != null && constraints.length > 0) {
                 if (defVals != null && defVals.length > 0) {
                     // check value constraints on every value
-                    for (InternalValue defVal : defVals) {
+                    for (int j = 0; j < defVals.length; j++) {
                         // constraints are OR-ed together
                         boolean satisfied = false;
                         ConstraintViolationException cve = null;
-                        for (QValueConstraint constraint : constraints) {
+                        for (int k = 0; k < constraints.length; k++) {
                             try {
-                                constraint.check(defVal);
+                                constraints[k].check(defVals[j]);
                                 // at least one constraint is satisfied
                                 satisfied = true;
                                 break;
                             } catch (ConstraintViolationException e) {
                                 cve = e;
+                                continue;
                             }
                         }
                         if (!satisfied) {
@@ -1616,15 +1576,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                  * the specified node type must be registered, with one notable
                  * exception: the node type just being registered
                  */
-                if (pd.getRequiredType() == PropertyType.REFERENCE
-                        || pd.getRequiredType() == PropertyType.WEAKREFERENCE) {
-                    for (QValueConstraint constraint : constraints) {
-                        Name ntName = NameFactoryImpl.getInstance().create(constraint.getString());
+                if (pd.getRequiredType() == PropertyType.REFERENCE) {
+                    for (int j = 0; j < constraints.length; j++) {
+                        ReferenceConstraint rc = (ReferenceConstraint) constraints[j];
+                        Name ntName = rc.getNodeTypeName();
                         if (!name.equals(ntName) && !ntdCache.containsKey(ntName)) {
                             String msg = "[" + name + "#" + pd.getName()
-                                    + "] invalid "
-                                    + (pd.getRequiredType() == PropertyType.REFERENCE ? "REFERENCE" : "WEAKREFERENCE")
-                                    + " value constraint '"
+                                    + "] invalid REFERENCE value constraint '"
                                     + ntName + "' (unknown node type)";
                             log.debug(msg);
                             throw new InvalidNodeTypeDefException(msg);
@@ -1636,7 +1594,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // validate child-node definitions
         NodeDef[] cnda = ntd.getChildNodeDefs();
-        for (NodeDef cnd : cnda) {
+        for (int i = 0; i < cnda.length; i++) {
+            NodeDef cnd = cnda[i];
             /**
              * sanity check:
              * make sure declaring node type matches name of node type definition
@@ -1705,7 +1664,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                          * of auto-created child nodes (node type 'a' defines
                          * auto-created child node with default primary type 'a')
                          */
-                        Stack<Name> definingNTs = new Stack<Name>();
+                        Stack definingNTs = new Stack();
                         definingNTs.push(name);
                         checkForCircularNodeAutoCreation(defaultENT, definingNTs, entCache, ntdCache);
                     }
@@ -1725,11 +1684,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             // check required primary types
             Name[] reqTypes = cnd.getRequiredPrimaryTypes();
             if (reqTypes != null && reqTypes.length > 0) {
-                for (Name rpt : reqTypes) {
-                    // skip nt:base required types
-                    if (NameConstants.NT_BASE.equals(rpt)) {
-                        continue;
-                    }
+                for (int n = 0; n < reqTypes.length; n++) {
+                    Name rpt = reqTypes[n];
                     checkNamespace(rpt, nsReg);
                     referenceToSelf = false;
                     /**
@@ -1831,45 +1787,45 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
     /**
      * Notify the listeners that a node type <code>ntName</code> has been registered.
-     * @param ntName node type name
      */
     private void notifyRegistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = listeners.values().toArray(
+        NodeTypeRegistryListener[] la =
+                (NodeTypeRegistryListener[]) listeners.values().toArray(
                         new NodeTypeRegistryListener[listeners.size()]);
-        for (NodeTypeRegistryListener aLa : la) {
-            if (aLa != null) {
-                aLa.nodeTypeRegistered(ntName);
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].nodeTypeRegistered(ntName);
             }
         }
     }
 
     /**
      * Notify the listeners that a node type <code>ntName</code> has been re-registered.
-     * @param ntName node type name
      */
     private void notifyReRegistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = listeners.values().toArray(
+        NodeTypeRegistryListener[] la =
+                (NodeTypeRegistryListener[]) listeners.values().toArray(
                         new NodeTypeRegistryListener[listeners.size()]);
-        for (NodeTypeRegistryListener aLa : la) {
-            if (aLa != null) {
-                aLa.nodeTypeReRegistered(ntName);
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].nodeTypeReRegistered(ntName);
             }
         }
     }
 
     /**
      * Notify the listeners that a node type <code>ntName</code> has been unregistered.
-     * @param ntName node type name
      */
     private void notifyUnregistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = listeners.values().toArray(
+        NodeTypeRegistryListener[] la =
+                (NodeTypeRegistryListener[]) listeners.values().toArray(
                         new NodeTypeRegistryListener[listeners.size()]);
-        for (NodeTypeRegistryListener aLa : la) {
-            if (aLa != null) {
-                aLa.nodeTypeUnregistered(ntName);
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].nodeTypeUnregistered(ntName);
             }
         }
     }

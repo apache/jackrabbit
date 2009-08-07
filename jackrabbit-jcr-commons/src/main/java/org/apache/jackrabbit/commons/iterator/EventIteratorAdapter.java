@@ -32,13 +32,10 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
         implements EventIterator {
 
     /**
-     * Creates an adapter for the given {@link RangeIterator}.
-     *
-     * @param iterator iterator of {@link Event}s
+     * Static instance of an empty {@link EventIterator}.
      */
-    public EventIteratorAdapter(EventIterator iterator) {
-        super(iterator);
-    }
+    public static final EventIterator EMPTY =
+        new EventIteratorAdapter(RangeIteratorAdapter.EMPTY);
 
     /**
      * Creates an adapter for the given {@link RangeIterator}.

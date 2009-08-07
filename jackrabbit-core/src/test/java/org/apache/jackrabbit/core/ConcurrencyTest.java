@@ -55,7 +55,7 @@ public class ConcurrencyTest extends AbstractJCRTest {
             Thread[] threads = new Thread[NUM_SESSIONS];
             for (int i = 0; i < threads.length; i++) {
                 // create new session
-                Session session = getHelper().getSuperuserSession();
+                Session session = helper.getSuperuserSession();
                 TestSession ts = new TestSession("s" + i, session);
                 Thread t = new Thread(ts);
                 t.setName((NUM_ITERATIONS - n) + "-s" + i);

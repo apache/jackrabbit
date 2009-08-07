@@ -35,7 +35,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
     /**
      * Test if the optional jcr:score property for full-text search is
      * supported.
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testScoreColumn() throws Exception {
@@ -48,7 +48,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test full-text search of the repository.
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testFullTextSearch() throws Exception {
@@ -74,7 +74,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test range evaluation of a Query.
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpRangeTest()}.
      */
     public void testRange() throws Exception {
@@ -90,7 +90,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test multi-value support of search.
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpMultiValueTest()}.
      */
     public void testMultiValueSearch() throws Exception {
@@ -107,7 +107,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
     /**
      * Test if the optional jcr:path pseudo property is contained in the query
      * result.
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testPathColumn() throws Exception {

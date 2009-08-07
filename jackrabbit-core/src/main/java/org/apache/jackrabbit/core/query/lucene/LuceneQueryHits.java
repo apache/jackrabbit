@@ -22,7 +22,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Wraps a lucene query result and adds a close method that allows to release
@@ -57,7 +58,8 @@ public class LuceneQueryHits implements QueryHits {
             return null;
         }
         int doc = scorer.doc();
-        NodeId id = new NodeId(reader.document(doc).get(FieldNames.UUID));
+        String uuid = reader.document(doc).get(FieldNames.UUID);
+        NodeId id = new NodeId(UUID.fromString(uuid));
         return new ScoreNode(id, scorer.score(), doc);
     }
 

@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
@@ -31,21 +31,21 @@ import java.util.Arrays;
 /**
  * <code>AccessControlEntryIterator</code>...
  */
-public class AccessControlEntryIterator implements Iterator<AccessControlEntry> {
+public class AccessControlEntryIterator implements Iterator {
 
     private static Logger log = LoggerFactory.getLogger(AccessControlEntryIterator.class);
 
-    private final List<AccessControlList> acls = new ArrayList<AccessControlList>();
-    private Iterator<AccessControlEntry> currentEntries;
-    private AccessControlEntry next;
+    private final List acls = new ArrayList();
+    private Iterator currentEntries;
+    private Object next;
 
-    public AccessControlEntryIterator(List<AccessControlList> aces) {
+    public AccessControlEntryIterator(List aces) {
         this(new AccessControlList[] {new UnmodifiableAccessControlList(aces)});
     }
 
     public AccessControlEntryIterator(AccessControlList[] acls) {
-        for (AccessControlList a : acls) {
-            this.acls.add(a);
+        for (int i = 0; i < acls.length; i++) {
+            this.acls.add(acls[i]);
         }
         next = seekNext();
     }
@@ -58,16 +58,16 @@ public class AccessControlEntryIterator implements Iterator<AccessControlEntry> 
         return next != null;
     }
 
-    public AccessControlEntry next() {
+    public Object next() {
         if (next == null) {
             throw new NoSuchElementException();
         }
-        AccessControlEntry ret = next;
+        Object ret = next;
         next = seekNext();
         return ret;
     }
 
-    private AccessControlEntry seekNext() {
+    private Object seekNext() {
         while (currentEntries == null || !currentEntries.hasNext()) {
             if (acls.isEmpty()) {
                 // reached last acl -> break out of while loop
@@ -76,7 +76,7 @@ public class AccessControlEntryIterator implements Iterator<AccessControlEntry> 
             } else {
                 AccessControlEntry[] entries = new AccessControlEntry[0];
                 try {
-                    entries = (acls.remove(0)).getAccessControlEntries();
+                    entries = ((AccessControlList) acls.remove(0)).getAccessControlEntries();
                 } catch (RepositoryException e) {
                     log.error("Unable to retrieve ACEs: " + e.getMessage() + " -> try next.");
                 }

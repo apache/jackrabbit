@@ -17,10 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -29,23 +26,13 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>1.6.0</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-webapp</artifactId>
   <packaging>war</packaging>
   <name>Jackrabbit Web Application</name>
   <description>Web application that hosts and serves a Jackrabbit content repository</description>
-
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-webapp
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-webapp
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-webapp</url>
-  </scm>
 
   <dependencies>
     <dependency>
@@ -55,7 +42,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>1.6.0</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
@@ -66,7 +53,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-server</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>1.6.0</version>
       <exclusions>
         <!-- JCR-683: The commons-httpclient dependency from            -->
         <!-- jackrabbit-webapp depends on commons-logging. Since this   -->
@@ -127,8 +114,7 @@
             <phase>package</phase>
             <configuration>
               <tasks>
-                <jar basedir="${project.build.outputDirectory}"
-                  destfile="${project.build.directory}/jackrabbit-webapp-${project.version}.jar"/>
+                <jar basedir="${project.build.outputDirectory}" destfile="${project.build.directory}/jackrabbit-webapp-${project.version}.jar" />
               </tasks>
             </configuration>
             <goals>

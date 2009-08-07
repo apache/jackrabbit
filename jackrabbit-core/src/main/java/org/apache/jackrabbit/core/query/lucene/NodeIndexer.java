@@ -16,20 +16,22 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -43,12 +45,11 @@ import javax.jcr.RepositoryException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
-import java.net.URI;
-import java.math.BigDecimal;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -111,7 +112,7 @@ public class NodeIndexer {
      * List of {@link FieldNames#FULLTEXT} fields which should not be used in
      * an excerpt.
      */
-    protected List<Fieldable> doNotUseInExcerpt = new ArrayList<Fieldable>();
+    protected List doNotUseInExcerpt = new ArrayList();
 
     /**
      * Creates a new node indexer.
@@ -175,7 +176,7 @@ public class NodeIndexer {
      * @throws RepositoryException if an error occurs while reading property
      *                             values from the <code>ItemStateProvider</code>.
      */
-    public Document createDoc() throws RepositoryException {
+    protected Document createDoc() throws RepositoryException {
         doNotUseInExcerpt.clear();
         Document doc = new Document();
 
@@ -184,7 +185,7 @@ public class NodeIndexer {
         // special fields
         // UUID
         doc.add(new Field(
-                FieldNames.UUID, node.getNodeId().toString(),
+                FieldNames.UUID, node.getNodeId().getUUID().toString(),
                 Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
         try {
             // parent UUID
@@ -197,8 +198,8 @@ public class NodeIndexer {
                 addParentChildRelation(doc, node.getParentId());
             } else {
                 // shareable node
-                for (NodeId id : node.getSharedSet()) {
-                    addParentChildRelation(doc, id);
+                for (Iterator it = node.getSharedSet().iterator(); it.hasNext(); ) {
+                    addParentChildRelation(doc, (NodeId) it.next());
                 }
                 // mark shareable nodes
                 doc.add(new Field(FieldNames.SHAREABLE_NODE, "",
@@ -213,21 +214,23 @@ public class NodeIndexer {
             // unknown uri<->prefix mappings
         }
 
-        Set<Name> props = node.getPropertyNames();
-        for (Name propName : props) {
+        Set props = node.getPropertyNames();
+        for (Iterator it = props.iterator(); it.hasNext();) {
+            Name propName = (Name) it.next();
             PropertyId id = new PropertyId(node.getNodeId(), propName);
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
 
                 // add each property to the _PROPERTIES_SET for searching
                 // beginning with V2
-                if (indexFormatVersion.getVersion() >= IndexFormatVersion.V2.getVersion()) {
+                if (indexFormatVersion.getVersion()
+                        >= IndexFormatVersion.V2.getVersion()) {
                     addPropertyName(doc, propState.getName());
                 }
 
                 InternalValue[] values = propState.getValues();
-                for (InternalValue value : values) {
-                    addValue(doc, value, propState.getName());
+                for (int i = 0; i < values.length; i++) {
+                    addValue(doc, values[i], propState.getName());
                 }
                 if (values.length > 1) {
                     // real multi-valued
@@ -241,8 +244,8 @@ public class NodeIndexer {
         }
 
         // now add fields that are not used in excerpt (must go at the end)
-        for (Fieldable field : doNotUseInExcerpt) {
-            doc.add(field);
+        for (Iterator it = doNotUseInExcerpt.iterator(); it.hasNext(); ) {
+            doc.add((Fieldable) it.next());
         }
         return doc;
     }
@@ -253,7 +256,7 @@ public class NodeIndexer {
      *
      * @param e the base exception.
      */
-    protected void throwRepositoryException(Exception e)
+    private void throwRepositoryException(Exception e)
             throws RepositoryException {
         String msg = "Error while indexing node: " + node.getNodeId() + " of "
             + "type: " + node.getNodeTypeName();
@@ -267,7 +270,7 @@ public class NodeIndexer {
      * @param doc  the lucene document.
      * @param name the name of the multi-value property.
      */
-    protected void addMVPName(Document doc, Name name) {
+    private void addMVPName(Document doc, Name name) {
         try {
             String propName = resolver.getJCRName(name);
             doc.add(new Field(FieldNames.MVP, propName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
@@ -283,7 +286,7 @@ public class NodeIndexer {
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
      */
-    protected void addValue(Document doc, InternalValue value, Name name) throws RepositoryException {
+    private void addValue(Document doc, InternalValue value, Name name) {
         String fieldName = name.getLocalName();
         try {
             fieldName = resolver.getJCRName(name);
@@ -293,12 +296,12 @@ public class NodeIndexer {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 if (isIndexed(name)) {
-                    addBinaryValue(doc, fieldName, value);
+                    addBinaryValue(doc, fieldName, value.getBLOBFileValue());
                 }
                 break;
             case PropertyType.BOOLEAN:
                 if (isIndexed(name)) {
-                    addBooleanValue(doc, fieldName, value.getBoolean());
+                    addBooleanValue(doc, fieldName, Boolean.valueOf(value.getBoolean()));
                 }
                 break;
             case PropertyType.DATE:
@@ -308,32 +311,22 @@ public class NodeIndexer {
                 break;
             case PropertyType.DOUBLE:
                 if (isIndexed(name)) {
-                    addDoubleValue(doc, fieldName, value.getDouble());
+                    addDoubleValue(doc, fieldName, new Double(value.getDouble()));
                 }
                 break;
             case PropertyType.LONG:
                 if (isIndexed(name)) {
-                    addLongValue(doc, fieldName, value.getLong());
+                    addLongValue(doc, fieldName, new Long(value.getLong()));
                 }
                 break;
             case PropertyType.REFERENCE:
                 if (isIndexed(name)) {
-                    addReferenceValue(doc, fieldName, value.getNodeId(), false);
-                }
-                break;
-            case PropertyType.WEAKREFERENCE:
-                if (isIndexed(name)) {
-                    addReferenceValue(doc, fieldName, value.getNodeId(), true);
+                    addReferenceValue(doc, fieldName, value.getUUID());
                 }
                 break;
             case PropertyType.PATH:
                 if (isIndexed(name)) {
                     addPathValue(doc, fieldName, value.getPath());
-                }
-                break;
-            case PropertyType.URI:
-                if (isIndexed(name)) {
-                    addURIValue(doc, fieldName, value.getURI());
                 }
                 break;
             case PropertyType.STRING:
@@ -355,18 +348,11 @@ public class NodeIndexer {
                 if (name.equals(NameConstants.JCR_PRIMARYTYPE)
                         || name.equals(NameConstants.JCR_MIXINTYPES)
                         || isIndexed(name)) {
-                    addNameValue(doc, fieldName, value.getName());
+                    addNameValue(doc, fieldName, value.getQName());
                 }
                 break;
-            case PropertyType.DECIMAL:
-                if (isIndexed(name)) {
-                    addDecimalValue(doc, fieldName, value.getDecimal());
-                }
-                break;
-
-
             default:
-                throw new IllegalArgumentException("illegal internal value type: " + value.getType());
+                throw new IllegalArgumentException("illegal internal value type");
         }
 
         // add length
@@ -381,7 +367,7 @@ public class NodeIndexer {
      * @param doc  the document.
      * @param name the name of the property.
      */
-    protected void addPropertyName(Document doc, Name name) {
+    private void addPropertyName(Document doc, Name name) {
         String fieldName = name.getLocalName();
         try {
             fieldName = resolver.getJCRName(name);
@@ -404,7 +390,7 @@ public class NodeIndexer {
      */
     protected void addBinaryValue(Document doc,
                                   String fieldName,
-                                  InternalValue internalValue) {
+                                  Object internalValue) {
         // 'check' if node is of type nt:resource
         try {
             String jcrData = mappings.getPrefix(Name.NS_JCR_URI) + ":data";
@@ -424,7 +410,8 @@ public class NodeIndexer {
                     encoding = encodingValue.getString();
                 }
 
-                InputStream stream = internalValue.getStream();
+                InputStream stream =
+                        ((BLOBFileValue) internalValue).getStream();
                 Reader reader = extractor.extractText(stream, type, encoding);
                 doc.add(createFulltextField(reader));
             }
@@ -534,7 +521,7 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addDoubleValue(Document doc, String fieldName, Object internalValue) {
-        double doubleVal = (Double) internalValue;
+        double doubleVal = ((Double) internalValue).doubleValue();
         doc.add(createFieldWithoutNorms(fieldName, DoubleField.doubleToString(doubleVal),
                 PropertyType.DOUBLE));
     }
@@ -549,49 +536,28 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addLongValue(Document doc, String fieldName, Object internalValue) {
-        long longVal = (Long) internalValue;
+        long longVal = ((Long) internalValue).longValue();
         doc.add(createFieldWithoutNorms(fieldName, LongField.longToString(longVal),
                 PropertyType.LONG));
     }
 
     /**
-     * Adds the long value to the document as the named field. The long
-     * value is converted to an indexable string value using the {@link LongField}
-     * class.
-     *
-     * @param doc           The document to which to add the field
-     * @param fieldName     The name of the field to add
-     * @param internalValue The value for the field to add to the document.
-     */
-    protected void addDecimalValue(Document doc, String fieldName, Object internalValue) {
-        BigDecimal decVal = (BigDecimal) internalValue;
-        doc.add(createFieldWithoutNorms(fieldName, DecimalField.decimalToString(decVal),
-                PropertyType.DECIMAL));
-    }
-
-    /**
      * Adds the reference value to the document as the named field. The value's
      * string representation is added as the reference data. Additionally the
-     * reference data is stored in the index. As of Jackrabbit 2.0 this method
-     * also adds the reference UUID as a {@link FieldNames#WEAK_REFS} field
-     * to the index if it is a weak reference.
+     * reference data is stored in the index.
      *
      * @param doc           The document to which to add the field
      * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
-     * @param weak          Flag indicating whether it's a WEAKREFERENCE (true) or a REFERENCE (flase)
      */
-    protected void addReferenceValue(Document doc, String fieldName, Object internalValue, boolean weak) {
-        String uuid = internalValue.toString();
+    protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
+        UUID value = (UUID) internalValue;
+        String uuid = value.toString();
         doc.add(createFieldWithoutNorms(fieldName, uuid,
-                weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE));
+                PropertyType.REFERENCE));
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, uuid),
                 Field.Store.YES, Field.Index.NO, Field.TermVector.NO));
-        if (weak) {
-            doc.add(new Field(FieldNames.WEAK_REFS, uuid, Field.Store.NO,
-                    Field.Index.NOT_ANALYZED_NO_NORMS));
-        }
     }
 
     /**
@@ -613,19 +579,6 @@ public class NodeIndexer {
         }
         doc.add(createFieldWithoutNorms(fieldName, pathString,
                 PropertyType.PATH));
-    }
-
-    /**
-     * Adds the uri value to the document as the named field.
-     *
-     * @param doc           The document to which to add the field
-     * @param fieldName     The name of the field to add
-     * @param internalValue The value for the field to add to the document.
-     */
-    protected void addURIValue(Document doc, String fieldName, Object internalValue) {
-        URI uri = (URI) internalValue;
-        doc.add(createFieldWithoutNorms(fieldName, uri.toString(),
-                PropertyType.URI));
     }
 
     /**
@@ -739,7 +692,7 @@ public class NodeIndexer {
     /**
      * Adds the name value to the document as the named field. The name
      * value is converted to an indexable string treating the internal value
-     * as a <code>Name</code> and mapping the name space using the name space
+     * as a qualified name and mapping the name space using the name space
      * mappings with which this class has been created.
      *
      * @param doc           The document to which to add the field

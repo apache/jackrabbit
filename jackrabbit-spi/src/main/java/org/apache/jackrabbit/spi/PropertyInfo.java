@@ -47,7 +47,7 @@ public interface PropertyInfo extends ItemInfo {
     public boolean isMultiValued();
 
     /**
-     * @return The values present on this <code>PropertyInfo</code>.
+     * @return Qualified values present on this <code>PropertyInfo</code>.
      */
     public QValue[] getValues();
 }

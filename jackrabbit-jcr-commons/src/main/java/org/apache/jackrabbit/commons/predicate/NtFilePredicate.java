@@ -75,7 +75,7 @@ public class NtFilePredicate implements Predicate {
 
     /**
      * @return <code>true</code> if the item is a nt:file or nt:resource property
-     * @see org.apache.jackrabbit.commons.predicate.Predicate#evaluate(java.lang.Object)
+     * @see org.apache.commons.collections.Predicate#evaluate(java.lang.Object)
      */
     public boolean evaluate(Object item) {
         if ( item instanceof Item ) {

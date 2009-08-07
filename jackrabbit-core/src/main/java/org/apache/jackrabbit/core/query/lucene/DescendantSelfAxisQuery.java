@@ -26,6 +26,7 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Sort;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -227,8 +228,8 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                              final SessionImpl session,
                              final Sort sort) throws IOException {
         if (sort.getSort().length == 0 && subQueryMatchesAll()) {
-            // maps path String to ScoreNode
-            Map<String, ScoreNode> startingPoints = new TreeMap<String, ScoreNode>();
+            // maps path String to NodeId
+            Map startingPoints = new TreeMap();
             QueryHits result = searcher.evaluate(getContextQuery());
             try {
                 // minLevels 0 and 1 are handled with a series of
@@ -253,8 +254,8 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
 
             // prune overlapping starting points
             String previousPath = null;
-            for (Iterator<String> it = startingPoints.keySet().iterator(); it.hasNext(); ) {
-                String path = it.next();
+            for (Iterator it = startingPoints.keySet().iterator(); it.hasNext(); ) {
+                String path = (String) it.next();
                 // if the previous path is a prefix of this path then the
                 // current path is obsolete
                 if (previousPath != null && path.startsWith(previousPath)) {
@@ -264,10 +265,12 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 }
             }
 
-            final Iterator<ScoreNode> scoreNodes = startingPoints.values().iterator();
+            final Iterator scoreNodes = startingPoints.values().iterator();
             return new AbstractQueryHits() {
 
                 private NodeTraversingQueryHits currentTraversal;
+
+                private ItemManager itemMgr = session.getItemManager();
 
                 {
                     fetchNextTraversal();
@@ -297,7 +300,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                         currentTraversal.close();
                     }
                     if (scoreNodes.hasNext()) {
-                        ScoreNode sn = scoreNodes.next();
+                        ScoreNode sn = (ScoreNode) scoreNodes.next();
                         try {
                             Node node = session.getNodeById(sn.getNodeId());
                             currentTraversal = new NodeTraversingQueryHits(node,
@@ -505,8 +508,8 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 if (log.isDebugEnabled()) {
                     log.debug("Collected {} context hits in {} ms for {}",
                             new Object[]{
-                                    contextHits.cardinality(),
-                                    time,
+                                    new Integer(contextHits.cardinality()),
+                                    new Long(time),
                                     DescendantSelfAxisQuery.this
                             });
                 }
@@ -550,8 +553,8 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
             // traverse
             while (pDocs.length != 0) {
                 boolean valid = false;
-                for (int pDoc : pDocs) {
-                    if (ancestorCount >= minLevels && contextHits.get(pDoc)) {
+                for (int i = 0; i < pDocs.length; i++) {
+                    if (ancestorCount >= minLevels && contextHits.get(pDocs[i])) {
                         valid = true;
                         break;
                     }
@@ -601,8 +604,8 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 return hResolver.getParents(docs[0], pDocs);
             } else {
                 pDocs = new int[0];
-                for (int doc : docs) {
-                    int[] p = hResolver.getParents(doc, new int[0]);
+                for (int i = 0; i < docs.length; i++) {
+                    int[] p = hResolver.getParents(docs[i], new int[0]);
                     int[] tmp = new int[p.length + pDocs.length];
                     System.arraycopy(pDocs, 0, tmp, 0, pDocs.length);
                     System.arraycopy(p, 0, tmp, pDocs.length, p.length);

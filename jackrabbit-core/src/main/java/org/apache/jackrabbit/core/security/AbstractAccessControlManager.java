@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
-import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
-import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +31,6 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 
 /**
@@ -46,7 +45,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      *
      * @param absPath Path to an existing node.
      * @return Always returns all registered <code>Privilege</code>s.
-     * @see javax.jcr.security.AccessControlManager#getSupportedPrivileges(String)
+     * @see AccessControlManager#getSupportedPrivileges(String)
      */
     public Privilege[] getSupportedPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
         checkInitialized();
@@ -57,7 +56,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     }
 
     /**
-     * @see javax.jcr.security.AccessControlManager#privilegeFromName(String)
+     * @see AccessControlManager#privilegeFromName(String)
      */
     public Privilege privilegeFromName(String privilegeName)
             throws AccessControlException, RepositoryException {
@@ -71,7 +70,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      *
      * @param absPath Path to an existing node.
      * @return always returns <code>null</code>.
-     * @see javax.jcr.security.AccessControlManager#getApplicablePolicies(String)
+     * @see AccessControlManager#getApplicablePolicies(String)
      */
     public AccessControlPolicy[] getPolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -86,7 +85,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      *
      * @param absPath Path to an existing node.
      * @return always returns an empty iterator.
-     * @see javax.jcr.security.AccessControlManager#getApplicablePolicies(String)
+     * @see AccessControlManager#getApplicablePolicies(String)
      */
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -99,7 +98,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     /**
      * Always throws <code>AccessControlException</code>
      *
-     * @see javax.jcr.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
+     * @see AccessControlManager#setPolicy(String, AccessControlPolicy)
      */
     public void setPolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -111,7 +110,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     /**
      * Always throws <code>AccessControlException</code>
      *
-     * @see javax.jcr.security.AccessControlManager#removePolicy(String, AccessControlPolicy)
+     * @see AccessControlManager#removePolicy(String, AccessControlPolicy)
      */
     public void removePolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -123,25 +122,15 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
 
     //-------------------------------------< JackrabbitAccessControlManager >---
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(java.security.Principal)
+     * @see JackrabbitAccessControlManager#getApplicablePolicies(java.security.Principal) 
      */
     public JackrabbitAccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
         checkInitialized();
-
+        
         log.debug("Implementation does not provide applicable policies -> returning empty array.");
         return new JackrabbitAccessControlPolicy[0];
     }
 
-    /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(java.security.Principal)
-     */
-    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
-        checkInitialized();
-
-        log.debug("Implementation does not provide applicable policies -> returning empty array.");
-        return new JackrabbitAccessControlPolicy[0];
-    }
-    
     //--------------------------------------------------------------------------
     /**
      * Check if this manager has been properly initialized.
@@ -170,7 +159,8 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     protected abstract PrivilegeRegistry getPrivilegeRegistry() throws RepositoryException;
 
     /**
-     * Tests if the given <code>absPath</code> is absolute and points to an existing node.
+     * Build a qualified path from the specified <code>absPath</code> and test
+     * if it is really absolute and points to an existing node.
      *
      * @param absPath Path to an existing node.
      * @throws PathNotFoundException if no node at <code>absPath</code> exists

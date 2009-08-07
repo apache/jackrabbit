@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.lock;
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.NodeImpl;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
@@ -33,6 +34,7 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ import java.util.Date;
  * <code>LockManagerImpl</code>...
  * TODO: TOBEFIXED. Lock objects obtained through this mgr are not informed if another session is or becomes lock-holder and removes the lock again.
  */
-public class LockManagerImpl implements LockStateManager, SessionListener {
+public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.jsr283.lock.LockManager, SessionListener {
 
     private static Logger log = LoggerFactory.getLogger(LockManagerImpl.class);
 
@@ -68,36 +69,79 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     private final WorkspaceManager wspManager;
     private final ItemManager itemManager;
     private final CacheBehaviour cacheBehaviour;
+    private final PathResolver resolver;
 
     /**
      * Map holding all locks that where created by this <code>Session</code> upon
-     * calls to {@link LockStateManager#lock(NodeState,boolean,boolean)} or to
-     * {@link LockStateManager#getLock(NodeState)}. The map entries are removed
+     * calls to {@link LockManager#lock(NodeState,boolean,boolean)} or to
+     * {@link LockManager#getLock(NodeState)}. The map entries are removed
      * only if a lock ends his life by {@link Node#unlock()} or by implicit
      * unlock upon {@link Session#logout()}.
      */
     private final Map lockMap;
 
     public LockManagerImpl(WorkspaceManager wspManager, ItemManager itemManager,
-                           CacheBehaviour cacheBehaviour) {
+                           CacheBehaviour cacheBehaviour, PathResolver pathResolver) {
         this.wspManager = wspManager;
         this.itemManager = itemManager;
         this.cacheBehaviour = cacheBehaviour;
+        this.resolver = pathResolver;
         // use hard references in order to make sure, that entries refering
         // to locks created by the current session are not removed.
         lockMap = new HashMap();
     }
 
-    //----------------< org.apache.jackrabbit.jcr2spi.lock.LockStateManager >---
+    //--------------------------------------------------------< LockManager >---
     /**
-     * @see LockStateManager#lock(NodeState,boolean,boolean)
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#getLock(String)
+     */
+    public org.apache.jackrabbit.api.jsr283.lock.Lock getLock(String absPath) throws LockException, RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return (org.apache.jackrabbit.api.jsr283.lock.Lock) n.getLock();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#isLocked(String)
+     */
+    public boolean isLocked(String absPath) throws RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return n.isLocked();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#holdsLock(String)
+     */
+    public boolean holdsLock(String absPath) throws RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return n.holdsLock();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
+     */
+    public org.apache.jackrabbit.api.jsr283.lock.Lock lock(String absPath, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerInfo) throws RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return (org.apache.jackrabbit.api.jsr283.lock.Lock) ((NodeImpl) n).lock(isDeep, isSessionScoped, timeoutHint, ownerInfo);
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#unlock(String) 
+     */
+    public void unlock(String absPath) throws LockException, RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        n.unlock();
+    }
+
+    //---------------------< org.apache.jackrabbit.jcr2spi.lock.LockManager >---
+    /**
+     * @see LockManager#lock(NodeState,boolean,boolean)
      */
     public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
         return lock(nodeState, isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
     /**
-     * @see LockStateManager#lock(NodeState,boolean,boolean,long,String)
+     * @see LockManager#lock(NodeState,boolean,boolean,long,String)
      */
     public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerHint) throws RepositoryException {
         // retrieve node first
@@ -120,7 +164,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     }
 
     /**
-     * @see LockStateManager#unlock(NodeState)
+     * @see LockManager#unlock(NodeState)
+     * @param nodeState
      */
     public void unlock(NodeState nodeState) throws LockException, RepositoryException {
         // execute the operation. Note, that its possible that the session is
@@ -145,7 +190,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * Note, that the flag indicating session-scoped lock cannot be retrieved
      * unless the current session is the lock holder.
      *
-     * @see LockStateManager#getLock(NodeState)
+     * @see LockManager#getLock(NodeState)
      * @param nodeState
      */
     public Lock getLock(NodeState nodeState) throws LockException, RepositoryException {
@@ -161,7 +206,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     }
 
     /**
-     * @see LockStateManager#isLocked(NodeState)
+     * @see LockManager#isLocked(NodeState)
+     * @param nodeState
      */
     public boolean isLocked(NodeState nodeState) throws RepositoryException {
         LockImpl l = getLockImpl(nodeState, false);
@@ -169,7 +215,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     }
 
     /**
-     * @see LockStateManager#checkLock(NodeState)
+     * @see LockManager#checkLock(NodeState)
+     * @param nodeState
      */
     public void checkLock(NodeState nodeState) throws LockException, RepositoryException {
         // shortcut: new status indicates that a new state was already added
@@ -185,14 +232,14 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         } // else: state is not locked at all || session is lock-holder
     }
 
-
+    //--------< LockManager, org.apache.jackrabbit.jcr2spi.lock.LockManager >---
     /**
      * Returns the lock tokens present on the <code>SessionInfo</code> this
      * manager has been created with.
      *
-     * @see LockStateManager#getLockTokens()
+     * @see LockManager#getLockTokens()
      */
-    public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException {
+    public String[] getLockTokens() {
         return wspManager.getLockTokens();
     }
 
@@ -201,7 +248,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * If this succeeds this method will inform all locks stored in the local
      * map in order to give them the chance to update their lock information.
      *
-     * @see LockStateManager#addLockToken(String)
+     * @see LockManager#addLockToken(String)
      */
     public void addLockToken(String lt) throws LockException, RepositoryException {
         wspManager.addLockToken(lt);
@@ -216,7 +263,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * All locks stored in the local lock map are notified by the removed
      * token in order have them updated their lock information.
      *
-     * @see LockStateManager#removeLockToken(String)
+     * @see LockManager#removeLockToken(String)
      */
     public void removeLockToken(String lt) throws LockException, RepositoryException {
         // JSR170 v. 1.0.1 defines that the token of a session-scoped lock may
@@ -246,6 +293,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
 
     //----------------------------------------------------< SessionListener >---
     /**
+     *
+     * @param session
      * @see SessionListener#loggingOut(Session)
      */
     public void loggingOut(Session session) {
@@ -267,6 +316,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     }
 
     /**
+     *
+     * @param session
      * @see SessionListener#loggedOut(Session)
      */
     public void loggedOut(Session session) {
@@ -369,7 +420,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         // store in the lock map. see below (LockImpl) for the conditions that
         // must be met in order a lock can be stored.
         LockImpl l = getLockFromMap(nState);
-        if (l != null && l.lockState.appliesToNodeState(nodeState)) {
+        if (l != null) {
             return l;
         }
 
@@ -651,7 +702,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     /**
      * Inner class implementing the {@link Lock} interface.
      */
-    private class LockImpl implements javax.jcr.lock.Lock, LockTokenListener {
+    private class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock, LockTokenListener {
 
         private final LockState lockState;
         private final Node node;
@@ -755,7 +806,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         }
 
         /**
-         * @see javax.jcr.lock.Lock#getSecondsRemaining()
+         * @see org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()
          */
         public long getSecondsRemaining() throws RepositoryException {
             updateLockInfo();
@@ -763,7 +814,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         }
 
         /**
-         * @see javax.jcr.lock.Lock#isLockOwningSession()
+         * @see org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()
          */
         public boolean isLockOwningSession(){
             return lockState.lockInfo.isLockOwner();

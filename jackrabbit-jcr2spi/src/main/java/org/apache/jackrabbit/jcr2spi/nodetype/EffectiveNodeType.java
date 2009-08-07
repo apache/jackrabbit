@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -94,37 +93,17 @@ public interface EffectiveNodeType {
 
     /**
      * @param name
-     * @param nodeTypeDefinition
-     *@param definitionProvider  @throws ConstraintViolationException  @throws NoSuchNodeTypeException
+     * @param nodeTypeName
+     * @param definitionProvider
+     * @throws ConstraintViolationException
+     * @throws NoSuchNodeTypeException
      */
-    public void checkAddNodeConstraints(Name name, QNodeTypeDefinition nodeTypeDefinition, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, Name nodeTypeName, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**
      * @param name
      * @throws ConstraintViolationException
-     * @deprecated Use {@link #hasRemoveNodeConstraint(Name)} and
-     * {@link #hasRemovePropertyConstraint(Name)} respectively.
      */
     public void checkRemoveItemConstraints(Name name) throws ConstraintViolationException;
-
-    /**
-     * Returns <code>true</code> if a single node definition matching the
-     * specified <code>nodeName</code> is either mandatory or protected.
-     *
-     * @param nodeName
-     * @return <code>true</code> if a single node definition matching the
-     * specified <code>nodeName</code> is either mandatory or protected.
-     */
-    public boolean hasRemoveNodeConstraint(Name nodeName);
-
-    /**
-     * Returns <code>true</code> if a single property definition matching the
-     * specified <code>propertyName</code> is either mandatory or protected.
-     *
-     * @param propertyName
-     * @return <code>true</code> if a single property definition matching the
-     * specified <code>propertyName</code> is either mandatory or protected.
-     */
-    public boolean hasRemovePropertyConstraint(Name propertyName);
 }

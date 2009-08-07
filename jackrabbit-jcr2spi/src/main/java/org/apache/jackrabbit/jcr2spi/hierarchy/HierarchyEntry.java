@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>HierarchyEntry</code>...
@@ -112,19 +112,14 @@ public interface HierarchyEntry {
     /**
      * Invalidates the underlying <code>ItemState</code> if available and if it
      * is not transiently modified. If the <code>recursive</code> flag is true,
-     * also invalidates the child entries recursively.<br>
+     * the hierarchy is traverses and {@link #invalidate(boolean)} is called on
+     * all child entries.<br>
      * Note, that in contrast to {@link HierarchyEntry#reload(boolean)}
      * this method only sets the status of this item state to {@link
-     * Status#INVALIDATED} and does not actually update it with the persistent
+     * Status#INVALIDATED} and does not acutally update it with the persistent
      * state in the repository.
      */
     public void invalidate(boolean recursive);
-
-    /**
-     * Calculates the status of the underlying <code>ItemState</code>: any pending
-     * changes to the underlying <code>ItemState</code> are applied.
-     */
-    public void calculateStatus();
 
     /**
      * Traverses the hierarchy and reverts all transient modifications such as
@@ -172,5 +167,4 @@ public interface HierarchyEntry {
      * @param transientOperation
      */
     public void complete(Operation transientOperation) throws RepositoryException;
-
 }

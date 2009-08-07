@@ -22,12 +22,14 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Path.Element;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+
 /**
  * Implements a query node that defines property value relation.
  */
-public class RelationQueryNode extends NAryQueryNode<QueryNode> implements QueryConstants {
+public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
 
     /**
      * Acts as an syntetic placeholder for a location step that matches any
@@ -39,7 +41,7 @@ public class RelationQueryNode extends NAryQueryNode<QueryNode> implements Query
     /**
      * The relative path to the property.
      */
-    private PathQueryNode relPath;
+    private Path relPath;
 
     /**
      * If <code>true</code> this relation query node contains a value preceded
@@ -88,23 +90,15 @@ public class RelationQueryNode extends NAryQueryNode<QueryNode> implements Query
      */
     private int type;
 
-    private final QueryNodeFactory factory;
-
     /**
      * Creates a new <code>RelationQueryNode</code> without a type nor value
      * assigned.
      *
-     * @param parent    the parent node for this query node.
-     * @param operation the operation.
-     * @param factory   the query node factory.
+     * @param parent the parent node for this query node.
      */
-    protected RelationQueryNode(QueryNode parent,
-                                int operation,
-                                QueryNodeFactory factory) {
+    protected RelationQueryNode(QueryNode parent, int operation) {
         super(parent);
         this.operation = operation;
-        this.factory = factory;
-        this.relPath = factory.createPathQueryNode(this);
     }
 
     /**
@@ -144,9 +138,38 @@ public class RelationQueryNode extends NAryQueryNode<QueryNode> implements Query
     }
 
     /**
+     * Returns the name of the property in this relation query node. Please
+     * note that this method does not return the full relative path that
+     * reference the property to match, but only the name of the final name
+     * element of the path returned by {@link #getRelativePath()}.
+     *
+     * @return the name of the property in this relation query node.
+     * @deprecated Use {@link #getRelativePath()} instead.
+     */
+    public Name getProperty() {
+        return relPath == null ? null : relPath.getNameElement().getName();
+    }
+
+    /**
+     * Sets a new property name for this relation query node.
+     *
+     * @param name the new property name.
+     * @deprecated Use {@link #setRelativePath(Path)} instead.
+     */
+    public void setProperty(Name name) {
+        PathBuilder builder = new PathBuilder();
+        builder.addLast(name);
+        try {
+            this.relPath = builder.getPath();
+        } catch (MalformedPathException e) {
+            // path is always valid
+        }
+    }
+
+    /**
      * @return the relative path that references the property in this relation.
      */
-    public PathQueryNode getRelativePath() {
+    public Path getRelativePath() {
         return relPath;
     }
 
@@ -157,14 +180,10 @@ public class RelationQueryNode extends NAryQueryNode<QueryNode> implements Query
      * @throws IllegalArgumentException if <code>relPath</code> is absolute.
      */
     public void setRelativePath(Path relPath) {
-        if (relPath.isAbsolute()) {
+        if (relPath != null && relPath.isAbsolute()) {
             throw new IllegalArgumentException("relPath must be relative");
         }
-        
-        Element[] elements = relPath.getElements();
-        for (Element element : elements) {
-            addPathElement(element);
-        }
+        this.relPath = relPath;
     }
 
     /**
@@ -174,13 +193,23 @@ public class RelationQueryNode extends NAryQueryNode<QueryNode> implements Query
      * @param element the path element to append.
      */
     public void addPathElement(Path.Element element) {
-        LocationStepQueryNode step = factory.createLocationStepQueryNode(relPath);
-        if (element.getName().equals(STAR_NAME_TEST)) {
-            step.setNameTest(null);
-        } else {
-            step.setNameTest(element.getName());
+        PathBuilder builder = new PathBuilder();
+        if (relPath != null) {
+            builder.addAll(relPath.getElements());
         }
-        relPath.addPathStep(step);
+        builder.addLast(element);
+        try {
+            relPath = builder.getPath();
+        }
+        catch (MalformedPathException e) {
+            // path is always valid
+        }
+        // try to normalize the path
+        try {
+          relPath = relPath.getNormalizedPath();
+        } catch (RepositoryException e) {
+            // just keep the original in that case
+        }
     }
 
     /**

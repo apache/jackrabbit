@@ -19,7 +19,6 @@ package org.apache.jackrabbit.commons.repository;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 
 import org.apache.jackrabbit.commons.AbstractRepository;
 
@@ -62,65 +61,15 @@ public class ProxyRepository extends AbstractRepository {
     }
 
     /**
-     * Checks whether the given key identifies a valid single-valued
-     * descriptor key in the proxied repository. Returns <code>false</code>
-     * if the proxied repository can not be accessed.
-     *
-     * @return <code>true</code> if the key identifies a valid single-valued
-     *         descriptor in the proxied repository,
-     *         <code>false</code> otherwise
-     */
-    public boolean isSingleValueDescriptor(String key) {
-        try {
-            return factory.getRepository().isSingleValueDescriptor(key);
-        } catch (RepositoryException e) {
-            return false;
-        }
-    }
-
-    /**
      * Returns the descriptor with the given key from the proxied repository.
      * Returns <code>null</code> if the descriptor does not exist or if the
      * proxied repository can not be accessed.
      *
-     * @param key descriptor key
      * @return descriptor value, or <code>null</code>
      */
     public String getDescriptor(String key) {
         try {
             return factory.getRepository().getDescriptor(key);
-        } catch (RepositoryException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Returns the value of the descriptor with the given key from the proxied
-     * repository. Returns <code>null</code> if the descriptor does not exist
-     * or if the proxied repository can not be accessed.
-     *
-     * @param key descriptor key
-     * @return descriptor value, or <code>null</code>
-     */
-    public Value getDescriptorValue(String key) {
-        try {
-            return factory.getRepository().getDescriptorValue(key);
-        } catch (RepositoryException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Returns the values of the descriptor with the given key from the proxied
-     * repository. Returns <code>null</code> if the descriptor does not exist
-     * or if the proxied repository can not be accessed.
-     *
-     * @param key descriptor key
-     * @return descriptor values, or <code>null</code>
-     */
-    public Value[] getDescriptorValues(String key) {
-        try {
-            return factory.getRepository().getDescriptorValues(key);
         } catch (RepositoryException e) {
             return null;
         }

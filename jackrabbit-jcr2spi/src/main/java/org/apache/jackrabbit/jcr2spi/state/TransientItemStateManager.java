@@ -223,7 +223,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
      *                     <code>null</code> if the created <code>NodeState</code>
      *                     cannot be identified by a unique ID.
      * @param nodeTypeName name of the node type of the new node state.
-     * @param definition   The definition for the new node state.
+     * @param definition   The qualified definition for the new node state.
      * @param parent       the parent of the new node state.
      * @return a new transient {@link NodeState}.
      */

@@ -47,15 +47,8 @@ public interface ExecutableQuery {
      * @param value   value to bind
      * @throws IllegalArgumentException      if <code>varName</code> is not a
      *                                       valid variable in this query.
-     * @throws RepositoryException if an error occurs.
+     * @throws javax.jcr.RepositoryException if an error occurs.
      */
     void bindValue(Name varName, Value value)
         throws IllegalArgumentException, RepositoryException;
-
-    /**
-     * @return the names of the bind variables in this query.
-     *
-     * @throws RepositoryException if an error occurs.
-     */
-    Name[] getBindVariableNames() throws RepositoryException;
 }

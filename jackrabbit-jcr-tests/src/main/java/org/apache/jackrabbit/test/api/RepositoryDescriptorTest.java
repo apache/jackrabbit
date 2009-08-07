@@ -20,9 +20,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.Repository;
 import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,55 +39,21 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
     private static final Set requiredDescriptorKeys = new HashSet();
 
     static {
-        requiredDescriptorKeys.add(Repository.IDENTIFIER_STABILITY);
         requiredDescriptorKeys.add(Repository.LEVEL_1_SUPPORTED);
         requiredDescriptorKeys.add(Repository.LEVEL_2_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_NODE_TYPE_MANAGEMENT_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_AUTOCREATED_DEFINITIONS_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_MULTIPLE_BINARY_PROPERTIES_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_MULTIVALUED_PROPERTIES_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_ORDERABLE_CHILD_NODES_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_OVERRIDES_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_PRIMARY_ITEM_NAME_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_PROPERTY_TYPES);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_RESIDUAL_DEFINITIONS_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_SAME_NAME_SIBLINGS_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_VALUE_CONSTRAINTS_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.NODE_TYPE_MANAGEMENT_UPDATE_IN_USE_SUPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_JOURNALED_OBSERVATION_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_LIFECYCLE_SUPPORTED);
         requiredDescriptorKeys.add(Repository.OPTION_LOCKING_SUPPORTED);
         requiredDescriptorKeys.add(Repository.OPTION_OBSERVATION_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED);
         requiredDescriptorKeys.add(Repository.OPTION_QUERY_SQL_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_RETENTION_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_SIMPLE_VERSIONING_SUPPORTED);
         requiredDescriptorKeys.add(Repository.OPTION_TRANSACTIONS_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_UNFILED_CONTENT_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_UPDATE_MIXIN_NODE_TYPES_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_UPDATE_PRIMARY_NODE_TYPE_SUPPORTED);
         requiredDescriptorKeys.add(Repository.OPTION_VERSIONING_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_XML_EXPORT_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_XML_IMPORT_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_ACTIVITIES_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.OPTION_BASELINES_SUPPORTED);
-        
-        requiredDescriptorKeys.add(Repository.QUERY_FULL_TEXT_SEARCH_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.QUERY_JOINS);
-        requiredDescriptorKeys.add(Repository.QUERY_LANGUAGES);
-        requiredDescriptorKeys.add(Repository.QUERY_STORED_QUERIES_SUPPORTED);
         requiredDescriptorKeys.add(Repository.QUERY_XPATH_DOC_ORDER);
         requiredDescriptorKeys.add(Repository.QUERY_XPATH_POS_INDEX);
         requiredDescriptorKeys.add(Repository.REP_NAME_DESC);
         requiredDescriptorKeys.add(Repository.REP_VENDOR_DESC);
         requiredDescriptorKeys.add(Repository.REP_VENDOR_URL_DESC);
+        requiredDescriptorKeys.add(Repository.REP_VERSION_DESC);
         requiredDescriptorKeys.add(Repository.SPEC_NAME_DESC);
         requiredDescriptorKeys.add(Repository.SPEC_VERSION_DESC);
-        requiredDescriptorKeys.add(Repository.WRITE_SUPPORTED);
     }
 
     /** The session for the tests */
@@ -102,7 +65,7 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
     }
 
     /**
@@ -120,19 +83,10 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
      * Tests that the required repository descriptors are available.
      */
     public void testRequiredDescriptors() {
-        Repository rep = session.getRepository();
         for (Iterator it = requiredDescriptorKeys.iterator(); it.hasNext();) {
-            String descName = (String) it.next();
-            assertTrue(descName + " is a standard descriptor", rep.isStandardDescriptor(descName));
-            if (rep.isSingleValueDescriptor(descName)) {
-                Value val = rep.getDescriptorValue(descName);
-                assertNotNull("Required descriptor is missing: " + descName,
-                        val);
-            } else {
-                Value[] vals = rep.getDescriptorValues(descName);
-                assertNotNull("Required descriptor is missing: " + descName,
-                        vals);
-            }
+            String descriptor = session.getRepository().getDescriptor((String) it.next());
+            assertNotNull("Not all required descriptors are available.",
+                    descriptor);
         }
     }
 
@@ -144,35 +98,9 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
         List keys = Arrays.asList(session.getRepository().getDescriptorKeys());
         for (Iterator it = requiredDescriptorKeys.iterator(); it.hasNext();) {
             String key = (String) it.next();
-            assertTrue("Required descriptor is missing: " + key,
+            assertTrue(key + " is missing from the required descriptor keys.",
                     keys.contains(key));
         }
     }
 
-    /**
-     * Tests whether {@link Repository#getDescriptorValues(String)} returns an
-     * Value[] of size 1 for single valued descriptors.
-     */
-    public void testGetDescriptorValues() {
-        Repository rep = session.getRepository();
-        // "option.node.type.management.supported" denotes a single-valued BOOLEAN descriptor
-        String descName = Repository.OPTION_NODE_TYPE_MANAGEMENT_SUPPORTED;
-        assertTrue(rep.isSingleValueDescriptor(descName));
-        Value[] vals = rep.getDescriptorValues(descName);
-        assertNotNull("Required descriptor is missing: " + descName, vals);
-        assertEquals(1, vals.length);
-        assertEquals(PropertyType.BOOLEAN, vals[0].getType());
-        try {
-            // getDescriptorValue(key).getString() is equivalent to getDescriptor(key)
-            assertEquals(vals[0].getString(), rep.getDescriptor(descName));
-        } catch (RepositoryException e) {
-            fail(e.getMessage());
-        }
-
-        // "option.node.type.management.supported" denotes a single-valued BOOLEAN descriptor
-        descName = Repository.QUERY_LANGUAGES;
-        assertFalse(rep.isSingleValueDescriptor(descName));
-        Value val = rep.getDescriptorValue(descName);
-        assertNull(descName + " is a multi-value descriptor, getDescriptorValue() should return null", val);
-    }
 }

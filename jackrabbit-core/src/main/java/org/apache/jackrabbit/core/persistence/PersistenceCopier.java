@@ -19,18 +19,20 @@ package org.apache.jackrabbit.core.persistence;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -65,7 +67,7 @@ public class PersistenceCopier {
      * of shareable nodes and to avoid trying to copy "missing" nodes
      * like the virtual "/jcr:system" node.
      */
-    private final Set<NodeId> exclude = new HashSet<NodeId>();
+    private final Set exclude = new HashSet();
 
     /**
      * Creates a tool for copying content from one persistence manager
@@ -106,7 +108,9 @@ public class PersistenceCopier {
             try {
                 NodeState node = source.load(id);
 
-                for (ChildNodeEntry entry : node.getChildNodeEntries()) {
+                Iterator iterator = node.getChildNodeEntries().iterator();
+                while (iterator.hasNext()) {
+                    ChildNodeEntry entry = (ChildNodeEntry) iterator.next();
                     copy(entry.getId());
                 }
 
@@ -144,7 +148,9 @@ public class PersistenceCopier {
             }
 
             // Copy all associated property states
-            for (Name name : sourceNode.getPropertyNames()) {
+            Iterator iterator = sourceNode.getPropertyNames().iterator();
+            while (iterator.hasNext()) {
+                Name name = (Name) iterator.next();
                 PropertyId id = new PropertyId(sourceNode.getNodeId(), name);
                 PropertyState sourceState = source.load(id);
                 PropertyState targetState = target.createNew(id);
@@ -154,9 +160,9 @@ public class PersistenceCopier {
                 InternalValue[] values = sourceState.getValues();
                 if (sourceState.getType() == PropertyType.BINARY) {
                     for (int i = 0; i < values.length; i++) {
-                        InputStream stream = values[i].getStream();
+                        InputStream stream = values[i].getBLOBFileValue().getStream();
                         try {
-                            values[i] = InternalValue.create(stream, store);
+                            values[i] = InternalValue.createTemporary(stream, store);
                         } finally {
                             stream.close();
                         }
@@ -171,11 +177,11 @@ public class PersistenceCopier {
             }
 
             // Copy all node references
-            if (source.existsReferencesTo(sourceNode.getNodeId())) {
-                changes.modified(source.loadReferencesTo(sourceNode.getNodeId()));
-            } else if (target.existsReferencesTo(sourceNode.getNodeId())) {
-                NodeReferences references =
-                    target.loadReferencesTo(sourceNode.getNodeId());
+            NodeReferencesId refsId = new NodeReferencesId(sourceNode.getNodeId());
+            if (source.exists(refsId)) {
+                changes.modified(source.load(refsId));
+            } else if (target.exists(refsId)) {
+                 NodeReferences references = target.load(refsId);
                 references.clearAllReferences();
                 changes.modified(references);
             }

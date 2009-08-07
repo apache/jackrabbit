@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.NodeName;
-
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeName;
 
 /**
  * <code>NodeNameImpl</code>...

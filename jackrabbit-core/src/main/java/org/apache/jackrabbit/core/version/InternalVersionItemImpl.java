@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 /**
  * Implements a <code>InternalVersionItem</code>.
@@ -31,14 +31,14 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
     /**
      * the version manager
      */
-    protected final InternalVersionManagerBase vMgr;
+    protected final AbstractVersionManager vMgr;
 
     /**
      * Creates a new Internal version item impl
      *
      * @param vMgr
      */
-    protected InternalVersionItemImpl(InternalVersionManagerBase vMgr, NodeStateEx node) {
+    protected InternalVersionItemImpl(AbstractVersionManager vMgr, NodeStateEx node) {
         this.vMgr = vMgr;
         this.node = node;
     }
@@ -48,7 +48,7 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
      *
      * @return the version manager.
      */
-    protected InternalVersionManagerBase getVersionManager() {
+    protected AbstractVersionManager getVersionManager() {
         return vMgr;
     }
 

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.QValueConstraint;
 
 /**
  * <code>PropDef</code> is the internal representation of
@@ -49,7 +48,7 @@ public interface PropDef extends ItemDef {
      *
      * @return the array of value constraints.
      */
-    QValueConstraint[] getValueConstraints();
+    ValueConstraint[] getValueConstraints();
 
     /**
      * Returns the array of default values.
@@ -64,26 +63,4 @@ public interface PropDef extends ItemDef {
      * @return the 'multiple' flag.
      */
     boolean isMultiple();
-
-    /**
-     * Returns the array of available query operators.
-     *
-     * @return the array of query operators.
-     */
-    String[] getAvailableQueryOperators();
-
-    /**
-     * Reports whether this property is full-text searchable.
-     *
-     * @return the 'fullTextSearchable' flag.
-     */
-    boolean isFullTextSearchable();
-
-    /**
-     * Reports whether this property is query-orderable.
-     *
-     * @return the 'queryOrderable' flag.
-     */
-    boolean isQueryOrderable();
-
 }

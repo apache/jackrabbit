@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import javax.transaction.xa.Xid;
 
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.TransactionContext;
 
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;

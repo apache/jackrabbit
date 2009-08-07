@@ -42,7 +42,7 @@ public class ReadWhileSaveTest extends AbstractJCRTest {
         Thread t = runExpensiveSave();
         long numReads = 0;
         while (t.isAlive()) {
-            Session s = getHelper().getSuperuserSession();
+            Session s = helper.getSuperuserSession();
             try {
                 for (NodeIterator it = s.getRootNode().getNodes(); it.hasNext(); ) {
                     it.nextNode();
@@ -71,7 +71,7 @@ public class ReadWhileSaveTest extends AbstractJCRTest {
             out.write(randomKb);
         }
         out.close();
-        final Session s = getHelper().getSuperuserSession();
+        final Session s = helper.getSuperuserSession();
         final Node stuff = s.getRootNode().getNode(testPath).addNode("stuff");
         Thread t = new Thread(new Runnable() {
             public void run() {

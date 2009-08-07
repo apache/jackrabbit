@@ -21,13 +21,12 @@ import java.util.Set;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
 
 /**
  * The <code>EventFilter</code> class implements the filter logic based
@@ -181,10 +180,10 @@ public class EventFilter {
 
         // check node types
         if (nodeTypes != null) {
-            Set<NodeType> eventTypes = eventState.getNodeTypes(session.getNodeTypeManager());
+            Set eventTypes = eventState.getNodeTypes(session.getNodeTypeManager());
             boolean match = false;
             for (int i = 0; i < nodeTypes.length && !match; i++) {
-                for (Iterator<NodeType> iter = eventTypes.iterator(); iter.hasNext();) {
+                for (Iterator iter = eventTypes.iterator(); iter.hasNext();) {
                     NodeTypeImpl nodeType = (NodeTypeImpl) iter.next();
                     match |= nodeType.getQName().equals(nodeTypes[i].getQName())
                             || nodeType.isDerivedFrom(nodeTypes[i].getQName());

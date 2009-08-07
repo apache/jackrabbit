@@ -16,24 +16,28 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Collections;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.version.OnParentVersionAction;
-import javax.jcr.version.VersionException;
-
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+
+import javax.jcr.NodeIterator;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.version.OnParentVersionAction;
+import javax.jcr.version.VersionException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Implements a <code>InternalFrozenNode</code>
@@ -42,14 +46,35 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         implements InternalFrozenNode {
 
     /**
+     * checkin mode version.
+     */
+    private static final int MODE_VERSION = 0;
+
+    /**
+     * checkin mode copy. specifies, that the items are always copied.
+     */
+    private static final int MODE_COPY = 1;
+
+    /**
+     * mode flag specifies, that the mode should be recursed. otherwise i
+     * will be redetermined by the opv.
+     */
+    private static final int MODE_COPY_RECURSIVE = 3;
+
+    /**
      * the list of frozen properties
      */
     private PropertyState[] frozenProperties;
 
     /**
-     * the frozen id of the original node
+     * the frozen child nodes
      */
-    private NodeId frozenUUID = null;
+    private InternalFreeze[] frozenNodes = null;
+
+    /**
+     * the frozen uuid of the original node
+     */
+    private UUID frozenUUID = null;
 
     /**
      * the frozen primary type of the orginal node
@@ -59,17 +84,15 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * the frozen list of mixin types of the original node
      */
-    private Set<Name> frozenMixinTypes = null;
+    private Name[] frozenMixinTypes = null;
 
     /**
      * Creates a new frozen node based on the given persistance node.
      *
-     * @param vMgr version manager
-     * @param node underlying node
-     * @param parent parent item
-     * @throws RepositoryException if an error occurs
+     * @param node
+     * @throws javax.jcr.RepositoryException
      */
-    public InternalFrozenNodeImpl(InternalVersionManagerBase vMgr, NodeStateEx node,
+    public InternalFrozenNodeImpl(AbstractVersionManager vMgr, NodeStateEx node,
                                   InternalVersionItem parent)
             throws RepositoryException {
         super(vMgr, node, parent);
@@ -81,10 +104,10 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
-        List<PropertyState> propList = new ArrayList<PropertyState>();
+        List propList = new ArrayList();
 
-        Set<Name> mixins = new HashSet<Name>();
-        for (PropertyState prop : props) {
+        for (int i = 0; i < props.length; i++) {
+            PropertyState prop = props[i];
             if (prop.getName().equals(NameConstants.JCR_FROZENUUID)) {
                 // special property
                 InternalValue value =
@@ -94,19 +117,22 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 // we do not automatically upgrade old content, we need to be
                 // ready to handle both types of values here.
                 if (value.getType() == PropertyType.STRING) {
-                    frozenUUID = new NodeId(value.getString());
+                    frozenUUID = UUID.fromString(value.getString());
                 } else {
-                    frozenUUID = value.getNodeId();
+                    frozenUUID = value.getUUID();
                 }
             } else if (prop.getName().equals(NameConstants.JCR_FROZENPRIMARYTYPE)) {
                 // special property
-                frozenPrimaryType = node.getPropertyValue(NameConstants.JCR_FROZENPRIMARYTYPE).getName();
+                frozenPrimaryType = node.getPropertyValue(NameConstants.JCR_FROZENPRIMARYTYPE).getQName();
             } else if (prop.getName().equals(NameConstants.JCR_FROZENMIXINTYPES)) {
                 // special property
                 InternalValue[] values = node.getPropertyValues(NameConstants.JCR_FROZENMIXINTYPES);
-                if (values != null) {
-                    for (InternalValue value : values) {
-                        mixins.add(value.getName());
+                if (values == null) {
+                    frozenMixinTypes = new Name[0];
+                } else {
+                    frozenMixinTypes = new Name[values.length];
+                    for (int j = 0; j < values.length; j++) {
+                        frozenMixinTypes[j] = values[j].getQName();
                     }
                 }
             } else if (prop.getName().equals(NameConstants.JCR_PRIMARYTYPE)) {
@@ -117,10 +143,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 propList.add(prop);
             }
         }
-        frozenProperties = propList.toArray(new PropertyState[propList.size()]);
-        frozenMixinTypes = Collections.unmodifiableSet(mixins);
+        frozenProperties = (PropertyState[]) propList.toArray(new PropertyState[propList.size()]);
 
         // do some checks
+        if (frozenMixinTypes == null) {
+            frozenMixinTypes = new Name[0];
+        }
         if (frozenPrimaryType == null) {
             throw new RepositoryException("Illegal frozen node. Must have 'frozenPrimaryType'");
         }
@@ -143,27 +171,45 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public List<ChildNodeEntry> getFrozenChildNodes()
+    public synchronized InternalFreeze[] getFrozenChildNodes()
             throws VersionException {
-        return node.getState().getChildNodeEntries();
+        if (frozenNodes == null) {
+            try {
+                // maybe add iterator?
+                List entries = node.getState().getChildNodeEntries();
+                frozenNodes = new InternalFreeze[entries.size()];
+                Iterator iter = entries.iterator();
+                int i = 0;
+                while (iter.hasNext()) {
+                    ChildNodeEntry entry =
+                            (ChildNodeEntry) iter.next();
+                    frozenNodes[i++] = (InternalFreeze) vMgr.getItem(entry.getId());
+                }
+            } catch (RepositoryException e) {
+                throw new VersionException("Unable to retrieve frozen child nodes", e);
+            }
+        }
+        return frozenNodes;
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean hasFrozenChildNode(Name name, int idx) {
-        return node.getState().hasChildNodeEntry(name, idx);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InternalFreeze getFrozenChildNode(Name name, int idx) 
-            throws RepositoryException {
-        ChildNodeEntry e = node.getState().getChildNodeEntry(name, idx);
-        return e == null
-                ? null
-                : (InternalFreeze) vMgr.getItem(e.getId());
+    public boolean hasFrozenHistory(UUID uuid) {
+        try {
+            NodeId id = new NodeId(uuid);
+            InternalFreeze[] frozen = getFrozenChildNodes();
+            for (int i = 0; i < frozen.length; i++) {
+                if (frozen[i] instanceof InternalFrozenVersionHistory
+                        && ((InternalFrozenVersionHistory) frozen[i])
+                            .getVersionHistoryId().equals(id)) {
+                    return true;
+                }
+            }
+        } catch (RepositoryException e) {
+            // ignore
+        }
+        return false;
     }
 
     /**
@@ -176,7 +222,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public NodeId getFrozenId() {
+    public UUID getFrozenUUID() {
         return frozenUUID;
     }
 
@@ -190,7 +236,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public Set<Name> getFrozenMixinTypes() {
+    public Name[] getFrozenMixinTypes() {
         return frozenMixinTypes;
     }
 
@@ -201,20 +247,16 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * list of frozen properties. It creates frozen child nodes for each child
      * node of <code>src</code> according to its OPV value.
      *
-     * @param parent destination parent
-     * @param name new node name
-     * @param src source node state
-     * @return the node node state
-     * @throws RepositoryException if an error occurs
+     * @param parent
+     * @param name
+     * @param src
+     * @return
+     * @throws RepositoryException
      */
     protected static NodeStateEx checkin(NodeStateEx parent, Name name,
-                                         NodeStateEx src)
+                                         NodeImpl src)
             throws RepositoryException {
-        try {
-            return checkin(parent, name, src, false);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        return checkin(parent, name, src, MODE_VERSION);
     }
 
     /**
@@ -224,60 +266,64 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * list of frozen properties. It creates frozen child nodes for each child
      * node of <code>src</code> according to its OPV value.
      *
-     * @param parent destination parent
-     * @param name new node name
-     * @param src source node state
-     * @param forceCopy if <code>true</code> the OPV is ignored and a COPY is performed
-     * @return the nde node state
-     * @throws RepositoryException if an error occurs
-     * @throws ItemStateException if an error during reading the items occurs
+     * @param parent
+     * @param name
+     * @param src
+     * @return
+     * @throws RepositoryException
      */
     private static NodeStateEx checkin(NodeStateEx parent, Name name,
-                                       NodeStateEx src, boolean forceCopy)
-            throws RepositoryException, ItemStateException {
+                                       NodeImpl src, int mode)
+            throws RepositoryException {
 
         // create new node
         NodeStateEx node = parent.addNode(name, NameConstants.NT_FROZENNODE, null, true);
 
         // initialize the internal properties
         node.setPropertyValue(NameConstants.JCR_FROZENUUID,
-                InternalValue.create(src.getNodeId().toString()));
+                InternalValue.create(src.internalGetUUID().toString()));
         node.setPropertyValue(NameConstants.JCR_FROZENPRIMARYTYPE,
-                InternalValue.create(src.getState().getNodeTypeName()));
+                InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
         if (src.hasProperty(NameConstants.JCR_MIXINTYPES)) {
-            node.setPropertyValues(NameConstants.JCR_FROZENMIXINTYPES,
-                    PropertyType.NAME, src.getPropertyValues(NameConstants.JCR_MIXINTYPES));
+            NodeType[] mixins = src.getMixinNodeTypes();
+            InternalValue[] ivalues = new InternalValue[mixins.length];
+            for (int i = 0; i < mixins.length; i++) {
+                ivalues[i] = InternalValue.create(((NodeTypeImpl) mixins[i]).getQName());
+            }
+            node.setPropertyValues(NameConstants.JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }
 
         // add the properties
-        for (PropertyState prop: src.getProperties()) {
+        PropertyIterator piter = src.getProperties();
+        while (piter.hasNext()) {
+            PropertyImpl prop = (PropertyImpl) piter.nextProperty();
             int opv;
-            if (forceCopy) {
+            if ((mode & MODE_COPY) > 0) {
                 opv = OnParentVersionAction.COPY;
             } else {
-                opv = src.getDefinition(prop).getOnParentVersion();
+                opv = prop.getDefinition().getOnParentVersion();
             }
 
-            Name propName = prop.getName();
             if (opv == OnParentVersionAction.ABORT) {
                 parent.reload();
-                throw new VersionException("Checkin aborted due to OPV abort in " + propName);
+                throw new VersionException("Checkin aborted due to OPV in " + prop);
             } else if (opv == OnParentVersionAction.VERSION
                     || opv == OnParentVersionAction.COPY) {
                 // ignore frozen properties
-                if (!propName.equals(NameConstants.JCR_PRIMARYTYPE)
-                        && !propName.equals(NameConstants.JCR_MIXINTYPES)
-                        && !propName.equals(NameConstants.JCR_UUID)) {
+                if (!prop.getQName().equals(NameConstants.JCR_PRIMARYTYPE)
+                        && !prop.getQName().equals(NameConstants.JCR_MIXINTYPES)
+                        && !prop.getQName().equals(NameConstants.JCR_UUID)) {
                     node.copyFrom(prop);
                 }
             }
         }
 
         // add the frozen children and histories
-        boolean isFull = src.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE);
-        for (NodeStateEx child: src.getChildNodes()) {
+        NodeIterator niter = src.getNodes();
+        while (niter.hasNext()) {
+            NodeImpl child = (NodeImpl) niter.nextNode();
             int opv;
-            if (forceCopy) {
+            if ((mode & MODE_COPY_RECURSIVE) > 0) {
                 opv = OnParentVersionAction.COPY;
             } else {
                 opv = child.getDefinition().getOnParentVersion();
@@ -286,19 +332,21 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             if (opv == OnParentVersionAction.ABORT) {
                 throw new VersionException("Checkin aborted due to OPV in " + child);
             } else if (opv == OnParentVersionAction.VERSION) {
-                if (isFull && child.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+                if (child.isNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
                     // create frozen versionable child
-                    NodeId histId = child.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
-                    NodeStateEx newChild = node.addNode(child.getName(), NameConstants.NT_VERSIONEDCHILD, null, false);
-                    newChild.setPropertyValue(
-                            NameConstants.JCR_CHILDVERSIONHISTORY,
-                            InternalValue.create(histId));
+                    NodeStateEx newChild = node.addNode(child.getQName(), NameConstants.NT_VERSIONEDCHILD, null, false);
+                    newChild.setPropertyValue(NameConstants.JCR_CHILDVERSIONHISTORY,
+                            InternalValue.create(new UUID(child.getVersionHistory().getUUID())));
+                    /*
+                        newChild.setPropertyValue(JCR_BASEVERSION,
+                                InternalValue.create(child.getBaseVersion().getUUID()));
+                     */
                 } else {
-                    // else copy
-                    checkin(node, child.getName(), child, true);
+                    // else copy but do not recurse
+                    checkin(node, child.getQName(), child, MODE_COPY);
                 }
             } else if (opv == OnParentVersionAction.COPY) {
-                checkin(node, child.getName(), child, true);
+                checkin(node, child.getQName(), child, MODE_COPY_RECURSIVE);
             }
         }
         return node;

@@ -28,12 +28,12 @@ import javax.jcr.lock.LockException;
  * Implementation of a <code>Lock</code> that gets returned to clients asking
  * for a lock.
  */
-class LockImpl implements javax.jcr.lock.Lock {
+class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
 
     /**
      * Lock info containing latest information
      */
-    protected final LockInfo info;
+    protected final AbstractLockInfo info;
 
     /**
      * Node holding lock
@@ -46,7 +46,7 @@ class LockImpl implements javax.jcr.lock.Lock {
      * @param info lock information
      * @param node node holding lock
      */
-    public LockImpl(LockInfo info, Node node) {
+    public LockImpl(AbstractLockInfo info, Node node) {
         this.info = info;
         this.node = node;
     }
@@ -57,14 +57,14 @@ class LockImpl implements javax.jcr.lock.Lock {
      * {@inheritDoc}
      */
     public String getLockOwner() {
-        return info.getLockOwner();
+        return info.lockOwner;
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean isDeep() {
-        return info.isDeep();
+        return info.deep;
     }
 
     /**
@@ -127,18 +127,18 @@ class LockImpl implements javax.jcr.lock.Lock {
     //--------------------------------------------------< new JSR 283 methods >
 
     /**
-     * @see javax.jcr.lock.Lock#getSecondsRemaining()
+     * @see org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()
      */
     public long getSecondsRemaining() {
         return info.getSecondsRemaining();
     }
 
     /**
-     * @see javax.jcr.lock.Lock#isLockOwningSession()
+     * @see org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()
      */
     public boolean isLockOwningSession() {
         try {
-            return info.isLockHolder(node.getSession());
+            return node.getSession().equals(info.getLockHolder());
         } catch (RepositoryException e) {
             return false;
         }

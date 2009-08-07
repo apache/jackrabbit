@@ -32,7 +32,7 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
  * /     -> descendants = false, nameTest = ""
  * </code>
  */
-public class LocationStepQueryNode extends NAryQueryNode<QueryNode> {
+public class LocationStepQueryNode extends NAryQueryNode {
 
     /** Constant value for position index = last() */
     public static final int LAST = Integer.MIN_VALUE;
@@ -46,7 +46,7 @@ public class LocationStepQueryNode extends NAryQueryNode<QueryNode> {
      * TODO: The root location step should be refactored somehow
      */
     public static final Name EMPTY_NAME = NameFactoryImpl.getInstance().create("", "");
-    
+
     /** Empty <code>QueryNode</code> array for us as return value */
     private static final QueryNode[] EMPTY = new QueryNode[0];
 
@@ -68,11 +68,9 @@ public class LocationStepQueryNode extends NAryQueryNode<QueryNode> {
     private int index = NONE;
 
     /**
-     * Creates a new <code>LocationStepQueryNode</code> that matches only the
-     * empty name (the repository root). The created location step uses only the
-     * child axis.
-     *
-     * @param parent the parent of this query node.
+     * Creates a new <code>LocationStepQueryNode</code> that matches only
+     * the empty name (the repository root). The created location step
+     * uses only the child axis.
      */
     protected LocationStepQueryNode(QueryNode parent) {
         super(parent);
@@ -134,7 +132,7 @@ public class LocationStepQueryNode extends NAryQueryNode<QueryNode> {
         if (operands == null) {
             return EMPTY;
         } else {
-            return operands.toArray(new QueryNode[operands.size()]);
+            return (QueryNode[]) operands.toArray(new QueryNode[operands.size()]);
         }
     }
 

@@ -45,7 +45,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     private static final Logger log = LoggerFactory.getLogger(GroupImpl.class);
 
-    private Principal principal;
+    private Principal principal = null;
 
     private GroupImpl(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
         super(node, userManager);
@@ -55,7 +55,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
         if (node == null || !node.isNodeType(NT_REP_GROUP)) {
             throw new IllegalArgumentException();
         }
-        if (!Text.isDescendant(GROUPS_PATH, node.getPath())) {
+        if(!Text.isDescendant(GROUPS_PATH, node.getPath())) {
             throw new IllegalArgumentException("Group has to be within the Group Path");
         }
         return new GroupImpl(node, userManager);
@@ -65,15 +65,13 @@ class GroupImpl extends AuthorizableImpl implements Group {
     //-------------------------------------------------------< Authorizable >---
     /**
      * Returns the name of the node that defines this <code>Group</code>, that
-     * has been used taking the principal name as hint, unescaping any chars
-     * that have been escaped to circumvent incompatitibilities with JCR name
-     * limitations.
+     * has been used taking the principal name as hint.
      *
      * @return name of the node that defines this <code>Group</code>.
      * @see Authorizable#getID()
      */
     public String getID() throws RepositoryException {
-        return Text.unescapeIllegalJcrChars(getNode().getName());
+        return getNode().getName();
     }
 
     /**
@@ -170,7 +168,8 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * @throws RepositoryException If an error occurs while collecting the members.
      */
     private Collection getMembers(boolean includeIndirect) throws RepositoryException {
-        PropertyIterator itr = getNode().getWeakReferences(getSession().getJCRName(P_GROUPS));
+        // TODO: replace by weak-refs
+        PropertyIterator itr = getNode().getReferences();
         Collection members = new HashSet((int) itr.getSize());
         while (itr.hasNext()) {
             NodeImpl n = (NodeImpl) itr.nextProperty().getParent();
@@ -184,10 +183,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
             } else if (n.isNodeType(NT_REP_USER)) {
                 User user = userManager.createUser(n);
                 members.add(user);
-            } else {
-                // weak-ref property 'rep:groups' that doesn't reside under an
-                // authorizable node -> doesn't represent a member of this group.
-                log.debug("Undefined reference to group '" + getID() + "' -> Not included in member set.");
             }
         }
         return members;

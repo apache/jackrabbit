@@ -182,6 +182,10 @@ public class Move extends AbstractOperation {
 
         if (sessionMove) {
             NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
+            if (destEntry.hasPropertyEntry(destName)) {
+                // TODO: remove for 283
+                throw new ItemExistsException("Move destination already exists (Property).");
+            }
 
             // force childnodeentries list to be present before the move is executed
             // on the hierarchy entry.

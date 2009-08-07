@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;

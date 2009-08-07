@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 /**
  * Extends the <code>ItemStateListener</code> allowing a client to be

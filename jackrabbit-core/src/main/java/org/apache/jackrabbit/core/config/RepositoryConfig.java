@@ -264,7 +264,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
     /**
      * map of workspace names and workspace configurations
      */
-    private Map<String, WorkspaceConfig> workspaces;
+    private Map workspaces;
 
     /**
      * Repository home directory.
@@ -369,7 +369,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
             ClusterConfig cc, DataStoreFactory dsf,
             RepositoryLockMechanismFactory rlf,
             RepositoryConfigurationParser parser) {
-        workspaces = new HashMap<String, WorkspaceConfig>();
+        workspaces = new HashMap();
         this.home = home;
         this.sec = sec;
         this.fsf = fsf;
@@ -418,9 +418,9 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
                         fs.createFolder(workspaceConfigDirectory);
                     } else {
                         String[] dirNames = fs.listFolders(workspaceConfigDirectory);
-                        for (String dir : dirNames) {
+                        for (int i = 0; i < dirNames.length; i++) {
                             String configDir = workspaceConfigDirectory
-                            + FileSystem.SEPARATOR + dir;
+                            + FileSystem.SEPARATOR + dirNames[i];
                             WorkspaceConfig wc = loadWorkspaceConfig(fs, configDir);
                             if (wc != null) {
                                 addWorkspaceConfig(wc);
@@ -445,8 +445,8 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
                         "Invalid workspace root directory: " + workspaceDirectory);
             }
 
-            for (File file: files) {
-                WorkspaceConfig wc = loadWorkspaceConfig(file);
+            for (int i = 0; i < files.length; i++) {
+                WorkspaceConfig wc = loadWorkspaceConfig(files[i]);
                 if (wc != null) {
                     addWorkspaceConfig(wc);
                 }
@@ -853,7 +853,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
      *
      * @return workspace configurations
      */
-    public Collection<WorkspaceConfig> getWorkspaceConfigs() {
+    public Collection getWorkspaceConfigs() {
         return workspaces.values();
     }
 
@@ -865,7 +865,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
      *         workspace does not exist
      */
     public WorkspaceConfig getWorkspaceConfig(String name) {
-        return workspaces.get(name);
+        return (WorkspaceConfig) workspaces.get(name);
     }
 
     /**

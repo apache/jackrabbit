@@ -70,22 +70,27 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
 
     private final class CaseTermEnum extends FilteredTermEnum {
 
+        private final int nameLength;
+
+        private final OffsetCharSequence termText;
+
+        private final OffsetCharSequence currentTerm;
+
         CaseTermEnum(IndexReader reader) throws IOException {
             // gather all terms that match
             // keep them in order and remember the doc frequency as value
-            final Map<Term, Integer> orderedTerms =
-                new LinkedHashMap<Term, Integer>();
+            final Map orderedTerms = new LinkedHashMap();
 
             Term term = getTerm();
 
             // there are always two range scanse: one with an initial
             // lower case character and another one with an initial upper case
             // character
-            List<RangeScan> rangeScans = new ArrayList<RangeScan>(2);
-            int nameLength = FieldNames.getNameLength(term.text());
+            List rangeScans = new ArrayList(2);
+            nameLength = FieldNames.getNameLength(term.text());
             String propName = term.text().substring(0, nameLength);
-            OffsetCharSequence termText = new OffsetCharSequence(nameLength, term.text());
-            OffsetCharSequence currentTerm = new OffsetCharSequence(nameLength, term.text(), transform);
+            this.termText = new OffsetCharSequence(nameLength, term.text());
+            this.currentTerm = new OffsetCharSequence(nameLength, term.text(), transform);
 
             try {
                 // start with a term using the lower case character for the first
@@ -120,14 +125,16 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                     rangeScans.add(new RangeScan(reader, term, term));
                 }
 
-                for (TermEnum terms : rangeScans) {
+                Iterator it = rangeScans.iterator();
+                while (it.hasNext()) {
+                    TermEnum terms = (TermEnum) it.next();
                     do {
                         Term t = terms.term();
                         if (t != null) {
                             currentTerm.setBase(t.text());
                             int compare = currentTerm.compareTo(termText);
                             if (compare == 0) {
-                                orderedTerms.put(t, terms.docFreq());
+                                orderedTerms.put(t, new Integer(terms.docFreq()));
                             } else if (compare < 0) {
                                 // try next one
                             } else {
@@ -139,7 +146,9 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                     } while (terms.next());
                 }
             } finally {
-                for (TermEnum terms : rangeScans) {
+                Iterator it = rangeScans.iterator();
+                while (it.hasNext()) {
+                    TermEnum terms = (TermEnum) it.next();
                     try {
                         terms.close();
                     } catch (IOException e) {
@@ -148,7 +157,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                 }
             }
 
-            final Iterator<Term> it = orderedTerms.keySet().iterator();
+            final Iterator it = orderedTerms.keySet().iterator();
 
             setEnum(new TermEnum() {
 
@@ -168,8 +177,8 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                 }
 
                 public int docFreq() {
-                    Integer docFreq = orderedTerms.get(current);
-                    return docFreq != null ? docFreq : 0;
+                    Integer docFreq = (Integer) orderedTerms.get(current);
+                    return docFreq != null ? docFreq.intValue() : 0;
                 }
 
                 public void close() {
@@ -177,7 +186,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                 }
 
                 private void getNext() {
-                    current = it.hasNext() ? it.next() : null;
+                    current = it.hasNext() ? (Term) it.next() : null;
                 }
             });
         }

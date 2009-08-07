@@ -54,7 +54,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      *          if getSize() returns -1 (unavailable).
      */
     public void testGetSize() throws RepositoryException, NotExecutableException {
-        NodeIterator it = execute(xpathRoot + "//*", Query.XPATH).getNodes();
+        NodeIterator it = execute(testPath + "//*", Query.XPATH).getNodes();
         long size = testRootNode.getNodes().getSize();
         if (size != -1) {
             long count = 0;
@@ -71,8 +71,8 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
     /**
      * Tests the method <code>NodeIterator.getPosition()</code>.
      */
-    public void testGetPosition() throws RepositoryException, NotExecutableException {
-        QueryResult rs = execute(xpathRoot + "//*", Query.XPATH);
+    public void testGetPosition() throws RepositoryException {
+        QueryResult rs = execute(testPath + "//*", Query.XPATH);
 
         // getPosition initially returns 0
         NodeIterator it = rs.getNodes();
@@ -89,10 +89,9 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
     /**
      * Tests the method <code>NodeIterator.getPosition()</code> on an empty
      * <code>NodeIterator</code>.
-     * @throws NotExecutableException 
      */
-    public void testGetPositionEmptyIterator() throws RepositoryException, NotExecutableException {
-        QueryResult rs = execute(xpathRoot + "/" + nodeName4, Query.XPATH);
+    public void testGetPositionEmptyIterator() throws RepositoryException {
+        QueryResult rs = execute(testPath + "/" + nodeName4, Query.XPATH);
 
         NodeIterator it = rs.getNodes();
         assertFalse("NodeIterator must be empty.", it.hasNext());
@@ -104,10 +103,9 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * Tests if a {@link java.util.NoSuchElementException} is thrown when {@link
      * javax.jcr.NodeIterator#nextNode()} is called and there are no more nodes
      * available.
-     * @throws NotExecutableException 
      */
-    public void testNoSuchElementException() throws RepositoryException, NotExecutableException {
-        NodeIterator it = execute(xpathRoot + "//*", Query.XPATH).getNodes();
+    public void testNoSuchElementException() throws RepositoryException {
+        NodeIterator it = execute(testPath + "//*", Query.XPATH).getNodes();
         while (it.hasNext()) {
             it.nextNode();
         }
@@ -121,10 +119,9 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
 
     /**
      * Tests if {@link javax.jcr.NodeIterator#skip(long)} works correctly.
-     * @throws NotExecutableException 
      */
-    public void testSkip() throws RepositoryException, NotExecutableException {
-        String query = xpathRoot + "//*";
+    public void testSkip() throws RepositoryException {
+        String query = testPath + "//*";
         QueryResult rs = execute(query, Query.XPATH);
         NodeIterator it = rs.getNodes();
 

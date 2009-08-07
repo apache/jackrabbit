@@ -29,7 +29,7 @@ public class NameFactoryImpl implements NameFactory {
     /**
      * Cache of flyweight name instances.
      *
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-1663">JCR-1663</a>
+     * @see https://issues.apache.org/jira/browse/JCR-1663
      */
     private final HashCache cache = new HashCache();
 
@@ -84,16 +84,16 @@ public class NameFactoryImpl implements NameFactory {
      */
     private static class NameImpl implements Name {
 
-        /** The memorized hash code of this name. */
+        /** The memorized hash code of this qualified name. */
         private transient int hash;
 
-        /** The memorized string representation of this name. */
+        /** The memorized string representation of this qualified name. */
         private transient String string;
 
-        /** The internalized namespace URI of this name. */
+        /** The internalized namespace URI of this qualified name. */
         private final String namespaceURI;
 
-        /** The local part of this name. */
+        /** The local part of this qualified name. */
         private final String localName;
 
         private NameImpl(String namespaceURI, String localName) {
@@ -140,13 +140,13 @@ public class NameFactoryImpl implements NameFactory {
         }
 
         /**
-         * Compares two names for equality. Returns <code>true</code>
-         * if the given object is a <code>Name</code> and has the same namespace
-         * URI and local part as this <code>Name</code>.
+         * Compares two qualified names for equality. Returns <code>true</code>
+         * if the given object is a qualified name and has the same namespace URI
+         * and local part as this qualified name.
          *
-         * @param obj the object to compare.
-         * @return <code>true</code> if the object is equal to this <code>Name</code>,
-         *         <code>false</code> otherwise.
+         * @param obj the object to compare this qualified name with
+         * @return <code>true</code> if the object is equal to this qualified name,
+         *         <code>false</code> otherwise
          * @see Object#equals(Object)
          */
         public boolean equals(Object obj) {
@@ -167,8 +167,8 @@ public class NameFactoryImpl implements NameFactory {
         }
 
         /**
-         * Returns the hash code of this name. The hash code is
-         * computed from the namespace URI and local part of the
+         * Returns the hash code of this qualified name. The hash code is
+         * computed from the namespace URI and local part of the qualified
          * name and memorized for better performance.
          *
          * @return hash code
@@ -188,7 +188,7 @@ public class NameFactoryImpl implements NameFactory {
 
         //------------------------------------------------------< Cloneable >---
         /**
-         * Creates a clone of this <code>Name</code>.
+         * Creates a clone of this qualified name.
          * Overriden in order to make <code>clone()</code> public.
          *
          * @return a clone of this instance
@@ -202,11 +202,11 @@ public class NameFactoryImpl implements NameFactory {
 
         //-----------------------------------------------------< Comparable >---
         /**
-         * Compares two <code>Name</code>s.
+         * Compares two qualified names.
          *
-         * @param o the object to compare.
+         * @param o the object to compare this qualified name with
          * @return comparison result
-         * @throws ClassCastException if the given object is not a <code>Name</code>.
+         * @throws ClassCastException if the given object is not a qualified name
          * @see Comparable#compareTo(Object)
          */
         public int compareTo(Object o) {

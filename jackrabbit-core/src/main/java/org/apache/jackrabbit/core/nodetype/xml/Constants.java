@@ -36,12 +36,6 @@ public interface Constants {
     /** Name of the <code>isMixin</code> attribute. */
     String ISMIXIN_ATTRIBUTE = "isMixin";
 
-    /** Name of the <code>isQueryable</code> attribute. */
-    String ISQUERYABLE_ATTRIBUTE = "isQueryable";
-
-    /** Name of the <code>isAbstract</code> attribute. */
-    String ISABSTRACT_ATTRIBUTE = "isAbstract";
-
     /** Name of the <code>hasOrderableChildNodes</code> attribute. */
     String HASORDERABLECHILDNODES_ATTRIBUTE = "hasOrderableChildNodes";
 
@@ -83,23 +77,6 @@ public interface Constants {
 
     /** Name of the default value element. */
     String DEFAULTVALUE_ELEMENT = "defaultValue";
-
-    /** Name of the <code>isQueryOrderable</code> attribute. */
-    String ISQUERYORDERABLE_ATTRIBUTE = "isQueryOrderable";
-
-    /** Name of the <code>isFullTextSearchable</code> attribute. */
-    String ISFULLTEXTSEARCHABLE_ATTRIBUTE = "isFullTextSearchable";
-
-    /** Name of the <code>availableQueryOperators</code> attribute. */
-    String AVAILABLEQUERYOPERATORS_ATTRIBUTE = "availableQueryOperators";
-
-    String EQ_ENTITY = "OP_EQ";
-    String NE_ENTITY = "OP_NE";
-    String LT_ENTITY = "OP_LT";
-    String LE_ENTITY = "OP_LE";
-    String GT_ENTITY = "OP_GT";
-    String GE_ENTITY = "OP_GE";
-    String LIKE_ENTITY = "OP_LIKE";
 
     /** Name of the <code>multiple</code> attribute. */
     String MULTIPLE_ATTRIBUTE = "multiple";

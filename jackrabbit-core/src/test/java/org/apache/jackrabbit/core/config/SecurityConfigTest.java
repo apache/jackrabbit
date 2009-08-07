@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.config;
 
 import org.apache.jackrabbit.core.DefaultSecurityManager;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
-import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.security.authentication.DefaultLoginModule;
 import org.apache.jackrabbit.core.security.simple.SimpleAccessManager;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
@@ -89,8 +88,6 @@ public class SecurityConfigTest extends AbstractJCRTest {
         assertNull(smc.getWorkspaceAccessConfig());
         assertEquals("security", smc.getWorkspaceName());
 
-        assertNull(smc.getUserManagerConfig());
-
         AccessManagerConfig amc = config.getAccessManagerConfig();
         assertNotNull(amc);
         assertTrue(amc.newInstance() instanceof DefaultAccessManager);
@@ -103,24 +100,6 @@ public class SecurityConfigTest extends AbstractJCRTest {
         assertEquals("anonymous", options.getProperty("anonymousId"));
         assertEquals("admin", options.getProperty("adminId"));
         assertEquals("org.apache.jackrabbit.TestPrincipalProvider", options.getProperty("principalProvider"));
-    }
-
-    public void testConfig3() throws ConfigurationException {
-        Element xml = parseXML(new InputSource(new StringReader(CONFIG_3)), true);
-        SecurityConfig config = parser.parseSecurityConfig(xml);
-
-        SecurityManagerConfig smc = config.getSecurityManagerConfig();
-
-        assertNotNull(smc.getUserManagerConfig());
-        BeanConfig umc = smc.getUserManagerConfig();
-
-        Properties params = umc.getParameters();
-        assertNotNull(params);
-
-        assertFalse(params.containsKey(UserManagerImpl.PARAM_COMPATIBILE_JR16));
-        assertTrue(Boolean.parseBoolean(params.getProperty(UserManagerImpl.PARAM_AUTO_EXPAND_TREE)));
-        assertEquals(4, Integer.parseInt(params.getProperty(UserManagerImpl.PARAM_DEFAULT_DEPTH)));
-        assertEquals(2000, Long.parseLong(params.getProperty(UserManagerImpl.PARAM_AUTO_EXPAND_SIZE)));
     }
 
     public void testInvalidConfig() {
@@ -171,24 +150,6 @@ public class SecurityConfigTest extends AbstractJCRTest {
     private static final String CONFIG_2 =
             "    <Security appName=\"Jackrabbit\">" +
             "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
-            "        </SecurityManager>" +
-            "        <AccessManager class=\"org.apache.jackrabbit.core.security.DefaultAccessManager\">" +
-            "        </AccessManager>" +
-            "        <LoginModule class=\"org.apache.jackrabbit.core.security.authentication.DefaultLoginModule\">" +
-            "           <param name=\"anonymousId\" value=\"anonymous\"/>" +
-            "           <param name=\"adminId\" value=\"admin\"/>" +
-            "           <param name=\"principalProvider\" value=\"org.apache.jackrabbit.TestPrincipalProvider\"/>" +
-            "        </LoginModule>\n" +
-            "    </Security>";
-
-    private static final String CONFIG_3 =
-            "    <Security appName=\"Jackrabbit\">" +
-            "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
-            "           <UserManager class=\"\">" +
-            "           <param name=\"defaultDepth\" value=\"4\"/>" +
-            "           <param name=\"autoExpandTree\" value=\"true\"/>" +
-            "           <param name=\"autoExpandSize\" value=\"2000\"/>" +
-            "           </UserManager>" +
             "        </SecurityManager>" +
             "        <AccessManager class=\"org.apache.jackrabbit.core.security.DefaultAccessManager\">" +
             "        </AccessManager>" +

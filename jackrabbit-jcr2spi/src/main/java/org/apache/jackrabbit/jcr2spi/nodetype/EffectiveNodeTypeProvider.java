@@ -29,7 +29,7 @@ import java.util.Map;
 public interface EffectiveNodeTypeProvider {
 
     /**
-     * Build the <code>EffectiveNodeType</code> from the given
+     * Build the <code>EffectiveNodeType</code> from the given qualified
      * <code>NodeType</code> name.
      *
      * @param ntName
@@ -40,7 +40,7 @@ public interface EffectiveNodeTypeProvider {
             throws NoSuchNodeTypeException;
 
     /**
-     * Build the <code>EffectiveNodeType</code> from the given array of
+     * Build the <code>EffectiveNodeType</code> from the given qualified
      * <code>NodeType</code> names.
      *
      * @param ntNames

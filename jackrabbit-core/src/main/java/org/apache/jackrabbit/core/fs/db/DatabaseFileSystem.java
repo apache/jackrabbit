@@ -45,6 +45,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.HashMap;
 
 /**
@@ -87,7 +88,7 @@ public class DatabaseFileSystem implements FileSystem {
     protected static final int SLEEP_BEFORE_RECONNECT = 10000;
 
     // the map of prepared statements (key: sql stmt, value: prepared stmt)
-    private HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
+    private HashMap preparedStatements = new HashMap();
 
     // SQL statements
     protected String selectExistSQL;
@@ -236,8 +237,9 @@ public class DatabaseFileSystem implements FileSystem {
 
         try {
             // close shared prepared statements
-            for (PreparedStatement prep : preparedStatements.values()) {
-                closeStatement(prep);
+            Iterator it = preparedStatements.values().iterator();
+            while (it.hasNext()) {
+                closeStatement((PreparedStatement) it.next());
             }
             preparedStatements.clear();
 
@@ -559,7 +561,7 @@ public class DatabaseFileSystem implements FileSystem {
                 Statement stmt = executeStmt(
                         selectFileAndFolderNamesSQL, new Object[]{folderPath});
                 rs = stmt.getResultSet();
-                ArrayList<String> names = new ArrayList<String>();
+                ArrayList names = new ArrayList();
                 while (rs.next()) {
                     String name = rs.getString(1);
                     if (name.length() == 0
@@ -600,7 +602,7 @@ public class DatabaseFileSystem implements FileSystem {
                 Statement stmt = executeStmt(
                         selectFileNamesSQL, new Object[]{folderPath});
                 rs = stmt.getResultSet();
-                ArrayList<String> names = new ArrayList<String>();
+                ArrayList names = new ArrayList();
                 while (rs.next()) {
                     names.add(rs.getString(1));
                 }
@@ -635,7 +637,7 @@ public class DatabaseFileSystem implements FileSystem {
                 Statement stmt = executeStmt(
                         selectFolderNamesSQL, new Object[]{folderPath});
                 rs = stmt.getResultSet();
-                ArrayList<String> names = new ArrayList<String>();
+                ArrayList names = new ArrayList();
                 while (rs.next()) {
                     String name = rs.getString(1);
                     if (name.length() == 0
@@ -1042,8 +1044,9 @@ public class DatabaseFileSystem implements FileSystem {
         // gracefully in order to avoid potential memory leaks
 
         // close shared prepared statements
-        for (PreparedStatement prep : preparedStatements.values()) {
-            closeStatement(prep);
+        Iterator it = preparedStatements.values().iterator();
+        while (it.hasNext()) {
+            closeStatement((PreparedStatement) it.next());
         }
         try {
             closeConnection(con);
@@ -1553,12 +1556,9 @@ public class DatabaseFileSystem implements FileSystem {
 
     //--------------------------------------------------------< inner classes >
 
-    /**
-     * An input stream that knows its size.
-     */
     class SizedInputStream extends FilterInputStream {
         private final long size;
-        private boolean consumed;
+        private boolean consumed = false;
 
         SizedInputStream(InputStream in, long size) {
             super(in);

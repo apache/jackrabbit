@@ -18,7 +18,6 @@ package org.apache.jackrabbit.server.remoting.davex;
 
 import junit.framework.TestCase;
 
-import javax.jcr.Property;
 import javax.jcr.Session;
 import javax.jcr.Repository;
 import javax.jcr.Workspace;
@@ -39,8 +38,6 @@ import javax.jcr.NamespaceException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import java.util.Map;
 import java.util.HashMap;
@@ -200,67 +197,6 @@ public class JsonDiffHandlerTest extends TestCase {
         }
 
         public void removeLockToken(String lt) {
-        }
-
-        public AccessControlManager getAccessControlManager()
-                throws UnsupportedRepositoryOperationException,
-                RepositoryException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        public Node getNode(String arg0) throws PathNotFoundException,
-                RepositoryException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        public Node getNodeByIdentifier(String arg0)
-                throws ItemNotFoundException, RepositoryException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        public Property getProperty(String arg0) throws PathNotFoundException,
-                RepositoryException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        public RetentionManager getRetentionManager()
-                throws UnsupportedRepositoryOperationException,
-                RepositoryException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        public boolean hasCapability(String arg0, Object arg1, Object[] arg2)
-                throws RepositoryException {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public boolean hasPermission(String arg0, String arg1)
-                throws RepositoryException {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public boolean nodeExists(String arg0) throws RepositoryException {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public boolean propertyExists(String arg0) throws RepositoryException {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public void removeItem(String arg0) throws VersionException,
-                LockException, ConstraintViolationException,
-                PathNotFoundException, RepositoryException {
-            // TODO Auto-generated method stub
-            
         }
     }
 }

@@ -23,7 +23,7 @@ import java.util.Random;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.ValueFactory;
+import javax.jcr.Session;
 
 /**
  * Tests copying binary values from one node to another.
@@ -51,7 +51,7 @@ public class CopyValueTest extends AbstractJCRTest {
 
     private void doTestCopy(int length) throws Exception {
         Node root = superuser.getRootNode();
-        if (root.hasNode("testCopy")) {
+        if(root.hasNode("testCopy")) {
             root.getNode("testCopy").remove();
             superuser.save();
         }
@@ -59,11 +59,10 @@ public class CopyValueTest extends AbstractJCRTest {
         Node n = testRoot.addNode("a");
         superuser.save();
         byte[] data = new byte[length + 1];
-        ValueFactory vf = superuser.getValueFactory();
-        n.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
+        n.setProperty("data", new ByteArrayInputStream(data));
         superuser.save();
         data = new byte[length];
-        n.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
+        n.setProperty("data", new ByteArrayInputStream(data));
         Property p = testRoot.getNode("a").getProperty("data");
         assertEquals(length, p.getLength());
         superuser.getWorkspace().copy("/testCopy/a", "/testCopy/b");
@@ -82,7 +81,7 @@ public class CopyValueTest extends AbstractJCRTest {
     public void testRandomOperations() throws Exception {
         Random random = new Random(1);
         Node root = superuser.getRootNode();
-        if (root.hasNode("testRandom")) {
+        if(root.hasNode("testRandom")) {
             root.getNode("testRandom").remove();
             superuser.save();
         }
@@ -107,8 +106,7 @@ public class CopyValueTest extends AbstractJCRTest {
                         .nextGaussian())));
                 byte[] data = new byte[dataLength];
                 log(node1 + " add len:" + dataLength);
-                ValueFactory vf = superuser.getValueFactory();
-                n.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
+                n.setProperty("data", new ByteArrayInputStream(data));
                 n.setProperty("len", dataLength);
                 break;
             }
@@ -153,7 +151,7 @@ public class CopyValueTest extends AbstractJCRTest {
             }
         }
         superuser.save();
-        for (int i = 0; i < opCounts.length; i++) {
+        for(int i=0; i<opCounts.length; i++) {
             log(i + ": " + opCounts[i]);
         }
         testRoot.remove();

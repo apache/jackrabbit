@@ -18,9 +18,9 @@ package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -65,21 +65,14 @@ class QueryResultImpl implements QueryResult {
     /**
      * {@inheritDoc}
      */
-    public String[] getSelectorNames() throws RepositoryException {
-        Name[] names = queryInfo.getSelectorNames();
-        String[] sn = new String[names.length];
-        NameResolver resolver = mgrProvider.getNameResolver();
-        for (int i = 0; i < sn.length; i++) {
-            sn[i] = resolver.getJCRName(names[i]);
-        }
-        return sn;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public String[] getColumnNames() throws RepositoryException {
-        return queryInfo.getColumnNames();
+        Name[] names = queryInfo.getColumnNames();
+        String[] propNames = new String[names.length];
+        NamePathResolver resolver = mgrProvider.getNamePathResolver();
+        for (int i = 0; i < names.length; i++) {
+            propNames[i] = resolver.getJCRName(names[i]);
+        }
+        return propNames;
     }
 
     /**
@@ -94,8 +87,7 @@ class QueryResultImpl implements QueryResult {
      */
     public RowIterator getRows() throws RepositoryException {
         return new RowIteratorImpl(queryInfo, mgrProvider.getNamePathResolver(),
-                mgrProvider.getJcrValueFactory(), itemMgr,
-                mgrProvider.getHierarchyManager());
+                mgrProvider.getJcrValueFactory());
     }
 
     /**

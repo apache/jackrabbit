@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.principal;
 import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;

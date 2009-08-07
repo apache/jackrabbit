@@ -45,7 +45,7 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      * this workspace was requested from.
      */
     public void testGetSession() throws RepositoryException {
-        Session session = getHelper().getReadOnlySession();
+        Session session = helper.getReadOnlySession();
         try {
             Session otherSession = session.getWorkspace().getSession();
             assertSame("Workspace.getSession() returns not the same session object.",
@@ -60,7 +60,7 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      * used for login.
      */
     public void testGetName() throws RepositoryException {
-        Session session = getHelper().getReadOnlySession(workspaceName);
+        Session session = helper.getReadOnlySession(workspaceName);
         try {
             String name = session.getWorkspace().getName();
             if (workspaceName != null) {
@@ -77,7 +77,7 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      * QueryManager object.
      */
     public void testGetQueryManager() throws RepositoryException {
-        Workspace ws = getHelper().getReadOnlySession().getWorkspace();
+        Workspace ws = helper.getReadOnlySession().getWorkspace();
         try {
             assertNotNull("Workspace does not return a QueryManager object.", ws.getQueryManager());
         } finally {
@@ -91,12 +91,12 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      * used for accessing the current workspace.
      */
     public void testGetAccessibleWorkspaceNames() throws RepositoryException {
-        Session session = getHelper().getReadOnlySession();
+        Session session = helper.getReadOnlySession();
         try {
             String[] wsNames = session.getWorkspace().getAccessibleWorkspaceNames();
             for (int i = 0; i < wsNames.length; i++) {
                 // login
-                Session s = getHelper().getReadOnlySession(wsNames[i]);
+                Session s = helper.getReadOnlySession(wsNames[i]);
                 s.logout();
             }
         } finally {

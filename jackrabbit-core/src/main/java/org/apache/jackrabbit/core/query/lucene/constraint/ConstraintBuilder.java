@@ -17,41 +17,48 @@
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
 import java.util.Map;
-import java.net.URLDecoder;
 
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
+import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.InvalidQueryException;
 
-import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.query.qom.ConstraintImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.AndImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ComparisonImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.ConstraintImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchScoreImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.LengthImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.LiteralImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NotImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.StaticOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 
 /**
  * <code>ConstraintBuilder</code> builds a {@link Constraint} from a tree of
@@ -73,7 +80,7 @@ public class ConstraintBuilder {
      *                             constraint.
      */
     public static Constraint create(ConstraintImpl constraint,
-                                    Map<Name, Value> bindVariableValues,
+                                    Map bindVariableValues,
                                     SelectorImpl[] selectors,
                                     LuceneQueryFactory factory,
                                     ValueFactory vf)
@@ -91,12 +98,12 @@ public class ConstraintBuilder {
     /**
      * A QOM tree visitor that translates the contraints.
      */
-    private static final class Visitor extends DefaultQOMTreeVisitor {
+    private static final class Visitor implements QOMTreeVisitor {
 
         /**
          * The bind variables and their values.
          */
-        private final Map<Name, Value> bindVariableValues;
+        private final Map bindVariableValues;
 
         /**
          * The selectors of the query.
@@ -121,7 +128,7 @@ public class ConstraintBuilder {
          * @param factory            the lucene query factory.
          * @param vf                 the value factory of the current session.
          */
-        Visitor(Map<Name, Value> bindVariableValues,
+        Visitor(Map bindVariableValues,
                 SelectorImpl[] selectors,
                 LuceneQueryFactory factory,
                 ValueFactory vf) {
@@ -148,19 +155,29 @@ public class ConstraintBuilder {
                     getSelector(node.getSelectorQName()));
         }
 
+        public Object visit(ChildNodeJoinConditionImpl node, Object data)
+                throws Exception {
+            // not used
+            return null;
+        }
+
+        public Object visit(ColumnImpl node, Object data) throws Exception {
+            // not used
+            return null;
+        }
+
         public Object visit(ComparisonImpl node, Object data) throws Exception {
             DynamicOperandImpl op1 = (DynamicOperandImpl) node.getOperand1();
-            Operator operator = node.getOperatorInstance();
             StaticOperandImpl op2 = ((StaticOperandImpl) node.getOperand2());
             Value staticValue = (Value) op2.accept(this, null);
 
             DynamicOperand dynOp = (DynamicOperand) op1.accept(this, staticValue);
             SelectorImpl selector = getSelector(op1.getSelectorQName());
-            if (operator == Operator.LIKE) {
+            if (node.getOperator() == QueryObjectModelConstants.OPERATOR_LIKE) {
                 return new LikeConstraint(dynOp, staticValue, selector);
             } else {
-                return new ComparisonConstraint(
-                        dynOp, operator, staticValue, selector);
+                return new ComparisonConstraint(dynOp, node.getOperator(),
+                        staticValue, selector);
             }
         }
 
@@ -168,6 +185,18 @@ public class ConstraintBuilder {
                 throws Exception {
             return new DescendantNodeConstraint(node,
                     getSelector(node.getSelectorQName()));
+        }
+
+        public Object visit(DescendantNodeJoinConditionImpl node, Object data)
+                throws Exception {
+            // not used
+            return null;
+        }
+
+        public Object visit(EquiJoinConditionImpl node, Object data)
+                throws Exception {
+            // not used
+            return null;
         }
 
         public Object visit(FullTextSearchImpl node, Object data)
@@ -178,7 +207,13 @@ public class ConstraintBuilder {
 
         public Object visit(FullTextSearchScoreImpl node, Object data)
                 throws Exception {
-            return new FullTextSearchScoreOperand();
+            // TODO
+            return null;
+        }
+
+        public Object visit(JoinImpl node, Object data) throws Exception {
+            // not used
+            return null;
         }
 
         public Object visit(LengthImpl node, Object data) throws Exception {
@@ -195,12 +230,12 @@ public class ConstraintBuilder {
         }
 
         public Object visit(LiteralImpl node, Object data) throws Exception {
-            return node.getLiteralValue();
+            return node.getValue();
         }
 
         public Object visit(LowerCaseImpl node, Object data) throws Exception {
             DynamicOperandImpl operand = (DynamicOperandImpl) node.getOperand();
-            return new LowerCaseOperand((DynamicOperand) operand.accept(this, data));
+            return new LowerCaseOperand((DynamicOperand) operand.accept(this, null));
         }
 
         public Object visit(NodeLocalNameImpl node, Object data) throws Exception {
@@ -210,35 +245,25 @@ public class ConstraintBuilder {
         public Object visit(NodeNameImpl node, Object data) throws Exception {
             Value staticValue = (Value) data;
             switch (staticValue.getType()) {
-                // STRING, PATH and URI may be convertable to a NAME -> check
                 case PropertyType.STRING:
                 case PropertyType.PATH:
-                case PropertyType.URI:
                     // make sure static value is valid NAME
                     try {
-                        String s = staticValue.getString();
-                        if (staticValue.getType() == PropertyType.URI) {
-                            if (s.startsWith("./")) {
-                                s = s.substring(2);
-                            }
-                            // need to decode
-                            s = URLDecoder.decode(s, "UTF-8");
-                        }
-                        vf.createValue(s, PropertyType.NAME);
+                            vf.createValue(staticValue.getString(), PropertyType.NAME);
                     } catch (ValueFormatException e) {
                             throw new InvalidQueryException("Value " +
                                 staticValue.getString() +
-                                " cannot be converted into NAME");
+                                " cannot be converted into STRING");
                     }
                     break;
-                // the following types cannot be converted to NAME
                 case PropertyType.DATE:
                 case PropertyType.DOUBLE:
-                case PropertyType.DECIMAL:
+                    // TODO case PropertyType.DECIMAL:
                 case PropertyType.LONG:
                 case PropertyType.BOOLEAN:
                 case PropertyType.REFERENCE:
-                case PropertyType.WEAKREFERENCE:
+                // TODO case PropertyType.WEAKREFERENCE:
+                // TODO case PropertyType.URI
                     throw new InvalidQueryException(staticValue.getString() +
                             " cannot be converted into a NAME value");
             }
@@ -249,6 +274,11 @@ public class ConstraintBuilder {
         public Object visit(NotImpl node, Object data) throws Exception {
             ConstraintImpl c = (ConstraintImpl) node.getConstraint();
             return new NotConstraint((Constraint) c.accept(this, null));
+        }
+
+        public Object visit(OrderingImpl node, Object data) throws Exception {
+            // not used
+            return null;
         }
 
         public Object visit(OrImpl node, Object data) throws Exception {
@@ -268,23 +298,45 @@ public class ConstraintBuilder {
             return new PropertyValueOperand(node);
         }
 
+        public Object visit(QueryObjectModelTree node, Object data)
+                throws Exception {
+            // not used
+            return null;
+        }
+
         public Object visit(SameNodeImpl node, Object data) throws Exception {
             return new SameNodeConstraint(node,
                     getSelector(node.getSelectorQName()));
         }
 
+        public Object visit(SameNodeJoinConditionImpl node, Object data)
+                throws Exception {
+            // not used
+            return null;
+        }
+
+        public Object visit(SelectorImpl node, Object data) throws Exception {
+            // not used
+            return null;
+        }
+
         public Object visit(UpperCaseImpl node, Object data) throws Exception {
             DynamicOperandImpl operand = (DynamicOperandImpl) node.getOperand();
-            return new UpperCaseOperand((DynamicOperand) operand.accept(this, data));
+            return new UpperCaseOperand((DynamicOperand) operand.accept(this, null));
         }
 
         private SelectorImpl getSelector(Name name) {
-            for (SelectorImpl selector : selectors) {
-                if (selector.getSelectorQName().equals(name)) {
-                    return selector;
+            if (name == null) {
+                // assume default selector
+                return selectors[0];
+            }
+            for (int i = 0; i < selectors.length; i++) {
+                if (selectors[i].getSelectorQName().equals(name)) {
+                    return selectors[i];
                 }
             }
             return null;
         }
+
     }
 }

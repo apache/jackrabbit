@@ -24,6 +24,7 @@ import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.security.auth.Subject;
 
 /**
@@ -31,7 +32,7 @@ import javax.security.auth.Subject;
  */
 public interface JackrabbitSecurityManager {
 
-    void init(Repository repository, Session systemSession) throws RepositoryException;
+    public void init(Repository repository, Session systemSession) throws RepositoryException;
 
     /**
      * Disposes those parts of this security manager that are related to the
@@ -39,12 +40,12 @@ public interface JackrabbitSecurityManager {
      *
      * @param workspaceName Name of the workspace that is being disposed.
      */
-    void dispose(String workspaceName);
+    public void dispose(String workspaceName);
 
     /**
      * Disposes this security manager instance and cleans all internal caches.
      */
-    void close();
+    public void close();
 
     /**
      * Returns a new <code>AuthContext</code> for the specified credentials and
@@ -56,7 +57,7 @@ public interface JackrabbitSecurityManager {
      * and <code>subject</code>.
      * @throws RepositoryException
      */
-    AuthContext getAuthContext(Credentials creds, Subject subject) throws RepositoryException;
+    public AuthContext getAuthContext(Credentials creds, Subject subject) throws RepositoryException;
 
     /**
      * Retrieve the <code>AccessManager</code> for the given <code>session</code>.
@@ -66,29 +67,29 @@ public interface JackrabbitSecurityManager {
      * @return <code>AccessManager</code> for the specified <code>session</code>.
      * @throws RepositoryException
      */
-    AccessManager getAccessManager(Session session, AMContext amContext) throws RepositoryException;
+    public AccessManager getAccessManager(Session session, AMContext amContext) throws RepositoryException;
 
     /**
      * Retrieve the principal manager for the given <code>session</code>.
      *
      * @param session
      * @return PrincipalManager for the given <code>session</code>.
-     * @throws javax.jcr.UnsupportedRepositoryOperationException If principal management
+     * @throws UnsupportedRepositoryOperationException If principal management
      * is not supported.
      * @throws RepositoryException if an error occurs
      */
-    PrincipalManager getPrincipalManager(Session session) throws RepositoryException;
+    public PrincipalManager getPrincipalManager(Session session) throws RepositoryException;
 
     /**
      * Returns the user manager for the specified <code>session</code>.
      *
      * @param session
      * @return UserManager for the given <code>session</code>.
-     * @throws javax.jcr.UnsupportedRepositoryOperationException If user management is
+     * @throws UnsupportedRepositoryOperationException If user management is
      * not supported.
      * @throws RepositoryException
      */
-    UserManager getUserManager(Session session) throws RepositoryException;
+    public UserManager getUserManager(Session session) throws RepositoryException;
 
     /**
      * Retrieve the id to be displayed upon {@link Session#getUserID()} for
@@ -98,5 +99,5 @@ public interface JackrabbitSecurityManager {
      * @return userID to be displayed upon {@link Session#getUserID()}.
      * @throws RepositoryException
      */
-    String getUserID(Subject subject) throws RepositoryException;
+    public String getUserID(Subject subject) throws RepositoryException;
 }

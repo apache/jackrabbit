@@ -98,6 +98,24 @@ public class UserManagerImplTest extends AbstractUserTest {
         }
     }
 
+
+    public void testRemoveUserRemovesTree() throws RepositoryException {
+        // create 2 new users. the second as child of the first.
+        Principal p = getTestPrincipal();
+        User u = userMgr.createUser(p.getName(), buildPassword(p));
+        String uID = u.getID();
+        p = getTestPrincipal();
+        User u2 = userMgr.createUser(p.getName(), buildPassword(p), p, ((UserImpl)u).getNode().getPath());
+        String u2ID = u2.getID();
+
+        // removing the first user must also remove the child-users.
+        u.remove();
+
+        // make sure both users are gone
+        assertNull(userMgr.getAuthorizable(uID));
+        assertNull(userMgr.getAuthorizable(u2ID));
+    }
+
     public void testPrincipalNameEqualsUserID() throws RepositoryException {
         Principal p = getTestPrincipal();
         User u = null;
@@ -372,7 +390,7 @@ public class UserManagerImplTest extends AbstractUserTest {
     }
 
     public void testCleanup() throws RepositoryException, NotExecutableException {
-        Session s = getHelper().getSuperuserSession();
+        Session s = helper.getSuperuserSession();
         try {
             UserManager umgr = getUserManager(s);
             s.logout();
@@ -397,7 +415,7 @@ public class UserManagerImplTest extends AbstractUserTest {
         String[] workspaceNames = superuser.getWorkspace().getAccessibleWorkspaceNames();
 
         for (int i = 0; i < workspaceNames.length; i++) {
-            Session s = getHelper().getSuperuserSession(workspaceNames[i]);
+            Session s = helper.getSuperuserSession(workspaceNames[i]);
             try {
                 UserManager umgr = getUserManager(s);
                 s.logout();

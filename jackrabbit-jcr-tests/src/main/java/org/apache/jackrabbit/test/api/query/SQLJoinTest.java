@@ -41,15 +41,16 @@ public class SQLJoinTest extends AbstractQueryTest {
     /**
      * Test a SQL query with a primary and mixin nodetype join.
      */
-    public void testJoin() throws RepositoryException, NotExecutableException {
+    public void testJoin() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         String testMixin = mixReferenceable;
         if (needsMixin(n1, testMixin)) {
-            ensureMixinType(n1, testMixin);
-        } else {
+            n1.addMixin(testMixin);
+        }
+        else {
             testMixin = mixVersionable;
             if (needsMixin(n1, testMixin)) {
-                ensureMixinType(n1, testMixin);
+                n1.addMixin(testMixin);
             }
         }
 
@@ -73,16 +74,16 @@ public class SQLJoinTest extends AbstractQueryTest {
     /**
      * Test a SQL query with a nt:base primary type and mixin nodetype join.
      */
-    public void testJoinNtBase() throws RepositoryException,
-            NotExecutableException {
+    public void testJoinNtBase() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         String testMixin = mixReferenceable;
         if (needsMixin(n1, testMixin)) {
-            ensureMixinType(n1, testMixin);
-        } else {
+            n1.addMixin(testMixin);
+        }
+        else {
             testMixin = mixVersionable;
             if (needsMixin(n1, testMixin)) {
-                ensureMixinType(n1, testMixin);
+                n1.addMixin(testMixin);
             }
         }
 
@@ -106,13 +107,15 @@ public class SQLJoinTest extends AbstractQueryTest {
     /**
      * Test a SQL query with a primary type and mixin nodetype join.
      */
-    public void testJoinFilterPrimaryType()
-            throws RepositoryException, NotExecutableException {
+    public void testJoinFilterPrimaryType() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(n1, mixReferenceable);
-        String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
-        Node n2 = testRootNode.addNode(nodeName2, nodetype);
-        ensureMixinType(n2, mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
+        Node n2 = testRootNode.addNode(nodeName2, ntBase);
+        if (needsMixin(n2, mixReferenceable)) {
+            n2.addMixin(mixReferenceable);
+        }
         testRootNode.save();
 
         StringBuffer query = new StringBuffer("SELECT * FROM ");
@@ -137,13 +140,15 @@ public class SQLJoinTest extends AbstractQueryTest {
      */
     public void testJoinSNS() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(n1, mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
         if (!n1.getDefinition().allowsSameNameSiblings()) {
             throw new NotExecutableException("Node at " + testRoot + " does not allow same name siblings with name " + nodeName1);
         }
         testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        ensureMixinType(n2, mixReferenceable);
+        n2.addMixin(mixReferenceable);
         testRootNode.save();
 
         StringBuffer query = new StringBuffer("SELECT * FROM ");

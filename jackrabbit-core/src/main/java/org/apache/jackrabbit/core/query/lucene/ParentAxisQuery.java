@@ -42,7 +42,7 @@ class ParentAxisQuery extends Query {
     /**
      * Default score is 1.0f.
      */
-    private static final Float DEFAULT_SCORE = 1.0f;
+    private static final Float DEFAULT_SCORE = new Float(1.0f);
 
     /**
      * The context query
@@ -124,13 +124,7 @@ class ParentAxisQuery extends Query {
      * @return 'ParentAxisQuery'.
      */
     public String toString(String field) {
-        StringBuffer sb = new StringBuffer();
-        sb.append("ParentAxisQuery(");
-        sb.append(contextQuery);
-        sb.append(", ");
-        sb.append(nameTest);
-        sb.append(")");
-        return sb.toString();
+        return "ParentAxisQuery";
     }
 
     //-----------------------< ParentAxisWeight >-------------------------------
@@ -241,7 +235,7 @@ class ParentAxisQuery extends Query {
          * key=[Integer] id of selected document from context query<br>
          * value=[Float] score for that document
          */
-        private final Map<Integer, Float> scores = new HashMap<Integer, Float>();
+        private final Map scores = new HashMap();
 
         /**
          * The next document id to return
@@ -286,11 +280,11 @@ class ParentAxisQuery extends Query {
          * {@inheritDoc}
          */
         public float score() throws IOException {
-            Float score = scores.get(nextDoc);
+            Float score = (Float) scores.get(new Integer(nextDoc));
             if (score == null) {
                 score = DEFAULT_SCORE;
             }
-            return score;
+            return score.floatValue();
         }
 
         /**
@@ -327,14 +321,14 @@ class ParentAxisQuery extends Query {
                             if (docs.length == 1) {
                                 // optimize single value
                                 hits.set(docs[0]);
-                                if (score != DEFAULT_SCORE) {
-                                    scores.put(docs[0], score);
+                                if (score != DEFAULT_SCORE.floatValue()) {
+                                    scores.put(new Integer(docs[0]), new Float(score));
                                 }
                             } else {
-                                for (int docNum : docs) {
-                                    hits.set(docNum);
-                                    if (score != DEFAULT_SCORE) {
-                                        scores.put(docNum, score);
+                                for (int i = 0; i < docs.length; i++) {
+                                    hits.set(docs[i]);
+                                    if (score != DEFAULT_SCORE.floatValue()) {
+                                        scores.put(new Integer(docs[i]), new Float(score));
                                     }
                                 }
                             }

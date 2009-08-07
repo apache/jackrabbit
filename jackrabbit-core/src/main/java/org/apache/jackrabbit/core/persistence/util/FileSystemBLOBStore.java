@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.persistence.util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -28,8 +28,6 @@ import java.io.OutputStream;
 /**
  * <code>FileSystemBLOBStore</code> is a <code>ResourceBasedBLOBStore</code>
  * implementation that stores BLOB data in a <code>FileSystem</code>.
- *
- * @deprecated the FileDataStore should be used instead
  */
 public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
 
@@ -55,7 +53,7 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
         // the blobId is an absolute file system path
         StringBuffer sb = new StringBuffer();
         sb.append(FileSystem.SEPARATOR_CHAR);
-        char[] chars = id.getParentId().toString().toCharArray();
+        char[] chars = id.getParentId().getUUID().toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
             if (chars[i] == '-') {

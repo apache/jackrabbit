@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,13 +40,13 @@ public class ItemStateMap implements ItemStateStore, Dumpable {
     /**
      * the map backing this <code>ItemStateStore</code> implementation
      */
-    protected final Map<ItemId, ItemState> map;
+    protected final Map map;
 
     /**
      * Creates a new HashMap-backed <code>ItemStateStore</code> implementation.
      */
     public ItemStateMap() {
-        this(new HashMap<ItemId, ItemState>());
+        this(new HashMap());
     }
 
     /**
@@ -53,19 +54,28 @@ public class ItemStateMap implements ItemStateStore, Dumpable {
      *
      * @param map <code>Map</code> implementation to be used as backing store.
      */
-    protected ItemStateMap(Map<ItemId, ItemState> map) {
+    protected ItemStateMap(Map map) {
         this.map = map;
     }
 
     //-------------------------------------------------------< ItemStateStore >
+    /**
+     * {@inheritDoc}
+     */
     public boolean contains(ItemId id) {
         return map.containsKey(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ItemState get(ItemId id) {
-        return map.get(id);
+        return (ItemState) map.get(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void put(ItemState state) {
         ItemId id = state.getId();
         if (map.containsKey(id)) {
@@ -74,35 +84,58 @@ public class ItemStateMap implements ItemStateStore, Dumpable {
         map.put(id, state);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void remove(ItemId id) {
         map.remove(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void clear() {
         map.clear();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isEmpty() {
         return map.isEmpty();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public int size() {
         return map.size();
     }
 
-    public Set<ItemId> keySet() {
+    /**
+     * {@inheritDoc}
+     */
+    public Set keySet() {
         return Collections.unmodifiableSet(map.keySet());
     }
 
-    public Collection<ItemState> values() {
+    /**
+     * {@inheritDoc}
+     */
+    public Collection values() {
         return Collections.unmodifiableCollection(map.values());
     }
 
     //-------------------------------------------------------------< Dumpable >
+    /**
+     * {@inheritDoc}
+     */
     public void dump(PrintStream ps) {
         ps.println("map entries:");
         ps.println();
-        for (ItemId id : keySet()) {
+        Iterator iter = keySet().iterator();
+        while (iter.hasNext()) {
+            ItemId id = (ItemId) iter.next();
             ItemState state = get(id);
             dumpItemState(id, state, ps);
         }

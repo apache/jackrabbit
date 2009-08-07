@@ -40,12 +40,12 @@ public class HashMapIndex implements StringIndex {
     /**
      * holds the string-to-index lookups.
      */
-    private final HashMap<String, Integer> stringToIndex = new HashMap<String, Integer>();
+    private final HashMap stringToIndex = new HashMap();
 
     /**
      * holds the index-to-string lookups.
      */
-    private final HashMap<Integer, String> indexToString = new HashMap<Integer, String>();
+    private final HashMap indexToString = new HashMap();
 
     /**
      * a copy of the {@link #stringToIndex} as properties class for faster
@@ -94,11 +94,11 @@ public class HashMapIndex implements StringIndex {
             InputStream in = file.getInputStream();
             stringToIndexProps.clear();
             stringToIndexProps.load(in);
-            Iterator<Object> iter = stringToIndexProps.keySet().iterator();
+            Iterator iter = stringToIndexProps.keySet().iterator();
             while (iter.hasNext()) {
                 String uri = (String) iter.next();
                 String prop = stringToIndexProps.getProperty(uri);
-                Integer idx = Integer.valueOf(prop);
+                Integer idx = new Integer(prop);
                 stringToIndex.put(uri, idx);
                 indexToString.put(idx, uri);
             }
@@ -127,7 +127,7 @@ public class HashMapIndex implements StringIndex {
      * and if the resource was modified since.
      */
     public int stringToIndex(String nsUri) {
-        Integer idx = stringToIndex.get(nsUri);
+        Integer idx = (Integer) stringToIndex.get(nsUri);
         if (idx == null) {
             try {
                 load();
@@ -136,10 +136,10 @@ public class HashMapIndex implements StringIndex {
                 ise.initCause(e);
                 throw ise;
             }
-            idx = stringToIndex.get(nsUri);
+            idx = (Integer) stringToIndex.get(nsUri);
         }
         if (idx == null) {
-            idx = Integer.valueOf(indexToString.size());
+            idx = new Integer(indexToString.size());
             stringToIndex.put(nsUri, idx);
             indexToString.put(idx, nsUri);
             stringToIndexProps.put(nsUri, idx.toString());
@@ -161,8 +161,8 @@ public class HashMapIndex implements StringIndex {
      * and if the resource was modified since.
      */
     public String indexToString(int i) {
-        Integer idx = Integer.valueOf(i);
-        String s = indexToString.get(idx);
+        Integer idx = new Integer(i);
+        String s = (String) indexToString.get(idx);
         if (s == null) {
             try {
                 load();
@@ -171,7 +171,7 @@ public class HashMapIndex implements StringIndex {
                 ise.initCause(e);
                 throw ise;
             }
-            s = indexToString.get(idx);
+            s = (String) indexToString.get(idx);
         }
         return s;
     }

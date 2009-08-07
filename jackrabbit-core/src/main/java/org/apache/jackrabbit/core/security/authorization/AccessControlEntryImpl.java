@@ -16,23 +16,22 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.value.StringValue;
 import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Iterator;
+import java.util.HashMap;
 
 /**
  * Simple, immutable implementation of the
- * {@link javax.jcr.security.AccessControlEntry}
+ * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlEntry}
  * and the {@link JackrabbitAccessControlEntry} interfaces.
  */
 public abstract class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
@@ -94,8 +93,8 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @param isAllow <code>true</code> if this ACE grants the specified
      * privileges to the specified principal; <code>false</code> otherwise.
      * @param restrictions A map of restriction name (String) to restriction
-     * (Value). See {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getRestrictionNames()}
-     * and {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getRestrictionType(String)}.
+     * (Value). See {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionNames()}
+     * and {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionType(String)}. 
      * @param valueFactory the value factory.
      * @throws AccessControlException if either principal or privileges are invalid.
      */
@@ -161,14 +160,14 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
 
     //-------------------------------------------------< AccessControlEntry >---
     /**
-     * @see javax.jcr.security.AccessControlEntry#getPrincipal()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlEntry#getPrincipal()
      */
     public Principal getPrincipal() {
         return principal;
     }
 
     /**
-     * @see javax.jcr.security.AccessControlEntry#getPrivileges()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlEntry#getPrivileges()
      */
     public Privilege[] getPrivileges() {
         return privileges;
@@ -184,14 +183,14 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     }
 
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry#getRestrictionNames()
+     * @see JackrabbitAccessControlEntry#getRestrictionNames()
      */
     public String[] getRestrictionNames() {
         return (String[]) restrictions.keySet().toArray(new String[restrictions.size()]);
     }
 
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry#getRestriction(String)
+     * @see JackrabbitAccessControlEntry#getRestriction(String)
      */
     public Value getRestriction(String restrictionName) {
         if (restrictions.containsKey(restrictionName)) {

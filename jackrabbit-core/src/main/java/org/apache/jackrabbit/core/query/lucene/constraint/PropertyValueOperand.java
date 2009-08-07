@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
+import java.io.IOException;
+
 import javax.jcr.Value;
 import javax.jcr.Property;
 import javax.jcr.Node;
@@ -24,11 +26,12 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
+import org.apache.jackrabbit.core.query.lucene.Util;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 
 /**
@@ -58,11 +61,11 @@ public class PropertyValueOperand extends DynamicOperand {
      * @param sn the current score node.
      * @param context the evaluation context.
      * @return the property state or <code>null</code>.
-     * @throws RepositoryException if an error occurs while reading.
+     * @throws IOException if an error occurs while reading.
      */
     public final PropertyState getPropertyState(ScoreNode sn,
-                                                EvaluationContext context)
-            throws RepositoryException {
+                                          EvaluationContext context)
+            throws IOException {
         ItemStateManager ism = context.getItemStateManager();
         PropertyId propId = new PropertyId(sn.getNodeId(), operand.getPropertyQName());
         try {
@@ -70,7 +73,7 @@ public class PropertyValueOperand extends DynamicOperand {
         } catch (NoSuchItemStateException e) {
             return null;
         } catch (ItemStateException e) {
-            throw new RepositoryException(e);
+            throw Util.createIOException(e);
         }
     }
 
@@ -81,17 +84,19 @@ public class PropertyValueOperand extends DynamicOperand {
      * @param sn the current score node.
      * @param context the evaluation context.
      * @return the property or <code>null</code>.
-     * @throws RepositoryException if an error occurs while reading.
+     * @throws IOException if an error occurs while reading.
      */
     public final Property getProperty(ScoreNode sn,
                                       EvaluationContext context)
-            throws RepositoryException {
+            throws IOException {
         SessionImpl session = context.getSession();
         try {
             Node n = session.getNodeById(sn.getNodeId());
             return n.getProperty(operand.getPropertyName());
         } catch (PathNotFoundException e) {
             return null;
+        } catch (RepositoryException e) {
+            throw Util.createIOException(e);
         }
     }
 
@@ -99,15 +104,19 @@ public class PropertyValueOperand extends DynamicOperand {
      * {@inheritDoc}
      */
     public Value[] getValues(ScoreNode sn, EvaluationContext context)
-            throws RepositoryException {
+            throws IOException {
         Property prop = getProperty(sn, context);
         if (prop == null) {
             return EMPTY;
         } else {
-            if (prop.getDefinition().isMultiple()) {
-                return prop.getValues();
-            } else {
-                return new Value[]{prop.getValue()};
+            try {
+                if (prop.getDefinition().isMultiple()) {
+                    return prop.getValues();
+                } else {
+                    return new Value[]{prop.getValue()};
+                }
+            } catch (RepositoryException e) {
+                throw Util.createIOException(e);
             }
         }
     }

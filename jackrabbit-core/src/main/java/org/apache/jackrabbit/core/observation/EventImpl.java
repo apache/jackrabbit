@@ -18,16 +18,16 @@ package org.apache.jackrabbit.core.observation;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
-import javax.jcr.observation.Event;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.api.jsr283.observation.Event;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,13 +140,14 @@ public final class EventImpl implements JackrabbitEvent, Event {
     /**
      * {@inheritDoc}
      */
-    public Map<String, String> getInfo() throws RepositoryException {
-        Map<String, String> info = new HashMap<String, String>();
-        for (Map.Entry<String, InternalValue> entry : eventState.getInfo().entrySet()) {
-            InternalValue value = entry.getValue();
+    public Map getInfo() throws RepositoryException {
+        Map info = new HashMap();
+        for (Iterator it = eventState.getInfo().entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            InternalValue value = (InternalValue) entry.getValue();
             String strValue = null;
             if (value != null) {
-                strValue = ValueFormat.getJCRString(value, session);
+                strValue = value.toJCRValue(session).getString();
             }
             info.put(entry.getKey(), strValue);
         }
@@ -156,9 +157,9 @@ public final class EventImpl implements JackrabbitEvent, Event {
     //-----------------------------------------------------------< EventImpl >
 
     /**
-     * Returns the <code>Path</code> of this event.
+     * Returns the qualified path of this event.
      *
-     * @return path
+     * @return qualified path
      * @throws RepositoryException if the path can't be constructed
      */
     public Path getQPath() throws RepositoryException {

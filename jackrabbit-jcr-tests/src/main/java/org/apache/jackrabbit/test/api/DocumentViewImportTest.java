@@ -89,7 +89,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
      * imports the document created with createSimpleDocument method and checks
      * the imported tree according the rules outlined in chapter 7.3.2 of the
      * specification.
-     * <p>
+     * <p/>
      * Additionally it checks the uuidBehaviour flag if the jcr:uuid property is
      * respected during import.
      *
@@ -116,7 +116,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
      * IMPORT_UUID_CREATE_NEW. It imports the document created with
      * createSimpleDocument method and checks the imported tree according the
      * rules outlined in chapter 7.3.2 of the specification.
-     * <p>
+     * <p/>
      * Additionally it checks the uuidBehaviour flag if the jcr:uuid property is
      * respected during import.
      *

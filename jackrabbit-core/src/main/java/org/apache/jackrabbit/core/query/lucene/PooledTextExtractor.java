@@ -20,9 +20,9 @@ import org.apache.jackrabbit.extractor.TextExtractor;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.InputStream;
+import java.io.IOException;
 
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.Channel;
@@ -105,17 +105,11 @@ public class PooledTextExtractor implements TextExtractor {
      * <p/>
      * This implementation returns an instance of {@link TextExtractorReader}.
      */
-    public Reader extractText(
-            InputStream stream, String type, String encoding)
-            throws IOException {
+    public Reader extractText(InputStream stream,
+                              String type,
+                              String encoding) throws IOException {
         TextExtractorJob job = new TextExtractorJob(extractor, stream, type, encoding);
-        try {
-            executor.execute(job);
-        } catch (InterruptedException e) {
-            log.warn("Failed to start a background text extraction task", e);
-            stream.close();
-        }
-        return new TextExtractorReader(job, timout);
+        return new TextExtractorReader(job, executor, timout);
     }
 
     /**

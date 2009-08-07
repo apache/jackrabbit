@@ -46,10 +46,6 @@ public final class JcrPath {
         list.add(new JcrPath("/a/..../", "/a/....", NOR|VAL));
         list.add(new JcrPath("/a/b:.a./", "/a/b:.a.", NOR|VAL));
 
-        // ... containing special characters allowed since JCR 2.0
-        list.add(new JcrPath("/name's[2]/'name[2]", NOR|VAL));
-        list.add(new JcrPath("/\"name\"[2]/name[2]", NOR|VAL));
-
         // relative paths
         list.add(new JcrPath("a/b/c/", "a/b/c", NOR|VAL));
         list.add(new JcrPath("a/b/c", NOR|VAL));
@@ -77,16 +73,6 @@ public final class JcrPath {
         list.add(new JcrPath("prefix:name[2]foo/prefix:name[2]"));
         list.add(new JcrPath("/..", "/..", 0));
         list.add(new JcrPath("/a/b/../../..", "/a/b/../../..", 0));
-
-        list.add(new JcrPath("/prefix:*name"));
-        list.add(new JcrPath("/prefix:n*ame"));
-        list.add(new JcrPath("/prefix:|name"));
-        list.add(new JcrPath("/prefix:n|ame"));
-
-        list.add(new JcrPath("/name[2]\""));
-        list.add(new JcrPath("/name[2]\"/name"));
-        list.add(new JcrPath("/name[2]'"));
-        list.add(new JcrPath("/name[2]'/name"));
 
         // normalized, relative paths
         list.add(new JcrPath(".", ".", NOR|VAL));

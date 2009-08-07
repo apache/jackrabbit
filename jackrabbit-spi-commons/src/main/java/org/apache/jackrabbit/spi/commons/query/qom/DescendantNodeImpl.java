@@ -20,8 +20,9 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
+
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.qom.DescendantNode;
 import javax.jcr.NamespaceException;
 
 /**
@@ -68,7 +69,7 @@ public class DescendantNodeImpl
      *
      * @return the path; non-null
      */
-    public String getAncestorPath() {
+    public String getPath() {
         return getJCRPath(path);
     }
 
@@ -101,5 +102,4 @@ public class DescendantNodeImpl
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
-
 }

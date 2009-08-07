@@ -23,7 +23,6 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.RepositoryException;
 import java.io.Serializable;
@@ -33,9 +32,13 @@ import java.io.Serializable;
  */
 public abstract class AbstractIdFactory implements IdFactory {
 
-    private static final char DELIMITER = '@';
+    /**
+     * Subclassed need to define a PathFactory used to create IDs
+     *
+     * @return a implementation of <code>PathFactory</code>.
+     */
+    protected abstract PathFactory getPathFactory();
 
-    //----------------------------------------------------------< IdFactory >---
     /**
      * {@inheritDoc}
      * @see IdFactory#createNodeId(NodeId, Path)
@@ -75,52 +78,6 @@ public abstract class AbstractIdFactory implements IdFactory {
             throw new IllegalArgumentException(e.getMessage());
         }
     }
-
-    /**
-     * @see IdFactory#toJcrIdentifier(NodeId)
-     */
-    public String toJcrIdentifier(NodeId nodeId) {
-        // TODO improve
-        String uniqueId = nodeId.getUniqueID();
-        Path path = nodeId.getPath();
-        if (path == null) {
-            return uniqueId;
-        } else if (uniqueId == null) {
-            return DELIMITER + path.toString();
-        } else {
-            StringBuffer bf = new StringBuffer();
-            bf.append(Text.escape(uniqueId, DELIMITER));
-            bf.append(DELIMITER);
-            bf.append(path.toString());
-            return bf.toString();
-        }
-    }
-
-    /**
-     * @see IdFactory#fromJcrIdentifier(String)
-     */
-    public NodeId fromJcrIdentifier(String jcrIdentifier) {
-        // TODO improve
-        int pos = jcrIdentifier.indexOf(DELIMITER);
-        switch (pos) {
-            case -1:
-                return createNodeId(jcrIdentifier);
-            case 0:
-                return createNodeId((String) null, getPathFactory().create(jcrIdentifier.substring(1)));
-            default:
-                String uniqueId = Text.unescape(jcrIdentifier.substring(0, pos), DELIMITER);
-                Path path = getPathFactory().create(jcrIdentifier.substring(pos+1));
-                return createNodeId(uniqueId, path);
-        }        
-    }
-
-    //--------------------------------------------------------------------------
-    /**
-     * Subclassed need to define a PathFactory used to create IDs
-     *
-     * @return a implementation of <code>PathFactory</code>.
-     */
-    protected abstract PathFactory getPathFactory();
 
     //------------------------------------------------------< Inner classes >---
 

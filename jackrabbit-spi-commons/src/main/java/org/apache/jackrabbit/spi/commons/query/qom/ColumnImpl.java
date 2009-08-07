@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import javax.jcr.query.qom.Column;
-
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
 
 /**
  * <code>ColumnImpl</code>...
@@ -44,12 +44,12 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
     /**
      * The name of the column.
      */
-    private final String columnName;
+    private final Name columnName;
 
     ColumnImpl(NamePathResolver resolver,
                Name selectorName,
                Name propertyName,
-               String columnName) {
+               Name columnName) {
         super(resolver);
         this.selectorName = selectorName;
         this.propertyName = propertyName;
@@ -74,6 +74,18 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
     public Name getPropertyQName() {
         return propertyName;
     }
+
+    /**
+     * Gets the column name.
+     * <p/>
+     *
+     * @return the column name; must be null if <code>getPropertyName</code> is
+     *         null and non-null otherwise
+     */
+    public Name getColumnQName() {
+        return columnName;
+    }
+
 
     //---------------------------< Column >-------------------------------------
 
@@ -104,7 +116,7 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
      *         null and non-null otherwise
      */
     public String getColumnName() {
-        return columnName;
+        return getJCRName(columnName);
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

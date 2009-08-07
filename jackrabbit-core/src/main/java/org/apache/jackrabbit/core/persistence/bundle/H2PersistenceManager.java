@@ -81,8 +81,8 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
         if (getUrl() == null) {
             setUrl("jdbc:h2:file:" + context.getHomeDir().getPath() + "/db/itemState");
         }
-        if (getDatabaseType() == null) {
-            setDatabaseType("h2");
+        if (getSchema() == null) {
+            setSchema("h2");
         }
         if (getSchemaObjectPrefix() == null) {
             setSchemaObjectPrefix("");

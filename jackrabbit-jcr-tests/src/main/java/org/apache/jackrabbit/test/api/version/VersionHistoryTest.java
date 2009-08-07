@@ -16,35 +16,28 @@
  */
 package org.apache.jackrabbit.test.api.version;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemVisitor;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
-import javax.jcr.lock.LockException;
-import javax.jcr.lock.LockManager;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
+import javax.jcr.ItemVisitor;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Property;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyIterator;
+import javax.jcr.Value;
+import javax.jcr.PropertyType;
+import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import javax.jcr.version.VersionManager;
+
+import java.util.HashMap;
+import java.util.GregorianCalendar;
+import java.util.Calendar;
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 
 
 /**
@@ -60,7 +53,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
 
     protected VersionHistory vHistory;
     private Version version;
-    private VersionManager versionManager;
 
     /**
      * helper class used in testAccept()
@@ -84,10 +76,9 @@ public class VersionHistoryTest extends AbstractVersionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        version = versionManager.checkin(versionableNode.getPath());
+        version = versionableNode.checkin();
 
-        vHistory = versionManager.getVersionHistory(versionableNode.getPath());
+        vHistory = versionableNode.getVersionHistory();
 
 
         if (vHistory == null) {
@@ -124,24 +115,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * The version history must initially contain two versions (root version +
-     * first test version) - linear variant
-     *
-     * @throws RepositoryException
-     * @since JCR 2.0
-     */
-    public void testInitialNumberOfLinearVersions() throws RepositoryException {
-        long initialSize = getNumberOfVersions(vHistory);
-        long initialLinearSize = getSize(vHistory.getAllLinearVersions());
-        long initialLinearFrozenSize = getSize(vHistory.getAllLinearFrozenNodes());
-
-        assertEquals("VersionHistory.getAllVersions() and .getAllLinearVersions should return the same number of versions for a purely linear version history.",
-                initialSize, initialLinearSize);
-        assertEquals("VersionHistory.getAllVersions() and .getAllLinearFrozenNodes should return the same number of nodes for a purely linear version history.",
-                initialSize, initialLinearFrozenSize);
-    }
-
-    /**
      * Test if the iterator returned by {@link javax.jcr.version.VersionHistory#getAllVersions()}
      * contains the root version upon creation of the version history.
      *
@@ -154,29 +127,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
             isContained |= it.nextVersion().isSame(rootVersion);
         }
         assertTrue("root version must be part of the version history", isContained);
-    }
-    
-    /**
-     * Test if the iterator returned by {@link javax.jcr.version.VersionHistory#getAllLinearVersions()}
-     * contains both the root and the base version upon creation of the version history.
-     * @since JCR 2.0
-     */
-    public void testInitiallyGetAllLinearVersionsContainsTheRootAndTheBaseVersion() throws RepositoryException {
-        
-        VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
-        
-        List lvh = new ArrayList();
-        for (VersionIterator it = vHistory.getAllLinearVersions(); it.hasNext(); ) {
-            lvh.add(it.nextVersion().getName());
-        }
-        
-        String rootVersion = vm.getVersionHistory(versionableNode.getPath()).getRootVersion().getName();
-        String baseVersion = vm.getBaseVersion(versionableNode.getPath()).getName();
-
-        assertTrue("root version " + rootVersion + " must be part of the linear version history: "
-                + lvh, lvh.contains(rootVersion));
-        assertTrue("base version " + baseVersion + " must be part of the linear version history: "
-                + lvh, lvh.contains(baseVersion));
     }
 
     /**
@@ -209,90 +159,12 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Test that {@link VersionHistory#getAllVersions()} returns an iterator
-     * containing the root version and all versions that have been created by
-     * Node.checkin().
-     *
-     * @see javax.jcr.version.VersionHistory#getAllVersions()
-     */
-    public void testGetAllVersionsJcr2() throws RepositoryException {
-        int cnt = 5;
-        HashMap versions = new HashMap();
-        Version v = vHistory.getRootVersion();
-        versions.put(v.getIdentifier(), v);
-        for (int i = 0; i < cnt; i++) {
-            v = versionManager.checkin(versionableNode.getPath());
-            versions.put(v.getIdentifier(), v);
-            versionManager.checkout(versionableNode.getPath());
-        }
-
-        VersionIterator it = vHistory.getAllVersions();
-        while (it.hasNext()) {
-            v = it.nextVersion();
-            if (!versions.containsKey(v.getIdentifier())) {
-                fail("VersionHistory.getAllVersions() must only contain the root version and versions, that have been created by a Node.checkin() call.");
-            }
-            versions.remove(v.getIdentifier());
-        }
-        assertTrue("VersionHistory.getAllVersions() must contain the root version and all versions that have been created with a Node.checkin() call.", versions.isEmpty());
-    }
-
-    /**
-     * Test that {@link VersionHistory#getAllFrozenNodes()} returns an iterator
-     * containing the frozen nodes of all versions that have been created by
-     * {@link VersionManager#checkpoint(String)}.
-     *
-     * @see javax.jcr.version.VersionHistory#getAllFrozenNodes()
-     * @since JCR 2.0
-     */
-    public void testGetAllFrozenNodes() throws RepositoryException {
-
-        VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
-        
-        String path = versionableNode.getPath();
-        int cnt = 2;
-        
-        for (int i = 0; i < cnt; i++) {
-            vm.checkpoint(path);
-        }
-
-        Set frozenIds = new HashSet();
-        for (VersionIterator it = vm.getVersionHistory(path).getAllVersions(); it.hasNext(); ) {
-            Version v = it.nextVersion();
-            frozenIds.add(v.getFrozenNode().getIdentifier());
-        }
-        
-        Set test = new HashSet();
-        for (NodeIterator it = vHistory.getAllFrozenNodes(); it.hasNext(); ) {
-            Node n = it.nextNode();
-            assertTrue("Node " + n.getPath() + " must be of type frozen node",
-                 n.isNodeType("nt:frozenNode"));
-            test.add(n.getIdentifier());
-        }
-        
-        assertEquals("getAllFrozenNodes must return the IDs of all frozen nodes", frozenIds, test);
-    }
-
-    /**
      * Test if UnsupportedRepositoryOperationException is thrown when calling
      * Node.getVersionHistory() on a non-versionable node.
      */
     public void testGetVersionHistoryOnNonVersionableNode() throws RepositoryException {
         try {
             nonVersionableNode.getVersionHistory();
-            fail("Node.getVersionHistory() must throw UnsupportedRepositoryOperationException if the node is not versionable.");
-        } catch (UnsupportedRepositoryOperationException e) {
-            //success
-        }
-    }
-
-    /**
-     * Test if UnsupportedRepositoryOperationException is thrown when calling
-     * Node.getVersionHistory() on a non-versionable node.
-     */
-    public void testGetVersionHistoryOnNonVersionableNodeJcr2() throws RepositoryException {
-        try {
-            versionManager.getVersionHistory(nonVersionableNode.getPath());
             fail("Node.getVersionHistory() must throw UnsupportedRepositoryOperationException if the node is not versionable.");
         } catch (UnsupportedRepositoryOperationException e) {
             //success
@@ -307,7 +179,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      */
     public void testGetVersion() throws RepositoryException {
 
-        Version v = versionManager.checkin(versionableNode.getPath());
+        Version v = versionableNode.checkin();
         Version v2 = vHistory.getVersion(v.getName());
 
         assertTrue("VersionHistory.getVersion(String versionName) must return the version that is identified by the versionName specified, if versionName is the name of a version created by Node.checkin().", v.isSame(v2));
@@ -329,7 +201,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
     public void testAddMixin() throws Exception {
         try {
             vHistory.addMixin(mixVersionable);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.addMixin(String) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -343,13 +215,13 @@ public class VersionHistoryTest extends AbstractVersionTest {
     public void testAddNode() throws Exception {
         try {
             vHistory.addNode(nodeName4);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.addNode(String) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.addNode(nodeName4, ntBase);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.addNode(String,String) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -376,36 +248,12 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.cancelMerge(Version)</code> throws an
-     * {@link javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testCancelMergeJcr2() throws Exception {
-        try {
-            versionManager.cancelMerge(vHistory.getPath(), version);
-            fail("VersionHistory.cancelMerge(Version) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
      * Tests if <code>VersionHistory.checkin()</code> throws an {@link
      * javax.jcr.UnsupportedRepositoryOperationException}
      */
     public void testCheckin() throws Exception {
         try {
             vHistory.checkin();
-            fail("VersionHistory.checkin() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>VersionHistory.checkin()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testCheckinJcr2() throws Exception {
-        try {
-            versionManager.checkin(vHistory.getPath());
             fail("VersionHistory.checkin() did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -424,36 +272,12 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.checkout()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testCheckoutJcr2() throws Exception {
-        try {
-            versionManager.checkout(vHistory.getPath());
-            fail("VersionHistory.checkout() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
      * Tests if <code>VersionHistory.doneMerge(Version)</code> throws an {@link
      * javax.jcr.UnsupportedRepositoryOperationException}
      */
     public void testDoneMerge() throws Exception {
         try {
             vHistory.doneMerge(version);
-            fail("VersionHistory should not be versionable: VersionHistory.doneMerge(Version) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>VersionHistory.doneMerge(Version)</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testDoneMergeJcr2() throws Exception {
-        try {
-            versionManager.doneMerge(vHistory.getPath(), version);
             fail("VersionHistory should not be versionable: VersionHistory.doneMerge(Version) did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -474,18 +298,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
     public void testGetBaseVersion() throws Exception {
         try {
             vHistory.getBaseVersion();
-            fail("VersionHistory.getBaseVersion() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>VersionHistory.getBaseVersion()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testGetBaseVersionJcr2() throws Exception {
-        try {
-            versionManager.getBaseVersion(vHistory.getPath());
             fail("VersionHistory.getBaseVersion() did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -520,18 +332,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
     public void testGetLock() throws Exception {
         try {
             vHistory.getLock();
-            fail("VersionHistory should not be lockable: VersionHistory.getLock() did not throw a LockException");
-        } catch (LockException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>VersionHistory.getLock()</code> throws an {@link
-     * javax.jcr.lock.LockException}
-     */
-    public void testGetLockJcr2() throws Exception {
-        try {
-            vHistory.getSession().getWorkspace().getLockManager().getLock(vHistory.getPath());
             fail("VersionHistory should not be lockable: VersionHistory.getLock() did not throw a LockException");
         } catch (LockException success) {
         }
@@ -673,31 +473,12 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.getIdentifier()</code> returns the right UUID
-     */
-    public void testGetIdentifier() throws Exception {
-        assertEquals("VersionHistory.getIdentifier() did not return the right Id", versionableNode.getProperty(jcrVersionHistory).getString(), vHistory.getIdentifier());
-    }
-
-    /**
      * Tests if <code>VersionHistory.getVersionHistory()</code> throws an {@link
      * javax.jcr.UnsupportedRepositoryOperationException}
      */
     public void testGetVersionHistory() throws Exception {
         try {
             vHistory.getVersionHistory();
-            fail("VersionHistory.getVersionHistory() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>VersionHistory.getVersionHistory()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testGetVersionHistoryJcr2() throws Exception {
-        try {
-            versionManager.getVersionHistory(vHistory.getPath());
             fail("VersionHistory.getVersionHistory() did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -744,14 +525,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.holdsLock()</code> returns
-     * <code>false</code>
-     */
-    public void testHoldsLockJcr2() throws Exception {
-        assertFalse("VersionHistory.holdsLock() did not return false", vHistory.getSession().getWorkspace().getLockManager().holdsLock(vHistory.getPath()));
-    }
-
-    /**
      * Tests if <code>VersionHistory.isCheckedOut()</code> returns
      * <code>true</code>
      */
@@ -760,27 +533,11 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.isCheckedOut()</code> returns
-     * <code>true</code>
-     */
-    public void testIsCheckedOutJcr2() throws Exception {
-        assertTrue("VersionHistory.isCheckedOut() did not return true", versionManager.isCheckedOut(vHistory.getPath()));
-    }
-
-    /**
      * Tests if <code>VersionHistory.isLocked()</code> returns
      * <code>false</code>
      */
     public void testIsLocked() throws Exception {
         assertFalse("VersionHistory.isLocked() did not return false", vHistory.isLocked());
-    }
-
-    /**
-     * Tests if <code>VersionHistory.isLocked()</code> returns
-     * <code>false</code>
-     */
-    public void testIsLockedJcr2() throws Exception {
-        assertFalse("VersionHistory.isLocked() did not return false", vHistory.getSession().getWorkspace().getLockManager().isLocked(vHistory.getPath()));
     }
 
     /**
@@ -849,35 +606,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.lock(boolean, boolean)</code> throws a
-     * {@link javax.jcr.lock.LockException}
-     */
-    public void testLockJcr2() throws Exception {
-        LockManager lockManager = vHistory.getSession().getWorkspace().getLockManager();
-        String path = vHistory.getPath();
-        try {
-            lockManager.lock(path, true, true, 60, "");
-            fail("VersionHistory should not be lockable: VersionHistory.lock(true,true) did not throw a LockException");
-        } catch (LockException success) {
-        }
-        try {
-            lockManager.lock(path, true, false, 60, "");
-            fail("VersionHistory should not be lockable: VersionHistory.lock(true,false) did not throw a LockException");
-        } catch (LockException success) {
-        }
-        try {
-            lockManager.lock(path, false, true, 60, "");
-            fail("VersionHistory should not be lockable: VersionHistory.lock(false,true) did not throw a LockException");
-        } catch (LockException success) {
-        }
-        try {
-            lockManager.lock(path, false, false, 60, "");
-            fail("VersionHistory should not be lockable: VersionHistory.lock(false,false) did not throw a UnsupportedRepositoryOperationException");
-        } catch (LockException success) {
-        }
-    }
-
-    /**
      * Tests if <code>VersionHistory.merge(String)</code> throws an
      * {@link javax.jcr.nodetype.ConstraintViolationException}
      */
@@ -894,25 +622,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
         }
     }
 
-    /**
-     * Tests if <code>VersionHistory.merge(String)</code> throws an
-     * {@link javax.jcr.nodetype.ConstraintViolationException}
-     */
-/*
-    TODO: check why this fails
-    public void testMergeJcr2() throws Exception {
-        try {
-            versionManager.merge(vHistory.getPath(), workspaceName, true);
-            fail("VersionHistory.merge(String, true) did not throw an ConstraintViolationException");
-        } catch (ConstraintViolationException success) {
-        }
-        try {
-            versionManager.merge(vHistory.getPath(), workspaceName, false);
-            fail("VersionHistory.merge(String, false) did not throw an ConstraintViolationException");
-        } catch (ConstraintViolationException success) {
-        }
-    }
-*/
     /**
      * Tests if <code>VersionHistory.orderBefore(String, String)</code> throws
      * an {@link javax.jcr.UnsupportedRepositoryOperationException}
@@ -988,38 +697,12 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.restore(String, boolean)</code> and
-     * <code>VersionHistory.restore(Version, boolean)</code> throw an {@link
-     * UnsupportedRepositoryOperationException} and <code>VersionHistory.restore(Version,
-     * String, boolean)</code> throws a {@link ConstraintViolationException}.
-     */
-    public void testRestoreJcr2() throws Exception {
-        try {
-            versionManager.restore(vHistory.getPath(), "abc", true);
-            fail("VersionHistory.restore(String,boolean) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
      * Tests if <code>VersionHistory.restoreByLabel(String, boolean)</code>
      * throws an {@link javax.jcr.UnsupportedRepositoryOperationException}
      */
     public void testRestoreByLabel() throws Exception {
         try {
             vHistory.restoreByLabel("abc", true);
-            fail("VersionHistory.restoreByLabel(String,boolean) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>VersionHistory.restoreByLabel(String, boolean)</code>
-     * throws an {@link javax.jcr.UnsupportedRepositoryOperationException}
-     */
-    public void testRestoreByLabelJcr2() throws Exception {
-        try {
-            versionManager.restoreByLabel(vHistory.getPath(), "abc", true);
             fail("VersionHistory.restoreByLabel(String,boolean) did not throw an UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException success) {
         }
@@ -1053,37 +736,37 @@ public class VersionHistoryTest extends AbstractVersionTest {
 
         try {
             vHistory.setProperty(propertyName1, s);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,String[]) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, s, PropertyType.STRING);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,String[],int) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, vArray);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,Value[]) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, vArray, PropertyType.STRING);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,Value[],int]) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, true);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,boolean) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, 123);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,double) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -1091,39 +774,39 @@ public class VersionHistoryTest extends AbstractVersionTest {
             byte[] bytes = {73, 26, 32, -36, 40, -43, -124};
             InputStream inpStream = new ByteArrayInputStream(bytes);
             vHistory.setProperty(propertyName1, inpStream);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,InputStream) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, "abc");
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,String) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             Calendar c = new GregorianCalendar(1945, 1, 6, 16, 20, 0);
             vHistory.setProperty(propertyName1, c);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,Calendar) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, testRootNode);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,Node) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             Value v = superuser.getValueFactory().createValue("abc");
             vHistory.setProperty(propertyName1, v);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,Value) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
         try {
             vHistory.setProperty(propertyName1, -2147483650L);
-            vHistory.getSession().save();
+            vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,long) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
@@ -1136,18 +819,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
     public void testUnlock() throws Exception {
         try {
             vHistory.unlock();
-            fail("VersionHistory should not be lockable: VersionHistory.unlock() did not throw a LockException");
-        } catch (LockException success) {
-        }
-    }
-
-    /**
-     * Tests if <code>VersionHistory.unlock()</code> throws a {@link
-     * javax.jcr.lock.LockException}
-     */
-    public void testUnlockJcr2() throws Exception {
-        try {
-            vHistory.getSession().getWorkspace().getLockManager().unlock(vHistory.getPath());
             fail("VersionHistory should not be lockable: VersionHistory.unlock() did not throw a LockException");
         } catch (LockException success) {
         }

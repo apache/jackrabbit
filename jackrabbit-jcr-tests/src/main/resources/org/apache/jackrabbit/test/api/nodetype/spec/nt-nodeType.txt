@@ -14,8 +14,8 @@ ChildNodeDefinition
   DefaultPrimaryType nt:childNodeDefinition
   AutoCreated false
   Mandatory false
-  OnParentVersion COPY
-  Protected true
+  OnParentVersion VERSION
+  Protected false
   SameNameSiblings true
 ChildNodeDefinition
   Name jcr:propertyDefinition
@@ -23,8 +23,8 @@ ChildNodeDefinition
   DefaultPrimaryType nt:propertyDefinition
   AutoCreated false
   Mandatory false
-  OnParentVersion COPY
-  Protected true
+  OnParentVersion VERSION
+  Protected false
   SameNameSiblings true
 PropertyDefinition
   Name jcr:hasOrderableChildNodes
@@ -33,16 +33,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
-  Multiple false
-PropertyDefinition
-  Name jcr:isAbstract
-  RequiredType BOOLEAN
-  DefaultValues null
-  AutoCreated false
-  Mandatory true
-  OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:isMixin
@@ -51,16 +42,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
-  Multiple false
-PropertyDefinition
-  Name jcr:isQueryable
-  RequiredType BOOLEAN
-  DefaultValues null
-  AutoCreated false
-  Mandatory true
-  OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:nodeTypeName
@@ -69,7 +51,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory true
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:primaryItemName
@@ -78,7 +60,7 @@ PropertyDefinition
   AutoCreated false
   Mandatory false
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple false
 PropertyDefinition
   Name jcr:supertypes
@@ -87,5 +69,5 @@ PropertyDefinition
   AutoCreated false
   Mandatory false
   OnParentVersion COPY
-  Protected true
+  Protected false
   Multiple true

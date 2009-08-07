@@ -25,11 +25,15 @@ import javax.jcr.InvalidItemStateException;
  */
 public class ConcurrentAddRemovePropertyTest extends ConcurrentModificationBase {
 
+    private Node getNode(String path) throws Exception {
+        return (Node) session.getItem(path);
+    }
+
     public void testAdd() throws Exception {
         Node n = testRootNode.addNode(nodeName1);
         superuser.save();
         n.setProperty(propertyName1, "foo");
-        session.getNode(testRoot).getNode(nodeName1).setProperty(propertyName2, "bar");
+        getNode(testRoot).getNode(nodeName1).setProperty(propertyName2, "bar");
         superuser.save();
         try {
             session.save();
@@ -42,7 +46,7 @@ public class ConcurrentAddRemovePropertyTest extends ConcurrentModificationBase 
         Node n = testRootNode.addNode(nodeName1);
         superuser.save();
         n.setProperty(propertyName1, "foo");
-        session.getNode(testRoot).getNode(nodeName1).setProperty(propertyName1, "bar");
+        getNode(testRoot).getNode(nodeName1).setProperty(propertyName1, "bar");
         superuser.save();
         try {
             session.save();
@@ -58,7 +62,7 @@ public class ConcurrentAddRemovePropertyTest extends ConcurrentModificationBase 
         n.setProperty(propertyName2, "bar");
         superuser.save();
         n.getProperty(propertyName1).remove();
-        session.getNode(testRoot).getNode(nodeName1).getProperty(propertyName2).remove();
+        getNode(testRoot).getNode(nodeName1).getProperty(propertyName2).remove();
         superuser.save();
         try {
             session.save();
@@ -72,7 +76,7 @@ public class ConcurrentAddRemovePropertyTest extends ConcurrentModificationBase 
         n.setProperty(propertyName1, "foo");
         superuser.save();
         n.getProperty(propertyName1).remove();
-        session.getNode(testRoot).getNode(nodeName1).getProperty(propertyName1).remove();
+        getNode(testRoot).getNode(nodeName1).getProperty(propertyName1).remove();
         superuser.save();
         try {
             session.save();

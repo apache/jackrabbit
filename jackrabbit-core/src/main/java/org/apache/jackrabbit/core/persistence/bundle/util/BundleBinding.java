@@ -21,14 +21,16 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
@@ -37,8 +39,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
-import java.math.BigDecimal;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -103,7 +105,7 @@ public class BundleBinding extends ItemStateBinding {
         bundle.setNodeDefId(NodeDefId.valueOf(in.readUTF()));
 
         // mixin types
-        Set<Name> mixinTypeNames = new HashSet<Name>();
+        Set mixinTypeNames = new HashSet();
         Name name = readIndexedQName(in);
         while (name != null) {
             mixinTypeNames.add(name);
@@ -144,7 +146,7 @@ public class BundleBinding extends ItemStateBinding {
         }
 
         // read shared set, since version 2.0
-        Set<NodeId> sharedSet = new HashSet<NodeId>();
+        Set sharedSet = new HashSet();
         if (version >= VERSION_2) {
             // shared set (list of parent uuids)
             NodeId parentId = readID(in);
@@ -186,8 +188,8 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            NodeId parentId = readID(in);
-            log.debug("ParentUUID: " + parentId);
+            UUID parentUuid = readUUID(in);
+            log.debug("ParentUUID: " + parentUuid);
         } catch (IOException e) {
             log.error("Error while reading ParentUUID: " + e);
             return false;
@@ -230,11 +232,11 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            NodeId cneId = readID(in);
-            while (cneId != null) {
+            UUID cneUUID = readUUID(in);
+            while (cneUUID != null) {
                 Name cneName = readQName(in);
-                log.debug("ChildNodentry: " + cneId + ":" + cneName);
-                cneId = readID(in);
+                log.debug("ChildNodentry: " + cneUUID + ":" + cneName);
+                cneUUID = readUUID(in);
             }
         } catch (IOException e) {
             log.error("Error while reading child node entry: " + e);
@@ -276,13 +278,16 @@ public class BundleBinding extends ItemStateBinding {
         out.writeUTF(bundle.getNodeDefId().toString());
 
         // mixin types
-        for (Name name : bundle.getMixinTypeNames()) {
-            writeIndexedQName(out, name);
+        Iterator iter = bundle.getMixinTypeNames().iterator();
+        while (iter.hasNext()) {
+            writeIndexedQName(out, (Name) iter.next());
         }
         writeIndexedQName(out, null);
 
         // properties
-        for (Name pName : bundle.getPropertyNames()) {
+        iter = bundle.getPropertyNames().iterator();
+        while (iter.hasNext()) {
+            Name pName = (Name) iter.next();
             // skip redundant primaryType, mixinTypes and uuid properties
             if (pName.equals(NameConstants.JCR_PRIMARYTYPE)
                 || pName.equals(NameConstants.JCR_MIXINTYPES)
@@ -303,7 +308,9 @@ public class BundleBinding extends ItemStateBinding {
         out.writeBoolean(bundle.isReferenceable());
 
         // child nodes (list of uuid/name pairs)
-        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
+        iter = bundle.getChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
             writeID(out, entry.getId());  // uuid
             writeQName(out, entry.getName());   // name
         }
@@ -313,8 +320,9 @@ public class BundleBinding extends ItemStateBinding {
         writeModCount(out, bundle.getModCount());
 
         // write shared set
-        for (NodeId nodeId: bundle.getSharedSet()) {
-            writeID(out, nodeId);
+        iter = bundle.getSharedSet().iterator();
+        while (iter.hasNext()) {
+            writeID(out, (NodeId) iter.next());
         }
         writeID(out, null);
 
@@ -382,9 +390,6 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.DOUBLE:
                     val = InternalValue.create(in.readDouble());
                     break;
-                case PropertyType.DECIMAL:
-                    val = InternalValue.create(readDecimal(in));
-                    break;
                 case PropertyType.LONG:
                     val = InternalValue.create(in.readLong());
                     break;
@@ -394,9 +399,8 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.NAME:
                     val = InternalValue.create(readQName(in));
                     break;
-                case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
-                    val = InternalValue.create(readID(in));
+                    val = InternalValue.create(readUUID(in));
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,
@@ -508,15 +512,6 @@ public class BundleBinding extends ItemStateBinding {
                         return false;
                     }
                     break;
-                case PropertyType.DECIMAL:
-                    try {
-                        BigDecimal d = readDecimal(in);
-                        log.debug("  decimal: " + d);
-                    } catch (IOException e) {
-                        log.error("Error while reading decimal value: " + e);
-                        return false;
-                    }
-                    break;
                 case PropertyType.LONG:
                     try {
                         double l = in.readLong();
@@ -544,11 +539,10 @@ public class BundleBinding extends ItemStateBinding {
                         return false;
                     }
                     break;
-                case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
                     try {
-                        NodeId id = readID(in);
-                        log.debug("  reference: " + id);
+                        UUID uuid = readUUID(in);
+                        log.debug("  reference: " + uuid);
                     } catch (IOException e) {
                         log.error("Error while reading reference value: " + e);
                         return false;
@@ -606,121 +600,92 @@ public class BundleBinding extends ItemStateBinding {
             InternalValue val = values[i];
             switch (state.getType()) {
                 case PropertyType.BINARY:
-                    try {
-                        long size = val.getLength();
-                        if (dataStore != null) {
-                            int maxMemorySize = dataStore.getMinRecordLength() - 1;
-                            if (size < maxMemorySize) {
-                                writeSmallBinary(out, val, state, i);
-                            } else {
-                                out.writeInt(BINARY_IN_DATA_STORE);
-                                val.store(dataStore);
-                                out.writeUTF(val.toString());
-                            }
-                            break;
-                        }
-                        // special handling required for binary value:
-                        // spool binary value to file in blob store
-                        if (size < 0) {
-                            log.warn("Blob has negative size. Potential loss of data. "
-                                    + "id={} idx={}", state.getId(), String.valueOf(i));
-                            out.writeInt(0);
-                            values[i] = InternalValue.create(new byte[0]);
-                            val.discard();
-                        } else if (size > minBlobSize) {
-                            out.writeInt(BINARY_IN_BLOB_STORE);
-                            String blobId = state.getBlobId(i);
-                            if (blobId == null) {
-                                try {
-                                    InputStream in = val.getStream();
-                                    try {
-                                        blobId = blobStore.createId(state.getId(), i);
-                                        blobStore.put(blobId, in, size);
-                                        state.setBlobId(blobId, i);
-                                    } finally {
-                                        IOUtils.closeQuietly(in);
-                                    }
-                                } catch (Exception e) {
-                                    String msg = "Error while storing blob. id="
-                                            + state.getId() + " idx=" + i + " size=" + size;
-                                    log.error(msg, e);
-                                    throw new IOException(msg);
-                                }
-                                try {
-                                    // replace value instance with value
-                                    // backed by resource in blob store and delete temp file
-                                    if (blobStore instanceof ResourceBasedBLOBStore) {
-                                        values[i] = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobId));
-                                    } else {
-                                        values[i] = InternalValue.create(blobStore.get(blobId));
-                                    }
-                                } catch (Exception e) {
-                                    log.error("Error while reloading blob. truncating. id="
-                                            + state.getId() + " idx=" + i + " size=" + size, e);
-                                    values[i] = InternalValue.create(new byte[0]);
-                                }
-                                val.discard();
-                            }
-                            // store id of blob as property value
-                            out.writeUTF(blobId);   // value
+                    BLOBFileValue blobVal = val.getBLOBFileValue();
+                    if (InternalValue.USE_DATA_STORE && dataStore != null) {
+                        if (blobVal.isSmall()) {
+                            writeSmallBinary(out, blobVal, state, i);
                         } else {
-                            // delete evt. blob
-                            byte[] data = writeSmallBinary(out, val, state, i);
-                            // replace value instance with value
-                            // backed by resource in blob store and delete temp file
-                            values[i] = InternalValue.create(data);
-                            val.discard();
+                            out.writeInt(BINARY_IN_DATA_STORE);
+                            try {
+                                val.store(dataStore);
+                            } catch (RepositoryException e) {
+                                String msg = "Error while storing blob. id="
+                                    + state.getId() + " idx=" + i + " size=" + val.getBLOBFileValue().getLength();
+                                log.error(msg, e);
+                                throw new IOException(msg);
+                            }
+                            out.writeUTF(val.toString());
                         }
-                    } catch (RepositoryException e) {
-                        String msg = "Error while storing blob. id="
-                            + state.getId() + " idx=" + i + " value=" + val;
-                        log.error(msg, e);
-                        throw new IOException(msg);
+                        break;
+                    }
+                    // special handling required for binary value:
+                    // spool binary value to file in blob store
+                    long size = blobVal.getLength();
+                    if (size < 0) {
+                        log.warn("Blob has negative size. Potential loss of data. "
+                                + "id={} idx={}", state.getId(), String.valueOf(i));
+                        out.writeInt(0);
+                        values[i] = InternalValue.create(new byte[0]);
+                        blobVal.discard();
+                    } else if (size > minBlobSize) {
+                        out.writeInt(BINARY_IN_BLOB_STORE);
+                        String blobId = state.getBlobId(i);
+                        if (blobId == null) {
+                            try {
+                                InputStream in = blobVal.getStream();
+                                try {
+                                    blobId = blobStore.createId(state.getId(), i);
+                                    blobStore.put(blobId, in, size);
+                                    state.setBlobId(blobId, i);
+                                } finally {
+                                    IOUtils.closeQuietly(in);
+                                }
+                            } catch (Exception e) {
+                                String msg = "Error while storing blob. id="
+                                        + state.getId() + " idx=" + i + " size=" + size;
+                                log.error(msg, e);
+                                throw new IOException(msg);
+                            }
+                            try {
+                                // replace value instance with value
+                                // backed by resource in blob store and delete temp file
+                                if (blobStore instanceof ResourceBasedBLOBStore) {
+                                    values[i] = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobId));
+                                } else {
+                                    values[i] = InternalValue.create(blobStore.get(blobId));
+                                }
+                            } catch (Exception e) {
+                                log.error("Error while reloading blob. truncating. id="
+                                        + state.getId() + " idx=" + i + " size=" + size, e);
+                                values[i] = InternalValue.create(new byte[0]);
+                            }
+                            blobVal.discard();
+                        }
+                        // store id of blob as property value
+                        out.writeUTF(blobId);   // value
+                    } else {
+                        // delete evt. blob
+                        byte[] data = writeSmallBinary(out, blobVal, state, i);
+                        // replace value instance with value
+                        // backed by resource in blob store and delete temp file
+                        values[i] = InternalValue.create(data);
+                        blobVal.discard();
                     }
                     break;
                 case PropertyType.DOUBLE:
-                    try {
-                        out.writeDouble(val.getDouble());
-                    } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing DOUBLE value.");
-                    }
-                    break;
-                case PropertyType.DECIMAL:
-                    try {
-                        writeDecimal(out, val.getDecimal());
-                    } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing DECIMAL value.");
-                    }
+                    out.writeDouble(val.getDouble());
                     break;
                 case PropertyType.LONG:
-                    try {
-                        out.writeLong(val.getLong());
-                    } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing LONG value.");
-                    }
+                    out.writeLong(val.getLong());
                     break;
                 case PropertyType.BOOLEAN:
-                    try {
-                        out.writeBoolean(val.getBoolean());
-                    } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing BOOLEAN value.");
-                    }
+                    out.writeBoolean(val.getBoolean());
                     break;
                 case PropertyType.NAME:
-                    try {
-                        writeQName(out, val.getName());
-                    } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing NAME value.");
-                    }
+                    writeQName(out, val.getQName());
                     break;
-                case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
-                    writeID(out, val.getNodeId());
+                    writeUUID(out, val.getUUID());
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,
@@ -736,31 +701,32 @@ public class BundleBinding extends ItemStateBinding {
      * Write a small binary value and return the data.
      *
      * @param out the output stream to write
+     * @param size the size
      * @param blobVal the binary value
      * @param state the property state (for error messages)
      * @param i the index (for error messages)
      * @return the data
      * @throws IOException if the data could not be read
      */
-    private byte[] writeSmallBinary(DataOutputStream out, InternalValue value, NodePropBundle.PropertyEntry state, int i) throws IOException {
+    private byte[] writeSmallBinary(DataOutputStream out, BLOBFileValue blobVal, NodePropBundle.PropertyEntry state, int i) throws IOException {
+        int size = (int) blobVal.getLength();
+        out.writeInt(size);
+        byte[] data = new byte[size];
         try {
-            int size = (int) value.getLength();
-            out.writeInt(size);
-            byte[] data = new byte[size];
             DataInputStream in =
-                new DataInputStream(value.getStream());
+                new DataInputStream(blobVal.getStream());
             try {
                 in.readFully(data);
             } finally {
                 IOUtils.closeQuietly(in);
             }
-            out.write(data, 0, data.length);
-            return data;
         } catch (Exception e) {
             String msg = "Error while storing blob. id="
-                    + state.getId() + " idx=" + i + " value=" + value;
+                    + state.getId() + " idx=" + i + " size=" + size;
             log.error(msg, e);
             throw new IOException(msg);
         }
+        out.write(data, 0, data.length);
+        return data;
     }
 }

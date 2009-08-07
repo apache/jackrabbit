@@ -592,38 +592,17 @@ public class DomUtil {
     }
 
     /**
-     * Same as {@link #getExpandedName(String, Namespace)}.
+     * Return a qualified name of a DOM node consisting of "{" + namespace uri + "}"
+     * + localName. If the specified namespace is <code>null</code> or represents
+     * the empty namespace, the local name is returned.
      *
      * @param localName
      * @param namespace
-     * @return the expanded name of a DOM node consisting of "{" + namespace uri + "}"
+     * @return the qualified name of a DOM node consisting of "{" + namespace uri + "}"
      * + localName. If the specified namespace is <code>null</code> or represents
      * the empty namespace, the local name is returned.
-     * @deprecated As of 2.0. Please use {@link #getExpandedName(String, Namespace)}
-     * instead. This method was named according to usage of 'qualified name' in
-     * JSR 170 that conflicts with the terminology used in XMLNS. As of JCR 2.0
-     * the String consisting of <code>"{" + namespace uri + "}" + localName</code>
-     * is called <code>Expanded Name</code>.
-     *
      */
     public static String getQualifiedName(String localName, Namespace namespace) {
-        return getExpandedName(localName, namespace);
-    }
-
-    /**
-     * Returns a string representation of the name of a DOM node consisting
-     * of "{" + namespace uri + "}" + localName. If the specified namespace is
-     * <code>null</code> or represents the empty namespace, the local name is
-     * returned.
-     *
-     * @param localName
-     * @param namespace
-     * @return String representation of the name of a DOM node consisting of "{" + namespace uri + "}"
-     * + localName. If the specified namespace is <code>null</code> or represents
-     * the empty namespace, the local name is returned.
-     * @since 2.0 Replaces the deprecated method {@link #getQualifiedName(String, Namespace)}.
-     */
-    public static String getExpandedName(String localName, Namespace namespace) {
         if (namespace == null || namespace.equals(Namespace.EMPTY_NAMESPACE)) {
             return localName;
         }
@@ -634,7 +613,7 @@ public class DomUtil {
     }
 
     /**
-     * Return the qualified name of a DOM node consisting of
+     * Return the prefixed name of a DOM node consisting of
      * namespace prefix + ":" + local name. If the specified namespace is <code>null</code>
      * or contains an empty prefix, the local name is returned.<br>
      * NOTE, that this is the value to be used for the 'qualified Name' parameter

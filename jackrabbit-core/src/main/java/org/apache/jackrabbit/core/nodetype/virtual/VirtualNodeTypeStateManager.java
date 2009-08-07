@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype.virtual;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;

@@ -19,7 +19,6 @@ package org.apache.jackrabbit.commons.repository;
 import javax.jcr.Credentials;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 
 import org.apache.jackrabbit.commons.AbstractRepository;
 
@@ -35,41 +34,10 @@ public class EmptyRepository extends AbstractRepository {
     /**
      * Returns <code>null</code> since this repository contains no descriptors.
      *
-     * @param key descriptor key
      * @return <code>null</code>
      */
     public String getDescriptor(String key) {
         return null;
-    }
-
-    /**
-     * Returns <code>null</code> since this repository contains no descriptors.
-     *
-     * @param key descriptor key
-     * @return <code>null</code>
-     */
-    public Value getDescriptorValue(String key) {
-        return null;
-    }
-
-    /**
-     * Returns <code>null</code> since this repository contains no descriptors.
-     *
-     * @param key descriptor key
-     * @return <code>null</code>
-     */
-    public Value[] getDescriptorValues(String key) {
-        return null;
-    }
-
-    /**
-     * Returns <code>false</code> since this repository contains no descriptors.
-     *
-     * @param key descriptor key
-     * @return <code>false</code>
-     */
-    public boolean isSingleValueDescriptor(String key) {
-        return false;
     }
 
     /**

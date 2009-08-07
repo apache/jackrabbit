@@ -22,11 +22,11 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
-import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
+import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
@@ -36,18 +36,18 @@ import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.nodetype.NodeTypeDefinition;
 import java.util.ArrayList;
 
 /**
  * <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition {
+public class NodeTypeImpl implements NodeType {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
@@ -70,7 +70,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
      */
     NodeTypeImpl(EffectiveNodeType ent, QNodeTypeDefinition ntd,
                  NodeTypeManagerImpl ntMgr, ManagerProvider mgrProvider) {
-        super(ntMgr);
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.mgrProvider = mgrProvider;
@@ -90,6 +89,31 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
+     * ValueFactory used to convert JCR values from one type to another in order
+     * to determine whether a property specified by name and value(s) would be
+     * allowed.
+     *
+     * @see NodeType#canSetProperty(String, Value)
+     * @see NodeType#canSetProperty(String, Value[])
+     * @return ValueFactory used to convert JCR values.
+     * @throws javax.jcr.RepositoryException If an error occurs.
+     */
+    private ValueFactory valueFactory() throws RepositoryException {
+        return mgrProvider.getJcrValueFactory();
+    }
+
+    /**
+     * ValueFactory used to convert JCR values to qualified ones in order to
+     * determine value constraints within the NodeType interface.
+     *
+     * @return ValueFactory used to convert JCR values to qualified ones.
+     * @throws javax.jcr.RepositoryException If an error occurs.
+     */
+    private QValueFactory qValueFactory() throws RepositoryException {
+        return mgrProvider.getQValueFactory();
+    }
+
+    /**
      * Returns the applicable property definition for a property with the
      * specified name and type.
      *
@@ -102,7 +126,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
      */
     private QPropertyDefinition getApplicablePropDef(Name propertyName, int type, boolean multiValued)
             throws RepositoryException {
-        return definitionProvider().getQPropertyDefinition(ntd.getName(), propertyName, type, multiValued);
+        return definitionProvider().getQPropertyDefinition(getQName(), propertyName, type, multiValued);
     }
 
     /**
@@ -121,12 +145,12 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * Returns the node type definition.
+     * Returns the 'internal', i.e. the fully qualified name.
      *
-     * @return the internal node type definition.
+     * @return the qualified name
      */
-    QNodeTypeDefinition getDefinition() {
-        return ntd;
+    private Name getQName() {
+        return ntd.getName();
     }
 
     /**
@@ -148,9 +172,9 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
         ValueConstraint.checkValueConstraints(def, values);
     }
     
-    //-------------------------------------------------< NodeTypeDefinition >---
+    //-----------------------------------------------------------< NodeType >---
     /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getName()
+     * @see javax.jcr.nodetype.NodeType#getName()
      */
     public String getName() {
         try {
@@ -163,7 +187,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getPrimaryItemName()
+     * @see javax.jcr.nodetype.NodeType#getPrimaryItemName()
      */
     public String getPrimaryItemName() {
         try {
@@ -181,77 +205,12 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#isMixin()
+     * @see javax.jcr.nodetype.NodeType#isMixin()
      */
     public boolean isMixin() {
         return ntd.isMixin();
     }
 
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#hasOrderableChildNodes()
-     */
-    public boolean hasOrderableChildNodes() {
-        return ntd.hasOrderableChildNodes();
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#isAbstract()
-     */
-    public boolean isAbstract() {
-        return ntd.isAbstract();
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#isQueryable()
-     */
-    public boolean isQueryable() {
-        return ntd.isQueryable();
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredPropertyDefinitions()
-     */
-    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
-        for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
-        }
-        return propDefs;
-    }
-
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredChildNodeDefinitions()
-     */
-    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
-        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
-        for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
-        }
-        return nodeDefs;
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredSupertypeNames()
-     */
-    public String[] getDeclaredSupertypeNames() {
-        Name[] stNames = ntd.getSupertypes();
-        String[] dstn = new String[stNames.length];
-        for (int i = 0; i < stNames.length; i++) {
-            try {
-                dstn[i] = resolver().getJCRName(stNames[i]);
-            } catch (NamespaceException e) {
-                // should never get here
-                log.error("invalid node type name: " + stNames[i], e);
-                dstn[i] = stNames.toString();
-            }
-        }
-        return dstn;
-    }
-
-    //-----------------------------------------------------------< NodeType >---
     /**
      * @see javax.jcr.nodetype.NodeType#isNodeType(String)
      */
@@ -267,6 +226,13 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             return false;
         }
         return isNodeType(ntName);
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeType#hasOrderableChildNodes()
+     */
+    public boolean hasOrderableChildNodes() {
+        return ntd.hasOrderableChildNodes();
     }
 
     /**
@@ -312,6 +278,18 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
+     * @see javax.jcr.nodetype.NodeType#getDeclaredPropertyDefinitions()
+     */
+    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
+        QPropertyDefinition[] pda = ntd.getPropertyDefs();
+        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
+        for (int i = 0; i < pda.length; i++) {
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
+        }
+        return propDefs;
+    }
+
+    /**
      * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypes()
      */
     public NodeType[] getDeclaredSupertypes() {
@@ -327,6 +305,18 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             }
         }
         return supertypes;
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefinitions()
+     */
+    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
+        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
+        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
+        for (int i = 0; i < cnda.length; i++) {
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
+        }
+        return nodeDefs;
     }
 
     /**
@@ -357,13 +347,13 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             if (def.getRequiredType() != PropertyType.UNDEFINED
                     && def.getRequiredType() != value.getType()) {
                 // type conversion required
-                v =  ValueHelper.convert(value, def.getRequiredType(), mgrProvider.getJcrValueFactory());
+                v =  ValueHelper.convert(value, def.getRequiredType(), valueFactory());
             } else {
                 // no type conversion required
                 v = value;
             }
             // create QValue from Value
-            QValue qValue = ValueFormat.getQValue(v, resolver(), mgrProvider.getQValueFactory());
+            QValue qValue = ValueFormat.getQValue(v, resolver(), qValueFactory());
             checkSetPropertyValueConstraints(def, new QValue[]{qValue});
             return true;
         } catch (NameException re) {
@@ -430,8 +420,8 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
                 if (values[i] != null) {
                     // create QValue from Value and perform
                     // type conversion as necessary
-                    Value v = ValueHelper.convert(values[i], targetType, mgrProvider.getJcrValueFactory());
-                    QValue qValue = ValueFormat.getQValue(v, resolver(), mgrProvider.getQValueFactory());
+                    Value v = ValueHelper.convert(values[i], targetType, valueFactory());
+                    QValue qValue = ValueFormat.getQValue(v, resolver(), qValueFactory());
                     list.add(qValue);
                 }
             }
@@ -466,9 +456,8 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
-            Name ntName = resolver().getQName(nodeTypeName);
-            QNodeTypeDefinition def = ntMgr.getNodeTypeDefinition(ntName);
-            ent.checkAddNodeConstraints(resolver().getQName(childNodeName), def, definitionProvider());
+            ent.checkAddNodeConstraints(resolver().getQName(childNodeName),
+                resolver().getQName(nodeTypeName), definitionProvider());
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through
@@ -491,36 +480,5 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             // fall through
         }
         return false;
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#canRemoveNode(String)
-     */
-    public boolean canRemoveNode(String nodeName) {
-        Name name;
-        try {
-            name = resolver().getQName(nodeName);
-        } catch (RepositoryException e) {
-            // should never get here
-            log.warn("Unable to determine if there are any remove constraints for a node with name " + nodeName);
-            return false;
-        }
-        return !ent.hasRemoveNodeConstraint(name);
-
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#canRemoveProperty(String)
-     */
-    public boolean canRemoveProperty(String propertyName) {
-        Name name;
-        try {
-            name = resolver().getQName(propertyName);
-        } catch (RepositoryException e) {
-            // should never get here
-            log.warn("Unable to determine if there are any remove constraints for a property with name " + propertyName);
-            return false;
-        }
-        return !ent.hasRemovePropertyConstraint(name);
     }
 }

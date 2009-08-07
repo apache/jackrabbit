@@ -17,10 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd ">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
   <modelVersion>4.0.0</modelVersion>
 
   <!-- ====================================================================== -->
@@ -35,7 +32,7 @@
 
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
-  <version>2.0-SNAPSHOT</version>
+  <version>1.6.0</version>
   <packaging>pom</packaging>
   <issueManagement>
     <system>Jira</system>
@@ -49,22 +46,46 @@
 
   <build>
     <plugins>
-      <!-- JCR-2087: Upgrade to Java 5 as the base platform -->
+      <!-- Use Java 1.4 everywhere -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <target>1.5</target>
-          <source>1.5</source>
+          <target>1.4</target>
+          <source>1.4</source>
         </configuration>
+      </plugin>
+      <!-- JCR-704: Enable maven-source-plugin -->
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Interoperate with Maven 1 -->
+      <plugin>
+        <artifactId>maven-one-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>install-maven-one-repository</goal>
+            </goals>
+            <phase>install</phase>
+          </execution>
+        </executions>
       </plugin>
       <!-- Generate aggregate Javadocs -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
-          <source>1.5</source>
+          <source>1.4</source>
           <aggregate>true</aggregate>
           <links>
-            <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
+            <link>http://java.sun.com/j2se/1.4.2/docs/api/</link>
             <link>http://www.day.com/maven/jsr170/javadocs/jcr-1.0/</link>
           </links>
         </configuration>
@@ -76,7 +97,7 @@
         <version>2.0</version>
         <configuration>
           <downloadSources>true</downloadSources>
-          <jdkLevel>1.5</jdkLevel>
+          <jdkLevel>1.4</jdkLevel>
         </configuration>
       </plugin>
       <plugin>
@@ -142,12 +163,41 @@
     </plugins>
   </reporting>
 
+  <profiles>
+    <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
+    <profile>
+      <id>non-mac</id>
+      <activation>
+        <os>
+          <family>!mac</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <dependencies>
+              <!-- JCR-661: Plugin dependencies are inherited -->
+              <dependency>
+                <groupId>sun</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.0</version>
+                <scope>system</scope>
+                <systemPath>${java.home}/../lib/tools.jar</systemPath>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>javax.jcr</groupId>
         <artifactId>jcr</artifactId>
-        <version>2.0-b113</version>
+        <version>1.0</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -316,4 +366,10 @@
     </dependencies>
   </dependencyManagement>
 
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/parent/tags/1.6.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/parent/tags/1.6.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/parent/tags/1.6.0</url>
+  </scm>
 </project>

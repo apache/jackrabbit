@@ -20,9 +20,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
-import javax.jcr.Property;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Node;
 
 /**
  * Tests a date property. If the workspace does not contain a node with a date
@@ -142,57 +139,22 @@ public class NamePropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Since JCR 2.0 a path property can be dereferenced if it points to a
-     * Node.
-     * TODO: create several tests out of this one
+     * Tests failure of conversion from Name type to Reference type.
+     *
+     * @throws RepositoryException
      */
-    public void testGetNode() throws RepositoryException {
+    public void testAsReference() throws RepositoryException {
         if (!multiple) {
-            String path = prop.getString();
-            if (prop.getParent().hasNode(path)) {
-                Node n = prop.getNode();
-                assertEquals("The path of the dereferenced property must be equal to the value", path, n.getPath());
-            } else {
-                try {
-                    prop.getNode();
-                    fail("Calling Property.getNode() for a PATH value that doesn't have a corresponding Node, PathNotFoundException is expected");
-                } catch (PathNotFoundException e) {
-                    // success.
-                }
-            }
-        } else {
             try {
                 prop.getNode();
-                fail("Property.getNode() called on a multivalue property " +
+                fail("Conversion from a Name value to a Reference value " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
                 //ok
             }
-        }
-    }
-
-    /**
-     * Since JCR 2.0 a path property can be dereferenced if it points to a
-     * Property.
-     * TODO: create several tests out of this one
-     */
-    public void testGetProperty() throws RepositoryException {
-        if (!multiple) {
-            String path = prop.getString();
-            if (prop.getParent().hasProperty(path)) {
-                Property p = prop.getProperty();
-                assertEquals("The path of the dereferenced property must be equal to the value", path, p.getPath());
-            } else {
-                try {
-                    prop.getProperty();
-                    fail("Calling Property.getProperty() for a PATH value that doesn't have a corresponding Node, PathNotFoundException is expected");
-                } catch (PathNotFoundException e) {
-                    // success.
-                }
-            }
         } else {
             try {
-                prop.getProperty();
+                prop.getNode();
                 fail("Property.getNode() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {

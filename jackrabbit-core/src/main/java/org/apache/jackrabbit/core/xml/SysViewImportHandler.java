@@ -20,7 +20,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -28,9 +28,9 @@ import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
-import javax.jcr.ValueFactory;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Stack;
 
 /**
@@ -44,7 +44,7 @@ class SysViewImportHandler extends TargetImportHandler {
      * the same instance is popped from the stack in the endElement method
      * when the corresponding sv:node element is encountered.
      */
-    private final Stack<ImportState> stack = new Stack<ImportState>();
+    private final Stack stack = new Stack();
 
     /**
      * fields used temporarily while processing sv:property and sv:value elements
@@ -52,8 +52,7 @@ class SysViewImportHandler extends TargetImportHandler {
     private Name currentPropName;
     private int currentPropType = PropertyType.UNDEFINED;
     // list of AppendableValue objects
-    private ArrayList<BufferedStringValue> currentPropValues =
-        new ArrayList<BufferedStringValue>();
+    private ArrayList currentPropValues = new ArrayList();
     private BufferedStringValue currentPropValue;
 
     /**
@@ -61,8 +60,8 @@ class SysViewImportHandler extends TargetImportHandler {
      *
      * @param importer
      */
-    SysViewImportHandler(Importer importer, ValueFactory valueFactory) {
-        super(importer, valueFactory);
+    SysViewImportHandler(Importer importer) {
+        super(importer);
     }
 
     private void processNode(ImportState state, boolean start, boolean end)
@@ -72,7 +71,7 @@ class SysViewImportHandler extends TargetImportHandler {
         }
         Name[] mixinNames = null;
         if (state.mixinNames != null) {
-            mixinNames = state.mixinNames.toArray(
+            mixinNames = (Name[]) state.mixinNames.toArray(
                     new Name[state.mixinNames.size()]);
         }
         NodeId id = null;
@@ -86,7 +85,8 @@ class SysViewImportHandler extends TargetImportHandler {
             if (start) {
                 importer.startNode(node, state.props);
                 // dispose temporary property values
-                for (PropInfo pi : state.props) {
+                for (Iterator iter = state.props.iterator(); iter.hasNext();) {
+                    PropInfo pi = (PropInfo) iter.next();
                     pi.dispose();
                 }
 
@@ -172,7 +172,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
         } else if (name.equals(NameConstants.SV_VALUE)) {
             // sv:value element
-            currentPropValue = new BufferedStringValue(resolver, valueFactory);
+            currentPropValue = new BufferedStringValue(resolver);
             String xsiType = atts.getValue("xsi:type");
             currentPropValue.setBase64("xs:base64Binary".equals(xsiType));
         } else {
@@ -256,7 +256,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 }
             } else if (currentPropName.equals(NameConstants.JCR_MIXINTYPES)) {
                 if (state.mixinNames == null) {
-                    state.mixinNames = new ArrayList<Name>(currentPropValues.size());
+                    state.mixinNames = new ArrayList(currentPropValues.size());
                 }
                 for (int i = 0; i < currentPropValues.size(); i++) {
                     BufferedStringValue val =
@@ -316,7 +316,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of mixin types of current node
          */
-        ArrayList<Name> mixinNames;
+        ArrayList mixinNames;
         /**
          * uuid of current node
          */
@@ -325,7 +325,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of PropInfo instances representing properties of current node
          */
-        ArrayList<PropInfo> props = new ArrayList<PropInfo>();
+        ArrayList props = new ArrayList();
 
         /**
          * flag indicating whether startNode() has been called for current node

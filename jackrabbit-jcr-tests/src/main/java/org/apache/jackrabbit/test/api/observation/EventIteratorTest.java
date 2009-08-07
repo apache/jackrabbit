@@ -30,9 +30,8 @@ import java.util.NoSuchElementException;
  * <li>{@link javax.jcr.observation.EventIterator#getPosition()}</li>
  * <li>{@link javax.jcr.observation.EventIterator#skip(long)}</li>
  * </ul>
- * <p>
- * Configuration requirements:
- * <p>
+ * <p/>
+ * Configuration requirements are:<br/>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child nodes that are created will be named {@link #nodeName1},
  * {@link #nodeName2} and {@link #nodeName3}.

@@ -52,7 +52,7 @@ public class TransactionContext extends Timer.Task {
     /**
      * The per thread associated Xid
      */
-    private static final ThreadLocal<Xid> CURRENT_XID = new ThreadLocal<Xid>();
+    private static ThreadLocal CURRENT_XID = new ThreadLocal();
 
     /**
      * Create a global timer for all transaction contexts.
@@ -73,11 +73,11 @@ public class TransactionContext extends Timer.Task {
     * The Xid
     */
    private final Xid xid;
-
+   
     /**
      * Transaction attributes.
      */
-    private final Map<String, Object> attributes = new HashMap<String, Object>();
+    private final Map attributes = new HashMap();
 
     /**
      * Status.
@@ -315,7 +315,7 @@ public class TransactionContext extends Timer.Task {
     public void setSuspended(boolean suspended) {
         this.suspended = suspended;
     }
-
+    
     /**
      * Helper Method to bind the {@link Xid} associated with this {@link TransactionContext}
      * to the {@link #CURRENT_XID} ThreadLocal.
@@ -331,25 +331,25 @@ public class TransactionContext extends Timer.Task {
     private void cleanCurrentXid() {
         CURRENT_XID.set(null);
     }
-
+    
     /**
      * Returns the {@link Xid} bind to the {@link #CURRENT_XID} ThreadLocal
      * @return current Xid or null
      */
     public static Xid getCurrentXid() {
-        return CURRENT_XID.get();
+        return (Xid) CURRENT_XID.get();
     }
-
+    
     /**
      * Helper Method to check if the given {@link Xid} has the same globalTransactionId
      * as the current {@link Xid} bind to the {@link #CURRENT_XID} ThreadLocal
      * @param xid Xid to check
-     * @param fallback if either the given {@link Xid} or the current {@link Xid} is null we can not check if they
+     * @param fallback if either the given {@link Xid} or the current {@link Xid} is null we can not check if they 
      *        are same, the fallback value will be returned
      * @return true if the same otherwise false
      */
     public static boolean isCurrentXid(Xid xid, boolean fallback) {
-        Xid currentXid = CURRENT_XID.get();
-        return fallback ? true : (currentXid == null || xid == null) ? fallback : Arrays.equals(xid.getGlobalTransactionId(), currentXid.getGlobalTransactionId());
+        Xid currentXid = (Xid) CURRENT_XID.get();
+        return fallback ? true : (currentXid == null || xid == null) ? fallback : Arrays.equals(xid.getGlobalTransactionId(), currentXid.getGlobalTransactionId());  
     }
 }

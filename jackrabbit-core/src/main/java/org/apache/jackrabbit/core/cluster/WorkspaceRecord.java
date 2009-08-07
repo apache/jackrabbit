@@ -44,7 +44,7 @@ public class WorkspaceRecord extends ClusterRecord {
     /**
      * Base workspace action
      */
-    public abstract static class Action {
+    public static abstract class Action {
         abstract int getType();
 
         abstract void write(Record record) throws JournalException;
@@ -57,8 +57,8 @@ public class WorkspaceRecord extends ClusterRecord {
      */
     static final class CreateWorkspaceAction extends Action {
         private InputSource inputSource;
-        private char[] charArray;
-        private byte[] byteArray;
+        private char charArray[];
+        private byte byteArray[];
 
         int getType() {
             return CREATE_WORKSPACE_ACTION_TYPE;
@@ -127,7 +127,7 @@ public class WorkspaceRecord extends ClusterRecord {
 
     /**
      * Creates a new {@link WorkspaceRecord} for create workspace action.
-     *
+     * 
      * @param workspace
      *            workspace name
      * @param inputSource
@@ -144,7 +144,7 @@ public class WorkspaceRecord extends ClusterRecord {
 
     /**
      * Creates a new empty {@link WorkspaceRecord}.
-     *
+     * 
      * @param record
      */
     protected WorkspaceRecord(Record record) {

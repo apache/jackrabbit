@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * This Class implements a very simple open handle monitor for the local
@@ -43,7 +44,7 @@ public class HandleMonitor {
     /**
      * the map of open handles (key=File, value=Handle)
      */
-    private HashMap<File, Handle> openHandles = new HashMap<File, Handle>();
+    private HashMap openHandles = new HashMap();
 
     /**
      * Opens a file and returns an InputStream
@@ -81,7 +82,7 @@ public class HandleMonitor {
      * @return
      */
     private Handle getHandle(File file) {
-        Handle handle = openHandles.get(file);
+        Handle handle = (Handle) openHandles.get(file);
         if (handle == null) {
             handle = new Handle(file);
             openHandles.put(file, handle);
@@ -94,8 +95,10 @@ public class HandleMonitor {
      */
     public void dump() {
         log.info("Number of open files: " + openHandles.size());
-        for (File file : openHandles.keySet()) {
-            Handle handle = openHandles.get(file);
+        Iterator iter = openHandles.keySet().iterator();
+        while (iter.hasNext()) {
+            File file = (File) iter.next();
+            Handle handle = (Handle) openHandles.get(file);
             handle.dump();
         }
     }
@@ -105,7 +108,7 @@ public class HandleMonitor {
      * @param file
      */
     public void dump(File file) {
-        Handle handle = openHandles.get(file);
+        Handle handle = (Handle) openHandles.get(file);
         if (handle != null) {
             handle.dump(true);
         }
@@ -124,7 +127,7 @@ public class HandleMonitor {
         /**
          * all open streams of this handle
          */
-        private HashSet<Handle.MonitoredInputStream> streams = new HashSet<Handle.MonitoredInputStream>();
+        private HashSet streams = new HashSet();
 
         /**
          * Creates a new handle for a file
@@ -169,7 +172,9 @@ public class HandleMonitor {
         private void dump(boolean detailed) {
             if (detailed) {
                 log.info("- " + file.getPath() + ", " + streams.size());
-                for (Handle.MonitoredInputStream in : streams) {
+                Iterator iter = streams.iterator();
+                while (iter.hasNext()) {
+                    Handle.MonitoredInputStream in = (Handle.MonitoredInputStream) iter.next();
                     in.dump();
                 }
             } else {

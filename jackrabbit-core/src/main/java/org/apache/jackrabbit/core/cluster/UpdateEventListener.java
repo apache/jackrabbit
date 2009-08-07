@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.core.cluster;
 
 import java.util.List;
-
-import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import javax.jcr.RepositoryException;
 
@@ -36,7 +34,7 @@ public interface UpdateEventListener {
      * @param userData the user data associated with this update.
      * @throws RepositoryException if the update cannot be processed
      */
-    void externalUpdate(ChangeLog changes, List<EventState> events, long timestamp, String userData)
+    void externalUpdate(ChangeLog changes, List events, long timestamp, String userData)
             throws RepositoryException;
 
 }

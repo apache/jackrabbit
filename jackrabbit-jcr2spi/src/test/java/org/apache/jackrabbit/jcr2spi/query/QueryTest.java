@@ -15,7 +15,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 
 import javax.jcr.RepositoryException;
@@ -32,9 +31,8 @@ public class QueryTest extends AbstractQueryTest {
 
     /**
      * Queries the child nodes of the root node.
-     * @throws NotExecutableException 
      */
-    public void testQueryChildNodesOfRoot() throws RepositoryException, NotExecutableException {
+    public void testQueryChildNodesOfRoot() throws RepositoryException {
         List nodes = new ArrayList();
         for (NodeIterator it = superuser.getRootNode().getNodes(); it.hasNext(); ) {
             nodes.add(it.nextNode());
@@ -43,7 +41,7 @@ public class QueryTest extends AbstractQueryTest {
         executeXPathQuery(superuser, "/jcr:root/*", children);
     }
 
-    public void testRemappedNamespace() throws RepositoryException, NotExecutableException {
+    public void testRemappedNamespace() throws RepositoryException {
         String namespaceURI = "http://jackrabbit.apache.org/spi/test";
         String defaultPrefix = "spiTest";
 

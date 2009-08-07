@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
+
+import java.util.Iterator;
 
 /**
  * <code>HierarchyManager</code> implementation that is also able to
@@ -100,7 +100,10 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
                                                          Name name,
                                                          int index) {
         // check removed child node entries first
-        for (ChildNodeEntry entry : parent.getRemovedChildNodeEntries()) {
+        Iterator iter = parent.getRemovedChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry =
+                    (ChildNodeEntry) iter.next();
             if (entry.getName().equals(name)
                     && entry.getIndex() == index) {
                 return entry;
@@ -119,7 +122,10 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          NodeId id) {
         // check removed child node entries first
-        for (ChildNodeEntry entry : parent.getRemovedChildNodeEntries()) {
+        Iterator iter = parent.getRemovedChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry =
+                    (ChildNodeEntry) iter.next();
             if (entry.getId().equals(id)) {
                 return entry;
             }

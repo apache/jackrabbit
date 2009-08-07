@@ -34,12 +34,12 @@ import org.xml.sax.InputSource;
  * {@link #cloneInputSource()} method.
  */
 public class ClonedInputSource extends InputSource {
-    private final char[] characterArray;
-    private final byte[] byteArray;
+    private final char characterArray[];
+    private final byte byteArray[];
 
     /**
      * Clone existing input source.
-     *
+     * 
      * @param input
      * @throws RepositoryException
      */
@@ -64,7 +64,7 @@ public class ClonedInputSource extends InputSource {
         }
     }
 
-    private ClonedInputSource(char[] characterArray, byte[] byteArray) {
+    private ClonedInputSource(char characterArray[], byte byteArray[]) {
         super();
         this.characterArray = characterArray;
         this.byteArray = byteArray;
@@ -81,7 +81,7 @@ public class ClonedInputSource extends InputSource {
     /**
      * Make a clone if this input source. The input source being cloned is still
      * valid after cloning.
-     *
+     * 
      * @return input source clone.
      */
     public ClonedInputSource cloneInputSource() {
@@ -108,7 +108,7 @@ public class ClonedInputSource extends InputSource {
                 final int bufferSize = Math.min(stream.available(), 4096);
                 ByteArrayOutputStream s = new ByteArrayOutputStream(bufferSize);
 
-                byte[] buffer = new byte[bufferSize];
+                byte buffer[] = new byte[bufferSize];
                 while (true) {
                     int numRead = stream.read(buffer);
                     if (numRead > 0) {
@@ -140,7 +140,7 @@ public class ClonedInputSource extends InputSource {
                 final int bufferSize = 4096;
                 CharArrayWriter w = new CharArrayWriter(bufferSize);
 
-                char[] buffer = new char[bufferSize];
+                char buffer[] = new char[bufferSize];
                 while (true) {
                     int numRead = reader.read(buffer);
                     if (numRead > 0) {

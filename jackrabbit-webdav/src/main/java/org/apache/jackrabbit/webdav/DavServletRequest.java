@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav;
 
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.w3c.dom.Document;
@@ -152,15 +153,43 @@ public interface DavServletRequest extends HttpServletRequest {
     public DavPropertyNameSet getPropFindProperties() throws DavException;
 
     /**
-     * Return a {@link List} of property change operations. Each entry
-     * is either of type {@link DavPropertyName}, indicating a &lt;remove&gt;
-     * operation, or of type {@link DavProperty}, indicating a &lt;set&gt;
-     * operation. Note that ordering is significant here.
+     * Return the set of properties the client wanted to modify / create with a
+     * PROPPATCH request, i.e. all entries in the &lt;propertyupdate&gt; element
+     * of the request body with name &lt;set&gt;.
      *
-     * @return {@link List} of property change operations
+     * @return set of properties the client wanted to modify / create with a
+     * PROPPATCH request.
      * @throws DavException In case of invalid request body
+     * @deprecated use {@link #getPropPatchChangeList()} instead
      */
-    public List getPropPatchChangeList() throws DavException;
+    public DavPropertySet getPropPatchSetProperties() throws DavException;
+
+    /**
+     * Return the set of property names the client wanted to remove with a
+     * PROPPATCH request, i.e. all entries in the &lt;propertyupdate&gt; element
+     * of the request body with name &lt;remove&gt;.<br>
+     * Note, that in constrast to the &lt;set&gt; Xml element, all the XML
+     * elements in a prop XML element inside of a remove XML element must be
+     * empty, as only the names of properties to be removed are required. Therefore
+     * a <code>DavPropertyNameSet</code> is returned and not a <code>DavPropertySet</code>
+     *
+     * @return set of property names the client wanted to remove with a
+     * PROPPATCH request.
+     * @throws DavException In case of invalid request body
+     * @deprecated use {@link #getPropPatchChangeList()} instead
+     */
+    public DavPropertyNameSet getPropPatchRemoveProperties() throws DavException;
+
+     /**
+      * Return a {@link List} of property change operations. Each entry
+      * is either of type {@link DavPropertyName}, indicating a &lt;remove&gt;
+      * operation, or of type {@link DavProperty}, indicating a &lt;set&gt;
+      * operation. Note that ordering is significant here.
+      *
+      * @return {@link List} of property change operations
+      * @throws DavException In case of invalid request body
+      */
+     public List getPropPatchChangeList() throws DavException;
 
     /**
      * Return the parsed 'lockinfo' request body, the {@link DavConstants#HEADER_TIMEOUT

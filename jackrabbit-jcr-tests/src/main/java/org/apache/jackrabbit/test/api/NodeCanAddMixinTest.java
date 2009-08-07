@@ -25,7 +25,6 @@ import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeType;
 
 /**
  * <code>NodeCanAddMixinTest</code> contains the test cases for the method
@@ -54,7 +53,14 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
         // create a node that is lockable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        ensureMixinType(node, mixLockable);
+        if (!node.isNodeType(mixLockable)) {
+            if (node.canAddMixin(mixLockable)) {
+                node.addMixin(mixLockable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
+                        "allow to add mix:lockable");
+            }
+        }
         testRootNode.save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
@@ -66,7 +72,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
         String pathRelToRoot = node.getPath().substring(1);
 
         // access node through another session to lock it
-        Session session2 = getHelper().getSuperuserSession();
+        Session session2 = helper.getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);
@@ -98,7 +104,14 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
         // create a node that is versionable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
-        ensureMixinType(node, mixVersionable);
+        if (!node.isNodeType(mixVersionable)) {
+            if (node.canAddMixin(mixVersionable)) {
+                node.addMixin(mixVersionable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not versionable and does not " +
+                        "allow to add mix:versionable");
+            }
+        }
         testRootNode.save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
@@ -130,55 +143,6 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
                     "NoSuchNodeTypeException if mixinName is an unknown mixin type");
         } catch (NoSuchNodeTypeException e) {
             // success
-        }
-    }
-
-       /**
-     * Test if adding the same mixin twice would be allowed.
-     *
-     * @throws RepositoryException
-     * @throws NotExecutableException
-     * @since JCR 2.0
-     */
-    public void testAddMixinTwice() throws RepositoryException, NotExecutableException {
-        Session session = testRootNode.getSession();
-        Node node = testRootNode.addNode(nodeName1, testNodeType);
-        String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
-
-        if (mixinName == null) {
-            throw new NotExecutableException("No testable mixin node type found");
-        }
-
-        assertTrue(node.canAddMixin(mixinName));
-        node.addMixin(mixinName);
-        // adding again must be possible (though it has no effect)
-        assertTrue(node.canAddMixin(mixinName));
-
-        session.save();
-
-        // adding again must be possible (though it has no effect)
-        assertTrue(node.canAddMixin(mixinName));
-    }
-
-    /**
-     * Test if an inherited mixin could be added.
-     *
-     * @throws RepositoryException
-     * @since JCR 2.0
-     */
-    public void testAddInheritedMixin() throws RepositoryException {
-        Session session = testRootNode.getSession();
-        Node node = testRootNode.addNode(nodeName1, testNodeType);
-        session.save();
-
-        NodeType nt = node.getPrimaryNodeType();
-        NodeType[] superTypes = nt.getSupertypes();
-        for (int i = 0; i < superTypes.length; i++) {
-            if (superTypes[i].isMixin()) {
-                String mixinName = superTypes[i].getName();
-                // adding again must be possible (though it has no effect)
-                assertTrue(node.canAddMixin(mixinName));
-            }
         }
     }
 

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.Node;
 
 /**
  * <code>ConcurrentReorderTest</code> checks if a reorder interleaved with
@@ -32,9 +33,13 @@ public class ConcurrentReorderTest extends ConcurrentModificationBase {
         superuser.save();
     }
 
+    private Node getNode(String path) throws Exception {
+        return (Node) session.getItem(path);
+    }
+
     public void testReorderWithAdd() throws Exception {
         testRootNode.orderBefore("C", "A");
-        session.getNode(testRoot).addNode("D");
+        getNode(testRoot).addNode("D");
         session.save();
         try {
             superuser.save();
@@ -46,7 +51,7 @@ public class ConcurrentReorderTest extends ConcurrentModificationBase {
 
     public void testAddWithReorder() throws Exception {
         testRootNode.addNode("D");
-        session.getNode(testRoot).orderBefore("C", "A");
+        getNode(testRoot).orderBefore("C", "A");
         session.save();
         try {
             superuser.save();

@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import javax.jcr.RepositoryException;
-import java.util.Map;
-
 /**
  * <code>Event</code> is similar to the regular JCR Event and adds additional
  * information about the affected item.
@@ -50,28 +47,11 @@ public interface Event {
      */
     public static final int PROPERTY_CHANGED = javax.jcr.observation.Event.PROPERTY_CHANGED;
 
-
-    /**
-     * An event of this type is generated when a node is moved.
-     *
-     * @since JCR 2.0
-     */
-    public static final int NODE_MOVED = javax.jcr.observation.Event.NODE_MOVED;
-
-    /**
-     * If event bundling is supported, this event is used to indicate a
-     * bundle boundary within the event journal.
-     *
-     * @since JCR 2.0
-     */
-    public static final int PERSIST = javax.jcr.observation.Event.PERSIST;
-    
     /**
      * Constant for observation listener interested in all types of events.
      */
     public static final int ALL_TYPES = Event.NODE_ADDED | Event.NODE_REMOVED |
-            Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED |
-            Event.NODE_MOVED | Event.PERSIST;
+    Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
 
     /**
      * Returns the type of this event: a constant defined by this interface.
@@ -82,8 +62,6 @@ public interface Event {
      * <li><code>{@link #PROPERTY_ADDED}</code></li>
      * <li><code>{@link #PROPERTY_REMOVED}</code></li>
      * <li><code>{@link #PROPERTY_CHANGED}</code></li>
-     * <li><code>{@link #NODE_MOVED}</code></li>
-     * <li><code>{@link #PERSIST}</code></li>
      * </ul>
      *
      * @return the type of this event.
@@ -127,33 +105,4 @@ public interface Event {
      * @return a <code>String</code>.
      */
     public String getUserID();
-
-    /**
-     * Returns the information map associated with this event.
-     *
-     * @return A <code>Map</code> containing parameter information.
-     * @throws RepositoryException if an error occurs.
-     * @see javax.jcr.observation.Event#getInfo()
-     * @since JCR 2.0
-     */
-    public Map<Name, QValue> getInfo() throws RepositoryException;
-
-    /**
-     * Returns the user data.
-     *
-     * @return the user data
-     * @see javax.jcr.observation.Event#getUserData()
-     * @since JCR 2.0
-     */
-    public String getUserData();
-
-    /**
-     * Returns the date when the change was persisted that caused this event.
-     *
-     * @return the date when the change was persisted that caused this event.
-     * @throws javax.jcr.RepositoryException if an error occurs.
-     * @see javax.jcr.observation.Event#getDate()
-     * @since JCR 2.0
-     */
-    public long getDate() throws RepositoryException;
 }

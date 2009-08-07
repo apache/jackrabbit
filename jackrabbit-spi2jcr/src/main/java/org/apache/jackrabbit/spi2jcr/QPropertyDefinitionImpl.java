@@ -18,29 +18,24 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
-import javax.jcr.NamespaceException;
 
 /**
- * <code>QPropertyDefinitionImpl</code> implements a property
+ * <code>QPropertyDefinitionImpl</code> implements a qualified property
  * definition based on a JCR {@link javax.jcr.nodetype.PropertyDefinition}.
  */
 class QPropertyDefinitionImpl
         extends org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl {
 
     /**
-     * Creates a new property definition based on
+     * Creates a new qualified property definition based on
      * <code>propDef</code>.
      *
      * @param propDef       the JCR property definition.
@@ -55,17 +50,11 @@ class QPropertyDefinitionImpl
             throws RepositoryException, NameException {
         super(propDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : resolver.getQName(propDef.getName()),
                 resolver.getQName(propDef.getDeclaringNodeType().getName()),
-                propDef.isAutoCreated(),
-                propDef.isMandatory(),
-                propDef.getOnParentVersion(),
-                propDef.isProtected(),
+                propDef.isAutoCreated(), propDef.isMandatory(),
+                propDef.getOnParentVersion(), propDef.isProtected(),
                 convertValues(propDef.getDefaultValues(), resolver, qValueFactory),
-                propDef.isMultiple(),
-                propDef.getRequiredType(),
-                ValueConstraint.create(propDef.getRequiredType(), propDef.getValueConstraints(), resolver),
-                propDef.getAvailableQueryOperators(),
-                propDef.isFullTextSearchable(),
-                propDef.isQueryOrderable());
+                propDef.isMultiple(), propDef.getRequiredType(),
+                convertConstraints(propDef.getValueConstraints(), resolver, qValueFactory, propDef.getRequiredType()));
     }
 
     /**
@@ -93,19 +82,32 @@ class QPropertyDefinitionImpl
     }
 
     /**
-     * Convert String jcr names to Name objects.
+     * Makes sure name and path constraints are parsed correctly using the
+     * namespace resolver.
      *
-     * @param aqos
+     * @param constraints  the constraint strings from the JCR property
+     *                     definition.
      * @param resolver
-     * @return
-     * @throws NamespaceException
-     * @throws IllegalNameException
+     * @param factory      the QValueFactory.
+     * @param requiredType the required type of the property definition.
+     * @return SPI formatted constraint strings.
+     * @throws RepositoryException if an error occurs while converting the
+     *                             constraint strings.
      */
-    private static Name[] convertQueryOperators(String[] aqos, NamePathResolver resolver) throws NamespaceException, IllegalNameException {
-        Name[] names = new Name[aqos.length];
-        for (int i = 0; i < aqos.length; i++) {
-            names[i] = resolver.getQName(aqos[i]);
+    private static String[] convertConstraints(String[] constraints,
+                                               NamePathResolver resolver,
+                                               QValueFactory factory,
+                                               int requiredType)
+            throws RepositoryException {
+        if (requiredType == PropertyType.REFERENCE
+                || requiredType == PropertyType.NAME
+                || requiredType == PropertyType.PATH) {
+            int type = requiredType == PropertyType.REFERENCE ? PropertyType.NAME : requiredType;
+            for (int i = 0; i < constraints.length; i++) {
+                constraints[i] = ValueFormat.getQValue(
+                        constraints[i], type, resolver, factory).getString();
+            }
         }
-        return names;
+        return constraints;
     }
 }

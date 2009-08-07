@@ -16,41 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Iterator;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-import javax.jcr.Repository;
-import javax.jcr.PropertyType;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.ObservationManager;
-import javax.security.auth.Subject;
-
+import EDU.oswego.cs.dl.util.concurrent.Mutex;
+import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
@@ -58,11 +27,11 @@ import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
 import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
+import org.apache.jackrabbit.core.cluster.WorkspaceEventChannel;
+import org.apache.jackrabbit.core.cluster.WorkspaceListener;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
-import org.apache.jackrabbit.core.cluster.WorkspaceEventChannel;
-import org.apache.jackrabbit.core.cluster.WorkspaceListener;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -75,19 +44,15 @@ import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
-import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
-import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
@@ -99,10 +64,12 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
-import org.apache.jackrabbit.core.version.InternalVersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.RegistryNamespaceResolver;
@@ -110,16 +77,42 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-import EDU.oswego.cs.dl.util.concurrent.Mutex;
-import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
+import javax.security.auth.Subject;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * A <code>RepositoryImpl</code> ...
  */
 public class RepositoryImpl extends AbstractRepository
-        implements javax.jcr.Repository, JackrabbitRepository, SessionListener, WorkspaceListener {
+        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, SessionListener, EventListener, WorkspaceListener {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
 
@@ -139,35 +132,30 @@ public class RepositoryImpl extends AbstractRepository
     public static final NodeId VERSION_STORAGE_NODE_ID = NodeId.valueOf("deadbeef-face-babe-cafe-babecafebabe");
 
     /**
-     * hardcoded id of the "/jcr:system/jcr:versionStorage/jcr:activities" node
-     */
-    public static final NodeId ACTIVITIES_NODE_ID = NodeId.valueOf("deadbeef-face-babe-ac71-babecafebabe");
-
-    /**
-     * hardcoded id of the "/jcr:system/jcr:versionStorage/jcr:configurations" node
-     */
-    public static final NodeId CONFIGURATIONS_NODE_ID = NodeId.valueOf("deadbeef-face-babe-c04f-babecafebabe");
-
-    /**
      * hardcoded id of the "/jcr:system/jcr:nodeTypes" node
      */
     public static final NodeId NODETYPES_NODE_ID = NodeId.valueOf("deadbeef-cafe-cafe-cafe-babecafebabe");
 
     /**
-     * the name of the resource containing customized descriptors of the repository.
+     * the name of the file system resource containing the properties of the
+     * repository.
      */
-    private static final String PROPERTIES_RESOURCE = "repository.properties";
+    private static final String PROPERTIES_RESOURCE = "rep.properties";
 
     /**
-     * the repository descriptors, maps String keys to Value/Value[] objects
+     * the repository properties.
      */
-    private final Map<String, DescriptorValue> repDescriptors = new HashMap<String, DescriptorValue>();
+    private final Properties repProps;
+
+    // names of well-known repository properties
+    public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
+    public static final String STATS_PROP_COUNT_PROPERTY = "jcr.repository.stats.properties.count";
 
     private NodeId rootNodeId;
 
     private final NamespaceRegistryImpl nsReg;
     private final NodeTypeRegistry ntReg;
-    private final InternalVersionManagerImpl vMgr;
+    private final VersionManagerImpl vMgr;
     private final VirtualNodeTypeStateManager virtNTMgr;
 
     /**
@@ -204,16 +192,20 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * map of workspace names and <code>WorkspaceInfo<code>s.
      */
-    private final HashMap<String, WorkspaceInfo> wspInfos = new HashMap<String, WorkspaceInfo>();
+    private final HashMap wspInfos = new HashMap();
 
     /**
      * active sessions (weak references)
      */
-    private final Map<SessionImpl, SessionImpl> activeSessions =
+    private final ReferenceMap activeSessions =
             new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
+    // misc. statistics
+    private long nodesCount = 0;
+    private long propsCount = 0;
+
     // flag indicating if repository has been shut down
-    private boolean disposed;
+    private boolean disposed = false;
 
     /**
      * The repository lock mechanism ensures that a repository is only instantiated once.
@@ -289,17 +281,24 @@ public class RepositoryImpl extends AbstractRepository
             // init root node uuid
             rootNodeId = loadRootNodeId(metaDataStore);
 
-            // initialize repository descriptors
-            initRepositoryDescriptors();
+            // load repository properties
+            repProps = loadRepProps();
+            nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
+            propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
 
             // create registries
             nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
             ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
             dataStore = repConfig.getDataStore();
+            if (dataStore != null) {
+                assert InternalValue.USE_DATA_STORE;
+            }
 
             // init workspace configs
-            for (WorkspaceConfig config : repConfig.getWorkspaceConfigs()) {
+            Iterator iter = repConfig.getWorkspaceConfigs().iterator();
+            while (iter.hasNext()) {
+                WorkspaceConfig config = (WorkspaceConfig) iter.next();
                 WorkspaceInfo info = createWorkspaceInfo(config);
                 wspInfos.put(config.getName(), info);
             }
@@ -311,7 +310,7 @@ public class RepositoryImpl extends AbstractRepository
                 clusterNode = createClusterNode();
                 nsReg.setEventChannel(clusterNode);
                 ntReg.setEventChannel(clusterNode);
-
+                
                 createWorkspaceEventChannel = clusterNode;
                 clusterNode.setListener(this);
             }
@@ -451,7 +450,7 @@ public class RepositoryImpl extends AbstractRepository
      * @return the newly created version manager
      * @throws RepositoryException if an error occurs
      */
-    protected InternalVersionManagerImpl createVersionManager(VersioningConfig vConfig,
+    protected VersionManagerImpl createVersionManager(VersioningConfig vConfig,
                                                       DelegatingObservationDispatcher delegatingDispatcher)
             throws RepositoryException {
 
@@ -467,11 +466,8 @@ public class RepositoryImpl extends AbstractRepository
 
         ISMLocking ismLocking = vConfig.getISMLocking();
 
-        return new InternalVersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
-                SYSTEM_ROOT_NODE_ID,
-                VERSION_STORAGE_NODE_ID,
-                ACTIVITIES_NODE_ID,
-                cacheFactory,
+        return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
+                VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory,
                 ismLocking);
     }
 
@@ -490,7 +486,7 @@ public class RepositoryImpl extends AbstractRepository
            secWspName = smc.getWorkspaceName();
         }
         try {
-            (wspInfos.get(wspName)).initialize();
+            ((WorkspaceInfo) wspInfos.get(wspName)).initialize();
             if (secWspName != null && !wspInfos.containsKey(secWspName)) {
                 createWorkspace(secWspName);
                 log.info("created system workspace: {}", secWspName);
@@ -692,7 +688,7 @@ public class RepositoryImpl extends AbstractRepository
         return ntReg;
     }
 
-    protected InternalVersionManager getVersionManager() {
+    protected VersionManager getVersionManager() {
         return vMgr;
     }
 
@@ -708,7 +704,7 @@ public class RepositoryImpl extends AbstractRepository
      */
     protected String[] getWorkspaceNames() {
         synchronized (wspInfos) {
-            return wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
+            return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
         }
     }
 
@@ -729,7 +725,7 @@ public class RepositoryImpl extends AbstractRepository
 
         WorkspaceInfo wspInfo;
         synchronized (wspInfos) {
-            wspInfo = wspInfos.get(workspaceName);
+            wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
             if (wspInfo == null) {
                 throw new NoSuchWorkspaceException(workspaceName);
             }
@@ -785,7 +781,7 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * Creates a workspace with the given name and given workspace configuration
      * template.
-     *
+     * 
      * The difference between this method and {@link #createWorkspace(String, InputSource)}
      * is that the later notifies the other cluster node that workspace has been created
      * whereas this method only creates the workspace.
@@ -812,7 +808,7 @@ public class RepositoryImpl extends AbstractRepository
             wspInfos.put(workspaceName, info);
         }
     }
-
+    
     /**
      * Creates a workspace with the given name and given workspace configuration
      * template.
@@ -830,7 +826,9 @@ public class RepositoryImpl extends AbstractRepository
 
         if (createWorkspaceEventChannel == null) {
             createWorkspaceInternal(workspaceName, configTemplate);
-        } else {
+        }
+        else {
+        
             ClonedInputSource template = new ClonedInputSource(configTemplate);
             createWorkspaceInternal(workspaceName, template.cloneInputSource());
             createWorkspaceEventChannel.workspaceCreated(workspaceName, template);
@@ -1107,16 +1105,17 @@ public class RepositoryImpl extends AbstractRepository
         // (copy sessions to array to avoid ConcurrentModificationException;
         // manually copy entries rather than calling ReferenceMap#toArray() in
         // order to work around  http://issues.apache.org/bugzilla/show_bug.cgi?id=25551)
-        List<SessionImpl> sa;
+        SessionImpl[] sa;
         synchronized (activeSessions) {
-            sa = new ArrayList<SessionImpl>(activeSessions.size());
-            for (SessionImpl session : activeSessions.values()) {
-                sa.add(session);
+            int cnt = 0;
+            sa = new SessionImpl[activeSessions.size()];
+            for (Iterator it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
+                sa[cnt] = (SessionImpl) it.next();
             }
         }
-        for (SessionImpl session : sa) {
-            if (session != null) {
-                session.logout();
+        for (int i = 0; i < sa.length; i++) {
+            if (sa[i] != null) {
+                sa[i].logout();
             }
         }
 
@@ -1127,7 +1126,8 @@ public class RepositoryImpl extends AbstractRepository
 
         // shut down workspaces
         synchronized (wspInfos) {
-            for (WorkspaceInfo wspInfo : wspInfos.values()) {
+            for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
+                WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
                 wspInfo.dispose();
             }
         }
@@ -1140,8 +1140,15 @@ public class RepositoryImpl extends AbstractRepository
             }
         }
 
-        repDescriptors.clear();
-
+        if (repProps != null) {
+            // persist repository properties
+            try {
+                storeRepProps(repProps);
+            } catch (RepositoryException e) {
+                log.error("failed to persist repository properties", e);
+            }
+        }
+        
         if (dataStore != null) {
             try {
                 // close the datastore
@@ -1172,7 +1179,7 @@ public class RepositoryImpl extends AbstractRepository
                 repLock.release();
             } catch (RepositoryException e) {
                 log.error("failed to release the repository lock", e);
-            }
+            }            
         }
 
         log.info("Repository has been shutdown");
@@ -1186,10 +1193,6 @@ public class RepositoryImpl extends AbstractRepository
         return repConfig;
     }
 
-    InternalVersionManagerImpl getVersionManagerImpl() {
-        return vMgr;
-    }
-
     /**
      * Returns the repository file system.
      * @return repository file system
@@ -1199,152 +1202,102 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
-     * Initializes the repository descriptors by executing the following steps:
-     * <ul>
-     * <li>Sets standard descriptors</li>
-     * <li>{@link #getCustomRepositoryDescriptors()} is called
-     * afterwards in order to add custom/overwrite standard repository decriptors.</li>
-     * </ul>
+     * Sets the default properties of the repository.
+     * <p/>
+     * This method loads the <code>Properties</code> from the
+     * <code>org/apache/jackrabbit/core/repository.properties</code> resource
+     * found in the class path and (re)sets the statistics properties, if not
+     * present.
      *
-     * @throws RepositoryException
+     * @param props the properties object to load
+     *
+     * @throws RepositoryException if the properties can not be loaded
      */
-    protected void initRepositoryDescriptors() throws RepositoryException {
+    protected void setDefaultRepositoryProperties(Properties props)
+            throws RepositoryException {
+        InputStream in = RepositoryImpl.class.getResourceAsStream("repository.properties");
+        try {
+            props.load(in);
+            in.close();
 
-        ValueFactory valFactory = ValueFactoryImpl.getInstance();
-        Value valTrue = valFactory.createValue(true);
-        Value valFalse = valFactory.createValue(false);
-
-        setDescriptor(Repository.REP_NAME_DESC, "Jackrabbit");
-        setDescriptor(Repository.REP_VENDOR_DESC, "Apache Software Foundation");
-        setDescriptor(Repository.REP_VENDOR_URL_DESC, "http://jackrabbit.apache.org/");
-        setDescriptor(Repository.SPEC_NAME_DESC, "Content Repository API for Java(TM) Technology Specification");
-        setDescriptor(Repository.SPEC_VERSION_DESC, "2.0");
-
-        setDescriptor(Repository.IDENTIFIER_STABILITY, Repository.IDENTIFIER_STABILITY_INDEFINITE_DURATION);
-        setDescriptor(Repository.LEVEL_1_SUPPORTED, valTrue);
-        setDescriptor(Repository.LEVEL_2_SUPPORTED, valTrue);
-        setDescriptor(Repository.WRITE_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_NODE_TYPE_MANAGEMENT_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_AUTOCREATED_DEFINITIONS_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE, Repository.NODE_TYPE_MANAGEMENT_INHERITANCE_MULTIPLE);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_MULTIPLE_BINARY_PROPERTIES_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_MULTIVALUED_PROPERTIES_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_ORDERABLE_CHILD_NODES_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_OVERRIDES_SUPPORTED, valFalse);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_PRIMARY_ITEM_NAME_SUPPORTED, valTrue);
-
-        Value[] types = new Value[] {
-                valFactory.createValue(PropertyType.BINARY),
-                valFactory.createValue(PropertyType.BOOLEAN),
-                valFactory.createValue(PropertyType.DATE),
-                valFactory.createValue(PropertyType.DECIMAL),
-                valFactory.createValue(PropertyType.DOUBLE),
-                valFactory.createValue(PropertyType.LONG),
-                valFactory.createValue(PropertyType.NAME),
-                valFactory.createValue(PropertyType.PATH),
-                valFactory.createValue(PropertyType.REFERENCE),
-                valFactory.createValue(PropertyType.STRING),
-                valFactory.createValue(PropertyType.URI),
-                valFactory.createValue(PropertyType.WEAKREFERENCE),
-                valFactory.createValue(PropertyType.UNDEFINED)
-        };
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_PROPERTY_TYPES, types);
-
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_RESIDUAL_DEFINITIONS_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_SAME_NAME_SIBLINGS_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_VALUE_CONSTRAINTS_SUPPORTED, valTrue);
-        setDescriptor(Repository.NODE_TYPE_MANAGEMENT_UPDATE_IN_USE_SUPORTED, valFalse);
-        setDescriptor(Repository.OPTION_ACCESS_CONTROL_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_JOURNALED_OBSERVATION_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_LIFECYCLE_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_LOCKING_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_QUERY_SQL_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_RETENTION_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_SHAREABLE_NODES_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_SIMPLE_VERSIONING_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_TRANSACTIONS_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_UNFILED_CONTENT_SUPPORTED, valFalse);
-        setDescriptor(Repository.OPTION_UPDATE_MIXIN_NODE_TYPES_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_UPDATE_PRIMARY_NODE_TYPE_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_VERSIONING_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_XML_EXPORT_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_XML_IMPORT_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_ACTIVITIES_SUPPORTED, valTrue);
-        setDescriptor(Repository.OPTION_BASELINES_SUPPORTED, valTrue);
-
-        setDescriptor(Repository.QUERY_FULL_TEXT_SEARCH_SUPPORTED, valTrue);
-        setDescriptor(Repository.QUERY_JOINS, Repository.QUERY_JOINS_INNER_OUTER);
-
-        Value[] languages = new Value[] {
-                valFactory.createValue("javax.jcr.query.JCR-JQOM"),
-                valFactory.createValue("javax.jcr.query.JCR-SQL2")
-        };
-        setDescriptor(Repository.QUERY_LANGUAGES, languages);
-
-        setDescriptor(Repository.QUERY_STORED_QUERIES_SUPPORTED, valTrue);
-        setDescriptor(Repository.QUERY_XPATH_POS_INDEX, valTrue);
-        // Disabled since in default configuration document order is not supported.
-        // See https://issues.apache.org/jira/browse/JCR-1237 for details
-        setDescriptor(Repository.QUERY_XPATH_DOC_ORDER, valFalse);
-
-        // now set customized repository descriptor values (if any exist)
-        Properties props = getCustomRepositoryDescriptors();
-        if (props != null) {
-            for (Iterator it = props.keySet().iterator(); it.hasNext();) {
-                String key = (String) it.next();
-                setDescriptor(key, props.getProperty(key));
+            // set counts
+            if (!props.containsKey(STATS_NODE_COUNT_PROPERTY)) {
+                props.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
             }
+            if (!props.containsKey(STATS_PROP_COUNT_PROPERTY)) {
+                props.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
+            }
+        } catch (IOException e) {
+            String msg = "Failed to load repository properties: " + e.toString();
+            log.error(msg);
+            throw new RepositoryException(msg, e);
         }
     }
 
     /**
-     * Returns a <code>Properties</code> object containing custom repository
-     * descriptors or <code>null</code> if none exist.
-     * <p/>
-     * Overridable to allow subclasses to add custom descriptors or to
-     * override standard descriptor values.
-     * <p/>
-     * Note that the properties entries will be set as single-valued <code>STRING</code>
-     * descriptor values.
-     * <p/>
-     * This method tries to load the <code>Properties</code> from the
-     * <code>org/apache/jackrabbit/core/repository.properties</code> resource
-     * found in the class path.
+     * Loads the repository properties by executing the following steps:
+     * <ul>
+     * <li> if the {@link #PROPERTIES_RESOURCE} exists in the meta data store,
+     * the properties are loaded from that resource.</li>
+     * <li> {@link #setDefaultRepositoryProperties(Properties)} is called
+     * afterwards in order to initialize/update the repository properties
+     * since some default properties might have changed and need updating.</li>
+     * <li> finally {@link #storeRepProps(Properties)} is called in order to
+     * persist the newly generated properties.</li>
+     * </ul>
      *
-     * @throws RepositoryException if the properties can not be loaded
+     * @return the newly loaded/initialized repository properties
+     *
+     * @throws RepositoryException
      */
-    protected Properties getCustomRepositoryDescriptors() throws RepositoryException {
-        InputStream in = RepositoryImpl.class.getResourceAsStream(PROPERTIES_RESOURCE);
-        if (in != null) {
-            try {
-                Properties props = new Properties();
-                props.load(in);
-                return props;
-            } catch (IOException e) {
-                String msg = "Failed to load customized repository properties: " + e.toString();
-                log.error(msg);
-                throw new RepositoryException(msg, e);
-            } finally {
-                IOUtils.closeQuietly(in);
+    protected Properties loadRepProps() throws RepositoryException {
+        FileSystemResource propFile = new FileSystemResource(metaDataStore, PROPERTIES_RESOURCE);
+        try {
+            Properties props = new Properties();
+            if (propFile.exists()) {
+                InputStream in = propFile.getInputStream();
+                try {
+                    props.load(in);
+                } finally {
+                    in.close();
+                }
             }
-        } else {
-            return null;
+            // now set the default props
+            setDefaultRepositoryProperties(props);
+
+            // and store
+            storeRepProps(props);
+
+            return props;
+
+        } catch (Exception e) {
+            String msg = "failed to load repository properties";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
         }
     }
 
-    protected void setDescriptor(String desc, String value) {
-        setDescriptor(desc, ValueFactoryImpl.getInstance().createValue(value));
-    }
-
-    protected void setDescriptor(String desc, Value value) {
-        repDescriptors.put(desc, new DescriptorValue(value));
-    }
-
-    protected void setDescriptor(String desc, Value[] values) {
-        repDescriptors.put(desc, new DescriptorValue(values));
+    /**
+     * Stores the properties to a persistent resource in the meta filesytem.
+     *
+     * @throws RepositoryException
+     */
+    protected void storeRepProps(Properties props) throws RepositoryException {
+        FileSystemResource propFile = new FileSystemResource(metaDataStore, PROPERTIES_RESOURCE);
+        try {
+            propFile.makeParentDirs();
+            OutputStream os = propFile.getOutputStream();
+            try {
+                props.store(os, null);
+            } finally {
+                // make sure stream is closed
+                os.close();
+            }
+        } catch (Exception e) {
+            String msg = "failed to persist repository properties";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
@@ -1464,47 +1417,34 @@ public class RepositoryImpl extends AbstractRepository
      * {@inheritDoc}
      */
     public String getDescriptor(String key) {
-        Value v = getDescriptorValue(key);
-        try {
-            return (v == null) ? null : v.getString();
-        } catch (RepositoryException e) {
-            log.error("corrupt descriptor value: " + key, e);
-            return null;
-        }
+        return repProps.getProperty(key);
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getDescriptorKeys() {
-        String[] keys = repDescriptors.keySet().toArray(new String[repDescriptors.keySet().size()]);
+        String[] keys = (String[]) repProps.keySet().toArray(new String[repProps.keySet().size()]);
         Arrays.sort(keys);
         return keys;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public Value getDescriptorValue(String key) {
-        DescriptorValue descVal = repDescriptors.get(key);
-        return (descVal != null) ? descVal.getValue() : null;
+        throw new RuntimeException("not implemented yet - see JCR-2062");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public Value[] getDescriptorValues(String key) {
-        DescriptorValue descVal = repDescriptors.get(key);
-        return (descVal != null) ? descVal.getValues() : null;
+        throw new RuntimeException("not implemented yet - see JCR-2062");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public boolean isSingleValueDescriptor(String key) {
-        DescriptorValue descVal = repDescriptors.get(key);
-        return (descVal != null && descVal.getValue() != null);
+        throw new RuntimeException("not implemented yet - see JCR-2062");
     }
+
+    public boolean isStandardDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
 
     //------------------------------------------------------< SessionListener >
     /**
@@ -1520,6 +1460,41 @@ public class RepositoryImpl extends AbstractRepository
         synchronized (activeSessions) {
             // remove session from active sessions
             activeSessions.remove(session);
+        }
+    }
+
+    //--------------------------------------------------------< EventListener >
+    /**
+     * {@inheritDoc}
+     */
+    public void onEvent(EventIterator events) {
+        // check status of this instance
+        if (disposed) {
+            // ignore, repository instance has been shut down
+            return;
+        }
+
+        synchronized (repProps) {
+            while (events.hasNext()) {
+                Event event = events.nextEvent();
+                long type = event.getType();
+                if ((type & Event.NODE_ADDED) == Event.NODE_ADDED) {
+                    nodesCount++;
+                    repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
+                }
+                if ((type & Event.NODE_REMOVED) == Event.NODE_REMOVED) {
+                    nodesCount--;
+                    repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
+                }
+                if ((type & Event.PROPERTY_ADDED) == Event.PROPERTY_ADDED) {
+                    propsCount++;
+                    repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
+                }
+                if ((type & Event.PROPERTY_REMOVED) == Event.PROPERTY_REMOVED) {
+                    propsCount--;
+                    repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
+                }
+            }
         }
     }
 
@@ -2023,6 +1998,12 @@ public class RepositoryImpl extends AbstractRepository
              * {@link org.apache.jackrabbit.core.state.SharedItemStateManager#createRootNodeState}
              */
 
+            // register the repository as event listener for keeping repository statistics
+            wsp.getObservationManager().addEventListener(RepositoryImpl.this,
+                    Event.NODE_ADDED | Event.NODE_REMOVED
+                    | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED,
+                    "/", true, null, null, false);
+
             // register SearchManager as event listener
             SearchManager searchMgr = getSearchManager();
             if (searchMgr != null) {
@@ -2199,7 +2180,7 @@ public class RepositoryImpl extends AbstractRepository
          * {@inheritDoc}
          */
         public void externalUpdate(ChangeLog external,
-                                   List<EventState> events,
+                                   List events,
                                    long timestamp,
                                    String userData) throws RepositoryException {
             try {
@@ -2273,26 +2254,27 @@ public class RepositoryImpl extends AbstractRepository
                     }
                 }
                 // get names of workspaces
-                Set<String> wspNames;
+                Set wspNames;
                 synchronized (wspInfos) {
-                    wspNames = new HashSet<String>(wspInfos.keySet());
+                    wspNames = new HashSet(wspInfos.keySet());
                 }
                 // remove default workspace (will never be shutdown when idle)
                 wspNames.remove(repConfig.getDefaultWorkspaceName());
 
                 synchronized (activeSessions) {
                     // remove workspaces with active sessions
-                    for (SessionImpl ses : activeSessions.values()) {
+                    for (Iterator it = activeSessions.values().iterator(); it.hasNext();) {
+                        SessionImpl ses = (SessionImpl) it.next();
                         wspNames.remove(ses.getWorkspace().getName());
                     }
                 }
 
                 // remaining names denote workspaces which currently have not
                 // active sessions
-                for (String wspName : wspNames) {
+                for (Iterator it = wspNames.iterator(); it.hasNext();) {
                     WorkspaceInfo wspInfo;
                     synchronized (wspInfos) {
-                        wspInfo = wspInfos.get(wspName);
+                        wspInfo = (WorkspaceInfo) wspInfos.get(it.next());
                     }
                     wspInfo.disposeIfIdle(maxIdleTime);
                 }
@@ -2350,28 +2332,8 @@ public class RepositoryImpl extends AbstractRepository
         }
     }
 
-    /**
-     * Represents a Repository Descriptor Value (either Value or Value[])
-     */
-    protected final class DescriptorValue {
-
-        private Value val;
-        private Value[] vals;
-
-        protected DescriptorValue(Value val) {
-            this.val = val;
-        }
-
-        protected DescriptorValue(Value[] vals) {
-            this.vals = vals;
-        }
-
-        protected Value getValue() {
-            return val;
-        }
-
-        protected Value[] getValues() {
-            return vals != null ? vals : new Value[] {val};
-        }
+    VersionManagerImpl getVersionManagerImpl() {
+        return vMgr;
     }
+
 }

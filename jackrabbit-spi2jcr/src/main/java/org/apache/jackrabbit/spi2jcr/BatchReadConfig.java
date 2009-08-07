@@ -34,7 +34,7 @@ public class BatchReadConfig {
     private Map depthMap = new HashMap(0);
 
     /**
-     * Return the depth for the given node type name. If the name is
+     * Return the depth for the given qualified node type name. If the name is
      * not defined in this configuration, the {@link #DEPTH_DEFAULT default value}
      * is returned.
      *

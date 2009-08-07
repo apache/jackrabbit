@@ -76,10 +76,6 @@ public class ChangeLogImpl implements ChangeLog {
         addOperation(Operations.setMixins(nodeId, mixinNodeTypeNames));
     }
 
-    public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
-        addOperation(Operations.setPrimaryType(nodeId, primaryNodeTypeName));
-    }
-
     public void setValue(PropertyId propertyId, QValue value) throws RepositoryException {
         addOperation(Operations.setValue(propertyId, value));
     }

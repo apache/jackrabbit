@@ -17,17 +17,18 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Collections;
@@ -152,7 +153,12 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         assertTrue(pt.addAccessControlEntry(grPrincipal, privs));
 
         // adding deny-entry must succeed
-        pt.addEntry(grPrincipal, privs, false, null);
+        try {
+            pt.addEntry(grPrincipal, privs, false, null);
+            fail("Adding DENY-ace for a group principal should fail.");
+        } catch (AccessControlException e) {
+            // success
+        }
     }
 
     public void testRevokeEffect() throws RepositoryException, NotExecutableException {

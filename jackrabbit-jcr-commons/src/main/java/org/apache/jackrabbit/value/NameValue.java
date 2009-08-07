@@ -16,11 +16,16 @@
  */
 package org.apache.jackrabbit.value;
 
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
-import java.math.BigDecimal;
 
 /**
  * A <code>NameValue</code> provides an implementation
@@ -46,13 +51,61 @@ public class NameValue extends BaseValue {
      *                              name.
      */
     public static NameValue valueOf(String s) throws ValueFormatException {
+        return valueOf(s, true);
+    }
+
+    /**
+     * Returns a new <code>NameValue</code> initialized to the value represented
+     * by the specified <code>String</code>.
+     * <p/>
+     * If <code>checkFormat</code> is <code>true</code> specified
+     * <code>String</code> must be a valid JCR name, otherwise the string is
+     * used as is.
+     *
+     * @param s           the string to be parsed.
+     * @param checkFormat if the format should be checked.
+     * @return a newly constructed <code>NameValue</code> representing the
+     *         specified value.
+     * @throws javax.jcr.ValueFormatException If the format should be checked
+     *                                        and the <code>String</code> is not
+     *                                        a valid name.
+     */
+    public static NameValue valueOf(String s, boolean checkFormat) throws ValueFormatException {
         if (s != null) {
+            if (checkFormat) {
+                try {
+                    NameFormat.checkFormat(s);
+                } catch (IllegalNameException ine) {
+                    throw new ValueFormatException(ine.getMessage());
+                }
+            }
             return new NameValue(s);
         } else {
             throw new ValueFormatException("not a valid name format: " + s);
         }
     }
 
+    /**
+     * Returns a new <code>NameValue</code> initialized to the value represented
+     * by the specified <code>QName</code> formatted to a string using the
+     * specified <code>resolver</code>.
+     *
+     * @param name     the name to format.
+     * @param resolver a namespace resolver the resolve the URI in the name to a
+     *                 prefix.
+     * @return a newly constructed <code>NameValue</code> representing the the
+     *         specified value.
+     * @throws ValueFormatException If the <code>QName</code> contains a URI
+     *                              that is not known to <code>resolver</code>.
+     */
+    public static NameValue valueOf(QName name, NamespaceResolver resolver)
+            throws ValueFormatException {
+        try {
+            return new NameValue(NameFormat.format(name, resolver));
+        } catch (NoPrefixDeclaredException e) {
+            throw new ValueFormatException(e.getMessage());
+        }
+    }
 
     /**
      * Protected constructor creating a <code>NameValue</code> object
@@ -122,6 +175,8 @@ public class NameValue extends BaseValue {
     public Calendar getDate()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to date failed: inconvertible types");
     }
 
@@ -131,6 +186,8 @@ public class NameValue extends BaseValue {
     public long getLong()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to long failed: inconvertible types");
     }
 
@@ -140,6 +197,8 @@ public class NameValue extends BaseValue {
     public boolean getBoolean()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        setValueConsumed();
+
         throw new ValueFormatException("conversion to boolean failed: inconvertible types");
     }
 
@@ -149,15 +208,8 @@ public class NameValue extends BaseValue {
     public double getDouble()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        throw new ValueFormatException("conversion to double failed: inconvertible types");
-    }
+        setValueConsumed();
 
-    /**
-     * {@inheritDoc}
-     */
-    public BigDecimal getDecimal()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
-        throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
+        throw new ValueFormatException("conversion to double failed: inconvertible types");
     }
 }

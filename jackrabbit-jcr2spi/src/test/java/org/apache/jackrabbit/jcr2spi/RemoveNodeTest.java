@@ -127,7 +127,7 @@ public class RemoveNodeTest extends RemoveItemTest {
         superuser.save();
 
         // get the node with session 2
-        Session otherSession = getHelper().getReadWriteSession();
+        Session otherSession = helper.getReadWriteSession();
         try {
             Node childNode2 = (Node) otherSession.getItem(childNode.getPath());
 

@@ -18,11 +18,11 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.AbstractNodeData;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
+import org.apache.jackrabbit.api.jsr283.version.Version;
+import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ public class VersionImpl extends NodeImpl implements Version {
      */
     protected InternalVersion getInternalVersion() throws RepositoryException {
         InternalVersion version =
-                session.getInternalVersionManager().getVersion((NodeId) id);
+                session.getVersionManager().getVersion((NodeId) id);
         if (version == null) {
             throw new InvalidItemStateException(id + ": the item does not exist anymore");
         }
@@ -108,11 +108,12 @@ public class VersionImpl extends NodeImpl implements Version {
         // get base version. this can certainly be optimized
         InternalVersionHistory vh = ((VersionHistoryImpl) getContainingHistory())
                 .getInternalVersionHistory();
-        Node vn = session.getNodeById(vh.getVersionableId());
+        NodeId id = new NodeId(vh.getVersionableUUID());
+        Node vn = session.getNodeById(id);
         InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
 
         InternalVersion suc = getInternalVersion().getLinearSuccessor(base);
-        return suc == null ? null : (Version) session.getNodeById(suc.getId());
+        return (Version) session.getNodeById(suc.getId());
     }
 
     /**

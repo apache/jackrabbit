@@ -29,7 +29,7 @@ import javax.jcr.RepositoryException;
 /**
  * Represents binary data which is stored in a file system resource.
  */
-class BLOBInResource extends BLOBFileValue {
+public class BLOBInResource extends BLOBFileValue {
 
     /**
      * The default logger
@@ -82,7 +82,10 @@ class BLOBInResource extends BLOBFileValue {
         return new BLOBInResource(fsResource);
     }
 
-    void delete(boolean pruneEmptyParentDirs) {
+    /**
+     * {@inheritDoc}
+     */
+    public void delete(boolean pruneEmptyParentDirs) {
         try {
             fsResource.delete(pruneEmptyParentDirs);
         } catch (FileSystemException fse) {
@@ -92,19 +95,31 @@ class BLOBInResource extends BLOBFileValue {
 
     }
 
-    void discard() {
+    /**
+     * {@inheritDoc}
+     */
+    public void discard() {
         // this instance is not backed by temporarily allocated resource/buffer
     }
 
-    boolean isImmutable() {
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isImmutable() {
         // delete will modify the state.
         return false;
     }
 
-    public long getSize() {
+    /**
+     * {@inheritDoc}
+     */
+    public long getLength() {
         return length;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public InputStream getStream() throws RepositoryException {
         try {
             return fsResource.getInputStream();
@@ -114,10 +129,16 @@ class BLOBInResource extends BLOBFileValue {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return PREFIX +  fsResource.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -138,6 +159,13 @@ class BLOBInResource extends BLOBFileValue {
      */
     public int hashCode() {
         return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isSmall() {
+        return false;
     }
 
 }

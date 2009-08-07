@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.persistence.xml;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -38,6 +39,7 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
 import org.apache.jackrabbit.core.util.DOMWalker;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -59,6 +61,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -167,7 +170,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
      */
     private String buildNodeFolderPath(NodeId id) {
         StringBuffer sb = new StringBuffer();
-        char[] chars = id.toString().toCharArray();
+        char[] chars = id.getUUID().toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < nodePathTemplate.length(); i++) {
             char ch = nodePathTemplate.charAt(i);
@@ -208,8 +211,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         return buildNodeFolderPath(id) + "/" + NODEFILENAME;
     }
 
-    private String buildNodeReferencesFilePath(NodeId id) {
-        return buildNodeFolderPath(id) + "/" + NODEREFSFILENAME;
+    private String buildNodeReferencesFilePath(NodeReferencesId id) {
+        return buildNodeFolderPath(id.getTargetId()) + "/" + NODEREFSFILENAME;
     }
 
     private void readState(DOMWalker walker, NodeState state)
@@ -222,7 +225,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new ItemStateException(msg);
         }
         // check uuid
-        if (!state.getNodeId().toString().equals(walker.getAttribute(UUID_ATTRIBUTE))) {
+        if (!state.getNodeId().getUUID().toString().equals(walker.getAttribute(UUID_ATTRIBUTE))) {
             String msg = "invalid serialized state: uuid mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -253,7 +256,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         // mixin types
         if (walker.enterElement(MIXINTYPES_ELEMENT)) {
-            Set<Name> mixins = new HashSet<Name>();
+            Set mixins = new HashSet();
             while (walker.iterateElements(MIXINTYPE_ELEMENT)) {
                 mixins.add(factory.create(walker.getAttribute(NAME_ATTRIBUTE)));
             }
@@ -333,7 +336,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         state.setModCount(Short.parseShort(modCount));
 
         // values
-        ArrayList<InternalValue> values = new ArrayList<InternalValue>();
+        ArrayList values = new ArrayList();
         if (walker.enterElement(VALUES_ELEMENT)) {
             while (walker.iterateElements(VALUE_ELEMENT)) {
                 // read serialized value
@@ -393,7 +396,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new ItemStateException(msg);
         }
         // check targetId
-        if (!refs.getTargetId().equals(NodeId.valueOf(walker.getAttribute(TARGETID_ATTRIBUTE)))) {
+        if (!refs.getId().equals(NodeReferencesId.valueOf(walker.getAttribute(TARGETID_ATTRIBUTE)))) {
             String msg = "invalid serialized state: targetId  mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -561,27 +564,30 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                     writer = new BufferedWriter(osw);
                 }
 
-                String parentId = (state.getParentId() == null) ? "" : state.getParentId().toString();
+                String parentId = (state.getParentId() == null) ? "" : state.getParentId().getUUID().toString();
                 String encodedNodeType = Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString());
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + NODE_ELEMENT + " "
-                        + UUID_ATTRIBUTE + "=\"" + id + "\" "
+                        + UUID_ATTRIBUTE + "=\"" + id.getUUID() + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + parentId + "\" "
-                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId() + "\" "
+                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
                         + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
                         + NODETYPE_ATTRIBUTE + "=\"" + encodedNodeType + "\">\n");
 
                 // mixin types
                 writer.write("\t<" + MIXINTYPES_ELEMENT + ">\n");
-                for (Name mixin : state.getMixinTypeNames()) {
+                Iterator iter = state.getMixinTypeNames().iterator();
+                while (iter.hasNext()) {
                     writer.write("\t\t<" + MIXINTYPE_ELEMENT + " "
-                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(mixin.toString()) + "\"/>\n");
+                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(iter.next().toString()) + "\"/>\n");
                 }
                 writer.write("\t</" + MIXINTYPES_ELEMENT + ">\n");
 
                 // properties
                 writer.write("\t<" + PROPERTIES_ELEMENT + ">\n");
-                for (Name propName : state.getPropertyNames()) {
+                iter = state.getPropertyNames().iterator();
+                while (iter.hasNext()) {
+                    Name propName = (Name) iter.next();
                     writer.write("\t\t<" + PROPERTY_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(propName.toString()) + "\">\n");
                     // @todo serialize type, definition id and values
@@ -591,10 +597,12 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
                 // child nodes
                 writer.write("\t<" + NODES_ELEMENT + ">\n");
-                for (ChildNodeEntry entry : state.getChildNodeEntries()) {
+                iter = state.getChildNodeEntries().iterator();
+                while (iter.hasNext()) {
+                    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                     writer.write("\t\t<" + NODE_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(entry.getName().toString()) + "\" "
-                            + UUID_ATTRIBUTE + "=\"" + entry.getId() + "\">\n");
+                            + UUID_ATTRIBUTE + "=\"" + entry.getId().getUUID().toString() + "\">\n");
                     writer.write("\t\t</" + NODE_ELEMENT + ">\n");
                 }
                 writer.write("\t</" + NODES_ELEMENT + ">\n");
@@ -648,7 +656,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + PROPERTY_ELEMENT + " "
                         + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getName().toString()) + "\" "
-                        + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentId() + "\" "
+                        + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentId().getUUID() + "\" "
                         + MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
                         + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
@@ -664,10 +672,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                             if (type == PropertyType.BINARY) {
                                 // special handling required for binary value:
                                 // put binary value in BLOB store
-                                InputStream in = val.getStream();
+                                BLOBFileValue blobVal = val.getBLOBFileValue();
+                                InputStream in = blobVal.getStream();
                                 String blobId = blobStore.createId(state.getPropertyId(), i);
                                 try {
-                                    blobStore.put(blobId, in, val.getLength());
+                                    blobStore.put(blobId, in, blobVal.getLength());
                                 } finally {
                                     IOUtils.closeQuietly(in);
                                 }
@@ -694,7 +703,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                         }
                                     }
                                 }
-                                val.discard();
+                                blobVal.discard();
                             } else {
                                 writer.write(Text.encodeIllegalXMLCharacters(val.toString()));
                             }
@@ -751,7 +760,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
                 if (val != null) {
-                    val.deleteBinaryResource();
+                    if (val.getType() == PropertyType.BINARY) {
+                        BLOBFileValue blobVal = val.getBLOBFileValue();
+                        // delete blob file and prune empty parent folders
+                        blobVal.delete(true);
+                    }
                 }
             }
         }
@@ -773,7 +786,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences loadReferencesTo(NodeId id)
+    public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -817,7 +830,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
+        NodeReferencesId id = refs.getId();
+        String refsFilePath = buildNodeReferencesFilePath(id);
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             refsFile.makeParentDirs();
@@ -835,9 +849,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 }
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + NODEREFERENCES_ELEMENT + " "
-                        + TARGETID_ATTRIBUTE + "=\"" + refs.getTargetId() + "\">\n");
+                        + TARGETID_ATTRIBUTE + "=\"" + refs.getId() + "\">\n");
                 // write references (i.e. the id's of the REFERENCE properties)
-                for (PropertyId propId : refs.getReferences()) {
+                Iterator iter = refs.getReferences().iterator();
+                while (iter.hasNext()) {
+                    PropertyId propId = (PropertyId) iter.next();
                     writer.write("\t<" + NODEREFERENCE_ELEMENT + " "
                             + PROPERTYID_ATTRIBUTE + "=\"" + propId + "\"/>\n");
                 }
@@ -846,7 +862,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.close();
             }
         } catch (Exception e) {
-            String msg = "failed to store " + refs;
+            String msg = "failed to store references: " + id;
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -860,7 +876,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
+        NodeReferencesId id = refs.getId();
+        String refsFilePath = buildNodeReferencesFilePath(id);
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             if (refsFile.exists()) {
@@ -868,7 +885,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete " + refs;
+            String msg = "failed to delete references: " + id;
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -915,7 +932,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean existsReferencesTo(NodeId id)
+    public synchronized boolean exists(NodeReferencesId id)
             throws ItemStateException {
 
         if (!initialized) {

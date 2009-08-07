@@ -16,15 +16,11 @@
  */
 package org.apache.jackrabbit.test;
 
-import java.security.Principal;
-import java.util.Properties;
-
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.rmi.PortableRemoteObject;
+import java.util.Properties;
 
 /**
  * Implements the abstract class <code>RepositoryStub</code> and uses JNDI
@@ -67,13 +63,4 @@ public class JNDIRepositoryStub extends RepositoryStub {
         return repository;
     }
 
-    public Principal getKnownPrincipal(Session session) throws RepositoryException {
-        // TODO Auto-generated method stub
-        throw new RepositoryException("TDB");
-    }
-
-    public Principal getUnknownPrincipal(Session session) throws RepositoryException, NotExecutableException {
-        // TODO Auto-generated method stub
-        throw new RepositoryException("TDB");
-    }
 }

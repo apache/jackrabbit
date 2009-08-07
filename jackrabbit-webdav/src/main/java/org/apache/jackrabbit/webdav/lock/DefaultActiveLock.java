@@ -16,8 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import java.util.UUID;
-
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.webdav.DavConstants;
 
 /**
@@ -32,7 +31,7 @@ import org.apache.jackrabbit.webdav.DavConstants;
  */
 public class DefaultActiveLock extends AbstractActiveLock {
 
-    private final String token = DavConstants.OPAQUE_LOCK_TOKEN_PREFIX + UUID.randomUUID();
+    private final String token = DavConstants.OPAQUE_LOCK_TOKEN_PREFIX + UUID.randomUUID().toString();
     private String owner;
     private boolean isDeep = true; // deep by default
     private long expirationTime = DavConstants.INFINITE_TIMEOUT; // never expires by default;

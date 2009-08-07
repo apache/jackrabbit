@@ -2,8 +2,7 @@ NodeTypeName
   nt:resource
 Supertypes
   nt:base
-  mix:lastModified
-  mix:mimeType
+  mix:referenceable
 IsMixin
   false
 HasOrderableChildNodes
@@ -13,6 +12,33 @@ PrimaryItemName
 PropertyDefinition
   Name jcr:data
   RequiredType BINARY
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:encoding
+  RequiredType STRING
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:lastModified
+  RequiredType DATE
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:mimeType
+  RequiredType STRING
   DefaultValues null
   AutoCreated false
   Mandatory true

@@ -44,7 +44,7 @@ public class TransientRepositoryTest extends TestCase {
                 public RepositoryImpl getRepository() throws RepositoryException {
                     throw new UnsupportedRepositoryOperationException();
                 }
-            }, null);
+            });
     }
 
     /**

@@ -85,7 +85,7 @@ public class NodeOrderTest extends AbstractJCRTest {
      * <code>Session</code>.
      */
     public void testOrder2() throws RepositoryException {
-        Session another = getHelper().getReadOnlySession();
+        Session another = helper.getReadOnlySession();
         try {
             NodeIterator it = ((Node) another.getItem(testRootNode.getPath())).getNodes();
             checkOrder(it, children);
@@ -99,7 +99,7 @@ public class NodeOrderTest extends AbstractJCRTest {
      * <code>Session</code> after having accessed some of the nodes individually.
      */
     public void testOrderAfterIndividualAccess() throws RepositoryException {
-        Session another = getHelper().getReadOnlySession();
+        Session another = helper.getReadOnlySession();
         try {
             Node n2 = (Node) another.getItem(children[2].getPath());
             Node n0 = (Node) another.getItem(children[0].getPath());
@@ -115,7 +115,7 @@ public class NodeOrderTest extends AbstractJCRTest {
      * <code>Session</code> after having accessed some of the nodes individually.
      */
     public void testOrderAfterIndividualAccess2() throws RepositoryException {
-        Session another = getHelper().getReadOnlySession();
+        Session another = helper.getReadOnlySession();
         try {
             Node n2 = (Node) another.getItem(children[3].getPath());
             Node n3 = (Node) another.getItem(children[1].getPath());

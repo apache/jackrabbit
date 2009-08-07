@@ -242,8 +242,8 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
         if (getDriver() == null) {
             setDriver(DERBY_EMBEDDED_DRIVER);
         }
-        if (getDatabaseType() == null) {
-            setDatabaseType("derby");
+        if (getSchema() == null) {
+            setSchema("derby");
         }
         if (getUrl() == null) {
             setUrl("jdbc:derby:" + context.getHomeDir().getPath() + "/db/itemState;create=true");

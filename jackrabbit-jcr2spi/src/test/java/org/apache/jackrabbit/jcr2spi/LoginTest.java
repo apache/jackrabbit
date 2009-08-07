@@ -29,7 +29,7 @@ public class LoginTest extends AbstractJCRTest {
     private static Logger log = LoggerFactory.getLogger(LoginTest.class);
 
     public void testNullLogin() throws RepositoryException {
-        Session s = getHelper().getRepository().login();
+        Session s = helper.getRepository().login();
         try {
             assertNotNull(s.getWorkspace().getName());
         } finally {
@@ -38,7 +38,7 @@ public class LoginTest extends AbstractJCRTest {
     }
 
     public void testNullWorkspaceLogin() throws RepositoryException {
-        Session s = getHelper().getRepository().login((String) null);
+        Session s = helper.getRepository().login((String) null);
         try {
             assertNotNull(s.getWorkspace().getName());
         } finally {
@@ -47,7 +47,7 @@ public class LoginTest extends AbstractJCRTest {
     }
 
     public void testNullCredentialsNullWorkspaceLogin() throws RepositoryException {
-        Session s = getHelper().getRepository().login(null, null);
+        Session s = helper.getRepository().login(null, null);
         try {
             assertNotNull(s.getWorkspace().getName());
         } finally {

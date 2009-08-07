@@ -32,12 +32,12 @@ public interface JackrabbitSession extends Session {
     /**
      * Returns the <code>PrincipalManager</code> for the current <code>Session</code>.
      *
-     * @return the <code>PrincipalManager</code> associated with this <code>Session</code>.
-     * @throws AccessDeniedException If the session lacks privileges to access
-     * the principal manager or principals in general.
+     * @return this sessions principal manager.
+     *
+     * @throws AccessDeniedException
      * @throws UnsupportedRepositoryOperationException If principal management
      * is not supported.
-     * @throws RepositoryException If another error occors.
+     * @throws RepositoryException
      * @see PrincipalManager
      */
     PrincipalManager getPrincipalManager() throws AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
@@ -45,7 +45,6 @@ public interface JackrabbitSession extends Session {
     /**
      * Returns the <code>UserManager</code> for the current <code>Session</code>.
      *
-     * @return the <code>UserManager</code> associated with this <code>Session</code>.
      * @throws javax.jcr.AccessDeniedException If this session is not allowed to
      * to access user data.
      * @throws UnsupportedRepositoryOperationException If user management is

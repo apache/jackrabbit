@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.NamedAccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.NamedAccessControlPolicy;
 
 import javax.jcr.RepositoryException;
 

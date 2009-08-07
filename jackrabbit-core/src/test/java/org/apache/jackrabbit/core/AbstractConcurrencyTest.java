@@ -68,7 +68,7 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
         for (int t = 0; t < tasks.length; t++) {
             for (int i = 0; i < concurrency; i++) {
                 int id = t * concurrency + i;
-                Session s = getHelper().getSuperuserSession();
+                Session s = helper.getSuperuserSession();
                 Node test = s.getRootNode().addNode(testPath + "/node" + id);
                 s.save();
                 executors[id] = new Executor(s, test, tasks[t]);
@@ -89,7 +89,7 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
             throws RepositoryException {
         Executor[] executors = new Executor[concurrency];
         for (int i = 0; i < concurrency; i++) {
-            Session s = getHelper().getSuperuserSession();
+            Session s = helper.getSuperuserSession();
             Node test = (Node) s.getItem(path);
             s.save();
             executors[i] = new Executor(s, test, task);

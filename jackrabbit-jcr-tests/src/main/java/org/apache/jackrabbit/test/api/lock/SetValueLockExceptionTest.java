@@ -88,7 +88,9 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         else {
             // add a lockable node
             testNode = testRootNode.addNode(nodeName1, testNodeType);
-            ensureMixinType(testNode, mixLockable);
+            if (needsMixin(testNode, mixLockable)) {
+                testNode.addMixin(mixLockable);
+            }
 
             // add properties
             dateValue = Calendar.getInstance();
@@ -144,7 +146,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         }
 
         // another session
-        Session session = getHelper().getReadWriteSession();
+        Session session = helper.getReadWriteSession();
         try {
             Node node = (Node) session.getItem(testNode.getPath());
             Property prop = null;

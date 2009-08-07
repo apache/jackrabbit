@@ -35,10 +35,10 @@ public class IndexingConfigurationEntityResolver implements EntityResolver {
     /**
      * Maps system ids to DTD resource names.
      */
-    private static final Map<String, String> SYSTEM_IDS;
+    private static final Map SYSTEM_IDS;
 
     static {
-        Map<String, String> systemIds = new HashMap<String, String>();
+        Map systemIds = new HashMap();
         systemIds.put(
                 "http://jackrabbit.apache.org/dtd/indexing-configuration-1.0.dtd",
                 "indexing-configuration-1.0.dtd");
@@ -56,7 +56,7 @@ public class IndexingConfigurationEntityResolver implements EntityResolver {
      */
     public InputSource resolveEntity(String publicId, String systemId)
             throws SAXException, IOException {
-        String resourceName = SYSTEM_IDS.get(systemId);
+        String resourceName = (String) SYSTEM_IDS.get(systemId);
         if (resourceName != null) {
             InputStream in = getClass().getResourceAsStream(resourceName);
             if (in != null) {

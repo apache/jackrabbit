@@ -16,13 +16,15 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.persistence.bundle.AbstractBundlePersistenceManager;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +36,6 @@ import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 
-/**
- * Test AbstractBundlePersistenceManager.getAllNodeIds
- */
 public class PersistenceManagerIteratorTest extends AbstractJCRTest {
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(PersistenceManagerIteratorTest.class);
@@ -59,20 +58,20 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
 
         RepositoryImpl r = (RepositoryImpl) rep;
         RepositoryConfig conf = r.getConfig();
-        Collection<WorkspaceConfig> coll = conf.getWorkspaceConfigs();
+        Collection coll = conf.getWorkspaceConfigs();
         String[] names = new String[coll.size()];
-        Iterator<WorkspaceConfig> wspIt = coll.iterator();
-        for (int i = 0; wspIt.hasNext(); i++) {
+        Iterator wspIt = coll.iterator();
+        for(int i = 0; wspIt.hasNext(); i++) {
             WorkspaceConfig wsc = (WorkspaceConfig) wspIt.next();
             names[i] = wsc.getName();
         }
 
-        for (int i = 0; i < names.length && i < 1; i++) {
-            Session s = getHelper().getSuperuserSession(names[i]);
+        for (int i = 0; i < names.length; i++) {
+            Session s = helper.getSuperuserSession(names[i]);
             try {
                 Method m = r.getClass().getDeclaredMethod("getWorkspaceInfo", new Class[] { String.class });
                 m.setAccessible(true);
-                Object info = m.invoke(r, names[i]);
+                Object info = m.invoke(r, new String[] { names[i] });
                 m = info.getClass().getDeclaredMethod("getPersistenceManager", new Class[0]);
                 m.setAccessible(true);
                 PersistenceManager pm = (PersistenceManager) m.invoke(info, new Object[0]);
@@ -84,16 +83,18 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 log("PM: " + pm.getClass().getName());
 
                 log("All nodes in one step");
+                NodeIdIterator it = apm.getAllNodeIds(null, 0);
                 NodeId after = null;
                 NodeId first = null;
-                for (NodeId id : apm.getAllNodeIds(null, 0)) {
-                    log("  " + id);
+                while (it.hasNext()) {
+                    NodeId id = it.nextNodeId();
+                    log("  " + id.toString());
                     if (first == null) {
                         // initialize first node id
                         first = id;
                     }
                     if (after != null) {
-                        assertFalse(id.compareTo(after) == 0);
+                        assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                     }
                     after = id;
                 }
@@ -103,25 +104,27 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 log("All nodes using batches");
                 while (true) {
                     log(" bigger than: " + after);
-                    Iterator<NodeId> it = apm.getAllNodeIds(after, 2).iterator();
+                    it = apm.getAllNodeIds(after, 2);
                     if (!it.hasNext()) {
                         break;
                     }
                     while (it.hasNext()) {
-                        NodeId id = it.next();
-                        log("    " + id);
-                        assertFalse(id.compareTo(after) == 0);
+                        NodeId id = it.nextNodeId();
+                        log("    " + id.toString());
+                        assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                         after = id;
                     }
                 }
 
                 log("Random access");
                 for (int j = 0; j < 50; j++) {
-                    after = new NodeId();
+                    after = new NodeId(UUID.randomUUID());
                     log(" bigger than: " + after);
-                    for (NodeId id : apm.getAllNodeIds(after, 2)) {
-                        log("    " + id);
-                        assertFalse(id.compareTo(after) == 0);
+                    it = apm.getAllNodeIds(after, 2);
+                    while (it.hasNext()) {
+                        NodeId id = it.nextNodeId();
+                        log("    " + id.toString());
+                        assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                         after = id;
                     }
                 }

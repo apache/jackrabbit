@@ -164,7 +164,7 @@ public class RemoveOrphanVersionHistoryTest extends AbstractJCRTest {
         node.remove();
         session.save();
 
-        Session otherSession = getHelper().getReadWriteSession(workspaceName);
+        Session otherSession = helper.getReadWriteSession(workspaceName);
         try {
             // create a reference to the version history in another workspace
             Node otherRoot = otherSession.getRootNode();

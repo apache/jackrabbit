@@ -77,7 +77,8 @@ public class EquiJoin extends AbstractCondition {
         ScoreNode[] nodes;
         // create lookup map
         while ((nodes = inner.nextScoreNodes()) != null) {
-            sDoc.doc = nodes[innerScoreNodeIndex].getDoc(reader);
+            Integer doc = new Integer(nodes[innerScoreNodeIndex].getDoc(reader));
+            sDoc.doc = doc.intValue();
             Comparable value = comparator.sortValue(sDoc);
             if (value != null) {
                 innerScoreNodes.addScoreNodes(value, nodes);

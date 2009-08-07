@@ -88,7 +88,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
      */
     private static Logger log = LoggerFactory.getLogger(OraclePersistenceManager.class);
 
-    private Class<?> blobClass;
+    private Class blobClass;
     private Integer durationSessionConstant;
     private Integer modeReadWriteConstant;
 
@@ -252,7 +252,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
         }
 
         // check if insert or update
-        boolean update = existsReferencesTo(refs.getTargetId());
+        boolean update = exists(refs.getId());
         String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
         Blob blob = null;
@@ -265,12 +265,12 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             // we are synchronized on this instance, therefore we do not
             // not have to additionally synchronize on the sql statement
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            executeStmt(sql, new Object[]{blob, refs.getTargetId().toString()});
+            executeStmt(sql, new Object[]{blob, refs.getId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write " + refs;
+            String msg = "failed to write node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
@@ -376,7 +376,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
         open.invoke(blob, new Object[]{modeReadWriteConstant});
         Method getBinaryOutputStream =
                 blobClass.getMethod("getBinaryOutputStream", new Class[0]);
-        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob);
+        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
         try {
             IOUtils.copy(in, out);
         } finally {
@@ -387,7 +387,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             out.close();
         }
         Method close = blobClass.getMethod("close", new Class[0]);
-        close.invoke(blob);
+        close.invoke(blob, null);
         return (Blob) blob;
     }
 
@@ -397,7 +397,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
     protected void freeTemporaryBlob(Object blob) throws Exception {
         // blob.freeTemporary();
         Method freeTemporary = blobClass.getMethod("freeTemporary", new Class[0]);
-        freeTemporary.invoke(blob);
+        freeTemporary.invoke(blob, null);
     }
 
     //--------------------------------------------------------< inner classes >

@@ -16,15 +16,16 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.Iterator;
 
 /**
  * Implements a synonym provider based on a properties file. Each line in the
@@ -72,7 +73,7 @@ public class PropertiesSynonymProvider implements SynonymProvider {
     /**
      * Contains the synonym mapping. Map&lt;String, String[]>
      */
-    private Map<String, String[]> synonyms = new HashMap<String, String[]>();
+    private Map synonyms = new HashMap();
 
     /**
      * {@inheritDoc}
@@ -100,7 +101,7 @@ public class PropertiesSynonymProvider implements SynonymProvider {
         term = term.toLowerCase();
         String[] syns;
         synchronized (this) {
-            syns = synonyms.get(term);
+            syns = (String[]) synonyms.get(term);
         }
         if (syns == null) {
             syns = EMPTY_ARRAY;
@@ -143,14 +144,16 @@ public class PropertiesSynonymProvider implements SynonymProvider {
      * @throws IOException if an error occurs while reading from the file system
      *                     resource.
      */
-    private static Map<String, String[]> getSynonyms(FileSystemResource config) throws IOException {
+    private static Map getSynonyms(FileSystemResource config) throws IOException {
         try {
-            Map<String, String[]> synonyms = new HashMap<String, String[]>();
+            Map synonyms = new HashMap();
             Properties props = new Properties();
             props.load(config.getInputStream());
-            for (Map.Entry<Object, Object> entry : props.entrySet()) {
-                String key = (String) entry.getKey();
-                String value = (String) entry.getValue();
+            Iterator it = props.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry e = (Map.Entry) it.next();
+                String key = (String) e.getKey();
+                String value = (String) e.getValue();
                 addSynonym(key, value, synonyms);
                 addSynonym(value, key, synonyms);
             }
@@ -167,9 +170,9 @@ public class PropertiesSynonymProvider implements SynonymProvider {
      * @param synonym  synonym for <code>term</code>.
      * @param synonyms the Map containing the synonyms.
      */
-    private static void addSynonym(String term, String synonym, Map<String, String[]> synonyms) {
+    private static void addSynonym(String term, String synonym, Map synonyms) {
         term = term.toLowerCase();
-        String[] syns = synonyms.get(term);
+        String[] syns = (String[]) synonyms.get(term);
         if (syns == null) {
             syns = new String[]{synonym};
         } else {

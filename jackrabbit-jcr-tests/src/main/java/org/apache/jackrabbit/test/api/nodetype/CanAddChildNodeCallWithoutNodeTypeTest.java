@@ -48,7 +48,7 @@ public class CanAddChildNodeCallWithoutNodeTypeTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
     }
 
     /**

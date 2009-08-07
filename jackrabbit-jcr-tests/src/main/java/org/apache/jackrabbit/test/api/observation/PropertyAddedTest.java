@@ -24,9 +24,8 @@ import java.util.List;
 
 /**
  * Test cases for {@link javax.jcr.observation.Event#PROPERTY_ADDED} events.
- * <p>
- * Configuration requirements:
- * <p>
+ * <p/>
+ * Configuration requirements are:<br/>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child nodes that are created will be named {@link #nodeName1} and
  * {@link #nodeName2}.

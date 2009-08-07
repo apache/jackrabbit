@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
-
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * Tests <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
@@ -54,7 +53,7 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
     }
 
@@ -88,10 +87,6 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
         NodeType nodeType = nodeDef.getDeclaringNodeType();
         String childNodeName = nodeDef.getName();
         String nodeTypeName = nodeDef.getRequiredPrimaryTypes()[0].getName();
-        if (nodeTypeName.equals(ntBase)) {
-            // nt:base is abstract and can never be added, upgrade for check below
-            nodeTypeName = ntUnstructured;
-        }
 
         assertTrue("NodeType.canAddChildNode(String childNodeName, String nodeTypeName) " +
                 "must return true if childNodeName and nodeTypeName match the " +
@@ -130,65 +125,6 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
 
     /**
      * Tests if <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
-     * returns false if <code>nodeTypeName</code> represents a mixin.
-     */
-    public void testCanAddMixinType()
-            throws NotExecutableException, RepositoryException {
-
-        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, false, false, false);
-
-        if (nodeDef == null) {
-            throw new NotExecutableException("No testable node type found.");
-        }
-
-        NodeType nodeType = nodeDef.getDeclaringNodeType();
-        String childNodeName = nodeDef.getName();
-        String mixinName;
-        NodeTypeIterator it = manager.getMixinNodeTypes();
-        if (it.hasNext()) {
-            mixinName = it.nextNodeType().getName();
-        } else {
-            throw new NotExecutableException("No mixin type found.");
-        }
-
-        assertFalse("NodeType.canAddChildNode(String childNodeName, String nodeTypeName) " +
-                "must return false if nodeTypeName represents a mixin type.",
-                nodeType.canAddChildNode(childNodeName, mixinName));
-    }
-
-    /**
-     * Tests if <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
-     * returns false if <code>nodeTypeName</code> represents an abstract node type.
-     */
-    public void testCanAddAbstractType()
-    throws NotExecutableException, RepositoryException {
-
-        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, false, false, false);
-
-        if (nodeDef == null) {
-            throw new NotExecutableException("No testable node type found.");
-        }
-
-        NodeType nodeType = nodeDef.getDeclaringNodeType();
-        String childNodeName = nodeDef.getName();
-        String abstractName = null;
-        NodeTypeIterator it = manager.getPrimaryNodeTypes();
-        while (it.hasNext() && abstractName == null) {
-            NodeType nt = it.nextNodeType();
-            if (nt.isAbstract()) {
-                abstractName = nt.getName();
-            }
-        }
-        if (abstractName == null) {
-            throw new NotExecutableException("No abstract type found.");
-        }
-
-        assertFalse("NodeType.canAddChildNode(String childNodeName, String nodeTypeName) " +
-                "must return false if nodeTypeName represents an abstract node type.",
-                nodeType.canAddChildNode(childNodeName, abstractName));
-    }
-    /**
-     * Tests if <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
      * returns false if <code>childNodeName</code> does not match the <code>NodeDef</code>.
      */
     public void testUndefined()
@@ -225,10 +161,6 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
         }
 
         String type = nodeDef.getRequiredPrimaryTypes()[0].getName();
-        if (type.equals(ntBase)) {
-            // nt:base is abstract and can never be added, upgrade for check below
-            type = ntUnstructured;
-        }
         NodeType nodeType = nodeDef.getDeclaringNodeType();
         String undefinedName = NodeTypeUtil.getUndefinedChildNodeName(nodeType);
 

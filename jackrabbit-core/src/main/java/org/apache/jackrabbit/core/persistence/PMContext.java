@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.persistence;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 import javax.jcr.NamespaceRegistry;
 import java.io.File;

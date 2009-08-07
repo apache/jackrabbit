@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -29,7 +30,6 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -42,14 +42,14 @@ import javax.jcr.Value;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
-import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.io.IOException;
 
 /**
@@ -62,6 +62,11 @@ class RowIteratorImpl implements RowIterator {
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(RowIteratorImpl.class);
+
+    /**
+     * The QValue factory.
+     */
+    private static final QValueFactory QVALUE_FACTORY = QValueFactoryImpl.getInstance();
 
     /**
      * The name of the excerpt function without prefix but with left parenthesis.
@@ -86,15 +91,19 @@ class RowIteratorImpl implements RowIterator {
     private final ScoreNodeIterator scoreNodes;
 
     /**
-     * Linked map of {@link ColumnImpl columns}, indexed by their column name
-     * (String).
+     * Array of select property names
      */
-    private final Map<String, ColumnImpl> columns;
+    private final Name[] properties;
+
+    /**
+     * Set of select property <code>Name</code>s.
+     */
+    private Set propertySet;
 
     /**
      * List of valid selector {@link Name}s.
      */
-    private final List<Name> selectorNames = new ArrayList<Name>();
+    private final List selectorNames = new ArrayList();
 
     /**
      * The item manager of the session that executes the query.
@@ -132,45 +141,35 @@ class RowIteratorImpl implements RowIterator {
      *
      * @param scoreNodes      a <code>ScoreNodeIterator</code> that contains the
      *                        nodes of the query result.
-     * @param columns         the columns to select.
+     * @param properties      <code>Name</code> of the select properties.
      * @param selectorNames   the selector names.
      * @param itemMgr         the item manager of the session that executes the
      *                        query.
      * @param hmgr            the hierarchy manager of the workspace.
      * @param resolver        <code>NamespaceResolver</code> of the user
      *                        <code>Session</code>.
-     * @param valueFactory    the value factory of the current session.
      * @param exProvider      the excerpt provider associated with the query
      *                        result that created this row iterator.
      * @param spellSuggestion the spell suggestion associated with the query
      *                        result or <code>null</code> if none is available.
-     * @throws NamespaceException if an error occurs while translating a JCR
-     *                            name.
      */
     RowIteratorImpl(ScoreNodeIterator scoreNodes,
-                    Map<String, ColumnImpl> columns,
+                    Name[] properties,
                     Name[] selectorNames,
                     ItemManager itemMgr,
                     HierarchyManager hmgr,
                     NamePathResolver resolver,
-                    ValueFactory valueFactory,
                     ExcerptProvider exProvider,
-                    SpellSuggestion spellSuggestion)
-            throws NamespaceException {
+                    SpellSuggestion spellSuggestion) {
         this.scoreNodes = scoreNodes;
-        this.columns = columns;
+        this.properties = properties;
         this.selectorNames.addAll(Arrays.asList(selectorNames));
         this.itemMgr = itemMgr;
         this.hmgr = hmgr;
         this.resolver = resolver;
         this.excerptProvider = exProvider;
         this.spellSuggestion = spellSuggestion;
-        if (valueFactory instanceof ValueFactoryQImpl) {
-            this.valueFactory = (ValueFactoryQImpl) valueFactory;
-        } else {
-            QValueFactory qvf = QValueFactoryImpl.getInstance();
-            this.valueFactory = new ValueFactoryQImpl(qvf, resolver);
-        }
+        this.valueFactory = new ValueFactoryQImpl(QVALUE_FACTORY, resolver);
     }
 
     /**
@@ -252,7 +251,7 @@ class RowIteratorImpl implements RowIterator {
      * Implements the {@link javax.jcr.query.Row} interface, which represents
      * a row in the query result.
      */
-    class RowImpl implements javax.jcr.query.Row {
+    class RowImpl implements org.apache.jackrabbit.api.jsr283.query.Row {
 
         /**
          * The score for this result row
@@ -295,10 +294,35 @@ class RowIteratorImpl implements RowIterator {
          */
         public Value[] getValues() throws RepositoryException {
             if (values == null) {
-                Value[] tmp = new Value[columns.size()];
-                int i = 0;
-                for (String columnName : columns.keySet()) {
-                    tmp[i++] = getValue(columnName);
+                Value[] tmp = new Value[properties.length];
+                for (int i = 0; i < properties.length; i++) {
+                    if (getNodeImpl().hasProperty(properties[i])) {
+                        PropertyImpl prop = getNodeImpl().getProperty(properties[i]);
+                        if (!prop.getDefinition().isMultiple()) {
+                            if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
+                                tmp[i] = valueFactory.createValue(prop.getString());
+                            } else {
+                                tmp[i] = prop.getValue();
+                            }
+                        } else {
+                            // mvp values cannot be returned
+                            tmp[i] = null;
+                        }
+                    } else {
+                        // property not set or one of the following:
+                        // jcr:path / jcr:score / rep:excerpt / rep:spellcheck
+                        if (NameConstants.JCR_PATH.equals(properties[i])) {
+                            tmp[i] = valueFactory.createValue(getNodeImpl().getPath(), PropertyType.PATH);
+                        } else if (NameConstants.JCR_SCORE.equals(properties[i])) {
+                            tmp[i] = valueFactory.createValue(Math.round(score * 1000f));
+                        } else if (isExcerptFunction(properties[i])) {
+                            tmp[i] = getExcerpt();
+                        } else if (isSpellCheckFunction(properties[i])) {
+                            tmp[i] = getSpellCheckedStatement();
+                        } else {
+                            tmp[i] = null;
+                        }
+                    }
                 }
                 values = tmp;
             }
@@ -309,50 +333,45 @@ class RowIteratorImpl implements RowIterator {
         }
 
         /**
-         * Returns the value of the indicated  column in this <code>Row</code>.
+         * Returns the value of the indicated  property in this <code>Row</code>.
          * <p/>
-         * If <code>columnbName</code> is not among the column names of the
+         * If <code>propertyName</code> is not among the column names of the
          * query result table, an <code>ItemNotFoundException</code> is thrown.
          *
          * @return a <code>Value</code>
-         * @throws ItemNotFoundException if <code>columnName</code> is not
+         * @throws ItemNotFoundException if <code>propertyName</code> is not
          *                               among the column names of the query result table.
-         * @throws RepositoryException   if another error occurs.
+         * @throws RepositoryException   if <code>propertyName</code> is not a
+         *                               valid property name.
          */
-        public Value getValue(String columnName) throws ItemNotFoundException, RepositoryException {
+        public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException {
+            if (propertySet == null) {
+                // create the set first
+                Set tmp = new HashSet();
+                tmp.addAll(Arrays.asList(properties));
+                propertySet = tmp;
+            }
             try {
-                ColumnImpl col = columns.get(columnName);
-                if (col == null) {
-                    if (isExcerptFunction(columnName)) {
+                Name prop = resolver.getQName(propertyName);
+                if (!propertySet.contains(prop)) {
+                    if (isExcerptFunction(propertyName)) {
                         // excerpt function with parameter
-                        return getExcerpt(columnName);
+                        return getExcerpt(propertyName);
                     } else {
-                        throw new ItemNotFoundException(columnName);
+                        throw new ItemNotFoundException(propertyName);
                     }
                 }
-                Node n = getNode(col.getSelectorName());
-                if (n == null) {
-                    return null;
-                }
-
-                if (NameConstants.JCR_PATH.equals(col.getPropertyQName())) {
-                    int idx = getSelectorIndex(col.getSelectorName());
-                    QValue p = valueFactory.getQValueFactory().create(hmgr.getPath(sn[idx].getNodeId()));
+                if (NameConstants.JCR_PATH.equals(prop)) {
+                    QValue p = QVALUE_FACTORY.create(hmgr.getPath(sn[0].getNodeId()));
                     return valueFactory.createValue(p);
-                } else if (n.hasProperty(col.getPropertyName())) {
-                    Property p = n.getProperty(col.getPropertyName());
-                    if (p.getDefinition().isMultiple()) {
-                        // mvp values cannot be returned
-                        return null;
+                } else if (getNodeImpl().hasProperty(prop)) {
+                    Property p = getNodeImpl().getProperty(prop);
+                    if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
+                        return valueFactory.createValue(p.getString());
                     } else {
-                        if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
-                            return valueFactory.createValue(p.getString());
-                        } else {
-                            return p.getValue();
-                        }
+                        return p.getValue();
                     }
                 } else {
-                    Name prop = resolver.getQName(columnName);
                     // either jcr:score, rep:excerpt,
                     // rep:spellcheck or not set
                     if (NameConstants.JCR_SCORE.equals(prop)) {
@@ -366,9 +385,9 @@ class RowIteratorImpl implements RowIterator {
                     }
                 }
             } catch (NameException e) {
-                if (isExcerptFunction(columnName)) {
+                if (isExcerptFunction(propertyName)) {
                     // excerpt function with parameter
-                    return getExcerpt(columnName);
+                    return getExcerpt(propertyName);
                 } else {
                     throw new RepositoryException(e.getMessage(), e);
                 }
@@ -406,6 +425,7 @@ class RowIteratorImpl implements RowIterator {
         public Node getNode(String selectorName) throws RepositoryException {
             ScoreNode s = sn[getSelectorIndex(selectorName)];
             if (s == null) {
+                // TODO correct?
                 return null;
             }
             return (Node) itemMgr.getItem(s.getNodeId());
@@ -495,7 +515,8 @@ class RowIteratorImpl implements RowIterator {
         public double getScore(String selectorName) throws RepositoryException {
             ScoreNode s = sn[getSelectorIndex(selectorName)];
             if (s == null) {
-                return 0;
+                // TODO correct?
+                return Double.NaN;
             }
             return s.getScore();
         }
@@ -621,7 +642,6 @@ class RowIteratorImpl implements RowIterator {
         /**
          * Creates an excerpt for node with the given <code>id</code>.
          *
-         * @param id a node id.
          * @return a StringValue or <code>null</code> if the excerpt cannot be
          *         created or an error occurs.
          */
@@ -633,7 +653,7 @@ class RowIteratorImpl implements RowIterator {
                 long time = System.currentTimeMillis();
                 String excerpt = excerptProvider.getExcerpt(id, 3, 150);
                 time = System.currentTimeMillis() - time;
-                log.debug("Created excerpt in {} ms.", time);
+                log.debug("Created excerpt in {} ms.", new Long(time));
                 if (excerpt != null) {
                     return valueFactory.createValue(excerpt);
                 } else {
@@ -647,7 +667,6 @@ class RowIteratorImpl implements RowIterator {
         /**
          * Highlights the matching terms in the passed <code>text</code>.
          *
-         * @param text the text where to apply highlighting.
          * @return a StringValue or <code>null</code> if highlighting fails.
          */
         private Value highlight(String text) {
@@ -660,7 +679,7 @@ class RowIteratorImpl implements RowIterator {
                 long time = System.currentTimeMillis();
                 text = hep.highlight(text);
                 time = System.currentTimeMillis() - time;
-                log.debug("Highlighted text in {} ms.", time);
+                log.debug("Highlighted text in {} ms.", new Long(time));
                 return valueFactory.createValue(text);
             } catch (IOException e) {
                 return null;

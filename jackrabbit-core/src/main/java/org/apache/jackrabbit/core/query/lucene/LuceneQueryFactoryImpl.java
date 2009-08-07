@@ -19,12 +19,11 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.query.qom.Literal;
-import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.RepositoryException;
 
 import org.apache.lucene.search.Query;
@@ -125,7 +124,7 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
      * {@inheritDoc}
      */
     public Query create(SelectorImpl selector) throws RepositoryException {
-        List<Term> terms = new ArrayList<Term>();
+        List terms = new ArrayList();
         String mixinTypesField = npResolver.getJCRName(NameConstants.JCR_MIXINTYPES);
         String primaryTypeField = npResolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
 
@@ -176,11 +175,11 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
         }
         Query q;
         if (terms.size() == 1) {
-            q = new JackrabbitTermQuery(terms.get(0));
+            q = new JackrabbitTermQuery((Term) terms.get(0));
         } else {
             BooleanQuery b = new BooleanQuery();
-            for (Term term : terms) {
-                b.add(new JackrabbitTermQuery(term), BooleanClause.Occur.SHOULD);
+            for (Iterator it = terms.iterator(); it.hasNext();) {
+                b.add(new JackrabbitTermQuery((Term) it.next()), BooleanClause.Occur.SHOULD);
             }
             q = b;
         }
@@ -207,14 +206,7 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
         QueryParser parser = new JackrabbitQueryParser(
                 fieldname, analyzer, synonymProvider);
         try {
-            StaticOperand expr = fts.getFullTextSearchExpression();
-            if (expr instanceof Literal) {
-                return parser.parse(
-                        ((Literal) expr).getLiteralValue().getString());
-            } else {
-                throw new RepositoryException(
-                        "Unknown static operand type: " + expr);
-            }
+            return parser.parse(fts.getFullTextSearchExpression());
         } catch (ParseException e) {
             throw new RepositoryException(e);
         }
@@ -257,7 +249,7 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
     public MultiColumnQuery create(JoinImpl join) throws RepositoryException {
         MultiColumnQuery left = create((SourceImpl) join.getLeft());
         MultiColumnQuery right = create((SourceImpl) join.getRight());
-        return new JoinQuery(left, right, join.getJoinTypeInstance(),
+        return new JoinQuery(left, right, join.getJoinType(),
                 (JoinConditionImpl) join.getJoinCondition(), scs, hmgr);
     }
 }

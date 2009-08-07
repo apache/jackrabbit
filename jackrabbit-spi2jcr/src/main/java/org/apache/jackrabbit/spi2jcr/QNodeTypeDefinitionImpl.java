@@ -31,18 +31,18 @@ import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
 
 /**
- * <code>QNodeTypeDefinitionImpl</code> implements a SPI node type
+ * <code>QNodeTypeDefinitionImpl</code> implements a qualified node type
  * definition based on a JCR {@link NodeType}.
  */
 class QNodeTypeDefinitionImpl
         extends org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl {
 
     /**
-     * Creates a new SPI node type definition based on a JCR
+     * Creates a new qualified node type definition based on a JCR
      * <code>NodeType</code>.
      *
      * @param nt            the JCR node type.
-     * @param resolver      the name and path resolver.
+     * @param resolver
      * @param qValueFactory the QValue factory.
      *
      * @throws NameException   if <code>nt</code> contains an illegal
@@ -58,19 +58,20 @@ class QNodeTypeDefinitionImpl
                                    QValueFactory qValueFactory)
             throws NamespaceException, RepositoryException, NameException {
         super(resolver.getQName(nt.getName()),
-                getNodeTypeNames(nt.getDeclaredSupertypes(), resolver), null,
-                nt.isMixin(), nt.isAbstract(), nt.isQueryable(), nt.hasOrderableChildNodes(),
+                getNodeTypeNames(nt.getDeclaredSupertypes(), resolver),
+                nt.isMixin(), nt.hasOrderableChildNodes(),
                 nt.getPrimaryItemName() != null ? resolver.getQName(nt.getPrimaryItemName()) : null,
                 getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
                 getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), resolver));
     }
 
     /**
-     * Builds the names of the passed node types using the given <code>resolver</code>.
+     * Returns the qualified names of the passed node types using the namespace
+     * resolver to parse the names.
      *
-     * @param nt the node types.
-     * @param resolver the name and path resolver.
-     * @return the names of the node types.
+     * @param nt         the node types
+     * @param resolver
+     * @return the qualified names of the node types.
      * @throws IllegalNameException   if a node type returns an illegal name.
      * @throws NamespaceException if the name of a node type contains a
      *                            prefix that is not known to <code>rResolver</code>.
@@ -87,12 +88,12 @@ class QNodeTypeDefinitionImpl
     }
 
     /**
-     * Builds SPI property definitions from the given {@link javax.jcr.nodetype.PropertyDefinition}s.
+     * Returns qualified property definitions for JCR property definitions.
      *
      * @param propDefs   the JCR property definitions.
      * @param resolver
      * @param factory    the value factory.
-     * @return property definitions.
+     * @return qualified property definitions.
      * @throws RepositoryException    if an error occurs while converting the
      *                                definitions.
      */
@@ -108,11 +109,11 @@ class QNodeTypeDefinitionImpl
     }
 
     /**
-     * Builds SPI node definitions from the given JCR node definitions.
+     * Returns qualified node definitions for JCR node definitions.
      *
      * @param nodeDefs the JCR node definitions.
      * @param resolver the name and path resolver.
-     * @return node definitions.
+     * @return qualified node definitions.
      * @throws IllegalNameException   if the node definition contains an illegal
      *                                name.
      * @throws NamespaceException if the name of a node definition contains

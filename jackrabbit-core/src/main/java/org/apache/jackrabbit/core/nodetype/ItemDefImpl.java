@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QItemDefinition;
 
 import javax.jcr.version.OnParentVersionAction;
 
@@ -64,15 +63,6 @@ public abstract class ItemDefImpl implements ItemDef {
     public ItemDefImpl() {
     }
 
-    public ItemDefImpl(QItemDefinition def) {
-        name = def.getName();
-        declaringNodeType = def.getDeclaringNodeType();
-        autoCreated = def.isAutoCreated();
-        onParentVersion = def.getOnParentVersion();
-        writeProtected = def.isProtected();
-        mandatory = def.isMandatory();
-    }
-    
     /**
      * Sets the name of declaring node type.
      *

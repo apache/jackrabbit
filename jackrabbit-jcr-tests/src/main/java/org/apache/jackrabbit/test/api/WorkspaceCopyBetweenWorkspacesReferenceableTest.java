@@ -19,8 +19,6 @@ package org.apache.jackrabbit.test.api;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 /**
  * <code>WorkspaceCopyBetweenWorkspacesReferenceableTest</code> contains tests
  * for copying referenceable nodes between workspace.
@@ -36,8 +34,7 @@ public class WorkspaceCopyBetweenWorkspacesReferenceableTest extends AbstractWor
      * Copies of referenceable nodes (nodes with UUIDs) are automatically given
      * new UUIDs.
      */
-    public void testCopyNodesReferenceableNodesNewUUID() throws RepositoryException,
-            NotExecutableException {
+    public void testCopyNodesReferenceableNodesNewUUID() throws RepositoryException {
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
 

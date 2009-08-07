@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.cluster;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.LockEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NamespaceEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NodeTypeEvent;
@@ -34,6 +34,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.test.JUnitTest;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Test cases for cluster record production and consumption. Verifies that
@@ -140,7 +141,7 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testLockOperation() throws Exception {
-        LockEvent event = new LockEvent(new NodeId(), true, "admin");
+        LockEvent event = new LockEvent(new NodeId(UUID.randomUUID()), true, "admin");
 
         master.createLockChannel(DEFAULT_WORKSPACE).create(event.getNodeId(),
                 event.isDeep(), event.getUserId()).ended(true);
@@ -158,7 +159,7 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testUnlockOperation() throws Exception {
-        UnlockEvent event = new UnlockEvent(new NodeId());
+        UnlockEvent event = new UnlockEvent(new NodeId(UUID.randomUUID()));
 
         master.createLockChannel(DEFAULT_WORKSPACE).create(event.getNodeId()).ended(true);
 

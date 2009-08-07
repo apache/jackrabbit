@@ -134,7 +134,7 @@ public class ReorderTest extends AbstractJCRTest {
         testRootNode.orderBefore(getRelPath(child3), getRelPath(child1));
         testRootNode.save();
 
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             testOrder((Node) otherSession.getItem(testRootNode.getPath()), new Node[] {child3, child1, child2, child4});
         } finally {

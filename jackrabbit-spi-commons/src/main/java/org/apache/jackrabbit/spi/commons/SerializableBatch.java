@@ -122,10 +122,6 @@ public class SerializableBatch implements Batch, Serializable {
         recording.add(new SetMixins(nodeId, mixinNodeTypeIds));
     }
 
-    public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
-        recording.add(new SetPrimaryType(nodeId, primaryNodeTypeName));
-    }
-
     public void move(NodeId srcNodeId,
                      NodeId destParentNodeId,
                      Name destName) {
@@ -269,37 +265,18 @@ public class SerializableBatch implements Batch, Serializable {
 
         private final NodeId nodeId;
 
-        private final Name[] mixinNodeTypeNames;
+        private final Name[] mixinNodeTypeIds;
 
-        SetMixins(NodeId nodeId, Name[] mixinNodeTypeNames) {
+        SetMixins(NodeId nodeId, Name[] mixinNodeTypeIds) {
             this.nodeId = nodeId;
-            this.mixinNodeTypeNames = mixinNodeTypeNames;
+            this.mixinNodeTypeIds = mixinNodeTypeIds;
         }
 
         /**
          * {@inheritDoc}
          */
         public void replay(Batch batch) throws RepositoryException {
-            batch.setMixins(nodeId, mixinNodeTypeNames);
-        }
-    }
-
-    private static class SetPrimaryType implements Operation {
-
-        private final NodeId nodeId;
-
-        private final Name primaryNodeTypeName;
-
-        SetPrimaryType(NodeId nodeId, Name primaryNodeTypeName) {
-            this.nodeId = nodeId;
-            this.primaryNodeTypeName = primaryNodeTypeName;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void replay(Batch batch) throws RepositoryException {
-            batch.setPrimaryType(nodeId, primaryNodeTypeName);
+            batch.setMixins(nodeId, mixinNodeTypeIds);
         }
     }
 

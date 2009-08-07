@@ -55,7 +55,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
         uPath = u.getNode().getPath();
 
         // create a session for the other user.
-        uSession = getHelper().getRepository().login(new SimpleCredentials(uID, pw.toCharArray()));
+        uSession = helper.getRepository().login(new SimpleCredentials(uID, pw.toCharArray()));
         uMgr = getUserManager(uSession);
     }
 

@@ -10,31 +10,12 @@ observation, and more. Typical applications that use content
 repositories include content management, document management,
 and records management systems.
 
-Jackrabbit is currently based on a pre-release version of the JCR 2.0 API
-defined by the Java Specification Request 283 (JSR 283,
-http://jcp.org/en/jsr/detail?id=283). Version 1.0 of the JCR API was
-specified by JSR 170.
+Version 1.0 of the JCR API was specified by the Java Specification
+Request 170 (JSR 170, http://jcp.org/en/jsr/detail?id=170) and work
+on the JCR version 2.0 has begun in JSR 283.
 
 Apache Jackrabbit is a project of the Apache Software Foundation.
 
-Building Jackrabbit
-===================
-
-To build Jackrabbit, you first need to download the jcr-2.0-b113.jar and
-jcr-2.0-b113.xml files from https://issues.apache.org/jira/browse/JCR-1104
-and install them to your local Maven repository:
-
-    mvn install:install-file \
-        -Dfile=jcr-2.0-b113.jar -DpomFile=jcr-2.0-b113.xml
-
-Once you've installed the jar, you can build Jackrabbit like this:
-
-    mvn clean install
-
-You need Maven 2.0.9 (or higher) with Java 5 (or higher) for the build.
-For more instructions, please see the documentation at:
-
-   http://jackrabbit.apache.org/building-jackrabbit.html
 
 License (see also LICENSE.txt)
 ==============================
@@ -84,8 +65,23 @@ To checkout the main Jackrabbit source tree, run
 
    svn checkout https://svn.apache.org/repos/asf/jackrabbit/trunk jackrabbit
 
+Once you have a copy of the source code tree, you can use Apache Maven
+
+   http://maven.apache.org/
+
+to build the project. You should use Maven 2 to build Jackrabbit.
+The minimal command to build, test, and package all the main Jackrabbit
+components is:
+
+   mvn install
+
+For more instructions, please see the documentation at:
+
+   http://jackrabbit.apache.org/building-jackrabbit.html
+
 Credits
 =======
 
 See http://jackrabbit.apache.org/jackrabbit-team.html for the list of 
 Jackrabbit committers and main contributors.
+

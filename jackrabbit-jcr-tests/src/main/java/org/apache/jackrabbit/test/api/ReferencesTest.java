@@ -24,8 +24,6 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * <code>ReferencesTest</code> contains the test cases for the references.
@@ -42,7 +40,9 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testReferences() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(n1, mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
 
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
@@ -113,93 +113,13 @@ public class ReferencesTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests Node.getReferences(String)
-     */
-    public void testGetReferencesWithName() throws RepositoryException, NotExecutableException {
-        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(n1, mixReferenceable);
-
-        // with some impls. the mixin type has only affect upon save
-        testRootNode.save();
-
-        // make sure the node is now referenceable
-        assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
-
-        // create references:
-        // n2.p1 -> n1
-        // n2.p2 -> n1
-        // n3.p1 -> n1
-        Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        Node n3 = testRootNode.addNode(nodeName3, testNodeType);
-
-        Value[] values = new Value[]{superuser.getValueFactory().createValue(n1)};
-
-        // abort test if the repository does not allow setting
-        // reference properties on this node
-        ensureCanSetProperty(n2, propertyName1, values);
-        ensureCanSetProperty(n2, propertyName2, values);
-        ensureCanSetProperty(n3, propertyName1, values);
-
-        Property p1 = n2.setProperty(propertyName1, values);
-        Property p2 = n2.setProperty(propertyName2, values);
-        Property p3 = n3.setProperty(propertyName1, n1);
-        testRootNode.save();
-
-        // get references with name propertyName1
-        // (should return p1 and p3))
-        PropertyIterator iter = n1.getReferences(propertyName1);
-        Set results = new HashSet();
-        while (iter.hasNext()) {
-            results.add(iter.nextProperty().getPath());
-        }
-        assertEquals("wrong number of references reported", 2, results.size());
-        assertTrue("missing reference property: " + p1.getPath(), results.contains(p1.getPath()));
-        assertTrue("missing reference property: " + p3.getPath(), results.contains(p3.getPath()));
-
-        // get references with name propertyName2
-        // (should return p2))
-        iter = n1.getReferences(propertyName2);
-        results.clear();
-        while (iter.hasNext()) {
-            results.add(iter.nextProperty().getPath());
-        }
-        assertEquals("wrong number of references reported", 1, results.size());
-        assertTrue("missing reference property: " + p2.getPath(), results.contains(p2.getPath()));
-
-        // remove reference n3.p1 -> n1
-        testRootNode.getNode(nodeName3).getProperty(propertyName1).remove();
-        testRootNode.save();
-
-        // get references with name propertyName1
-        // (should return p1))
-        iter = n1.getReferences(propertyName1);
-        results.clear();
-        while (iter.hasNext()) {
-            results.add(iter.nextProperty().getPath());
-        }
-        assertEquals("wrong number of references reported", 1, results.size());
-        assertTrue("missing reference property: " + p1.getPath(), results.contains(p1.getPath()));
-
-        // remove reference n2.p1 -> n1
-        p1.remove();
-        testRootNode.save();
-
-        // get references with name propertyName1
-        // (should nothing))
-        iter = n1.getReferences(propertyName1);
-        results.clear();
-        while (iter.hasNext()) {
-            results.add(iter.nextProperty().getPath());
-        }
-        assertEquals("wrong number of references reported", 0, results.size());
-    }
-
-    /**
      * Tests Property.getNode();
      */
     public void testReferenceTarget() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(n1, mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
 
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
@@ -226,9 +146,13 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testAlterReference() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(n1, mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        ensureMixinType(n2, mixReferenceable);
+        if (needsMixin(n2, mixReferenceable)) {
+            n2.addMixin(mixReferenceable);
+        }
 
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
@@ -281,25 +205,5 @@ public class ReferencesTest extends AbstractJCRTest {
         if (iter.hasNext()) {
             fail("too many referers: " + iter.nextProperty().getPath());
         }
-    }
-
-    public void testNonReferenceable() throws RepositoryException, NotExecutableException {
-        Node nonReferenceable = null;
-        if (testRootNode.isNodeType(mixReferenceable)) {
-            Node child = testRootNode.addNode(nodeName1, testNodeType);
-            superuser.save();
-            if (!child.isNodeType(mixReferenceable)) {
-                nonReferenceable = child;
-            }
-        } else {
-            nonReferenceable = testRootNode;
-        }
-
-        if (nonReferenceable == null) {
-            throw new NotExecutableException("Test node is referenceable.");
-        }
-
-        // getReferences must return an empty iterator and must not throw.        
-        assertFalse(nonReferenceable.getReferences().hasNext());
     }
 }

@@ -20,13 +20,15 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -62,15 +64,14 @@ class ConsistencyCheck {
     private final MultiIndex index;
 
     /**
-     * All the document ids within the index.
+     * All the document UUIDs within the index.
      */
-    private Set<NodeId> documentIds;
+    private Set documentUUIDs;
 
     /**
      * List of all errors.
      */
-    private final List<ConsistencyCheckError> errors =
-        new ArrayList<ConsistencyCheckError>();
+    private final List errors = new ArrayList();
 
     /**
      * Private constructor.
@@ -108,7 +109,8 @@ class ConsistencyCheck {
             return;
         }
         int notRepairable = 0;
-        for (ConsistencyCheckError error : errors) {
+        for (Iterator it = errors.iterator(); it.hasNext();) {
+            ConsistencyCheckError error = (ConsistencyCheckError) it.next();
             try {
                 if (error.repairable()) {
                     error.repair();
@@ -137,8 +139,8 @@ class ConsistencyCheck {
      * Returns the errors detected by the consistency check.
      * @return the errors detected by the consistency check.
      */
-    List<ConsistencyCheckError> getErrors() {
-        return new ArrayList<ConsistencyCheckError>(errors);
+    List getErrors() {
+        return new ArrayList(errors);
     }
 
     /**
@@ -146,10 +148,10 @@ class ConsistencyCheck {
      * @throws IOException if an error occurs while running the check.
      */
     private void run() throws IOException {
-        // Ids of multiple nodes in the index
-        Set<NodeId> multipleEntries = new HashSet<NodeId>();
-        // collect all documents ids
-        documentIds = new HashSet<NodeId>();
+        // UUIDs of multiple nodes in the index
+        Set multipleEntries = new HashSet();
+        // collect all documents UUIDs
+        documentUUIDs = new HashSet();
         CachingMultiIndexReader reader = index.getIndexReader();
         try {
             for (int i = 0; i < reader.maxDoc(); i++) {
@@ -161,13 +163,13 @@ class ConsistencyCheck {
                     continue;
                 }
                 Document d = reader.document(i, FieldSelectors.UUID);
-                NodeId id = new NodeId(d.get(FieldNames.UUID));
-                if (stateMgr.hasItemState(id)) {
-                    if (!documentIds.add(id)) {
-                        multipleEntries.add(id);
+                UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
+                if (stateMgr.hasItemState(new NodeId(uuid))) {
+                    if (!documentUUIDs.add(uuid)) {
+                        multipleEntries.add(uuid);
                     }
                 } else {
-                    errors.add(new NodeDeleted(id));
+                    errors.add(new NodeDeleted(uuid));
                 }
             }
         } finally {
@@ -175,8 +177,8 @@ class ConsistencyCheck {
         }
 
         // create multiple entries errors
-        for (NodeId id : multipleEntries) {
-            errors.add(new MultipleEntries(id));
+        for (Iterator it = multipleEntries.iterator(); it.hasNext();) {
+            errors.add(new MultipleEntries((UUID) it.next()));
         }
 
         reader = index.getIndexReader();
@@ -191,20 +193,21 @@ class ConsistencyCheck {
                     continue;
                 }
                 Document d = reader.document(i, FieldSelectors.UUID_AND_PARENT);
-                NodeId id = new NodeId(d.get(FieldNames.UUID));
+                UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
                 String parentUUIDString = d.get(FieldNames.PARENT);
-                NodeId parentId = null;
+                UUID parentUUID = null;
                 if (parentUUIDString.length() > 0) {
-                    parentId = new NodeId(parentUUIDString);
+                    parentUUID = UUID.fromString(parentUUIDString);
                 }
-                if (parentId == null || documentIds.contains(parentId)) {
+                if (parentUUID == null || documentUUIDs.contains(parentUUID)) {
                     continue;
                 }
                 // parent is missing
+                NodeId parentId = new NodeId(parentUUID);
                 if (stateMgr.hasItemState(parentId)) {
-                    errors.add(new MissingAncestor(id, parentId));
+                    errors.add(new MissingAncestor(uuid, parentUUID));
                 } else {
-                    errors.add(new UnknownParent(id, parentId));
+                    errors.add(new UnknownParent(uuid, parentUUID));
                 }
             }
         } finally {
@@ -223,7 +226,7 @@ class ConsistencyCheck {
         // remember as fallback
         String uuid = node.getNodeId().toString();
         StringBuffer path = new StringBuffer();
-        List<ChildNodeEntry> elements = new ArrayList<ChildNodeEntry>();
+        List elements = new ArrayList();
         try {
             while (node.getParentId() != null) {
                 NodeId parentId = node.getParentId();
@@ -233,7 +236,7 @@ class ConsistencyCheck {
                 node = parent;
             }
             for (int i = elements.size() - 1; i > -1; i--) {
-                ChildNodeEntry entry = elements.get(i);
+                ChildNodeEntry entry = (ChildNodeEntry) elements.get(i);
                 path.append('/').append(entry.getName().getLocalName());
                 if (entry.getIndex() > 1) {
                     path.append('[').append(entry.getIndex()).append(']');
@@ -255,11 +258,11 @@ class ConsistencyCheck {
      */
     private class MissingAncestor extends ConsistencyCheckError {
 
-        private final NodeId parentId;
+        private final UUID parentUUID;
 
-        private MissingAncestor(NodeId id, NodeId parentId) {
-            super("Parent of " + id + " missing in index. Parent: " + parentId, id);
-            this.parentId = parentId;
+        private MissingAncestor(UUID uuid, UUID parentUUID) {
+            super("Parent of " + uuid + " missing in index. Parent: " + parentUUID, uuid);
+            this.parentUUID = parentUUID;
         }
 
         /**
@@ -275,15 +278,15 @@ class ConsistencyCheck {
          * @throws IOException if an error occurs while repairing.
          */
         public void repair() throws IOException {
-            NodeId ancestorId = parentId;
-            while (ancestorId != null && !documentIds.contains(ancestorId)) {
+            NodeId parentId = new NodeId(parentUUID);
+            while (parentId != null && !documentUUIDs.contains(parentId.getUUID())) {
                 try {
-                    NodeState n = (NodeState) stateMgr.getItemState(ancestorId);
+                    NodeState n = (NodeState) stateMgr.getItemState(parentId);
                     log.info("Reparing missing node " + getPath(n));
                     Document d = index.createDocument(n);
                     index.addDocument(d);
-                    documentIds.add(n.getNodeId());
-                    ancestorId = n.getParentId();
+                    documentUUIDs.add(n.getNodeId().getUUID());
+                    parentId = n.getParentId();
                 } catch (ItemStateException e) {
                     throw new IOException(e.toString());
                 } catch (RepositoryException e) {
@@ -298,8 +301,8 @@ class ConsistencyCheck {
      */
     private class UnknownParent extends ConsistencyCheckError {
 
-        private UnknownParent(NodeId id, NodeId parentId) {
-            super("Node " + id + " has unknown parent: " + parentId, id);
+        private UnknownParent(UUID uuid, UUID parentUUID) {
+            super("Node " + uuid + " has unknown parent: " + parentUUID, uuid);
         }
 
         /**
@@ -314,7 +317,7 @@ class ConsistencyCheck {
          * No operation.
          */
         public void repair() throws IOException {
-            log.warn("Unknown parent for " + id + " cannot be repaired");
+            log.warn("Unknown parent for " + uuid + " cannot be repaired");
         }
     }
 
@@ -323,8 +326,8 @@ class ConsistencyCheck {
      */
     private class MultipleEntries extends ConsistencyCheckError {
 
-        MultipleEntries(NodeId id) {
-            super("Multiple entries found for node " + id, id);
+        MultipleEntries(UUID uuid) {
+            super("Multiple entries found for node " + uuid, uuid);
         }
 
         /**
@@ -342,14 +345,14 @@ class ConsistencyCheck {
          */
         public void repair() throws IOException {
             // first remove all occurrences
-            index.removeAllDocuments(id);
+            index.removeAllDocuments(uuid);
             // then re-index the node
             try {
-                NodeState node = (NodeState) stateMgr.getItemState(id);
+                NodeState node = (NodeState) stateMgr.getItemState(new NodeId(uuid));
                 log.info("Re-indexing duplicate node occurrences in index: " + getPath(node));
                 Document d = index.createDocument(node);
                 index.addDocument(d);
-                documentIds.add(node.getNodeId());
+                documentUUIDs.add(node.getNodeId().getUUID());
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             } catch (RepositoryException e) {
@@ -363,8 +366,8 @@ class ConsistencyCheck {
      */
     private class NodeDeleted extends ConsistencyCheckError {
 
-        NodeDeleted(NodeId id) {
-            super("Node " + id + " does not longer exist.", id);
+        NodeDeleted(UUID uuid) {
+            super("Node " + uuid + " does not longer exist.", uuid);
         }
 
         /**
@@ -380,8 +383,8 @@ class ConsistencyCheck {
          * @throws IOException if an error occurs while repairing.
          */
         public void repair() throws IOException {
-            log.info("Removing deleted node from index: " + id);
-            index.removeDocument(id);
+            log.info("Removing deleted node from index: " + uuid);
+            index.removeDocument(uuid);
         }
     }
 }

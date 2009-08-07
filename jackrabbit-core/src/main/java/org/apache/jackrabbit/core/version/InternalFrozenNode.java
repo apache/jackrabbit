@@ -16,16 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Set;
-import java.util.List;
-
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.version.VersionException;
-import javax.jcr.RepositoryException;
 
 /**
  * The InternalFrozenNode interface represents the frozen node that was generated
@@ -41,7 +36,7 @@ public interface InternalFrozenNode extends InternalFreeze {
      * @return an array of internal freezes
      * @throws VersionException if the freezes cannot be retrieved
      */
-    List<ChildNodeEntry> getFrozenChildNodes() throws VersionException;
+    InternalFreeze[] getFrozenChildNodes() throws VersionException;
 
     /**
      * Returns the list of frozen properties.
@@ -51,11 +46,11 @@ public interface InternalFrozenNode extends InternalFreeze {
     PropertyState[] getFrozenProperties();
 
     /**
-     * Returns the frozen node id.
+     * Returns the frozen UUID.
      *
-     * @return the frozen id
+     * @return the frozen uuid.
      */
-    NodeId getFrozenId();
+    UUID getFrozenUUID();
 
     /**
      * Returns the name of frozen primary type.
@@ -69,22 +64,14 @@ public interface InternalFrozenNode extends InternalFreeze {
      *
      * @return the list of names of the frozen mixin types.
      */
-    Set<Name> getFrozenMixinTypes();
+    Name[] getFrozenMixinTypes();
 
     /**
-     * Checks if this frozen node had the inidcated child node.
-     * @param name name of the childnode
-     * @param idx 1-based index
-     * @return <code>true</code> if the child node exists
+     * Checks if this frozen node has the frozen version history
+     * @param uuid
+     * @return <code>true</code> if this node has the history;
+     *         <code>false</code> otherwise.
      */
-    boolean hasFrozenChildNode(Name name, int idx);
+    boolean hasFrozenHistory(UUID uuid);
 
-    /**
-     * Returns the frozen child node or <code>null</code>
-     * @param name name of the childnode
-     * @param idx 1-based index
-     * @return the child node
-     * @throws RepositoryException if an error occurs
-     */
-    InternalFreeze getFrozenChildNode(Name name, int idx) throws RepositoryException;
 }

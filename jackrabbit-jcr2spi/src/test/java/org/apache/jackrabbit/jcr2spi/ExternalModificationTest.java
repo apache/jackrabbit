@@ -47,7 +47,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
         refNode.addMixin(mixReferenceable);
         testRootNode.save();
 
-        testSession = getHelper().getReadWriteSession();
+        testSession = helper.getReadWriteSession();
     }
 
     protected void tearDown() throws Exception {
@@ -204,7 +204,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
 
     public void testExternalRemoval() throws RepositoryException, NotExecutableException {
         String uuid = refNode.getUUID();
-        Node refNode2 = testSession.getNodeByUUID(uuid);
+        Node refNode2 = (Node) testSession.getNodeByUUID(uuid);
 
         String srcPath = refNode.getPath();
         String destPath = destParentNode.getPath() + "/" + nodeName2;
@@ -230,7 +230,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
         refNode.save();
 
         String uuid = refNode.getUUID();
-        Node refNode2 = testSession.getNodeByUUID(uuid);
+        Node refNode2 = (Node) testSession.getNodeByUUID(uuid);
         Node c2 =  (Node) testSession.getItem(childN.getPath());
         Property p2 = (Property) testSession.getItem(p.getPath());
         // transiently remove the property -> test effect of external removal.
@@ -258,7 +258,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
         refNode.save();
 
         String uuid = refNode.getUUID();
-        Node refNode2 = testSession.getNodeByUUID(uuid);
+        Node refNode2 = (Node) testSession.getNodeByUUID(uuid);
         Node c2 =  (Node) testSession.getItem(childN.getPath());
         Property p2 = (Property) testSession.getItem(p.getPath());
         // transiently modify  -> test effect of external removal.

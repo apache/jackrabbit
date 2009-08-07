@@ -424,10 +424,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         if (tmpRelPath == null) {
                             tmpRelPath = new PathBuilder();
                         }
-                        PathQueryNode relPath = tmp.getRelativePath();
-                        LocationStepQueryNode[] steps = relPath.getPathSteps();
-                        
-                        tmpRelPath.addLast(steps[steps.length-1].getNameTest());
+                        tmpRelPath.addLast(tmp.getRelativePath().getNameElement());
                     }
                 }
                 break;
@@ -548,11 +545,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 }
                 break;
             case JJTDOTDOT:
-                if (queryNode instanceof LocationStepQueryNode) {
-                    ((LocationStepQueryNode) queryNode).setNameTest(PATH_FACTORY.getParentElement().getName());
-                } else {
-                    ((RelationQueryNode) queryNode).addPathElement(PATH_FACTORY.getParentElement());
-                }
+                exceptions.add(new InvalidQueryException("Parent axis is not supported"));
                 break;
             default:
                 // per default traverse
@@ -950,12 +943,47 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     }
                     if (queryNode.getType() == QueryNode.TYPE_PATH) {
                         PathQueryNode pathNode = (PathQueryNode) queryNode;
-                        
-                        pathNode.addPathStep(createDerefQueryNode(node, descendant, pathNode));
-                    } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
-                        RelationQueryNode relNode = (RelationQueryNode) queryNode;
-                        DerefQueryNode deref = createDerefQueryNode(node, descendant, relNode.getRelativePath());
-                        relNode.getRelativePath().addPathStep(deref);
+                        DerefQueryNode derefNode = factory.createDerefQueryNode(pathNode, null, false);
+
+                        // assign property name
+                        node.jjtGetChild(1).jjtAccept(this, derefNode);
+                        // check property name
+                        if (derefNode.getRefProperty() == null) {
+                            exceptions.add(new InvalidQueryException("Wrong first argument type for jcr:deref"));
+                        }
+
+                        SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
+                        if (literal.getId() == JJTSTRINGLITERAL) {
+                            String value = literal.getValue();
+                            // strip quotes
+                            value = value.substring(1, value.length() - 1);
+                            if (!value.equals("*")) {
+                                Name name = null;
+                                try {
+                                    name = decode(resolver.getQName(value));
+                                } catch (NameException e) {
+                                    exceptions.add(new InvalidQueryException("Illegal name: " + value));
+                                }
+                                derefNode.setNameTest(name);
+                            }
+                        } else {
+                            exceptions.add(new InvalidQueryException("Second argument for jcr:deref must be a String"));
+                        }
+
+                        // check if descendant
+                        if (!descendant) {
+                            Node p = node.jjtGetParent();
+                            for (int i = 0; i < p.jjtGetNumChildren(); i++) {
+                                SimpleNode c = (SimpleNode) p.jjtGetChild(i);
+                                if (c == node) {
+                                    break;
+                                }
+                                descendant = (c.getId() == JJTSLASHSLASH
+                                        || c.getId() == JJTROOTDESCENDANTS);
+                            }
+                        }
+                        derefNode.setIncludeDescendants(descendant);
+                        pathNode.addPathStep(derefNode);
                     } else {
                         exceptions.add(new InvalidQueryException("Unsupported location for jcr:deref()"));
                     }
@@ -1073,51 +1101,6 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             exceptions.add(e);
         }
         return queryNode;
-    }
-
-    private DerefQueryNode createDerefQueryNode(SimpleNode node, boolean descendant, QueryNode pathNode)
-        throws NamespaceException {
-        DerefQueryNode derefNode = factory.createDerefQueryNode(pathNode, null, false);
-
-        // assign property name
-        node.jjtGetChild(1).jjtAccept(this, derefNode);
-        // check property name
-        if (derefNode.getRefProperty() == null) {
-            exceptions.add(new InvalidQueryException("Wrong first argument type for jcr:deref"));
-        }
-
-        SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
-        if (literal.getId() == JJTSTRINGLITERAL) {
-            String value = literal.getValue();
-            // strip quotes
-            value = value.substring(1, value.length() - 1);
-            if (!value.equals("*")) {
-                Name name = null;
-                try {
-                    name = decode(resolver.getQName(value));
-                } catch (NameException e) {
-                    exceptions.add(new InvalidQueryException("Illegal name: " + value));
-                }
-                derefNode.setNameTest(name);
-            }
-        } else {
-            exceptions.add(new InvalidQueryException("Second argument for jcr:deref must be a String"));
-        }
-
-        // check if descendant
-        if (!descendant) {
-            Node p = node.jjtGetParent();
-            for (int i = 0; i < p.jjtGetNumChildren(); i++) {
-                SimpleNode c = (SimpleNode) p.jjtGetChild(i);
-                if (c == node) {
-                    break;
-                }
-                descendant = (c.getId() == JJTSLASHSLASH
-                        || c.getId() == JJTROOTDESCENDANTS);
-            }
-        }
-        derefNode.setIncludeDescendants(descendant);
-        return derefNode;
     }
 
     private OrderQueryNode.OrderSpec createOrderSpec(SimpleNode node,

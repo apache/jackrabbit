@@ -19,8 +19,10 @@ package org.apache.jackrabbit.core;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -31,7 +33,6 @@ import javax.jcr.Value;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
-import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.slf4j.Logger;
@@ -44,8 +45,8 @@ import org.slf4j.LoggerFactory;
  * when no longer used, this class can be used to avoid having to explicitly
  * shut down the repository.
  */
-public class TransientRepository extends AbstractRepository
-        implements JackrabbitRepository, SessionListener {
+public class TransientRepository
+        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, SessionListener {
 
     /**
      * The logger instance used to log the repository and session lifecycles.
@@ -110,8 +111,7 @@ public class TransientRepository extends AbstractRepository
      * repository instance is automatically shut down until a new session
      * is opened.
      */
-    private final Map<Session, Session> sessions =
-        new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    private final Map sessions = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
      * The static repository descriptors. The default {@link RepositoryImpl}
@@ -121,20 +121,13 @@ public class TransientRepository extends AbstractRepository
     private final Properties descriptors;
 
     /**
-     * The path to the repository home directory.
-     */
-    private final String home;
-
-    /**
      * Creates a transient repository proxy that will use the given repository
      * factory to initialize the underlying repository instances.
      *
      * @param factory repository factory
-     * @param home    the path to the repository home directory.
      */
-    public TransientRepository(RepositoryFactory factory, String home) {
+    public TransientRepository(RepositoryFactory factory) {
         this.factory = factory;
-        this.home = home;
         this.repository = null;
         this.descriptors = new Properties();
 
@@ -161,8 +154,10 @@ public class TransientRepository extends AbstractRepository
      * <code>org.apache.jackrabbit.repository.home</code>. If these properties
      * are not found, then the default values "<code>repository.xml</code>"
      * and "<code>repository</code>" are used.
+     *
+     * @throws IOException not thrown, to be removed in Jackrabbit 2.0
      */
-    public TransientRepository() {
+    public TransientRepository() throws IOException {
         this(System.getProperty(CONF_PROPERTY, CONF_DEFAULT),
              System.getProperty(HOME_PROPERTY, HOME_DEFAULT));
     }
@@ -172,13 +167,15 @@ public class TransientRepository extends AbstractRepository
      * configuration to initialize the underlying repository instance.
      *
      * @param config repository configuration
+     * @throws IOException not thrown, to be removed in Jackrabbit 2.0
      */
-    public TransientRepository(final RepositoryConfig config) {
+    public TransientRepository(final RepositoryConfig config)
+            throws IOException {
         this(new RepositoryFactory() {
             public RepositoryImpl getRepository() throws RepositoryException {
                 return RepositoryImpl.create(config);
             }
-        }, config.getHomeDir());
+        });
     }
 
     /**
@@ -189,8 +186,10 @@ public class TransientRepository extends AbstractRepository
      * @see #TransientRepository(File, File)
      * @param config repository configuration file
      * @param home repository home directory
+     * @throws IOException not thrown, to be removed in Jackrabbit 2.0
      */
-    public TransientRepository(String config, String home) {
+    public TransientRepository(String config, String home)
+            throws IOException {
         this(new File(config), new File(home));
     }
 
@@ -238,14 +237,7 @@ public class TransientRepository extends AbstractRepository
                             "Invalid repository configuration file: " + xml, e);
                 }
             }
-        }, dir.getAbsolutePath());
-    }
-
-    /**
-     * @return the path to the repository home directory.
-     */
-    public String getHomeDir() {
-        return home;
+        });
     }
 
     /**
@@ -279,15 +271,15 @@ public class TransientRepository extends AbstractRepository
      * descriptor keys are returned.
      *
      * @return descriptor keys
+     * @see Repository#getDescriptorKeys()
      */
     public synchronized String[] getDescriptorKeys() {
         if (repository != null) {
             return repository.getDescriptorKeys();
         } else {
-            String[] keys = Collections.list(
-                    descriptors.propertyNames()).toArray(new String[0]);
-            Arrays.sort(keys);
-            return keys;
+            List keys = Collections.list(descriptors.propertyNames());
+            Collections.sort(keys);
+            return (String[]) keys.toArray(new String[keys.size()]);
         }
     }
 
@@ -298,40 +290,13 @@ public class TransientRepository extends AbstractRepository
      *
      * @param key descriptor key
      * @return descriptor value
-     * @see javax.jcr.Repository#getDescriptor(String)
+     * @see Repository#getDescriptor(String)
      */
     public synchronized String getDescriptor(String key) {
         if (repository != null) {
             return repository.getDescriptor(key);
         } else {
             return descriptors.getProperty(key);
-        }
-    }
-
-    public Value getDescriptorValue(String key) {
-        if (repository != null) {
-            return repository.getDescriptorValue(key);
-        } else {
-            throw new UnsupportedOperationException(
-                    "not implemented yet - see JCR-2062");
-        }
-    }
-
-    public Value[] getDescriptorValues(String key) {
-        if (repository != null) {
-            return repository.getDescriptorValues(key);
-        } else {
-            throw new UnsupportedOperationException(
-                    "not implemented yet - see JCR-2062");
-        }
-    }
-
-    public boolean isSingleValueDescriptor(String key) {
-        if (repository != null) {
-            return repository.isSingleValueDescriptor(key);
-        } else {
-            throw new UnsupportedOperationException(
-                    "not implemented yet - see JCR-2062");
         }
     }
 
@@ -345,10 +310,9 @@ public class TransientRepository extends AbstractRepository
      * @param workspaceName workspace name
      * @return new session
      * @throws RepositoryException if the session could not be created
-     * @see javax.jcr.Repository#login(Credentials,String)
+     * @see Repository#login(Credentials,String)
      */
-    public synchronized Session login(
-            Credentials credentials, String workspaceName)
+    public synchronized Session login(Credentials credentials, String workspaceName)
             throws RepositoryException {
         // Start the repository if this is the first login
         if (sessions.isEmpty()) {
@@ -357,8 +321,7 @@ public class TransientRepository extends AbstractRepository
 
         try {
             logger.debug("Opening a new session");
-            SessionImpl session = (SessionImpl) repository.login(
-                    credentials, workspaceName);
+            SessionImpl session = (SessionImpl) repository.login(credentials, workspaceName);
             sessions.put(session, session);
             session.addListener(this);
             logger.info("Session opened");
@@ -373,6 +336,61 @@ public class TransientRepository extends AbstractRepository
         }
     }
 
+    /**
+     * Calls {@link #login(Credentials, String)} with a <code>null</code>
+     * workspace name.
+     *
+     * @param credentials login credentials
+     * @return new session
+     * @throws RepositoryException if the session could not be created
+     * @see Repository#login(Credentials)
+     */
+    public Session login(Credentials credentials) throws RepositoryException {
+        return login(credentials, null);
+    }
+
+    /**
+     * Calls {@link #login(Credentials, String)} with <code>null</code> login
+     * credentials.
+     *
+     * @param workspaceName workspace name
+     * @return new session
+     * @throws RepositoryException if the session could not be created
+     * @see Repository#login(String)
+     */
+    public Session login(String workspaceName) throws RepositoryException {
+        return login(null, workspaceName);
+    }
+
+    /**
+     * Calls {@link #login(Credentials, String)} with <code>null</code> login
+     * credentials and a <code>null</code> workspace name.
+     *
+     * @return new session
+     * @throws RepositoryException if the session could not be created
+     * @see Repository#login(Credentials)
+     */
+    public Session login() throws RepositoryException {
+        return login(null, null);
+    }
+
+
+    public Value getDescriptorValue(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public Value[] getDescriptorValues(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isSingleValueDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isStandardDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
     //--------------------------------------------------<JackrabbitRepository>
 
     /**
@@ -382,8 +400,9 @@ public class TransientRepository extends AbstractRepository
      * @see Session#logout()
      */
     public synchronized void shutdown() {
-        Session[] copy = sessions.keySet().toArray(new Session[0]);
-        for (Session session : copy) {
+        Iterator iterator = new HashSet(sessions.keySet()).iterator();
+        while (iterator.hasNext()) {
+            Session session = (Session) iterator.next();
             session.logout();
         }
     }
@@ -417,5 +436,4 @@ public class TransientRepository extends AbstractRepository
      */
     public void loggingOut(SessionImpl session) {
     }
-
 }

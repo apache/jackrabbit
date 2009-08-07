@@ -68,7 +68,7 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
         //isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
         nameFactory = NameFactoryImpl.getInstance();
 

@@ -147,7 +147,7 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
         if (localName == null || namespace == null || reportClass == null) {
             throw new IllegalArgumentException("A ReportType cannot be registered with a null name, namespace or report class");
         }
-        String key = DomUtil.getExpandedName(localName, namespace);
+        String key = DomUtil.getQualifiedName(localName, namespace);
         if (types.containsKey(key)) {
             return (ReportType) types.get(key);
         } else {

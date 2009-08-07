@@ -16,22 +16,21 @@
  */
 package org.apache.jackrabbit.test.api.observation;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
+import javax.jcr.observation.EventListenerIterator;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * This class implements the basic {@link #setUp} and {@link #tearDown()}
@@ -43,9 +42,6 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      * Default wait timeout for events: 5000 ms
      */
     protected static final long DEFAULT_WAIT_TIMEOUT = 5000;
-
-
-    protected static final int ALL_TYPES = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED | javax.jcr.observation.Event.NODE_MOVED;
 
     /**
      * The <code>ObservationManager</code>
@@ -248,53 +244,5 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
             assertTrue("Path " + path + " not expected in events.",
                     optional.contains(path));
         }
-    }
-    
-
-    /**
-     * Registers an event listener for the passed <code>eventTypes</code> and
-     * calls the callable.
-     *
-     * @param call       the callable.
-     * @param eventTypes the types of the events to listen for.
-     * @return the events that were generated during execution of the callable.
-     * @throws RepositoryException if an error occurs.
-     */
-    protected Event[] getEvents(Callable call, int eventTypes)
-            throws RepositoryException {
-        EventResult result = new EventResult(log);
-        addEventListener(result, eventTypes);
-        call.call();
-        Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        removeEventListener(result);
-        return events;
-    }
-
-    /**
-     * Returns the first event with the given <code>path</code>.
-     *
-     * @param events the events.
-     * @param path   the path.
-     * @return the event with the given <code>path</code> or {@link #fail()}s if
-     *         no such event exists.
-     * @throws RepositoryException if an error occurs while reading from the
-     *                             repository.
-     */
-    protected Event getEventByPath(Event[] events, String path)
-            throws RepositoryException {
-        for (int i = 0; i < events.length; i++) {
-            if (events[i].getPath().equals(path)) {
-                return events[i];
-            }
-        }
-        fail("no event with path: " + path + " in " + Arrays.asList(events));
-        return null;
-    }
-    
-    /**
-     * Helper interface.
-     */
-    protected interface Callable {
-        public void call() throws RepositoryException;
     }
 }

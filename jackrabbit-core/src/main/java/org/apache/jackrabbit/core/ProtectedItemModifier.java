@@ -16,16 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.acl.ACLEditor;
@@ -33,16 +25,23 @@ import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ItemExistsException;
+import javax.jcr.AccessDeniedException;
+
 /**
- * <code>ProtectedItemModifier</code>: An abstract helper class to allow classes
- * residing outside of the core package to modify and remove protected items.
- * The protected item definitions are required in order not to have security
- * relevant content being changed through common item operations but forcing
- * the usage of the corresponding APIs, which assert that implementation
- * specific constraints are not violated.
+ * <code>SecurityItemModifier</code>: An abstract helper class to allow classes
+ * of the security API residing outside of the core package to modify and remove
+ * protected items for security. The protected item definitions are required in
+ * order not to have security relevant content being changed through common
+ * item operations but forcing the usage of the security API. The latter asserts
+ * that implementation specific constraints are not violated.
  */
 public abstract class ProtectedItemModifier {
 
@@ -55,10 +54,10 @@ public abstract class ProtectedItemModifier {
 
     protected ProtectedItemModifier(int permission) {
         Class cl = getClass();
-        if (!(UserManagerImpl.class.isAssignableFrom(cl) ||
-              RetentionManagerImpl.class.isAssignableFrom(cl) ||
-              ACLEditor.class.isAssignableFrom(cl) ||
-              org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class.isAssignableFrom(cl))) {
+        if (!(cl.equals(UserManagerImpl.class) ||
+              cl.equals(RetentionManagerImpl.class) ||
+              cl.equals(ACLEditor.class) ||
+              cl.equals(org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class))) {
             throw new IllegalArgumentException("Only UserManagerImpl, RetentionManagerImpl and ACLEditor may extend from the ProtectedItemModifier");
         }
         this.permission = permission;
@@ -74,7 +73,7 @@ public abstract class ProtectedItemModifier {
 
         // check for name collisions
         // TODO: improve. copied from NodeImpl
-        NodeState thisState = parentImpl.getNodeState();
+        NodeState thisState = (NodeState) parentImpl.getItemState();
         ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
         if (cne != null) {
             // there's already a child node entry with that name;
@@ -129,10 +128,6 @@ public abstract class ProtectedItemModifier {
         // validation: make sure Node is not locked or checked-in.
         n.checkSetProperty();
         itemImpl.internalRemove(true);
-    }
-
-    protected void markModified(NodeImpl parentImpl) throws RepositoryException {
-        parentImpl.getOrCreateTransientItemState();
     }
 
     private void checkPermission(ItemImpl item, int perm) throws RepositoryException {

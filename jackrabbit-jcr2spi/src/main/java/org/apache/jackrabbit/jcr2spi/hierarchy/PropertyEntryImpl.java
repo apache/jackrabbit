@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
 
 /**
  * <code>PropertyEntryImpl</code> implements a reference to a property state.
@@ -66,7 +66,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * Returns a <code>PropertyState</code>.
      */
     ItemState doResolve() throws ItemNotFoundException, RepositoryException {
-        return getItemStateFactory().createPropertyState(getWorkspaceId(), this);
+        return factory.getItemStateFactory().createPropertyState(getWorkspaceId(), this);
     }
 
     /**
@@ -74,7 +74,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      */
     Path buildPath(boolean workspacePath) throws RepositoryException {
         Path parentPath = parent.buildPath(workspacePath);
-        return getPathFactory().create(parentPath, getName(), true);
+        return factory.getPathFactory().create(parentPath, getName(), true);
     }
 
     //------------------------------------------------------< PropertyEntry >---
@@ -82,14 +82,14 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * @see PropertyEntry#getId()
      */
     public PropertyId getId() throws InvalidItemStateException, RepositoryException {
-        return getIdFactory().createPropertyId(parent.getId(), getName());
+        return factory.getIdFactory().createPropertyId(parent.getId(), getName());
     }
 
     /**
      * @see PropertyEntry#getWorkspaceId()
      */
     public PropertyId getWorkspaceId() throws InvalidItemStateException, RepositoryException {
-        return getIdFactory().createPropertyId(parent.getWorkspaceId(), getName());
+        return factory.getIdFactory().createPropertyId(parent.getWorkspaceId(), getName());
     }
 
     /**
@@ -135,9 +135,5 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
             default:
                 // ignore
         }
-    }
-
-    public void calculateStatus() {
-        parent.calculateStatus();
     }
 }

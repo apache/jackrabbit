@@ -22,14 +22,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Properties;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -39,15 +36,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.retention.RetentionPolicy;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
@@ -83,24 +76,9 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
     private final Properties settings;
 
     /**
-     * Map of repository instances. Key = repository home, value = repository
-     * instance.
+     * The repository instance.
      */
-    private static final Map<String, Repository> REPOSITORY_INSTANCES = new HashMap<String, Repository>();
-
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            public void run() {
-                synchronized (REPOSITORY_INSTANCES) {
-                    for (Repository repo : REPOSITORY_INSTANCES.values()) {
-                        if (repo instanceof RepositoryImpl) {
-                            ((RepositoryImpl) repo).shutdown();
-                        }
-                    }
-                }
-            }
-        }));
-    }
+    private Repository repository;
 
     private static Properties getStaticProperties() {
         Properties properties = new Properties();
@@ -147,76 +125,59 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
      */
     public synchronized Repository getRepository()
             throws RepositoryStubException {
-        try {
-            String dir = settings.getProperty(PROP_REPOSITORY_HOME);
-            if (dir == null) {
-                dir = new File("target", "repository").getAbsolutePath();
-            } else {
-                dir = new File(dir).getAbsolutePath();
-            }
-
-            String xml = settings.getProperty(PROP_REPOSITORY_CONFIG);
-            if (xml == null) {
-                xml = new File(dir, "repository.xml").getPath();
-            }
-
-            return getOrCreateRepository(dir, xml);
-
-        } catch (Exception e) {
-            RepositoryStubException exception =
-                    new RepositoryStubException("Failed to start repository");
-            exception.initCause(e);
-            throw exception;
-        }
-    }
-
-    protected Repository createRepository(String dir, String xml)
-            throws Exception {
-        new File(dir).mkdirs();
-
-        if (!new File(xml).exists()) {
-            InputStream input = getResource("repository.xml");
+        if (repository == null) {
             try {
-                OutputStream output = new FileOutputStream(xml);
-                try {
-                    IOUtils.copy(input, output);
-                } finally {
-                    output.close();
+                String dir = settings.getProperty(PROP_REPOSITORY_HOME);
+                if (dir == null) {
+                    dir = new File("target", "repository").getPath();
                 }
-            } finally {
-                input.close();
-            }
-        }
 
-        RepositoryConfig config = RepositoryConfig.create(xml, dir);
-        return RepositoryImpl.create(config);
-    }
+                new File(dir).mkdirs();
 
-    protected Repository getOrCreateRepository(String dir, String xml)
-            throws Exception {
-        synchronized (REPOSITORY_INSTANCES) {
-            Repository repo = REPOSITORY_INSTANCES.get(dir);
-            if (repo == null) {
-                repo = createRepository(dir, xml);
-                Session session = repo.login(superuser);
+                String xml = settings.getProperty(PROP_REPOSITORY_CONFIG);
+                if (xml == null) {
+                    xml = new File(dir, "repository.xml").getPath();
+                }
+
+                if (!new File(xml).exists()) {
+                    InputStream input = getResource("repository.xml");
+                    try {
+                        OutputStream output = new FileOutputStream(xml);
+                        try {
+                            IOUtils.copy(input, output);
+                        } finally {
+                            output.close();
+                        }
+                    } finally {
+                        input.close();
+                    }
+                }
+
+                RepositoryConfig config = RepositoryConfig.create(xml, dir);
+                repository = RepositoryImpl.create(config);
+
+                Session session = repository.login(superuser);
                 try {
                     prepareTestContent(session);
                 } finally {
                     session.logout();
                 }
-
-                REPOSITORY_INSTANCES.put(dir, repo);
+            } catch (Exception e) {
+                RepositoryStubException exception =
+                    new RepositoryStubException("Failed to start repository");
+                exception.initCause(e);
+                throw exception;
             }
-            return repo;
         }
+        return repository;
     }
 
     private void prepareTestContent(Session session)
             throws RepositoryException, IOException {
         JackrabbitWorkspace workspace =
             (JackrabbitWorkspace) session.getWorkspace();
-        Collection<String> workspaces =
-            Arrays.asList(workspace.getAccessibleWorkspaceNames());
+        Set workspaces = new HashSet(
+                Arrays.asList(workspace.getAccessibleWorkspaceNames()));
         if (!workspaces.contains("test")) {
             workspace.createWorkspace("test");
         }
@@ -236,12 +197,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         addPropertyTestData(getOrAddNode(data, "property"));
         addQueryTestData(getOrAddNode(data, "query"));
         addNodeTestData(getOrAddNode(data, "node"));
-        addLifecycleTestData(getOrAddNode(data, "lifecycle"));
         addExportTestData(getOrAddNode(data, "docViewTest"));
-
-        Node conf = getOrAddNode(session.getRootNode(), "testconf");
-        addRetentionTestData(getOrAddNode(conf, "retentionTest"));
-
         session.save();
     }
 
@@ -268,14 +224,6 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         ValueFactory factory = node.getSession().getValueFactory();
         node.setProperty("path", factory.createValue("/", PropertyType.PATH));
         node.setProperty("multi", new String[] { "one", "two", "three" });
-    }
-
-    /**
-     * Creates a node with a RetentionPolicy
-     */
-    private void addRetentionTestData(Node node) throws RepositoryException {
-        RetentionPolicy rp = RetentionPolicyImpl.createRetentionPolicy("testRetentionPolicy", node.getSession());
-        node.getSession().getRetentionManager().setRetentionPolicy(node.getPath(), rp);
     }
 
     /**
@@ -310,8 +258,6 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         }
 
         Node resource = node.addNode("myResource", "nt:resource");
-        // nt:resource not longer referenceable since JCR 2.0
-        resource.addMixin("mix:referenceable");
         resource.setProperty("jcr:encoding", ENCODING);
         resource.setProperty("jcr:mimeType", "text/plain");
         resource.setProperty(
@@ -330,22 +276,6 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                 factory.createValue(resource),
                 factory.createValue(resReference)
             });
-    }
-
-    /**
-     * Creates a lifecycle policy node and another node with a lifecycle
-     * referencing that policy.
-     */
-    private void addLifecycleTestData(Node node) throws RepositoryException {
-        Node policy = getOrAddNode(node, "policy");
-        policy.addMixin(NodeType.MIX_REFERENCEABLE);
-        Node transitions = getOrAddNode(policy, "transitions");
-        Node transition = getOrAddNode(transitions, "identity");
-        transition.setProperty("from", "identity");
-        transition.setProperty("to", "identity");
-
-        Node lifecycle = getOrAddNode(node, "node");
-        ((NodeImpl) lifecycle).assignLifecyclePolicy(policy, "identity");
     }
 
     private void addExportTestData(Node node) throws RepositoryException, IOException {
@@ -414,38 +344,6 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         byte[] bytes = "Hello w\u00F6rld.".getBytes(ENCODING);
         resource.setProperty(name, new ByteArrayInputStream(bytes));
         resource.setProperty("jcr:lastModified", Calendar.getInstance());
-    }
-
-    @Override
-    public Principal getKnownPrincipal(Session session) throws RepositoryException {
-        
-        Principal knownPrincipal = null;
-        
-        if (session instanceof SessionImpl) {
-            for (Principal p : ((SessionImpl)session).getSubject().getPrincipals()) {
-                if (! (p instanceof Group)) {
-                    knownPrincipal = p;
-                }
-            }
-        }
-        
-        if (knownPrincipal != null) {
-            return knownPrincipal;
-        }
-        else {
-            throw new RepositoryException("no applicable principal found");
-        }
-    }
-
-    private static Principal UNKNOWN_PRINCIPAL = new Principal() {
-        public String getName() {
-            return "an_unknown_user";
-        }
-    };
-    
-    @Override
-    public Principal getUnknownPrincipal(Session session) throws RepositoryException, NotExecutableException {
-        return UNKNOWN_PRINCIPAL;
     }
 
 }

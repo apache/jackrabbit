@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import javax.jcr.nodetype.NodeTypeDefinition;
+import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 
@@ -38,14 +37,12 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
     private static Logger log = LoggerFactory.getLogger(NodeTypeDefinitionImpl.class);
 
     private final NodeTypeDef ntd;
-    // resolver used to translate <code>Name</code>s to JCR name strings.
+    // resolver used to translate qualified names to JCR names
     private final NamePathResolver resolver;
-    private final ValueFactory valueFactory;
 
-    public NodeTypeDefinitionImpl(NodeTypeDef ntd, NamePathResolver resolver, ValueFactory valueFactory) {
+    public NodeTypeDefinitionImpl(NodeTypeDef ntd, NamePathResolver resolver) {
         this.ntd = ntd;
         this.resolver = resolver;
-        this.valueFactory = valueFactory;
     }
 
     //---------------------------------------------------< NodeTypeDefinition >
@@ -79,11 +76,11 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
         String[] supertypes = new String[ntNames.length];
         for (int i = 0; i < ntNames.length; i++) {
             try {
-                supertypes[i] = resolver.getJCRName(ntNames[i]);
+                supertypes[i] = resolver.getJCRName(ntd.getName());
             } catch (NamespaceException e) {
                 // should never get here
                 log.error("encountered unregistered namespace in node type name", e);
-                supertypes[i] = ntNames[i].toString();
+                supertypes[i] = ntd.getName().toString();
             }
         }
         return supertypes;
@@ -107,24 +104,6 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
      */
     public boolean isAbstract() {
         return ntd.isAbstract();
-    }
-
-    /**
-     * Returns <code>true</code> if the node type is queryable, meaning that
-     * the available-query-operators, full-text-searchable
-     * and query-orderable attributes of its property definitions take effect. See
-     * {@link javax.jcr.nodetype.PropertyDefinition#getAvailableQueryOperators()},
-     * {@link javax.jcr.nodetype.PropertyDefinition#isFullTextSearchable()} and
-     * {@link javax.jcr.nodetype.PropertyDefinition#isQueryOrderable()}.
-     * <p>
-     * If a node type is declared non-queryable then these attributes of its property
-     * definitions have no effect.
-     *
-     * @since JCR 2.0
-     * @return a <code>boolean</code>
-     */
-    public boolean isQueryable() {
-        return ntd.isQueryable();
     }
 
     /**
@@ -178,7 +157,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
         PropDef[] pda = ntd.getPropertyDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefinitionImpl(pda[i], null, resolver, valueFactory);
+            propDefs[i] = new PropertyDefinitionImpl(pda[i], null, resolver);
         }
         return propDefs;
     }

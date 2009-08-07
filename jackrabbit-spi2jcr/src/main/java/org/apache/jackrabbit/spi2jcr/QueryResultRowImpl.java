@@ -16,24 +16,18 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 
 import javax.jcr.query.Row;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.Node;
 
 /**
  * <code>QueryResultRowImpl</code> implements a <code>QueryResultRow</code>
@@ -42,14 +36,14 @@ import javax.jcr.Node;
 class QueryResultRowImpl implements QueryResultRow {
 
     /**
-     * The node ids of the underlying row.
+     * The node id of the underlying row.
      */
-    private final Map<Name, NodeId> nodeIds = new HashMap<Name, NodeId>();
+    private final NodeId nodeId;
 
     /**
-     * The score values for this row.
+     * The score value for this row.
      */
-    private final Map<Name, Double> scores = new HashMap<Name, Double>();
+    private final double score;
 
     /**
      * The QValues for this row.
@@ -61,19 +55,30 @@ class QueryResultRowImpl implements QueryResultRow {
      *
      * @param row           the JCR row.
      * @param columnNames   the resolved names of the columns.
-     * @param selectorNames the selector names.
+     * @param scoreName     the name of the jcr:score column.
+     * @param pathName      the name of the jcr:path column
      * @param idFactory     the id factory.
-     * @param resolver      the name path resolver.
+     * @param resolver
      * @param qValueFactory the QValue factory.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>row</code>.
      */
     public QueryResultRowImpl(Row row,
                               String[] columnNames,
-                              Name[] selectorNames,
+                              String scoreName,
+                              String pathName,
                               IdFactoryImpl idFactory,
                               NamePathResolver resolver,
                               QValueFactory qValueFactory) throws RepositoryException {
+        String jcrPath = row.getValue(pathName).getString();
+        Path path;
+        try {
+            path = resolver.getQPath(jcrPath);
+        } catch (NameException e) {
+            throw new RepositoryException(e.getMessage(), e);
+        }
+        this.nodeId = idFactory.createNodeId((String) null, path);
+        this.score = row.getValue(scoreName).getDouble();
         this.values = new QValue[columnNames.length];
         for (int i = 0; i < columnNames.length; i++) {
             Value v = row.getValue(columnNames[i]);
@@ -83,59 +88,20 @@ class QueryResultRowImpl implements QueryResultRow {
                 values[i] = ValueFormat.getQValue(v, resolver, qValueFactory);
             }
         }
-        List<Name> selNames = new ArrayList<Name>();
-        selNames.addAll(Arrays.asList(selectorNames));
-        if (selNames.isEmpty()) {
-            selNames.add(null); // default selector
-        }
-        for (Name sn : selNames) {
-            Node n;
-            double score;
-            if (sn == null) {
-                n = row.getNode();
-                score = row.getScore();
-            } else {
-                String selName = resolver.getJCRName(sn);
-                n = row.getNode(selName);
-                score = row.getScore(selName);
-            }
-            NodeId id = null;
-            if (n != null) {
-                id = idFactory.fromJcrIdentifier(n.getIdentifier());
-            }
-            nodeIds.put(sn, id);
-            scores.put(sn, score);
-        }
     }
 
-    public NodeId getNodeId(Name selectorName) {
-        if (nodeIds.containsKey(selectorName)) {
-            return nodeIds.get(selectorName);
-        } else {
-            if (nodeIds.size() == 1) {
-                return nodeIds.values().iterator().next();
-            } else {
-                throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
-            }
-        }
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId getNodeId() {
+        return nodeId;
     }
 
-    public double getScore(Name selectorName) {
-        Double score;
-        if (scores.containsKey(selectorName)) {
-            score = scores.get(selectorName);
-        } else {
-            if (scores.size() == 1) {
-                score = scores.values().iterator().next();
-            } else {
-                throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
-            }
-        }
-        if (score == null) {
-            return Double.NaN;
-        } else {
-            return score;
-        }
+    /**
+     * {@inheritDoc}
+     */
+    public double getScore() {
+        return score;
     }
 
     /**

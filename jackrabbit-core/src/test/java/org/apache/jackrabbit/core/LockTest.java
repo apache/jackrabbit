@@ -58,7 +58,7 @@ public class LockTest extends AbstractJCRTest {
                 public void run() {
                     Session s;
                     try {
-                        s = getHelper().getSuperuserSession();
+                        s = helper.getSuperuserSession();
                     } catch (RepositoryException e) {
                         return;
                     }
@@ -125,7 +125,7 @@ public class LockTest extends AbstractJCRTest {
                 public void run() {
                     Session s;
                     try {
-                        s = getHelper().getSuperuserSession();
+                        s = helper.getSuperuserSession();
                     } catch (RepositoryException e) {
                         return;
                     }
@@ -191,7 +191,7 @@ public class LockTest extends AbstractJCRTest {
                 public void run() {
                     Session s;
                     try {
-                        s = getHelper().getSuperuserSession();
+                        s = helper.getSuperuserSession();
                     } catch (RepositoryException e) {
                         return;
                     }

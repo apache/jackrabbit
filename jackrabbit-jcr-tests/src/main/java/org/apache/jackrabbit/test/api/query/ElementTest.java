@@ -41,21 +41,12 @@ import javax.jcr.Node;
  */
 public class ElementTest extends AbstractQueryTest {
 
-    private String simpleNodeType;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        simpleNodeType = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
-    }
-
     /**
      * Tests the element test without arguments.
-     * @throws NotExecutableException 
      */
-    public void testElementTest() throws RepositoryException, NotExecutableException {
-
+    public void testElementTest() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
+        Node n2 = testRootNode.addNode(nodeName2, ntBase);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -65,11 +56,10 @@ public class ElementTest extends AbstractQueryTest {
 
     /**
      * Tests the element test with one any node argument.
-     * @throws NotExecutableException 
      */
-    public void testElementTestAnyNode() throws RepositoryException, NotExecutableException {
+    public void testElementTestAnyNode() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
+        Node n2 = testRootNode.addNode(nodeName2, ntBase);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -80,11 +70,10 @@ public class ElementTest extends AbstractQueryTest {
     /**
      * Tests the element test with an any node argument and a type argument
      * that matches all nodes (nt:base).
-     * @throws NotExecutableException 
      */
-    public void testElementTestAnyNodeNtBase() throws RepositoryException, NotExecutableException {
+    public void testElementTestAnyNodeNtBase() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
+        Node n2 = testRootNode.addNode(nodeName2, ntBase);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -95,11 +84,10 @@ public class ElementTest extends AbstractQueryTest {
     /**
      * Tests the element test with an any node argument and a type argument
      * that matches only certain child nodes.
-     * @throws NotExecutableException 
      */
-    public void testElementTestAnyNodeSomeNT() throws RepositoryException, NotExecutableException {
+    public void testElementTestAnyNodeSomeNT() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, simpleNodeType);
+        testRootNode.addNode(nodeName2, ntBase);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -109,11 +97,10 @@ public class ElementTest extends AbstractQueryTest {
 
     /**
      * Tests the element test with one single name test argument.
-     * @throws NotExecutableException 
      */
-    public void testElementTestNameTest() throws RepositoryException, NotExecutableException {
+    public void testElementTestNameTest() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, simpleNodeType);
+        testRootNode.addNode(nodeName2, ntBase);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -124,11 +111,10 @@ public class ElementTest extends AbstractQueryTest {
     /**
      * Tests the element test with a name test argument and a type argument that
      * matches all nodes (nt:base).
-     * @throws NotExecutableException 
      */
-    public void testElementTestNameTestNtBase() throws RepositoryException, NotExecutableException {
+    public void testElementTestNameTestNtBase() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, simpleNodeType);
+        testRootNode.addNode(nodeName2, ntBase);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -139,11 +125,10 @@ public class ElementTest extends AbstractQueryTest {
     /**
      * Tests the element test with a name test argument and a type argument that
      * matches only certain child nodes.
-     * @throws NotExecutableException 
      */
-    public void testElementTestNameTestSomeNT() throws RepositoryException, NotExecutableException {
+    public void testElementTestNameTestSomeNT() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, simpleNodeType);
+        testRootNode.addNode(nodeName2, ntBase);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 
@@ -161,9 +146,9 @@ public class ElementTest extends AbstractQueryTest {
         if (!n1.getDefinition().allowsSameNameSiblings()) {
             throw new NotExecutableException("Node at " + testRoot + " does not allow same name siblings with name " + nodeName1);
         }
-        testRootNode.addNode(nodeName1, simpleNodeType);
+        testRootNode.addNode(nodeName1, ntBase);
         Node n2 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, simpleNodeType);
+        testRootNode.addNode(nodeName2, ntBase);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
 

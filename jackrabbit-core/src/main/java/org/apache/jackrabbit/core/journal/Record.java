@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;

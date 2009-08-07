@@ -16,37 +16,33 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.util.Calendar;
-
-import javax.jcr.Binary;
-import javax.jcr.Item;
-import javax.jcr.ItemVisitor;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.version.VersionException;
-
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.slf4j.Logger;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+import javax.jcr.Property;
+import javax.jcr.Item;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.ItemVisitor;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.PropertyType;
+import java.io.InputStream;
+import java.util.Calendar;
 
 /**
  * <code>PropertyImpl</code>...
@@ -59,8 +55,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public PropertyImpl(SessionImpl session, PropertyState state, ItemLifeCycleListener[] listeners) {
         super(session, state, listeners);
-        // NOTE: JCR value(s) will be read (and converted from the internal value
-        // representation) on demand.
+        // value will be read (and converted from qualified value) on demand.
     }
 
     //-----------------------------------------------------< Item interface >---
@@ -91,7 +86,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Item#isNode()
      */
     public boolean isNode() {
-        return false;
+	return false;
     }
 
     //-------------------------------------------------< Property interface >---
@@ -198,19 +193,6 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(Binary)
-     */
-    public void setValue(Binary value) throws RepositoryException {
-        checkIsWritable(false);
-        int reqType = getRequiredType(PropertyType.BINARY);
-        if (value == null) {
-            setInternalValues(null, reqType);
-        } else {
-            setValue(session.getValueFactory().createValue(value), reqType);
-        }
-    }
-
-    /**
      * @see Property#setValue(long)
      */
     public void setValue(long value) throws ValueFormatException, VersionException, LockException, RepositoryException {
@@ -225,15 +207,6 @@ public class PropertyImpl extends ItemImpl implements Property {
     public void setValue(double value) throws ValueFormatException, VersionException, LockException, RepositoryException {
         checkIsWritable(false);
         int reqType = getRequiredType(PropertyType.DOUBLE);
-        setValue(session.getValueFactory().createValue(value), reqType);
-    }
-
-    /**
-     * @see Property#setValue(BigDecimal)
-     */
-    public void setValue(BigDecimal value) throws RepositoryException {
-        checkIsWritable(false);
-        int reqType = getRequiredType(PropertyType.DECIMAL);
         setValue(session.getValueFactory().createValue(value), reqType);
     }
 
@@ -309,13 +282,6 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getBinary()
-     */
-    public Binary getBinary() throws RepositoryException {
-        return getValue().getBinary();
-    }
-
-    /**
      * @see Property#getLong()
      */
     public long getLong() throws ValueFormatException, RepositoryException {
@@ -327,13 +293,6 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public double getDouble() throws ValueFormatException, RepositoryException {
         return getValue().getDouble();
-    }
-
-    /**
-     * @see Property#getDecimal()
-     */
-    public BigDecimal getDecimal() throws RepositoryException {
-        return getValue().getDecimal();
     }
 
     /**
@@ -354,52 +313,12 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#getNode()
      */
     public Node getNode() throws ValueFormatException, RepositoryException {
-        Value value = getValue();
-        int type = value.getType();
-        switch (type) {
-            case PropertyType.REFERENCE:
-            case PropertyType.WEAKREFERENCE:
-                return session.getNodeByUUID(value.getString());
-
-            case PropertyType.PATH:
-            case PropertyType.NAME:
-                String path = value.getString();
-                Path p = session.getPathResolver().getQPath(path);
-                boolean absolute = p.isAbsolute();
-                return (absolute) ? session.getNode(path) : getParent().getNode(path);
-
-            case PropertyType.STRING:
-                try {
-                    Value refValue = ValueHelper.convert(value, PropertyType.REFERENCE, session.getValueFactory());
-                    return session.getNodeByUUID(refValue.getString());
-                } catch (RepositoryException e) {
-                    // try if STRING value can be interpreted as PATH value
-                    Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
-                    p = session.getPathResolver().getQPath(pathValue.getString());
-                    absolute = p.isAbsolute();
-                    return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
-                }
-
-            default:
-                throw new ValueFormatException("Property value cannot be converted to a PATH, REFERENCE or WEAKREFERENCE");
+        QValue value = getQValue();
+        if (value.getType() == PropertyType.REFERENCE) {
+            return session.getNodeByUUID(value.getString());
+        } else {
+            throw new ValueFormatException("Property must be of type REFERENCE (" + safeGetJCRPath() + ")");
         }
-    }
-
-    /**
-     * @see Property#getProperty()
-     */
-    public Property getProperty() throws RepositoryException {
-        Value value = getValue();
-        Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
-        String path = pathValue.getString();
-        boolean absolute;
-        try {
-            Path p = session.getPathResolver().getQPath(path);
-            absolute = p.isAbsolute();
-        } catch (RepositoryException e) {
-            throw new ValueFormatException("Property value cannot be converted to a PATH");
-        }
-        return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
     }
 
     /**
@@ -432,8 +351,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         switch (value.getType()) {
             case PropertyType.NAME:
             case PropertyType.PATH:
-                String jcrString = ValueFormat.getJCRString(value, session.getNamePathResolver());
-                length = jcrString.length();
+                Value jcrValue = ValueFormat.getJCRValue(value, session.getNamePathResolver(), session.getJcrValueFactory());
+                length = jcrValue.getString().length();
                 break;
             default:
                 length = value.getLength();
@@ -459,15 +378,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         return getPropertyState().getType();
     }
 
-    /**
-     *
-     * @return true if the definition indicates that this Property is multivalued.
-     */
-    public boolean isMultiple() {
-        return getPropertyState().isMultiValued();
-    }
-
-   //-----------------------------------------------------------< ItemImpl >---
+    //-----------------------------------------------------------< ItemImpl >---
     /**
      * Returns the Name defined with this <code>PropertyState</code>
      *
@@ -496,6 +407,13 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     //---------------------------------------------< private implementation >---
+    /**
+     *
+     * @return true if the definition indicates that this Property is multivalued.
+     */
+    private boolean isMultiple() {
+        return getPropertyState().isMultiValued();
+    }
 
     /**
      *

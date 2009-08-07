@@ -44,8 +44,7 @@ public class WorkspaceMoveReferenceableTest extends AbstractWorkspaceReferenceab
      * Copies of referenceable nodes (nodes with UUIDs) remains their original
      * UUIDs.
      */
-    public void testMoveNodesReferenceableNodesNewUUID() throws RepositoryException,
-            NotExecutableException {
+    public void testMoveNodesReferenceableNodesNewUUID() throws RepositoryException {
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
 

@@ -51,7 +51,7 @@ import java.io.StringReader;
 /**
  * <code>SerializationTest</code> contains the test cases for the method
  * <code>Workspace.exportSysView()</code> and <code>Session.importSysView()</code>.
- * <p>
+ * <p/>
  * This class exports and re-imports the repository. The tests check for
  * differences between the original and the re-imported repository.
  *
@@ -81,7 +81,7 @@ public class SerializationTest extends AbstractJCRTest {
             file = File.createTempFile("serializationTest", ".xml");
             log.print("Tempfile: " + file.getAbsolutePath());
 
-            SerializationContext sc = new SerializationContext(this, session);
+            SerializationContext sc = new SerializationContext(this);
             treeComparator = new TreeComparator(sc, session);
             treeComparator.createComplexTree(treeComparator.WORKSPACE);
         }
@@ -103,6 +103,9 @@ public class SerializationTest extends AbstractJCRTest {
             session.logout();
             session = null;
         }
+        if (treeComparator != null) {
+            treeComparator.tearDown();
+        }
         workspace = null;
         super.tearDown();
     }
@@ -120,7 +123,13 @@ public class SerializationTest extends AbstractJCRTest {
      */
     protected Node initVersioningException(boolean returnParent) throws RepositoryException, NotExecutableException, IOException {
         Node vNode = testRootNode.addNode(nodeName1, testNodeType);
-        ensureMixinType(vNode, mixVersionable);
+        if (!vNode.isNodeType(mixVersionable)) {
+            if (vNode.canAddMixin(mixVersionable)) {
+                vNode.addMixin(mixVersionable);
+            } else {
+                throw new NotExecutableException("NodeType: " + testNodeType + " is not versionable");
+            }
+        }
         Node vChild = vNode.addNode(nodeName2, testNodeType);
         session.save();
         vNode.checkin();
@@ -206,7 +215,7 @@ public class SerializationTest extends AbstractJCRTest {
         if (isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             //A LockException is thrown if a lock prevents the addition of the subtree.
             Node lNode = testRootNode.addNode(nodeName1);
-            ensureMixinType(lNode, mixLockable);
+            lNode.addMixin(mixLockable);
             testRootNode.save();
             Lock lock = lNode.lock(true, true);
             session.removeLockToken(lock.getLockToken());   //remove the token, so the lock is for me, too
@@ -452,8 +461,7 @@ public class SerializationTest extends AbstractJCRTest {
             throws Exception {
 
         treeComparator.createExampleTree();
-        String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
-        Node node = testRootNode.addNode("ntBase", nodetype);
+        Node node = testRootNode.addNode("ntBase", ntBase);
         session.save();
 
         FileInputStream in = new FileInputStream(file);
@@ -517,7 +525,7 @@ public class SerializationTest extends AbstractJCRTest {
         session.logout();
         superuser = null; //so tearDown won't fail
 
-        session = getHelper().getReadWriteSession();
+        session = helper.getReadWriteSession();
         treeComparator.setSession(session);
         treeComparator.compare(treeComparator.CHECK_EMPTY);
     }
@@ -540,7 +548,7 @@ public class SerializationTest extends AbstractJCRTest {
         session.logout();
         superuser = null; //so tearDown won't fail
 
-        session = getHelper().getReadWriteSession();
+        session = helper.getReadWriteSession();
         treeComparator.setSession(session);
         treeComparator.compare(treeComparator.CHECK_EMPTY);
     }

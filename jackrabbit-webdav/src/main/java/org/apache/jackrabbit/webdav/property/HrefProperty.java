@@ -154,11 +154,11 @@ public class HrefProperty extends AbstractDavProperty {
     }
 
     /**
-     * Return an list of String containing the text of those DAV:href elements
+     * Return an array of String containing the text of those DAV:href elements
      * that would be returned as child elements of this property on
      * {@link org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)}
      *
-     * @return list of href String
+     * @return array of href String
      */
     public List getHrefs() {
         return (value != null) ? Arrays.asList(value) : new ArrayList();

@@ -21,49 +21,74 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Join;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.EquiJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Comparison;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNode;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Length;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeName;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeLocalName;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearchScore;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.LowerCase;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.UpperCase;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.BindVariableValue;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Literal;
+
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.qom.And;
-import javax.jcr.query.qom.BindVariableValue;
-import javax.jcr.query.qom.ChildNode;
-import javax.jcr.query.qom.ChildNodeJoinCondition;
-import javax.jcr.query.qom.Column;
-import javax.jcr.query.qom.Comparison;
-import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.DescendantNode;
-import javax.jcr.query.qom.DescendantNodeJoinCondition;
-import javax.jcr.query.qom.DynamicOperand;
-import javax.jcr.query.qom.EquiJoinCondition;
-import javax.jcr.query.qom.FullTextSearch;
-import javax.jcr.query.qom.FullTextSearchScore;
-import javax.jcr.query.qom.Join;
-import javax.jcr.query.qom.JoinCondition;
-import javax.jcr.query.qom.Length;
-import javax.jcr.query.qom.Literal;
-import javax.jcr.query.qom.LowerCase;
-import javax.jcr.query.qom.NodeLocalName;
-import javax.jcr.query.qom.NodeName;
-import javax.jcr.query.qom.Not;
-import javax.jcr.query.qom.Or;
-import javax.jcr.query.qom.Ordering;
-import javax.jcr.query.qom.PropertyExistence;
-import javax.jcr.query.qom.PropertyValue;
-import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.QueryObjectModelConstants;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-import javax.jcr.query.qom.SameNode;
-import javax.jcr.query.qom.SameNodeJoinCondition;
-import javax.jcr.query.qom.Selector;
-import javax.jcr.query.qom.Source;
-import javax.jcr.query.qom.StaticOperand;
-import javax.jcr.query.qom.UpperCase;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import java.util.BitSet;
 
 /**
  * <code>QueryObjectModelFactoryImpl</code> implements the query object model
  * factory from JSR 283.
  */
 public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
+
+    private static final BitSet VALID_OPERATORS = new BitSet();
+
+    private static final BitSet VALID_JOIN_TYPES = new BitSet();
+
+    private static final BitSet VALID_ORDERS = new BitSet();
+
+    static {
+        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_EQUAL_TO);
+        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_GREATER_THAN);
+        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO);
+        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_LESS_THAN);
+        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO);
+        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_LIKE);
+        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO);
+
+        VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_INNER);
+        VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_LEFT_OUTER);
+        VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_RIGHT_OUTER);
+
+        VALID_ORDERS.set(QueryObjectModelConstants.ORDER_ASCENDING);
+        VALID_ORDERS.set(QueryObjectModelConstants.ORDER_DESCENDING);
+    }
 
     /**
      * The name and path resolver for this QOM factory.
@@ -133,7 +158,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                                         Column[] columns)
             throws InvalidQueryException, RepositoryException {
         if (source == null) {
-            throw new InvalidQueryException("source must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("source must not be null");
         }
         if (!(source instanceof SourceImpl)) {
             throw new RepositoryException("Unknown Source implementation");
@@ -209,9 +235,9 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      *
      * @param left          the left node-tuple source; non-null
      * @param right         the right node-tuple source; non-null
-     * @param joinTypeName  either <ul> <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_INNER},</li>
-     *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_LEFT_OUTER},</li>
-     *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_RIGHT_OUTER}</li>
+     * @param joinType      either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
+     *                      <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
+     *                      <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
      *                      </ul>
      * @param joinCondition the join condition; non-null
      * @return the join; non-null
@@ -221,7 +247,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      */
     public Join join(Source left,
                      Source right,
-                     String joinTypeName,
+                     int joinType,
                      JoinCondition joinCondition)
             throws InvalidQueryException, RepositoryException {
         if (!(left instanceof SourceImpl) || !(right instanceof SourceImpl)) {
@@ -230,12 +256,11 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
         if (!(joinCondition instanceof JoinConditionImpl)) {
             throw new RepositoryException("Unknwon JoinCondition implementation");
         }
-        return new JoinImpl(
-                resolver,
-                (SourceImpl) left,
-                (SourceImpl) right,
-                JoinType.getJoinTypeByName(joinTypeName),
-                (JoinConditionImpl) joinCondition);
+        if (!VALID_JOIN_TYPES.get(joinType)) {
+            throw new RepositoryException("Invalid joinType");
+        }
+        return new JoinImpl(resolver, (SourceImpl) left, (SourceImpl) right,
+                joinType, (JoinConditionImpl) joinCondition);
     }
 
     /**
@@ -359,7 +384,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public And and(Constraint constraint1, Constraint constraint2)
             throws InvalidQueryException, RepositoryException {
         if (constraint1 == null || constraint2 == null) {
-            throw new InvalidQueryException("Constraints must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("Constraints must not be null");
         }
         if (constraint1 instanceof ConstraintImpl
                 && constraint2 instanceof ConstraintImpl) {
@@ -384,7 +410,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public Or or(Constraint constraint1, Constraint constraint2)
             throws InvalidQueryException, RepositoryException {
         if (constraint1 == null || constraint2 == null) {
-            throw new InvalidQueryException("Constraints must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("Constraints must not be null");
         }
         if (constraint1 instanceof ConstraintImpl
                 && constraint2 instanceof ConstraintImpl) {
@@ -415,34 +442,40 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     /**
      * Filters node-tuples based on the outcome of a binary operation.
      *
-     * @param left the first operand; non-null
-     * @param operatorName the operator; either <ul> <li>{@link #JCR_OPERATOR_EQUAL_TO},</li>
-     *                 <li>{@link #JCR_OPERATOR_NOT_EQUAL_TO},</li> <li>{@link
-     *                 #JCR_OPERATOR_LESS_THAN},</li> <li>{@link #JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
-     *                 <li>{@link #JCR_OPERATOR_GREATER_THAN},</li> <li>{@link
-     *                 #JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li> <li>{@link
-     *                 #JCR_OPERATOR_LIKE}</li> </ul>
-     * @param right the second operand; non-null
+     * @param operand1 the first operand; non-null
+     * @param operator the operator; either <ul> <li>{@link #OPERATOR_EQUAL_TO},</li>
+     *                 <li>{@link #OPERATOR_NOT_EQUAL_TO},</li> <li>{@link
+     *                 #OPERATOR_LESS_THAN},</li> <li>{@link #OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
+     *                 <li>{@link #OPERATOR_GREATER_THAN},</li> <li>{@link
+     *                 #OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li> <li>{@link
+     *                 #OPERATOR_LIKE}</li> </ul>
+     * @param operand2 the second operand; non-null
      * @return the constraint; non-null
      * @throws javax.jcr.query.InvalidQueryException
      *                                       if the query is invalid
      * @throws javax.jcr.RepositoryException if the operation otherwise fails
      */
-    public Comparison comparison(
-            DynamicOperand left, String operatorName, StaticOperand right)
+    public Comparison comparison(DynamicOperand operand1,
+                                 int operator,
+                                 StaticOperand operand2)
             throws InvalidQueryException, RepositoryException {
-        if (!(left instanceof DynamicOperandImpl)) {
-            throw new RepositoryException("Invalid left operand: " + left);
+        if (operand1 == null || operand2 == null) {
+            // TODO: correct exception?
+            throw new RepositoryException("operands must not be null");
         }
-        if (!(right instanceof StaticOperandImpl)) {
-            throw new RepositoryException("Invalid right operand: " + right);
+        if (!VALID_OPERATORS.get(operator)) {
+            // TODO: correct exception?
+            throw new RepositoryException("invalid operator");
         }
-
-        return new ComparisonImpl(
-                resolver,
-                (DynamicOperandImpl) left,
-                Operator.getOperatorByName(operatorName),
-                (StaticOperandImpl) right);
+        if (operand1 instanceof DynamicOperandImpl
+                && operand2 instanceof StaticOperandImpl) {
+            return new ComparisonImpl(resolver,
+                    (DynamicOperandImpl) operand1,
+                    operator,
+                    (StaticOperandImpl) operand2);
+        } else {
+            throw new RepositoryException("Unknown operand implementation");
+        }
     }
 
     /**
@@ -494,7 +527,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      * @throws javax.jcr.RepositoryException if the operation otherwise fails
      */
     public FullTextSearch fullTextSearch(String propertyName,
-            StaticOperand fullTextSearchExpression)
+                                         String fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException                          // CM
     {
         Name propName = null;
@@ -521,12 +554,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      */
     public FullTextSearch fullTextSearch(String selectorName,
                                          String propertyName,
-                                         StaticOperand fullTextSearchExpression)
+                                         String fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException {
-        if (fullTextSearchExpression == null) {
-            throw new IllegalArgumentException(
-                    "Full text search expression is null");
-        }
         Name propName = null;
         if (propertyName != null) {
             propName = checkPropertyName(propertyName);
@@ -828,7 +857,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public BindVariableValue bindVariable(String bindVariableName)
             throws InvalidQueryException, RepositoryException {
         if (bindVariableName == null) {
-            throw new InvalidQueryException("bindVariableName must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("bindVariableName must not be null");
         }
         try {
             return new BindVariableValueImpl(
@@ -849,7 +879,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public Literal literal(Value value)
             throws InvalidQueryException, RepositoryException {
         if (value == null) {
-            throw new InvalidQueryException("value must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("value must not be null");
         }
         return new LiteralImpl(resolver, value);
     }
@@ -869,7 +900,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
             throw new RepositoryException("Unknown DynamicOperand implementation");
         }
         return new OrderingImpl(resolver, (DynamicOperandImpl) operand,
-                QueryObjectModelConstants.JCR_ORDER_ASCENDING);
+                QueryObjectModelConstants.ORDER_ASCENDING);
     }
 
     /**
@@ -887,7 +918,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
             throw new RepositoryException("Unknown DynamicOperand implementation");
         }
         return new OrderingImpl(resolver, (DynamicOperandImpl) operand,
-                QueryObjectModelConstants.JCR_ORDER_DESCENDING);
+                QueryObjectModelConstants.ORDER_DESCENDING);
     }
 
     /**
@@ -915,7 +946,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                 throw new InvalidQueryException(e.getMessage());
             }
         }
-        return new ColumnImpl(resolver, null, propName, propertyName);
+        return new ColumnImpl(resolver, null, propName, propName);
     }
 
     /**
@@ -936,7 +967,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public Column column(String propertyName, String columnName)                  // CM
             throws InvalidQueryException, RepositoryException {
         if (propertyName == null && columnName != null) {
-            throw new InvalidQueryException(
+            // TODO: correct exception?
+            throw new RepositoryException(
                     "columnName must be null if propertyName is null");
         }
         Name propName = null;
@@ -947,7 +979,15 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                 throw new InvalidQueryException(e.getMessage());
             }
         }
-        return new ColumnImpl(resolver, null, propName, columnName);
+        Name colName = null;
+        if (columnName != null) {
+            try {
+                colName = resolver.getQName(columnName);
+            } catch (NameException e) {
+                throw new InvalidQueryException(e.getMessage());
+            }
+        }
+        return new ColumnImpl(resolver, null, propName, colName);
     }
 
     /**
@@ -969,7 +1009,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                          String propertyName,
                          String columnName) throws InvalidQueryException, RepositoryException {
         if (propertyName == null && columnName != null) {
-            throw new InvalidQueryException(
+            // TODO: correct exception?
+            throw new RepositoryException(
                     "columnName must be null if propertyName is null");
         }
         Name propName = null;
@@ -980,8 +1021,16 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                 throw new InvalidQueryException(e.getMessage());
             }
         }
+        Name colName = null;
+        if (columnName != null) {
+            try {
+                colName = resolver.getQName(columnName);
+            } catch (NameException e) {
+                throw new InvalidQueryException(e.getMessage());
+            }
+        }
         return new ColumnImpl(resolver, checkSelectorName(selectorName),
-                propName, columnName);
+                propName, colName);
     }
 
     //------------------------------< internal >--------------------------------
@@ -989,7 +1038,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     private Name checkSelectorName(String selectorName)
             throws RepositoryException {
         if (selectorName == null) {
-            throw new InvalidQueryException("selectorName must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("selectorName must not be null");
         }
         try {
             return resolver.getQName(selectorName);
@@ -1001,7 +1051,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     private Name checkNodeTypeName(String nodeTypeName)
             throws RepositoryException {
         if (nodeTypeName == null) {
-            throw new InvalidQueryException("nodeTypeName must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("nodeTypeName must not be null");
         }
         try {
             return resolver.getQName(nodeTypeName);
@@ -1012,7 +1063,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
 
     private Path checkPath(String path) throws RepositoryException {
         if (path == null) {
-            throw new InvalidQueryException("path must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("path must not be null");
         }
         try {
             return resolver.getQPath(path);
@@ -1024,7 +1076,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     private Name checkPropertyName(String propertyName)
             throws RepositoryException {
         if (propertyName == null) {
-            throw new InvalidQueryException("propertyName must not be null");
+            // TODO: correct exception?
+            throw new RepositoryException("propertyName must not be null");
         }
         try {
             return resolver.getQName(propertyName);
@@ -1033,10 +1086,11 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
         }
     }
 
-    private StaticOperand checkFullTextSearchExpression(StaticOperand fullTextSearchExpression)
+    private String checkFullTextSearchExpression(String fullTextSearchExpression)
             throws RepositoryException {
         if (fullTextSearchExpression == null) {
-            throw new InvalidQueryException(
+            // TODO: correct exception?
+            throw new RepositoryException(
                     "fullTextSearchExpression must not be null");
         }
         return fullTextSearchExpression;

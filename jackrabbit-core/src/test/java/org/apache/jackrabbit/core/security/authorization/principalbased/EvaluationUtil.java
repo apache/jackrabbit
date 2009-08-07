@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.PropertyType;
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Iterator;
 
 /**
  * <code>EvaluationTest</code>...
@@ -48,12 +48,6 @@ class EvaluationUtil {
                             return true;
                         }
                     }
-                    policies = ((JackrabbitAccessControlManager) acMgr).getPolicies(princ);
-                    for (int i = 0; i < policies.length; i++) {
-                        if (policies[i] instanceof ACLTemplate) {
-                            return true;
-                        }
-                    }
                 } catch (RepositoryException e) {
                     // ignore
                 }
@@ -65,17 +59,7 @@ class EvaluationUtil {
     static JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException,
             AccessDeniedException, NotExecutableException {
         if (acM instanceof JackrabbitAccessControlManager) {
-            // first try applicable policies
             AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acM).getApplicablePolicies(principal);
-            for (int i = 0; i < policies.length; i++) {
-                if (policies[i] instanceof ACLTemplate) {
-                    ACLTemplate acl = (ACLTemplate) policies[i];
-                    return acl;
-                }
-            }
-
-            // second existing policies
-            policies = ((JackrabbitAccessControlManager) acM).getPolicies(principal);
             for (int i = 0; i < policies.length; i++) {
                 if (policies[i] instanceof ACLTemplate) {
                     ACLTemplate acl = (ACLTemplate) policies[i];

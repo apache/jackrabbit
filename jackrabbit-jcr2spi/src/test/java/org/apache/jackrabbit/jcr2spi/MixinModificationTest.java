@@ -96,7 +96,7 @@ public class MixinModificationTest extends AbstractJCRTest {
             throw new NotExecutableException();
         }
 
-        Session testSession = getHelper().getReadWriteSession();
+        Session testSession = helper.getReadWriteSession();
         try {
             Node n = (Node) testSession.getItem(nPath);
             String uuid = n.getUUID();

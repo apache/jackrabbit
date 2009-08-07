@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Iterator;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -48,7 +47,7 @@ public class NodeState extends ItemState {
     /**
      * the name of this node's primary type
      */
-    private Name nodeTypeName;
+    private final Name nodeTypeName;
 
     /**
      * Definition of this node state
@@ -132,11 +131,6 @@ public class NodeState extends ItemState {
             }
             synchronized (another) {
                 NodeState nState = (NodeState) another;
-
-                if (!nodeTypeName.equals(nState.nodeTypeName)) {
-                    nodeTypeName = nState.nodeTypeName;
-                    modified = true;
-                }
 
                 if (nState.definition != null && !nState.definition.equals(definition)) {
                     definition = nState.definition;
@@ -317,14 +311,10 @@ public class NodeState extends ItemState {
      * Returns the identifiers of all reference properties that point to
      * this node.
      *
-     * @param propertyName name filter of referring properties to be returned;
-     * if <code>null</code> then all references are returned.
-     * @param weak Boolean flag indicating whether weak references should be
-     * returned or not.
      * @return reference property identifiers
      */
-    public Iterator<PropertyId> getNodeReferences(Name propertyName, boolean weak) {
-        return isf.getNodeReferences(this, propertyName, weak);
+    public PropertyId[] getNodeReferences() {
+        return isf.getNodeReferences(this);
     }
 
     /**

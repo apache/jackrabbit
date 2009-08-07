@@ -213,7 +213,7 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
         try {
             Node referenceableNode = testRootNode.addNode(nodeName3, testNodeType);
             if (needsMixin(referenceableNode, mixReferenceable)) {
-                ensureMixinType(referenceableNode, mixReferenceable);
+                referenceableNode.addMixin(mixReferenceable);
             }
 
             // some implementations may require a save after addMixin()

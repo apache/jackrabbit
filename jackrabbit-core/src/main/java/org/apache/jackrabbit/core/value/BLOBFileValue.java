@@ -18,12 +18,11 @@ package org.apache.jackrabbit.core.value;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.OutputStream;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Binary;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 
 /**
@@ -36,40 +35,23 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
  * This interface is for Jackrabbit-internal use only. Applications should
  * use <code>javax.jcr.ValueFactory</code> to create binary values.
  */
-abstract class BLOBFileValue implements Binary {
+public abstract class BLOBFileValue {
 
     /**
-     * Returns a String representation of this value.
+     * Returns an InputStream representation of this value.
      *
-     * @return String representation of this value.
-     * @throws RepositoryException
+     * @return An InputStream representation of this value.
      */
-    String getString() throws RepositoryException {
-        // TODO: review again. currently the getString method of the JCR Value is delegated to the QValue.
-        InputStream stream = getStream();
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = stream.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
-            byte[] data = out.toByteArray();
-            return new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("UTF-8 not supported on this platform", e);
-        } catch (IOException e) {
-            throw new RepositoryException("conversion from stream to string failed", e);
-        } finally {
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-    }
+    public abstract InputStream getStream() throws RepositoryException;
+
+    /**
+     * Returns the length of this <code>BLOBFileValue</code>.
+     *
+     * @return The length, in bytes, of this <code>BLOBFileValue</code>,
+     *         or -1L if the length can't be determined.
+     * @throws IOException
+     */
+    public abstract long getLength();
 
     /**
      * Frees temporarily allocated resources such as temporary file, buffer, etc.
@@ -78,7 +60,7 @@ abstract class BLOBFileValue implements Binary {
      *
      * @see #delete(boolean)
      */
-    abstract void discard();
+    public abstract void discard();
 
     /**
      * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
@@ -86,7 +68,7 @@ abstract class BLOBFileValue implements Binary {
      * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
      *                             will automatically be deleted
      */
-    abstract void delete(boolean pruneEmptyParentDirs);
+    public abstract void delete(boolean pruneEmptyParentDirs);
 
     /**
      * Checks if this object is immutable.
@@ -94,40 +76,56 @@ abstract class BLOBFileValue implements Binary {
      *
      * @return true if the object is immutable
      */
-    abstract boolean isImmutable();
-
-    public abstract boolean equals(Object obj);
-
-    public abstract String toString();
-
-    public abstract int hashCode();
+    public abstract boolean isImmutable();
 
     /**
-     * Get the data identifier if one is available.
-     *
-     * @return the data identifier or null
+     * {@inheritDoc}
      */
-    DataIdentifier getDataIdentifier() {
-        return null;
-    }
+    public abstract boolean equals(Object obj);
 
-    //-----------------------------------------------------< javax.jcr.Binary >
-    public abstract long getSize();
+    /**
+     * {@inheritDoc}
+     */
+    public abstract String toString();
 
-    public abstract InputStream getStream() throws RepositoryException;
-
-    public int read(byte[] b, long position) throws IOException, RepositoryException {
+    /*
+     * Spools the contents of this <code>BLOBFileValue</code> to the given
+     * output stream.
+     *
+     * @param out output stream
+     * @throws RepositoryException if the input stream for this
+     *                             <code>BLOBFileValue</code> could not be obtained
+     * @throws IOException         if an error occurs while while spooling
+     */
+    public void spool(OutputStream out) throws RepositoryException, IOException {
         InputStream in = getStream();
         try {
-            in.skip(position);
-            return in.read(b);
+            IOUtils.copy(in, out);
         } finally {
-            in.close();
+            IOUtils.closeQuietly(in);
         }
     }
 
-    public void dispose() {
-        discard();
+    /**
+     * {@inheritDoc}
+     */
+    public abstract int hashCode();
+
+    /**
+     * Check if the value is small (contains a low number of bytes) and should
+     * be stored inline.
+     *
+     * @return true if the value is small
+     */
+    public abstract boolean isSmall();
+    
+    /**
+     * Get the data identifier if one is available.
+     * 
+     * @return the data identifier or null
+     */
+    public DataIdentifier getDataIdentifier() {
+        return null;
     }
 
 }

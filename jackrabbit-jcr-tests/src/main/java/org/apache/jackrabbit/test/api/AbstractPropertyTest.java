@@ -59,7 +59,7 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
 
         prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), getPropertyType(), getPropertyIsMultivalued());
         if (prop == null) {

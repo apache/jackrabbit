@@ -22,27 +22,32 @@ import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.core.TestRepository;
+import org.apache.jackrabbit.uuid.UUID;
+
+import junit.framework.TestCase;
 
 /**
  * Test cases for the {@link WorkspaceImporter} class.
  */
-public class WorkspaceImporterTest extends AbstractJCRTest {
+public class WorkspaceImporterTest extends TestCase {
+
+    private Session session;
 
     private Node root;
 
     protected void setUp() throws Exception {
-        super.setUp();
-        root = superuser.getRootNode().addNode("WorkspaceImporterTest");
-        superuser.save();
+        session = TestRepository.getInstance().login();
+        root = session.getRootNode().addNode("WorkspaceImporterTest");
+        session.save();
     }
 
     protected void tearDown() throws Exception {
         root.remove();
-        superuser.save();
-        super.tearDown();
+        session.save();
+        session.logout();
     }
 
     /**
@@ -53,7 +58,7 @@ public class WorkspaceImporterTest extends AbstractJCRTest {
      */
     public void testReferenceImport() throws Exception {
         try {
-            NodeId id = new NodeId();
+            UUID uuid = UUID.randomUUID();
             String xml =
                 "<sv:node sv:name=\"a\""
                 + " xmlns:jcr=\"http://www.jcp.org/jcr/1.0\""
@@ -67,16 +72,16 @@ public class WorkspaceImporterTest extends AbstractJCRTest {
                 + "<sv:property sv:name=\"jcr:mixinTypes\" sv:type=\"Name\">"
                 + "<sv:value>mix:referenceable</sv:value></sv:property>"
                 + "<sv:property sv:name=\"jcr:uuid\" sv:type=\"String\">"
-                + "<sv:value>" + id + "</sv:value></sv:property>"
+                + "<sv:value>" + uuid + "</sv:value></sv:property>"
                 + "</sv:node>"
                 + "<sv:node sv:name=\"c\">"
                 + "<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">"
                 + "<sv:value>nt:unstructured</sv:value></sv:property>"
                 + "<sv:property sv:name=\"ref\" sv:type=\"Reference\">"
-                + "<sv:value>" + id + "</sv:value></sv:property>"
+                + "<sv:value>" + uuid + "</sv:value></sv:property>"
                 + "</sv:node>"
                 + "</sv:node>";
-            superuser.getWorkspace().importXML(
+            session.getWorkspace().importXML(
                     root.getPath(),
                     new ByteArrayInputStream(xml.getBytes("UTF-8")),
                     ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);

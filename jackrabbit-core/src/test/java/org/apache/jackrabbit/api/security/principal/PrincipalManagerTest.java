@@ -74,7 +74,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
     }
 
     public void testReadOnlyIsEveryOne() throws RepositoryException {
-        Session s = getHelper().getReadOnlySession();
+        Session s = helper.getReadOnlySession();
         try {
             Principal[] pcpls = getPrincipals(s);
             for (int i = 0; i < pcpls.length; i++) {

@@ -16,24 +16,24 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
-import java.security.Principal;
+import javax.jcr.Node;
 import java.util.Collections;
 import java.util.Map;
+import java.security.Principal;
 
 /**
  * <code>EvaluationTest</code>...
@@ -45,7 +45,24 @@ public class WriteTest extends AbstractWriteTest {
     }
 
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
-        return EvaluationUtil.getPolicy(acM, path, principal);
+        // first try if there is a new applicable policy
+        AccessControlPolicyIterator it = acM.getApplicablePolicies(path);
+        while (it.hasNext()) {
+            AccessControlPolicy acp = it.nextAccessControlPolicy();
+            if (acp instanceof ACLTemplate) {
+                return (ACLTemplate) acp;
+            }
+        }
+        // try if there is an acl that has been set before:
+        AccessControlPolicy[] pcls = acM.getPolicies(path);
+        for (int i = 0; i < pcls.length; i++) {
+            AccessControlPolicy policy = pcls[i];
+            if (policy instanceof ACLTemplate) {
+                return (ACLTemplate) policy;
+            }
+        }
+        // no applicable or existing ACLTemplate to edit -> not executable.
+        throw new NotExecutableException("ACLTemplate expected.");
     }
 
     protected Map getRestrictions(Session s, String path) {
@@ -78,7 +95,7 @@ public class WriteTest extends AbstractWriteTest {
         // make sure the 'rep:policy' node has been created.
         assertTrue(superuser.itemExists(tmpl.getPath() + "/rep:policy"));
 
-        Session testSession = getTestSession();
+        SessionImpl testSession = getTestSession();
         AccessControlManager testAcMgr = getTestACManager();
         // test: MODIFY_AC granted at 'path'
         assertTrue(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_ACCESS_CONTROL)));
@@ -154,7 +171,7 @@ public class WriteTest extends AbstractWriteTest {
            content that requires jcr:modifyAccessControl privilege instead.
          */
         String policyPath = childNPath + "/rep:policy";
-        assertFalse(getTestSession().hasPermission(policyPath, javax.jcr.Session.ACTION_REMOVE));
+        assertFalse(getTestSession().hasPermission(policyPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(policyPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 
@@ -168,49 +185,5 @@ public class WriteTest extends AbstractWriteTest {
         n.addMixin(((SessionImpl) superuser).getJCRName(AccessControlConstants.NT_REP_ACCESS_CONTROLLABLE));
         it = acMgr.getApplicablePolicies(childNPath);
         assertTrue(it.hasNext());
-    }
-
-    public void testInheritance2() throws RepositoryException, NotExecutableException {
-        Session testSession = getTestSession();
-        AccessControlManager testAcMgr = getTestACManager();
-
-        /*
-          precondition:
-          testuser must have READ-only permission on test-node and below
-        */
-        checkReadOnly(path);
-        checkReadOnly(childNPath);
-
-        // give jcr:write privilege on 'path' and withdraw them on 'childNPath'
-        Privilege[] privileges = privilegesFromNames(new String[] {Privilege.JCR_WRITE});
-        givePrivileges(path, privileges, getRestrictions(superuser, path));
-        withdrawPrivileges(childNPath, privileges, getRestrictions(superuser, path));
-
-        /*
-        since evaluation respects inheritance through the node
-        hierarchy, the jcr:write privilege must not be granted at childNPath
-        */
-        assertFalse(testAcMgr.hasPrivileges(childNPath, privileges));
-
-        /*
-         ... same for permissions at 'childNPath'
-         */
-        String actions = Session.ACTION_SET_PROPERTY + "," + Session.ACTION_REMOVE + "," + Session.ACTION_ADD_NODE;
-
-        String nonExistingItemPath = childNPath + "/anyItem";
-        assertFalse(testSession.hasPermission(nonExistingItemPath, actions));
-
-        // yet another level in the hierarchy
-        Node grandChild = superuser.getNode(childNPath).addNode(nodeName3);
-        superuser.save();
-        String gcPath = grandChild.getPath();
-
-        // grant write privilege again
-        givePrivileges(gcPath, privileges, getRestrictions(superuser, path));
-        assertTrue(testAcMgr.hasPrivileges(gcPath, privileges));
-        assertTrue(testSession.hasPermission(gcPath + "/anyProp", Session.ACTION_SET_PROPERTY));
-        // however: removing the grand-child nodes must not be allowed as
-        // remove_child_node privilege is missing on the direct ancestor.
-        assertFalse(testSession.hasPermission(gcPath, Session.ACTION_REMOVE));
     }
 }

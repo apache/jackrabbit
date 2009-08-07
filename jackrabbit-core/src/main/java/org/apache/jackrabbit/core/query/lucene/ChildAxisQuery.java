@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.query.lucene.hits.AdaptingHits;
 import org.apache.jackrabbit.core.query.lucene.hits.Hits;
@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -43,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.HashMap;
@@ -450,18 +452,18 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                     calc[0] = new SimpleChildrenCalculator(reader, hResolver);
                     contextScorer.score(new HitCollector() {
 
-                        private List<Integer> docIds = new ArrayList<Integer>();
+                        private List docIds = new ArrayList();
 
                         public void collect(int doc, float score) {
                             calc[0].collectContextHit(doc);
                             if (docIds != null) {
-                                docIds.add(doc);
+                                docIds.add(new Integer(doc));
                                 if (docIds.size() > CONTEXT_SIZE_THRESHOLD) {
                                     // switch
                                     calc[0] = new HierarchyResolvingChildrenCalculator(
                                             reader, hResolver);
-                                    for (int docId : docIds) {
-                                        calc[0].collectContextHit(docId);
+                                    for (Iterator it = docIds.iterator(); it.hasNext(); ) {
+                                        calc[0].collectContextHit(((Integer) it.next()).intValue());
                                     }
                                     // indicate that we switched
                                     docIds = null;
@@ -485,17 +487,19 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                     if (nameTest == null) {
                         // only select this node if it is the child at
                         // specified position
-                        List<ChildNodeEntry> childNodes = state.getChildNodeEntries();
                         if (position == LocationStepQueryNode.LAST) {
                             // only select last
+                            List childNodes = state.getChildNodeEntries();
                             if (childNodes.size() == 0
-                                    || !(childNodes.get(childNodes.size() - 1)).getId().equals(id)) {
+                                    || !((ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                        .getId().equals(id)) {
                                 return false;
                             }
                         } else {
+                            List childNodes = state.getChildNodeEntries();
                             if (position < 1
                                     || childNodes.size() < position
-                                    || !(childNodes.get(position - 1)).getId().equals(id)) {
+                                    || !((ChildNodeEntry) childNodes.get(position - 1)).getId().equals(id)) {
                                 return false;
                             }
                         }
@@ -512,9 +516,10 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                             } else {
                                 // only use the last one
                                 Name name = entry.getName();
-                                List<ChildNodeEntry> childNodes = state.getChildNodeEntries(name);
+                                List childNodes = state.getChildNodeEntries(name);
                                 if (childNodes.size() == 0
-                                        || !(childNodes.get(childNodes.size() - 1)).getId().equals(id)) {
+                                        || !((ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                            .getId().equals(id)) {
                                     return false;
                                 }
                             }
@@ -615,31 +620,32 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
          */
         public Hits getHits() throws IOException {
             // read the uuids of the context nodes
-            Map<Integer, String> uuids = new HashMap<Integer, String>();
+            Map uuids = new HashMap();
             for (int i = contextHits.next(); i > -1; i = contextHits.next()) {
                 String uuid = reader.document(i, FieldSelectors.UUID).get(FieldNames.UUID);
-                uuids.put(i, uuid);
+                uuids.put(new Integer(i), uuid);
             }
 
             // get child node entries for each hit
             Hits childrenHits = new AdaptingHits();
-            for (String uuid : uuids.values()) {
-                NodeId id = new NodeId(uuid);
+            for (Iterator it = uuids.values().iterator(); it.hasNext(); ) {
+                String uuid = (String) it.next();
+                NodeId id = new NodeId(UUID.fromString(uuid));
                 try {
                     long time = System.currentTimeMillis();
                     NodeState state = (NodeState) itemMgr.getItemState(id);
                     time = System.currentTimeMillis() - time;
-                    log.debug("got NodeState with id {} in {} ms.", id, time);
-                    List<ChildNodeEntry> entries;
+                    log.debug("got NodeState with id {} in {} ms.", id, new Long(time));
+                    Iterator entries;
                     if (nameTest != null) {
-                        entries = state.getChildNodeEntries(nameTest);
+                        entries = state.getChildNodeEntries(nameTest).iterator();
                     } else {
                         // get all children
-                        entries = state.getChildNodeEntries();
+                        entries = state.getChildNodeEntries().iterator();
                     }
-                    for (ChildNodeEntry entry : entries) {
-                        NodeId childId = entry.getId();
-                        Term uuidTerm = new Term(FieldNames.UUID, childId.toString());
+                    while (entries.hasNext()) {
+                        NodeId childId = ((ChildNodeEntry) entries.next()).getId();
+                        Term uuidTerm = new Term(FieldNames.UUID, childId.getUUID().toString());
                         TermDocs docs = reader.termDocs(uuidTerm);
                         try {
                             if (docs.next()) {
@@ -668,7 +674,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
         /**
          * The document numbers of the context hits.
          */
-        private final Set<Integer> docIds = new HashSet<Integer>();
+        private final Set docIds = new HashSet();
 
         /**
          * Creates a new hierarchy resolving children calculator.
@@ -685,7 +691,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
          * {@inheritDoc}
          */
         protected void collectContextHit(int doc) {
-            docIds.add(doc);
+            docIds.add(new Integer(doc));
         }
 
         /**
@@ -700,12 +706,12 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                 docs = hResolver.getParents(h, docs);
                 if (docs.length == 1) {
                     // optimize single value
-                    if (docIds.contains(docs[0])) {
+                    if (docIds.contains(new Integer(docs[0]))) {
                         childrenHits.set(h);
                     }
                 } else {
                     for (int i = 0; i < docs.length; i++) {
-                        if (docIds.contains(docs[i])) {
+                        if (docIds.contains(new Integer(docs[i]))) {
                             childrenHits.set(h);
                         }
                     }
@@ -713,7 +719,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             }
             time = System.currentTimeMillis() - time;
 
-            log.debug("Filtered hits in {} ms.", time);
+            log.debug("Filtered hits in {} ms.", new Long(time));
             return childrenHits;
         }
     }

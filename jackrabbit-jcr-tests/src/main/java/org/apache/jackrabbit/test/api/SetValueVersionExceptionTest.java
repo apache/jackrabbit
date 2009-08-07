@@ -58,7 +58,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
 
         value = session.getValueFactory().createValue("abc");
         values = new Value[] {value};
@@ -70,7 +70,13 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         // create a node that is versionable
         node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
-        ensureMixinType(node, mixVersionable);
+        if (!node.isNodeType(mixVersionable)) {
+            if (node.canAddMixin(mixVersionable)) {
+                node.addMixin(mixVersionable);
+            } else {
+                throw new NotExecutableException("Failed to set up required test items");
+            }
+        }
 
         property = node.setProperty(propertyName1, value);
         multiProperty = node.setProperty(propertyName2, values);
@@ -274,7 +280,13 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
             : testRootNode.addNode(nodeName3, nodeType3);
 
         // try to make it referenceable if it is not
-        ensureMixinType(referenceableNode, mixReferenceable);
+        if (!referenceableNode.isNodeType(mixReferenceable)) {
+            if (referenceableNode.canAddMixin(mixReferenceable)) {
+              referenceableNode.addMixin(mixReferenceable);
+            } else {
+                throw new NotExecutableException("Failed to set up required test items.");
+            }
+        }
 
         // implementation specific if mixin takes effect immediately or upon save
         testRootNode.save();
@@ -285,7 +297,13 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName4, nodeType);
 
         // try to make it versionable if it is not
-        ensureMixinType(node, mixVersionable);
+        if (!node.isNodeType(mixVersionable)) {
+            if (node.canAddMixin(mixVersionable)) {
+                node.addMixin(mixVersionable);
+            } else {
+                throw new NotExecutableException("Failed to set up required test items.");
+            }
+        }
 
         // fail early when reference properties are not suppoerted
         ensureCanSetProperty(node, refPropName, node.getSession().getValueFactory().createValue(referenceableNode));

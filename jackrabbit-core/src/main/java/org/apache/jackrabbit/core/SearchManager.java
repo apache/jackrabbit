@@ -16,44 +16,44 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.Query;
-import javax.jcr.query.qom.QueryObjectModel;
-
 import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryObjectModelImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
@@ -82,6 +82,11 @@ public class SearchManager implements SynchronousEventListener {
      */
     private static final String NS_XS_PREFIX = "xs";
     public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
+
+    /**
+     * Name of the parameter that indicates the query implementation class.
+     */
+    private static final String PARAM_QUERY_IMPL = "queryClass";
 
     /**
      * The search configuration.
@@ -268,12 +273,9 @@ public class SearchManager implements SynchronousEventListener {
      *
      * @param session   the session of the user executing the query.
      * @param itemMgr   the item manager of the user executing the query. Needed
-     *                  to return <code>Node</code> instances in the result
-     *                  set.
+     *                  to return <code>Node</code> instances in the result set.
      * @param statement the actual query statement.
      * @param language  the syntax of the query statement.
-     * @param node      a nt:query node where the query was read from or
-     *                  <code>null</code> if it is not a stored query.
      * @return a <code>Query</code> instance to execute.
      * @throws InvalidQueryException if the query is malformed or the
      *                               <code>language</code> is unknown.
@@ -282,11 +284,10 @@ public class SearchManager implements SynchronousEventListener {
     public Query createQuery(SessionImpl session,
                              ItemManager itemMgr,
                              String statement,
-                             String language,
-                             Node node)
+                             String language)
             throws InvalidQueryException, RepositoryException {
         AbstractQueryImpl query = createQueryInstance();
-        query.init(session, itemMgr, handler, statement, language, node);
+        query.init(session, itemMgr, handler, statement, language);
         return query;
     }
 
@@ -296,8 +297,6 @@ public class SearchManager implements SynchronousEventListener {
      * @param session   the session of the user executing the query.
      * @param qomTree   the query object model tree, representing the query.
      * @param langugage the original language of the query statement.
-     * @param node      a nt:query node where the query was read from or
-     *                  <code>null</code> if it is not a stored query.
      * @return the query object model for the query.
      * @throws InvalidQueryException the the query object model tree is
      *                               considered invalid by the query handler
@@ -306,27 +305,32 @@ public class SearchManager implements SynchronousEventListener {
      */
     public QueryObjectModel createQueryObjectModel(SessionImpl session,
                                                    QueryObjectModelTree qomTree,
-                                                   String langugage,
-                                                   Node node)
+                                                   String langugage)
             throws InvalidQueryException, RepositoryException {
         QueryObjectModelImpl qom = new QueryObjectModelImpl();
-        qom.init(session, session.getItemManager(), handler, qomTree, langugage, node);
+        qom.init(session, session.getItemManager(), handler, qomTree, langugage);
         return qom;
     }
 
     /**
-     * Returns the ids of the nodes that refer to the node with <code>id</code>
-     * by weak references.
+     * Creates a query object from a node that can be executed on the workspace.
      *
-     * @param id the id of the target node.
-     * @return the ids of the referring nodes.
-     * @throws RepositoryException if an error occurs.
-     * @throws IOException         if an error occurs while reading from the
-     *                             index.
+     * @param session the session of the user executing the query.
+     * @param itemMgr the item manager of the user executing the query. Needed
+     *                to return <code>Node</code> instances in the result set.
+     * @param node a node of type nt:query.
+     * @return a <code>Query</code> instance to execute.
+     * @throws InvalidQueryException if <code>absPath</code> is not a valid
+     *                               persisted query (that is, a node of type nt:query)
+     * @throws RepositoryException   if any other error occurs.
      */
-    public Iterable<NodeId> getWeaklyReferringNodes(NodeId id)
-            throws RepositoryException, IOException {
-        return handler.getWeaklyReferringNodes(id);
+    public Query createQuery(SessionImpl session,
+                             ItemManager itemMgr,
+                             Node node)
+            throws InvalidQueryException, RepositoryException {
+        AbstractQueryImpl query = createQueryInstance();
+        query.init(session, itemMgr, handler, node);
+        return query;
     }
 
     /**
@@ -367,11 +371,11 @@ public class SearchManager implements SynchronousEventListener {
         long time = System.currentTimeMillis();
 
         // nodes that need to be removed from the index.
-        final Set<NodeId> removedNodes = new HashSet<NodeId>();
+        final Set removedNodes = new HashSet();
         // nodes that need to be added to the index.
-        final Map<NodeId, EventImpl> addedNodes = new HashMap<NodeId, EventImpl>();
+        final Map addedNodes = new HashMap();
         // property events
-        List<EventImpl> propEvents = new ArrayList<EventImpl>();
+        List propEvents = new ArrayList();
 
         while (events.hasNext()) {
             EventImpl e = (EventImpl) events.nextEvent();
@@ -402,7 +406,8 @@ public class SearchManager implements SynchronousEventListener {
         }
 
         // sort out property events
-        for (EventImpl e : propEvents) {
+        for (int i = 0; i < propEvents.size(); i++) {
+            EventImpl e = (EventImpl) propEvents.get(i);
             NodeId nodeId = e.getParentId();
             if (e.getType() == Event.PROPERTY_ADDED) {
                 if (addedNodes.put(nodeId, e) == null) {
@@ -423,8 +428,8 @@ public class SearchManager implements SynchronousEventListener {
             }
         }
 
-        Iterator<NodeState> addedStates = new Iterator<NodeState>() {
-            private final Iterator<NodeId> iter = addedNodes.keySet().iterator();
+        NodeStateIterator addedStates = new NodeStateIterator() {
+            private final Iterator iter = addedNodes.keySet().iterator();
 
             public void remove() {
                 throw new UnsupportedOperationException();
@@ -434,7 +439,11 @@ public class SearchManager implements SynchronousEventListener {
                 return iter.hasNext();
             }
 
-            public NodeState next() {
+            public Object next() {
+                return nextNodeState();
+            }
+
+            public NodeState nextNodeState() {
                 NodeState item = null;
                 NodeId id = (NodeId) iter.next();
                 try {
@@ -442,7 +451,7 @@ public class SearchManager implements SynchronousEventListener {
                 } catch (ItemStateException ise) {
                     // check whether this item state change originated from
                     // an external event
-                    EventImpl e = addedNodes.get(id);
+                    EventImpl e = (EventImpl) addedNodes.get(id);
                     if (e == null || !e.isExternal()) {
                         log.error("Unable to index node " + id + ": does not exist");
                     } else {
@@ -452,7 +461,25 @@ public class SearchManager implements SynchronousEventListener {
                 return item;
             }
         };
-        Iterator<NodeId> removedIds = removedNodes.iterator();
+        NodeIdIterator removedIds = new NodeIdIterator() {
+            private final Iterator iter = removedNodes.iterator();
+
+            public NodeId nextNodeId() throws NoSuchElementException {
+                return (NodeId) iter.next();
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            public boolean hasNext() {
+                return iter.hasNext();
+            }
+
+            public Object next() {
+                return nextNodeId();
+            }
+        };
 
         if (removedNodes.size() > 0 || addedNodes.size() > 0) {
             try {

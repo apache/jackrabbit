@@ -38,8 +38,6 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -68,9 +66,9 @@ import javax.jcr.version.VersionException;
  * If <code>srcWorkspaceName</code> differs from the workspace name present with
  * the SessionInfo, the copy is corresponds to a copy across workspaces.
  * The source and destination of the copy operation are specified by
- * {@link NodeId}s. The <code>Name</code> holds the new name. Taken together,
- * this information is sufficient to completely specify and authorize the copy
- * operations.<p/>
+ * {@link NodeId}s. The <code>Name</code> holds the new name in fully qualified
+ * form. Taken together, this information is sufficient to completely specify
+ * and authorize the copy operations.<p/>
  *
  * The RepositoryService in addition allows to create and submit {@link Batch}
  * objects, that cover lists of operations that have to be applied to the
@@ -121,7 +119,7 @@ public interface RepositoryService {
      * @see javax.jcr.Repository#getDescriptorKeys()
      * @see javax.jcr.Repository#getDescriptor(String)
      */
-    public Map<String, String> getRepositoryDescriptors() throws RepositoryException;
+    public Map getRepositoryDescriptors() throws RepositoryException;
 
     //-----------------------------------< SessionInfo creation and release >---
     /**
@@ -287,7 +285,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#getVersionHistory()
      * @see javax.jcr.version.Version#getContainingHistory()
      */
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+    public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns an Iterator of <code>ChildInfo</code>s present on the
@@ -300,31 +298,7 @@ public interface RepositoryService {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * Returns the {@link PropertyId Id}s of the properties that are referencing
-     * the node identified by the given <code>nodeId</code>. If
-     * <code>weakReferences</code> is <code>true</code> the ids of
-     * {@link javax.jcr.PropertyType#WEAKREFERENCE WEAKREFERENCE} properties are
-     * returned, otherwise the property must be of type {@link javax.jcr.PropertyType#REFERENCE REFERENCE}.
-     *
-     * @param sessionInfo
-     * @param nodeId
-     * @param propertyName name filter of referring properties to be returned;
-     * if <code>null</code> then all references are returned.
-     * @param weakReferences If <code>true</code> the properties must be of type
-     * {@link javax.jcr.PropertyType#WEAKREFERENCE}, otherwise of type
-     * {@link javax.jcr.PropertyType#REFERENCE}.
-     * @return An Iterator of {@link PropertyId Id}s of the properties that are
-     * referencing the node identified by the given <code>nodeId</code> or an
-     * empty iterator if the node is not eferenceable or no references exist.
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     * @see PropertyInfo#getId()
-     * @since JCR 2.0
-     */
-    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName, boolean weakReferences) throws ItemNotFoundException, RepositoryException;
+    public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the <code>PropertyInfo</code> for the <code>Property</code>
@@ -601,13 +575,13 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @param nodeId
-     * @return <code>NodeId</code> of newly created version
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.InvalidItemStateException
      * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#checkin()
+     * @return <code>NodeId</code> of newly created version
      */
     public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
 
@@ -623,20 +597,6 @@ public interface RepositoryService {
      * @see javax.jcr.Node#checkout()
      */
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
-
-    /**
-     * Performs a checkpoint for the <code>Node</code> identified by the given
-     * <code>NodeId</code>.
-     *
-     * @param sessionInfo
-     * @param nodeId
-     * @return <code>NodeId</code> of newly created version
-     * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.version.VersionManager#checkpoint(String)
-     * @since JCR 2.0
-     */
-    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * Remove the version inditified by the specified <code>versionId</code>.
@@ -722,29 +682,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#merge(String, boolean)
      */
-    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
-
-    /**
-     * Merge the node identified by the given <code>NodeId</code> and its subtree
-     * with the corresponding node present in the workspace with the name of
-     * <code>srcWorkspaceName</code>.
-     *
-     * @param sessionInfo
-     * @param nodeId
-     * @param srcWorkspaceName
-     * @param bestEffort
-     * @return an <code>Iterator</code> over the {@link NodeId}s of all nodes that
-     * received a merge result of "fail" in the course of this operation.
-     * @throws javax.jcr.NoSuchWorkspaceException
-     * @throws javax.jcr.AccessDeniedException
-     * @throws javax.jcr.MergeException
-     * @throws javax.jcr.lock.LockException
-     * @throws javax.jcr.InvalidItemStateException
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.version.VersionManager#merge(String, String, boolean, boolean)
-     * @since JCR 2.0
-     */
-    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * Resolve an existing merge conflict present with the node identified by
@@ -803,55 +741,6 @@ public interface RepositoryService {
      */
     public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label) throws VersionException, RepositoryException;
 
-    /**
-     * Create a new activity.
-     *
-     * @param sessionInfo
-     * @param title
-     * @return the <code>NodeId</code> of the new activity node.
-     * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.version.VersionManager#createActivity(String)
-     * @since JCR 2.0
-     */
-    public NodeId createActivity(SessionInfo sessionInfo, String title) throws UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * Removes the activity identified by the specified <code>activityId</code>.
-     *
-     * @param sessionInfo
-     * @param activityId
-     * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.version.VersionManager#removeActivity(Node)
-     * @since JCR 2.0
-     */
-    public void removeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * Merges the activity identified by the given <code>activityId</code> into
-     * the workspace the specified <code>sessionInfo</code> has been created for.
-     *
-     * @param sessionInfo
-     * @param activityId
-     * @return an <code>Iterator</code> over the {@link NodeId}s of all nodes that
-     * received a merge result of "fail" in the course of this operation.
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     */
-    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     *
-     * @param sessionInfo
-     * @param nodeId
-     * @return
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     * @see javax.jcr.version.VersionManager#createConfiguration(String)
-     */
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException;
-
     //----------------------------------------------------------< Searching >---
     /**
      * Returns a String array identifying all query languages supported by this
@@ -867,22 +756,20 @@ public interface RepositoryService {
 
     /**
      * Checks if the query <code>statement</code> is valid according to the
-     * specified query <code>language</code> and returns the bind variable
-     * names found in the query statement.
+     * specified query <code>language</code>.
      *
      * @param sessionInfo the session info.
      * @param statement   the query statement to check.
      * @param language    the query language.
      * @param namespaces  the locally re-mapped namespace which may be used in
      *                    the query <code>statement</code>.
-     * @return the bind variable names.
      * @throws InvalidQueryException if the query statement is invalid or the
      *                               language is not supported.
      * @throws RepositoryException   if an error occurs while checking the
      *                               statement.
      * @see javax.jcr.query.QueryManager#createQuery(String, String)
      */
-    public String[] checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws InvalidQueryException, RepositoryException;
+    public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws InvalidQueryException, RepositoryException;
 
     /**
      * Execute the given query statement with the specified query language. The
@@ -890,31 +777,16 @@ public interface RepositoryService {
      * to namespace uri in order to be able to properly resolve prefix:localname
      * patterns present within the query statement.
      *
-     * @param sessionInfo the session info that wants to execute the query.
-     * @param statement   the query statement to be execute.
-     * @param language    the query language used to parse the query
-     *                    <code>statement</code>.
-     * @param namespaces  the locally re-mapped namespace which may be used in
-     *                    the query <code>statement</code>.
-     * @param limit       The maximum result size or <code>-1</code> is no
-     *                    maximum is set.
-     * @param offset      The offset in the total result set or <code>-1</code>
-     *                    is no offset is set.
-     * @param values      A Map of name/value pairs collected upon calls to
-     *                    {@link javax.jcr.query.Query#bindValue(String,
-     *                    javax.jcr.Value)}.
-     * @return The query info.
-     * @throws RepositoryException if an error occurs.
+     * @param sessionInfo
+     * @param statement the query statement to be execute.
+     * @param language the query language used to parse the query <code>statement</code>.
+     * @param namespaces the locally re-mapped namespace which may be used in
+     * the query <code>statement</code>.
+     * @return
+     * @throws javax.jcr.RepositoryException
      * @see javax.jcr.query.Query#execute()
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo,
-                                  String statement,
-                                  String language,
-                                  Map<String, String> namespaces,
-                                  long limit,
-                                  long offset,
-                                  Map<String, QValue> values)
-            throws RepositoryException;
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws RepositoryException;
 
     //--------------------------------------------------------< Observation >---
     /**
@@ -1030,29 +902,6 @@ public interface RepositoryService {
             throws RepositoryException, InterruptedException;
 
     /**
-     * Returns events from the <code>EventJournal</code> after a given point in
-     * time. The returned event bundle may only contain events up to a given
-     * time. In order to retrieve more events a client must call this method
-     * again with the timestamp from the last event bundle. An empty bundle
-     * indicates that there are no more events.
-     *
-     * @param sessionInfo the session info.
-     * @param filter      the event filter to apply. Please note: the
-     *                    <code>noLocal</code> flag is ignored.
-     * @param after       retrieve events that occurred after the given
-     *                    timestamp.
-     * @return the event bundle.
-     * @throws RepositoryException if an error occurs.
-     * @throws UnsupportedRepositoryOperationException
-     *                             if the underlying implementation does not
-     *                             support event journaling.
-     */
-    public EventBundle getEvents(SessionInfo sessionInfo,
-                                 EventFilter filter,
-                                 long after)
-            throws RepositoryException, UnsupportedRepositoryOperationException;
-
-    /**
      * Indicates that the passed subscription is no longer needed.
      * <p/>
      * <b>Note on thread-safety:</b> it is permissible to call this methods
@@ -1077,7 +926,7 @@ public interface RepositoryService {
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      * @see javax.jcr.NamespaceRegistry#getURIs()
      */
-    public Map<String, String> getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException;
+    public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
      * Returns the namespace URI for the given namespace <code>prefix</code>.
@@ -1145,7 +994,7 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
      * Retrieve <code>QNodeTypeDefinition</code>s for the given names. The
@@ -1167,75 +1016,5 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException;
-
-    /**
-     * Registers the node types with the specified <code>QNodeTypeDefinition</code>s.
-     * If <code>allowUpdate</code> is <code>true</code> this method may also be
-     * used to reregister existing node types with a modified definition, otherwise
-     * this method will fail with <code>NodeTypeExistsException</code> if any of
-     * the specified definition has the name of an already registered node type.
-     *
-     * @param sessionInfo
-     * @param nodeTypeDefinitions
-     * @param allowUpdate
-     * @throws InvalidNodeTypeDefinitionException If any of the specified definitions
-     * is invalid.
-     * @throws NodeTypeExistsException If any of the specified definitions has the
-     * name of an already registered node type and <code>allowUpdate</code> is <code>false</code>.
-     * @throws UnsupportedRepositoryOperationException If registering node types
-     * is not supported.
-     * @throws RepositoryException If another error occurs.
-     * @see javax.jcr.nodetype.NodeTypeManager#registerNodeTypes(javax.jcr.nodetype.NodeTypeDefinition[], boolean)
-     */
-    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * Unregisters the node types with the specified <code>names</code>.
-     * 
-     * @param sessionInfo
-     * @param nodeTypeNames
-     * @throws UnsupportedRepositoryOperationException If unregistering node types
-     * is not supported.
-     * @throws NoSuchNodeTypeException If any of the specified names has no
-     * corresponding registered node type.
-     * @throws RepositoryException If another error occurs.
-     * @see javax.jcr.nodetype.NodeTypeManager#unregisterNodeTypes(String[])
-     */
-    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException;
-
-    //-----------------------------------------------< Workspace Management >---
-    /**
-     * Create a new workspace with the specified <code>name</code>. If
-     * <code>srcWorkspaceName</code> isn't <code>null</code> the content of
-     * that workspace is 'cloned' to the new workspace as inital content,
-     * otherwise an empty workspace will be created.
-     *
-     * @param sessionInfo
-     * @param name The name of the new workspace.
-     * @param srcWorkspaceName The name of the workspace from which the initial
-     * content of the new workspace will be 'cloned'.
-     * @throws AccessDeniedException
-     * @throws UnsupportedRepositoryOperationException
-     * @throws NoSuchWorkspaceException
-     * @throws RepositoryException
-     * @see javax.jcr.Workspace#createWorkspace(String)
-     * @see javax.jcr.Workspace#createWorkspace(String, String)
-     * @since JCR 2.0
-     */
-    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException;
-
-    /**
-     * Deletes the workspace with the specified <code>name</code>.
-     *
-     * @param sessionInfo
-     * @param name  The name of the workspace to be deleted.
-     * @throws AccessDeniedException
-     * @throws UnsupportedRepositoryOperationException
-     * @throws NoSuchWorkspaceException
-     * @throws RepositoryException
-     * @see javax.jcr.Workspace#deleteWorkspace(String)
-     * @since JCR 2.0
-     */
-    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException;
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException;
 }

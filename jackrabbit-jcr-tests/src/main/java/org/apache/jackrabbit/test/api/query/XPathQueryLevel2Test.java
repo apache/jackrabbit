@@ -35,7 +35,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
     /**
      * Test if the optional jcr:score property for full-text search is
      * supported.
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testScoreColumn() throws Exception {
@@ -48,7 +48,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test full-text search of the repository.<br>
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testFullTextSearch() throws Exception {
@@ -73,7 +73,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test range evauluation of Query.<br>
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpRangeTest()}.
      */
     public void testRange() throws Exception {
@@ -89,7 +89,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test multi-value support of search.<br>
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpMultiValueTest()}.
      */
     public void testMultiValueSearch() throws Exception {
@@ -105,7 +105,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test if the jcr:path pseudo property is contained in result.
-     * <p>
+     * <p/>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testPathColumn() throws Exception {
@@ -129,9 +129,11 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
      *         and excluding with a word
      */
     private Statement getFullTextStatement() {
-        String xpath =
-            xpathRoot + "/*[" + jcrContains + "(., '\"quick brown\" -cat')]";
-        return new Statement(xpath, Query.XPATH);
+        StringBuffer tmp = new StringBuffer("/");
+        tmp.append(jcrRoot).append(testRoot);
+        tmp.append("/*[").append(jcrContains);
+        tmp.append("(., '\"quick brown\" -cat')]");
+        return new Statement(tmp.toString(), Query.XPATH);
     }
 
     /**
@@ -139,20 +141,24 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
      *         property
      */
     private Statement getMultiValueStatement() {
-        String xpath =
-            xpathRoot + "/*[@" + propertyName2 + " = 'two' and @"
-            + propertyName1 + " = 'existence']";
-        return new Statement(xpath, Query.XPATH);
+        StringBuffer tmp = new StringBuffer("/");
+        tmp.append(jcrRoot).append(testRoot);
+        tmp.append("/*[@").append(propertyName2).append(" = 'two'");
+        tmp.append(" and @").append(propertyName1).append(" = 'existence']");
+        return new Statement(tmp.toString(), Query.XPATH);
     }
 
     /**
      * @return Statement selecting nodes by its range in {@link #propertyName1}
      */
     private Statement getRangeStatement() {
-        String xpath =
-            xpathRoot + "/*[@" + propertyName1 + " <= 'b' and @"
-            + propertyName1 + " > 'a']";
-        return new Statement(xpath, Query.XPATH);
+        StringBuffer tmp = new StringBuffer("/");
+        tmp.append(jcrRoot).append(testRoot);
+        tmp.append("/*[@");
+        tmp.append(propertyName1);
+        tmp.append(" <= 'b' and @");
+        tmp.append(propertyName1);
+        tmp.append(" > 'a']");
+        return new Statement(tmp.toString(), Query.XPATH);
     }
-
 }

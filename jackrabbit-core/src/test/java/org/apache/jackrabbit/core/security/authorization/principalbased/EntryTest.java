@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.value.BooleanValue;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.value.BooleanValue;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;

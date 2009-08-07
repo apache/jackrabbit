@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import javax.jcr.GuestCredentials;
+import org.apache.jackrabbit.api.jsr283.GuestCredentials;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.RepositoryException;
@@ -29,7 +29,7 @@ public class GuestLoginTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        guest = getHelper().getRepository().login(new GuestCredentials());
+        guest = helper.getRepository().login(new GuestCredentials());
     }
 
     protected void tearDown() throws Exception {

@@ -16,22 +16,22 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.qom.Column;
-import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.Ordering;
-import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.Source;
-
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilderRegistry;
 
 /**
- * <code>QueryObjectModelImpl</code> implements the query object model.
+ * <code>QueryObjectModelImpl</code>...
  */
 public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel {
 
@@ -41,50 +41,64 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
     protected QueryObjectModelTree qomTree;
 
     /**
-     * {@inheritDoc}
-     * @throws UnsupportedOperationException always.
+     * @inheritDoc
      */
     public void init(SessionImpl session,
                      ItemManager itemMgr,
                      QueryHandler handler,
                      String statement,
-                     String language,
-                     Node node) throws InvalidQueryException {
-        throw new UnsupportedOperationException();
+                     String language) throws InvalidQueryException {
+        checkNotInitialized();
+        this.session = session;
+        this.language = language;
+        this.handler = handler;
+        this.statement = statement;
+        this.query = handler.createExecutableQuery(session, itemMgr,
+                createQOMTree(statement, language));
+        setInitialized();
     }
 
     /**
-     * Initializes a query instance from a query object model.
-     *
-     * @param session  the session of the user executing this query.
-     * @param itemMgr  the item manager of the session executing this query.
-     * @param handler  the query handler of the search index.
-     * @param qomTree  the query object model tree.
-     * @param language the original query syntax from where the JQOM was
-     *                 created.
-     * @param node     a nt:query node where the query was read from or
-     *                 <code>null</code> if it is not a stored query.
-     * @throws InvalidQueryException if the qom tree cannot be serialized
-     *                               according to the given language.
-     * @throws RepositoryException   if another error occurs
+     * @inheritDoc
+     */
+    public void init(SessionImpl session,
+                     ItemManager itemMgr,
+                     QueryHandler handler,
+                     Node node) throws InvalidQueryException, RepositoryException {
+        checkNotInitialized();
+        this.session = session;
+        this.node = node;
+        this.handler = handler;
+
+        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
+            throw new InvalidQueryException("node is not of type nt:query");
+        }
+        this.statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
+        this.language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
+        this.query = handler.createExecutableQuery(session, itemMgr,
+                createQOMTree(statement, language));
+        setInitialized();
+    }
+
+    /**
+     * @inheritDoc
      */
     public void init(SessionImpl session,
                      ItemManager itemMgr,
                      QueryHandler handler,
                      QueryObjectModelTree qomTree,
-                     String language,
-                     Node node)
+                     String language)
             throws InvalidQueryException, RepositoryException {
         checkNotInitialized();
         this.session = session;
         this.language = language;
         this.handler = handler;
         this.qomTree = qomTree;
-        this.node = node;
-        this.statement = QueryObjectModelBuilderRegistry.getQueryObjectModelBuilder(language).toString(this);
+        this.statement = null; // TODO: format qomTree into a SQL2 statement
         this.query = handler.createExecutableQuery(session, itemMgr, qomTree);
         setInitialized();
     }
+
 
     //-------------------------< QueryObjectModel >-----------------------------
 
@@ -122,5 +136,23 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
      */
     public Column[] getColumns() {
         return qomTree.getColumns();
+    }
+
+    //------------------------------< internal >--------------------------------
+
+    /**
+     * Creates a {@link QueryObjectModelTree} representation for the query
+     * <code>statement</code>.
+     *
+     * @param statement the query statement.
+     * @param language  the language of the query statement.
+     * @return the {@link QueryObjectModelTree} representation.
+     * @throws InvalidQueryException if the query statement is malformed.
+     */
+    private QueryObjectModelTree createQOMTree(String statement,
+                                               String language)
+            throws InvalidQueryException {
+        // TODO: implement
+        return null;
     }
 }

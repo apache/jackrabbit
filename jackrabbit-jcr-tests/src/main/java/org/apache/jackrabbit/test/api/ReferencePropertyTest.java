@@ -171,19 +171,6 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests dereferencing a REFERENCE property to a Property
-     * @since JCR 2.0
-     */
-    public void testGetProperty() throws RepositoryException {
-        try {
-            prop.getProperty();
-            fail("A REFERENCE property cannot be resolved to a Property.");
-        } catch (ValueFormatException e) {
-            // ok
-        }
-    }
-
-    /**
      * Tests if Value.getType() returns the same as Property.getType() and also
      * tests that prop.getDefinition().getRequiredType() returns the same type
      * in case it is not of Undefined type.

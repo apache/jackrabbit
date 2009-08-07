@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.search.Query;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -68,8 +68,8 @@ public class SimpleExcerptProvider implements ExcerptProvider {
                     text.append(separator);
                     separator = " ... ";
                     InternalValue[] values = propState.getValues();
-                    for (InternalValue value : values) {
-                        text.append(value.toString());
+                    for (int i = 0; i < values.length; i++) {
+                        text.append(values[i].toString());
                     }
                 }
             }

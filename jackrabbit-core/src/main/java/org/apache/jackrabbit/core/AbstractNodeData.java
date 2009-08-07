@@ -17,9 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import javax.jcr.nodetype.NodeDefinition;
-
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
 
 /**

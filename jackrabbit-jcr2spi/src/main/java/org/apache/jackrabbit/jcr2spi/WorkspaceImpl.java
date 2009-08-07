@@ -19,12 +19,11 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
-import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Clone;
 import org.apache.jackrabbit.jcr2spi.operation.Copy;
@@ -69,7 +68,6 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
-import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.ObservationManager;
@@ -101,13 +99,10 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     private final WorkspaceManager wspManager;
 
-    private LockStateManager lockManager;
+    private LockManager lockManager;
     private ObservationManager obsManager;
     private QueryManager qManager;
     private VersionManager versionManager;
-
-    private LockManager jcrLockManager;
-    private javax.jcr.version.VersionManager jcrVersionManager;
 
     public WorkspaceImpl(String name, SessionImpl session, RepositoryConfig config, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
@@ -249,7 +244,13 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @see javax.jcr.Workspace#restore(Version[], boolean)
      */
     public void restore(Version[] versions, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException {
-        getVersionManager().restore(versions, removeExisting);
+        session.checkHasPendingChanges();
+
+        NodeState[] versionStates = new NodeState[versions.length];
+        for (int i = 0; i < versions.length; i++) {
+            versionStates[i] = session.getVersionState(versions[i]);
+        }
+        getVersionManager().restore(versionStates, removeExisting);
     }
 
     /**
@@ -343,61 +344,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
     }
 
-    /**
-     * @see javax.jcr.Workspace#createWorkspace(String)
-     */
-    public void createWorkspace(String name) throws RepositoryException {
-        session.checkIsAlive();
-        session.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
-        wspManager.createWorkspace(name, null);
-    }
-
-
-    /**
-     * @see javax.jcr.Workspace#createWorkspace(String, String)
-     */
-    public void createWorkspace(String name, String srcWorkspace) throws RepositoryException {
-        session.checkIsAlive();
-        session.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
-        wspManager.createWorkspace(name, srcWorkspace);
-    }
-
-
-    /**
-     * @see javax.jcr.Workspace#deleteWorkspace(String)
-     */
-    public void deleteWorkspace(String name) throws RepositoryException {
-        session.checkIsAlive();
-        session.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
-        wspManager.deleteWorkspace(name);
-    }
-
-
-    /**
-     * @see javax.jcr.Workspace#getLockManager()
-     */
-    public LockManager getLockManager() throws RepositoryException {
-        session.checkIsAlive();
-        session.checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
-        if (jcrLockManager == null) {
-            jcrLockManager = new JcrLockManager(session);
-        }
-        return jcrLockManager;
-    }
-
-    /**
-     * @see javax.jcr.Workspace#getVersionManager()
-     */
-    public synchronized javax.jcr.version.VersionManager getVersionManager()
-            throws RepositoryException {
-        session.checkIsAlive();
-        session.checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
-        if (jcrVersionManager == null) {
-            jcrVersionManager = new JcrVersionManager(session);
-        }
-        return jcrVersionManager;
-    }
-
     //----------------------------------------------------< ManagerProvider >---
     /**
      * @see ManagerProvider#getNamePathResolver()
@@ -442,9 +388,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     }
 
     /**
-     * @see ManagerProvider#getLockStateManager()
+     * @see ManagerProvider#getLockManager()
      */
-    public LockStateManager getLockStateManager() {
+    public LockManager getLockManager() {
         if (lockManager == null) {
             lockManager = createLockManager(wspManager, session.getItemManager());
         }
@@ -452,9 +398,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     }
 
     /**
-     * @see ManagerProvider#getVersionStateManager()
+     * @see ManagerProvider#getVersionManager()
      */
-    public VersionManager getVersionStateManager() {
+    public VersionManager getVersionManager() {
         if (versionManager == null) {
             versionManager = createVersionManager(wspManager);
         }
@@ -468,30 +414,14 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         return wspManager.getItemDefinitionProvider();
     }
 
-    /**
-     * @see ManagerProvider#getNodeTypeDefinitionProvider()
-     */
-    public NodeTypeDefinitionProvider getNodeTypeDefinitionProvider() {
-        return session.getNodeTypeManager();
-    }
-
-    /**
-     * @see ManagerProvider#getEffectiveNodeTypeProvider()
-     */
     public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider() {
         return wspManager.getEffectiveNodeTypeProvider();
     }
 
-    /**
-     * @see ManagerProvider#getJcrValueFactory()
-     */
     public ValueFactory getJcrValueFactory() throws RepositoryException {
         return session.getJcrValueFactory();
     }
 
-    /**
-     * @see ManagerProvider#getQValueFactory()
-     */
     public QValueFactory getQValueFactory() throws RepositoryException {
         return session.getQValueFactory();
     }
@@ -560,11 +490,11 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      *
      * @param wspManager
      * @param itemManager
-     * @return a new <code>LockStateManager</code> instance.
+     * @return a new <code>LockManager</code> instance.
      */
-    protected LockStateManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
-        LockManagerImpl lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour());
-        session.addListener(lMgr);
+    protected LockManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
+        LockManager lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour(), getPathResolver());
+        session.addListener((LockManagerImpl) lMgr);
         return lMgr;
     }
 
@@ -582,9 +512,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * Create the <code>ObservationManager</code>. May be overridden by subclasses.
      *
      * @return a new <code>ObservationManager</code> instance
-     * @throws RepositoryException
      */
-    protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) throws RepositoryException {
+    protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) {
         return new ObservationManagerImpl(wspManager, resolver, ntRegistry);
     }
 }

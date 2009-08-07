@@ -16,25 +16,33 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
+import javax.jcr.Value;
 import javax.jcr.RangeIterator;
 
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryResultRow;
-import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.jcr.search.SearchResultProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +56,13 @@ public class QueryInfoImpl implements QueryInfo {
      */
     private static final Logger log = LoggerFactory.getLogger(QueryInfoImpl.class);
 
-    private final String[] columnNames;
+    private static final double UNDEFINED_SCORE = -1;
 
-    private final List<QueryResultRow> results = new ArrayList<QueryResultRow>();
+    private final Name[] columnNames;
+    private int scoreIndex = -1;
+    private final Map results = new LinkedHashMap();
 
-    public QueryInfoImpl(MultiStatus ms, IdFactory idFactory,
+    public QueryInfoImpl(MultiStatus ms, SessionInfo sessionInfo, URIResolver uriResolver,
                          NamePathResolver resolver, ValueFactory valueFactory,
                          QValueFactory qValueFactory)
         throws RepositoryException {
@@ -60,17 +70,43 @@ public class QueryInfoImpl implements QueryInfo {
         String responseDescription = ms.getResponseDescription();
         if (responseDescription != null) {
             String[] cn = responseDescription.split(" ");
-            this.columnNames = new String[cn.length];
+            this.columnNames = new Name[cn.length];
             for (int i = 0; i < cn.length; i++) {
-                columnNames[i] = ISO9075.decode(cn[i]);
+                String jcrColumnNames = ISO9075.decode(cn[i]);
+                try {
+                    columnNames[i] = resolver.getQName(jcrColumnNames);
+                    if (NameConstants.JCR_SCORE.equals(columnNames[i])) {
+                        scoreIndex = i;
+                    }
+                } catch (NameException e) {
+                    throw new RepositoryException(e);
+                }
             }
         } else {
             throw new RepositoryException("Missing column infos: Unable to build QueryInfo object.");
         }
 
-        for (MultiStatusResponse response : ms.getResponses()) {
-            results.add(new QueryResultRowImpl(response, columnNames, resolver,
-                    qValueFactory, valueFactory, idFactory));
+        MultiStatusResponse[] responses = ms.getResponses();
+        for (int i = 0; i < responses.length; i++) {
+            MultiStatusResponse response = responses[i];
+            String href = response.getHref();
+            DavPropertySet okSet = response.getProperties(DavServletResponse.SC_OK);
+
+            DavProperty davProp = okSet.get(SearchResultProperty.SEARCH_RESULT_PROPERTY);
+            SearchResultProperty resultProp = new SearchResultProperty(davProp, valueFactory);
+            Value[] values = resultProp.getValues();
+            QValue[] qValues = new QValue[values.length];
+            for (int j = 0; j < values.length; j++) {
+                try {
+                    qValues[j] = (values[j] == null) ?  null : ValueFormat.getQValue(values[j], resolver, qValueFactory);
+                } catch (RepositoryException e) {
+                    // should not occur
+                    log.error("Malformed value: " + values[j].toString());
+                }
+            }
+
+            NodeId nodeId = uriResolver.getNodeId(href, sessionInfo);
+            results.put(nodeId, qValues);
         }
     }
 
@@ -78,34 +114,112 @@ public class QueryInfoImpl implements QueryInfo {
      * @see QueryInfo#getRows()
      */
     public RangeIterator getRows() {
-        return new RangeIteratorAdapter(results);
+        return new QueryResultRowIterator();
     }
 
     /**
      * @see QueryInfo#getColumnNames()
      */
-    public String[] getColumnNames() {
-        String[] names = new String[columnNames.length];
-        System.arraycopy(columnNames, 0, names, 0, columnNames.length);
-        return names;
+    public Name[] getColumnNames() {
+        return columnNames;
     }
 
+    //--------------------------------------------------------< inner class >---
     /**
-     * @see QueryInfo#getSelectorNames()
+     * Inner class implementing the <code>RangeIterator</code> for the query
+     * result rows. 
      */
-    public Name[] getSelectorNames() {
-        if (results.isEmpty()) {
-            // TODO: this is not correct
-            return new Name[0];
-        } else {
-            Set<Name> uniqueNames = new HashSet<Name>();
-            QueryResultRowImpl row = (QueryResultRowImpl) results.get(0);
-            for (Name n : row.getSelectorNames()) {
-                if (n != null) {
-                    uniqueNames.add(n);
+    private class QueryResultRowIterator implements RangeIterator {
+
+        private final Iterator keyIterator;
+        private long pos = 0;
+
+        private QueryResultRowIterator() {
+            keyIterator = results.keySet().iterator();
+        }
+
+        private QueryResultRow nextQueryResultRow() {
+            final NodeId nId = (NodeId) keyIterator.next();
+            final QValue[] qValues = (QValue[]) results.get(nId);
+            pos++;
+
+            return new QueryResultRow() {
+                /**
+                 * @see QueryResultRow#getNodeId()
+                 */
+                public NodeId getNodeId() {
+                    return nId;
                 }
+
+                /**
+                 * @see QueryResultRow#getScore()
+                 */
+                public double getScore() {
+                    if (scoreIndex != -1 && qValues[scoreIndex] != null) {
+                        try {
+                            return Double.parseDouble(qValues[scoreIndex].getString());
+                        } catch (RepositoryException e) {
+                            log.error("Error while building query score", e);
+                        }   return UNDEFINED_SCORE;
+                    } else {
+                        log.error("Cannot determined jcr:score from query results.");
+                        return UNDEFINED_SCORE;
+                    }
+                }
+
+                /**
+                 * @see QueryResultRow#getValues()
+                 */
+                public QValue[] getValues() {
+                    return qValues;
+                }
+            };
+        }
+
+        //--------------------------------------------------< RangeIterator >---
+        /**
+         * @see RangeIterator#skip(long)
+         */
+        public void skip(long skipNum) {
+            while (skipNum-- > 0) {
+                nextQueryResultRow();
             }
-            return uniqueNames.toArray(new Name[uniqueNames.size()]);
+        }
+
+        /**
+         * @see RangeIterator#getSize()
+         */
+        public long getSize() {
+            return results.size();
+        }
+
+        /**
+         * @see RangeIterator#getPosition()
+         */
+        public long getPosition() {
+            return pos;
+        }
+
+        //-------------------------------------------------------< Iterator >---
+        /**
+         * @see Iterator#remove()
+         */
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not implemented");
+        }
+
+        /**
+         * @see Iterator#hasNext()
+         */
+        public boolean hasNext() {
+            return keyIterator.hasNext();
+        }
+
+        /**
+         * @see Iterator#next()
+         */
+        public Object next() {
+            return nextQueryResultRow();
         }
     }
 }

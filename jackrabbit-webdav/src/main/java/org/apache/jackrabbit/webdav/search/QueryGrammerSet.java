@@ -115,7 +115,7 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
         Grammer(String localName, Namespace namespace) {
             this.localName = localName;
             this.namespace = namespace;
-            hashCode = DomUtil.getExpandedName(localName, namespace).hashCode();
+            hashCode = DomUtil.getQualifiedName(localName, namespace).hashCode();
         }
 
         public int hashCode() {

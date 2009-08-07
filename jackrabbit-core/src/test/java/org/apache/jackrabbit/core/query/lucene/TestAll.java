@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.test.ConcurrentTestSuite;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -34,10 +33,9 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new ConcurrentTestSuite("Search tests");
+        TestSuite suite = new TestSuite("Search tests");
 
         suite.addTestSuite(IndexingQueueTest.class);
-        suite.addTestSuite(DecimalConvertTest.class);
         suite.addTestSuite(IndexingAggregateTest.class);
 
         return suite;

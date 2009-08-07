@@ -50,9 +50,7 @@ public class ValueFormat {
         } else if (jcrValue instanceof QValueValue) {
             return ((QValueValue)jcrValue).getQValue();
         } else if (jcrValue.getType() == PropertyType.BINARY) {
-            // TODO: jsr 283 binary property conversion
             try {
-                //return factory.create(jcrValue.getBinary());
                 return factory.create(jcrValue.getStream());
             } catch (IOException e) {
                 throw new RepositoryException(e);
@@ -63,8 +61,6 @@ public class ValueFormat {
             return factory.create(jcrValue.getDouble());
         } else if (jcrValue.getType() == PropertyType.LONG) {
             return factory.create(jcrValue.getLong());
-        } else if (jcrValue.getType() == PropertyType.DECIMAL) {
-            return factory.create(jcrValue.getDecimal());
         } else {
             return getQValue(jcrValue.getString(), jcrValue.getType(), resolver, factory);
         }
@@ -111,11 +107,8 @@ public class ValueFormat {
             case PropertyType.BOOLEAN:
             case PropertyType.DOUBLE:
             case PropertyType.LONG:
-            case PropertyType.DECIMAL:
             case PropertyType.DATE:
             case PropertyType.REFERENCE:
-            case PropertyType.WEAKREFERENCE:
-            case PropertyType.URI:
                 qValue = factory.create(jcrValue, propertyType);
                 break;
             case PropertyType.BINARY:
@@ -126,7 +119,7 @@ public class ValueFormat {
                 qValue = factory.create(qName);
                 break;
             case PropertyType.PATH:
-                Path qPath = resolver.getQPath(jcrValue, false);
+                Path qPath = resolver.getQPath(jcrValue).getNormalizedPath();
                 qValue = factory.create(qPath);
                 break;
             default:
@@ -136,99 +129,51 @@ public class ValueFormat {
     }
 
     /**
-     * @param value
+     * @param qualifiedValue
      * @param resolver
-     * @param factory
-     * @return the JCR value created from the given <code>QValue</code>.
+     * @return
      * @throws RepositoryException
      */
-    public static Value getJCRValue(QValue value,
+    public static Value getJCRValue(QValue qualifiedValue,
                                     NamePathResolver resolver,
                                     ValueFactory factory) throws RepositoryException {
         if (factory instanceof ValueFactoryQImpl) {
-            return ((ValueFactoryQImpl)factory).createValue(value);
+            return ((ValueFactoryQImpl)factory).createValue(qualifiedValue);
         } else {
             Value jcrValue;
-            int propertyType = value.getType();
+            int propertyType = qualifiedValue.getType();
             switch (propertyType) {
                 case PropertyType.STRING:
                 case PropertyType.REFERENCE:
-                case PropertyType.WEAKREFERENCE:
-                case PropertyType.URI:
-                    jcrValue = factory.createValue(value.getString(), propertyType);
+                    jcrValue = factory.createValue(qualifiedValue.getString(), propertyType);
                     break;
                 case PropertyType.PATH:
-                    Path qPath = value.getPath();
+                    Path qPath = qualifiedValue.getPath();
                     jcrValue = factory.createValue(resolver.getJCRPath(qPath), propertyType);
                     break;
                 case PropertyType.NAME:
-                    Name qName = value.getName();
+                    Name qName = qualifiedValue.getName();
                     jcrValue = factory.createValue(resolver.getJCRName(qName), propertyType);
                     break;
                 case PropertyType.BOOLEAN:
-                    jcrValue = factory.createValue(value.getBoolean());
+                    jcrValue = factory.createValue(qualifiedValue.getBoolean());
                     break;
                 case PropertyType.BINARY:
-                    jcrValue = factory.createValue(value.getBinary());
+                    jcrValue = factory.createValue(qualifiedValue.getStream());
                     break;
                 case PropertyType.DATE:
-                    jcrValue = factory.createValue(value.getCalendar());
+                    jcrValue = factory.createValue(qualifiedValue.getCalendar());
                     break;
                 case PropertyType.DOUBLE:
-                    jcrValue = factory.createValue(value.getDouble());
+                    jcrValue = factory.createValue(qualifiedValue.getDouble());
                     break;
                 case PropertyType.LONG:
-                    jcrValue = factory.createValue(value.getLong());
-                    break;
-                case PropertyType.DECIMAL:
-                    jcrValue = factory.createValue(value.getDecimal());
+                    jcrValue = factory.createValue(qualifiedValue.getLong());
                     break;
                 default:
                     throw new RepositoryException("illegal internal value type");
             }
             return jcrValue;
         }
-    }
-
-    /**
-     * Returns the JCR string representation of the given <code>QValue</code>.
-     * This method is a shortcut for
-     * {@link #getJCRValue(QValue, NamePathResolver, ValueFactory)} followed by
-     * {@link Value#getString()}.
-     *
-     * @param value
-     * @param resolver
-     * @return the JCR String representation for the given <code>QValue</code>.
-     * @throws RepositoryException
-     */
-    public static String getJCRString(QValue value,
-                                      NamePathResolver resolver) throws RepositoryException {
-        String jcrString;
-        int propertyType = value.getType();
-        switch (propertyType) {
-            case PropertyType.STRING:
-            case PropertyType.REFERENCE:
-            case PropertyType.WEAKREFERENCE:
-            case PropertyType.URI:
-            case PropertyType.BOOLEAN:
-            case PropertyType.DATE:
-            case PropertyType.DOUBLE:
-            case PropertyType.LONG:
-            case PropertyType.DECIMAL:
-            case PropertyType.BINARY:
-                jcrString = value.getString();
-                break;
-            case PropertyType.PATH:
-                Path qPath = value.getPath();
-                jcrString = resolver.getJCRPath(qPath);
-                break;
-            case PropertyType.NAME:
-                Name qName = value.getName();
-                jcrString = resolver.getJCRName(qName);
-                break;
-            default:
-                throw new RepositoryException("illegal internal value type");
-        }
-        return jcrString;
     }
 }

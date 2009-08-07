@@ -45,7 +45,7 @@ public class ImpersonateTest extends AbstractJCRTest {
         // impersonate to read-only user
         Session session;
         try {
-            session = superuser.impersonate(getHelper().getReadOnlyCredentials());
+            session = superuser.impersonate(helper.getReadOnlyCredentials());
         } catch (LoginException e) {
             throw new NotExecutableException("impersonate threw LoginException");
         }

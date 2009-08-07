@@ -529,7 +529,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @return the primary path to this <code>Item</code>
      */
     Path getQPath() throws RepositoryException {
-        return state.getPath();
+        return state.getQPath();
     }
 
     /**

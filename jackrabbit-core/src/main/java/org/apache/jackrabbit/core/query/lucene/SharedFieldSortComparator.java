@@ -17,31 +17,33 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.SortComparator;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.document.Document;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Implements a <code>SortComparator</code> which knows how to sort on a lucene
  * field that contains values for multiple properties.
  */
 public class SharedFieldSortComparator extends SortComparator {
-
-    private static final long serialVersionUID = 2609351820466200052L;
 
     /**
      * The name of the shared field in the lucene index.
@@ -122,6 +124,104 @@ public class SharedFieldSortComparator extends SortComparator {
     }
 
     /**
+     * Checks if <code>reader</code> is of type {@link MultiIndexReader} and if
+     * that's the case calls this method recursively for each reader within the
+     * multi index reader; otherwise the reader is simply added to the list.
+     *
+     * @param readers the list of index readers.
+     * @param reader  the reader to check.
+     */
+    private static void getIndexReaders(List readers, IndexReader reader) {
+        if (reader instanceof MultiIndexReader) {
+            IndexReader[] r = ((MultiIndexReader) reader).getIndexReaders();
+            for (int i = 0; i < r.length; i++) {
+                getIndexReaders(readers, r[i]);
+            }
+        } else {
+            readers.add(reader);
+        }
+    }
+
+    /**
+     * Abstract base class of {@link ScoreDocComparator} implementations.
+     */
+    abstract class AbstractScoreDocComparator implements ScoreDocComparator {
+
+        /**
+         * The index readers.
+         */
+        protected final List readers = new ArrayList();
+
+        /**
+         * The document number starts for the {@link #readers}.
+         */
+        protected final int[] starts;
+
+        public AbstractScoreDocComparator(IndexReader reader)
+                throws IOException {
+            getIndexReaders(readers, reader);
+
+            int maxDoc = 0;
+            this.starts = new int[readers.size() + 1];
+
+            for (int i = 0; i < readers.size(); i++) {
+                IndexReader r = (IndexReader) readers.get(i);
+                starts[i] = maxDoc;
+                maxDoc += r.maxDoc();
+            }
+            starts[readers.size()] = maxDoc;
+        }
+
+        /**
+         * Compares sort values of <code>i</code> and <code>j</code>. If the
+         * sort values have differing types, then the sort order is defined on
+         * the type itself by calling <code>compareTo()</code> on the respective
+         * type class names.
+         *
+         * @param i first score doc.
+         * @param j second score doc.
+         * @return a negative integer if <code>i</code> should come before
+         *         <code>j</code><br> a positive integer if <code>i</code>
+         *         should come after <code>j</code><br> <code>0</code> if they
+         *         are equal
+         */
+        public int compare(ScoreDoc i, ScoreDoc j) {
+            return Util.compare(sortValue(i), sortValue(j));
+        }
+
+        public int sortType() {
+            return SortField.CUSTOM;
+        }
+
+        /**
+         * Returns the reader index for document <code>n</code>.
+         *
+         * @param n document number.
+         * @return the reader index.
+         */
+        protected int readerIndex(int n) {
+            int lo = 0;
+            int hi = readers.size() - 1;
+
+            while (hi >= lo) {
+                int mid = (lo + hi) >> 1;
+                int midValue = starts[mid];
+                if (n < midValue) {
+                    hi = mid - 1;
+                } else if (n > midValue) {
+                    lo = mid + 1;
+                } else {
+                    while (mid + 1 < readers.size() && starts[mid + 1] == midValue) {
+                        mid++;
+                    }
+                    return mid;
+                }
+            }
+            return hi;
+        }
+    }
+
+    /**
      * A score doc comparator that works for order by clauses with properties
      * directly on the result nodes.
      */
@@ -140,7 +240,7 @@ public class SharedFieldSortComparator extends SortComparator {
 
             String namedValue = FieldNames.createNamedValue(propertyName, "");
             for (int i = 0; i < readers.size(); i++) {
-                IndexReader r = readers.get(i);
+                IndexReader r = (IndexReader) readers.get(i);
                 indexes[i] = SharedFieldCache.INSTANCE.getValueIndex(r, field,
                         namedValue, SharedFieldSortComparator.this);
             }
@@ -183,10 +283,10 @@ public class SharedFieldSortComparator extends SortComparator {
         public Comparable sortValue(ScoreDoc i) {
             try {
                 int idx = readerIndex(i.doc);
-                IndexReader reader = readers.get(idx);
+                IndexReader reader = (IndexReader) readers.get(idx);
                 Document doc = reader.document(i.doc - starts[idx], FieldSelectors.UUID);
                 String uuid = doc.get(FieldNames.UUID);
-                Path path = hmgr.getPath(new NodeId(uuid));
+                Path path = hmgr.getPath(new NodeId(UUID.fromString(uuid)));
                 PathBuilder builder = new PathBuilder(path);
                 builder.addAll(relPath.getElements());
                 PropertyId id = hmgr.resolvePropertyPath(builder.getPath());
@@ -230,8 +330,8 @@ public class SharedFieldSortComparator extends SortComparator {
          * {@inheritDoc}
          */
         public Comparable sortValue(ScoreDoc i) {
-            for (ScoreDocComparator comparator : comparators) {
-                Comparable c = comparator.sortValue(i);
+            for (int j = 0; j < comparators.length; j++) {
+                Comparable c = comparators[j].sortValue(i);
                 if (c != null) {
                     return c;
                 }

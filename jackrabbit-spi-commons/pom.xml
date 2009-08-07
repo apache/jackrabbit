@@ -17,10 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -29,21 +26,11 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>1.6.0</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-spi-commons</artifactId>
   <name>Jackrabbit SPI Commons</name>
-
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi-commons
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi-commons
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi-commons</url>
-  </scm>
 
   <build>
     <plugins>
@@ -58,11 +45,11 @@
                 <echo>Remove files that have been customized in Jackrabbit</echo>
                 <delete>
                   <fileset dir="${project.build.directory}/generated-sources/javacc/org/apache/jackrabbit/spi/commons/query">
-                    <include name="sql/ASTLiteral.java"/>
-                    <include name="sql/ASTContainsExpression.java"/>
-                    <include name="sql/ASTPredicate.java"/>
-                    <include name="sql/ASTIdentifier.java"/>
-                    <include name="xpath/SimpleNode.java"/>
+                    <include name="sql/ASTLiteral.java" />
+                    <include name="sql/ASTContainsExpression.java" />
+                    <include name="sql/ASTPredicate.java" />
+                    <include name="sql/ASTIdentifier.java" />
+                    <include name="xpath/SimpleNode.java" />
                   </fileset>
                 </delete>
               </tasks>
@@ -127,12 +114,12 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>1.6.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>1.6.0</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>

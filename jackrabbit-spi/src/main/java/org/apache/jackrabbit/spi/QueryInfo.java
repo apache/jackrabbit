@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * <code>QueryInfo</code> is the the return value of
- * {@link RepositoryService#executeQuery(SessionInfo, String, String, Map, long, long, Map)} 
+ * {@link RepositoryService#executeQuery(SessionInfo, String, String, Map)}
  * which is used to run a query on the <code>RepositoryService</code>. It
  * provides access to the rows of the query result as well as to the column
  * names.
@@ -39,16 +39,9 @@ public interface QueryInfo {
     public RangeIterator getRows();
 
     /**
-     * @return an array of <code>String</code>s representing the column names of
-     *         the query result.
+     * @return an array of <code>Name</code>s representing the column names of
+     * the query result.
      * @see javax.jcr.query.QueryResult#getColumnNames()
      */
-    public String[] getColumnNames();
-
-    /**
-     * @return an array of <code>Name</code>s representing the selector names of
-     *         the query result.
-     * @see javax.jcr.query.QueryResult#getSelectorNames()
-     */
-    public Name[] getSelectorNames();
+    public Name[] getColumnNames();
 }

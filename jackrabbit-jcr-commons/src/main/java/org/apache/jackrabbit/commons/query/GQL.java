@@ -24,7 +24,6 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
 import javax.jcr.query.Query;
-import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -1014,30 +1013,6 @@ public final class GQL {
                 propertyName = REP_EXCERPT + "(" + excerptPath + ")";
             }
             return row.getValue(propertyName);
-        }
-
-        public Node getNode() throws RepositoryException {
-            return row.getNode();
-        }
-
-        public Node getNode(String selectorName) throws RepositoryException {
-            return row.getNode(selectorName);
-        }
-
-        public String getPath() throws RepositoryException {
-            return row.getPath();
-        }
-
-        public String getPath(String selectorName) throws RepositoryException {
-            return row.getPath(selectorName);
-        }
-
-        public double getScore() throws RepositoryException {
-            return row.getScore();
-        }
-
-        public double getScore(String selectorName) throws RepositoryException {
-            return row.getScore(selectorName);
         }
     }
 

@@ -37,7 +37,7 @@ public class SkipDeletedNodesTest extends AbstractQueryTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        s2 = getHelper().getSuperuserSession();
+        s2 = helper.getSuperuserSession();
         qm = s2.getWorkspace().getQueryManager();
     }
 

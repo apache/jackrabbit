@@ -26,8 +26,6 @@ import java.util.Map;
 
 import javax.jcr.PropertyType;
 
-import org.apache.jackrabbit.spi.QValueConstraint;
-
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
  * two node type definitions.
@@ -134,14 +132,7 @@ public class NodeTypeDefDiff {
                 type = tmpType;
             }
 
-            // check abstract flag (MAJOR modification)
-            tmpType = abstractFlagDiff();
-            if (tmpType > type) {
-                type = tmpType;
-            }
-
             // no need to check orderableChildNodes flag (TRIVIAL modification)
-            // no need to check queryable flag (TRIVIAL modification)
 
             // check property definitions
             tmpType = buildPropDefDiffs();
@@ -223,13 +214,6 @@ public class NodeTypeDefDiff {
      */
     public int mixinFlagDiff() {
         return oldDef.isMixin() != newDef.isMixin() ? MAJOR : NONE;
-    }
-
-    /**
-     * @return
-     */
-    public int abstractFlagDiff() {
-        return oldDef.isAbstract() && !newDef.isAbstract() ? MAJOR : NONE;
     }
 
     /**
@@ -531,15 +515,15 @@ public class NodeTypeDefDiff {
                  * check if valueConstraints were made more restrictive
                  * (constraints are ORed)
                  */
-                QValueConstraint[] vca1 = getOldDef().getValueConstraints();
+                ValueConstraint[] vca1 = getOldDef().getValueConstraints();
                 HashSet set1 = new HashSet();
                 for (int i = 0; i < vca1.length; i++) {
-                    set1.add(vca1[i].getString());
+                    set1.add(vca1[i].getDefinition());
                 }
-                QValueConstraint[] vca2 = getNewDef().getValueConstraints();
+                ValueConstraint[] vca2 = getNewDef().getValueConstraints();
                 HashSet set2 = new HashSet();
                 for (int i = 0; i < vca2.length; i++) {
-                    set2.add(vca2[i].getString());
+                    set2.add(vca2[i].getDefinition());
                 }
 
                 if (set1.isEmpty() && !set2.isEmpty()) {
@@ -551,8 +535,6 @@ public class NodeTypeDefDiff {
                 }
 
                 // no need to check defaultValues (TRIVIAL change)
-                // no need to check availableQueryOperators (TRIVIAL change)
-                // no need to check queryOrderable (TRIVIAL change)
 
                 if (type == TRIVIAL) {
                     int t1 = getOldDef().getRequiredType();

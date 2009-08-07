@@ -21,7 +21,7 @@ import javax.jcr.RepositoryException;
 /**
  * Implements a query node that defines a not operation on the child query.
  */
-public class NotQueryNode extends NAryQueryNode<QueryNode> {
+public class NotQueryNode extends NAryQueryNode {
 
     /**
      * Creates a new <code>NotQueryNode</code> instance.

@@ -29,7 +29,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -57,9 +56,6 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     private final QPropertyDefinition[] propDefs;
     private final QNodeDefinition[] nodeDefs;
     private Set dependencies;
-
-    private final boolean isAbstract;
-    private final boolean isQueryable;
 
     /**
      * Default constructor.
@@ -103,16 +99,6 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             orderableChildNodes = Boolean.valueOf(ntdElement.getAttribute(HASORDERABLECHILDNODES_ATTRIBUTE)).booleanValue();
         } else {
             orderableChildNodes = false;
-        }
-        if (ntdElement.hasAttribute(ISABSTRACT_ATTRIBUTE)) {
-            isAbstract = Boolean.valueOf(ntdElement.getAttribute(ISABSTRACT_ATTRIBUTE)).booleanValue();
-        } else {
-            isAbstract = false;
-        }
-        if (ntdElement.hasAttribute(ISQUERYABLE_ATTRIBUTE)) {
-            isQueryable = Boolean.valueOf(ntdElement.getAttribute(ISQUERYABLE_ATTRIBUTE)).booleanValue();
-        } else {
-            isQueryable = false;
         }
 
         // nodeDefinitions
@@ -173,20 +159,6 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     }
 
     /**
-     * @see QNodeTypeDefinition#isAbstract()
-     */
-    public boolean isAbstract() {
-        return isAbstract;
-    }
-
-    /**
-     * @see QNodeTypeDefinition#isQueryable()
-     */
-    public boolean isQueryable() {
-        return isQueryable;
-    }
-
-    /**
      * @see QNodeTypeDefinition#hasOrderableChildNodes()
      */
     public boolean hasOrderableChildNodes() {
@@ -241,14 +213,13 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             }
             // property definitions
             for (int i = 0; i < propDefs.length; i++) {
-                // [WEAK]REFERENCE value constraints
-                if (propDefs[i].getRequiredType() == PropertyType.REFERENCE
-                        || propDefs[i].getRequiredType() == PropertyType.WEAKREFERENCE) {
-                    QValueConstraint[] ca = propDefs[i].getValueConstraints();
+                // REFERENCE value constraints
+                if (propDefs[i].getRequiredType() == PropertyType.REFERENCE) {
+                    String[] ca = propDefs[i].getValueConstraints();
                     if (ca != null) {
                         for (int j = 0; j < ca.length; j++) {
                             // TODO: don't rely on a specific factory
-                            Name ntName = NameFactoryImpl.getInstance().create(ca[j].getString());
+                            Name ntName = NameFactoryImpl.getInstance().create(ca[j]);
                             if (!name.equals(ntName)) {
                                 dependencies.add(ntName);
                             }
@@ -274,8 +245,6 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
                 && (primaryItemName == null ? other.getPrimaryItemName() == null : primaryItemName.equals(other.getPrimaryItemName()))
                 && Arrays.equals(supertypes, other.getSupertypes())
                 && mixin == other.isMixin()
-                && isAbstract == other.isAbstract()
-                && isQueryable == other.isQueryable()
                 && orderableChildNodes == other.hasOrderableChildNodes()
                 && Arrays.equals(propDefs, other.getPropertyDefs())
                 && Arrays.equals(nodeDefs, other.getChildNodeDefs());

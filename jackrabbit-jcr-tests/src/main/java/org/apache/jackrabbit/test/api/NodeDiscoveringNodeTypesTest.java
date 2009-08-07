@@ -56,7 +56,7 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         testRootNode = session.getRootNode().getNode(testPath);
         NodeIterator nodes = testRootNode.getNodes();
         try {

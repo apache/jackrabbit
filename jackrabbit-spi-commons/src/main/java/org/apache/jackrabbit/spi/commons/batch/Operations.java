@@ -38,7 +38,8 @@ public final class Operations {
         super();
     }
 
-    // -------------------------------------------------------------< Empty >---
+    // -----------------------------------------------------< Empty >---
+
     /**
      * Representative of the empty {@link Operation} which does nothing when
      * applied to a {@link Batch}.
@@ -80,7 +81,8 @@ public final class Operations {
         return Empty.INSTANCE;
     }
 
-    // -----------------------------------------------------------< AddNode >---
+    // -----------------------------------------------------< AddNode >---
+
     /**
      * Representative of an add-node {@link Operation} which calls
      * {@link Batch#addNode(NodeId, Name, Name, String)} when applied to a {@link Batch}.
@@ -165,7 +167,8 @@ public final class Operations {
         return new AddNode(parentId, nodeName, nodetypeName, uuid);
     }
 
-    // -------------------------------------------------------< AddProperty >---
+    // -----------------------------------------------------< AddProperty >---
+
     /**
      * Representative of an add-property {@link Operation} which calls
      * {@link Batch#addProperty(NodeId, Name, QValue)} or {@link Batch#addProperty(NodeId, Name, QValue[])}
@@ -280,7 +283,8 @@ public final class Operations {
         return new AddProperty(parentId, propertyName, values);
     }
 
-    // --------------------------------------------------------------< Move >---
+    // -----------------------------------------------------< Move >---
+
     /**
      * Representative of a move {@link Operation} which calls
      * {@link Batch#move(NodeId, NodeId, Name)} when applied to a {@link Batch}.
@@ -357,7 +361,8 @@ public final class Operations {
         return new Move(srcNodeId, destParentNodeId, destName);
     }
 
-    // ------------------------------------------------------------< Remove >---
+    // -----------------------------------------------------< Remove >---
+
     /**
      * Representative of a remove {@link Operation} which calls {@link Batch#remove(ItemId)} when
      * applied to a {@link Batch}.
@@ -420,7 +425,8 @@ public final class Operations {
         return new Remove(itemId);
     }
 
-    // ------------------------------------------------------< ReorderNodes >---
+    // -----------------------------------------------------< ReorderNodes >---
+
     /**
      * Representative of a reorder-nodes {@link Operation} which calls
      * {@link Batch#reorderNodes(NodeId, NodeId, NodeId)} when applied to a {@link Batch}.
@@ -497,7 +503,8 @@ public final class Operations {
         return new ReorderNodes(parentId, srcNodeId, beforeNodeId);
     }
 
-    // ---------------------------------------------------------< SetMixins >---
+    // -----------------------------------------------------< SetMixins >---
+
     /**
      * Representative of a set-mixin {@link Operation} which calls
      * {@link Batch#setMixins(NodeId, Name[])} when applied to a {@link Batch}.
@@ -567,77 +574,8 @@ public final class Operations {
         return new SetMixins(nodeId, mixinNodeTypeNames);
     }
 
-    // ----------------------------------------------------< SetPrimaryType >---
-    /**
-     * Representative of a set-mixin {@link Operation} which calls
-     * {@link Batch#setMixins(NodeId, Name[])} when applied to a {@link Batch}.
-     */
-    public static class SetPrimaryType implements Operation {
-        protected final NodeId nodeId;
-        protected final Name primaryTypeName;
+    // -----------------------------------------------------< SetValue >---
 
-        /**
-         * Create a new set-mixin {@link Operation} for the given arguments.
-         *
-         * @see Batch#setMixins(NodeId, Name[])
-         * @param nodeId
-         * @param primaryTypeName
-         */
-        public SetPrimaryType(NodeId nodeId, Name primaryTypeName) {
-            super();
-            this.nodeId = nodeId;
-            this.primaryTypeName = primaryTypeName;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void apply(Batch batch) throws RepositoryException {
-            batch.setPrimaryType(nodeId, primaryTypeName);
-        }
-
-        public String toString() {
-            return "SetPrimaryType[" + nodeId + ", " + primaryTypeName + "]";
-        }
-
-        public boolean equals(Object other) {
-            if (null == other) {
-                return false;
-            }
-            if (this == other) {
-                return true;
-            }
-            if (other instanceof SetPrimaryType) {
-                return equals((SetPrimaryType) other);
-            }
-            return false;
-        }
-
-        public boolean equals(SetPrimaryType other) {
-            return Operations.equals(nodeId, other.nodeId)
-                && primaryTypeName.equals(other.primaryTypeName);
-        }
-
-        public int hashCode() {
-            return 41 * (
-                    41 + Operations.hashCode(nodeId))
-                    + Operations.hashCode(primaryTypeName);
-        }
-    }
-
-    /**
-     * Factory method for creating a set-primaryType {@link Operation} for the given arguments.
-     *
-     * @see Batch#setPrimaryType(NodeId, Name)
-     * @param nodeId
-     * @param primaryTypeName
-     * @return
-     */
-    public static Operation setPrimaryType(NodeId nodeId, Name primaryTypeName) {
-        return new SetPrimaryType(nodeId, primaryTypeName);
-    }
-
-    // ----------------------------------------------------------< SetValue >---
     /**
      * Representative of a set-value {@link Operation} which calls
      * {@link Batch#setValue(PropertyId, QValue)} or {@link Batch#setValue(PropertyId, QValue[])}
@@ -743,7 +681,7 @@ public final class Operations {
         return new SetValue(propertyId, values);
     }
 
-    // -----------------------------------------------------------< private >---
+    // -----------------------------------------------------< private >---
 
     protected static boolean equals(Object o1, Object o2) {
         return o1 == null

@@ -18,15 +18,8 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
 
 import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-
 import java.util.Arrays;
 
 /**
@@ -43,7 +36,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /**
      * The value constraints.
      */
-    private QValueConstraint[] valueConstraints = QValueConstraint.EMPTY_ARRAY;
+    private ValueConstraint[] valueConstraints = ValueConstraint.EMPTY_ARRAY;
 
     /**
      * The default values.
@@ -62,69 +55,10 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     private PropDefId id = null;
 
-    /*
-     * The 'fulltext searchable' flag.
-     */
-    private boolean fullTextSearchable = true;
-
-    /*
-     * The 'query orderable' flag.
-     */
-    private boolean queryOrderable = true;
-
-    /*
-     * The 'query operators.
-     */
-    private String[] queryOperators = Operator.getAllQueryOperators();
-
-
     /**
      * Default constructor.
      */
     public PropDefImpl() {
-    }
-
-    public PropDefImpl(QPropertyDefinition pd) {
-        super(pd);
-        requiredType = pd.getRequiredType();
-        valueConstraints = pd.getValueConstraints();
-        QValue[] vs = pd.getDefaultValues();
-        if (vs != null) {
-            defaultValues = new InternalValue[vs.length];
-            for (int i=0; i<vs.length; i++) {
-                try {
-                    defaultValues[i] = InternalValue.create(vs[i]);
-                } catch (RepositoryException e) {
-                    throw new IllegalStateException("Error while converting default values.", e);
-                }
-            }
-        }
-        multiple = pd.isMultiple();
-        fullTextSearchable = pd.isFullTextSearchable();
-        queryOrderable = pd.isQueryOrderable();
-        queryOperators = pd.getAvailableQueryOperators();
-    }
-
-    /**
-     * Returns the QPropertyDefinition of this PropDef
-     * @return the QPropertyDefinition
-     */
-    public QPropertyDefinition getQPropertyDefinition() {
-        return new QPropertyDefinitionImpl(
-                getName(),
-                getDeclaringNodeType(),
-                isAutoCreated(),
-                isMandatory(),
-                getOnParentVersion(),
-                isProtected(),
-                getDefaultValues(),
-                isMultiple(),
-                getRequiredType(),
-                getValueConstraints(),
-                getAvailableQueryOperators(),
-                isFullTextSearchable(),
-                isQueryOrderable()
-        );
     }
 
     /**
@@ -143,13 +77,13 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      *
      * @param valueConstraints
      */
-    public void setValueConstraints(QValueConstraint[] valueConstraints) {
+    public void setValueConstraints(ValueConstraint[] valueConstraints) {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         if (valueConstraints != null) {
             this.valueConstraints = valueConstraints;
         } else {
-            this.valueConstraints = QValueConstraint.EMPTY_ARRAY;
+            this.valueConstraints = ValueConstraint.EMPTY_ARRAY;
         }
     }
 
@@ -177,43 +111,6 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         this.multiple = multiple;
-    }
-
-    /**
-     * Sets the 'fulltext searchable' flag.
-     *
-     * @param fullTextSearchable
-     */
-    public void setFullTextSearchable(boolean fullTextSearchable) {
-        // reset id field in order to force lazy recomputation of identifier
-        id = null;
-        this.fullTextSearchable = fullTextSearchable;
-    }
-
-    /**
-     * Sets the 'fulltext searchable' flag.
-     *
-     * @param queryOrderable
-     */
-    public void setQueryOrderable(boolean queryOrderable) {
-        // reset id field in order to force lazy recomputation of identifier
-        id = null;
-        this.queryOrderable = queryOrderable;
-    }
-
-    /**
-     * Sets the 'available' query operators.
-     *
-     * @param queryOperators
-     */
-    public void setAvailableQueryOperators(String[] queryOperators) {
-        // reset id field in order to force lazy recomputation of identifier
-        id = null;
-        if (queryOperators != null) {
-            this.queryOperators = queryOperators;
-        } else {
-            this.queryOperators = new String[0];
-        }
     }
 
     //------------------------------------------------< ItemDefImpl overrides >
@@ -297,7 +194,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /**
      * {@inheritDoc}
      */
-    public QValueConstraint[] getValueConstraints() {
+    public ValueConstraint[] getValueConstraints() {
         return valueConstraints;
     }
 
@@ -324,27 +221,6 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String[] getAvailableQueryOperators() {
-        return queryOperators;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isFullTextSearchable() {
-        return fullTextSearchable;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isQueryOrderable() {
-        return queryOrderable;
-    }
-
     //-------------------------------------------< java.lang.Object overrides >
     /**
      * Compares two property definitions for equality. Returns <code>true</code>
@@ -366,10 +242,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
                     && requiredType == other.requiredType
                     && Arrays.equals(valueConstraints, other.valueConstraints)
                     && Arrays.equals(defaultValues, other.defaultValues)
-                    && multiple == other.multiple
-                    && Arrays.equals(queryOperators, other.queryOperators)
-                    && queryOrderable == other.queryOrderable
-                    && fullTextSearchable == other.fullTextSearchable;
+                    && multiple == other.multiple;
         }
         return false;
     }

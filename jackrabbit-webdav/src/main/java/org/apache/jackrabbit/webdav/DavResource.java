@@ -25,6 +25,7 @@ import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 
 import java.io.IOException;
@@ -162,6 +163,22 @@ public interface DavResource {
      * @throws DavException if an error occurs
      */
     public void removeProperty(DavPropertyName propertyName) throws DavException;
+
+    /**
+     * Set/add the specified properties and remove the properties with the given
+     * names from this resource respectively.
+     *
+     * @param setProperties Set of properties to be added or modified
+     * @param removePropertyNames Set of property names to be removed
+     * @return multistatus response listing the status resulting from
+     * setting and/or removing the specified properties, in order to allow a
+     * detailed multistatus response.
+     * @throws DavException if an error occurred. This may be the case if the
+     * general state of the resource prevents any properties to be set or removed
+     * (e.g. due to a lock).
+     * @deprecated use {@link #alterProperties(List)} instead
+     */
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException;
 
     /**
      * Set/add and remove the specified properties from this resource.

@@ -17,12 +17,8 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.RepositoryStub;
-import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.Session;
 
 /**
  * Encapsulates the various properties that are needed for a serialization test
@@ -36,13 +32,6 @@ class SerializationContext {
     public String sourceFolderName;
     public String targetFolderName;
     public String rootNodeName;
-    public String nodeName1;
-    public String nodeName2;
-    public String nodeName3;
-    public String testNodeType;
-    public String propertyName1;
-    public String jcrPrimaryType;
-    public String mixReferenceable;
 
     public String propertyValueMayChange;
     public String propertySkipped;
@@ -69,8 +58,7 @@ class SerializationContext {
     public String referenceTestProperty;
     public String multiValueTestProperty;
 
-    public SerializationContext(AbstractJCRTest test, Session session)
-            throws RepositoryException {
+    public SerializationContext(AbstractJCRTest test) throws RepositoryException {
         // creates a serialization context based on a test class
         baseTest = test;
 
@@ -79,13 +67,6 @@ class SerializationContext {
         sourceFolderName = get("sourceFolderName");
         targetFolderName = get("targetFolderName");
         rootNodeName = get("rootNodeName");
-        nodeName1 = get(RepositoryStub.PROP_NODE_NAME1);
-        nodeName2 = get(RepositoryStub.PROP_NODE_NAME2);
-        nodeName3 = get(RepositoryStub.PROP_NODE_NAME3);
-        testNodeType = get(RepositoryStub.PROP_NODETYPE);
-        propertyName1 = get(RepositoryStub.PROP_PROP_NAME1);
-        jcrPrimaryType = session.getNamespacePrefix(AbstractJCRTest.NS_JCR_URI) + ":primaryType";
-        mixReferenceable = session.getNamespacePrefix(AbstractJCRTest.NS_MIX_URI) + ":referenceable";
 
         propertyValueMayChange = " " + get("propertyValueMayChange") + " ";
         propertySkipped = " " + get("propertySkipped") + " ";
@@ -120,28 +101,4 @@ class SerializationContext {
         return value;
     }
 
-    public void log(String message) {
-        baseTest.log.println(message);
-    }
-
-    /**
-     * Ensures that the given <code>node</code> is of the given mixin type.
-     *
-     * @param node  a node.
-     * @param mixin the name of a mixin type.
-     * @throws NotExecutableException if the node is not of type mixin and the
-     *                                mixin cannot be added.
-     * @throws RepositoryException    if an error occurs.
-     */
-    protected void ensureMixinType(Node node, String mixin)
-            throws NotExecutableException, RepositoryException {
-        if (!node.isNodeType(mixin)) {
-            if (node.canAddMixin(mixin)) {
-                node.addMixin(mixin);
-            } else {
-                throw new NotExecutableException(node.getPath() +
-                        " does not support adding " + mixin);
-            }
-        }
-    }
 }

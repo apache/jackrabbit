@@ -28,8 +28,6 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 
-import javax.jcr.RepositoryException;
-
 /**
  * PathParserTest
  */
@@ -207,88 +205,6 @@ public class PathParserTest extends TestCase {
         for (Iterator it = paths.iterator(); it.hasNext(); ) {
             Path path = (Path) it.next();
             assertFalse("path is canonical: " + path, path.isCanonical());
-        }
-    }
-
-    public void testIdentifierParse() throws RepositoryException {
-        DummyIdentifierResolver idResolver = new DummyIdentifierResolver();
-        List valid = idResolver.getValidIdentifiers();
-        for (Iterator it = valid.iterator(); it.hasNext();) {
-            String jcrPath = "[" + it.next() + "]";
-            try {                
-                PathParser.parse(jcrPath, resolver, factory);
-                fail("Parsing an identifier-based jcr path needs a IdentifierResolver");
-            } catch (MalformedPathException e) {
-                // success: cannot parse identifier path if idResolver is missing.
-            }
-            try {
-                PathParser.parse(factory.getRootPath(), jcrPath, resolver, factory);
-                fail("Parsing an identifier-based jcr path needs a IdentifierResolver");
-            } catch (MalformedPathException e) {
-                // success: cannot parse identifier path if idResolver is missing.
-            }
-
-            Path p = PathParser.parse(jcrPath, resolver, idResolver, factory, true);
-            assertFalse(p.denotesIdentifier());
-
-            p = PathParser.parse(jcrPath, resolver, idResolver, factory, false);
-            assertTrue(p.denotesIdentifier());
-
-            try {
-                PathParser.parse(factory.getRootPath(), jcrPath, resolver, idResolver, factory);
-                fail("Cannot parser an identifier-based path to a relative path.");
-            } catch (MalformedPathException e) {
-                // success: invalid argument parent-path if the jcr-path is an identifier-based path.
-            }
-
-            try {
-                PathParser.parse(jcrPath, resolver, factory);
-                fail("Parsing an identifier-based jcr path needs a IdentifierResolver");
-            } catch (MalformedPathException e) {
-                // success: cannot parse identifier path if idResolver is missing.
-            }
-        }
-    }
-
-    public void testInvalidIdentifierParse() throws RepositoryException {
-        DummyIdentifierResolver idResolver = new DummyIdentifierResolver();
-
-        List invalid = idResolver.getInvalidIdentifierPaths();
-        for (Iterator it = invalid.iterator(); it.hasNext();) {
-            String jcrPath = it.next().toString();
-            try {
-                Path p = PathParser.parse(jcrPath, resolver, idResolver, factory, true);
-                fail("Invalid identifier based path");
-            } catch (MalformedPathException e) {
-                // ok
-            }
-            try {
-                Path p = PathParser.parse(jcrPath, resolver, idResolver, factory, false);
-                fail("Invalid identifier based path");
-            } catch (MalformedPathException e) {
-                // ok
-            }
-        }       
-    }
-    
-    public void testIdentifierCheckFormat() throws RepositoryException {
-        DummyIdentifierResolver idResolver = new DummyIdentifierResolver();
-        List valid = idResolver.getValidIdentifiers();
-        for (Iterator it = valid.iterator(); it.hasNext();) {
-            String jcrPath = "[" + it.next() + "]";
-            PathParser.checkFormat(jcrPath);
-        }
-
-        List invalid = idResolver.getInvalidIdentifierFormats();
-        for (Iterator it = invalid.iterator(); it.hasNext();) {
-            String jcrPath = it.next().toString();
-            try {
-                // passing null-nameResolver -> executes check-format only
-                PathParser.checkFormat(jcrPath);
-                fail(jcrPath);
-            } catch (MalformedPathException e) {
-                // success
-            }
         }
     }
 }

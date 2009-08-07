@@ -52,9 +52,11 @@ abstract class AbstractWorkspaceVersionableTest extends AbstractWorkspaceCopyBet
     /**
      * add the mix:versionable mixin type to a node.
      */
-    protected Node addMixinVersionableToNode(Node parent, Node node) throws RepositoryException,
-            NotExecutableException {
-        ensureMixinType(node, mixVersionable);
+    protected Node addMixinVersionableToNode(Node parent, Node node) throws RepositoryException {
+        NodeType nodetype = node.getPrimaryNodeType();
+        if (!nodetype.isNodeType(mixVersionable)) {
+            node.addMixin(mixVersionable);
+        }
         parent.save();
 
         return node;

@@ -83,7 +83,7 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
      * Implements a node iterator that traverses a node tree in document
      * order.
      */
-    private class TraversingNodeIterator implements Iterator<Node> {
+    private class TraversingNodeIterator implements Iterator {
 
         /**
          * The current <code>Node</code>, which acts as the starting point for
@@ -100,7 +100,7 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
          * The chain of iterators which includes the iterators of the children
          * of the current node.
          */
-        private Iterator<Node> selfAndChildren;
+        private Iterator selfAndChildren;
 
         /**
          * Creates a <code>TraversingNodeIterator</code>.
@@ -134,19 +134,19 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
         /**
          * @inheritDoc
          */
-        public Node next() {
+        public Object next() {
             init();
-            return selfAndChildren.next();
+            NodeImpl n = (NodeImpl) selfAndChildren.next();
+            return n;
         }
 
         /**
          * Initializes the iterator chain once.
          */
-        @SuppressWarnings({"unchecked"})
         private void init() {
             if (selfAndChildren == null) {
-                List<Iterator<Node>> allIterators = new ArrayList<Iterator<Node>>();
-                Iterator<Node> current = Collections.singletonList(currentNode).iterator();
+                List allIterators = new ArrayList();
+                Iterator current = Collections.singletonList(currentNode).iterator();
                 allIterators.add(current);
                 if (maxDepth == 0) {
                     // only current node

@@ -44,7 +44,7 @@ public class UserTest extends AbstractUserTest {
     }
 
     public void testReadOnlyIsntAdmin() throws NotExecutableException, RepositoryException {
-        Session s = getHelper().getReadOnlySession();
+        Session s = helper.getReadOnlySession();
         try {
             User user = getTestUser(s);
             assertFalse(user.isAdmin());
@@ -60,7 +60,7 @@ public class UserTest extends AbstractUserTest {
     }
 
     public void testChangePassword() throws RepositoryException, NotExecutableException {
-        String oldPw = getHelper().getProperty("javax.jcr.tck.superuser.pwd");
+        String oldPw = helper.getProperty("javax.jcr.tck.superuser.pwd");
         if (oldPw == null) {
             // missing property
             throw new NotExecutableException();
@@ -70,7 +70,7 @@ public class UserTest extends AbstractUserTest {
         try {
             user.changePassword("pw");
             // make sure the user can login with the new pw
-            Session s = getHelper().getRepository().login(new SimpleCredentials(user.getID(), "pw".toCharArray()));
+            Session s = helper.getRepository().login(new SimpleCredentials(user.getID(), "pw".toCharArray()));
             s.logout();
         } finally {
             user.changePassword(oldPw);
@@ -78,7 +78,7 @@ public class UserTest extends AbstractUserTest {
     }
 
     public void testChangePassword2() throws RepositoryException, NotExecutableException {
-        String oldPw = getHelper().getProperty("javax.jcr.tck.superuser.pwd");
+        String oldPw = helper.getProperty("javax.jcr.tck.superuser.pwd");
         if (oldPw == null) {
             // missing property
             throw new NotExecutableException();
@@ -88,7 +88,7 @@ public class UserTest extends AbstractUserTest {
         try {
             user.changePassword("pw");
 
-            Session s = getHelper().getRepository().login(new SimpleCredentials(user.getID(), oldPw.toCharArray()));
+            Session s = helper.getRepository().login(new SimpleCredentials(user.getID(), oldPw.toCharArray()));
             s.logout();
             fail("superuser pw has changed. login must fail.");
         } catch (LoginException e) {

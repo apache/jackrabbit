@@ -40,7 +40,7 @@ public class IsSameTest extends AbstractJCRTest {
         testRootNode.save();
 
         // access same property through different session
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Property otherProperty = (Property) otherSession.getItem(p.getPath());
             assertTrue(p.isSame(otherProperty));
@@ -59,7 +59,7 @@ public class IsSameTest extends AbstractJCRTest {
         p.setValue("someOtherValue");
 
         // access same property through different session
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Property otherProperty = (Property) otherSession.getItem(p.getPath());
             assertTrue(p.isSame(otherProperty));
@@ -78,7 +78,7 @@ public class IsSameTest extends AbstractJCRTest {
         testRootNode.save();
 
         // access same property through different session
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Property otherProperty = (Property) otherSession.getItem(jcrData.getPath());
             assertTrue(jcrData.isSame(otherProperty));
@@ -97,7 +97,7 @@ public class IsSameTest extends AbstractJCRTest {
         testRootNode.save();
 
         // access same property through different session
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Property otherProperty = (Property) otherSession.getItem(jcrData.getPath());
             assertTrue(n.getProperty("jcr:data").isSame(otherProperty));
@@ -116,7 +116,7 @@ public class IsSameTest extends AbstractJCRTest {
         testRootNode.save();
 
         // access nt:resource node through different session
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Node otherNode = (Node) otherSession.getItem(n.getPath());
             assertTrue(n.isSame(otherNode));
@@ -135,7 +135,7 @@ public class IsSameTest extends AbstractJCRTest {
         testRootNode.save();
 
         // access nt:resource node through different session
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Node otherNode = (Node) otherSession.getItem(n.getPath());
             assertTrue(otherNode.isSame(n));
@@ -169,7 +169,7 @@ public class IsSameTest extends AbstractJCRTest {
         String destPath = testRootNode.getPath() + "/" + nodeName2;
         testRootNode.getSession().move(srcPath, destPath);
 
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Node otherNode = (Node) otherSession.getItem(srcPath);
             assertTrue(n.isSame(otherNode));
@@ -189,7 +189,7 @@ public class IsSameTest extends AbstractJCRTest {
         String srcPath = n.getPath();
         String destPath = testRootNode.getPath() + "/" + nodeName2;
 
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Node otherNode = (Node) otherSession.getItem(srcPath);
 
@@ -212,7 +212,7 @@ public class IsSameTest extends AbstractJCRTest {
         String srcPath = n.getPath();
         String destPath = testRootNode.getPath() + "/" + nodeName2;
 
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Node otherNode = (Node) otherSession.getItem(srcPath);
 
@@ -244,7 +244,7 @@ public class IsSameTest extends AbstractJCRTest {
         n.addMixin(mixReferenceable);
         testRootNode.save();
 
-        Session otherSession = getHelper().getReadOnlySession();
+        Session otherSession = helper.getReadOnlySession();
         try {
             Node otherNode3 = (Node) otherSession.getItem(n3.getPath());
 
@@ -297,7 +297,7 @@ public class IsSameTest extends AbstractJCRTest {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         Property p = n.setProperty(propertyName1, "anyValue");
 
-        Session s2 = getHelper().getReadWriteSession();
+        Session s2 = helper.getReadWriteSession();
         try {
             Node trn = (Node) s2.getItem(testRootNode.getPath());
             Node n2 = trn.addNode(nodeName1, testNodeType);

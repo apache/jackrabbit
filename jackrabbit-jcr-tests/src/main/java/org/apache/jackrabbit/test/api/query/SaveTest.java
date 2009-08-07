@@ -114,7 +114,7 @@ public class SaveTest extends AbstractJCRTest {
     /**
      * Tests if a {@link javax.jcr.version.VersionException} is thrown when a
      * query is stored under a checked in node.
-     * <p>
+     * <p/>
      * The tests creates a node under <code>testRoot</code> with name
      * <code>nodeName1</code> and adds a mix:versionable mixin if the node is
      * not already versionable.
@@ -133,7 +133,13 @@ public class SaveTest extends AbstractJCRTest {
         // create a node that is versionable
         Node versionable = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
-        ensureMixinType(versionable, mixVersionable);
+        if (!versionable.isNodeType(mixVersionable)) {
+            if (versionable.canAddMixin(mixVersionable)) {
+                versionable.addMixin(mixVersionable);
+            } else {
+                fail("Node " + nodeName1 + " is not versionable and does not allow to add mix:versionable");
+            }
+        }
         testRootNode.save();
         versionable.checkin();
 
@@ -148,7 +154,7 @@ public class SaveTest extends AbstractJCRTest {
     /**
      * Tests if a {@link javax.jcr.nodetype.ConstraintViolationException} is
      * thrown if a query is stored under a node which does not allow child nodes.
-     * <p>
+     * <p/>
      * The test creates a node <code>nodeName1</code> of type <code>testNodeType</code>
      * under <code>testRoot</code>. Then the test tries to store a query as
      * <code>nodeName2</code> under <code>nodeName1</code>.
@@ -169,7 +175,7 @@ public class SaveTest extends AbstractJCRTest {
     /**
      * Tests if a {@link javax.jcr.lock.LockException} is thrown if a query is
      * stored under a node locked by another <code>Session</code>.
-     * <p>
+     * <p/>
      * The test creates a node <code>nodeName1</code> of type <code>testNodeType</code>
      * under <code>testRoot</code> and locks the node with the superuser session.
      * Then the test tries to store a query as <code>nodeName2</code> under
@@ -185,11 +191,17 @@ public class SaveTest extends AbstractJCRTest {
         // create a node that is lockable
         Node lockable = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        ensureMixinType(lockable, mixLockable);
+        if (!lockable.isNodeType(mixLockable)) {
+            if (lockable.canAddMixin(mixLockable)) {
+                lockable.addMixin(mixLockable);
+            } else {
+                fail("Node " + nodeName1 + " is not lockable and does not allow to add mix:lockable");
+            }
+        }
         testRootNode.save();
         lockable.lock(false, true);
 
-        Session readWrite = getHelper().getReadWriteSession();
+        Session readWrite = helper.getReadWriteSession();
         try {
             Query query = readWrite.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);

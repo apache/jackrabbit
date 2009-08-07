@@ -20,17 +20,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -39,6 +38,7 @@ import javax.jcr.Workspace;
 import org.apache.jackrabbit.commons.xml.DocumentViewExporter;
 import org.apache.jackrabbit.commons.xml.Exporter;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
+import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.commons.xml.SystemViewExporter;
 import org.apache.jackrabbit.commons.xml.ToXmlContentHandler;
 import org.apache.jackrabbit.util.XMLChar;
@@ -56,8 +56,7 @@ public abstract class AbstractSession implements Session {
      * This map is only accessed from synchronized methods (see
      * <a href="https://issues.apache.org/jira/browse/JCR-1793">JCR-1793</a>).
      */
-    private final Map<String, String> namespaces =
-        new HashMap<String, String>();
+    private final Map namespaces = new HashMap();
 
     /**
      * Clears the local namespace mappings. Subclasses that for example
@@ -86,9 +85,11 @@ public abstract class AbstractSession implements Session {
      */
     public synchronized String getNamespacePrefix(String uri)
             throws NamespaceException, RepositoryException {
-        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+        Iterator iterator = namespaces.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
             if (entry.getValue().equals(uri)) {
-                return entry.getKey();
+                return (String) entry.getKey();
             }
         }
 
@@ -120,7 +121,7 @@ public abstract class AbstractSession implements Session {
      */
     public synchronized String getNamespaceURI(String prefix)
             throws NamespaceException, RepositoryException {
-        String uri = namespaces.get(prefix);
+        String uri = (String) namespaces.get(prefix);
 
         if (uri == null) {
             // Not in local mappings, try the global ones
@@ -151,11 +152,14 @@ public abstract class AbstractSession implements Session {
      */
     public synchronized String[] getNamespacePrefixes()
             throws RepositoryException {
-        for (String uri : getWorkspace().getNamespaceRegistry().getURIs()) {
-            getNamespacePrefix(uri);
+        NamespaceRegistry registry = getWorkspace().getNamespaceRegistry();
+        String[] uris = registry.getURIs();
+        for (int i = 0; i < uris.length; i++) {
+            getNamespacePrefix(uris[i]);
         }
 
-        return namespaces.keySet().toArray(new String[namespaces.size()]);
+        return (String[])
+            namespaces.keySet().toArray(new String[namespaces.size()]);
     }
 
     /**
@@ -190,19 +194,24 @@ public abstract class AbstractSession implements Session {
                     "Prefix is not a valid XML NCName: " + prefix);
         }
 
-        // Remove existing mapping for the given prefix
-        namespaces.remove(prefix);
+        // FIXME Figure out how this should be handled
+        // Currently JSR 283 does not specify this exception, but for
+        // compatibility with JCR 1.0 TCK it probably should.
+        // Note that the solution here also affects the remove() code below
+        String previous = (String) namespaces.get(prefix);
+        if (previous != null && !previous.equals(uri)) {
+            throw new NamespaceException("Namespace already mapped");
+        }
 
-        // Remove existing mapping(s) for the given URI
-        Set<String> prefixes = new HashSet<String>();
-        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+        namespaces.remove(prefix);
+        Iterator iterator = namespaces.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
             if (entry.getValue().equals(uri)) {
-                prefixes.add(entry.getKey());
+                iterator.remove();
             }
         }
-        namespaces.keySet().removeAll(prefixes);
 
-        // Add the new mapping
         namespaces.put(prefix, uri);
     }
 
@@ -346,14 +355,6 @@ public abstract class AbstractSession implements Session {
 
     //-----------------------------------------------------< Item handling >--
 
-    private String toRelativePath(String absPath) throws PathNotFoundException {
-        if (absPath.startsWith("/") && absPath.length() > 1) {
-            return absPath.substring(1);
-        } else {
-            throw new PathNotFoundException("Not an absolute path: " + absPath);
-        }
-    }
-
     /**
      * Returns the node or property at the given path.
      * <p>
@@ -368,7 +369,6 @@ public abstract class AbstractSession implements Session {
      *     above call fails with a {@link PathNotFoundException}
      * </ul>
      *
-     * @see Session#getItem(String)
      * @param absPath absolute path
      * @return the node or property with the given path
      * @throws PathNotFoundException if the given path is invalid or not found
@@ -376,16 +376,20 @@ public abstract class AbstractSession implements Session {
      */
     public Item getItem(String absPath)
             throws PathNotFoundException, RepositoryException {
+        if (!absPath.startsWith("/")) {
+            throw new PathNotFoundException("Not an absolute path: " + absPath);
+        }
+
         Node root = getRootNode();
-        if (absPath.equals("/")) {
+        String relPath = absPath.substring(1);
+        if (relPath.length() == 0) {
             return root;
-        } else {
-            String relPath = toRelativePath(absPath);
-            if (root.hasNode(relPath)) {
-                return root.getNode(relPath);
-            } else {
-                return root.getProperty(relPath);
-            }
+        }
+
+        try {
+            return root.getNode(relPath);
+        } catch (PathNotFoundException e) {
+            return root.getProperty(relPath);
         }
     }
 
@@ -395,98 +399,17 @@ public abstract class AbstractSession implements Session {
      * if a {@link PathNotFoundException} was thrown. Other exceptions are
      * passed through.
      *
-     * @see Session#itemExists(String)
      * @param absPath absolute path
      * @return <code>true</code> if an item exists at the given path,
      *         <code>false</code> otherwise
      * @throws RepositoryException if an error occurs
      */
     public boolean itemExists(String absPath) throws RepositoryException {
-        if (absPath.equals("/")) {
+        try {
+            getItem(absPath);
             return true;
-        } else {
-            Node root = getRootNode();
-            String relPath = toRelativePath(absPath);
-            return root.hasNode(relPath) || root.hasProperty(relPath);
-        }
-    }
-
-    /**
-     * Removes the identified item. Implemented by calling
-     * {@link Item#remove()} on the item removed by {@link #getItem(String)}.
-     *
-     * @see Session#removeItem(String)
-     * @param absPath An absolute path of the item to be removed
-     * @throws RepositoryException if the item can not be removed
-     */
-    public void removeItem(String absPath) throws RepositoryException {
-        getItem(absPath).remove();
-    }
-
-    /**
-     * Returns the node with the given absolute path.
-     *
-     * @see Session#getNode(String)
-     * @param absPath absolute path
-     * @return node at the given path
-     * @throws RepositoryException if the node can not be accessed
-     */
-    public Node getNode(String absPath) throws RepositoryException {
-        Node root = getRootNode();
-        if (absPath.equals("/")) {
-            return root;
-        } else {
-            return root.getNode(toRelativePath(absPath));
-        }
-    }
-
-    /**
-     * Checks whether a node with the given absolute path exists.
-     *
-     * @see Session#nodeExists(String)
-     * @param absPath absolute path
-     * @return <code>true</code> if a node with the given path exists,
-     *         <code>false</code> otherwise
-     * @throws RepositoryException if the path is invalid
-     */
-    public boolean nodeExists(String absPath) throws RepositoryException {
-        if (absPath.equals("/")) {
-            return true;
-        } else {
-            return getRootNode().hasNode(toRelativePath(absPath));
-        }
-    }
-
-    /**
-     * Returns the property with the given absolute path.
-     *
-     * @see Session#getProperty(String)
-     * @param absPath absolute path
-     * @return node at the given path
-     * @throws RepositoryException if the property can not be accessed
-     */
-    public Property getProperty(String absPath) throws RepositoryException {
-        if (absPath.equals("/")) {
-            throw new RepositoryException("The root node is not a property");
-        } else {
-            return getRootNode().getProperty(toRelativePath(absPath));
-        }
-    }
-
-    /**
-     * Checks whether a property with the given absolute path exists.
-     *
-     * @see Session#propertyExists(String)
-     * @param absPath absolute path
-     * @return <code>true</code> if a property with the given path exists,
-     *         <code>false</code> otherwise
-     * @throws RepositoryException if the path is invalid
-     */
-    public boolean propertyExists(String absPath) throws RepositoryException {
-        if (absPath.equals("/")) {
+        } catch (PathNotFoundException e) {
             return false;
-        } else {
-            return getRootNode().hasProperty(toRelativePath(absPath));
         }
     }
 

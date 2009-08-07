@@ -422,6 +422,38 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         }   
     }
 
+    /**
+     * Return the list of 'set' entries in the PROPPATCH request body. The list
+     * is empty if the request body could not be parsed or if the request body did
+     * not contain any 'set' elements.
+     *
+     * @return the list of 'set' entries in the PROPPATCH request body
+     * @see DavServletRequest#getPropPatchSetProperties()
+     * @deprecated use {@link #getPropPatchChangeList()} instead
+     */
+    public DavPropertySet getPropPatchSetProperties() throws DavException {
+        if (proppatchSet == null) {
+            parsePropPatchRequest();
+        }
+        return proppatchSet;
+    }
+
+    /**
+     * Return the list of 'remove' entries in the PROPPATCH request body. The list
+     * is empty if the request body could not be parsed or if the request body did
+     * not contain any 'remove' elements.
+     *
+     * @return the list of 'remove' entries in the PROPPATCH request body
+     * @see DavServletRequest#getPropPatchRemoveProperties()
+     * @deprecated use {@link #getPropPatchChangeList()} instead
+     */
+    public DavPropertyNameSet getPropPatchRemoveProperties() throws DavException {
+        if (proppatchRemove == null) {
+            parsePropPatchRequest();
+        }
+        return proppatchRemove;
+    }
+
      /**
       * Return a {@link List} of property change operations. Each entry
       * is either of type {@link DavPropertyName}, indicating a &lt;remove&gt;

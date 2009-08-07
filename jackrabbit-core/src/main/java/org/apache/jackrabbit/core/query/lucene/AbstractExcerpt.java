@@ -29,13 +29,14 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.Reader;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.SortedMap;
 import java.util.Arrays;
@@ -82,7 +83,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
         IndexReader reader = index.getIndexReader();
         try {
             checkRewritten(reader);
-            Term idTerm = new Term(FieldNames.UUID, id.toString());
+            Term idTerm = new Term(FieldNames.UUID, id.getUUID().toString());
             TermDocs tDocs = reader.termDocs(idTerm);
             int docNumber;
             Document doc;
@@ -176,12 +177,14 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
     /**
      * @return the extracted terms from the query.
      */
-    protected final Set<Term> getQueryTerms() {
-        Set<Term> extractedTerms = new HashSet<Term>();
-        Set<Term> relevantTerms = new HashSet<Term>();
+    protected final Set getQueryTerms() {
+        Set extractedTerms = new HashSet();
+        Set relevantTerms = new HashSet();
         query.extractTerms(extractedTerms);
         // only keep terms for fulltext fields
-        for (Term t : extractedTerms) {
+        Iterator it = extractedTerms.iterator();
+        while (it.hasNext()) {
+            Term t = (Term) it.next();
             if (t.field().equals(FieldNames.FULLTEXT)) {
                 relevantTerms.add(t);
             } else {
@@ -227,15 +230,15 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
      */
     private TermPositionVector createTermPositionVector(String text) {
         // term -> TermVectorOffsetInfo[]
-        final SortedMap<String, TermVectorOffsetInfo[]> termMap =
-            new TreeMap<String, TermVectorOffsetInfo[]>();
+        final SortedMap termMap = new TreeMap();
         Reader r = new StringReader(text);
         TokenStream ts = index.getTextAnalyzer().tokenStream("", r);
         Token t = new Token();
         try {
             while ((t = ts.next(t)) != null) {
                 String termText = t.term();
-                TermVectorOffsetInfo[] info = termMap.get(termText);
+                TermVectorOffsetInfo[] info =
+                        (TermVectorOffsetInfo[]) termMap.get(termText);
                 if (info == null) {
                     info = new TermVectorOffsetInfo[1];
                 } else {
@@ -263,7 +266,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             public TermVectorOffsetInfo[] getOffsets(int index) {
                 TermVectorOffsetInfo[] info = TermVectorOffsetInfo.EMPTY_OFFSET_INFO;
                 if (index >= 0 && index < terms.length) {
-                    info = termMap.get(terms[index]);
+                    info = (TermVectorOffsetInfo[]) termMap.get(terms[index]);
                 }
                 return info;
             }
@@ -283,7 +286,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             public int[] getTermFrequencies() {
                 int[] freqs = new int[terms.length];
                 for (int i = 0; i < terms.length; i++) {
-                    freqs[i] = termMap.get(terms[i]).length;
+                    freqs[i] = ((TermVectorOffsetInfo[]) termMap.get(terms[i])).length;
                 }
                 return freqs;
             }

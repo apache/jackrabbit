@@ -40,7 +40,7 @@ public class RemoveVersion extends Remove {
 
     private NodeEntry versionableEntry = null;
 
-    private RemoveVersion(ItemState removeState, NodeState parent, VersionManager mgr)
+    protected RemoveVersion(ItemState removeState, NodeState parent, VersionManager mgr)
             throws RepositoryException {
         super(removeState, parent);
         try {
@@ -79,8 +79,8 @@ public class RemoveVersion extends Remove {
         }
 
         // invalidate the versionhistory entry and all its children
-        // in order to have the v-graph recalculated
-        parent.getNodeEntry().invalidate(true);
+        // in order to the the v-graph recalculated
+        removeState.getHierarchyEntry().getParent().invalidate(true);
     }
 
     //----------------------------------------< Access Operation Parameters >---

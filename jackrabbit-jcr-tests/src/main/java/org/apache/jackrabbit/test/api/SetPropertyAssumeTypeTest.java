@@ -122,7 +122,9 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
         Property prop;
 
-        prop = testNode.setProperty(testPropName, binaryValue, PropertyType.BINARY);
+        // create an extra value for BINARY property to avoid IllegalStateException
+        Value stringValueForBinary = NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING);
+        prop = testNode.setProperty(testPropName, stringValueForBinary, PropertyType.BINARY);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",
                      PropertyType.BINARY,
@@ -184,7 +186,10 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
         Property prop;
 
-        prop = testNode.setProperty(testPropName, binaryValues, PropertyType.BINARY);
+        // create an extra value for BINARY property to avoid IllegalStateException
+        Value stringValuesForBinary[] =
+            new Value[] {NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING)};
+        prop = testNode.setProperty(testPropName, stringValuesForBinary, PropertyType.BINARY);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",
                      PropertyType.BINARY,
@@ -369,8 +374,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
         setUpNodeWithUndefinedProperty(false);
 
         Node referenceableNode = testRootNode.addNode(nodeName2);
-        ensureMixinType(referenceableNode, mixReferenceable);
-
+        referenceableNode.addMixin(mixReferenceable);
         // some implementations may require a save after addMixin()
         testRootNode.save();
 

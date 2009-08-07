@@ -27,7 +27,6 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
@@ -50,6 +49,9 @@ public class VersionImpl extends NodeImpl implements Version {
 
     //------------------------------------------------------------< Version >---
     /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see Version#getContainingHistory()
      */
     public VersionHistory getContainingHistory() throws RepositoryException {
@@ -57,6 +59,9 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see Version#getCreated()
      */
     public Calendar getCreated() throws RepositoryException {
@@ -64,6 +69,9 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see Version#getSuccessors()
      */
     public Version[] getSuccessors() throws RepositoryException {
@@ -71,52 +79,13 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * @see Version#getLinearSuccessor()
-     */
-    public Version getLinearSuccessor() throws RepositoryException {
-        // TODO: improve.
-        VersionHistory vh = getContainingHistory();
-        for (VersionIterator it = vh.getAllLinearVersions(); it.hasNext();) {
-            Version v = it.nextVersion();
-            if (isSame(v.getLinearPredecessor())) {
-                return v;
-            }
-        }
-
-        // no linear successor found
-        return null;
-    }
-    
-    /**
+     *
+     * @return
+     * @throws RepositoryException
      * @see Version#getPredecessors()
      */
     public Version[] getPredecessors() throws RepositoryException {
         return getVersions(NameConstants.JCR_PREDECESSORS);
-    }
-
-    /**
-     * @see Version#getLinearPredecessor()
-     */
-    public Version getLinearPredecessor() throws RepositoryException {
-        Value[] values = getProperty(NameConstants.JCR_PREDECESSORS).getValues();
-        if (values != null && values.length > 0) {
-            Node n = session.getNodeByUUID(values[0].getString());
-            if (n instanceof Version) {
-                return (Version) n;
-            } else {
-                throw new RepositoryException("Version property contains invalid value not pointing to a 'Version'");
-            }
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * @see Version#getFrozenNode()
-     */
-    public Node getFrozenNode() throws RepositoryException {
-        return getNode(NameConstants.JCR_FROZENNODE, 1);
-
     }
 
     //---------------------------------------------------------------< Item >---

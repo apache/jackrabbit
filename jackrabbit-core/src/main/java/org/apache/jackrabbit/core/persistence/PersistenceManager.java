@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 
 /**
@@ -131,13 +132,13 @@ public interface PersistenceManager {
             throws NoSuchItemStateException, ItemStateException;
 
     /**
-     * Load the persisted references to the node with the given identifier.
+     * Load the persistent members of a node references object.
      *
      * @param id reference target node id
      * @throws NoSuchItemStateException if the target node does not exist
      * @throws ItemStateException if another error occurs
      */
-    NodeReferences loadReferencesTo(NodeId id)
+    NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -168,7 +169,7 @@ public interface PersistenceManager {
      *         <code>false</code> otherwise
      * @throws ItemStateException on persistence manager errors
      */
-    boolean existsReferencesTo(NodeId targetId) throws ItemStateException;
+    boolean exists(NodeReferencesId targetId) throws ItemStateException;
 
     /**
      * Atomically saves the given set of changes.

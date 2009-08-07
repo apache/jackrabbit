@@ -18,14 +18,17 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.StringIndex;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import java.io.DataInputStream;
@@ -35,7 +38,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.math.BigDecimal;
 
 /**
  * This Class implements relatively efficient serialization methods for item
@@ -136,6 +138,46 @@ public class ItemStateBinding {
     }
 
     /**
+     * Deserializes a <code>NodeReferences</code> from the data input stream.
+     *
+     * @param in the input stream
+     * @param id the id of the nodereference to deserialize
+     * @param pMgr the persistence manager
+     * @return the node references
+     * @throws IOException in an I/O error occurs.
+     */
+    public NodeReferences readState(DataInputStream in, NodeReferencesId id,
+                                    PersistenceManager pMgr)
+            throws IOException {
+        NodeReferences state = new NodeReferences(id);
+        int count = in.readInt();   // count & version
+        // int version = (count >> 24) | 0x0ff;
+        count &= 0x00ffffff;
+        for (int i = 0; i < count; i++) {
+            state.addReference(readPropertyId(in));    // propertyId
+        }
+        return state;
+    }
+
+    /**
+     * Serializes a <code>NodeReferences</code> to the data output stream.
+     *
+     * @param out the output stream
+     * @param state the state to write.
+     * @throws IOException in an I/O error occurs.
+     */
+    public void writeState(DataOutputStream out, NodeReferences state)
+            throws IOException {
+        // references
+        Collection c = state.getReferences();
+        out.writeInt(c.size() | (VERSION_CURRENT << 24)); // count
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            PropertyId propId = (PropertyId) iter.next();
+            writePropertyId(out, propId);
+        }
+    }
+
+    /**
      * Deserializes a <code>NodeState</code> from the data input stream.
      *
      * @param in the input streaam
@@ -162,7 +204,7 @@ public class ItemStateBinding {
 
         // mixin types
         int count = in.readInt();   // count
-        Set<Name> set = new HashSet<Name>(count);
+        Set set = new HashSet(count);
         for (int i = 0; i < count; i++) {
             set.add(readQName(in)); // name
         }
@@ -212,95 +254,64 @@ public class ItemStateBinding {
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
         // mixin types
-        Collection<Name> c = state.getMixinTypeNames();
+        Collection c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count
-        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
-            writeQName(out, iter.next());
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            writeQName(out, (Name) iter.next());
         }
         // properties (names)
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
-        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
-            Name pName = iter.next();
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            Name pName = (Name) iter.next();
             writeIndexedQName(out, pName);
         }
         // child nodes (list of name/uuid pairs)
-        Collection<ChildNodeEntry> collChild = state.getChildNodeEntries();
-        out.writeInt(collChild.size()); // count
-        for (Iterator<ChildNodeEntry> iter = collChild.iterator(); iter.hasNext();) {
-            ChildNodeEntry entry = iter.next();
+        c = state.getChildNodeEntries();
+        out.writeInt(c.size()); // count
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             writeQName(out, entry.getName());   // name
             writeID(out, entry.getId());  // uuid
         }
         writeModCount(out, state.getModCount());
         
         // shared set (list of parent uuids)
-        Collection<NodeId> collShared = state.getSharedSet();
-        out.writeInt(collShared.size()); // count
-        for (Iterator<NodeId> iter = collShared.iterator(); iter.hasNext();) {
-            writeID(out, iter.next());
+        c = state.getSharedSet();
+        out.writeInt(c.size()); // count
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            writeID(out, (NodeId) iter.next());
         }
     }
 
     /**
-     * Deserializes a node identifier
+     * Deserializes a UUID
      * @param in the input stream
-     * @return the node id
+     * @return the uuid
      * @throws IOException in an I/O error occurs.
      */
-    public NodeId readNodeId(DataInputStream in) throws IOException {
+    public UUID readUUID(DataInputStream in) throws IOException {
         if (in.readBoolean()) {
             byte[] bytes = new byte[16];
             in.readFully(bytes);
-            return new NodeId(bytes);
+            return new UUID(bytes);
         } else {
             return null;
         }
     }
 
     /**
-     * Serializes a node identifier
+     * Serializes a UUID
      * @param out the output stream
-     * @param uuid the node id
+     * @param uuid the uuid
      * @throws IOException in an I/O error occurs.
      */
-    public void writeNodeId(DataOutputStream out, String id) throws IOException {
-        if (id == null) {
+    public void writeUUID(DataOutputStream out, String uuid) throws IOException {
+        if (uuid == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.write(new NodeId(id).getRawBytes());
-        }
-    }
-
-    /**
-     * Deserializes a BigDecimal
-     * @param in the input stream
-     * @return the decimal
-     * @throws IOException in an I/O error occurs.
-     */
-    public BigDecimal readDecimal(DataInputStream in) throws IOException {
-        if (in.readBoolean()) {
-            // TODO more efficient serialization format
-            return new BigDecimal(in.readUTF());
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Serializes a BigDecimal
-     * @param out the output stream
-     * @param decimal the decimal number
-     * @throws IOException in an I/O error occurs.
-     */
-    public void writeDecimal(DataOutputStream out, BigDecimal decimal) throws IOException {
-        if (decimal == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            // TODO more efficient serialization format
-            out.writeUTF(decimal.toString());
+            out.write(UUID.fromString(uuid).getRawBytes());
         }
     }
 
@@ -317,7 +328,7 @@ public class ItemStateBinding {
             while (pos < 16) {
                 pos += in.read(bytes, pos, 16 - pos);
             }
-            return new NodeId(bytes);
+            return new NodeId(new UUID(bytes));
         } else {
             return null;
         }
@@ -334,7 +345,22 @@ public class ItemStateBinding {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.write(id.getRawBytes());
+            out.write(id.getUUID().getRawBytes());
+        }
+    }
+
+    /**
+     * Serializes a UUID
+     * @param out the output stream
+     * @param uuid the uuid
+     * @throws IOException in an I/O error occurs.
+     */
+    public void writeUUID(DataOutputStream out, UUID uuid) throws IOException {
+        if (uuid == null) {
+            out.writeBoolean(false);
+        } else {
+            out.writeBoolean(true);
+            out.write(uuid.getRawBytes());
         }
     }
 
@@ -431,9 +457,8 @@ public class ItemStateBinding {
      * @throws IOException in an I/O error occurs.
      */
     public PropertyId readPropertyId(DataInputStream in) throws IOException {
-        NodeId id = readNodeId(in);
+        UUID uuid = readUUID(in);
         Name name = readQName(in);
-        return new PropertyId(id, name);
+        return new PropertyId(new NodeId(uuid), name);
     }
-
 }

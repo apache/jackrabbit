@@ -106,8 +106,6 @@ class JsonDiffHandler implements DiffHandler {
 
             if (JcrConstants.JCR_MIXINTYPES.equals(propName)) {
                 setMixins(parent, extractValuesFromRequest(targetPath));
-            } else if (JcrConstants.JCR_PRIMARYTYPE.equals(propName)) {
-                setPrimaryType(parent, extractValuesFromRequest(targetPath));
             } else {
                 if (diffValue == null || diffValue.length() == 0) {
                     // single valued property with value present in multipart.
@@ -347,17 +345,6 @@ class JsonDiffHandler implements DiffHandler {
             throw new RepositoryException("Internal error: No child node added.");
         }
         return n;
-    }
-
-    private static void setPrimaryType(Node n, Value[] values) throws RepositoryException, DiffException {
-        if (values.length == 1) {
-            String ntName = values[0].getString();
-            if (!ntName.equals(n.getPrimaryNodeType().getName())) {
-                n.setPrimaryType(ntName);
-            } // else: same primaryType as before -> nothing to do.
-        } else {
-            throw new DiffException("Invalid diff: jcr:primarytype cannot have multiple values, nor can it's value be removed.");
-        }
     }
 
     private static void setMixins(Node n, Value[] values) throws RepositoryException {

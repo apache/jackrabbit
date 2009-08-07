@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.io.IOException;
 
@@ -45,9 +46,9 @@ class Recovery {
     private final RedoLog redoLog;
 
     /**
-     * The ids of the uncommitted transactions. Set of Long objects.
+     * The ids of the uncommitted transactions. Set of Integer objects.
      */
-    private final Set<Long> losers = new HashSet<Long>();
+    private final Set losers = new HashSet();
 
     /**
      * Creates a new Recovery instance.
@@ -91,22 +92,23 @@ class Recovery {
      * @throws IOException if the recovery fails.
      */
     private void run() throws IOException {
-        List<MultiIndex.Action> actions = redoLog.getActions();
+        List actions = redoLog.getActions();
 
         // find loser transactions
-        for (MultiIndex.Action a : actions) {
+        for (Iterator it = actions.iterator(); it.hasNext();) {
+            MultiIndex.Action a = (MultiIndex.Action) it.next();
             if (a.getType() == MultiIndex.Action.TYPE_START) {
-                losers.add(a.getTransactionId());
+                losers.add(new Long(a.getTransactionId()));
             } else if (a.getType() == MultiIndex.Action.TYPE_COMMIT) {
-                losers.remove(a.getTransactionId());
+                losers.remove(new Long(a.getTransactionId()));
             }
         }
 
         // find last volatile commit without changes from a loser
         int lastSafeVolatileCommit = -1;
-        Set<Long> transactionIds = new HashSet<Long>();
+        Set transactionIds = new HashSet();
         for (int i = 0; i < actions.size(); i++) {
-            MultiIndex.Action a = actions.get(i);
+            MultiIndex.Action a = (MultiIndex.Action) actions.get(i);
             if (a.getType() == MultiIndex.Action.TYPE_COMMIT) {
                 transactionIds.clear();
             } else if (a.getType() == MultiIndex.Action.TYPE_VOLATILE_COMMIT) {
@@ -119,13 +121,13 @@ class Recovery {
                     lastSafeVolatileCommit = i;
                 }
             } else {
-                transactionIds.add(a.getTransactionId());
+                transactionIds.add(new Long(a.getTransactionId()));
             }
         }
 
         // delete dirty indexes
         for (int i = lastSafeVolatileCommit + 1; i < actions.size(); i++) {
-            MultiIndex.Action a = actions.get(i);
+            MultiIndex.Action a = (MultiIndex.Action) actions.get(i);
             if (a.getType() == MultiIndex.Action.TYPE_CREATE_INDEX) {
                 a.undo(index);
             }
@@ -134,7 +136,7 @@ class Recovery {
         // replay actions up to last safe volatile commit
         // ignore add node actions, they are included in volatile commits
         for (int i = 0; i < actions.size() && i <= lastSafeVolatileCommit; i++) {
-            MultiIndex.Action a = actions.get(i);
+            MultiIndex.Action a = (MultiIndex.Action) actions.get(i);
             switch (a.getType()) {
                 case MultiIndex.Action.TYPE_ADD_INDEX:
                 case MultiIndex.Action.TYPE_CREATE_INDEX:
@@ -154,7 +156,7 @@ class Recovery {
 
         // now replay the rest until we encounter a loser transaction
         for (int i = lastSafeVolatileCommit + 1; i < actions.size(); i++) {
-            MultiIndex.Action a = actions.get(i);
+            MultiIndex.Action a = (MultiIndex.Action) actions.get(i);
             if (losers.contains(new Long(a.getTransactionId()))) {
                 break;
             } else {

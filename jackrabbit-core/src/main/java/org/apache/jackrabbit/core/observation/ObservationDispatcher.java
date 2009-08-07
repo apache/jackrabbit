@@ -48,22 +48,22 @@ public final class ObservationDispatcher extends EventDispatcher
     /**
      * Currently active <code>EventConsumer</code>s for notification.
      */
-    private Set<EventConsumer> activeConsumers = new HashSet<EventConsumer>();
+    private Set activeConsumers = new HashSet();
 
     /**
      * Currently active synchronous <code>EventConsumer</code>s for notification.
      */
-    private Set<EventConsumer> synchronousConsumers = new HashSet<EventConsumer>();
+    private Set synchronousConsumers = new HashSet();
 
     /**
      * Set of <code>EventConsumer</code>s for read only Set access
      */
-    private Set<EventConsumer> readOnlyConsumers;
+    private Set readOnlyConsumers;
 
     /**
      * Set of synchronous <code>EventConsumer</code>s for read only Set access.
      */
-    private Set<EventConsumer> synchronousReadOnlyConsumers;
+    private Set synchronousReadOnlyConsumers;
 
     /**
      * synchronization monitor for listener changes
@@ -111,19 +111,19 @@ public final class ObservationDispatcher extends EventDispatcher
      *
      * @return <code>Set</code> of <code>EventConsumer</code>s.
      */
-    Set<EventConsumer> getAsynchronousConsumers() {
+    Set getAsynchronousConsumers() {
         synchronized (consumerChange) {
             if (readOnlyConsumers == null) {
-                readOnlyConsumers = Collections.unmodifiableSet(new HashSet<EventConsumer>(activeConsumers));
+                readOnlyConsumers = Collections.unmodifiableSet(new HashSet(activeConsumers));
             }
             return readOnlyConsumers;
         }
     }
 
-    Set<EventConsumer> getSynchronousConsumers() {
+    Set getSynchronousConsumers() {
         synchronized (consumerChange) {
             if (synchronousReadOnlyConsumers == null) {
-                synchronousReadOnlyConsumers = Collections.unmodifiableSet(new HashSet<EventConsumer>(synchronousConsumers));
+                synchronousReadOnlyConsumers = Collections.unmodifiableSet(new HashSet(synchronousConsumers));
             }
             return synchronousReadOnlyConsumers;
         }
@@ -139,8 +139,8 @@ public final class ObservationDispatcher extends EventDispatcher
 
             log.debug("got EventStateCollection");
             log.debug("event delivery to " + action.getEventConsumers().size() + " consumers started...");
-            for (Iterator<EventConsumer> it = action.getEventConsumers().iterator(); it.hasNext();) {
-                EventConsumer c = it.next();
+            for (Iterator it = action.getEventConsumers().iterator(); it.hasNext();) {
+                EventConsumer c = (EventConsumer) it.next();
                 try {
                     c.consumeEvents(action.getEventStates());
                 } catch (Throwable t) {
@@ -161,10 +161,11 @@ public final class ObservationDispatcher extends EventDispatcher
      * prepare the events for dispatching.
      */
     void prepareEvents(EventStateCollection events) {
-        Set<EventConsumer> consumers = new HashSet<EventConsumer>();
+        Set consumers = new HashSet();
         consumers.addAll(getSynchronousConsumers());
         consumers.addAll(getAsynchronousConsumers());
-        for (EventConsumer c : consumers) {
+        for (Iterator it = consumers.iterator(); it.hasNext();) {
+            EventConsumer c = (EventConsumer) it.next();
             c.prepareEvents(events);
         }
     }
@@ -173,10 +174,11 @@ public final class ObservationDispatcher extends EventDispatcher
      * {@inheritDoc}
      */
     void prepareDeleted(EventStateCollection events, ChangeLog changes) {
-        Set<EventConsumer> consumers = new HashSet<EventConsumer>();
+        Set consumers = new HashSet();
         consumers.addAll(getSynchronousConsumers());
         consumers.addAll(getAsynchronousConsumers());
-        for (EventConsumer c : consumers) {
+        for (Iterator it = consumers.iterator(); it.hasNext();) {
+            EventConsumer c = (EventConsumer) it.next();
             c.prepareDeleted(events, changes.deletedStates());
         }
     }
@@ -189,11 +191,12 @@ public final class ObservationDispatcher extends EventDispatcher
      */
     void dispatchEvents(EventStateCollection events) {
         // notify synchronous listeners
-        Set<EventConsumer> synchronous = getSynchronousConsumers();
+        Set synchronous = getSynchronousConsumers();
         if (log.isDebugEnabled()) {
             log.debug("notifying " + synchronous.size() + " synchronous listeners.");
         }
-        for (EventConsumer c : synchronous) {
+        for (Iterator it = synchronous.iterator(); it.hasNext();) {
+            EventConsumer c = (EventConsumer) it.next();
             try {
                 c.consumeEvents(events);
             } catch (Throwable t) {

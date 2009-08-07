@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Properties;
 
 import javax.jcr.AccessDeniedException;
@@ -49,8 +50,8 @@ public class NamespaceRegistryImpl implements
     private static final String NS_REG_RESOURCE = "ns_reg.properties";
     private static final String NS_IDX_RESOURCE = "ns_idx.properties";
 
-    private static final HashSet<String> reservedPrefixes = new HashSet<String>();
-    private static final HashSet<String> reservedURIs = new HashSet<String>();
+    private static final HashSet reservedPrefixes = new HashSet();
+    private static final HashSet reservedURIs = new HashSet();
 
     static {
         // reserved prefixes
@@ -73,13 +74,13 @@ public class NamespaceRegistryImpl implements
         reservedURIs.add(Name.NS_SV_URI);
     }
 
-    private HashMap<String, String> prefixToURI = new HashMap<String, String>();
-    private HashMap<String, String> uriToPrefix = new HashMap<String, String>();
+    private HashMap prefixToURI = new HashMap();
+    private HashMap uriToPrefix = new HashMap();
 
-    private HashMap<Integer, String> indexToURI = new HashMap<Integer, String>();
-    private HashMap<String, Integer> uriToIndex = new HashMap<String, Integer>();
+    private HashMap indexToURI = new HashMap();
+    private HashMap uriToIndex = new HashMap();
 
-    private int lastIndex;
+    private int lastIndex = 0;
 
     private final FileSystem nsRegStore;
 
@@ -132,7 +133,7 @@ public class NamespaceRegistryImpl implements
         uriToPrefix.put(uri, prefix);
         if (!uriToIndex.containsKey(uri)) {
             if (idx == null) {
-                idx = ++lastIndex;
+                idx = new Integer(++lastIndex);
             } else {
                 if (idx.intValue() > lastIndex) {
                     lastIndex = idx.intValue();
@@ -195,8 +196,9 @@ public class NamespaceRegistryImpl implements
                 clear();
 
                 // read mappings from properties
-                for (Object p : props.keySet()) {
-                    String prefix = (String) p;
+                Iterator iter = props.keySet().iterator();
+                while (iter.hasNext()) {
+                    String prefix = (String) iter.next();
                     String uri = props.getProperty(prefix);
                     String idx = indexes.getProperty(uri);
                     if (idx != null) {
@@ -227,8 +229,10 @@ public class NamespaceRegistryImpl implements
             Properties props = new Properties();
 
             // store mappings in properties
-            for (String prefix : prefixToURI.keySet()) {
-                String uri = prefixToURI.get(prefix);
+            Iterator iter = prefixToURI.keySet().iterator();
+            while (iter.hasNext()) {
+                String prefix = (String) iter.next();
+                String uri = (String) prefixToURI.get(prefix);
                 props.setProperty(prefix, uri);
             }
 
@@ -252,7 +256,9 @@ public class NamespaceRegistryImpl implements
             Properties props = new Properties();
 
             // store mappings in properties
-            for (String uri : uriToIndex.keySet()) {
+            Iterator iter = uriToIndex.keySet().iterator();
+            while (iter.hasNext()) {
+                String uri = (String) iter.next();
                 String index = uriToIndex.get(uri).toString();
                 props.setProperty(uri, index);
             }
@@ -290,7 +296,7 @@ public class NamespaceRegistryImpl implements
      * @throws IllegalArgumentException if the namespace is not registered
      */
     public int stringToIndex(String uri) {
-        Integer idx = uriToIndex.get(uri);
+        Integer idx = (Integer) uriToIndex.get(uri);
         if (idx == null) {
             throw new IllegalArgumentException("Namespace not registered: " + uri);
         }
@@ -305,7 +311,7 @@ public class NamespaceRegistryImpl implements
      * @throws IllegalArgumentException if the given index is invalid
      */
     public String indexToString(int idx) {
-        String uri = indexToURI.get(idx);
+        String uri = (String) indexToURI.get(new Integer(idx));
         if (uri == null) {
             throw new IllegalArgumentException("Invalid namespace index: " + idx);
         }
@@ -345,7 +351,7 @@ public class NamespaceRegistryImpl implements
         }
 
         // check existing mappings
-        String oldPrefix = uriToPrefix.get(uri);
+        String oldPrefix = (String) uriToPrefix.get(uri);
         if (prefix.equals(oldPrefix)) {
             throw new NamespaceException("failed to register namespace "
                     + prefix + " -> " + uri + ": mapping already exists");
@@ -403,14 +409,14 @@ public class NamespaceRegistryImpl implements
      * {@inheritDoc}
      */
     public String[] getPrefixes() throws RepositoryException {
-        return prefixToURI.keySet().toArray(new String[prefixToURI.keySet().size()]);
+        return (String[]) prefixToURI.keySet().toArray(new String[prefixToURI.keySet().size()]);
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getURIs() throws RepositoryException {
-        return uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
+        return (String[]) uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
     }
 
     //---------------------------------------------------< NamespaceRegistry >
@@ -418,7 +424,7 @@ public class NamespaceRegistryImpl implements
      * {@inheritDoc}
      */
     public String getURI(String prefix) throws NamespaceException {
-        String uri = prefixToURI.get(prefix);
+        String uri = (String) prefixToURI.get(prefix);
         if (uri == null) {
             throw new NamespaceException(prefix
                     + ": is not a registered namespace prefix.");
@@ -430,7 +436,7 @@ public class NamespaceRegistryImpl implements
      * {@inheritDoc}
      */
     public String getPrefix(String uri) throws NamespaceException {
-        String prefix = uriToPrefix.get(uri);
+        String prefix = (String) uriToPrefix.get(uri);
         if (prefix == null) {
             throw new NamespaceException(uri
                     + ": is not a registered namespace uri.");

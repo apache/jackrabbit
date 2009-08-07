@@ -87,7 +87,7 @@ public class PropertyDefTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = getHelper().getReadOnlySession();
+        session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
         // re-fetch testRootNode with read-only session
         testRootNode = (Node) session.getItem(testRoot);
@@ -200,9 +200,6 @@ public class PropertyDefTest extends AbstractJCRTest {
                     case PropertyType.REFERENCE:
                     case PropertyType.BOOLEAN:
                     case PropertyType.UNDEFINED:
-                    case PropertyType.WEAKREFERENCE:
-                    case PropertyType.DECIMAL:
-                    case PropertyType.URI:
                         // success
                         break;
                     default:
@@ -339,10 +336,8 @@ public class PropertyDefTest extends AbstractJCRTest {
                     for (int j = 0; j < values.length; j++) {
 
                         if (!def.isMultiple()) {
-                            assertEquals(
-                                    "Single-valued property "
-                                    + type.getName() +"/" + def.getName()
-                                    + " must not have more than one default value.",
+                            assertEquals("Single-valued properties must not " +
+                                    "have more than one default value.",
                                     1, values.length);
                         }
                     }

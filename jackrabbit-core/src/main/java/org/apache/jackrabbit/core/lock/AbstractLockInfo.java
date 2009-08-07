@@ -17,20 +17,19 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.NodeId;
 
 import javax.jcr.Session;
 
 /**
  * Common information about a lock.
  */
-abstract class AbstractLockInfo implements LockInfo {
+public abstract class AbstractLockInfo {
 
     /**
      * Constant for the undefined or infinite timeout.
      */
     static final long TIMEOUT_INFINITE = Long.MAX_VALUE;
-
     /**
      * Constant for the expired timeout.
      */
@@ -57,14 +56,14 @@ abstract class AbstractLockInfo implements LockInfo {
     protected final String lockOwner;
 
     /**
-     * Flag indicating whether this lock is live
-     */
-    private boolean live;
-
-    /**
      * Session currently holding lock
      */
-    private SessionImpl lockHolder;
+    protected SessionImpl lockHolder;
+
+    /**
+     * Flag indicating whether this lock is live
+     */
+    protected boolean live;
 
     /**
      * Create a new instance of this class.
@@ -114,27 +113,6 @@ abstract class AbstractLockInfo implements LockInfo {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public boolean isLockHolder(Session session) {
-        return lockHolder == session;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getLockOwner() {
-        return lockOwner;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isDeep() {
-        return deep;
-    }
-
-    /**
      * Return the session currently holding the lock
      *
      * @return session currently holding the lock
@@ -153,22 +131,18 @@ abstract class AbstractLockInfo implements LockInfo {
     }
 
     /**
-     * {@inheritDoc}
+     * Return the lock token as seen by the session passed as parameter. If
+     * this session is currently holding the lock, it will get the lock token
+     * itself, otherwise a <code>null</code> string.
+     *
+     * @param session The session asking for the lock token.
+     * @return lock token.
      */
     public String getLockToken(Session session) {
-        if (isLockHolder(session)) {
+        if (session.equals(lockHolder)) {
             return lockToken.toString();
         }
         return null;
-    }
-
-    /**
-     * Return the lock token.
-     *
-     * @return lock token
-     */
-    public String getLockToken() {
-        return lockToken.toString();
     }
 
     /**

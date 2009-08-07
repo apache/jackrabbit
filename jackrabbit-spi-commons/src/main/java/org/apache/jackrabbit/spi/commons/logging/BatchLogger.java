@@ -123,14 +123,6 @@ public class BatchLogger extends AbstractLogger implements Batch {
             }}, "setMixins(NodeId, Name[])", new Object[]{nodeId, mixinNodeTypeNames});
     }
 
-    public void setPrimaryType(final NodeId nodeId, final Name primaryNodeTypeName) throws RepositoryException {
-        execute(new Callable() {
-            public Object call() throws RepositoryException {
-                batch.setPrimaryType(nodeId, primaryNodeTypeName);
-                return null;
-            }}, "setPrimaryType(NodeId, Name)", new Object[]{nodeId, primaryNodeTypeName});
-    }
-
     public void move(final NodeId srcNodeId, final NodeId destParentNodeId, final Name destName)
             throws RepositoryException {
 

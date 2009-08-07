@@ -16,11 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
+import java.io.IOException;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyType;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
+import org.apache.jackrabbit.core.query.lucene.Util;
 import org.apache.jackrabbit.core.SessionImpl;
 
 /**
@@ -35,12 +37,16 @@ public class NodeNameOperand extends DynamicOperand {
      * @param sn      the score node.
      * @param context the evaluation context.
      * @return the node name.
-     * @throws RepositoryException if an error occurs while reading the name.
+     * @throws IOException if an error occurs while reading the name.
      */
     public Value[] getValues(ScoreNode sn, EvaluationContext context)
-            throws RepositoryException {
-        SessionImpl session = context.getSession();
-        String name = session.getNodeById(sn.getNodeId()).getName();
-        return new Value[]{session.getValueFactory().createValue(name, PropertyType.NAME)};
+            throws IOException {
+        try {
+            SessionImpl session = context.getSession();
+            String name = session.getNodeById(sn.getNodeId()).getName();
+            return new Value[]{session.getValueFactory().createValue(name)};
+        } catch (RepositoryException e) {
+            throw Util.createIOException(e);
+        }
     }
 }
