@@ -29,6 +29,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,6 +71,9 @@ import javax.jcr.observation.ObservationManager;
  * </pre>
  */
 public class GarbageCollector {
+
+    /** logger instance */
+    private static final Logger LOG = LoggerFactory.getLogger(GarbageCollector.class);
 
     private ScanEventListener callback;
 
@@ -309,21 +314,25 @@ public class GarbageCollector {
         try {
             for (PropertyIterator it = n.getProperties(); it.hasNext();) {
                 Property p = it.nextProperty();
-                if (p.getType() == PropertyType.BINARY) {
-                    if (n.hasProperty("jcr:uuid")) {
-                        rememberNode(n.getProperty("jcr:uuid").getString());
-                    } else {
-                        rememberNode(n.getPath());
+                try {
+                    if (p.getType() == PropertyType.BINARY) {
+                        if (n.hasProperty("jcr:uuid")) {
+                            rememberNode(n.getProperty("jcr:uuid").getString());
+                        } else {
+                            rememberNode(n.getPath());
+                        }
+                        if (p.getDefinition().isMultiple()) {
+                            p.getLengths();
+                        } else {
+                            p.getLength();
+                        }
                     }
-                    if (p.getDefinition().isMultiple()) {
-                        p.getLengths();
-                    } else {
-                        p.getLength();
-                    }
+                } catch (InvalidItemStateException e) {
+                    LOG.debug("Property removed concurrently - ignoring", e);
                 }
             }
         } catch (InvalidItemStateException e) {
-            // the property may have been removed in the meantime - ignore
+            LOG.debug("Node removed concurrently - ignoring", e);
         }
         if (callback != null) {
             callback.afterScanning(n);
@@ -333,7 +342,7 @@ public class GarbageCollector {
                 recurse(it.nextNode(), sleep);
             }
         } catch (InvalidItemStateException e) {
-            // the item may have been removed in the meantime - ignore
+            LOG.debug("Node removed concurrently - ignoring", e);
         }
     }
 
