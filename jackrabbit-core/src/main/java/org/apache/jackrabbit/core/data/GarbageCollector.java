@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -305,26 +306,34 @@ public class GarbageCollector {
         if (callback != null) {
             callback.beforeScanning(n);
         }
-        for (PropertyIterator it = n.getProperties(); it.hasNext();) {
-            Property p = it.nextProperty();
-            if (p.getType() == PropertyType.BINARY) {
-                if (n.hasProperty("jcr:uuid")) {
-                    rememberNode(n.getProperty("jcr:uuid").getString());
-                } else {
-                    rememberNode(n.getPath());
-                }
-                if (p.getDefinition().isMultiple()) {
-                    p.getLengths();
-                } else {
-                    p.getLength();
+        try {
+            for (PropertyIterator it = n.getProperties(); it.hasNext();) {
+                Property p = it.nextProperty();
+                if (p.getType() == PropertyType.BINARY) {
+                    if (n.hasProperty("jcr:uuid")) {
+                        rememberNode(n.getProperty("jcr:uuid").getString());
+                    } else {
+                        rememberNode(n.getPath());
+                    }
+                    if (p.getDefinition().isMultiple()) {
+                        p.getLengths();
+                    } else {
+                        p.getLength();
+                    }
                 }
             }
+        } catch (InvalidItemStateException e) {
+            // the property may have been removed in the meantime - ignore
         }
         if (callback != null) {
             callback.afterScanning(n);
         }
-        for (NodeIterator it = n.getNodes(); it.hasNext();) {
-            recurse(it.nextNode(), sleep);
+        try {
+            for (NodeIterator it = n.getNodes(); it.hasNext();) {
+                recurse(it.nextNode(), sleep);
+            }
+        } catch (InvalidItemStateException e) {
+            // the item may have been removed in the meantime - ignore
         }
     }
 
