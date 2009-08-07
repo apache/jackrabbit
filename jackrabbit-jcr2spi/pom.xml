@@ -17,10 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -29,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.6.0</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr2spi</artifactId>
@@ -37,12 +34,12 @@
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr2spi
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/1.6.0/jackrabbit-jcr2spi
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr2spi
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/1.6.0/jackrabbit-jcr2spi
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-jcr2spi</url>
+    <url>http://svn.apache.org/viewvc/jackrabbit/tags/1.6.0/jackrabbit-jcr2spi</url>
   </scm>
 
   <build>
@@ -76,23 +73,23 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
-      <version>1.6-SNAPSHOT</version>
+      <version>1.6.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi-commons</artifactId>
-      <version>1.6-SNAPSHOT</version>
+      <version>1.6.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.6-SNAPSHOT</version>
+      <version>1.6.0</version>
     </dependency>
     <!-- tmp dependency to jackrabbit-api until jsr 283 is released -->
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>1.6-SNAPSHOT</version>
+      <version>1.6.0</version>
     </dependency>
     <!-- end of tmp dependency -->
     <dependency>
@@ -115,7 +112,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-tests</artifactId>
-      <version>1.6-SNAPSHOT</version>
+      <version>1.6.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
