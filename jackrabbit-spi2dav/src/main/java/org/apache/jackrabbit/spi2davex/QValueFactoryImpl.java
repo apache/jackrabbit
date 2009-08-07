@@ -69,7 +69,6 @@ import java.net.URISyntaxException;
  */
 class QValueFactoryImpl extends AbstractQValueFactory {
 
-    private final NamePathResolver resolver;
     private final ValueLoader loader;
     private final ValueFactory vf;
 
@@ -78,7 +77,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
     }
 
     QValueFactoryImpl(NamePathResolver resolver, ValueLoader loader) {
-        this.resolver = resolver;
         this.loader = loader;
         vf = new ValueFactoryQImpl(this, resolver);
     }
