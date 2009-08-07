@@ -7,10 +7,43 @@ Apache Jackrabbit 1.6 is an incremental feature release. While
 remaining compatible with previous releases, Jackrabbit 1.6 introduces
 a number of new features, improvements and fixes to known issues.
 
-TODO: Notable new features
+The most notable changes in this release are:
 
-See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
-more information.
+    * The RepositoryCopier tool makes it easy to backup and migrate
+      repositories (JCR-442). There is also improved support for selectively
+      copying content and version histories between repositories (JCR-1972).
+
+    * A new WebDAV-based JCR remoting layer has been added to complement
+      the existing JCR-RMI layer (JCR-1877, JCR-1958).
+
+    * Query performance has been further optimized (JCR-1820, JCR-1855
+      and JCR-2025).
+
+    * Added support for Ingres and MaxDB/SapDB databases (JCR-1960, JCR-1527).
+
+    * Session.refresh() can now be used to synchronize a cluster node
+      with changes from the other nodes in the cluster (JCR-1753).
+
+    * Unreferenced version histories are now automatically removed once
+      all the contained versions have been removed (JCR-134).
+
+    * Standalone components like the JCR-RMI layer and the OCM framework
+      have been moved to a separate JCR Commons subproject of Jackrabbit,
+      and are not included in this release. Updates to those components
+      will be distributed as separate releases.
+
+    * Development preview: There are even more JSR 283 features in
+      Jackrabbit 1.6 than were included in the 1.5 version. These new
+      features are accessible through special "jsr283" interfaces in
+      the Jackrabbit API. Note that none of these features are ready
+      for production use, and will be replaced with final JCR 2.0 versions
+      in Jackrabbit 2.0. 
+
+See the Jackrabbit issue tracker for all the 120 changes in this release:
+
+    https://issues.apache.org/jira/browse/JCR
+
+The issue tracker also documents all the known issues in this release.
 
 Release Contents
 ----------------
@@ -29,167 +62,50 @@ signature that you can use to verify the authenticity of your download.
 The public key used for the PGP signature can be found at
 https://svn.apache.org/repos/asf/jackrabbit/dist/KEYS.
 
-The build will result in the following components (with artifactIds in
-parenthesis) being built and installed in your local Maven repository.
-Pre-built binary artifacts of these components are also available on
-the Jackrabbit download page and on the central Maven repository.
-
-  * Jackrabbit API (jackrabbit-api)
-    Interface extensions that Apache Jackrabbit supports in
-    addition to the standard JCR API.
-
-  * Jackrabbit JCR Commons (jackrabbit-jcr-commons)
-    General-purpose classes for use with the JCR API.
-
-  * Jackrabbit JCR Tests (jackrabbit-jcr-tests)
-    Set of JCR API test cases designed for testing the compliance
-    of an implementation. Note that this is not the official JCR TCK!
-
-  * Jackrabbit Core (jackrabbit-core)
-    Core of the Apache Jackrabbit content repository implementation.
-
-  * Jackrabbit Text Extractors (jackrabbit-text-extractors)
-    Text extractor classes that allow Jackrabbit to extract text content
-    from binary properties for full text indexing.
-
-  * Jackrabbit WebDAV Library (jackrabbit-webdav)
-    Interfaces and common utility classes used for building a
-    WebDAV server or client.
-
-  * Jackrabbit JCR Server (jackrabbit-jcr-server)
-    WebDAV servlet implementations based on JCR.
-
-  * Jackrabbit Web Application (jackrabbit-webapp)
-    Deployable Jackrabbit installation with WebDAV support for JCR.
-
-  * Jackrabbit JCA Resource Adapter (jackrabbit-jca)
-    J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
-
-  * Jackrabbit SPI (jackrabbit-spi)
-    The SPI defines a layer within a JSR-170 implementation that separates
-    the transient space from the persistent layer.
-
-  * Jackrabbit SPI Commons (jackrabbit-spi-commons)
-    This component contains generic utility classes that might be used
-    to build an SPI implementation.
-
-  * Jackrabbit SPI2JCR (jackrabbit-spi2jcr)
-    This component contains a SPI implementation wrapping around an
-    implementation of JSR-170.
-
-  * Jackrabbit JCR2SPI (jackrabbit-jcr2spi)
-    This component contains an implementation of the JSR-170 API and
-    covers the functionality that is not delegated to the SPI
-    implementation.
-
 Upgrading to Jackrabbit 1.6
 ---------------------------
 
-TODO
-
-Upgrading to Jackrabbit 1.5
----------------------------
-
-Apache Jackrabbit 1.4 is fully compatible with the previous 1.x releases.
+Apache Jackrabbit 1.6 is fully compatible with the previous 1.x releases.
 A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
 the relevant jar files with the new versions and adding some new dependencies.
 No changes to repository contents are needed.
 
-The Lucene dependency was upgraded to 2.3.2. No index file changes are needed.
-Note that Jackrabbit 1.5 only works with Lucene 2.3, not even with 2.2 or 2.4.
+The Lucene dependency was upgraded to 2.4.1. Note that Jackrabbit 1.6 only
+works with this version of Lucene, not with earlier versions and possibly
+not even with later versions due to the tight integration with Lucene
+internals (JCR-1855).
 
-The SLF4J dependency was upgraded to 1.5.3 as the default, but Jackrabbit will
-work with any SLF4J 1.x version in your classpath.
+The POI dependency was upgraded to 3.2-FINAL.
 
-The PDFBox dependency was upgraded to 0.7.3, which introduced new dependencies
-to the FontBox 0.1.0 and JempBox 0.2.0 libraries.
+Repository configuration has been extended with options for the repository
+lock mechanism. No changes to existing configuration files are needed unless
+you need to use this new feature (JCR-1605).
 
-The NekoHTML dependency has been upgraded to 1.9.7.
+Contributors
+------------
 
-The POI dependency was upgraded to 3.0.2-FINAL, which introduced new
-dependencies to commons-logging and log4j. If you use the Maven dependency
-mechanism then you may want to override these dependencies with something
-like jcl104-over-slf4j to avoid using multiple different logging frameworks.
+The following people have contributed to this release by submitting bug
+reports or by participating in the issue resolution process.
 
-A new dependency to Commons IO 1.4 has been added. Make sure that Commons IO
-is available in your classpath.
+    Alessandro Cosenza      Dominique Pfister        Murray Armfield
+    Alexander Klimetschek   Eric Wout van der Steen  Nicolas Toper
+    Angela Schreiber        Fabrizio Giustina        Oleg Alexeyev
+    Ard Schrijvers          Felix Meschberger        Paco Avila
+    Arthur Meyer            Greg Klebus              Roman Puchkovskiy
+    Attila Király           Jacco van Weert          Ryan Vanderwerf
+    Bart van der Schans     James Abley              Sandrine Raffalli
+    Boni Gopalan            Jason Gritman            Savvas Triantafyllou
+    Brian Whipple           Jukka Zitting            Sébastien Launay
+    Cédric Damioli          Julian Reschke           Stefan Guggisberg
+    Charles Brooking        Julian Sedding           Stephane Landelle
+    Christian               Ken Yue                  Thomas Fromm
+    Christophe Lombart      Marcel Reutegger         Thomas Mueller
+    Claus Köll              Marius Ropotica          Tobias Bocanegra
+    Dan Diephouse           Martijn Hendriks         Torsten Weck
+    Dave Brosius            Micah Whitacre           Tyson Norris
+    Dirk Feufel             Michael Dürig            Yoav Landman
 
-Repository configuration has been extended with options for the new JSR 283
-security. However, no changes to existing configuration files are needed
-unless you want to enable these new features. Note that the new JSR 283
-security feature is a development preview and may change before JCR 2.0.
-
-Note that the configuration file parser will now use strict XML validation
-if you include a <!DOCTYPE> setting in your configuration file. You can
-disable this feature simply by removing the <!DOCTYPE> setting.
-
-Upgrading to Jackrabbit 1.4
----------------------------
-
-Apache Jackrabbit 1.4 is fully compatible with the previous 1.x releases.
-A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
-the relevant jar files with the new versions and adding some new dependencies.
-No changes to repository contents are needed.
-
-Jackrabbit 1.4 introduces the SPI layer described above, and in addition to
-it's earlier dependencies the jackrabbit-core component now also needs the
-jackrabbit-spi and jackrabbit-spi-commons components in the classpath.
-
-A number of classes in jackrabbit-jcr-commons have been deprecated, and you
-should check for the suggested replacements if you use those classes in your
-applications.
-
-The Lucene dependency was upgraded to 2.2.0, and so you need to upgrade
-also the lucene-core jar file in your classpath when upgrading
-jackrabbit-core. No index file changes are needed.
-
-Repository configuration has been extended with a number of options for
-storage, locking and indexing strategies. However, no changes to existing
-configuration files are needed unless you want to enable these new features.
-
-Upgrading to Jackrabbit 1.3
----------------------------
-
-Apache Jackrabbit 1.3 is fully compatible with the previous 1.x releases.
-A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
-the relevant jar files with the new versions. No changes to repository
-contents are needed.
-
-See below for a more detailed description of the structural changes in
-the Apache Jackrabbit 1.2 release.
-
-Upgrading to Jackrabbit 1.2
----------------------------
-
-The most notable effect of the component restructuring in the 1.2 release
-was that the previous jackrabbit-core component has been split in three
-pieces: jackrabbit-api, jackrabbit-jcr-commons, and jackrabbit-core. Thus
-you need to replace the previous jackrabbit-core-1.x.jar file with the
-three new jar archives.
-
-The structure of the WebDAV components have also changed. WebDAV support
-now consists of the webapp component jackrabbit-webapp and the libraries
-jackrabbit-webdav and jackrabbit-jcr-server.
-
-The Apache Lucene dependency used for full text indexing has been upgraded
-to version 2.0 in this release. Lucene 2.0 is able to continue using
-existing index files, but you can also manually recreate the index with
-Lucene 2.0 extensions by removing the "index" directories of a closed
-repository. Jackrabbit will automatically re-index content when the
-repository is next started.
-
-Also the Apache Derby dependency has been upgraded to version 10.2.
-Like Lucene, the new Derby version can keep using existing database files.
-New repositories and workspaces will however be created using extensions
-and improvements introduced in the 10.2 version.
-
-Changes and known issues in this release
-----------------------------------------
-
-All the changes (new features, improvements, bug fixes) and known issues
-in this release are documented in the Jackrabbit issue tracker at:
-
-    https://issues.apache.org/jira/browse/JCR
+Thank you to everyone involved!
 
 About Apache Jackrabbit
 -----------------------
