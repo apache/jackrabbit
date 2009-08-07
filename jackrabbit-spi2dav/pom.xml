@@ -17,7 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-spi2dav</artifactId>
@@ -34,12 +34,12 @@
 
   <scm>
     <connection>
-        scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/1.6.0/jackrabbit-spi2dav
+        scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2dav
     </connection>
       <developerConnection>
-          scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/1.6.0/jackrabbit-spi2dav
+          scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2dav
       </developerConnection>
-      <url>http://svn.apache.org/viewvc/jackrabbit/tags/1.6.0/jackrabbit-spi2dav</url>
+      <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi2dav</url>
   </scm>
 
   <build>
@@ -71,28 +71,28 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
       <classifier />
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi-commons</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webdav</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-server</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>xerces</groupId>
@@ -124,20 +124,20 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-tests</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr2spi</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
       <classifier />
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr2spi</artifactId>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -145,7 +145,7 @@
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
       <classifier>tests</classifier>
-      <version>1.6.0</version>
+      <version>1.6.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
