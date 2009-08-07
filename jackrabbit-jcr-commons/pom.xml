@@ -34,16 +34,6 @@
   <description>General purpose classes for use with the JCR API</description>
   <packaging>bundle</packaging>
 
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-jcr-commons</url>
-  </scm>
-
   <build>
     <plugins>
       <plugin>

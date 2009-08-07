@@ -33,16 +33,6 @@
   <name>Jackrabbit Text Extractors</name>
   <description>Classes to extract text content from binary documents</description>
 
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-text-extractors
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-text-extractors
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-text-extractors</url>
-  </scm>
-
   <build>
     <plugins>
       <plugin>

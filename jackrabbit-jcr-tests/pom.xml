@@ -33,17 +33,6 @@
   <name>Jackrabbit JCR Tests</name>
   <description>JCR API test cases</description>
 
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-tests
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-tests
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-jcr-tests</url>
-  </scm>
-
-
   <build>
     <plugins>
       <plugin>

@@ -32,16 +32,6 @@
   <artifactId>jackrabbit-spi2jcr</artifactId>
   <name>Jackrabbit SPI to JCR</name>
 
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2jcr
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2jcr
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi2jcr</url>
-  </scm>
-
   <build>
     <plugins>
       <plugin>
@@ -171,4 +161,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
 </project>

@@ -32,16 +32,6 @@
   <artifactId>jackrabbit-spi-commons</artifactId>
   <name>Jackrabbit SPI Commons</name>
 
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi-commons
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi-commons
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi-commons</url>
-  </scm>
-
   <build>
     <plugins>
       <plugin>
