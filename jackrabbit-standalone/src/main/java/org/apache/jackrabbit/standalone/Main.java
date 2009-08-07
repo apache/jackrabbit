@@ -185,10 +185,7 @@ public class Main {
         }
 
         message("Creating a repository copy in " + targetDir);
-
-        RepositoryCopier copier = new RepositoryCopier(source, target);
-        copier.copy();
-
+        RepositoryCopier.copy(source, target);
         message("The repository has been successfully copied.");
     }
 
