@@ -16,18 +16,21 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -98,20 +101,24 @@ public class PersistenceCopier {
      * are automatically skipped.
      *
      * @param id identifier of the node to be copied
-     * @throws Exception if the copy operation fails
+     * @throws RepositoryException if the copy operation fails
      */
-    public void copy(NodeId id) throws Exception {
+    public void copy(NodeId id) throws RepositoryException {
         if (!exclude.contains(id)) {
-            NodeState node = source.load(id);
+            try {
+                NodeState node = source.load(id);
 
-            Iterator iterator = node.getChildNodeEntries().iterator();
-            while (iterator.hasNext()) {
-                ChildNodeEntry entry = (ChildNodeEntry) iterator.next();
-                copy(entry.getId());
+                Iterator iterator = node.getChildNodeEntries().iterator();
+                while (iterator.hasNext()) {
+                    ChildNodeEntry entry = (ChildNodeEntry) iterator.next();
+                    copy(entry.getId());
+                }
+
+                copy(node);
+                exclude.add(id);
+            } catch (ItemStateException e) {
+                throw new RepositoryException("Unable to copy " + id, e);
             }
-
-            copy(node);
-            exclude.add(id);
         }
     }
 
@@ -120,66 +127,73 @@ public class PersistenceCopier {
      * to the target persistence manager.
      *
      * @param sourceNode source node state
-     * @throws Exception if the copy operation fails
+     * @throws RepositoryException if the copy operation fails
      */
-    private void copy(NodeState sourceNode) throws Exception {
-        ChangeLog changes = new ChangeLog();
+    private void copy(NodeState sourceNode) throws RepositoryException {
+        try {
+            ChangeLog changes = new ChangeLog();
 
-        // Copy the node state
-        NodeState targetNode = target.createNew(sourceNode.getNodeId());
-        targetNode.setParentId(sourceNode.getParentId());
-        targetNode.setDefinitionId(sourceNode.getDefinitionId());
-        targetNode.setNodeTypeName(sourceNode.getNodeTypeName());
-        targetNode.setMixinTypeNames(sourceNode.getMixinTypeNames());
-        targetNode.setPropertyNames(sourceNode.getPropertyNames());
-        targetNode.setChildNodeEntries(sourceNode.getChildNodeEntries());
-        if (target.exists(targetNode.getNodeId())) {
-            changes.modified(targetNode);
-        } else {
-            changes.added(targetNode);
-        }
+            // Copy the node state
+            NodeState targetNode = target.createNew(sourceNode.getNodeId());
+            targetNode.setParentId(sourceNode.getParentId());
+            targetNode.setDefinitionId(sourceNode.getDefinitionId());
+            targetNode.setNodeTypeName(sourceNode.getNodeTypeName());
+            targetNode.setMixinTypeNames(sourceNode.getMixinTypeNames());
+            targetNode.setPropertyNames(sourceNode.getPropertyNames());
+            targetNode.setChildNodeEntries(sourceNode.getChildNodeEntries());
+            if (target.exists(targetNode.getNodeId())) {
+                changes.modified(targetNode);
+            } else {
+                changes.added(targetNode);
+            }
 
-        // Copy all associated property states
-        Iterator iterator = sourceNode.getPropertyNames().iterator();
-        while (iterator.hasNext()) {
-            Name name = (Name) iterator.next();
-            PropertyId id = new PropertyId(sourceNode.getNodeId(), name);
-            PropertyState sourceState = source.load(id);
-            PropertyState targetState = target.createNew(id);
-            targetState.setDefinitionId(sourceState.getDefinitionId());
-            targetState.setType(sourceState.getType());
-            targetState.setMultiValued(sourceState.isMultiValued());
-            InternalValue[] values = sourceState.getValues();
-            if (sourceState.getType() == PropertyType.BINARY) {
-                for (int i = 0; i < values.length; i++) {
-                    InputStream stream = values[i].getBLOBFileValue().getStream();
-                    try {
-                        values[i] = InternalValue.createTemporary(stream, store);
-                    } finally {
-                        stream.close();
+            // Copy all associated property states
+            Iterator iterator = sourceNode.getPropertyNames().iterator();
+            while (iterator.hasNext()) {
+                Name name = (Name) iterator.next();
+                PropertyId id = new PropertyId(sourceNode.getNodeId(), name);
+                PropertyState sourceState = source.load(id);
+                PropertyState targetState = target.createNew(id);
+                targetState.setDefinitionId(sourceState.getDefinitionId());
+                targetState.setType(sourceState.getType());
+                targetState.setMultiValued(sourceState.isMultiValued());
+                InternalValue[] values = sourceState.getValues();
+                if (sourceState.getType() == PropertyType.BINARY) {
+                    for (int i = 0; i < values.length; i++) {
+                        InputStream stream = values[i].getBLOBFileValue().getStream();
+                        try {
+                            values[i] = InternalValue.createTemporary(stream, store);
+                        } finally {
+                            stream.close();
+                        }
                     }
                 }
+                targetState.setValues(values);
+                if (target.exists(targetState.getPropertyId())) {
+                    changes.modified(targetState);
+                } else {
+                    changes.added(targetState);
+                }
             }
-            targetState.setValues(values);
-            if (target.exists(targetState.getPropertyId())) {
-                changes.modified(targetState);
-            } else {
-                changes.added(targetState);
+
+            // Copy all node references
+            NodeReferencesId refsId = new NodeReferencesId(sourceNode.getNodeId());
+            if (source.exists(refsId)) {
+                changes.modified(source.load(refsId));
+            } else if (target.exists(refsId)) {
+                 NodeReferences references = target.load(refsId);
+                references.clearAllReferences();
+                changes.modified(references);
             }
-        }
 
-        // Copy all node references
-        NodeReferencesId refsId = new NodeReferencesId(sourceNode.getNodeId());
-        if (source.exists(refsId)) {
-            changes.modified(source.load(refsId));
-        } else if (target.exists(refsId)) {
-            NodeReferences references = target.load(refsId);
-            references.clearAllReferences();
-            changes.modified(references);
+            // Persist the copied states
+            target.store(changes);
+        } catch (IOException e) {
+            throw new RepositoryException(
+                    "Unable to copy binary values of " + sourceNode, e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Unable to copy " + sourceNode, e);
         }
-
-        // Persist the copied states
-        target.store(changes);
     }
 
 }

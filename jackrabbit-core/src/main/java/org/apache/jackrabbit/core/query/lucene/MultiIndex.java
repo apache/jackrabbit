@@ -241,7 +241,7 @@ public class MultiIndex {
         removeDeletable();
 
         // initialize IndexMerger
-        merger = new IndexMerger(this, handler.getIndexMergerPoolSize());
+        merger = new IndexMerger(this);
         merger.setMaxMergeDocs(handler.getMaxMergeDocs());
         merger.setMergeFactor(handler.getMergeFactor());
         merger.setMinMergeDocs(handler.getMinMergeDocs());
