@@ -19,12 +19,9 @@ package org.apache.jackrabbit.spi2davex;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
@@ -39,13 +36,11 @@ import org.xml.sax.SAXException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.Binary;
 import javax.jcr.ValueFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -56,18 +51,19 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.TimeZone;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * <code>ValueFactoryImpl</code>...
  */
-class QValueFactoryImpl extends AbstractQValueFactory {
+class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl {
+
+    /**
+     * A dummy value for calling the constructor of AbstractQValue
+     */
+    private static final Object DUMMY_VALUE = new Serializable() {
+        private static final long serialVersionUID = -5667366239976271493L;
+    };
 
     private final ValueLoader loader;
     private final ValueFactory vf;
@@ -108,421 +104,18 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         return loader.loadType(uri);
     }
 
-    //------------------------------------------------------< QValueFactory >---
-    /**
-     * @see QValueFactory#create(String, int)
-     */
-    public QValue create(String value, int type) throws RepositoryException {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        try {
-            switch (type) {
-                case PropertyType.BOOLEAN:
-                    return (Boolean.valueOf(value).booleanValue()) ?
-                            QValueImpl.TRUE :
-                            QValueImpl.FALSE;
-                case PropertyType.DATE: {
-                        Calendar cal = ISO8601.parse(value);
-                        if (cal == null) {
-                            throw new ValueFormatException("not a valid date: " + value);
-                        }
-                        return new DateQValue(cal);
-                    }
-                case PropertyType.DOUBLE:
-                    return new QValueImpl(Double.valueOf(value));
-                case PropertyType.LONG:
-                    return new QValueImpl(Long.valueOf(value));
-                case PropertyType.PATH:
-                    return new QValueImpl(PATH_FACTORY.create(value));
-                case PropertyType.NAME:
-                    return new QValueImpl(NAME_FACTORY.create(value));
-                case PropertyType.STRING:
-                case PropertyType.REFERENCE:
-                case PropertyType.WEAKREFERENCE:
-                    return new QValueImpl(value, type);
-                case PropertyType.BINARY:
-                    return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
-                case PropertyType.DECIMAL:
-                    return new QValueImpl(new BigDecimal(value));
-                case PropertyType.URI:
-                    return new QValueImpl(URI.create(value));
-            }
-        } catch (IllegalArgumentException ex) {
-            // given String value cannot be converted to Long/Double/Path/Name
-            throw new ValueFormatException(ex);
-        } catch (UnsupportedEncodingException ex) {
-            throw new RepositoryException(ex);
-        }
-
-        // none of the legal types:
-        throw new IllegalArgumentException("illegal type");
-    }
-
-    /**
-     * @see QValueFactory#create(Calendar)
-     */
-    public QValue create(Calendar value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        // Calendar is not constant, must create a clone
-        return new DateQValue((Calendar) value.clone());
-    }
-
-    /**
-     * @see QValueFactory#create(double)
-     */
-    public QValue create(double value) {
-        return new QValueImpl(Double.valueOf(value));
-    }
-
-    /**
-     * @see QValueFactory#create(long)
-     */
-    public QValue create(long value) {
-        return new QValueImpl(Long.valueOf(value));
-    }
-
-    /**
-     * @see QValueFactory#create(boolean)
-     */
-    public QValue create(boolean value) throws RepositoryException {
-        return (value) ? QValueImpl.TRUE : QValueImpl.FALSE;
-    }
-
-    /**
-     * @see QValueFactory#create(URI)
-     */
-    public QValue create(URI value) {
-        return new QValueImpl(value);
-    }
-
-    /**
-     * @see QValueFactory#create(URI)
-     */
-    public QValue create(BigDecimal value) {
-        return new QValueImpl(value);
-    }
-
-    /**
-     * @see QValueFactory#create(Name)
-     */
-    public QValue create(Name value) {
-        return new QValueImpl(value);
-    }
-
-    /**
-     * @see QValueFactory#create(Path)
-     */
-    public QValue create(Path value) {
-        return new QValueImpl(value);
-    }
-
-    /**
-     * @see QValueFactory#create(byte[])
-     */
-    public QValue create(byte[] value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        return new BinaryQValue(value);
-    }
-
-    /**
-     * @see QValueFactory#create(InputStream)
-     */
-    public QValue create(InputStream value) throws IOException {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        return new BinaryQValue(value);
-    }
-
-    /**
-     * @see QValueFactory#create(File)
-     */
-    public QValue create(File value) throws IOException {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        return new BinaryQValue(value);
-    }
-
     //--------------------------------------------------------< Inner Class >---
-    /**
-     * <code>QValue</code> implementation for all valid <code>PropertyType</code>s
-     * except for BINARY.
-     * @see QValueFactoryImpl.BinaryQValue
-     */
-    private static class QValueImpl extends AbstractQValue implements Serializable {
-
-        private static final QValue TRUE = new QValueImpl(Boolean.TRUE);
-        private static final QValue FALSE = new QValueImpl(Boolean.FALSE);
-
-        private QValueImpl(String value, int type) {
-            super(value, type);
-        }
-
-        private QValueImpl(Long value) {
-            super(value);
-        }
-
-        private QValueImpl(Double value) {
-            super(value);
-        }
-
-        private QValueImpl(Boolean value) {
-            super(value);
-        }
-
-        private QValueImpl(Calendar value) {
-            super(value);
-        }
-
-        private QValueImpl(Name value) {
-            super(value);
-        }
-
-        private QValueImpl(Path value) {
-            super(value);
-        }
-
-        protected QValueImpl(BigDecimal value) {
-            super(value);
-        }
-
-        protected QValueImpl(URI value) {
-            super(value);
-        }
-
-        //---------------------------------------------------------< QValue >---
-        /**
-         * @see QValue#getString()
-         */
-        public String getString() {
-            return val.toString();
-        }
 
         /**
-         * @see QValue#getStream()
-         */
-        public InputStream getStream() throws RepositoryException {
-            try {
-                // convert via string
-                return new ByteArrayInputStream(getString().getBytes(DEFAULT_ENCODING));
-            } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(QValueFactoryImpl.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
-            }
-        }
-
-        /**
-         * @see org.apache.jackrabbit.spi.QValue#getDecimal()
-         */
-        public BigDecimal getDecimal() throws RepositoryException {
-            if (val instanceof BigDecimal) {
-                return (BigDecimal) val;
-            } else if (val instanceof Double) {
-                return new BigDecimal((Double) val);
-            } else if (val instanceof Long) {
-                return new BigDecimal((Long) val);
-            } else if (val instanceof Calendar) {
-                return new BigDecimal(((Calendar) val).getTimeInMillis());
-            } else {
-                try {
-                    return new BigDecimal(getString());
-                } catch (NumberFormatException e) {
-                    throw new ValueFormatException("not a valid decimal string: " + getString(), e);
-                }
-            }
-        }
-
-        /**
-         * @see QValue#getCalendar()
-         */
-        public Calendar getCalendar() throws RepositoryException {
-            if (val instanceof Calendar) {
-                return (Calendar) ((Calendar) val).clone();
-            } else if (val instanceof Double) {
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
-                cal.setTimeInMillis(((Double) val).longValue());
-                return cal;
-            } else if (val instanceof Long) {
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
-                cal.setTimeInMillis(((Long) val).longValue());
-                return cal;
-            } else if (val instanceof BigDecimal) {
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
-                cal.setTimeInMillis(((BigDecimal) val).longValue());
-                return cal;
-            } else {
-                String str = getString();
-                Calendar cal = ISO8601.parse(str);
-                if (cal == null) {
-                    int type = getType();
-                    if (type == PropertyType.LONG) {
-                        cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
-                        cal.setTimeInMillis(new Long(str).longValue());
-                    } else if (type == PropertyType.DOUBLE) {
-                        cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
-                        cal.setTimeInMillis(new Double(str).longValue());
-                    } else {
-                        throw new ValueFormatException("not a date string: " + getString());
-                    }
-                }
-                return cal;
-            }
-        }
-
-        /**
-         * @see QValue#getDouble()
-         */
-        public double getDouble() throws RepositoryException {
-            if (val instanceof Double) {
-                return ((Double) val).doubleValue();
-            } else if (val instanceof BigDecimal) {
-                return ((BigDecimal) val).doubleValue();
-            } else if (val instanceof Calendar) {
-                return ((Calendar) val).getTimeInMillis();
-            } else {
-                try {
-                    return Double.parseDouble(getString());
-                } catch (NumberFormatException ex) {
-                    int type = getType();
-                    if (type == PropertyType.DATE) {
-                        Calendar cal = ISO8601.parse(getString());
-                        if (cal != null) {
-                            return cal.getTimeInMillis();
-                        }
-                    }
-                    throw new ValueFormatException("not a double: " + getString(), ex);
-                }
-            }
-        }
-
-        /**
-         * @see QValue#getLong()
-         */
-        public long getLong() throws RepositoryException {
-            if (val instanceof Long) {
-                return ((Long) val).longValue();
-            } else if (val instanceof Double) {
-                return ((Double) val).longValue();
-            } else if (val instanceof BigDecimal) {
-                return ((BigDecimal) val).longValue();
-            } else if (val instanceof Calendar) {
-                return ((Calendar) val).getTimeInMillis();
-            } else {
-                String str = getString();
-                try {
-                    return Long.parseLong(str);
-                } catch (NumberFormatException ex) {
-                    int type = getType();
-                    if (type == PropertyType.DOUBLE) {
-                        return new Double(str).longValue();
-                    } else if (type == PropertyType.DATE) {
-                        Calendar cal = ISO8601.parse(getString());
-                        if (cal != null) {
-                            return cal.getTimeInMillis();
-                        }
-                    }
-                    throw new ValueFormatException("not a long: " + getString(), ex);
-                }
-            }
-        }
-
-        /**
-         * @see QValue#getBinary()
-         */
-        public Binary getBinary() throws RepositoryException {
-            // TODO FIXME consolidate Binary implementations
-            return new Binary() {
-                public InputStream getStream() throws RepositoryException {
-                    return QValueImpl.this.getStream();
-                }
-
-                public int read(byte[] b, long position) throws IOException, RepositoryException {
-                    InputStream in = getStream();
-                    try {
-                        in.skip(position);
-                        return in.read(b);
-                    } finally {
-                        in.close();
-                    }
-                }
-
-                public long getSize() throws RepositoryException {
-                    return getLength();
-                }
-
-                public void dispose() {
-                }
-
-            };
-        }
-
-    }
-
-    //--------------------------------------------------------< Inner Class >---
-    /**
-     * Extension for values of type {@link PropertyType#DATE}.
-     */
-    private class DateQValue extends QValueImpl {
-
-        private final String formattedStr;
-
-        private DateQValue(Calendar value) {
-            super(value);
-            formattedStr = ISO8601.format(value);
-        }
-
-        /**
-         * @return The formatted String of the internal Calendar value.
-         * @see QValue#getString()
-         * @see ISO8601#format(Calendar)
-         */
-        public String getString() {
-            return formattedStr;
-        }
-
-        //---------------------------------------------------------< Object >---
-        /**
-         * @param obj The object to be checked for equality.
-         * @return true if the given Object is a <code>DateQValue</code> with an
-         * equal String representation.
-         * @see Object#equals(Object)
-         */
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof DateQValue) {
-                DateQValue other = (DateQValue) obj;
-                return formattedStr.equals(other.formattedStr);
-            } else if (obj instanceof QValueImpl) {
-                QValueImpl other = (QValueImpl) obj;
-                return other.getType() == PropertyType.DATE && formattedStr.equals(other.getString());
-            }
-            return false;
-        }
-
-        /**
-         * @return the hashCode of the formatted String of the Calender value.
-         * @see Object#hashCode()
-         */
-        public int hashCode() {
-            return formattedStr.hashCode();
-        }
-    }
-
-    //--------------------------------------------------------< Inner Class >---
-    /**
      * <code>BinaryQValue</code> represents a binary <code>Value</code> which is
      * backed by a resource or byte[]. Unlike <code>BinaryValue</code> it has no
      * state, i.e. the <code>getStream()</code> method always returns a fresh
      * <code>InputStream</code> instance.
      */
-    private class BinaryQValue implements QValue, Serializable, ValueLoader.Target {
+    private class BinaryQValue extends AbstractQValue implements ValueLoader.Target {
+
+        private static final long serialVersionUID = 2736654000266713469L;
+
         /**
          * empty array
          */
@@ -551,11 +144,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         private byte[] buffer;
 
         /**
-         * Converted text
-         */
-        private transient String text = null;
-
-        /**
          * URI to retrieve the value from
          */
         private String uri;
@@ -564,62 +152,11 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         private boolean initialized = true;
 
         private BinaryQValue(long length, String uri, int index) {
+            super(DUMMY_VALUE, PropertyType.BINARY);
             this.length = length;
             this.uri = uri;
             this.index = index;
             initialized = false;
-        }
-
-        /**
-         * Creates a new <code>BinaryQValue</code> instance from an
-         * <code>InputStream</code>. The contents of the stream is spooled
-         * to a temporary file or to a byte buffer if its size is smaller than
-         * {@link #MAX_BUFFER_SIZE}.
-         * <p/>
-         * The new instance represents a <i>temporary</i> value whose dynamically
-         * allocated resources will be freed explicitly on {@link #discard()}.
-         *
-         * @param in stream to be represented as a <code>BinaryQValue</code> instance
-         * @throws IOException if an error occurs while reading from the stream or
-         *                     writing to the temporary file
-         */
-        private BinaryQValue(InputStream in) throws IOException {
-            init(in, true);
-        }
-
-
-        /**
-         * Creates a new <code>BinaryQValue</code> instance from a
-         * <code>byte[]</code> array.
-         *
-         * @param bytes byte array to be represented as a <code>BinaryQValue</code>
-         *              instance
-         */
-        private BinaryQValue(byte[] bytes) {
-            buffer = bytes;
-            file = null;
-            // this instance is not backed by a temporarily allocated buffer
-            temp = false;
-        }
-
-        /**
-         * Creates a new <code>BinaryQValue</code> instance from a <code>File</code>.
-         *
-         * @param file file to be represented as a <code>BinaryQValue</code> instance
-         * @throws IOException if the file can not be read
-         */
-        private BinaryQValue(File file) throws IOException {
-            String path = file.getCanonicalPath();
-            if (!file.isFile()) {
-                throw new IOException(path + ": the specified file does not exist");
-            }
-            if (!file.canRead()) {
-                throw new IOException(path + ": the specified file can not be read");
-            }
-            // this instance is backed by a 'real' file
-            this.file = file;
-            // this instance is not backed by temporarily allocated resource/buffer
-            temp = false;
         }
 
         /**
@@ -675,6 +212,7 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                     }
                 }
             } finally {
+                in.close();
                 if (out != null) {
                     out.close();
                 }
@@ -693,12 +231,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         //---------------------------------------------------------< QValue >---
-        /**
-         * @see QValue#getType()
-         */
-        public int getType() {
-            return PropertyType.BINARY;
-        }
 
         /**
          * Returns the length of this <code>BinaryQValue</code>.
@@ -722,32 +254,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 // value has not yet been read from the server.
                 return length;
             }
-        }
-
-        /**
-         * @see QValue#getString()
-         */
-        public String getString() throws RepositoryException {
-            if (text == null) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                try {
-                    spool(out);
-                    byte[] data = out.toByteArray();
-                    text = new String(data, QValueFactoryImpl.DEFAULT_ENCODING);
-                } catch (UnsupportedEncodingException e) {
-                    throw new RepositoryException(QValueFactoryImpl.DEFAULT_ENCODING
-                        + " not supported on this platform", e);
-                } catch (IOException e) {
-                    throw new ValueFormatException("conversion from stream to string failed", e);
-                } finally {
-                    try {
-                        out.close();
-                    } catch (IOException e) {
-                        // ignore
-                    }
-                }
-            }
-            return text;
         }
 
         /**
@@ -786,70 +292,10 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         /**
-         * @see QValue#getCalendar()
-         */
-        public Calendar getCalendar() throws RepositoryException {
-             Calendar cal = ISO8601.parse(getString());
-             if (cal == null) {
-                 throw new ValueFormatException("not a date string: " + getString());
-             } else {
-                 return cal;
-             }
-        }
-
-        /**
-         * @see QValue#getDouble()
-         */
-        public double getDouble() throws RepositoryException {
-            try {
-                return Double.parseDouble(getString());
-            } catch (NumberFormatException ex) {
-                throw new ValueFormatException(ex);
-            }
-        }
-
-        /**
-         * @see QValue#getLong()
-         */
-        public long getLong() throws RepositoryException {
-            try {
-                return Long.parseLong(getString());
-            } catch (NumberFormatException ex) {
-                throw new ValueFormatException(ex);
-            }
-        }
-
-        public boolean getBoolean() throws RepositoryException {
-            return new Boolean(getString()).booleanValue();
-        }
-
-        /**
          * @see QValue#getPath()
          */
         public Path getPath() throws RepositoryException {
             throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @see QValue#getDecimal()
-         */
-        public BigDecimal getDecimal() throws RepositoryException {
-            try {
-                return new BigDecimal(getString());
-            } catch (NumberFormatException ex) {
-                throw new ValueFormatException(ex);
-            }
-        }
-
-        /**
-         * @see QValue#getURI()
-         */
-        public URI getURI() throws RepositoryException {
-            try {
-                return new URI(getString());
-            } catch (URISyntaxException ex) {
-                throw new ValueFormatException(ex);
-            }
         }
 
         /**
@@ -970,50 +416,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         //----------------------------------------------------------------------
-        /**
-         * Spools the contents of this <code>BinaryQValue</code> to the given
-         * output stream.
-         *
-         * @param out output stream
-         * @throws RepositoryException if the input stream for this
-         *                             <code>BinaryQValue</code> could not be obtained
-         * @throws IOException         if an error occurs while while spooling
-         */
-        private void spool(OutputStream out) throws RepositoryException, IOException {
-            InputStream in;
-            if (file != null) {
-                // this instance is backed by a 'real' file
-                try {
-                    in = new FileInputStream(file);
-                } catch (FileNotFoundException fnfe) {
-                    throw new RepositoryException("file backing binary value not found",
-                        fnfe);
-                }
-            } else if (buffer != null) {
-                // this instance is backed by an in-memory buffer
-                in = new ByteArrayInputStream(buffer);
-            } else {
-                // only uri present:
-                loadBinary();
-                if (buffer == null) {
-                    in = new FileInputStream(file);
-                } else {
-                    in = new ByteArrayInputStream(buffer);
-                }
-            }
-            try {
-                byte[] buffer = new byte[0x2000];
-                int read;
-                while ((read = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, read);
-                }
-            } finally {
-                try {
-                    in.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
 
         private synchronized void loadBinary() throws RepositoryException, IOException {
             if (uri == null) {
