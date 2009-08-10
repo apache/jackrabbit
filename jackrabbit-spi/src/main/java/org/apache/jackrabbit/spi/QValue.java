@@ -82,7 +82,7 @@ public interface QValue {
 
     /**
      * Returns an <code>InputStream</code> representation of this <code>QValue</code>
-     * object.
+     * object. This method always returns a new stream.
      *
      * @return A stream representation of this value.
      * @throws RepositoryException
