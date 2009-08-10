@@ -41,6 +41,11 @@ public class AddPropertyTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        super.tearDown();
+    }
+
     private static void assertItemStatus(Item item, int status) throws NotExecutableException {
         if (!(item instanceof ItemImpl)) {
             throw new NotExecutableException("org.apache.jackrabbit.jcr2spi.ItemImpl expected");

@@ -39,6 +39,7 @@ public class MoveCombinedTest extends AbstractMoveTest {
     protected void tearDown() throws Exception {
         if (testSession != null) {
             testSession.logout();
+            testSession = null;
         }
         super.tearDown();
     }
