@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.value;
 
 import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.RepositoryException;
 
@@ -48,7 +47,7 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
     /**
      * The current ref count. Initially set to one.
      */
-    private final AtomicInteger refCount = new AtomicInteger(1);
+    private int refCount = 1;
 
     /**
      * Whether this instance has been discarded and cannot be used anymore.
@@ -70,9 +69,9 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
     /**
      * Discards the underyling value if the reference count drops to zero.
      */
-    public void dispose() {
-        if (refCount.get() > 0) {
-            if (refCount.decrementAndGet() == 0) {
+    public synchronized void dispose() {
+        if (refCount > 0) {
+            if (--refCount == 0) {
                 log.debug("{}@refCount={}, discarding value...",
                         System.identityHashCode(this), refCount);
                 value.dispose();
@@ -101,12 +100,12 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
      * @throws RepositoryException if an error occurs while creating the copy or
      *                             if this value has been disposed already.
      */
-    BLOBFileValue copy() throws RepositoryException {
-        if (refCount.get() <= 0) {
+    synchronized BLOBFileValue copy() throws RepositoryException {
+        if (refCount <= 0) {
             throw new RepositoryException("this BLOBFileValue has been disposed");
         }
         BLOBFileValue bin = new RefCountBinary();
-        refCount.incrementAndGet();
+        refCount++;
         log.debug("{}@refCount={}", System.identityHashCode(this), refCount);
         return bin;
     }
