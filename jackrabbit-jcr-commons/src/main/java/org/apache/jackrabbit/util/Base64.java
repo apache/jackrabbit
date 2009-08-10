@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.io.BufferedWriter;
 
 /**
  * <code>Base64</code> provides Base64 encoding/decoding of strings and streams.
@@ -115,8 +116,15 @@ public class Base64 {
      */
     public static void encode(InputStream in, OutputStream out)
             throws IOException {
-        Writer writer = new OutputStreamWriter(out, CHARSET);
-        encode(in, writer);
+        Writer writer = new BufferedWriter(new OutputStreamWriter(out, CHARSET));
+        try {
+            encode(in, writer);
+        } finally {
+            try {
+                writer.flush();
+            } catch (IOException ignore) {
+            }
+        }
     }
 
     /**
