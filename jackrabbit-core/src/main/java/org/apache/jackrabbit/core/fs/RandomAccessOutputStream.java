@@ -23,6 +23,8 @@ import java.io.OutputStream;
  * Extends the regular <code>java.io.OutputStream</code> with a random
  * access facility. Multiple <code>write()</code> operations can be
  * positioned off sequence with the {@link #seek} method.
+ *
+ * @deprecated this class should no longer be used
  */
 public abstract class RandomAccessOutputStream extends OutputStream {
 

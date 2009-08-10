@@ -20,7 +20,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.slf4j.Logger;
@@ -37,7 +36,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.FileInputStream;
-import java.io.RandomAccessFile;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -569,7 +567,7 @@ public class DatabaseFileSystem implements FileSystem {
                     }
                     names.add(name);
                 }
-                return (String[]) names.toArray(new String[names.size()]);
+                return names.toArray(new String[names.size()]);
             } catch (SQLException e) {
                 String msg = "failed to list child entries of folder: " + folderPath;
                 log.error(msg, e);
@@ -604,7 +602,7 @@ public class DatabaseFileSystem implements FileSystem {
                 while (rs.next()) {
                     names.add(rs.getString(1));
                 }
-                return (String[]) names.toArray(new String[names.size()]);
+                return names.toArray(new String[names.size()]);
             } catch (SQLException e) {
                 String msg = "failed to list file entries of folder: " + folderPath;
                 log.error(msg, e);
@@ -645,7 +643,7 @@ public class DatabaseFileSystem implements FileSystem {
                     }
                     names.add(name);
                 }
-                return (String[]) names.toArray(new String[names.size()]);
+                return names.toArray(new String[names.size()]);
             } catch (SQLException e) {
                 String msg = "failed to list folder entries of folder: " + folderPath;
                 log.error(msg, e);
@@ -653,39 +651,6 @@ public class DatabaseFileSystem implements FileSystem {
             } finally {
                 closeResultSet(rs);
             }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void touch(String filePath) throws FileSystemException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
-        FileSystemPathUtil.checkFormat(filePath);
-
-        String parentDir = FileSystemPathUtil.getParentDir(filePath);
-        String name = FileSystemPathUtil.getName(filePath);
-
-        int count = 0;
-        synchronized (updateLastModifiedSQL) {
-            try {
-                Statement stmt = executeStmt(updateLastModifiedSQL, new Object[]{
-                        new Long(System.currentTimeMillis()),
-                        parentDir,
-                        name});
-                count = stmt.getUpdateCount();
-            } catch (SQLException e) {
-                String msg = "failed to touch file: " + filePath;
-                log.error(msg, e);
-                throw new FileSystemException(msg, e);
-            }
-        }
-
-        if (count == 0) {
-            throw new FileSystemException("no such file: " + filePath);
         }
     }
 
@@ -818,163 +783,6 @@ public class DatabaseFileSystem implements FileSystem {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public RandomAccessOutputStream getRandomAccessOutputStream(final String filePath)
-            throws FileSystemException, UnsupportedOperationException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
-        FileSystemPathUtil.checkFormat(filePath);
-
-        final String parentDir = FileSystemPathUtil.getParentDir(filePath);
-        final String name = FileSystemPathUtil.getName(filePath);
-
-        if (!isFolder(parentDir)) {
-            throw new FileSystemException("path not found: " + parentDir);
-        }
-
-        if (isFolder(filePath)) {
-            throw new FileSystemException("path denotes folder: " + filePath);
-        }
-
-        try {
-            TransientFileFactory fileFactory = TransientFileFactory.getInstance();
-            final File tmpFile = fileFactory.createTransientFile("bin", null, null);
-
-            // @todo FIXME use java.sql.Blob
-
-            if (isFile(filePath)) {
-                // file entry exists, spool contents to temp file first
-                InputStream in = getInputStream(filePath);
-                OutputStream out = new FileOutputStream(tmpFile);
-                try {
-                    IOUtils.copy(in, out);
-                } finally {
-                    out.close();
-                    in.close();
-                }
-            }
-
-            return new RandomAccessOutputStream() {
-                private final RandomAccessFile raf =
-                    new RandomAccessFile(tmpFile, "rw");
-
-                public void close() throws IOException {
-                    raf.close();
-
-                    InputStream in = null;
-                    try {
-                        if (isFile(filePath)) {
-                            synchronized (updateDataSQL) {
-                                long length = tmpFile.length();
-                                in = new FileInputStream(tmpFile);
-                                executeStmt(updateDataSQL,
-                                        new Object[]{
-                                            new SizedInputStream(in, length),
-                                            new Long(System.currentTimeMillis()),
-                                            new Long(length),
-                                            parentDir,
-                                            name
-                                        });
-                            }
-                        } else {
-                            synchronized (insertFileSQL) {
-                                long length = tmpFile.length();
-                                in = new FileInputStream(tmpFile);
-                                executeStmt(insertFileSQL,
-                                        new Object[]{
-                                            parentDir,
-                                            name,
-                                            new SizedInputStream(in, length),
-                                            new Long(System.currentTimeMillis()),
-                                            new Long(length)
-                                        });
-                            }
-                        }
-
-                    } catch (Exception e) {
-                        IOException ioe = new IOException(e.getMessage());
-                        ioe.initCause(e);
-                        throw ioe;
-                    } finally {
-                        if (in != null) {
-                            in.close();
-                        }
-                        // temp file can now safely be removed
-                        tmpFile.delete();
-                    }
-                }
-
-                public void seek(long position) throws IOException {
-                    raf.seek(position);
-                }
-
-                public void write(int b) throws IOException {
-                    raf.write(b);
-                }
-
-                public void flush() /*throws IOException*/ {
-                    // nop
-                }
-
-                public void write(byte[] b) throws IOException {
-                    raf.write(b);
-                }
-
-                public void write(byte[] b, int off, int len) throws IOException {
-                    raf.write(b, off, len);
-                }
-            };
-        } catch (Exception e) {
-            String msg = "failed to open output stream to file: " + filePath;
-            log.error(msg, e);
-            throw new FileSystemException(msg, e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void copy(String srcPath, String destPath) throws FileSystemException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
-        FileSystemPathUtil.checkFormat(srcPath);
-        FileSystemPathUtil.checkFormat(destPath);
-
-        if (isFolder(srcPath)) {
-            // src is a folder
-            copyDeepFolder(srcPath, destPath);
-        } else {
-            // src is a file
-            copyFile(srcPath, destPath);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void move(String srcPath, String destPath) throws FileSystemException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
-        FileSystemPathUtil.checkFormat(srcPath);
-        FileSystemPathUtil.checkFormat(destPath);
-
-        // @todo optimize move (use sql update stmts)
-        copy(srcPath, destPath);
-        if (isFile(srcPath)) {
-            deleteFile(srcPath);
-        } else {
-            deleteFolder(srcPath);
-        }
-    }
-
     //----------------------------------< misc. helper methods & overridables >
 
     /**
@@ -1085,7 +893,7 @@ public class DatabaseFileSystem implements FileSystem {
             throws SQLException {
         int trials = 2;
         while (true) {
-            PreparedStatement stmt = (PreparedStatement) preparedStatements.get(sql);
+            PreparedStatement stmt = preparedStatements.get(sql);
             try {
                 for (int i = 0; i < params.length; i++) {
                     if (params[i] instanceof SizedInputStream) {
@@ -1422,90 +1230,6 @@ public class DatabaseFileSystem implements FileSystem {
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
             }
-        }
-    }
-
-    /**
-     * Recursively copies the given folder to the given destination.
-     *
-     * @param srcPath folder to be copied
-     * @param destPath destination path to which the folder is to be copied
-     * @throws FileSystemException if an error occurs
-     */
-    protected void copyDeepFolder(String srcPath, String destPath)
-            throws FileSystemException {
-
-        if (!exists(destPath)) {
-            createDeepFolder(destPath);
-        }
-
-        String[] names = listFolders(srcPath);
-
-        for (int i = 0; i < names.length; i++) {
-            String src = (FileSystemPathUtil.denotesRoot(srcPath)
-                    ? srcPath + names[i] : srcPath + FileSystem.SEPARATOR + names[i]);
-            String dest = (FileSystemPathUtil.denotesRoot(destPath)
-                    ? destPath + names[i] : destPath + FileSystem.SEPARATOR + names[i]);
-            copyDeepFolder(src, dest);
-        }
-
-        synchronized (copyFilesSQL) {
-            try {
-                executeStmt(copyFilesSQL, new Object[]{destPath, srcPath});
-            } catch (SQLException e) {
-                String msg = "failed to copy file entries from " + srcPath + " to " + destPath;
-                log.error(msg, e);
-                throw new FileSystemException(msg, e);
-            }
-        }
-    }
-
-    /**
-     * Copies the given file entry to the given destination path. The parent
-     * folder of the destination path will be created if it doesn't exist
-     * already. If the destination path refers to an existing file, the file
-     * will be overwritten.
-     *
-     * @param srcPath file to be copied
-     * @param destPath destination path to which the file is to be copied
-     * @throws FileSystemException if an error occurs
-     */
-    protected void copyFile(String srcPath, String destPath)
-            throws FileSystemException {
-
-        final String srcParentDir = FileSystemPathUtil.getParentDir(srcPath);
-        final String srcName = FileSystemPathUtil.getName(srcPath);
-
-        final String destParentDir = FileSystemPathUtil.getParentDir(destPath);
-        final String destName = FileSystemPathUtil.getName(destPath);
-
-        if (!exists(destParentDir)) {
-            createDeepFolder(destParentDir);
-        }
-        if (isFile(destPath)) {
-            deleteFile(destPath);
-        }
-
-        int count = 0;
-        synchronized (copyFileSQL) {
-            try {
-                Statement stmt = executeStmt(
-                        copyFileSQL,
-                        new Object[]{
-                                destParentDir,
-                                destName,
-                                srcParentDir,
-                                srcName});
-                count = stmt.getUpdateCount();
-            } catch (SQLException e) {
-                String msg = "failed to copy file from " + srcPath + " to " + destPath;
-                log.error(msg, e);
-                throw new FileSystemException(msg, e);
-            }
-        }
-
-        if (count == 0) {
-            throw new FileSystemException("no such file: " + srcPath);
         }
     }
 

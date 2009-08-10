@@ -31,27 +31,12 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 
 public class MemoryFileSystem implements FileSystem {
 
     private Map entries = new HashMap();
 
     public void close() {
-    }
-
-    public void copy(String srcPath, String destPath)
-            throws FileSystemException {
-        assertExistence(srcPath);
-        MemoryFile srcFile = getFile(srcPath);
-        OutputStream destinationOutputStream = getOutputStream(destPath);
-        try {
-            destinationOutputStream.write(srcFile.getData());
-        } catch (IOException e) {
-            throw new FileSystemException(e.getMessage(), e);
-        } finally {
-            IOUtils.closeQuietly(destinationOutputStream);
-        }
     }
 
     private MemoryFile getFile(String filePath) throws FileSystemException {
@@ -159,12 +144,6 @@ public class MemoryFileSystem implements FileSystem {
         };
     }
 
-    public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
-            throws UnsupportedOperationException {
-        throw new UnsupportedOperationException(
-                "Random access is not implemented for the memory file system");
-    }
-
     public boolean hasChildren(String path) throws FileSystemException {
         assertIsFolder(path);
         return list(path).length > 0;
@@ -241,50 +220,6 @@ public class MemoryFileSystem implements FileSystem {
             }
         }
         return (String[]) result.toArray(new String[result.size()]);
-    }
-
-    public void move(String srcPath, String destPath)
-            throws FileSystemException {
-        assertExistence(srcPath);
-        if (exists(destPath)) {
-            throw new FileSystemException("Destination exists: " + destPath);
-        }
-
-        // Create destination folder if it does not yet exist
-        String[] path = destPath.split(SEPARATOR);
-        String folder = "";
-        for (int i = 1; i < path.length; i++) {
-            folder += SEPARATOR + path[i];
-            if (!exists(folder)) {
-                createFolder(folder);
-            }
-        }
-        
-        Map moves = new HashMap();
-        moves.put(srcPath, destPath);
-        if (getEntry(srcPath).isFolder()) {
-            srcPath = srcPath + "/";
-            Iterator iterator = entries.keySet().iterator();
-            while (iterator.hasNext()) {
-                String name = (String) iterator.next();
-                if (name.startsWith(srcPath)) {
-                    moves.put(
-                            name,
-                            destPath + "/" + name.substring(srcPath.length()));
-                }
-            }
-        }
-
-        Iterator iterator = moves.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            entries.put(entry.getValue(), entries.remove(entry.getKey()));
-        }
-    }
-
-    public void touch(String filePath) throws FileSystemException {
-        assertIsFile(filePath);
-        getEntry(filePath).touch();
     }
 
 }

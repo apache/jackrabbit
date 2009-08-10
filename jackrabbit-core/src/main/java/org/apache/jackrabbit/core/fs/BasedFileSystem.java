@@ -89,13 +89,6 @@ public class BasedFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public void copy(String srcPath, String destPath) throws FileSystemException {
-        fsBase.copy(buildBasePath(srcPath), buildBasePath(destPath));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void createFolder(String folderPath) throws FileSystemException {
         fsBase.createFolder(buildBasePath(folderPath));
     }
@@ -138,14 +131,6 @@ public class BasedFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
-            throws FileSystemException {
-        return fsBase.getRandomAccessOutputStream(buildBasePath(filePath));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public boolean hasChildren(String path) throws FileSystemException {
         return fsBase.hasChildren(buildBasePath(path));
     }
@@ -181,13 +166,6 @@ public class BasedFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public void touch(String filePath) throws FileSystemException {
-        fsBase.touch(buildBasePath(filePath));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public String[] list(String folderPath) throws FileSystemException {
         return fsBase.list(buildBasePath(folderPath));
     }
@@ -204,12 +182,5 @@ public class BasedFileSystem implements FileSystem {
      */
     public String[] listFolders(String folderPath) throws FileSystemException {
         return fsBase.listFolders(buildBasePath(folderPath));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void move(String srcPath, String destPath) throws FileSystemException {
-        fsBase.move(buildBasePath(srcPath), buildBasePath(destPath));
     }
 }
