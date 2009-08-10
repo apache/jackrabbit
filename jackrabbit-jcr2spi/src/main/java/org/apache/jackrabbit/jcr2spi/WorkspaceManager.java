@@ -154,6 +154,11 @@ public class WorkspaceManager
     private final Thread changeFeed;
 
     /**
+     * Flag that indicates that the changeFeed thread should be disposed.
+     */
+    private volatile boolean disposeChangeFeed = false;
+
+    /**
      * List of event listener that are set on this WorkspaceManager to get
      * notifications about local and external changes.
      */
@@ -592,7 +597,9 @@ public class WorkspaceManager
         try {
             updateSync.acquire();
             if (changeFeed != null) {
+                disposeChangeFeed = true;
                 changeFeed.interrupt();
+                changeFeed.join();
             }
             hierarchyManager.dispose();
             if (subscription != null) {
@@ -1132,7 +1139,7 @@ public class WorkspaceManager
         }
 
         public void run() {
-            while (!Thread.interrupted()) {
+            while (!Thread.interrupted() && !disposeChangeFeed) {
                 try {
                     InternalEventListener[] iel;
                     Subscription subscr;
@@ -1151,7 +1158,7 @@ public class WorkspaceManager
                             sessionInfo.getWorkspaceName());
                     // check if thread had been interrupted while
                     // getting events
-                    if (Thread.interrupted()) {
+                    if (Thread.interrupted() || disposeChangeFeed) {
                         log.debug("Thread interrupted, terminating...");
                         break;
                     }
