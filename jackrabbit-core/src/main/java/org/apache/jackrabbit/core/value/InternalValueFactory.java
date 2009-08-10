@@ -150,7 +150,11 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     }
 
     public QValue create(InputStream value) throws RepositoryException, IOException {
-        return InternalValue.create(value, store);
+        if (store == null) {
+            return InternalValue.createTemporary(value);
+        } else {
+            return InternalValue.create(value, store);
+        }
     }
 
     public QValue create(File value) throws RepositoryException, IOException {

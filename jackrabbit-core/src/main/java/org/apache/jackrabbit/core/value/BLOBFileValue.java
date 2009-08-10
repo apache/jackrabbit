@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.value;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Binary;
@@ -39,48 +37,6 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
 abstract class BLOBFileValue implements Binary {
 
     /**
-     * Returns a String representation of this value.
-     *
-     * @return String representation of this value.
-     * @throws RepositoryException
-     */
-    String getString() throws RepositoryException {
-        // TODO: review again. currently the getString method of the JCR Value is delegated to the QValue.
-        InputStream stream = getStream();
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = stream.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
-            byte[] data = out.toByteArray();
-            return new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("UTF-8 not supported on this platform", e);
-        } catch (IOException e) {
-            throw new RepositoryException("conversion from stream to string failed", e);
-        } finally {
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-    }
-
-    /**
-     * Frees temporarily allocated resources such as temporary file, buffer, etc.
-     * If this <code>BLOBFileValue</code> is backed by a persistent resource
-     * calling this method will have no effect.
-     *
-     * @see #delete(boolean)
-     */
-    abstract void discard();
-
-    /**
      * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
      *
      * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
@@ -89,12 +45,18 @@ abstract class BLOBFileValue implements Binary {
     abstract void delete(boolean pruneEmptyParentDirs);
 
     /**
-     * Checks if this object is immutable.
-     * Immutable objects can not change and can safely copied.
+     * Returns a copy of this BLOB file value. The returned copy may also be
+     * this object. However an implementation must guarantee that the returned
+     * value has state that is independent from this value. Immutable values
+     * can savely return the same value (this object).
+     * <p/>
+     * Specifically, {@link #dispose()} on the returned value must not have an
+     * effect on this value!
      *
-     * @return true if the object is immutable
+     * @return a value that can be used independently from this value.
+     * @throws RepositoryException if an error occur while copying this value.
      */
-    abstract boolean isImmutable();
+    abstract BLOBFileValue copy() throws RepositoryException;
 
     public abstract boolean equals(Object obj);
 
@@ -112,9 +74,6 @@ abstract class BLOBFileValue implements Binary {
     }
 
     //-----------------------------------------------------< javax.jcr.Binary >
-    public abstract long getSize();
-
-    public abstract InputStream getStream() throws RepositoryException;
 
     public int read(byte[] b, long position) throws IOException, RepositoryException {
         InputStream in = getStream();
@@ -125,9 +84,4 @@ abstract class BLOBFileValue implements Binary {
             in.close();
         }
     }
-
-    public void dispose() {
-        discard();
-    }
-
 }
