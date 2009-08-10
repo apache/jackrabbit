@@ -25,6 +25,8 @@ import org.apache.commons.io.IOUtils;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
+import javax.jcr.Binary;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.math.BigDecimal;
@@ -348,6 +350,38 @@ public abstract class AbstractQValue implements QValue, Serializable {
         } else {
             return val.toString();
         }
+    }
+
+    /**
+     * This implementation creates a binary instance that uses
+     * {@link #getStream()} and skipping on the given stream as its underlying
+     * mechanism to provide random access defined on {@link Binary}.
+     *
+     * @see QValue#getBinary()
+     */
+    public Binary getBinary() throws RepositoryException {
+        return new Binary() {
+            public InputStream getStream() throws RepositoryException {
+                return AbstractQValue.this.getStream();
+            }
+
+            public int read(byte[] b, long position) throws IOException, RepositoryException {
+                InputStream in = getStream();
+                try {
+                    in.skip(position);
+                    return in.read(b);
+                } finally {
+                    in.close();
+                }
+            }
+
+            public long getSize() throws RepositoryException {
+                return getLength();
+            }
+
+            public void dispose() {
+            }
+        };
     }
 
     /**

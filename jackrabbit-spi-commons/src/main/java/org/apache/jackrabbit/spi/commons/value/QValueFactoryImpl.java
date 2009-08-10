@@ -24,7 +24,6 @@ import org.apache.jackrabbit.util.TransientFileFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Binary;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,7 +35,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 /**
@@ -91,7 +89,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
      * state, i.e. the <code>getStream()</code> method always returns a fresh
      * <code>InputStream</code> instance.
      */
-    private static class BinaryQValue extends AbstractQValue implements Binary, Serializable {
+    private static class BinaryQValue extends AbstractQValue implements Serializable {
 
         /**
          * A dummy value for calling the constructor of AbstractQValue
@@ -300,13 +298,6 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         /**
-         * @see QValue#getBinary()
-         */
-        public Binary getBinary() throws RepositoryException {
-            return this;
-        }
-
-        /**
          * Frees temporarily allocated resources such as temporary file, buffer, etc.
          * If this <code>BinaryQValue</code> is backed by a persistent resource
          * calling this method will have no effect.
@@ -325,10 +316,6 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
                 // this instance is backed by an in-memory buffer
                 buffer = EMPTY_BYTE_ARRAY;
             }
-        }
-
-        public void dispose() {
-            discard();
         }
 
         //-----------------------------------------------< java.lang.Object >---
@@ -375,35 +362,6 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
          */
         public int hashCode() {
             return 0;
-        }
-
-        //-----------------------------< javx.jcr.Binary >----------------------
-        /**
-         * {@inheritDoc}
-         */
-        public int read(byte[] b, long position) throws IOException, RepositoryException {
-            if (file != null) {
-                // this instance is backed by a temp file
-                RandomAccessFile raf = new RandomAccessFile(file, "r");
-                raf.seek(position);
-                return raf.read(b);
-            } else {
-                // this instance is backed by an in-memory buffer
-                int length = Math.min(b.length, buffer.length - (int) position);
-                if (length > 0) {
-                    System.arraycopy(buffer, (int) position, b, 0, length);
-                    return length;
-                } else {
-                    return -1;
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public long getSize() throws RepositoryException {
-            return getLength();
         }
 
         //-----------------------------< Serializable >-------------------------

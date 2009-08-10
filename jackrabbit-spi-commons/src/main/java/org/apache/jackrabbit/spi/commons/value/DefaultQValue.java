@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.spi.commons.value;
 
 import java.io.Serializable;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -25,13 +24,11 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Calendar;
 
-import javax.jcr.Binary;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.value.BinaryImpl;
 
 /**
  * <code>QValue</code> implementation for all valid <code>PropertyType</code>s
@@ -81,19 +78,6 @@ public class DefaultQValue extends AbstractQValue implements Serializable {
     }
 
     //-------------------------------------------------------------< QValue >---
-
-    /**
-     * @see QValue#getBinary()
-     */
-    public Binary getBinary() throws RepositoryException {
-        try {
-            // convert via string
-            return new BinaryImpl(getString().getBytes(
-                    AbstractQValueFactory.DEFAULT_ENCODING));
-        } catch (IOException e) {
-            throw new RepositoryException(e);
-        }
-    }
 
     /**
      * @see QValue#getStream()

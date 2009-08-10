@@ -47,6 +47,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(AddNewPropertyTest.class);
         suite.addTestSuite(SingleValuedPropertyTest.class);
         suite.addTestSuite(MultiValuedPropertyTest.class);
+        suite.addTestSuite(BinaryTest.class);
 
         // change mixin types
         suite.addTestSuite(MixinModificationTest.class);
