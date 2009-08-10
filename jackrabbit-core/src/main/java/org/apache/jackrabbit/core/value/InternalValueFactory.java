@@ -18,38 +18,26 @@ package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
-import org.apache.jackrabbit.util.ISO8601;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.io.FileInputStream;
 import java.util.Calendar;
-import java.math.BigDecimal;
 import java.net.URI;
+import java.math.BigDecimal;
 
 /**
- * <code>InternalValueFactory</code>...
+ * <code>InternalValueFactory</code> implements a {@link QValueFactory} that
+ * creates {@link InternalValue} instances for binary values.
  */
 public final class InternalValueFactory extends AbstractQValueFactory {
-
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(InternalValueFactory.class);
 
     private static final QValueFactory INSTANCE = new InternalValueFactory(null);
 
@@ -62,56 +50,6 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     public static QValueFactory getInstance() {
         return INSTANCE;
     }
-
-    public QValue create(String value, int type) throws ValueFormatException, RepositoryException {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
-        try {
-            switch (type) {
-                case PropertyType.BOOLEAN:
-                    return InternalValue.create(Boolean.valueOf(value).booleanValue());
-                case PropertyType.DATE: {
-                    Calendar cal = ISO8601.parse(value);
-                    if (cal == null) {
-                        throw new ValueFormatException("not a valid date: " + value);
-                    }
-                    return InternalValue.create(cal);
-                }
-                case PropertyType.DOUBLE:
-                    return InternalValue.create(Double.parseDouble(value));
-                case PropertyType.LONG:
-                    return InternalValue.create(Long.parseLong(value));
-                case PropertyType.DECIMAL:
-                    return InternalValue.create(new BigDecimal(value));
-                case PropertyType.PATH:
-                    return InternalValue.create(PathFactoryImpl.getInstance().create(value));
-                case PropertyType.NAME:
-                    return InternalValue.create(NameFactoryImpl.getInstance().create(value));
-                case PropertyType.STRING:
-                    return InternalValue.create(value);
-                case PropertyType.URI:
-                    return InternalValue.create(URI.create(value));
-                case PropertyType.REFERENCE:
-                    return InternalValue.create(new NodeId(value));
-                case PropertyType.WEAKREFERENCE:
-                    return InternalValue.create(new NodeId(value), true);
-                case PropertyType.BINARY:
-                    return InternalValue.create(value.getBytes("UTF-8"));
-                // default: invalid type specified -> see below.
-            }
-        } catch (NumberFormatException ex) {
-            // given String value cannot be converted to Decimal
-            throw new ValueFormatException(ex);
-        } catch (IllegalArgumentException ex) {
-            // given String value cannot be converted to Long/Double/Path/Name
-            throw new ValueFormatException(ex);
-        } catch (UnsupportedEncodingException ex) {
-            throw new RepositoryException(ex);
-        }
-
-        // invalid type specified:
-        throw new IllegalArgumentException("illegal type " + type);    }
 
     public QValue create(Calendar value) throws RepositoryException {
         return InternalValue.create(value);
@@ -160,5 +98,13 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     public QValue create(File value) throws RepositoryException, IOException {
         InputStream in = new FileInputStream(value);
         return InternalValue.createTemporary(in);
+    }
+
+    protected QValue createReference(String ref, boolean weak) {
+        return InternalValue.create(new NodeId(ref), weak);
+    }
+
+    protected QValue createString(String value) {
+        return InternalValue.create(value);
     }
 }
