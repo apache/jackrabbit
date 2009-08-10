@@ -106,7 +106,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
 
     //--------------------------------------------------------< Inner Class >---
 
-        /**
+    /**
      * <code>BinaryQValue</code> represents a binary <code>Value</code> which is
      * backed by a resource or byte[]. Unlike <code>BinaryValue</code> it has no
      * state, i.e. the <code>getStream()</code> method always returns a fresh
