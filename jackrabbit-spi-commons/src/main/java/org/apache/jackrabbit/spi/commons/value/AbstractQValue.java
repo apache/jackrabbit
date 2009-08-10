@@ -16,12 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons.value;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.commons.io.IOUtils;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -30,16 +29,16 @@ import java.util.Calendar;
 import java.util.TimeZone;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * <code>AbstractQValue</code>...
  */
-public abstract class AbstractQValue implements QValue {
+public abstract class AbstractQValue implements QValue, Serializable {
 
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(AbstractQValue.class);
+    private static final long serialVersionUID = 6976433831974695272L;
 
     protected Object val;
     protected final int type;
@@ -310,9 +309,9 @@ public abstract class AbstractQValue implements QValue {
      */
     public boolean getBoolean() throws RepositoryException {
         if (type == PropertyType.BOOLEAN) {
-            return ((Boolean) val).booleanValue();
+            return (Boolean) val;
         } else {
-            return Boolean.valueOf(getString()).booleanValue();
+            return Boolean.valueOf(getString());
         }
     }
 
@@ -332,6 +331,26 @@ public abstract class AbstractQValue implements QValue {
     }
 
     /**
+     * @see QValue#getPath()
+     */
+    public String getString() throws RepositoryException {
+        if (type == PropertyType.BINARY) {
+            InputStream stream = getStream();
+            try {
+                return IOUtils.toString(stream, "UTF-8");
+            } catch (IOException e) {
+                throw new RepositoryException("conversion from stream to string failed", e);
+            } finally {
+                IOUtils.closeQuietly(stream);
+            }
+        } else if (type == PropertyType.DATE) {
+            return ISO8601.format(((Calendar) val));
+        } else {
+            return val.toString();
+        }
+    }
+
+    /**
      * @see QValue#discard()
      */
     public void discard() {
@@ -339,13 +358,18 @@ public abstract class AbstractQValue implements QValue {
     }
 
     //---------------------------------------------------------< Object >---
+
     /**
      * Returns the string representation of this internal value.
      *
      * @return string representation of this internal value
      */
     public String toString() {
-        return val.toString();
+        if (type == PropertyType.DATE) {
+            return ISO8601.format((Calendar) val);
+        } else {
+            return val.toString();
+        }
     }
 
     /**
