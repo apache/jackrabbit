@@ -36,7 +36,6 @@ import org.xml.sax.SAXException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.Binary;
 import javax.jcr.ValueFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
@@ -296,37 +295,6 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
          */
         public Path getPath() throws RepositoryException {
             throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @see QValue#getBinary()
-         */
-        public Binary getBinary() throws RepositoryException {
-            // TODO FIXME consolidate Binary implementations
-            // TODO optimize
-            return new Binary() {
-                public InputStream getStream() throws RepositoryException {
-                    return BinaryQValue.this.getStream();
-                }
-
-                public int read(byte[] b, long position) throws IOException, RepositoryException {
-                    InputStream in = getStream();
-                    try {
-                        in.skip(position);
-                        return in.read(b);
-                    } finally {
-                        in.close();
-                    }
-                }
-
-                public long getSize() throws RepositoryException {
-                    return getLength();
-                }
-
-                public void dispose() {
-                }
-
-            };
         }
 
         /**
