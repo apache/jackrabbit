@@ -49,6 +49,7 @@ import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.commons.io.IOUtils;
 
 /**
  * <code>InternalValue</code> represents the internal format of a property value.
@@ -115,7 +116,6 @@ public class InternalValue extends AbstractQValue {
             throws ValueFormatException, RepositoryException {
         switch (value.getType()) {
             case PropertyType.BINARY:
-                InternalValue result;
                 BLOBFileValue blob = null;
                 if (value instanceof BinaryValueImpl) {
                     BinaryValueImpl bin = (BinaryValueImpl) value;
@@ -131,10 +131,24 @@ public class InternalValue extends AbstractQValue {
                     }
                 }
                 if (blob == null) {
-                    blob = getBLOBFileValue(store, value.getBinary().getStream(), true);
+                    Binary b = value.getBinary();
+                    boolean dispose = false;
+                    try {
+                        if (b instanceof BLOBFileValue) {
+                            // use as is
+                            blob = (BLOBFileValue) b;
+                        } else {
+                            // create a copy from the stream
+                            dispose = true;
+                            blob = getBLOBFileValue(store, b.getStream(), true);
+                        }
+                    } finally {
+                        if (dispose) {
+                            b.dispose();
+                        }
+                    }
                 }
-                result = new InternalValue(blob);
-                return result;
+                return new InternalValue(blob);
             case PropertyType.BOOLEAN:
                 return create(value.getBoolean());
             case PropertyType.DATE:
@@ -334,7 +348,7 @@ public class InternalValue extends AbstractQValue {
      * @throws RepositoryException
      */
     public static InternalValue create(InputStream value) throws RepositoryException {
-        return new InternalValue(getBLOBFileValue(null, value, false));
+        return create(value, null);
     }
 
     /**
@@ -432,21 +446,8 @@ public class InternalValue extends AbstractQValue {
             // wrapped value is immutable (and therefore this instance as well)
             return this;
         }
-        BLOBFileValue v = (BLOBFileValue) val;
-        if (v.isImmutable()) {
-            return this;
-        }
-        // return a copy since the wrapped BLOBFileValue instance is mutable
-        InputStream stream = v.getStream();
-        try {
-            return createTemporary(stream);
-        } finally {
-            try {
-                stream.close();
-            } catch (IOException e) {
-                // ignore
-            }
-        }
+        // return a copy of the wrapped BLOBFileValue
+        return new InternalValue(((BLOBFileValue) val).copy());
     }
 
     /**
@@ -639,7 +640,7 @@ public class InternalValue extends AbstractQValue {
      */
     public long getLength() throws RepositoryException {
         if (PropertyType.BINARY == type) {
-            return ((BLOBFileValue) val).getSize();
+            return ((Binary) val).getSize();
         } else {
             return super.getLength();
         }
@@ -650,7 +651,14 @@ public class InternalValue extends AbstractQValue {
      */
     public String getString() throws RepositoryException {
         if (type == PropertyType.BINARY) {
-            return ((BLOBFileValue) val).getString();
+            InputStream stream = getStream();
+            try {
+                return IOUtils.toString(stream, "UTF-8");
+            } catch (IOException e) {
+                throw new RepositoryException("conversion from stream to string failed", e);
+            } finally {
+                IOUtils.closeQuietly(stream);
+            }
         } else if (type == PropertyType.DATE) {
             return ISO8601.format(((Calendar) val));
         } else {
@@ -663,7 +671,7 @@ public class InternalValue extends AbstractQValue {
      */
     public InputStream getStream() throws RepositoryException {
         if (type == PropertyType.BINARY) {
-            return ((BLOBFileValue) val).getStream();
+            return ((Binary) val).getStream();
         } else {
             try {
                 // convert via string
@@ -679,7 +687,9 @@ public class InternalValue extends AbstractQValue {
      */
     public Binary getBinary() throws RepositoryException {
         if (type == PropertyType.BINARY) {
-            return (BLOBFileValue) val;
+            // return an independent copy that can be disposed without
+            // affecting this value
+            return ((BLOBFileValue) val).copy();
         } else {
             try {
                 // convert via string
@@ -697,7 +707,7 @@ public class InternalValue extends AbstractQValue {
     public void discard() {
         if (type == PropertyType.BINARY) {
             BLOBFileValue bfv = (BLOBFileValue) val;
-            bfv.discard();
+            bfv.dispose();
         } else {
             super.discard();
         }

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.value.BinaryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +60,26 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
     public Value createValue(QValue qvalue) {
         if (qvalue instanceof InternalValue && PropertyType.BINARY == qvalue.getType()) {
             try {
-                return new BinaryValueImpl(((InternalValue) qvalue).getBLOBFileValue());
+                return new BinaryValueImpl(((InternalValue) qvalue).getBLOBFileValue().copy());
             } catch (RepositoryException e) {
                 // should not get here
                 log.error(e.getMessage(), e);
             }
         }
         return super.createValue(qvalue);
+    }
+
+    public Binary createBinary(InputStream stream) throws RepositoryException {
+        try {
+            QValue value = getQValueFactory().create(stream);
+            if (value instanceof InternalValue) {
+                return ((InternalValue) value).getBLOBFileValue();
+            } else {
+                return new BinaryImpl(stream);
+            }
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     public Value createValue(Binary binary) {
@@ -77,6 +91,8 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
                     // if the value is already in this data store
                     return new BinaryValueImpl(value.getBLOBFileValue());
                 }
+            } else if (binary instanceof BLOBFileValue) {
+                return new BinaryValueImpl(((BLOBFileValue) binary).copy());
             }
             return createValue(binary.getStream());
         } catch (RepositoryException e) {

@@ -32,6 +32,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.core.value tests");
 
+        suite.addTestSuite(BinaryValueTest.class);
         suite.addTestSuite(InternalValueFactoryTest.class);
         suite.addTestSuite(InternalValueTest.class);
 

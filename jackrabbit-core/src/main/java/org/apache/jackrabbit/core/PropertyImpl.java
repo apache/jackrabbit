@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -49,6 +50,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -474,7 +476,14 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     public InputStream getStream() throws RepositoryException {
-        return getValue().getBinary().getStream();
+        final Binary bin = getValue().getBinary();
+        // make sure binary is disposed after stream had been consumed
+        return new AutoCloseInputStream(bin.getStream()) {
+            public void close() throws IOException {
+                super.close();
+                bin.dispose();
+            }
+        };
     }
 
     public long getLong() throws RepositoryException {

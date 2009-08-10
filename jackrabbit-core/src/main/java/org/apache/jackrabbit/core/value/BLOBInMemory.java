@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
@@ -122,14 +121,14 @@ class BLOBInMemory extends BLOBFileValue {
         // the data will be garbage collected
     }
 
-    void discard() {
+    public void dispose() {
         // do nothing
         // this object could still be referenced
         // the data will be garbage collected
     }
 
-    boolean isImmutable() {
-        return true;
+    BLOBFileValue copy() throws RepositoryException {
+        return this;
     }
 
     public long getSize() {
@@ -138,14 +137,6 @@ class BLOBInMemory extends BLOBFileValue {
 
     public InputStream getStream() {
         return new ByteArrayInputStream(data);
-    }
-
-    String getString() throws RepositoryException {
-        try {
-            return new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("UTF-8 not supported on this platform", e);
-        }
     }
 
     public String toString() {

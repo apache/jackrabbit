@@ -92,8 +92,12 @@ class BLOBInTempFile extends BLOBFileValue {
      * @param in the stream
      * @param temp
      */
-    static BLOBInTempFile getInstance(InputStream in, boolean temp) throws RepositoryException {
-        return new BLOBInTempFile(in, temp);
+    static BLOBFileValue getInstance(InputStream in, boolean temp) throws RepositoryException {
+        if (temp) {
+            return new RefCountingBLOBFileValue(new BLOBInTempFile(in, temp));
+        } else {
+            return new BLOBInTempFile(in, temp);
+        }
     }
 
     /**
@@ -101,7 +105,7 @@ class BLOBInTempFile extends BLOBFileValue {
      *
      * @param file the file
      */
-    static BLOBInTempFile getInstance(File file, boolean temp) throws IOException {
+    static BLOBInTempFile getInstance(File file, boolean temp) {
         return new BLOBInTempFile(file, temp);
     }
 
@@ -111,15 +115,18 @@ class BLOBInTempFile extends BLOBFileValue {
         file = null;
     }
 
-    void discard() {
+    public void dispose() {
         if (temp) {
             delete(true);
         }
     }
 
-    boolean isImmutable() {
-        // discard and delete can modify the state.
-        return false;
+    BLOBFileValue copy() throws RepositoryException {
+        if (temp) {
+            return BLOBInTempFile.getInstance(getStream(), temp);
+        } else {
+            return BLOBInTempFile.getInstance(file, temp);
+        }
     }
 
     public long getSize() {

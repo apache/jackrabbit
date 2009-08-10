@@ -57,7 +57,7 @@ class BLOBInDataStore extends BLOBFileValue {
         // do nothing
     }
 
-    void discard() {
+    public void dispose() {
         // do nothing
     }
 
@@ -65,8 +65,8 @@ class BLOBInDataStore extends BLOBFileValue {
         return identifier;
     }
 
-    boolean isImmutable() {
-        return true;
+    BLOBFileValue copy() throws RepositoryException {
+        return this;
     }
 
     public boolean equals(Object obj) {

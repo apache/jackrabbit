@@ -92,13 +92,12 @@ class BLOBInResource extends BLOBFileValue {
 
     }
 
-    void discard() {
+    public void dispose() {
         // this instance is not backed by temporarily allocated resource/buffer
     }
 
-    boolean isImmutable() {
-        // delete will modify the state.
-        return false;
+    BLOBFileValue copy() throws RepositoryException {
+        return BLOBInTempFile.getInstance(getStream(), true);
     }
 
     public long getSize() {
