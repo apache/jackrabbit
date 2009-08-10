@@ -62,6 +62,7 @@ public class GetPropertyTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (readOnly != null) {
             readOnly.logout();
+            readOnly = null;
         }
         super.tearDown();
     }

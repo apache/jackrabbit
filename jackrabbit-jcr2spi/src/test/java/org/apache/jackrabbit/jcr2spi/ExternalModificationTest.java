@@ -53,7 +53,10 @@ public class ExternalModificationTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (testSession != null) {
             testSession.logout();
+            testSession = null;
         }
+        destParentNode = null;
+        refNode = null;
         super.tearDown();
     }
 
