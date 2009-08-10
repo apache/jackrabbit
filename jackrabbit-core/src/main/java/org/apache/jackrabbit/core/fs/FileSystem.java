@@ -77,23 +77,6 @@ public interface FileSystem {
     OutputStream getOutputStream(String filePath) throws FileSystemException;
 
     /**
-     * Returns an output stream for writing bytes to the file denoted by this path.
-     * The file will be created if it doesn't exist. The current position of the
-     * file pointer is set to <code>0</code>. See also
-     * {@link RandomAccessOutputStream#seek(long)};
-     *
-     * @param filePath the path of the file.
-     * @return an random access output stream for writing bytes to the file.
-     * @throws FileSystemException           if the file could not be created or
-     *                                       if the output stream cannot be obtained.
-     * @throws UnsupportedOperationException if the implementation does
-     *                                       not support file access through a
-     *                                      {@link RandomAccessOutputStream}.
-     */
-    RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
-            throws FileSystemException, UnsupportedOperationException;
-
-    /**
      * Creates the folder named by this path, including any necessary but
      * nonexistent parent folders. Note that if this operation fails it
      * may have succeeded in creating some of the necessary parent folders.
@@ -166,14 +149,6 @@ public interface FileSystem {
     long lastModified(String path) throws FileSystemException;
 
     /**
-     * Set the modified time of an existing file to now.
-     *
-     * @param filePath the path of the file.
-     * @throws FileSystemException if the path does not denote an existing file.
-     */
-    void touch(String filePath) throws FileSystemException;
-
-    /**
      * Returns an array of strings naming the files and folders
      * in the folder denoted by this path.
      *
@@ -227,23 +202,5 @@ public interface FileSystem {
      *                             another error occurs.
      */
     void deleteFolder(String folderPath) throws FileSystemException;
-
-    /**
-     * Moves a file or folder to a new location.
-     *
-     * @param srcPath  the path of the file or folder to be moved.
-     * @param destPath the destination path to which the file or folder is to be moved.
-     * @throws FileSystemException if the move fails
-     */
-    void move(String srcPath, String destPath) throws FileSystemException;
-
-    /**
-     * Copies a file or folder to a new location.
-     *
-     * @param srcPath  the path of the file or folder to be copied.
-     * @param destPath the destination path to which the file or folder is to be copied.
-     * @throws FileSystemException if the copy fails
-     */
-    void copy(String srcPath, String destPath) throws FileSystemException;
 
 }

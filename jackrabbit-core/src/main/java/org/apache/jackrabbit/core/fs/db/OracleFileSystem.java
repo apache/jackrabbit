@@ -21,7 +21,6 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +39,6 @@ import java.io.File;
 import java.io.FilterOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
-import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
 
 /**
@@ -417,130 +415,6 @@ public class OracleFileSystem extends DbFileSystem {
                         // temp file can now safely be removed
                         tmpFile.delete();
                     }
-                }
-            };
-        } catch (Exception e) {
-            String msg = "failed to open output stream to file: " + filePath;
-            log.error(msg, e);
-            throw new FileSystemException(msg, e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public RandomAccessOutputStream getRandomAccessOutputStream(
-            final String filePath)
-            throws FileSystemException, UnsupportedOperationException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
-        FileSystemPathUtil.checkFormat(filePath);
-
-        final String parentDir = FileSystemPathUtil.getParentDir(filePath);
-        final String name = FileSystemPathUtil.getName(filePath);
-
-        if (!isFolder(parentDir)) {
-            throw new FileSystemException("path not found: " + parentDir);
-        }
-
-        if (isFolder(filePath)) {
-            throw new FileSystemException("path denotes folder: " + filePath);
-        }
-
-        try {
-            TransientFileFactory fileFactory = TransientFileFactory.getInstance();
-            final File tmpFile = fileFactory.createTransientFile("bin", null, null);
-
-            // @todo FIXME use java.sql.Blob
-
-            if (isFile(filePath)) {
-                // file entry exists, spool contents to temp file first
-                InputStream in = getInputStream(filePath);
-                OutputStream out = new FileOutputStream(tmpFile);
-                try {
-                    IOUtils.copy(in, out);
-                } finally {
-                    out.close();
-                    in.close();
-                }
-            }
-
-            return new RandomAccessOutputStream() {
-                private final RandomAccessFile raf =
-                    new RandomAccessFile(tmpFile, "rw");
-
-                public void close() throws IOException {
-                    raf.close();
-
-                    InputStream in = null;
-                    Blob blob = null;
-                    try {
-                        if (isFile(filePath)) {
-                            synchronized (updateDataSQL) {
-                                long length = tmpFile.length();
-                                in = new FileInputStream(tmpFile);
-                                blob = createTemporaryBlob(in);
-                                executeStmt(updateDataSQL,
-                                        new Object[]{
-                                            blob,
-                                            new Long(System.currentTimeMillis()),
-                                            new Long(length),
-                                            parentDir,
-                                            name
-                                        });
-                            }
-                        } else {
-                            synchronized (insertFileSQL) {
-                                long length = tmpFile.length();
-                                in = new FileInputStream(tmpFile);
-                                blob = createTemporaryBlob(in);
-                                executeStmt(insertFileSQL,
-                                        new Object[]{
-                                            parentDir,
-                                            name,
-                                            blob,
-                                            new Long(System.currentTimeMillis()),
-                                            new Long(length)
-                                        });
-                            }
-                        }
-                    } catch (Exception e) {
-                        IOException ioe = new IOException(e.getMessage());
-                        ioe.initCause(e);
-                        throw ioe;
-                    } finally {
-                        if (blob != null) {
-                            try {
-                                freeTemporaryBlob(blob);
-                            } catch (Exception e1) {
-                            }
-                        }
-                        IOUtils.closeQuietly(in);
-                        // temp file can now safely be removed
-                        tmpFile.delete();
-                    }
-                }
-
-                public void seek(long position) throws IOException {
-                    raf.seek(position);
-                }
-
-                public void write(int b) throws IOException {
-                    raf.write(b);
-                }
-
-                public void flush() /*throws IOException*/ {
-                    // nop
-                }
-
-                public void write(byte[] b) throws IOException {
-                    raf.write(b);
-                }
-
-                public void write(byte[] b, int off, int len) throws IOException {
-                    raf.write(b, off, len);
                 }
             };
         } catch (Exception e) {

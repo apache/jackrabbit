@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.fs.local;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.jackrabbit.util.LazyFileInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 
 /**
  * A <code>LocalFileSystem</code> ...
@@ -179,23 +177,6 @@ public class LocalFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public void copy(String srcPath, String destPath)
-            throws FileSystemException {
-        File src = new File(root, osPath(srcPath));
-        File dest = new File(root, osPath(destPath));
-        try {
-            FileUtil.copy(src, dest);
-        } catch (IOException ioe) {
-            String msg = "copying " + src.getPath() + " to "
-                    + dest.getPath() + " failed";
-            log.debug(msg);
-            throw new FileSystemException(msg, ioe);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void createFolder(String folderPath) throws FileSystemException {
         File f = new File(root, osPath(folderPath));
         if (f.exists()) {
@@ -296,21 +277,6 @@ public class LocalFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
-            throws FileSystemException {
-        File f = new File(root, osPath(filePath));
-        try {
-            return new RAFOutputStream(new RandomAccessFile(f, "rw"));
-        } catch (IOException e) {
-            String msg = "failed to get output stream for " + f.getPath();
-            log.debug(msg);
-            throw new FileSystemException(msg, e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public boolean hasChildren(String path) throws FileSystemException {
         File f = new File(root, osPath(path));
         if (!f.exists()) {
@@ -357,14 +323,6 @@ public class LocalFileSystem implements FileSystem {
             return -1;
         }
         return f.length();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void touch(String filePath) throws FileSystemException {
-        File f = new File(root, osPath(filePath));
-        f.setLastModified(System.currentTimeMillis());
     }
 
     /**
@@ -425,42 +383,4 @@ public class LocalFileSystem implements FileSystem {
         return entries;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void move(String srcPath, String destPath)
-            throws FileSystemException {
-        File src = new File(root, osPath(srcPath));
-        File dest = new File(root, osPath(destPath));
-
-        if (dest.exists()) {
-            // we need to move the existing file/folder out of the way first
-            try {
-                FileUtil.delete(dest);
-            } catch (IOException ioe) {
-                String msg = "moving " + src.getPath() + " to "
-                        + dest.getPath() + " failed";
-                log.debug(msg);
-                throw new FileSystemException(msg, ioe);
-            }
-        }
-        File destParent = dest.getParentFile();
-        if (!destParent.exists()) {
-            // create destination parent folder first
-            if (!destParent.mkdirs()) {
-                String msg = "moving " + src.getPath() + " to "
-                        + dest.getPath() + " failed";
-                log.debug(msg);
-                throw new FileSystemException(msg);
-            }
-        }
-
-        // now we're ready to move/rename the file/folder
-        if (!src.renameTo(dest)) {
-            String msg = "moving " + src.getPath() + " to "
-                    + dest.getPath() + " failed";
-            log.debug(msg);
-            throw new FileSystemException(msg);
-        }
-    }
 }

@@ -30,8 +30,4 @@ public abstract class MemoryFileSystemEntry {
         return lastModified;
     }
 
-    public void touch() {
-        this.lastModified = System.currentTimeMillis();
-    }
-
 }

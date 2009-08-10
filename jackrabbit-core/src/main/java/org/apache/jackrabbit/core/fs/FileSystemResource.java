@@ -175,14 +175,6 @@ public class FileSystemResource {
     }
 
     /**
-     * @see FileSystem#getRandomAccessOutputStream
-     */
-    public RandomAccessOutputStream getRandomAccessOutputStream()
-            throws FileSystemException {
-        return fs.getRandomAccessOutputStream(path);
-    }
-
-    /**
      * @see FileSystem#lastModified
      */
     public long lastModified() throws FileSystemException {
@@ -194,20 +186,6 @@ public class FileSystemResource {
      */
     public long length() throws FileSystemException {
         return fs.length(path);
-    }
-
-    /**
-     * @see FileSystem#touch
-     */
-    public void touch() throws FileSystemException {
-        fs.touch(path);
-    }
-
-    /**
-     * @see FileSystem#move
-     */
-    public void move(String destPath) throws FileSystemException {
-        fs.move(path, destPath);
     }
 
     //-------------------------------------------< java.lang.Object overrides >
