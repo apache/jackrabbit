@@ -38,6 +38,8 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.security.auth.Subject;
+import java.security.Principal;
+import java.util.Set;
 
 /**
  * <code>SimpleAccessManager</code> ...
@@ -294,5 +296,45 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         if (hierMgr.resolveNodePath(path) == null) {
             throw new PathNotFoundException(absPath);
         }
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
+     */
+    public boolean hasPrivileges(String absPath, Set<Principal> principals, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
+        if (anonymous) {
+            // anonymous doesn't have READ_AC privilege
+            throw new AccessDeniedException();
+        }
+        
+        if (principals.size() == 1) {
+            Principal princ = principals.iterator().next();
+            if (princ instanceof AnonymousPrincipal) {
+                return privileges.length == 1 && privileges[0].equals(privilegeRegistry.getPrivilege(Privilege.JCR_READ));
+            }
+        }
+
+        // @todo check permission based on principals
+        return true;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getPrivileges(String, Set)
+     */
+    public Privilege[] getPrivileges(String absPath, Set<Principal> principals) throws PathNotFoundException, RepositoryException {
+        if (anonymous) {
+            // anonymous doesn't have READ_AC privilege
+            throw new AccessDeniedException();
+        }
+
+        if (principals.size() == 1) {
+            Principal princ = principals.iterator().next();
+            if (princ instanceof AnonymousPrincipal) {
+                return new Privilege[] {privilegeRegistry.getPrivilege(Privilege.JCR_READ)};
+            }
+        }
+
+        // @todo check permission based on principals
+        return new Privilege[] {privilegeRegistry.getPrivilege(Privilege.JCR_ALL)};
     }
 }

@@ -326,7 +326,6 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkInitialized();
         checkPermission(absPath, Permission.READ_AC);
 
-        // TODO: acProvider may not retrieve the correct policy in case of transient modifications
         return acProvider.getEffectivePolicies(getPath(absPath));
     }
 
@@ -395,6 +394,40 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         }
         return editor.getPolicies(principal);
     }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
+     */
+    public boolean hasPrivileges(String absPath, Set<Principal> principals, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
+        checkInitialized();
+        checkValidNodePath(absPath);
+        checkPermission(absPath, Permission.READ_AC);
+
+        if (privileges == null || privileges.length == 0) {
+            // null or empty privilege array -> return true
+            log.debug("No privileges passed -> allowed.");
+            return true;
+        } else {
+            int privs = PrivilegeRegistry.getBits(privileges);
+            Path p = resolver.getQPath(absPath);
+            return (acProvider.compilePermissions(principals).getPrivileges(p) | ~privs) == -1;
+        }
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getPrivileges(String, Set)
+     */
+    public Privilege[] getPrivileges(String absPath, Set<Principal> principals) throws PathNotFoundException, RepositoryException {
+        checkInitialized();
+        checkValidNodePath(absPath);
+        checkPermission(absPath, Permission.READ_AC);
+
+        int bits = acProvider.compilePermissions(principals).getPrivileges(resolver.getQPath(absPath));
+        return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
+                new Privilege[0] :
+                privilegeRegistry.getPrivileges(bits);
+    }
+
     //---------------------------------------< AbstractAccessControlManager >---
     /**
      * @see AbstractAccessControlManager#checkInitialized()
