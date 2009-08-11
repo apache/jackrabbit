@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.security.Principal;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
@@ -273,6 +274,20 @@ class SystemSession extends SessionImpl {
                 PathNotFoundException, AccessDeniedException, RepositoryException {
             // cannot determine the effective policies for the system session.
             return new AccessControlPolicy[0];
+        }
+
+        /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
+     */
+        public boolean hasPrivileges(String absPath, Set<Principal> principals, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        /**
+         * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getPrivileges(String, Set)
+         */
+        public Privilege[] getPrivileges(String absPath, Set<Principal> principals) throws PathNotFoundException, RepositoryException {
+            throw new UnsupportedOperationException("not implemented");
         }
     }
 }

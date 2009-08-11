@@ -19,9 +19,12 @@ package org.apache.jackrabbit.api.security;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
+import java.util.Set;
 
 /**
  * <code>JackrabbitAccessControlManager</code> provides extensions to the
@@ -62,4 +65,76 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
      * @throws RepositoryException
      */
     JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Returns whether the given set of <code>Principal</code>s has the specified
+     * privileges for absolute path <code>absPath</code>, which must be an
+     * existing node.
+     * <p>
+     * Testing an aggregate privilege is equivalent to testing each non
+     * aggregate privilege among the set returned by calling
+     * <code>Privilege.getAggregatePrivileges()</code> for that privilege.
+     * <p>
+     * The results reported by the this method reflect the net <i>effect</i> of
+     * the currently applied control mechanisms. It does not reflect unsaved
+     * access control policies or unsaved access control entries. Changes to
+     * access control status caused by these mechanisms only take effect on
+     * <code>Session.save()</code> and are only then reflected in the results of
+     * the privilege test methods.
+     * <p>
+     * Since this method allows to view the privileges of principals other
+     * than included in the editing session, this method must throw
+     * <code>AccessDeniedException</code> if the session lacks
+     * <code>READ_ACCESS_CONTROL</code> privilege for the <code>absPath</code>
+     * node.
+     *
+     * @param absPath    an absolute path.
+     * @param principals a set of <code>Principal</code>s for which is the
+     * given privileges are tested.
+     * @param privileges an array of <code>Privilege</code>s.
+     * @return <code>true</code> if the session has the specified privileges;
+     *         <code>false</code> otherwise.
+     * @throws javax.jcr.PathNotFoundException if no node at <code>absPath</code> exists
+     * or the session does not have sufficent access to retrieve a node at that location.
+     * @throws AccessDeniedException if the session lacks
+     * <code>READ_ACCESS_CONTROL</code> privilege for the <code>absPath</code> node.
+     * @throws RepositoryException  if another error occurs.
+     */
+    public boolean hasPrivileges(String absPath, Set<Principal> principals, Privilege[] privileges)
+            throws PathNotFoundException, AccessDeniedException, RepositoryException;
+
+    /**
+     * Returns the privileges the given set of <code>Principal</code>s has for
+     * absolute path <code>absPath</code>, which must be an existing node.
+     * <p>
+     * The returned privileges are those for which {@link #hasPrivileges} would
+     * return <code>true</code>.
+     * <p>
+     * The results reported by the this method reflect the net <i>effect</i> of
+     * the currently applied control mechanisms. It does not reflect unsaved
+     * access control policies or unsaved access control entries. Changes to
+     * access control status caused by these mechanisms only take effect on
+     * <code>Session.save()</code> and are only then reflected in the results of
+     * the privilege test methods.
+     * <p>
+     * Since this method allows to view the privileges of principals other
+     * than included in the editing session, this method must throw
+     * <code>AccessDeniedException</code> if the session lacks
+     * <code>READ_ACCESS_CONTROL</code> privilege for the <code>absPath</code>
+     * node.
+     *
+     *
+     * @param absPath an absolute path.
+     * @param principals a set of <code>Principal</code>s for which is the
+     * privileges are retrieved.
+     * @return an array of <code>Privilege</code>s.
+     * @throws PathNotFoundException if no node at <code>absPath</code> exists
+     * or the session does not have sufficient access to retrieve a node at that
+     * location.
+     * @throws AccessDeniedException if the session lacks <code>READ_ACCESS_CONTROL</code>
+     * privilege for the <code>absPath</code> node.
+     * @throws RepositoryException  if another error occurs.
+     */
+    public Privilege[] getPrivileges(String absPath, Set<Principal> principals)
+            throws PathNotFoundException, AccessDeniedException, RepositoryException;
 }
