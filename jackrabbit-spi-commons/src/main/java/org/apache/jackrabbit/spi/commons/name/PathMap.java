@@ -21,6 +21,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,14 +32,15 @@ import java.util.Iterator;
  * Generic path map that associates information with the individual path elements
  * of a path.
  */
-public class PathMap {
+public class PathMap<T> {
 
     private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
 
     /**
      * Root element
      */
-    private final Element root = new Element(PATH_FACTORY.getRootPath().getNameElement());
+    private final Element<T> root =
+        new Element<T>(PATH_FACTORY.getRootPath().getNameElement());
 
     /**
      * Map a path to a child. If <code>exact</code> is <code>false</code>,
@@ -48,12 +50,12 @@ public class PathMap {
      * @return child, maybe <code>null</code> if <code>exact</code> is
      *         <code>true</code>
      */
-    public Element map(Path path, boolean exact) {
+    public Element<T> map(Path path, boolean exact) {
         Path.Element[] elements = path.getElements();
-        Element current = root;
+        Element<T> current = root;
 
         for (int i = 1; i < elements.length; i++) {
-            Element next = current.getChild(elements[i]);
+            Element<T> next = current.getChild(elements[i]);
             if (next == null) {
                 if (exact) {
                     return null;
@@ -71,8 +73,8 @@ public class PathMap {
      * @param path path to child
      * @param obj object to store at destination
      */
-    public Element put(Path path, Object obj) {
-        Element element = put(path);
+    public Element<T> put(Path path, T obj) {
+        Element<T> element = put(path);
         element.obj = obj;
         return element;
     }
@@ -83,12 +85,12 @@ public class PathMap {
      * @param path path to child
      * @param element element to store at destination
      */
-    public void put(Path path, Element element) {
+    public void put(Path path, Element<T> element) {
         Path.Element[] elements = path.getElements();
-        Element current = root;
+        Element<T> current = root;
 
         for (int i = 1; i < elements.length - 1; i++) {
-            Element next = current.getChild(elements[i]);
+            Element<T> next = current.getChild(elements[i]);
             if (next == null) {
                 next = current.createChild(elements[i]);
             }
@@ -101,12 +103,12 @@ public class PathMap {
      * Create an empty child given by its path.
      * @param path path to child
      */
-    public Element put(Path path) {
+    public Element<T> put(Path path) {
         Path.Element[] elements = path.getElements();
-        Element current = root;
+        Element<T> current = root;
 
         for (int i = 1; i < elements.length; i++) {
-            Element next = current.getChild(elements[i]);
+            Element<T> next = current.getChild(elements[i]);
             if (next == null) {
                 next = current.createChild(elements[i]);
             }
@@ -123,7 +125,7 @@ public class PathMap {
      *                     or not; otherwise call back on non-empty children
      *                     only
      */
-    public void traverse(ElementVisitor visitor, boolean includeEmpty) {
+    public void traverse(ElementVisitor<T> visitor, boolean includeEmpty) {
         root.traverse(visitor, includeEmpty);
     }
 
@@ -131,17 +133,17 @@ public class PathMap {
      * Internal class holding the object associated with a certain
      * path element.
      */
-    public final static class Element {
+    public final static class Element<T> {
 
         /**
          * Parent element
          */
-        private Element parent;
+        private Element<T> parent;
 
         /**
          * Map of immediate children
          */
-        private Map children;
+        private Map<Name, List<Element<T>>> children;
 
         /**
          * Number of non-empty children
@@ -151,7 +153,7 @@ public class PathMap {
         /**
          * Object associated with this element
          */
-        private Object obj;
+        private T obj;
 
         /**
          * Path.Element suitable for path construction associated with this
@@ -185,8 +187,8 @@ public class PathMap {
          * @param nameIndex position where child is created
          * @return child
          */
-        private Element createChild(Path.Element nameIndex) {
-            Element element = new Element(nameIndex);
+        private Element<T> createChild(Path.Element nameIndex) {
+            Element<T> element = new Element<T>(nameIndex);
             put(nameIndex, element);
             return element;
         }
@@ -214,10 +216,10 @@ public class PathMap {
             // convert 1-based index value to 0-base value
             int index = getZeroBasedIndex(nameIndex);
             if (children != null) {
-                ArrayList list = (ArrayList) children.get(nameIndex.getName());
+                List<Element<T>> list = children.get(nameIndex.getName());
                 if (list != null && list.size() > index) {
                     for (int i = index; i < list.size(); i++) {
-                        Element element = (Element) list.get(i);
+                        Element<T> element = list.get(i);
                         if (element != null) {
                             element.index = element.getNormalizedIndex() + 1;
                             element.updatePathElement(element.getName(), element.index);
@@ -234,15 +236,15 @@ public class PathMap {
          * @return element matching <code>nameIndex</code> or <code>null</code> if
          *         none exists.
          */
-        private Element getChild(Path.Element nameIndex) {
+        private Element<T> getChild(Path.Element nameIndex) {
             // convert 1-based index value to 0-base value
             int index = getZeroBasedIndex(nameIndex);
-            Element element = null;
+            Element<T> element = null;
 
             if (children != null) {
-                ArrayList list = (ArrayList) children.get(nameIndex.getName());
+                List<Element<T>> list = children.get(nameIndex.getName());
                 if (list != null && list.size() > index) {
-                    element = (Element) list.get(index);
+                    element = list.get(index);
                 }
             }
             return element;
@@ -253,15 +255,15 @@ public class PathMap {
          * @param nameIndex position where child should be located
          * @param element element to add
          */
-        public void put(Path.Element nameIndex, Element element) {
+        public void put(Path.Element nameIndex, Element<T> element) {
             // convert 1-based index value to 0-base value
             int index = getZeroBasedIndex(nameIndex);
             if (children == null) {
-                children = new HashMap();
+                children = new HashMap<Name, List<Element<T>>>();
             }
-            ArrayList list = (ArrayList) children.get(nameIndex.getName());
+            List<Element<T>> list = children.get(nameIndex.getName());
             if (list == null) {
-                list = new ArrayList();
+                list = new ArrayList<Element<T>>();
                 children.put(nameIndex.getName(), list);
             }
             while (list.size() < index) {
@@ -289,7 +291,7 @@ public class PathMap {
          * @param nameIndex child's path element
          * @return removed child, may be <code>null</code>
          */
-        public Element remove(Path.Element nameIndex) {
+        public Element<T> remove(Path.Element nameIndex) {
             return remove(nameIndex, true, true);
         }
 
@@ -309,7 +311,7 @@ public class PathMap {
          *                      an element
          * @return removed child, may be <code>null</code>
          */
-        private Element remove(Path.Element nameIndex, boolean shift,
+        private Element<T> remove(Path.Element nameIndex, boolean shift,
                                boolean removeIfEmpty) {
 
             // convert 1-based index value to 0-base value
@@ -317,14 +319,14 @@ public class PathMap {
             if (children == null) {
                 return null;
             }
-            ArrayList list = (ArrayList) children.get(nameIndex.getName());
+            List<Element<T>> list = children.get(nameIndex.getName());
             if (list == null || list.size() <= index) {
                 return null;
             }
-            Element element = (Element) list.set(index, null);
+            Element<T> element = list.set(index, null);
             if (shift) {
                 for (int i = index + 1; i < list.size(); i++) {
-                    Element sibling = (Element) list.get(i);
+                    Element<T> sibling = list.get(i);
                     if (sibling != null) {
                         sibling.index--;
                         sibling.updatePathElement(sibling.getName(), sibling.index);
@@ -386,19 +388,14 @@ public class PathMap {
          *                 <code>Path.PathElement</code> and values
          *                 are of type <code>Element</code>
          */
-        public void setChildren(Map children) {
+        public void setChildren(Map<Path.Element, Element<T>> children) {
             // Remove all children without removing the element itself
             this.children = null;
             childrenCount = 0;
 
             // Now add back all items
-            Iterator entries = children.entrySet().iterator();
-            while (entries.hasNext()) {
-                Map.Entry entry = (Map.Entry) entries.next();
-
-                Path.Element nameIndex = (Path.Element) entry.getKey();
-                Element element = (Element) entry.getValue();
-                put(nameIndex, element);
+            for (Map.Entry<Path.Element, Element<T>> entry : children.entrySet()) {
+                put(entry.getKey(), entry.getValue());
             }
 
             // Special case: if map was empty, handle like removeAll()
@@ -411,7 +408,7 @@ public class PathMap {
          * Return the object associated with this element
          * @return object associated with this element
          */
-        public Object get() {
+        public T get() {
             return obj;
         }
 
@@ -419,7 +416,7 @@ public class PathMap {
          * Set the object associated with this element
          * @param obj object associated with this element
          */
-        public void set(Object obj) {
+        public void set(T obj) {
             this.obj = obj;
 
             if (obj == null && childrenCount == 0 && parent != null) {
@@ -542,16 +539,13 @@ public class PathMap {
          *        element regardless, whether the associated object is empty
          *        or not; otherwise call back on non-empty children only
          */
-        public void traverse(ElementVisitor visitor, boolean includeEmpty) {
+        public void traverse(ElementVisitor<T> visitor, boolean includeEmpty) {
             if (includeEmpty || obj != null) {
                 visitor.elementVisited(this);
             }
             if (children != null) {
-                Iterator iter = children.values().iterator();
-                while (iter.hasNext()) {
-                    ArrayList list = (ArrayList) iter.next();
-                    for (int i = 0; i < list.size(); i++) {
-                        Element element = (Element) list.get(i);
+                for (List<Element<T>>list : children.values()) {
+                    for (Element<T> element : list) {
                         if (element != null) {
                             element.traverse(visitor, includeEmpty);
                         }
@@ -578,8 +572,8 @@ public class PathMap {
          * child of this node.
          * @param other node to check
          */
-        public boolean isAncestorOf(Element other) {
-            Element parent = other.parent;
+        public boolean isAncestorOf(Element<T> other) {
+            Element<T> parent = other.parent;
             while (parent != null) {
                 if (parent == this) {
                     return true;
@@ -593,7 +587,7 @@ public class PathMap {
          * Return the parent of this element
          * @return parent or <code>null</code> if this is the root element
          */
-        public Element getParent() {
+        public Element<T> getParent() {
             return parent;
         }
 
@@ -609,15 +603,11 @@ public class PathMap {
          * Return an iterator over all of this element's children. Every
          * element returned by this iterator is of type {@link Element}.
          */
-        public Iterator getChildren() {
-            ArrayList result = new ArrayList();
-
+        public Iterator<Element<T>> getChildren() {
+            ArrayList<Element<T>> result = new ArrayList<Element<T>>();
             if (children != null) {
-                Iterator iter = children.values().iterator();
-                while (iter.hasNext()) {
-                    ArrayList list = (ArrayList) iter.next();
-                    for (int i = 0; i < list.size(); i++) {
-                        Element element = (Element) list.get(i);
+                for (List<Element<T>> list : children.values()) {
+                    for (Element<T> element : list) {
                         if (element != null) {
                             result.add(element);
                         }
@@ -637,12 +627,12 @@ public class PathMap {
          * @return descendant, maybe <code>null</code> if <code>exact</code> is
          *         <code>true</code>
          */
-        public Element getDescendant(Path relPath, boolean exact) {
+        public Element<T> getDescendant(Path relPath, boolean exact) {
             Path.Element[] elements = relPath.getElements();
-            Element current = this;
+            Element<T> current = this;
 
             for (int i = 0; i < elements.length; i++) {
-                Element next = current.getChild(elements[i]);
+                Element<T> next = current.getChild(elements[i]);
                 if (next == null) {
                     if (exact) {
                         return null;
@@ -658,12 +648,12 @@ public class PathMap {
     /**
      * Element visitor used in {@link PathMap#traverse}
      */
-    public interface ElementVisitor {
+    public interface ElementVisitor<T> {
 
         /**
          * Invoked for every element visited on a tree traversal
          * @param element element visited
          */
-        void elementVisited(Element element);
+        void elementVisited(Element<T> element);
     }
 }

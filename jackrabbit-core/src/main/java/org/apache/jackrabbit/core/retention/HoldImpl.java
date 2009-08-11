@@ -63,16 +63,16 @@ class HoldImpl implements Hold {
         return valueFactory.createValue(str);
     }
 
-    static Hold createFromValue(Value val, NodeId nodeId, NameResolver resolver) throws RepositoryException {
+    static HoldImpl createFromValue(Value val, NodeId nodeId, NameResolver resolver) throws RepositoryException {
         String str = val.getString();
         Name name = NAME_FACTORY.create(str.substring(2));
         boolean isDeep = str.startsWith(DEEP);
         return new HoldImpl(name, isDeep, nodeId, resolver);
     }
 
-    static Hold[] createFromProperty(PropertyImpl property, NodeId nodeId) throws RepositoryException {
+    static HoldImpl[] createFromProperty(PropertyImpl property, NodeId nodeId) throws RepositoryException {
         Value[] vs = property.getValues();
-        Hold[] holds = new Hold[vs.length];
+        HoldImpl[] holds = new HoldImpl[vs.length];
         for (int i = 0; i < vs.length; i++) {
             holds[i] = createFromValue(vs[i], nodeId, (SessionImpl) property.getSession());
         }
