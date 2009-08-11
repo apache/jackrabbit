@@ -90,7 +90,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     /**
      * Path map containing all locks at the leaves.
      */
-    private final PathMap lockMap = new PathMap();
+    private final PathMap<AbstractLockInfo> lockMap =
+        new PathMap<AbstractLockInfo>();
 
     private final ReentrantLock lockMapLock = new ReentrantLock(){
 
@@ -244,9 +245,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         final ArrayList<AbstractLockInfo> list = new ArrayList<AbstractLockInfo>();
 
-        lockMap.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
-                AbstractLockInfo info = (AbstractLockInfo) element.get();
+        lockMap.traverse(new PathMap.ElementVisitor<AbstractLockInfo>() {
+            public void elementVisited(PathMap.Element<AbstractLockInfo> element) {
+                AbstractLockInfo info = element.get();
                 if (!info.isSessionScoped()) {
                     list.add(info);
                 }
@@ -318,9 +319,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         try {
             // check whether node is already locked
             Path path = getPath(session, node.getId());
-            PathMap.Element element = lockMap.map(path, false);
+            PathMap.Element<AbstractLockInfo> element = lockMap.map(path, false);
 
-            LockInfo other = (LockInfo) element.get();
+            LockInfo other = element.get();
             if (other != null) {
                 if (element.hasPath(path)) {
                     throw new LockException("Node already locked: " + node);
@@ -378,11 +379,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         try {
             SessionImpl session = (SessionImpl) node.getSession();
             // check whether node is locked by this session
-            PathMap.Element element = lockMap.map(getPath(session, node.getId()), true);
+            PathMap.Element<AbstractLockInfo> element =
+                lockMap.map(getPath(session, node.getId()), true);
             if (element == null) {
                 throw new LockException("Node not locked: " + node);
             }
-            AbstractLockInfo info = (AbstractLockInfo) element.get();
+            AbstractLockInfo info = element.get();
             if (info == null) {
                 throw new LockException("Node not locked: " + node);
             }
@@ -415,10 +417,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * @return an array of <code>AbstractLockInfo</code>s
      */
     AbstractLockInfo[] getLockInfos(final SessionImpl session) {
-        final ArrayList<LockInfo> infos = new ArrayList<LockInfo>();
-        lockMap.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
-                LockInfo info = (LockInfo) element.get();
+        final ArrayList<AbstractLockInfo> infos = new ArrayList<AbstractLockInfo>();
+        lockMap.traverse(new PathMap.ElementVisitor<AbstractLockInfo>() {
+            public void elementVisited(PathMap.Element<AbstractLockInfo> element) {
+                AbstractLockInfo info = element.get();
                 if (info.isLive() && info.isLockHolder(session)) {
                     infos.add(info);
                 }
@@ -444,8 +446,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         acquire();
         try {
-            PathMap.Element element = lockMap.map(path, false);
-            AbstractLockInfo info = (AbstractLockInfo) element.get();
+            PathMap.Element<AbstractLockInfo> element = lockMap.map(path, false);
+            AbstractLockInfo info = element.get();
             if (info != null) {
                 if (element.hasPath(path) || info.isDeep()) {
                     return info;
@@ -487,8 +489,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             SessionImpl session = (SessionImpl) node.getSession();
             Path path = getPath(session, node.getId());
 
-            PathMap.Element element = lockMap.map(path, false);
-            AbstractLockInfo info = (AbstractLockInfo) element.get();
+            PathMap.Element<AbstractLockInfo> element = lockMap.map(path, false);
+            AbstractLockInfo info = element.get();
             if (info != null && (element.hasPath(path) || info.deep)) {
                 Node lockHolder = (Node) session.getItemManager().getItem(info.getId());
                 return new LockImpl(info, lockHolder);
@@ -544,7 +546,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         try {
             SessionImpl session = (SessionImpl) node.getSession();
-            PathMap.Element element = lockMap.map(getPath(session, node.getId()), true);
+            PathMap.Element<AbstractLockInfo> element = lockMap.map(getPath(session, node.getId()), true);
             if (element == null) {
                 return false;
             }
@@ -566,8 +568,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             SessionImpl session = (SessionImpl) node.getSession();
             Path path = getPath(session, node.getId());
 
-            PathMap.Element element = lockMap.map(path, false);
-            AbstractLockInfo info = (AbstractLockInfo) element.get();
+            PathMap.Element<AbstractLockInfo> element = lockMap.map(path, false);
+            AbstractLockInfo info = element.get();
             if (info == null) {
                 return false;
             }
@@ -599,8 +601,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     public void checkLock(Path path, Session session)
             throws LockException, RepositoryException {
 
-        PathMap.Element element = lockMap.map(path, false);
-        LockInfo info = (LockInfo) element.get();
+        PathMap.Element<AbstractLockInfo> element = lockMap.map(path, false);
+        LockInfo info = element.get();
         if (info != null) {
             if (element.hasPath(path) || info.isDeep()) {
                 checkLock(info, session);
@@ -635,12 +637,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             throws LockException, RepositoryException {
 
         // check whether node is locked by this session
-        PathMap.Element element = lockMap.map(getPath((SessionImpl) session,
-                node.getId()), true);
+        PathMap.Element<AbstractLockInfo> element =
+            lockMap.map(getPath((SessionImpl) session, node.getId()), true);
         if (element == null) {
             throw new LockException("Node not locked: " + node);
         }
-        AbstractLockInfo info = (AbstractLockInfo) element.get();
+        AbstractLockInfo info = element.get();
         if (info == null) {
             throw new LockException("Node not locked: " + node);
         }
@@ -677,9 +679,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
             NodeImpl node = (NodeImpl)
                 this.sysSession.getItemManager().getItem(lockToken.getId());
-            PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
+            PathMap.Element<AbstractLockInfo> element =
+                lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
-                AbstractLockInfo info = (AbstractLockInfo) element.get();
+                AbstractLockInfo info = element.get();
                 if (info != null) {
                     if (info.isLockHolder(session)) {
                         // nothing to do
@@ -715,9 +718,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
             NodeImpl node = (NodeImpl) this.sysSession.getItemManager()
                     .getItem(lockToken.getId());
-            PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
+            PathMap.Element<AbstractLockInfo> element =
+                lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
-                AbstractLockInfo info = (AbstractLockInfo) element.get();
+                AbstractLockInfo info = element.get();
                 if (info != null) {
                     if (info.isLockHolder(session)) {
                         info.setLockHolder(null);
@@ -979,16 +983,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         }
 
         /**
-         * Return the event type. May be {@link Event#NODE_ADDED},
-         * {@link Event#NODE_REMOVED} or a combination of both.\
-         *
-         * @return event type
-         */
-        public int getType() {
-            return type;
-        }
-
-        /**
          * Return the old path if this is a move operation
          *
          * @return old path
@@ -1011,9 +1005,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * {@inheritDoc}
      */
     public void onEvent(EventIterator events) {
-        Iterator iter = consolidateEvents(events);
+        Iterator<HierarchyEvent> iter = consolidateEvents(events);
         while (iter.hasNext()) {
-            HierarchyEvent event = (HierarchyEvent) iter.next();
+            HierarchyEvent event = iter.next();
             if (event.type == Event.NODE_ADDED) {
                 nodeAdded(event.path);
             } else if (event.type == Event.NODE_REMOVED) {
@@ -1029,7 +1023,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * add and remove operations on nodes with the same UUID into a move
      * operation.
      */
-    private Iterator consolidateEvents(EventIterator events) {
+    private Iterator<HierarchyEvent> consolidateEvents(EventIterator events) {
         LinkedMap eventMap = new LinkedMap();
 
         while (events.hasNext()) {
@@ -1062,15 +1056,14 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * Refresh a non-empty path element whose children might have changed
      * its position.
      */
-    private void refresh(PathMap.Element element) {
+    private void refresh(PathMap.Element<AbstractLockInfo> element) {
         final ArrayList<AbstractLockInfo> infos = new ArrayList<AbstractLockInfo>();
         boolean needsSave = false;
 
         // save away non-empty children
-        element.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
-                AbstractLockInfo info = (AbstractLockInfo) element.get();
-                infos.add(info);
+        element.traverse(new PathMap.ElementVisitor<AbstractLockInfo>() {
+            public void elementVisited(PathMap.Element<AbstractLockInfo> element) {
+                infos.add(element.get());
             }
         }, false);
 
@@ -1110,7 +1103,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         acquire();
 
         try {
-            PathMap.Element parent = lockMap.map(path.getAncestor(1), true);
+            PathMap.Element<AbstractLockInfo> parent =
+                lockMap.map(path.getAncestor(1), true);
             if (parent != null) {
                 refresh(parent);
             }
@@ -1132,7 +1126,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         acquire();
 
         try {
-            PathMap.Element parent = lockMap.map(oldPath.getAncestor(1), true);
+            PathMap.Element<AbstractLockInfo> parent =
+                lockMap.map(oldPath.getAncestor(1), true);
             if (parent != null) {
                 refresh(parent);
             }
@@ -1153,7 +1148,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         acquire();
 
         try {
-            PathMap.Element parent = lockMap.map(path.getAncestor(1), true);
+            PathMap.Element<AbstractLockInfo> parent =
+                lockMap.map(path.getAncestor(1), true);
             if (parent != null) {
                 refresh(parent);
             }
@@ -1286,11 +1282,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         try {
             Path path = getPath(sysSession, nodeId);
-            PathMap.Element element = lockMap.map(path, true);
+            PathMap.Element<AbstractLockInfo> element = lockMap.map(path, true);
             if (element == null) {
                 throw new LockException("Node not locked: " + path.toString());
             }
-            AbstractLockInfo info = (AbstractLockInfo) element.get();
+            AbstractLockInfo info = element.get();
             if (info == null) {
                 throw new LockException("Node not locked: " + path.toString());
             }
@@ -1310,8 +1306,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * @param ps print stream to dump to
      */
     public void dump(final PrintStream ps) {
-        lockMap.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
+        lockMap.traverse(new PathMap.ElementVisitor<AbstractLockInfo>() {
+            public void elementVisited(PathMap.Element<AbstractLockInfo> element) {
                 StringBuffer line = new StringBuffer();
                 for (int i = 0; i < element.getDepth(); i++) {
                     line.append("--");

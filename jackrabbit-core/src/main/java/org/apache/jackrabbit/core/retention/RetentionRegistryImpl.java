@@ -63,8 +63,10 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
      */
     private static final String FILE_NAME = "retention";
 
-    private final PathMap retentionMap  = new PathMap();
-    private final PathMap holdMap = new PathMap();
+    private final PathMap<RetentionPolicyImpl> retentionMap =
+        new PathMap<RetentionPolicyImpl>();
+
+    private final PathMap<List<HoldImpl>> holdMap = new PathMap<List<HoldImpl>>();
 
     private final SessionImpl session;
     private final FileSystemResource retentionFile;
@@ -150,23 +152,22 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
      * present only once.
      */
     private void writeRetentionFile() {
-        final Set nodeIds = new HashSet();
+        final Set<NodeId> nodeIds = new HashSet<NodeId>();
 
         // first look for nodes containing holds
-        holdMap.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
-                List holds = (List) element.get();
+        holdMap.traverse(new PathMap.ElementVisitor<List<HoldImpl>>() {
+            public void elementVisited(PathMap.Element<List<HoldImpl>> element) {
+                List<HoldImpl> holds = element.get();
                 if (!holds.isEmpty()) {
-                    nodeIds.add(((HoldImpl) holds.get(0)).getNodeId());
+                    nodeIds.add(holds.get(0).getNodeId());
                 }
             }
         }, false);
 
         // then collect ids of nodes having an retention policy
-        retentionMap.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
-                RetentionPolicyImpl rp  = (RetentionPolicyImpl) element.get();
-                nodeIds.add(rp.getNodeId());
+        retentionMap.traverse(new PathMap.ElementVisitor<RetentionPolicyImpl>() {
+            public void elementVisited(PathMap.Element<RetentionPolicyImpl> element) {
+                nodeIds.add(element.get().getNodeId());
             }
         }, false);
 
@@ -174,7 +175,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
             BufferedWriter writer = null;
             try {
                 writer = new BufferedWriter(new OutputStreamWriter(retentionFile.getOutputStream()));
-                for (Iterator it = nodeIds.iterator(); it.hasNext();) {
+                for (Iterator<NodeId> it = nodeIds.iterator(); it.hasNext();) {
                     writer.write(it.next().toString());
                     if (it.hasNext()) {
                         writer.newLine();
@@ -197,7 +198,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
 
     private void addHolds(Path nodePath, PropertyImpl p) throws RepositoryException {
         synchronized (holdMap) {
-            Hold[] holds = HoldImpl.createFromProperty(p, ((PropertyId) p.getId()).getParentId());
+            HoldImpl[] holds = HoldImpl.createFromProperty(p, ((PropertyId) p.getId()).getParentId());
             holdMap.put(nodePath, Arrays.asList(holds));
             holdCnt++;
         }
@@ -205,7 +206,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
 
     private void removeHolds(Path nodePath) {
         synchronized (holdMap) {
-            PathMap.Element el = holdMap.map(nodePath, true);
+            PathMap.Element<List<HoldImpl>> el = holdMap.map(nodePath, true);
             if (el != null) {
                 el.remove();
                 holdCnt--;
@@ -215,7 +216,8 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
 
     private void addRetentionPolicy(Path nodePath, PropertyImpl p) throws RepositoryException {
         synchronized (retentionMap) {
-            RetentionPolicy rp = new RetentionPolicyImpl(p.getString(), ((PropertyId) p.getId()).getParentId(), session);
+            RetentionPolicyImpl rp = new RetentionPolicyImpl(
+                    p.getString(), ((PropertyId) p.getId()).getParentId(), session);
             retentionMap.put(nodePath, rp);
             retentionCnt++;
         }
@@ -223,7 +225,8 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
 
     private void removeRetentionPolicy(Path nodePath) {
         synchronized (retentionMap) {
-            PathMap.Element el = retentionMap.map(nodePath, true);
+            PathMap.Element<RetentionPolicyImpl> el =
+                retentionMap.map(nodePath, true);
             if (el != null) {
                 el.remove();
                 retentionCnt--;
@@ -242,8 +245,8 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
         if (holdCnt <= 0) {
             return false;
         }
-        PathMap.Element element = holdMap.map(nodePath, false);
-        List holds = (List) element.get();
+        PathMap.Element<List<HoldImpl>> element = holdMap.map(nodePath, false);
+        List<HoldImpl> holds = element.get();
         if (holds != null) {
             if (element.hasPath(nodePath)) {
                 // one or more holds on the specified path
@@ -257,9 +260,8 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
                 // by a deep hold on any ancestor.
                 return true;
             } else {
-                for (Iterator it = holds.iterator(); it.hasNext();) {
-                    Hold h = (Hold) it.next();
-                    if (h.isDeep()) {
+                for (Hold hold : holds) {
+                    if (hold.isDeep()) {
                         return true;
                     }
                 }
@@ -280,14 +282,14 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
             return false;
         }
         RetentionPolicy rp = null;
-        PathMap.Element element = retentionMap.map(nodePath, true);
+        PathMap.Element<RetentionPolicyImpl> element = retentionMap.map(nodePath, true);
         if (element != null) {
-            rp = (RetentionPolicy) element.get();
+            rp = element.get();
         }
         if (rp == null && checkParent) {
             element = retentionMap.map(nodePath.getAncestor(1), true);
             if (element != null) {
-                rp = (RetentionPolicy) element.get();
+                rp = element.get();
             }
         }
         return rp != null;

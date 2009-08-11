@@ -63,7 +63,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Mapping of paths to children in the path map
      */
-    private final PathMap pathCache = new PathMap();
+    private final PathMap<LRUEntry> pathCache = new PathMap<LRUEntry>();
 
     /**
      * Mapping of item ids to <code>LRUEntry</code> in the path map
@@ -132,13 +132,13 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             pathToNode = path.getAncestor(1);
         }
 
-        PathMap.Element element = map(pathToNode);
+        PathMap.Element<LRUEntry> element = map(pathToNode);
         if (element == null) {
             // not even intermediate match: call base class
             return super.resolvePath(path, typesAllowed);
         }
 
-        LRUEntry entry = (LRUEntry) element.get();
+        LRUEntry entry = element.get();
         if (element.hasPath(path)) {
             // exact match: return answer
             synchronized (cacheMonitor) {
@@ -179,7 +179,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throws ItemStateException, RepositoryException {
 
         if (state.isNode()) {
-            PathMap.Element element = get(state.getId());
+            PathMap.Element<LRUEntry> element = get(state.getId());
             if (element != null) {
                 try {
                     Path.Element[] elements = element.getPath().getElements();
@@ -218,7 +218,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throws ItemNotFoundException, RepositoryException {
 
         if (id.denotesNode()) {
-            PathMap.Element element = get(id);
+            PathMap.Element<LRUEntry> element = get(id);
             if (element != null) {
                 try {
                     return element.getPath();
@@ -239,7 +239,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throws ItemNotFoundException, RepositoryException {
 
         if (id.denotesNode()) {
-            PathMap.Element element = get(id);
+            PathMap.Element<LRUEntry> element = get(id);
             if (element != null) {
                 return element.getName();
             }
@@ -254,7 +254,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throws ItemNotFoundException, RepositoryException {
 
         if (id.denotesNode()) {
-            PathMap.Element element = get(id);
+            PathMap.Element<LRUEntry> element = get(id);
             if (element != null) {
                 return element.getDepth();
             }
@@ -269,9 +269,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throws ItemNotFoundException, RepositoryException {
 
         if (itemId.denotesNode()) {
-            PathMap.Element element = get(nodeId);
+            PathMap.Element<LRUEntry> element = get(nodeId);
             if (element != null) {
-                PathMap.Element child = get(itemId);
+                PathMap.Element<LRUEntry> child = get(itemId);
                 if (child != null) {
                     return element.isAncestorOf(child);
                 }
@@ -311,10 +311,10 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 // Item not cached, ignore
                 return;
             }
-            for (PathMap.Element element : entry.getElements()) {
-                Iterator iter = element.getChildren();
+            for (PathMap.Element<LRUEntry> element : entry.getElements()) {
+                Iterator<PathMap.Element<LRUEntry>> iter = element.getChildren();
                 while (iter.hasNext()) {
-                    PathMap.Element child = (PathMap.Element) iter.next();
+                    PathMap.Element<LRUEntry> child = iter.next();
                     ChildNodeEntry cne = modified.getChildNodeEntry(
                             child.getName(), child.getNormalizedIndex());
                     if (cne == null) {
@@ -323,7 +323,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                         continue;
                     }
 
-                    LRUEntry childEntry = (LRUEntry) child.get();
+                    LRUEntry childEntry = child.get();
                     if (childEntry != null && !cne.getId().equals(childEntry.getId())) {
                         // Different child item, remove
                         evict(child, true);
@@ -395,13 +395,14 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (entry == null) {
                 return;
             }
-            for (PathMap.Element parent : entry.getElements()) {
-                HashMap<Path.Element, PathMap.Element> newChildrenOrder = new HashMap<Path.Element, PathMap.Element>();
+            for (PathMap.Element<LRUEntry> parent : entry.getElements()) {
+                HashMap<Path.Element, PathMap.Element<LRUEntry>> newChildrenOrder =
+                    new HashMap<Path.Element, PathMap.Element<LRUEntry>>();
                 boolean orderChanged = false;
 
-                Iterator iter = parent.getChildren();
+                Iterator<PathMap.Element<LRUEntry>> iter = parent.getChildren();
                 while (iter.hasNext()) {
-                    PathMap.Element child = (PathMap.Element) iter.next();
+                    PathMap.Element<LRUEntry> child = iter.next();
                     LRUEntry childEntry = (LRUEntry) child.get();
                     if (childEntry == null) {
                         /**
@@ -479,7 +480,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param id node id
      * @return cached element, <code>null</code> if not found
      */
-    private PathMap.Element get(ItemId id) {
+    private PathMap.Element<LRUEntry> get(ItemId id) {
         synchronized (cacheMonitor) {
             LRUEntry entry = (LRUEntry) idCache.get(id);
             if (entry != null) {
@@ -498,11 +499,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param path path
      * @return cached element, <code>null</code> if not found
      */
-    private PathMap.Element map(Path path) {
+    private PathMap.Element<LRUEntry> map(Path path) {
         synchronized (cacheMonitor) {
-            PathMap.Element element = pathCache.map(path, false);
+            PathMap.Element<LRUEntry> element = pathCache.map(path, false);
             while (element != null) {
-                LRUEntry entry = (LRUEntry) element.get();
+                LRUEntry entry = element.get();
                 if (entry != null) {
                     entry.touch();
                     return element;
@@ -531,7 +532,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                  */
                 LRUEntry entry = head;
                 while (entry != null) {
-                    PathMap.Element[] elements = entry.getElements();
+                    PathMap.Element<LRUEntry>[] elements = entry.getElements();
                     int childrenCount = 0;
                     for (int i = 0; i < elements.length; i++) {
                         childrenCount += elements[i].getChildrenCount();
@@ -543,7 +544,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                     entry = entry.getNext();
                 }
             }
-            PathMap.Element element = pathCache.put(path);
+            PathMap.Element<LRUEntry> element = pathCache.put(path);
             if (element.get() != null) {
                 if (!id.equals(((LRUEntry) element.get()).getId())) {
                     log.warn("overwriting PathMap.Element");
@@ -582,7 +583,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (path == null) {
                 return true;
             }
-            PathMap.Element[] elements = entry.getElements();
+            PathMap.Element<LRUEntry>[] elements = entry.getElements();
             for (int i = 0; i < elements.length; i++) {
                 if (elements[i].hasPath(path)) {
                     return true;
@@ -601,7 +602,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     boolean isCached(Path path) {
         synchronized (cacheMonitor) {
-            PathMap.Element element = pathCache.map(path, true);
+            PathMap.Element<LRUEntry> element = pathCache.map(path, true);
             if (element != null) {
                 return element.get() != null;
             }
@@ -620,7 +621,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         synchronized (cacheMonitor) {
             LRUEntry entry = (LRUEntry) idCache.get(id);
             if (entry != null) {
-                PathMap.Element[] elements = entry.getElements();
+                PathMap.Element<LRUEntry>[] elements = entry.getElements();
                 for (int i = 0; i < elements.length; i++) {
                     evict(elements[i], shift);
                 }
@@ -636,10 +637,10 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      *
      * @param element path map element
      */
-    private void evict(PathMap.Element element, boolean shift) {
+    private void evict(PathMap.Element<LRUEntry> element, boolean shift) {
         // assert: synchronized (cacheMonitor)
-        element.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
+        element.traverse(new PathMap.ElementVisitor<LRUEntry>() {
+            public void elementVisited(PathMap.Element<LRUEntry> element) {
                 LRUEntry entry = (LRUEntry) element.get();
                 if (entry.removeElement(element) == 0) {
                     idCache.remove(entry.getId());
@@ -665,7 +666,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throws RepositoryException, ItemStateException {
 
         // assert: synchronized (cacheMonitor)
-        PathMap.Element element = null;
+        PathMap.Element<LRUEntry> element = null;
 
         LRUEntry entry = (LRUEntry) idCache.get(id);
         if (entry != null) {
@@ -678,14 +679,14 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 child = (NodeState) getItemState(id);
             }
             if (child == null || !child.isShareable()) {
-                PathMap.Element[] elements = entry.getElements();
+                PathMap.Element<LRUEntry>[] elements = entry.getElements();
                 element = elements[0];
                 for (int i = 0; i < elements.length; i++) {
                     elements[i].remove();
                 }
             }
         }
-        PathMap.Element parent = pathCache.map(path.getAncestor(1), true);
+        PathMap.Element<LRUEntry> parent = pathCache.map(path.getAncestor(1), true);
         if (parent != null) {
             parent.insert(path.getNameElement());
         }
@@ -710,11 +711,13 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throws RepositoryException, ItemStateException {
 
         // assert: synchronized (cacheMonitor)
-        PathMap.Element parent = pathCache.map(path.getAncestor(1), true);
+        PathMap.Element<LRUEntry> parent =
+            pathCache.map(path.getAncestor(1), true);
         if (parent == null) {
             return;
         }
-        PathMap.Element element = parent.getDescendant(PathFactoryImpl.getInstance().create(
+        PathMap.Element<LRUEntry> element =
+            parent.getDescendant(PathFactoryImpl.getInstance().create(
                 new Path.Element[] { path.getNameElement() }), true);
         if (element != null) {
             // with SNS, this might evict a child that is NOT the one
@@ -749,8 +752,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     public void dump(final PrintStream ps) {
         synchronized (cacheMonitor) {
-            pathCache.traverse(new PathMap.ElementVisitor() {
-                public void elementVisited(PathMap.Element element) {
+            pathCache.traverse(new PathMap.ElementVisitor<LRUEntry>() {
+                public void elementVisited(PathMap.Element<LRUEntry> element) {
                     StringBuffer line = new StringBuffer();
                     for (int i = 0; i < element.getDepth(); i++) {
                         line.append("--");
@@ -787,9 +790,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             elementsInCache += entry.getElements().length;
         }
 
-        class PathMapElementCounter implements PathMap.ElementVisitor {
+        class PathMapElementCounter implements PathMap.ElementVisitor<LRUEntry> {
             int count;
-            public void elementVisited(PathMap.Element element) {
+            public void elementVisited(PathMap.Element<LRUEntry> element) {
                 LRUEntry mappedEntry = (LRUEntry) element.get();
                 LRUEntry cachedEntry = (LRUEntry) idCache.get(mappedEntry.getId());
                 if (cachedEntry == null) {
@@ -804,7 +807,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                         cachedEntry.getId() + ").";
                     throw new IllegalStateException(msg);
                 }
-                PathMap.Element[] elements = cachedEntry.getElements();
+                PathMap.Element<LRUEntry>[] elements = cachedEntry.getElements();
                 for (int i = 0; i < elements.length; i++) {
                     if (elements[i] == element) {
                         count++;
@@ -850,7 +853,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         /**
          * Elements in path map
          */
-        private PathMap.Element[] elements;
+        private PathMap.Element<LRUEntry>[] elements;
 
         /**
          * Create a new instance of this class
@@ -858,7 +861,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          * @param id node id
          * @param element the path map element for this entry
          */
-        public LRUEntry(NodeId id, PathMap.Element element) {
+        public LRUEntry(NodeId id, PathMap.Element<LRUEntry> element) {
             this.id = id;
             this.elements = new PathMap.Element[] { element };
 
@@ -909,15 +912,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         }
 
         /**
-         * Return previous LRU entry
-         *
-         * @return previous LRU entry
-         */
-        public LRUEntry getPrevious() {
-            return previous;
-        }
-
-        /**
          * Return next LRU entry
          *
          * @return next LRU entry
@@ -942,15 +936,16 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          *
          * @return element in path map
          */
-        public PathMap.Element[] getElements() {
+        public PathMap.Element<LRUEntry>[] getElements() {
             return elements;
         }
 
         /**
          * Add a mapping to some element.
          */
-        public void addElement(PathMap.Element element) {
-            PathMap.Element[] tmp = new PathMap.Element[elements.length + 1];
+        public void addElement(PathMap.Element<LRUEntry> element) {
+            PathMap.Element<LRUEntry>[] tmp =
+                new PathMap.Element[elements.length + 1];
             System.arraycopy(elements, 0, tmp, 0, elements.length);
             tmp[elements.length] = element;
             elements = tmp;
@@ -961,7 +956,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          *
          * @return number of mappings left
          */
-        public int removeElement(PathMap.Element element) {
+        public int removeElement(PathMap.Element<LRUEntry> element) {
             boolean found = false;
             for (int i = 0; i < elements.length; i++) {
                 if (found) {
@@ -971,7 +966,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 }
             }
             if (found) {
-                PathMap.Element[] tmp = new PathMap.Element[elements.length - 1];
+                PathMap.Element<LRUEntry>[] tmp =
+                    new PathMap.Element[elements.length - 1];
                 System.arraycopy(elements, 0, tmp, 0, tmp.length);
                 elements = tmp;
             }
