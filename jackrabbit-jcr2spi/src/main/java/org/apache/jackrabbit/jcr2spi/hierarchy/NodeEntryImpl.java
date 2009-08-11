@@ -297,34 +297,48 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#getId()
      */
     public NodeId getId() throws InvalidItemStateException, RepositoryException {
-        IdFactory idFactory = getIdFactory();
-        if (uniqueID != null) {
-            return idFactory.createNodeId(uniqueID);
-        } else {
-            PathFactory pf = getPathFactory();
-            if (parent == null) {
-                // root node
-                return idFactory.createNodeId((String) null, pf.getRootPath());
-            } else {
-                Path p = pf.create(getName(), getIndex());
-                return idFactory.createNodeId(parent.getId(), p);
-            }
-        }
+        return getId(false);
     }
 
     /**
      * @see NodeEntry#getWorkspaceId()
      */
     public NodeId getWorkspaceId() throws InvalidItemStateException, RepositoryException {
-        if (uniqueID != null || parent == null) {
-            // uniqueID and root-node -> internal id is always the same as getId().
-            return getId();
-        } else {
-            NodeId parentId = (revertInfo != null)
-                ? revertInfo.oldParent.getWorkspaceId()
-                : parent.getWorkspaceId();
-            return getIdFactory().createNodeId(parentId,
-                    getPathFactory().create(getName(true), getIndex(true)));
+        return getId(true);
+    }
+
+    private NodeId getId(boolean wspId) throws RepositoryException {
+        if (parent == null) { // shortcut for root
+            return getIdFactory().createNodeId((String) null, getPathFactory().getRootPath());  // fixme: cache root
+        }
+        else if (uniqueID != null) { // shortcut for uniqueID based IDs
+            return getIdFactory().createNodeId(uniqueID);
+        }
+        else {
+            return buildNodeId(this, getPathFactory(), getIdFactory(), wspId);
+        }
+    }
+
+    private static NodeId buildNodeId(NodeEntryImpl entry, PathFactory pathFactory, IdFactory idFactory,
+            boolean wspId) throws RepositoryException {
+
+        PathBuilder pathBuilder = new PathBuilder(pathFactory);
+        while (entry.getParent() != null && entry.getUniqueID() == null) {
+            pathBuilder.addFirst(entry.getName(wspId), entry.getIndex(wspId));
+            entry = (wspId && entry.revertInfo != null)
+                ? entry.revertInfo.oldParent
+                : entry.parent;
+        }
+
+        // We either walked up to an entry below root or up to an uniqueID. In the former
+        // case we construct an NodeId with an absolute path. In the latter case we construct
+        // a NodeId from an uuid and a relative path.
+        if (entry.getParent() == null) {
+            pathBuilder.addRoot();
+            return idFactory.createNodeId((String) null, pathBuilder.getPath());
+        }
+        else {
+            return idFactory.createNodeId(entry.getUniqueID(), pathBuilder.getPath());
         }
     }
 
