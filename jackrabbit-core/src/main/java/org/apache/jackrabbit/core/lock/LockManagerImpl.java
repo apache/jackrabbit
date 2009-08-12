@@ -322,15 +322,20 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             LockInfo other = element.get();
             if (other != null) {
                 if (element.hasPath(path)) {
-                    throw new LockException("Node already locked: " + node);
+                    throw new LockException(
+                            "Node already locked: " + node, null,
+                            node.getPath());
                 } else if (other.isDeep()) {
                     throw new LockException(
-                            "Parent node has a deep lock: " + node);
+                            "Parent node has a deep lock: " + node, null,
+                            session.getJCRPath(getPath(session, other.getId())));
                 }
             }
             if (info.isDeep() && element.hasPath(path)
                     && element.getChildrenCount() > 0) {
-                throw new LockException("Some child node is locked.");
+                throw new LockException(
+                        "Some child node is locked.", null,
+                        session.getJCRPath(getPath(session, other.getId())));
             }
 
             // create lock token
@@ -677,8 +682,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             NodeId id = LockInfo.parseLockToken(lt);
 
             NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
-            PathMap.Element<LockInfo> element =
-                lockMap.map(node.getPrimaryPath(), true);
+            Path path = node.getPrimaryPath();
+            PathMap.Element<LockInfo> element = lockMap.map(path, true);
             if (element != null) {
                 LockInfo info = element.get();
                 if (info != null) {
@@ -692,7 +697,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     } else {
                         String msg = "Cannot add lock token: lock already held by other session.";
                         log.warn(msg);
-                        throw new LockException(msg);
+                        throw new LockException(
+                                msg, null, session.getJCRPath(path));
                     }
                 }
             }
@@ -727,7 +733,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     } else {
                         String msg = "Cannot remove lock token: lock held by other session.";
                         log.warn(msg);
-                        throw new LockException(msg);
+                        throw new LockException(
+                                msg, null, session.getJCRPath(getPath(session, id)));
                     }
                 }
             }

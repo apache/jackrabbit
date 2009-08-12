@@ -106,10 +106,12 @@ class LockImpl implements javax.jcr.lock.Lock {
      */
     public void refresh() throws LockException, RepositoryException {
         if (!isLive()) {
-            throw new LockException("Lock is not live any more.");
+            throw new LockException(
+                    "Lock is not live any more.", null, node.getPath());
         }
         if (!isLockOwningSession()) {
-            throw new LockException("Session does not hold lock.");
+            throw new LockException(
+                    "Session does not hold lock.", null, node.getPath());
         }
         // make sure the current session has sufficient privileges to refresh
         // the lock.
