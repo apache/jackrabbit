@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.lock;
 
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 
 import javax.jcr.Session;
@@ -54,11 +55,25 @@ public interface LockInfo {
     public boolean isLockHolder(Session session);
 
     /**
+     * Return the session currently holding the lock
+     *
+     * @return session currently holding the lock
+     */
+    SessionImpl getLockHolder();
+
+    /**
+     * Set the session currently holding the lock
+     *
+     * @param lockHolder session currently holding the lock
+     */
+    void setLockHolder(SessionImpl lockHolder);
+
+    /**
      * Return the lock token associated with this lock.
      *
      * @return lock token
      */
-    public String getLockToken();
+    LockToken getLockToken();
 
     /**
      * Return a flag indicating whether the lock is live
@@ -66,6 +81,19 @@ public interface LockInfo {
      * @return <code>true</code> if the lock is live; otherwise <code>false</code>
      */
     public boolean isLive();
+
+    /**
+     * Set the live flag
+     * @param live live flag
+     */
+    void setLive(boolean live);
+
+    /**
+     * Return a flag indicating whether the lock information may still change.
+     *
+     * @return <code>true</code> if the lock is still alive.
+     */
+    boolean mayChange();
 
     /**
      * Return a flag indicating whether the lock is session-scoped
@@ -81,4 +109,5 @@ public interface LockInfo {
      * @return number of seconds remaining until the lock expires.
      */
     public long getSecondsRemaining();
+
 }

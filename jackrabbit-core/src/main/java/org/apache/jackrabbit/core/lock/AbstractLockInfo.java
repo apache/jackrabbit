@@ -157,8 +157,8 @@ abstract class AbstractLockInfo implements LockInfo {
      *
      * @return lock token
      */
-    public String getLockToken() {
-        return lockToken.toString();
+    public LockToken getLockToken() {
+        return lockToken;
     }
 
     /**

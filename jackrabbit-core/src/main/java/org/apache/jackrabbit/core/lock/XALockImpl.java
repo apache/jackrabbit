@@ -31,9 +31,9 @@ class XALockImpl extends LockImpl {
     private final XALockManager lockMgr;
     
     /**
-     * Abstract lock info.
+     * The underlying lock info.
      */
-    private final AbstractLockInfo info;
+    private final LockInfo info;
 
     /**
      * Create a new instance of this class.
@@ -41,7 +41,7 @@ class XALockImpl extends LockImpl {
      * @param node node holding lock
      */
     public XALockImpl(
-            XALockManager lockMgr, AbstractLockInfo info, NodeImpl node) {
+            XALockManager lockMgr, LockInfo info, NodeImpl node) {
         super(info, node);
 
         this.info = info;
