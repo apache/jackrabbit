@@ -201,7 +201,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                 if (s == null || s.equals("")) {
                     break;
                 }
-                reapplyLock(LockToken.parse(s));
+                reapplyLock(s);
             }
         } catch (IOException e) {
             throw new FileSystemException("error while reading locks file", e);
@@ -215,13 +215,14 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      *
      * @param lockToken lock token to apply
      */
-    private void reapplyLock(LockToken lockToken) {
+    private void reapplyLock(String lockToken) {
         try {
-            NodeImpl node = (NodeImpl)
-                sysSession.getItemManager().getItem(lockToken.getId());
-            Path path = getPath(sysSession, lockToken.getId());
+            NodeId id = LockInfo.parseLockToken(lockToken);
+            NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
+            Path path = getPath(sysSession, id);
 
-            InternalLockInfo info = new InternalLockInfo(lockToken, false,
+            InternalLockInfo info = new InternalLockInfo(
+                    id, false,
                     node.getProperty(NameConstants.JCR_LOCKISDEEP).getBoolean(),
                     node.getProperty(NameConstants.JCR_LOCKOWNER).getString());
             info.setLive(true);
@@ -259,7 +260,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             writer = new BufferedWriter(
                     new OutputStreamWriter(locksFile.getOutputStream()));
             for (LockInfo info : list) {
-                writer.write(info.getLockToken().toString());
+                writer.write(info.getLockToken());
                 writer.newLine();
             }
         } catch (FileSystemException fse) {
@@ -300,8 +301,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         SessionImpl session = (SessionImpl) node.getSession();
         String lockOwner = (ownerInfo != null) ? ownerInfo : session.getUserID();
-        InternalLockInfo info = new InternalLockInfo(new LockToken(node.getNodeId()),
-                isSessionScoped, isDeep, lockOwner, timeoutHint);
+        InternalLockInfo info = new InternalLockInfo(
+                node.getNodeId(), isSessionScoped, isDeep, lockOwner, timeoutHint);
 
         ClusterOperation operation = null;
         boolean successful = false;
@@ -327,7 +328,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                             "Parent node has a deep lock: " + node);
                 }
             }
-            if (info.deep && element.hasPath(path)
+            if (info.isDeep() && element.hasPath(path)
                     && element.getChildrenCount() > 0) {
                 throw new LockException("Some child node is locked.");
             }
@@ -337,8 +338,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             info.setLive(true);
             session.addListener(info);
             if (!info.isSessionScoped()) {
-                getSessionLockManager(session).lockTokenAdded(
-                        info.getLockToken().toString());
+                getSessionLockManager(session).lockTokenAdded(info.getLockToken());
             }
             lockMap.put(path, info);
 
@@ -388,8 +388,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             }
             checkUnlock(info, session);
 
-            getSessionLockManager(session).lockTokenRemoved(
-                    info.getLockToken().toString());
+            getSessionLockManager(session).lockTokenRemoved(info.getLockToken());
 
             element.set(null);
             info.setLive(false);
@@ -470,7 +469,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
             throws LockException, RepositoryException {
         LockInfo info = internalLock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
-        writeLockProperties(node, info.lockOwner, info.deep);
+        writeLockProperties(node, info.getLockOwner(), info.isDeep());
 
         return new LockImpl(info, node);
     }
@@ -675,10 +674,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      */
     public void addLockToken(SessionImpl session, String lt) throws LockException, RepositoryException {
         try {
-            LockToken lockToken = LockToken.parse(lt);
+            NodeId id = LockInfo.parseLockToken(lt);
 
-            NodeImpl node = (NodeImpl)
-                this.sysSession.getItemManager().getItem(lockToken.getId());
+            NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
             PathMap.Element<LockInfo> element =
                 lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
@@ -714,10 +712,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             throws LockException, RepositoryException {
 
         try {
-            LockToken lockToken = LockToken.parse(lt);
+            NodeId id = LockInfo.parseLockToken(lt);
 
-            NodeImpl node = (NodeImpl) this.sysSession.getItemManager()
-                    .getItem(lockToken.getId());
+            NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
             PathMap.Element<LockInfo> element =
                 lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
@@ -1174,7 +1171,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
          * @param deep          whether lock is deep
          * @param lockOwner     owner of lock
          */
-        public InternalLockInfo(LockToken lockToken, boolean sessionScoped,
+        public InternalLockInfo(NodeId lockToken, boolean sessionScoped,
                                 boolean deep, String lockOwner) {
             this(lockToken, sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
         }
@@ -1188,7 +1185,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
          * @param lockOwner     owner of lock
          * @param timeoutHint
          */
-        public InternalLockInfo(LockToken lockToken, boolean sessionScoped,
+        public InternalLockInfo(NodeId lockToken, boolean sessionScoped,
                                 boolean deep, String lockOwner, long timeoutHint) {
             super(lockToken, sessionScoped, deep, lockOwner, timeoutHint);
         }
@@ -1229,7 +1226,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                         }
                     }
                 } else if (isLockHolder(session)) {
-                    session.removeLockToken(getLockToken().toString());
+                    session.removeLockToken(getLockToken());
                     setLockHolder(null);
                 }
             }
@@ -1264,7 +1261,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             Path path = getPath(sysSession, nodeId);
 
             // create lock token
-            InternalLockInfo info = new InternalLockInfo(new LockToken(nodeId), false, isDeep, lockOwner);
+            InternalLockInfo info = new InternalLockInfo(nodeId, false, isDeep, lockOwner);
             info.setLive(true);
             lockMap.put(path, info);
 

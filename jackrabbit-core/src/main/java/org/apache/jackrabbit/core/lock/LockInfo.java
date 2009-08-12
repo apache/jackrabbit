@@ -37,24 +37,24 @@ public abstract class LockInfo {
     static final long TIMEOUT_EXPIRED = -1;
 
     /**
-     * Lock token
+     * Lock holder node id. Used also as the lock token.
      */
-    protected final LockToken lockToken;
+    private final NodeId id;
 
     /**
      * Flag indicating whether lock is session scoped
      */
-    protected final boolean sessionScoped;
+    private final boolean sessionScoped;
 
     /**
      * Flag indicating whether lock is deep
      */
-    protected final boolean deep;
+    private final boolean deep;
 
     /**
      * Lock owner, determined on creation time
      */
-    protected final String lockOwner;
+    private final String lockOwner;
 
     /**
      * Flag indicating whether this lock is live
@@ -69,28 +69,16 @@ public abstract class LockInfo {
     /**
      * Create a new instance of this class.
      *
-     * @param lockToken     lock token
-     * @param sessionScoped whether lock token is session scoped
-     * @param deep          whether lock is deep
-     * @param lockOwner     owner of lock
-     */
-    protected LockInfo(LockToken lockToken, boolean sessionScoped, boolean deep,
-                    String lockOwner) {
-        this(lockToken, sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
-    }
-
-    /**
-     * Create a new instance of this class.
-     *
-     * @param lockToken     lock token
+     * @param id            lock holder node id
      * @param sessionScoped whether lock token is session scoped
      * @param deep          whether lock is deep
      * @param lockOwner     owner of lock
      * @param timeoutHint   the timeoutHint
      */
-    protected LockInfo(LockToken lockToken, boolean sessionScoped, boolean deep,
-                            String lockOwner, long timeoutHint) {
-        this.lockToken = lockToken;
+    protected LockInfo(
+            NodeId id, boolean sessionScoped, boolean deep,
+            String lockOwner, long timeoutHint) {
+        this.id = id;
         this.sessionScoped = sessionScoped;
         this.deep = deep;
         this.lockOwner = lockOwner;
@@ -102,8 +90,9 @@ public abstract class LockInfo {
      *
      * @return lock token
      */
-    public LockToken getLockToken() {
-        return lockToken;
+    public String getLockToken() {
+        String uuid = id.toString();
+        return uuid + "-" + getLockTokenCheckDigit(uuid);
     }
 
     /**
@@ -111,7 +100,7 @@ public abstract class LockInfo {
      * @return the id
      */
     public NodeId getId() {
-        return lockToken.getId();
+        return id;
     }
 
     /**
@@ -229,6 +218,66 @@ public abstract class LockInfo {
         buffer.append("owner:").append(lockOwner);
         buffer.append(')');
         return buffer.toString();
+    }
+
+    /**
+     * Parse a lock token string representation and return the lock
+     * holder node id.
+     *
+     * @param token string representation of lock token
+     * @return lock holder node id
+     * @throws IllegalArgumentException if some field is illegal
+     */
+    public static NodeId parseLockToken(String token)
+            throws IllegalArgumentException {
+        int sep = token.lastIndexOf('-');
+        if (sep == -1 || sep == token.length() - 1) {
+            throw new IllegalArgumentException("Separator not found.");
+        }
+        String uuid = token.substring(0, sep);
+        if (getLockTokenCheckDigit(uuid) != token.charAt(token.length() - 1)) {
+            throw new IllegalArgumentException("Bad check digit.");
+        }
+        return NodeId.valueOf(uuid);
+    }
+
+    /**
+     * Return the check digit for a lock token, given by its UUID
+     * @param uuid uuid
+     * @return check digit
+     */
+    private static char getLockTokenCheckDigit(String uuid) {
+        int result = 0;
+
+        int multiplier = 36;
+        for (int i = 0; i < uuid.length(); i++) {
+            char c = uuid.charAt(i);
+            if (c >= '0' && c <= '9') {
+                int num = c - '0';
+                result += multiplier * num;
+                multiplier--;
+            } else if (c >= 'A' && c <= 'F') {
+                int num = c - 'A' + 10;
+                result += multiplier * num;
+                multiplier--;
+            } else if (c >= 'a' && c <= 'f') {
+                int num = c - 'a' + 10;
+                result += multiplier * num;
+                multiplier--;
+            }
+        }
+
+        int rem = result % 37;
+        if (rem != 0) {
+            rem = 37 - rem;
+        }
+        if (rem >= 0 && rem <= 9) {
+            return (char) ('0' + rem);
+        } else if (rem >= 10 && rem <= 35) {
+            return (char) ('A' + rem - 10);
+        } else {
+            return '+';
+        }
     }
 
 }
