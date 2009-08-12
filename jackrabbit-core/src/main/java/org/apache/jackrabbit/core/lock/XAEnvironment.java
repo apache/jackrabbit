@@ -110,7 +110,7 @@ class XAEnvironment {
      */
     public LockInfo lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
-        return lock(node, isDeep, isSessionScoped, AbstractLockInfo.TIMEOUT_INFINITE, null);
+        return lock(node, isDeep, isSessionScoped, LockInfo.TIMEOUT_INFINITE, null);
     }
 
     /**
@@ -423,7 +423,7 @@ class XAEnvironment {
     /**
      * Information about a lock used inside transactions.
      */
-    class XALockInfo extends AbstractLockInfo {
+    class XALockInfo extends LockInfo {
 
         /**
          * Node being locked/unlocked.
