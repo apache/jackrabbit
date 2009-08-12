@@ -590,7 +590,6 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void setMixins(NodeId nodeId, Name[] mixinNodeTypeNames) throws RepositoryException {
             assertMethod();
 
-            NamePathResolver resolver = getNamePathResolver(sessionInfo);
             QValue[] vs = new QValue[mixinNodeTypeNames.length];
             for (int i = 0; i < mixinNodeTypeNames.length; i++) {
                 vs[i] = getQValueFactory(sessionInfo).create(mixinNodeTypeNames[i]);
@@ -604,7 +603,6 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
             assertMethod();
 
-            NamePathResolver resolver = getNamePathResolver(sessionInfo);
             QValue v = getQValueFactory(sessionInfo).create(primaryNodeTypeName);
             addProperty(nodeId, NameConstants.JCR_PRIMARYTYPE, v);
         }
