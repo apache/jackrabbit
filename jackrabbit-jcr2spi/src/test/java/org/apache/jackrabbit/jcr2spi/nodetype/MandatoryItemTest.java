@@ -56,6 +56,7 @@ public class MandatoryItemTest extends AbstractJCRTest {
             }
         }
         if (childPropDef == null && childNodeDef == null) {
+            cleanUp();
             throw new NotExecutableException();
         }
     }

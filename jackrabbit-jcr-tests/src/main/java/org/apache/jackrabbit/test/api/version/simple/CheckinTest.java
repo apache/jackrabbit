@@ -36,9 +36,14 @@ public class CheckinTest extends AbstractVersionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        versionManager.checkout(path);
+        try {
+            VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+            String path = versionableNode.getPath();
+            versionManager.checkout(path);
+        } catch (RepositoryException e) {
+            cleanUp();
+            throw e;
+        }
     }
 
     /**

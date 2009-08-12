@@ -40,7 +40,12 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
 
         super.setUp();
 
-        retentionMgr = getRetentionManager(superuser);
+        try {
+            retentionMgr = getRetentionManager(superuser);
+        } catch (NotExecutableException e) {
+            cleanUp();
+            throw e;
+        }
         testNodePath = testRootNode.getPath();
     }
 

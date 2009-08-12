@@ -60,19 +60,24 @@ public class RestoreTest extends AbstractVersionTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
-        String path = versionableNode.getPath();
-        propertyValue1 = getProperty("propertyValue1");
-        propertyValue2 = getProperty("propertyValue2");
-        versionableNode.setProperty(propertyName1, propertyValue1);
-        versionableNode.getSession().save();
-        version = versionManager.checkin(path);
-        versionManager.checkout(path);
-        versionableNode.setProperty(propertyName1, propertyValue2);
-        versionableNode.getSession().save();
-        version2 = versionManager.checkin(path);
-        versionManager.checkout(path);
-        rootVersion = versionManager.getVersionHistory(path).getRootVersion();
+        try {
+            versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+            String path = versionableNode.getPath();
+            propertyValue1 = getProperty("propertyValue1");
+            propertyValue2 = getProperty("propertyValue2");
+            versionableNode.setProperty(propertyName1, propertyValue1);
+            versionableNode.getSession().save();
+            version = versionManager.checkin(path);
+            versionManager.checkout(path);
+            versionableNode.setProperty(propertyName1, propertyValue2);
+            versionableNode.getSession().save();
+            version2 = versionManager.checkin(path);
+            versionManager.checkout(path);
+            rootVersion = versionManager.getVersionHistory(path).getRootVersion();
+        } catch (RepositoryException e) {
+            cleanUp();
+            fail("Failed to setup test: " + e.getMessage());
+        }
 
         // build a second versionable node below the testroot
         try {
