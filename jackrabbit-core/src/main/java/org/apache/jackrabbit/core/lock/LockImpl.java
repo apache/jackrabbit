@@ -38,7 +38,7 @@ class LockImpl implements javax.jcr.lock.Lock {
     /**
      * Node holding lock
      */
-    protected final Node node;
+    protected final NodeImpl node;
 
     /**
      * Create a new instance of this class.
@@ -46,7 +46,7 @@ class LockImpl implements javax.jcr.lock.Lock {
      * @param info lock information
      * @param node node holding lock
      */
-    public LockImpl(LockInfo info, Node node) {
+    public LockImpl(LockInfo info, NodeImpl node) {
         this.info = info;
         this.node = node;
     }
@@ -78,12 +78,9 @@ class LockImpl implements javax.jcr.lock.Lock {
      * {@inheritDoc}
      */
     public String getLockToken() {
-        if (info.isSessionScoped()) {
-            return null;
-        }
-        try {
-            return info.getLockToken(node.getSession());
-        } catch (RepositoryException e) {
+        if (!info.isSessionScoped() || info.isLockHolder(node.getSession())) {
+            return info.getLockToken();
+        } else {
             return null;
         }
     }
@@ -117,7 +114,7 @@ class LockImpl implements javax.jcr.lock.Lock {
         // make sure the current session has sufficient privileges to refresh
         // the lock.
         SessionImpl s = (SessionImpl) node.getSession();
-        s.getAccessManager().checkPermission(((NodeImpl) node).getPrimaryPath(), Permission.LOCK_MNGMT);
+        s.getAccessManager().checkPermission(node.getPrimaryPath(), Permission.LOCK_MNGMT);
 
         // TODO: TOBEFIXED for 2.0
         // TODO  - add refresh if timeout is supported -> see #getSecondsRemaining
@@ -137,10 +134,7 @@ class LockImpl implements javax.jcr.lock.Lock {
      * @see javax.jcr.lock.Lock#isLockOwningSession()
      */
     public boolean isLockOwningSession() {
-        try {
-            return info.isLockHolder(node.getSession());
-        } catch (RepositoryException e) {
-            return false;
-        }
+        return info.isLockHolder(node.getSession());
     }
+
 }

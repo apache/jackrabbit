@@ -153,16 +153,6 @@ abstract class AbstractLockInfo implements LockInfo {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public String getLockToken(Session session) {
-        if (isLockHolder(session)) {
-            return lockToken.toString();
-        }
-        return null;
-    }
-
-    /**
      * Return the lock token.
      *
      * @return lock token

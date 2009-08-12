@@ -52,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -390,7 +389,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             }
             checkUnlock(info, session);
 
-            getSessionLockManager(session).lockTokenRemoved(info.getLockToken(session));
+            getSessionLockManager(session).lockTokenRemoved(info.getLockToken());
 
             element.set(null);
             info.setLive(false);
@@ -492,7 +491,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             PathMap.Element<AbstractLockInfo> element = lockMap.map(path, false);
             AbstractLockInfo info = element.get();
             if (info != null && (element.hasPath(path) || info.deep)) {
-                Node lockHolder = (Node) session.getItemManager().getItem(info.getId());
+                NodeImpl lockHolder = (NodeImpl)
+                    session.getItemManager().getItem(info.getId());
                 return new LockImpl(info, lockHolder);
             } else {
                 throw new LockException("Node not locked: " + node);
@@ -516,9 +516,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         try {
             Lock[] locks = new Lock[infos.length];
             for (int i = 0; i < infos.length; i++) {
-                AbstractLockInfo info = infos[i];
-                Node holder = (Node) session.getItemManager().getItem(info.getId());
-                locks[i] = new LockImpl(info, holder);
+                NodeImpl holder = (NodeImpl)
+                    session.getItemManager().getItem(infos[i].getId());
+                locks[i] = new LockImpl(infos[i], holder);
             }
             return locks;
         } finally {
