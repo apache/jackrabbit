@@ -109,29 +109,40 @@ class LockImpl implements javax.jcr.lock.Lock {
             info.throwLockException(
                     "Lock is not live any more",
                     (SessionImpl) node.getSession());
-        }
-        if (!isLockOwningSession()) {
+        } else if (!isLockOwningSession()) {
             info.throwLockException(
                     "Session does not hold lock.",
                     (SessionImpl) node.getSession());
-        }
-        // make sure the current session has sufficient privileges to refresh
-        // the lock.
-        SessionImpl s = (SessionImpl) node.getSession();
-        s.getAccessManager().checkPermission(node.getPrimaryPath(), Permission.LOCK_MNGMT);
+        } else {
+            // make sure the current session has sufficient privileges to refresh
+            // the lock.
+            SessionImpl session = (SessionImpl) node.getSession();
+            session.getAccessManager().checkPermission(
+                    node.getPrimaryPath(), Permission.LOCK_MNGMT);
 
-        // TODO: TOBEFIXED for 2.0
-        // TODO  - add refresh if timeout is supported -> see #getSecondsRemaining
-        // since a lock has no expiration date no other action is required
+            // Update the lock timeout
+            info.updateTimeoutTime();
+        }
     }
 
     //--------------------------------------------------< new JSR 283 methods >
 
-    /**
-     * @see javax.jcr.lock.Lock#getSecondsRemaining()
-     */
+    /** {@inheritDoc} */
     public long getSecondsRemaining() {
-        return info.getSecondsRemaining();
+        if (!info.isLive()) {
+            return -1;
+        } else {
+            return Long.MAX_VALUE;
+        }
+
+        // TODO JCR-1590: Disabled until locks get unlocked when they timeout
+//        long timeout = info.getTimeoutTime();
+//        if (timeout == Long.MAX_VALUE) {
+//            return Long.MAX_VALUE;
+//        }
+//
+//        long now = (System.currentTimeMillis() + 999) / 1000; // round up
+//        return Math.max(timeout - now, 1); // must always be positive
     }
 
     /**

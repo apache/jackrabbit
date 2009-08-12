@@ -110,7 +110,7 @@ class XAEnvironment {
      */
     public LockInfo lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
-        return lock(node, isDeep, isSessionScoped, LockInfo.TIMEOUT_INFINITE, null);
+        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
     /**
@@ -444,7 +444,7 @@ class XAEnvironment {
         public XALockInfo(
                 NodeImpl node,
                 boolean sessionScoped, boolean deep, String lockOwner) {
-            super(node.getNodeId(), sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
+            super(node.getNodeId(), sessionScoped, deep, lockOwner, Long.MAX_VALUE);
             this.node = node;
         }
 
@@ -453,9 +453,7 @@ class XAEnvironment {
          * unlock operation on some existing lock information.
          */
         public XALockInfo(NodeImpl node, LockInfo info) {
-            super(info.getId(), info.isSessionScoped(), info.isDeep(),
-                    info.getLockOwner(), info.getSecondsRemaining());
-
+            super(info);
             this.node = node;
             this.isUnlock = true;
         }
@@ -478,7 +476,7 @@ class XAEnvironment {
             } else {
                 LockInfo internalLock = lockMgr.internalLock(
                         node, isDeep(), isSessionScoped(),
-                        getSecondsRemaining(), getLockOwner());
+                        getTimeoutTime(), getLockOwner());
                 LockInfo xaEnvLock = getLockInfo(node);
                 // Check if the lockToken has been removed in the transaction ...
                 if (xaEnvLock != null && xaEnvLock.getLockHolder() == null) {
@@ -494,7 +492,7 @@ class XAEnvironment {
             if (isUnlock) {
                 lockMgr.internalLock(
                         node, isDeep(), isSessionScoped(),
-                        getSecondsRemaining(), getLockOwner());
+                        getTimeoutHint(), getLockOwner());
             } else {
                 lockMgr.internalUnlock(node);
             }
