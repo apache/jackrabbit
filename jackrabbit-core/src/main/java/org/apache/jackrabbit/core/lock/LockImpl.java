@@ -78,8 +78,8 @@ class LockImpl implements javax.jcr.lock.Lock {
      * {@inheritDoc}
      */
     public String getLockToken() {
-        if (!info.isSessionScoped() || info.isLockHolder(node.getSession())) {
-            return info.getLockToken();
+        if (!info.isSessionScoped() && info.isLockHolder(node.getSession())) {
+            return info.getLockToken().toString();
         } else {
             return null;
         }

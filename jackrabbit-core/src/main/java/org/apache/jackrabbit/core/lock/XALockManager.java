@@ -73,13 +73,13 @@ public class XALockManager implements LockManager, InternalXAResource {
      */
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
             throws LockException, RepositoryException {
-        AbstractLockInfo info;
+        LockInfo info;
         if (isInXA()) {
             info = xaEnv.lock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
         } else {
             info = lockMgr.internalLock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
         }
-        lockMgr.writeLockProperties(node, info.lockOwner, info.deep);
+        lockMgr.writeLockProperties(node, info.getLockOwner(), info.isDeep());
         return new XALockImpl(this, info, node);
     }
 
@@ -87,7 +87,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public Lock getLock(NodeImpl node) throws LockException, RepositoryException {
-        AbstractLockInfo info;
+        LockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
         } else {
@@ -105,7 +105,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public Lock[] getLocks(SessionImpl session) throws RepositoryException {
-        AbstractLockInfo[] infos;
+        LockInfo[] infos;
         if (isInXA()) {
             infos = xaEnv.getLockInfos(session);
         } else {
@@ -115,7 +115,7 @@ public class XALockManager implements LockManager, InternalXAResource {
         XALockImpl[] locks = new XALockImpl[infos.length];
 
         for (int i = 0; i < infos.length; i++) {
-            AbstractLockInfo info = infos[i];
+            LockInfo info = infos[i];
             NodeImpl holder = (NodeImpl) session.getItemManager().getItem(info.getId());
             locks[i] = new XALockImpl(this, info, holder);
         }
@@ -138,7 +138,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public boolean holdsLock(NodeImpl node) throws RepositoryException {
-        AbstractLockInfo info;
+        LockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
         } else {
@@ -151,7 +151,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public boolean isLocked(NodeImpl node) throws RepositoryException {
-        AbstractLockInfo info;
+        LockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
         } else {
@@ -164,7 +164,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public void checkLock(NodeImpl node) throws LockException, RepositoryException {
-        AbstractLockInfo info;
+        LockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
             if (info != null && !info.isLockHolder(node.getSession())) {
@@ -196,7 +196,7 @@ public class XALockManager implements LockManager, InternalXAResource {
             throws LockException, RepositoryException {
 
         if (isInXA()) {
-            AbstractLockInfo info = xaEnv.getLockInfo(node);
+            LockInfo info = xaEnv.getLockInfo(node);
             if (info == null || !info.getId().equals(node.getId())) {
                 throw new LockException("Node not locked: " + node);
             }
@@ -297,7 +297,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      * Return a flag indicating whether a lock info belongs to a different
      * XA environment.
      */
-    public boolean differentXAEnv(AbstractLockInfo info) {
+    public boolean differentXAEnv(LockInfo info) {
         if (isInXA()) {
             return xaEnv.differentXAEnv(info);
         } else {
