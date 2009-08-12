@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.NodeImpl;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 /**
@@ -41,7 +40,8 @@ class XALockImpl extends LockImpl {
      * @param info lock information
      * @param node node holding lock
      */
-    public XALockImpl(XALockManager lockMgr, AbstractLockInfo info, Node node) {
+    public XALockImpl(
+            XALockManager lockMgr, AbstractLockInfo info, NodeImpl node) {
         super(info, node);
 
         this.info = info;
@@ -56,7 +56,7 @@ class XALockImpl extends LockImpl {
     public boolean isLive() throws RepositoryException {
         if (info.mayChange()) {
             if (lockMgr.differentXAEnv(info)) {
-                return lockMgr.holdsLock((NodeImpl) node);
+                return lockMgr.holdsLock(node);
             }
         }
         return super.isLive();

@@ -54,14 +54,11 @@ public interface LockInfo {
     public boolean isLockHolder(Session session);
 
     /**
-     * Return the lock token as seen by the session passed as parameter. If
-     * this session is currently holding the lock, it will get the lock token
-     * itself, otherwise a <code>null</code> string.
+     * Return the lock token associated with this lock.
      *
-     * @param session The session asking for the lock token.
-     * @return lock token.
+     * @return lock token
      */
-    public String getLockToken(Session session);
+    public String getLockToken();
 
     /**
      * Return a flag indicating whether the lock is live
