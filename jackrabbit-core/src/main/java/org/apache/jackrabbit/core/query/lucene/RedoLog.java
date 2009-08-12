@@ -188,19 +188,6 @@ class RedoLog {
     }
 
     /**
-     * Clears the redo log.
-     * @throws IOException if the redo log cannot be cleared.
-     */
-    void clear() throws IOException {
-        if (out != null) {
-            out.close();
-            out = null;
-        }
-        dir.deleteFile(fileName);
-        entryCount = 0;
-    }
-
-    /**
      * Closes this redo log.
      *
      * @throws IOException if an error occurs while flushing pending writes.
