@@ -293,9 +293,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * @throws LockException       if the node is already locked
      * @throws RepositoryException if another error occurs
      */
-    AbstractLockInfo internalLock(NodeImpl node, boolean isDeep,
-                                  boolean isSessionScoped, long timeoutHint,
-                                  String ownerInfo)
+    LockInfo internalLock(
+            NodeImpl node, boolean isDeep, boolean isSessionScoped,
+            long timeoutHint, String ownerInfo)
             throws LockException, RepositoryException {
 
         SessionImpl session = (SessionImpl) node.getSession();
@@ -424,7 +424,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                 }
             }
         }, false);
-        return infos.toArray(new AbstractLockInfo[infos.size()]);
+        return infos.toArray(new LockInfo[infos.size()]);
     }
 
     /**
@@ -464,12 +464,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      */
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
-        return lock(node, isDeep, isSessionScoped, AbstractLockInfo.TIMEOUT_INFINITE, null);
+        return lock(node, isDeep, isSessionScoped, LockInfo.TIMEOUT_INFINITE, null);
     }
 
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
             throws LockException, RepositoryException {
-        AbstractLockInfo info = internalLock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
+        LockInfo info = internalLock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
         writeLockProperties(node, info.lockOwner, info.deep);
 
         return new LockImpl(info, node);
@@ -1164,7 +1164,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * Contains information about a lock and gets placed inside the child
      * information of a {@link org.apache.jackrabbit.spi.commons.name.PathMap}.
      */
-    class InternalLockInfo extends AbstractLockInfo implements SessionListener {
+    class InternalLockInfo extends LockInfo implements SessionListener {
 
         /**
          * Create a new instance of this class.
