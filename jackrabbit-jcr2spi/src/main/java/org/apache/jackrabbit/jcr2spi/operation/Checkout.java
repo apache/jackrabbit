@@ -41,11 +41,23 @@ public class Checkout extends AbstractOperation {
     private static Logger log = LoggerFactory.getLogger(Checkout.class);
 
     private final NodeState nodeState;
+    private final NodeId activityId;
+    private final boolean supportsActivity;
     private final VersionManager mgr;
 
     private Checkout(NodeState nodeState, VersionManager mgr) {
         this.nodeState = nodeState;
         this.mgr = mgr;
+        supportsActivity = false;
+        activityId = null;
+        // NOTE: affected-states only needed for transient modifications
+    }
+
+    private Checkout(NodeState nodeState, NodeId activityId, VersionManager mgr) {
+        this.nodeState = nodeState;
+        this.activityId = activityId;
+        this.mgr = mgr;
+        supportsActivity = true;
         // NOTE: affected-states only needed for transient modifications
     }
 
@@ -90,8 +102,32 @@ public class Checkout extends AbstractOperation {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 
+    /**
+     * The id of the current activity present on the editing session or <code>null</code>.
+     *
+     * @return id of the current activity present on the editing session or <code>null</code>.
+     */
+    public NodeId getActivityId() {
+        return activityId;
+    }
+
+    /**
+     * Returns <code>true</code>, if activities are supported, 
+     * <code>false</code> otherwise.
+     *
+     * @return  <code>true</code>, if activities are supported,
+     * <code>false</code> otherwise.
+     */
+    public boolean supportsActivity() {
+        return supportsActivity;
+    }
+
     //------------------------------------------------------------< Factory >---
     public static Operation create(NodeState nodeState, VersionManager mgr) {
         return new Checkout(nodeState, mgr);
+    }
+
+    public static Operation create(NodeState nodeState, NodeId activityId, VersionManager mgr) {
+        return new Checkout(nodeState, activityId, mgr);
     }
 }

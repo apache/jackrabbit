@@ -558,6 +558,14 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     /**
      * @throws UnsupportedRepositoryOperationException always.
      */
+    public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId)
+            throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
     public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId)
             throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();

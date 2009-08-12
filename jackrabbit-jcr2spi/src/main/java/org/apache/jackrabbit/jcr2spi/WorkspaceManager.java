@@ -963,7 +963,11 @@ public class WorkspaceManager
          * @see OperationVisitor#visit(Checkout)
          */
         public void visit(Checkout operation) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
-            service.checkout(sessionInfo, operation.getNodeId());
+            if (operation.supportsActivity()) {
+                service.checkout(sessionInfo, operation.getNodeId(), operation.getActivityId());
+            } else {
+                service.checkout(sessionInfo, operation.getNodeId());
+            }
         }
 
         /**

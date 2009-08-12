@@ -42,6 +42,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.Repository;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -77,6 +78,7 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -876,7 +878,13 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsVersionable();
         checkIsLocked();
         if (!isCheckedOut()) {
-            session.getVersionStateManager().checkout(getNodeState());
+            if (session.isSupportedOption(Repository.OPTION_ACTIVITIES_SUPPORTED)) {
+                NodeImpl activity = (NodeImpl) session.getWorkspace().getVersionManager().getActivity();
+                NodeId activityId = (activity == null) ? null : activity.getNodeState().getNodeId();
+                session.getVersionStateManager().checkout(getNodeState(), activityId);
+            } else {
+                session.getVersionStateManager().checkout(getNodeState());
+            }
         } else {
             // nothing to do
             log.debug("Node " + safeGetJCRPath() + " is already checked out.");

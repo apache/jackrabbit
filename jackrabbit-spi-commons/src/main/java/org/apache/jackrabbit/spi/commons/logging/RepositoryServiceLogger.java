@@ -398,6 +398,17 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "checkout(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
+    public void checkout(final SessionInfo sessionInfo, final NodeId nodeId, final NodeId activityId)
+            throws RepositoryException {
+
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                service.checkout(unwrap(sessionInfo), nodeId, activityId);
+                return null;
+            }
+        }, "checkout(SessionInfo, NodeId, NodeId)", new Object[]{unwrap(sessionInfo), nodeId, activityId});
+    }
+
     public NodeId checkpoint(final SessionInfo sessionInfo, final NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
         return (NodeId) execute(new Callable() {
             public Object call() throws RepositoryException {

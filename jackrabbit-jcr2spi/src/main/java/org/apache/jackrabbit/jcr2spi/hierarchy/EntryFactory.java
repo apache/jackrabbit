@@ -23,15 +23,11 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>EntryFactory</code>...
  */
 public class EntryFactory {
-
-    private static Logger log = LoggerFactory.getLogger(EntryFactory.class);
 
     /**
      * IdFactory to create an ItemId based on the parent NodeId.
@@ -43,7 +39,7 @@ public class EntryFactory {
     private final NodeEntry rootEntry;
 
     /**
-     *
+     * Listener to creation and uid-changes of node entries.
      */
     private final NodeEntryListener listener;
 

@@ -613,7 +613,8 @@ public interface RepositoryService {
 
     /**
      * Performs a checkout for the <code>Node</code> identified by the given
-     * <code>NodeId</code>.
+     * <code>NodeId</code>. Same as {@link #checkout(SessionInfo, NodeId, NodeId)}
+     * where the <code>activityId</code> is <code>null</code>.
      *
      * @param sessionInfo
      * @param nodeId
@@ -623,6 +624,23 @@ public interface RepositoryService {
      * @see javax.jcr.Node#checkout()
      */
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
+
+    /**
+     * Performs a checkout for the <code>Node</code> identified by the given
+     * <code>NodeId</code> and for activity identified by the specified
+     * <code>activityId</code>. If the <code>activityId</code> is <code>null</code>
+     * this corresponds to {@link #checkout(SessionInfo, NodeId)}
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @param activityId  Id of the activity node set to the editing session or
+     * <code>null</code> if no activity is in effect.
+     * @throws UnsupportedRepositoryOperationException
+     * @throws LockException
+     * @throws RepositoryException
+     * @since JCR 2.0
+     */
+    public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
 
     /**
      * Performs a checkpoint for the <code>Node</code> identified by the given

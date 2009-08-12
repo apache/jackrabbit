@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.version;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 
@@ -59,6 +60,14 @@ public interface VersionManager {
      * @see javax.jcr.Node#checkout()
      */
     public void checkout(NodeState nodeState) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
+
+    /**
+     * 
+     * @param nodeState
+     * @param activityId
+     * @throws RepositoryException
+     */
+    public void checkout(NodeState nodeState, NodeId activityId) throws RepositoryException;
 
     /**
      * @param nodeState
