@@ -29,14 +29,11 @@ import javax.jcr.lock.LockException;
 public abstract class LockInfo {
 
     /**
-     * Constant for the undefined or infinite timeout.
+     * The biggest possible timeout hint value (in seconds), used to avoid
+     * overflows when calculating the timeout. 100 years should be plenty
+     * enough for anyone...
      */
-    static final long TIMEOUT_INFINITE = Long.MAX_VALUE;
-
-    /**
-     * Constant for the expired timeout.
-     */
-    static final long TIMEOUT_EXPIRED = -1;
+    private static final long MAXIMUM_TIMEOUT = 100L * 365L * 24L * 60L * 60L;
 
     /**
      * Lock holder node id. Used also as the lock token.
@@ -59,7 +56,20 @@ public abstract class LockInfo {
     private final String lockOwner;
 
     /**
-     * Flag indicating whether this lock is live
+     * Lock timeout hint (in seconds) given when the lock was created.
+     * Guaranteed to be between 0 and {@link #MAXIMUM_TIMEOUT}. If the value
+     * is 0, then this lock will not timeout.
+     */
+    private final long timeoutHint;
+
+    /**
+     * Time (in seconds since epoch) when this lock will timeout. Set to
+     * {@link Long#MAX_VALUE} if this lock will not timeout.
+     */
+    private long timeoutTime;
+
+    /**
+     * Flag indicating whether this lock is live. See also {@link #timeoutTime}.
      */
     private boolean live;
 
@@ -75,7 +85,7 @@ public abstract class LockInfo {
      * @param sessionScoped whether lock token is session scoped
      * @param deep          whether lock is deep
      * @param lockOwner     owner of lock
-     * @param timeoutHint   the timeoutHint
+     * @param timeoutHint   lock timeout hint in seconds
      */
     protected LockInfo(
             NodeId id, boolean sessionScoped, boolean deep,
@@ -84,7 +94,18 @@ public abstract class LockInfo {
         this.sessionScoped = sessionScoped;
         this.deep = deep;
         this.lockOwner = lockOwner;
-        // TODO: TOBEFIXED for 2.0 respect and deal with timeout hint.
+        this.timeoutHint = timeoutHint;
+
+        updateTimeoutTime();
+    }
+
+    protected LockInfo(LockInfo that) {
+        this.id = that.id;
+        this.sessionScoped = that.sessionScoped;
+        this.deep = that.deep;
+        this.lockOwner = that.lockOwner;
+        this.timeoutHint = that.timeoutHint;
+        this.timeoutTime = that.timeoutTime;
     }
 
     /**
@@ -189,14 +210,35 @@ public abstract class LockInfo {
     }
 
     /**
-     * Return the number of seconds remaining until the lock expires.
+     * Returns the timeout hint given when the lock was created.
      *
-     * @return number of seconds remaining until the lock expires.
+     * @return timeout hint (in seconds)
      */
-    public long getSecondsRemaining() {
-        // TODO: TOBEFIXED for 2.0
-        // TODO  - add support for timeout specified by the API user -> LockManager#lock
-        return isLive() ? TIMEOUT_INFINITE : TIMEOUT_EXPIRED;
+    public long getTimeoutHint() {
+        return timeoutHint;
+    }
+
+    /**
+     * Returns the time when this lock will expire. 
+     *
+     * @return timeout time in seconds after epoch
+     */
+    public long getTimeoutTime() {
+        return timeoutTime;
+    }
+
+    /**
+     * Updates the timeout time of this lock based on current time and
+     * the timeout hint specified for this lock. The timeout time is always
+     * rounded up.
+     */
+    public void updateTimeoutTime() {
+        if (timeoutHint > 0 && timeoutHint <= MAXIMUM_TIMEOUT) {
+            long now = (System.currentTimeMillis() + 999) / 1000; // round up
+            this.timeoutTime = now + timeoutHint;
+        } else {
+            this.timeoutTime = Long.MAX_VALUE;
+        }
     }
 
     /**

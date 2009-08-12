@@ -224,7 +224,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             InternalLockInfo info = new InternalLockInfo(
                     id, false,
                     node.getProperty(NameConstants.JCR_LOCKISDEEP).getBoolean(),
-                    node.getProperty(NameConstants.JCR_LOCKOWNER).getString());
+                    node.getProperty(NameConstants.JCR_LOCKOWNER).getString(),
+                    Long.MAX_VALUE);
             info.setLive(true);
             lockMap.put(path, info);
         } catch (RepositoryException e) {
@@ -464,7 +465,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      */
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
-        return lock(node, isDeep, isSessionScoped, LockInfo.TIMEOUT_INFINITE, null);
+        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
@@ -1171,19 +1172,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
          * @param sessionScoped whether lock token is session scoped
          * @param deep          whether lock is deep
          * @param lockOwner     owner of lock
-         */
-        public InternalLockInfo(NodeId lockToken, boolean sessionScoped,
-                                boolean deep, String lockOwner) {
-            this(lockToken, sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
-        }
-
-        /**
-         * Create a new instance of this class.
-         *
-         * @param lockToken     lock token
-         * @param sessionScoped whether lock token is session scoped
-         * @param deep          whether lock is deep
-         * @param lockOwner     owner of lock
          * @param timeoutHint
          */
         public InternalLockInfo(NodeId lockToken, boolean sessionScoped,
@@ -1262,7 +1250,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             Path path = getPath(sysSession, nodeId);
 
             // create lock token
-            InternalLockInfo info = new InternalLockInfo(nodeId, false, isDeep, lockOwner);
+            InternalLockInfo info = new InternalLockInfo(
+                    nodeId, false, isDeep, lockOwner, Long.MAX_VALUE);
             info.setLive(true);
             lockMap.put(path, info);
 
