@@ -32,7 +32,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 public class BinaryTest extends AbstractJCRTest {
 
     public void testStreamBinary() throws Exception {
-        byte[] data = new byte[10 * 1024 * 1024];
+        byte[] data = new byte[1024 * 1024];
         new Random().nextBytes(data);
         Node test = testRootNode.addNode("test");
         Property p = test.setProperty("prop", new ByteArrayInputStream(data));

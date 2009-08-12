@@ -37,7 +37,12 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
         checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
         
         super.setUp();
-        acMgr = getAccessControlManager(superuser);
+        try {
+            acMgr = getAccessControlManager(superuser);
+        } catch (NotExecutableException e) {
+            cleanUp();
+            throw e;
+        }
     }
 
     protected static AccessControlManager getAccessControlManager(Session s) throws RepositoryException, NotExecutableException {

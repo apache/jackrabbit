@@ -45,8 +45,13 @@ public class CheckoutTest extends AbstractVersionTest {
          if (!versionableNode.isCheckedOut()) {
              fail("A versionable node must be checked-out after persistent creation.");
          }
-         versionManager.checkin(path);
-     }
+        try {
+            versionManager.checkin(path);
+        } catch (RepositoryException e) {
+            cleanUp();
+            throw e;
+        }
+    }
 
      /**
       * Test if Node.isCheckedOut() returns true, if the versionable node has

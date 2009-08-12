@@ -41,12 +41,14 @@ public class NodeTypeImplTest extends AbstractJCRTest {
         if (nt instanceof NodeTypeImpl) {
             nodeType = (NodeTypeImpl) nt;
         } else {
+            cleanUp();
             throw new NotExecutableException("NodeTypeImpl expected.");
         }
 
         if (superuser instanceof NameResolver) {
             resolver = (NameResolver) superuser;
         } else {
+            cleanUp();
              throw new NotExecutableException();
         }
     }

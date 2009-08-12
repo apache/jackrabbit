@@ -38,6 +38,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * Tests features available with shareable nodes.
@@ -48,8 +49,13 @@ public class ShareableNodeTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        checkSupportedOption(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
-        ensureKnowsNodeType(superuser, mixShareable);
+        try {
+            checkSupportedOption(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
+            ensureKnowsNodeType(superuser, mixShareable);
+        } catch (NotExecutableException e) {
+            cleanUp();
+            throw e;
+        }
         mixShareable = superuser.getNamespacePrefix(NS_MIX_URI) + ":shareable";
     }
 
