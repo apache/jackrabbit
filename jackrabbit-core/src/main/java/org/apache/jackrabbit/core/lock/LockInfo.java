@@ -19,7 +19,9 @@ package org.apache.jackrabbit.core.lock;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
 
 /**
  * Internal lock information.
@@ -195,6 +197,33 @@ public abstract class LockInfo {
         // TODO: TOBEFIXED for 2.0
         // TODO  - add support for timeout specified by the API user -> LockManager#lock
         return isLive() ? TIMEOUT_INFINITE : TIMEOUT_EXPIRED;
+    }
+
+    /**
+     * Utility method that throws a {@link LockException} with the
+     * "failure node path" set to the path of the node that holds this lock.
+     * The given session is used to resolve the path of the lock holder node.
+     *
+     * @param message exception message
+     * @param session session that the user was using for the failing operation
+     * @throws LockException always thrown, unless another error occurs
+     * @throws RepositoryException if the path of this lock can not be resolved
+     */
+    public void throwLockException(String message, SessionImpl session)
+            throws LockException, RepositoryException {
+        String path;
+        try {
+            path = session.getJCRPath(
+                    session.getHierarchyManager().getPath(id));
+        } catch (RepositoryException ignored) {
+            path = null;
+        }
+        if (path != null) {
+            throw new LockException(
+                    message + " (lock held by node " + path + ")", null, path);
+        } else {
+            throw new LockException(message);
+        }
     }
 
     /**
