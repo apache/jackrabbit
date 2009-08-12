@@ -496,6 +496,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      *
      * @param name new version name
      * @param src source node to version
+     * @param created optional created date
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */

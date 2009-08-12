@@ -169,6 +169,13 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public NodeId[] getVirtualRootIds() {
+        return new NodeId[]{rootNodeId};
+    }
+
+    /**
      * Returns the root state
      *
      * @return the root state

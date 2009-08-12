@@ -63,26 +63,24 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      */
     protected final NodeTypeRegistry ntReg;
 
-    /**
-     * Persistent root node of the version histories.
-     */
-    protected NodeStateEx historyRoot;
+    protected final NodeId historiesId;
 
-    /**
-     * Persistent root node of the activities.
-     */
-    protected NodeStateEx activitiesRoot;
+    protected final NodeId activitiesId;
 
     /**
      * the lock on this version manager
      */
     private final DefaultISMLocking rwLock = new DefaultISMLocking();
 
-    public InternalVersionManagerBase(NodeTypeRegistry ntReg) {
+    protected InternalVersionManagerBase(NodeTypeRegistry ntReg,
+                                         NodeId historiesId,
+                                         NodeId activitiesId) {
         this.ntReg = ntReg;
+        this.historiesId = historiesId;
+        this.activitiesId = activitiesId;
     }
 
-    //-------------------------------------------------------< InternalVersionManager >
+//-------------------------------------------------------< InternalVersionManager >
 
     /**
      * {@inheritDoc}
@@ -142,7 +140,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             String uuid = id.toString();
             Name name = getName(uuid);
 
-            NodeStateEx parent = getParentNode(historyRoot, uuid, null);
+            NodeStateEx parent = getParentNode(getHistoryRoot(), uuid, null);
             if (parent != null && parent.hasNode(name)) {
                 NodeStateEx history = parent.getNode(name, 1);
                 return getVersionHistory(history.getNodeId());
@@ -197,6 +195,21 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             }
         }
     }
+
+    /**
+     * returns the id of the version history root node
+     *
+     * @return the id of the version history root node
+     */
+    abstract protected NodeStateEx getHistoryRoot();
+
+    /**
+     * returns the id of the activities root node
+     *
+     * @return the id of the activities root node
+     */
+    abstract protected NodeStateEx getActivitiesRoot();
+
 
     /**
      * Helper for managing write operations.
@@ -293,7 +306,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             String uuid = node.getNodeId().toString();
             Name name = getName(uuid);
 
-            NodeStateEx parent = getParentNode(historyRoot, uuid, null);
+            NodeStateEx parent = getParentNode(getHistoryRoot(), uuid, null);
             if (parent != null && parent.hasNode(name)) {
                 NodeStateEx history = parent.getNode(name, 1);
                 Name root = NameConstants.JCR_ROOTVERSION;
@@ -395,7 +408,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         try {
             // create deep path
             String uuid = node.getNodeId().toString();
-            NodeStateEx parent = getParentNode(historyRoot, uuid, NameConstants.REP_VERSIONSTORAGE);
+            NodeStateEx parent = getParentNode(getHistoryRoot(), uuid, NameConstants.REP_VERSIONSTORAGE);
             Name name = getName(uuid);
             if (parent.hasNode(name)) {
                 // already exists
@@ -433,7 +446,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         try {
             // create deep path
             NodeId activityId = new NodeId();
-            NodeStateEx parent = getParentNode(activitiesRoot, activityId.toString(), NameConstants.REP_ACTIVITIES);
+            NodeStateEx parent = getParentNode(getActivitiesRoot(), activityId.toString(), NameConstants.REP_ACTIVITIES);
             Name name = getName(activityId.toString());
 
             // create new activity node in the persistent state
@@ -482,7 +495,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
                 NodeStateEx parent = getNodeStateEx(parentId);
                 parent.removeNode(name);
                 parent.store();
-                if (parent.getChildNodes().length == 0 && !parentId.equals(activitiesRoot.getNodeId())) {
+                if (parent.getChildNodes().length == 0 && !parentId.equals(activitiesId)) {
                     name = parent.getName();
                     parentId = parent.getParentId();
                 } else {
@@ -546,6 +559,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * @param history the version history
      * @param node node to checkin
      * @param simple flag indicates simple versioning
+     * @param created optional created date.
      * @return internal version
      * @throws javax.jcr.RepositoryException if an error occurs
      * @see javax.jcr.Node#checkin()
