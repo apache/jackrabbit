@@ -322,20 +322,16 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             LockInfo other = element.get();
             if (other != null) {
                 if (element.hasPath(path)) {
-                    throw new LockException(
-                            "Node already locked: " + node, null,
-                            node.getPath());
+                    other.throwLockException(
+                            "Node already locked: " + node, session);
                 } else if (other.isDeep()) {
-                    throw new LockException(
-                            "Parent node has a deep lock: " + node, null,
-                            session.getJCRPath(getPath(session, other.getId())));
+                    other.throwLockException(
+                            "Parent node has a deep lock: " + node, session);
                 }
             }
             if (info.isDeep() && element.hasPath(path)
                     && element.getChildrenCount() > 0) {
-                throw new LockException(
-                        "Some child node is locked.", null,
-                        session.getJCRPath(getPath(session, other.getId())));
+                info.throwLockException("Some child node is locked", session);
             }
 
             // create lock token
@@ -697,8 +693,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     } else {
                         String msg = "Cannot add lock token: lock already held by other session.";
                         log.warn(msg);
-                        throw new LockException(
-                                msg, null, session.getJCRPath(path));
+                        info.throwLockException(msg, session);
                     }
                 }
             }
@@ -733,8 +728,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     } else {
                         String msg = "Cannot remove lock token: lock held by other session.";
                         log.warn(msg);
-                        throw new LockException(
-                                msg, null, session.getJCRPath(getPath(session, id)));
+                        info.throwLockException(msg, session);
                     }
                 }
             }
