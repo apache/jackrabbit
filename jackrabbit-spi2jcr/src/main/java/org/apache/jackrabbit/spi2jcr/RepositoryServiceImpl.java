@@ -684,7 +684,22 @@ public class RepositoryServiceImpl implements RepositoryService {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                getNode(nodeId, getSessionInfoImpl(sessionInfo)).checkout();
+                getNode(nodeId, sInfo).checkout();
+                return null;
+            }
+        }, sInfo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void checkout(final SessionInfo sessionInfo, final NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        Node activity = (activityId == null) ? null : getNode(activityId, sInfo);
+        sInfo.getSession().getWorkspace().getVersionManager().setActivity(activity);
+        executeWithLocalEvents(new Callable() {
+            public Object run() throws RepositoryException {
+                getNode(nodeId, sInfo).checkout();
                 return null;
             }
         }, sInfo);
@@ -966,11 +981,10 @@ public class RepositoryServiceImpl implements RepositoryService {
     public void removeActivity(SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         final VersionManager vMgr = getVersionManager(sInfo);
-        Node activity = (Node) executeWithLocalEvents(new Callable() {
+        executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                // TODO: uncomment as soon as removeActivity method is fixed in jsr 283
-                // return vMgr.removeActivity(getNode(activityId, sInfo));
-                throw new UnsupportedOperationException("Impl missing... waiting for updated jsr 283 jar.");
+                vMgr.removeActivity(getNode(activityId, sInfo));
+                return null;
             }
         }, getSessionInfoImpl(sessionInfo));
     }

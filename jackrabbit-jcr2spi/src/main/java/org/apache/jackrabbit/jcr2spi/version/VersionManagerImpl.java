@@ -34,8 +34,6 @@ import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
@@ -60,8 +58,6 @@ import java.util.Iterator;
  */
 public class VersionManagerImpl implements VersionManager {
 
-    private static Logger log = LoggerFactory.getLogger(VersionManagerImpl.class);
-
     private final WorkspaceManager workspaceManager;
 
     public VersionManagerImpl(WorkspaceManager workspaceManager) {
@@ -75,7 +71,11 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
-        Operation co = Checkout.create(nodeState, this);
+        checkout(nodeState, null);
+    }
+
+    public void checkout(NodeState nodeState, NodeId activityId) throws RepositoryException {
+        Operation co = Checkout.create(nodeState, activityId, this);
         workspaceManager.execute(co);
     }
 

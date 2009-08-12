@@ -22,6 +22,9 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 
 import javax.jcr.version.Version;
@@ -37,6 +40,8 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.MergeException;
 import javax.jcr.Node;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Repository;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
 import java.util.Iterator;
@@ -56,6 +61,12 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
     private final ItemManager itemManager;
     private final PathResolver resolver;
 
+    /**
+     * The ID of the activity currently in effect for the session this
+     * manager has been created for.
+     */
+    private NodeId activityId;
+
     protected JcrVersionManager(SessionImpl session) {
         this.session = session;
         vMgr = session.getVersionStateManager();
@@ -68,6 +79,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#checkin(String)
      */
     public Version checkin(String absPath) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException {
+        session.checkIsAlive();
+        
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         return n.checkin();
     }
@@ -76,6 +89,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#checkout(String)
      */
     public void checkout(String absPath) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         n.checkout();
     }
@@ -85,6 +100,7 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      */
     public Version checkpoint(String absPath) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException {
         session.checkIsAlive();
+
         NodeImpl n = (NodeImpl) itemManager.getNode(resolver.getQPath(absPath));
         return n.checkpoint();
     }
@@ -93,6 +109,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#isCheckedOut(String)
      */
     public boolean isCheckedOut(String absPath) throws RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         return n.isCheckedOut();
     }
@@ -101,6 +119,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#getVersionHistory(String)
      */
     public VersionHistory getVersionHistory(String absPath) throws UnsupportedRepositoryOperationException, RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         return n.getVersionHistory();
     }
@@ -109,6 +129,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#getBaseVersion(String)
      */
     public Version getBaseVersion(String absPath) throws UnsupportedRepositoryOperationException, RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         return n.getBaseVersion();
     }
@@ -131,6 +153,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#restore(String, String, boolean)
      */
     public void restore(String absPath, String versionName, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         n.restore(versionName, removeExisting);
     }
@@ -146,6 +170,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#restore(String, Version, boolean)
      */
     public void restore(String absPath, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         n.restore(version, removeExisting);
     }
@@ -154,6 +180,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#restoreByLabel(String, String, boolean)
      */
     public void restoreByLabel(String absPath, String versionLabel, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         n.restoreByLabel(versionLabel, removeExisting);
     }
@@ -169,6 +197,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#merge(String, String, boolean, boolean)
      */
     public NodeIterator merge(String absPath, String srcWorkspace, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+        session.checkIsAlive();        
+
         NodeImpl n = (NodeImpl) itemManager.getNode(resolver.getQPath(absPath));
         n.checkIsWritable();
         session.checkHasPendingChanges();
@@ -188,6 +218,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#doneMerge(String, Version)
      */
     public void doneMerge(String absPath, Version version) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
+        session.checkIsAlive();
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         n.doneMerge(version);
     }
@@ -196,6 +228,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#cancelMerge(String, Version)
      */
     public void cancelMerge(String absPath, Version version) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
+        session.checkIsAlive();                                  
+
         Node n = itemManager.getNode(resolver.getQPath(absPath));
         n.cancelMerge(version);
     }
@@ -204,7 +238,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#createConfiguration(String)
      */
     public Node createConfiguration(String absPath) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO: add validation
+        session.checkIsAlive();
+
         NodeImpl n = (NodeImpl) itemManager.getNode(resolver.getQPath(absPath));
         NodeEntry entry = vMgr.createConfiguration((NodeState) n.getItemState());
         return (Node) itemManager.getItem(entry);
@@ -214,23 +249,47 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#setActivity(Node)
      */
     public Node setActivity(Node activity) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        session.checkIsAlive();
+        session.checkSupportedOption(Repository.OPTION_ACTIVITIES_SUPPORTED);
+
+
+        Node oldActivity = getActivity();
+        if (activity == null) {
+            activityId = null;
+        } else {
+            NodeImpl activityNode = getValidActivity(activity, "set");
+            activityId = (NodeId) activityNode.getItemState().getId();
+        }
+        return oldActivity;
     }
 
     /**
      * @see javax.jcr.version.VersionManager#getActivity()
      */
     public Node getActivity() throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        session.checkIsAlive();
+        session.checkSupportedOption(Repository.OPTION_ACTIVITIES_SUPPORTED);
+
+        if (activityId == null) {
+            return null;
+        } else {
+            try {
+                return (Node) itemManager.getItem(session.getHierarchyManager().getNodeEntry(activityId));
+            } catch (ItemNotFoundException e) {
+                // the activity doesn't exist any more.
+                log.warn("Activity node with id " + activityId + " doesn't exist any more.");
+                activityId = null;
+                return null;
+            }
+        }
     }
 
     /**
      * @see javax.jcr.version.VersionManager#createActivity(String)
      */
     public Node createActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO: add validation
+        session.checkIsAlive();
+
         NodeEntry entry = vMgr.createActivity(title);
         return (Node) itemManager.getItem(entry);
     }
@@ -239,16 +298,57 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#removeActivity(Node)
      */
     public void removeActivity(Node activityNode) throws UnsupportedRepositoryOperationException, RepositoryException {
-        vMgr.removeActivity((NodeState) ((NodeImpl) activityNode).getItemState());
+        session.checkIsAlive();
+        NodeImpl activity = getValidActivity(activityNode, "remove");
+
+        NodeState nState = (NodeState) activity.getItemState();
+        ItemId removeId = nState.getId();
+        vMgr.removeActivity(nState);
+
+        // if the removal succeeded, make sure there is no current activity
+        // setting on this session, that points to the removed activity.
+        if (activityId != null && activityId.equals(removeId)) {
+            activityId = null;
+        }
     }
 
     /**
      * @see javax.jcr.version.VersionManager#merge(Node)
      */
     public NodeIterator merge(Node activityNode) throws VersionException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        // TODO: add validation
-        Iterator failedIds = vMgr.mergeActivity((NodeState) ((NodeImpl) activityNode).getItemState());
+        session.checkIsAlive();
+        NodeImpl activity = getValidActivity(activityNode, "merge");
+        Iterator failedIds = vMgr.mergeActivity((NodeState) activity.getItemState());
         return new LazyItemIterator(itemManager, session.getHierarchyManager(), failedIds);
     }
 
+    /**
+     * Assert that activity nodes passes to any of the activity methods have
+     * been obtained from the session this version manager has been created for.
+     * This is particularly important for workspace operations that are followed
+     * by internal updated of modified items: The hierarchy entries invalidated
+     * after successful completion of the operation must reside within scope
+     * defined by this session.
+     * <br>
+     * In addition this method varifies that the passed node is of type nt:activity.
+     *
+     * @param activityNode
+     * @param methodName
+     * @return
+     * @throws RepositoryException
+     */
+    private NodeImpl getValidActivity(Node activityNode, String methodName) throws UnsupportedRepositoryOperationException, RepositoryException {
+        NodeImpl activity;
+        if (session != activityNode.getSession()) {
+            String msg = "Attempt to " +methodName+ " an activity node that has been retrieved by another session.";
+            log.warn(msg);
+            activity = (NodeImpl) session.getNodeByIdentifier(activityNode.getIdentifier());
+        } else {
+            activity = (NodeImpl) activityNode;
+        }
+        if (!activity.isNodeType(NameConstants.NT_ACTIVITY)) {
+            throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
+        }
+        return activity;
+    }
 }

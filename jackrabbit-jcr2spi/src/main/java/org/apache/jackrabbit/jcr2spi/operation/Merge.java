@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,13 @@ public class Merge extends AbstractOperation {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
         if (isActivityMerge()) {
-            // TODO invalidate
+            // TODO be more specific about what needs to be invalidated
+            // look for the root entry and invalidate the complete tree
+            HierarchyEntry entry = nodeState.getNodeEntry();
+            while (entry.getParent() != null) {
+                entry = entry.getParent();
+            }
+            entry.invalidate(true);
         } else {
             try {
                 NodeEntry vhe = mgr.getVersionHistoryEntry(nodeState);

@@ -1463,6 +1463,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         execute(method, sessionInfo);
     }
 
+    /**
+     * @see RepositoryService#checkout(SessionInfo, NodeId, NodeId)
+     */
+    public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityOd) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+    }
+
+    /**
+     * @see RepositoryService#checkpoint(SessionInfo, NodeId)
+     */
     public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
         // TODO
         throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");

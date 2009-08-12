@@ -362,9 +362,12 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.checkout(sessionInfo, nodeId);
     }
 
+    public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws RepositoryException {
+        repositoryService.checkout(sessionInfo, nodeId, activityId);
+    }
+
     public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId)
             throws RepositoryException {
-
         return repositoryService.checkpoint(sessionInfo, nodeId);
     }
 
@@ -418,7 +421,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     public NodeId createActivity(SessionInfo sessionInfo, String title)
             throws RepositoryException {
-
         return repositoryService.createActivity(sessionInfo, title);
     }
 
@@ -436,10 +438,9 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId)
             throws RepositoryException {
-
         return repositoryService.createConfiguration(sessionInfo, nodeId);
     }
-
+    
     //----------------------------------------------------------< Searching >---
 
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws RepositoryException {
