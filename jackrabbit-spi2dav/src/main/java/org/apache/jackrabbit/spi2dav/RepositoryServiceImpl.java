@@ -354,7 +354,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         NamePathResolver resolver = sessionInfo.getNamePathResolver();
         if (resolver == null) {
             resolver = new NamePathResolverImpl(sessionInfo);
-            ((SessionInfoImpl) sessionInfo).setNamePathResolver(resolver);
+            sessionInfo.setNamePathResolver(resolver);
         }
         return resolver;
     }
@@ -574,7 +574,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new LoginException("Login failed: Unknown workspace '" + workspaceName+ "'.");
             }
 
-            boolean success = false;
             DavPropertySet props = responses[0].getProperties(DavServletResponse.SC_OK);
             if (props.contains(ItemResourceConstants.JCR_WORKSPACE_NAME)) {
                 String wspName = props.get(ItemResourceConstants.JCR_WORKSPACE_NAME).getValue().toString();
