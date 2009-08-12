@@ -94,6 +94,16 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     private WriteLock vmgrLock;
 
     /**
+     * Persistent root node of the version histories.
+     */
+    private final NodeStateEx historyRoot;
+
+    /**
+     * Persistent root node of the activities.
+     */
+    private final NodeStateEx activitiesRoot;
+
+    /**
      * Creates a new instance of this class.
      *
      * @param vMgr the underlying version manager
@@ -105,7 +115,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     public InternalXAVersionManager(InternalVersionManagerImpl vMgr, NodeTypeRegistry ntReg,
                             SessionImpl session, ItemStateCacheFactory cacheFactory)
             throws RepositoryException {
-        super(ntReg);
+        super(ntReg, vMgr.historiesId, vMgr.activitiesId);
         this.vMgr = vMgr;
         this.session = session;
         this.stateMgr = XAItemStateManager.createInstance(vMgr.getSharedStateMgr(),
@@ -113,11 +123,17 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
         NodeState state;
         try {
-            state = (NodeState) stateMgr.getItemState(vMgr.getHistoryRootId());
+            state = (NodeState) stateMgr.getItemState(historiesId);
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to retrieve history root", e);
         }
         this.historyRoot = new NodeStateEx(stateMgr, ntReg, state, NameConstants.JCR_VERSIONSTORAGE);
+        try {
+            state = (NodeState) stateMgr.getItemState(activitiesId);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Unable to retrieve activities root", e);
+        }
+        this.activitiesRoot = new NodeStateEx(stateMgr, ntReg, state, NameConstants.JCR_ACTIVITIES);
     }
 
     //------------------------------------------< EventStateCollectionFactory >
@@ -286,6 +302,12 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * {@inheritDoc}
      */
     public NodeId getVirtualRootId() {
+        // never used
+        return null;
+    }
+
+    public NodeId[] getVirtualRootIds() {
+        // never used
         return null;
     }
 
@@ -393,6 +415,20 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     }
 
     //-----------------------------------------------< InternalVersionManagerBase >
+
+    /**
+     * {@inheritDoc}
+     */
+    protected NodeStateEx getHistoryRoot() {
+        return historyRoot;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected NodeStateEx getActivitiesRoot() {
+        return activitiesRoot;
+    }
 
     /**
      * {@inheritDoc}

@@ -148,7 +148,7 @@ public class SharedItemStateManager
      * for referential integrity.
      * Should be changed very carefully by experienced developers only.
      *
-     * @see https://issues.apache.org/jira/browse/JCR-954
+     * @see "https://issues.apache.org/jira/browse/JCR-954"
      */
     private boolean checkReferences = true;
 
@@ -208,7 +208,7 @@ public class SharedItemStateManager
      * Enables or disables the referential integrity checking, this
      * should be used very carefully by experienced developers only.
      *
-     * @see https://issues.apache.org/jira/browse/JCR-954
+     * @see "https://issues.apache.org/jira/browse/JCR-954"
      * @param checkReferences whether to do referential integrity checks
      */
     public void setCheckReferences(boolean checkReferences) {
@@ -1294,6 +1294,9 @@ public class SharedItemStateManager
 
         // add child node entry for virtual jcr:versionStorage
         jcrSystemState.addChildNodeEntry(NameConstants.JCR_VERSIONSTORAGE, RepositoryImpl.VERSION_STORAGE_NODE_ID);
+
+        // add child node entry for virtual jcr:activities
+        jcrSystemState.addChildNodeEntry(NameConstants.JCR_ACTIVITIES, RepositoryImpl.ACTIVITIES_NODE_ID);
 
         // add child node entry for virtual jcr:nodeTypes
         jcrSystemState.addChildNodeEntry(NameConstants.JCR_NODETYPES, RepositoryImpl.NODETYPES_NODE_ID);

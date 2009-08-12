@@ -491,9 +491,6 @@
 // J A C K R A B B I T   I N T E R N A L S
 //------------------------------------------------------------------------------
 
-[rep:nodeTypes]
-  + * (nt:nodeType) = nt:nodeType protected ABORT
-
 [rep:root] > nt:unstructured
   + jcr:system (rep:system) = rep:system mandatory IGNORE
 
@@ -501,37 +498,51 @@
   orderable
   + jcr:versionStorage (rep:versionStorage) = rep:versionStorage mandatory protected ABORT
   + jcr:nodeTypes (rep:nodeTypes) = rep:nodeTypes mandatory protected ABORT
-  + jcr:configurations (rep:Configurations) = rep:Configurations protected sns ABORT
-  + * (nt:base) = nt:unstructured sns IGNORE
+  // @since 2.0
+  + jcr:activities (rep:Activities) = rep:Activities mandatory protected ABORT
+  // @since 2.0
+  + jcr:configurations (rep:Configurations) = rep:Configurations protected ABORT
+  + * (nt:base) = nt:base IGNORE
 
-// implementation note: currently we keep the activities below the version storage
-// because of the complexity of adding new virtual item state providers.
-// the future goal is to keep them as siblings, of course.
 
+/**
+ * Node Types (virtual) storage
+ */
+[rep:nodeTypes]
+  + * (nt:nodeType) = nt:nodeType protected ABORT
+
+/**
+ * Version storage
+ */
 [rep:versionStorage]
-  + * (nt:versionHistory) = nt:versionHistory protected sns ABORT
-  + * (rep:versionStorage) = rep:versionStorage protected sns ABORT
-  + * (rep:Activities) = rep:Activities protected sns ABORT
+  + * (nt:versionHistory) = nt:versionHistory protected ABORT
+  + * (rep:versionStorage) = rep:versionStorage protected ABORT
 
+/**
+ * Activities storage
+ * @since 2.0
+ */
 [rep:Activities]
-  + * (nt:activity) = nt:activity protected sns ABORT
-  + * (rep:Activities) = rep:Activities protected sns ABORT
+  + * (nt:activity) = nt:activity protected ABORT
+  + * (rep:Activities) = rep:Activities protected ABORT
 
 /**
  * the intermediate nodes for the configurations storage.
  * Note: since the versionable node points to the configuration and vice versa,
  * a configuration could never be removed because no such API exists. therefore
  * the child node definitions are not protected.
+ * @since 2.0
  */
 [rep:Configurations]
-  + * (nt:configuration) = nt:configuration sns ABORT
-  + * (rep:Configurations) = rep:Configurations sns ABORT
+  + * (nt:configuration) = nt:configuration ABORT
+  + * (rep:Configurations) = rep:Configurations ABORT
 
 /**
  * mixin that provides a multi value property for referencing versions.
  * This is used for recording the baseline versions in the nt:configuration
  * node, and to setup a bidirectional relationship between activities and
  * the respective versions
+ * @since 2.0
  */
 [rep:VersionReference] mix
   - rep:versions (REFERENCE) protected multiple

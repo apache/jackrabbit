@@ -43,6 +43,11 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     private final NodeId historyRootId;
 
     /**
+     * The root node UUID for the activity storage
+     */
+    private final NodeId activitiesRootId;
+
+    /**
      * The item state manager directly on the version persistence mgr
      */
     private final VersionItemStateManager stateMgr;
@@ -57,8 +62,10 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
      *
      */
     public VersionItemStateProvider(NodeId historyRootId,
+                                    NodeId activitiesRootId,
                                     VersionItemStateManager stateMgr) {
         this.historyRootId = historyRootId;
+        this.activitiesRootId = activitiesRootId;
         this.stateMgr = stateMgr;
 
         stateMgr.addListener(this);
@@ -70,7 +77,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
      * @inheritDoc
      */
     public boolean isVirtualRoot(ItemId id) {
-        return id.equals(historyRootId);
+        return id.equals(historyRootId) || id.equals(activitiesRootId);
     }
 
     /**
@@ -78,6 +85,13 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
      */
     public NodeId getVirtualRootId() {
         return historyRootId;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public NodeId[] getVirtualRootIds() {
+        return new NodeId[]{historyRootId, activitiesRootId};
     }
 
     /**

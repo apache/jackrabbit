@@ -250,6 +250,7 @@ public class RepositoryCopier {
                 target.getVersionManagerImpl().getPersistenceManager(),
                 target.getDataStore());
         copier.copy(RepositoryImpl.VERSION_STORAGE_NODE_ID);
+        copier.copy(RepositoryImpl.ACTIVITIES_NODE_ID);
     }
 
     private void copyWorkspaces() throws RepositoryException {

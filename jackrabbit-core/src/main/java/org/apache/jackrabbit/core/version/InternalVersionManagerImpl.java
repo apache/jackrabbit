@@ -29,6 +29,7 @@ import javax.jcr.version.VersionException;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -75,9 +76,14 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     private static Logger log = LoggerFactory.getLogger(InternalVersionManager.class);
 
     /**
+     * The path of the jcr:system node: /jcr:system
+     */
+    private static final Path SYSTEM_PATH;
+
+    /**
      * The path to the version storage: /jcr:system/jcr:versionStorage
      */
-    private static final Path VERSION_STORAGE_PATH;
+    private static final Path HISTORIES_PATH;
 
     /**
      * The path to the version storage: /jcr:system/jcr:versionStorage/jcr:activities
@@ -89,13 +95,17 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             PathBuilder builder = new PathBuilder();
             builder.addRoot();
             builder.addLast(NameConstants.JCR_SYSTEM);
-            builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
-            VERSION_STORAGE_PATH = builder.getPath();
+            SYSTEM_PATH = builder.getPath();
 
             builder = new PathBuilder();
             builder.addRoot();
             builder.addLast(NameConstants.JCR_SYSTEM);
             builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
+            HISTORIES_PATH = builder.getPath();
+
+            builder = new PathBuilder();
+            builder.addRoot();
+            builder.addLast(NameConstants.JCR_SYSTEM);
             builder.addLast(NameConstants.JCR_ACTIVITIES);
             ACTIVITIES_PATH = builder.getPath();
 
@@ -131,6 +141,16 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     private final DynamicESCFactory escFactory;
 
     /**
+     * Persistent root node of the version histories.
+     */
+    private final NodeStateEx historyRoot;
+
+    /**
+     * Persistent root node of the activities.
+     */
+    private final NodeStateEx activitiesRoot;
+    
+    /**
      * Map of returned items. this is kept for invalidating
      */
     @SuppressWarnings("unchecked")
@@ -144,8 +164,8 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * @param fs workspace file system
      * @param ntReg node type registry
      * @param obsMgr observation manager
-     * @param rootParentId node id of the version storage parent (i.e. jcr:system)
-     * @param storageId node id of the version storage (i.e. jcr:versionStorage)
+     * @param systemId node id of the version storage parent (i.e. jcr:system)
+     * @param historiesId node id of the version storage (i.e. jcr:versionStorage)
      * @param activitiesId node id of the activities storage (i.e. jcr:activities)
      * @param cacheFactory item state cache factory
      * @param ismLocking workspace item state locking
@@ -154,26 +174,52 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     public InternalVersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
                               NodeTypeRegistry ntReg,
                               DelegatingObservationDispatcher obsMgr,
-                              NodeId rootParentId,
-                              NodeId storageId,
+                              NodeId systemId,
+                              NodeId historiesId,
                               NodeId activitiesId,
                               ItemStateCacheFactory cacheFactory,
                               ISMLocking ismLocking) throws RepositoryException {
-        super(ntReg);
+        super(ntReg, historiesId, activitiesId);
         try {
             this.pMgr = pMgr;
             this.fs = fs;
             this.escFactory = new DynamicESCFactory(obsMgr);
 
+            // need to recreate the jcr:system node in this pm, too. so that
+            // it can act as parent for the histories and activities.
+            if (false && !pMgr.exists(systemId)) {
+                NodeState root = pMgr.createNew(systemId);
+                root.setParentId(RepositoryImpl.ROOT_NODE_ID);
+                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_ROOT).getApplicableChildNodeDef(
+                        NameConstants.JCR_SYSTEM, NameConstants.REP_SYSTEM, ntReg).getId());
+                root.setNodeTypeName(NameConstants.REP_SYSTEM);
+                PropertyState pt = pMgr.createNew(new PropertyId(systemId, NameConstants.JCR_PRIMARYTYPE));
+                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicablePropertyDef(
+                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
+                pt.setMultiValued(false);
+                pt.setType(PropertyType.NAME);
+                pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_SYSTEM)});
+                root.addPropertyName(pt.getName());
+
+                // add version storage and activities as child node entries
+                root.addChildNodeEntry(NameConstants.JCR_VERSIONSTORAGE, historiesId);
+                root.addChildNodeEntry(NameConstants.JCR_ACTIVITIES, activitiesId);
+
+                ChangeLog cl = new ChangeLog();
+                cl.added(root);
+                cl.added(pt);
+                pMgr.store(cl);
+            }
+
             // need to store the version storage root directly into the persistence manager
-            if (!pMgr.exists(storageId)) {
-                NodeState root = pMgr.createNew(storageId);
-                root.setParentId(rootParentId);
+            if (!pMgr.exists(historiesId)) {
+                NodeState root = pMgr.createNew(historiesId);
+                root.setParentId(systemId);
                 root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
                         NameConstants.JCR_VERSIONSTORAGE, NameConstants.REP_VERSIONSTORAGE, ntReg).getId());
                 root.setNodeTypeName(NameConstants.REP_VERSIONSTORAGE);
-                PropertyState pt = pMgr.createNew(new PropertyId(storageId, NameConstants.JCR_PRIMARYTYPE));
-                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicablePropertyDef(
+                PropertyState pt = pMgr.createNew(new PropertyId(historiesId, NameConstants.JCR_PRIMARYTYPE));
+                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_VERSIONSTORAGE).getApplicablePropertyDef(
                         NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
                 pt.setType(PropertyType.NAME);
@@ -188,8 +234,8 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             // check for jcr:activities
             if (!pMgr.exists(activitiesId)) {
                 NodeState root = pMgr.createNew(activitiesId);
-                root.setParentId(storageId);
-                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_VERSIONSTORAGE).getApplicableChildNodeDef(
+                root.setParentId(systemId);
+                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
                         NameConstants.JCR_ACTIVITIES, NameConstants.REP_ACTIVITIES, ntReg).getId());
                 root.setNodeTypeName(NameConstants.REP_ACTIVITIES);
                 PropertyState pt = pMgr.createNew(new PropertyId(activitiesId, NameConstants.JCR_PRIMARYTYPE));
@@ -199,32 +245,25 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                 pt.setType(PropertyType.NAME);
                 pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_ACTIVITIES)});
                 root.addPropertyName(pt.getName());
-
-                // add activities as child
-                NodeState historyState = pMgr.load(storageId);
-                historyState.addChildNodeEntry(NameConstants.JCR_ACTIVITIES, activitiesId);
-                                
                 ChangeLog cl = new ChangeLog();
                 cl.added(root);
                 cl.added(pt);
-                cl.modified(historyState);
                 pMgr.store(cl);
             }
 
-            sharedStateMgr = createItemStateManager(pMgr, storageId, ntReg, cacheFactory, ismLocking);
+            sharedStateMgr = createItemStateManager(pMgr, systemId, ntReg, cacheFactory, ismLocking);
 
             stateMgr = LocalItemStateManager.createInstance(sharedStateMgr, escFactory, cacheFactory);
             stateMgr.addListener(this);
 
-            NodeState nodeState = (NodeState) stateMgr.getItemState(storageId);
+            NodeState nodeState = (NodeState) stateMgr.getItemState(historiesId);
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_VERSIONSTORAGE);
 
             nodeState = (NodeState) stateMgr.getItemState(activitiesId);
             activitiesRoot =  new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_ACTIVITIES);
 
             // create the virtual item state provider
-            versProvider = new VersionItemStateProvider(
-                    getHistoryRootId(), sharedStateMgr);
+            versProvider = new VersionItemStateProvider(historiesId, activitiesId, sharedStateMgr);
 
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
@@ -339,7 +378,10 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     protected InternalVersionItem getItem(NodeId id)
             throws RepositoryException {
 
-        if (id.equals(getHistoryRootId())) {
+        if (id.equals(historiesId)) {
+            return null;
+        }
+        if (id.equals(activitiesId)) {
             return null;
         }
         ReadLock lock = acquireReadLock();
@@ -564,12 +606,21 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     }
 
     /**
-     * returns the id of the version history root node
+     * returns the version history root node
      *
-     * @return the id of the version history root node
+     * @return the version history root node
      */
-    NodeId getHistoryRootId() {
-        return historyRoot.getState().getNodeId();
+    protected NodeStateEx getHistoryRoot() {
+        return historyRoot;
+    }
+
+    /**
+     * returns the activities root node
+     *
+     * @return the activities root node
+     */
+    protected NodeStateEx getActivitiesRoot() {
+        return activitiesRoot;
     }
 
     /**
@@ -703,7 +754,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
          * the update, an internal event source is used.
          */
         public EventStateCollection createEventStateCollection(SessionImpl source) {
-            return obsMgr.createEventStateCollection(source, VERSION_STORAGE_PATH);
+            return obsMgr.createEventStateCollection(source, SYSTEM_PATH);
         }
 
         /**
