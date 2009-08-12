@@ -143,7 +143,7 @@ class XAEnvironment {
 
         // verify node is not already locked.
         if (isLocked(node)) {
-            throw new LockException("Node locked.");
+            throw new LockException("Node locked.", null, node.getPath());
         }
 
         // create a new lock info for this node
