@@ -213,11 +213,23 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     /**
      * Reapply a lock given a lock token that was read from the locks file
      *
-     * @param lockToken lock token to apply
+     * @param lockTokenLine lock token to apply
      */
-    private void reapplyLock(String lockToken) {
+    private void reapplyLock(String lockTokenLine) {
+        String[] parts = lockTokenLine.split(",");
+        String token = parts[0];
+        long timeoutHint = Long.MAX_VALUE;
+        if (parts.length > 1) {
+            try {
+                timeoutHint = Long.parseLong(parts[1]);
+            } catch (NumberFormatException e) {
+                log.warn("Unexpected timeout hint "
+                        + parts[1] + " for lock token " + token, e);
+            }
+        }
+
         try {
-            NodeId id = LockInfo.parseLockToken(lockToken);
+            NodeId id = LockInfo.parseLockToken(parts[0]);
             NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
             Path path = getPath(sysSession, id);
 
@@ -225,12 +237,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     id, false,
                     node.getProperty(NameConstants.JCR_LOCKISDEEP).getBoolean(),
                     node.getProperty(NameConstants.JCR_LOCKOWNER).getString(),
-                    Long.MAX_VALUE);
+                    timeoutHint);
             info.setLive(true);
             lockMap.put(path, info);
         } catch (RepositoryException e) {
-            log.warn("Unable to recreate lock '" + lockToken
-                    + "': " + e.getMessage());
+            log.warn("Unable to recreate lock '" + token + "': " + e.getMessage());
             log.debug("Root cause: ", e);
         }
     }
@@ -262,6 +273,13 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     new OutputStreamWriter(locksFile.getOutputStream()));
             for (LockInfo info : list) {
                 writer.write(info.getLockToken());
+
+                // Store the timeout hint, if one is specified
+                if (info.getTimeoutHint() != Long.MAX_VALUE) {
+                    writer.write(',');
+                    writer.write(Long.toString(info.getTimeoutHint()));
+                }
+
                 writer.newLine();
             }
         } catch (FileSystemException fse) {
