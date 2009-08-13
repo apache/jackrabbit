@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha7
+Release Notes -- Apache Jackrabbit -- Version 2.0-alpha8
 
 Introduction
 ------------
@@ -48,26 +48,24 @@ JCR 2.0 feature completeness
 ----------------------------
 
 The following 43 top level JCR 2.0 implementation issues are being tracked in
-the Jackrabbit issue tracker. Most of them have already been partially
-implemented, but the issue will only be marked as resolved once no more
-related work is needed.
+the Jackrabbit issue tracker.
 
-Open (5 issues)
-  [JCR-1588] JSR 283: Access Control
+Open (3 issues)
   [JCR-1590] JSR 283: Locking
-  [JCR-1712] JSR 283: JCR Names
   [JCR-2085] test case (TCK) maintenance for JCR 2.0
   [JCR-2208] update tests so that both Query.XPATH and Query:SQL are ...
 
-Resolved (38 issues)
+Resolved (40 issues)
   [JCR-1564] JSR 283 namespace handling
   [JCR-1565] JSR 283 lifecycle management
+  [JCR-1588] JSR 283: Access Control
   [JCR-1589] JSR 283: Retention & Hold Management
   [JCR-1591] JSR 283: NodeType Management
   [JCR-1592] JSR 283: Activities
   [JCR-1593] JSR 283: Simple versioning
   [JCR-1608] JSR 283: Workspace Management
   [JCR-1609] JSR 283: new Property Types
+  [JCR-1712] JSR 283: JCR Names
   [JCR-1834] JSR 283: Create RepositoryFactory implementation
   [JCR-1839] JSR 283: Introduce Event.getDate()
   [JCR-1849] JSR 283: EventJournal
@@ -118,8 +116,7 @@ Apache Jackrabbit is a fully conforming implementation of the Content
 Repository for Java Technology API (JCR). A content repository is a
 hierarchical content store with support for structured and unstructured
 content, full text search, versioning, transactions, observation, and
-more. Typical applications that use content repositories include content
-management, document management, and records management systems.
+more.
 
 For more information, visit http://jackrabbit.apache.org/
 
