@@ -198,11 +198,11 @@ class IndexHistory {
      */
     String getRedoLogName(long generation) {
         if (generation == 0) {
-            return RedoLog.REDO_LOG;
+            return DefaultRedoLog.REDO_LOG;
         } else {
-            return RedoLog.REDO_LOG_PREFIX +
+            return DefaultRedoLog.REDO_LOG_PREFIX +
                     Long.toString(generation, Character.MAX_RADIX) +
-                    RedoLog.DOT_LOG;
+                    DefaultRedoLog.DOT_LOG;
         }
     }
 }

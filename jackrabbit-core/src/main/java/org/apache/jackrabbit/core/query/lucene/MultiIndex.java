@@ -125,6 +125,11 @@ public class MultiIndex {
     private final DirectoryManager directoryManager;
 
     /**
+     * The redo log factory
+     */
+    private final RedoLogFactory redoLogFactory;
+
+    /**
      * The base directory to store the index.
      */
     private final Directory indexDir;
@@ -232,6 +237,7 @@ public class MultiIndex {
      */
     MultiIndex(SearchIndex handler, Set<NodeId> excludedIDs) throws IOException {
         this.directoryManager = handler.getDirectoryManager();
+        this.redoLogFactory = handler.getRedoLogFactory();
         this.indexDir = directoryManager.getDirectory(".");
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
@@ -246,7 +252,7 @@ public class MultiIndex {
         // as of 1.5 deletable file is not used anymore
         removeDeletable();
 
-        this.redoLog = RedoLog.create(indexDir, indexNames.getGeneration());
+        this.redoLog = redoLogFactory.createRedoLog(this);
 
         // initialize IndexMerger
         merger = new IndexMerger(this, handler.getIndexMergerPoolSize());
@@ -766,6 +772,17 @@ public class MultiIndex {
     }
 
     /**
+     * Runs a consistency check on this multi index.
+     *
+     * @return the consistency check.
+     * @throws IOException if an error occurs while running the check.
+     */
+    ConsistencyCheck runConsistencyCheck() throws IOException {
+        return ConsistencyCheck.run(this,
+                handler.getContext().getItemStateManager());
+    }
+
+    /**
      * Closes this <code>MultiIndex</code>.
      */
     void close() {
@@ -821,6 +838,20 @@ public class MultiIndex {
      */
     IndexingQueue getIndexingQueue() {
         return indexingQueue;
+    }
+
+    /**
+     * @return the base directory of the index.
+     */
+    Directory getDirectory() {
+        return indexDir;
+    }
+
+    /**
+     * @return the current generation of the index names.
+     */
+    long getIndexGeneration() {
+        return indexNames.getGeneration();
     }
 
     /**
@@ -942,7 +973,7 @@ public class MultiIndex {
                 // close redo.log and create a new one based
                 // on the new indexNames generation
                 redoLog.close();
-                redoLog = RedoLog.create(indexDir, indexNames.getGeneration());
+                redoLog = redoLogFactory.createRedoLog(this);
             }
 
             lastFlushTime = System.currentTimeMillis();

@@ -44,7 +44,7 @@ import java.util.HashSet;
  * in the index for such a node are removed, and the node is re-indexed.</li>
  * </ul>
  */
-class ConsistencyCheck {
+public class ConsistencyCheck {
 
     /**
      * Logger instance for this class
@@ -102,7 +102,7 @@ class ConsistencyCheck {
      *   repair failure.
      * @throws IOException if a repair failure occurs.
      */
-    void repair(boolean ignoreFailure) throws IOException {
+    public void repair(boolean ignoreFailure) throws IOException {
         if (errors.size() == 0) {
             log.info("No errors found.");
             return;
@@ -137,7 +137,7 @@ class ConsistencyCheck {
      * Returns the errors detected by the consistency check.
      * @return the errors detected by the consistency check.
      */
-    List<ConsistencyCheckError> getErrors() {
+    public List<ConsistencyCheckError> getErrors() {
         return new ArrayList<ConsistencyCheckError>(errors);
     }
 
