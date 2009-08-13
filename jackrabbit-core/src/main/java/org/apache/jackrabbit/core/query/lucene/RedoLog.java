@@ -16,117 +16,17 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.lucene.store.Directory;
-import org.apache.jackrabbit.core.query.lucene.directory.IndexOutputStream;
-import org.apache.jackrabbit.core.query.lucene.directory.IndexInputStream;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Implements a redo log for changes that have not been committed to disk. While
+ * Defines a redo log for changes that have not been committed to disk. While
  * nodes are added to and removed from the volatile index (held in memory) a
- * redo log is written to keep track of the changes. In case the Jackrabbit
+ * redo log is maintained to keep track of the changes. In case the Jackrabbit
  * process terminates unexpected the redo log is applied when Jackrabbit is
  * restarted the next time.
- * <p/>
- * This class is not thread-safe.
  */
-class RedoLog {
-
-    /**
-     * Logger instance for this class
-     */
-    private static final Logger log = LoggerFactory.getLogger(RedoLog.class);
-
-    /**
-     * Default name of the redo log file
-     */
-    static final String REDO_LOG = "redo.log";
-
-    /**
-     * Prefix of the redo log files.
-     */
-    static final String REDO_LOG_PREFIX = "redo_";
-
-    /**
-     * The .log extension.
-     */
-    static final String DOT_LOG = ".log";
-
-    /**
-     * Implements a {@link ActionCollector} that counts all entries and sets
-     * {@link #entryCount}.
-     */
-    private final ActionCollector ENTRY_COUNTER = new ActionCollector() {
-        public void collect(MultiIndex.Action a) {
-            entryCount++;
-        }
-    };
-
-    /**
-     * The directory where the log file is stored.
-     */
-    private final Directory dir;
-
-    /**
-     * The name of the log file.
-     */
-    private final String fileName;
-
-    /**
-     * The number of log entries in the log file
-     */
-    private int entryCount = 0;
-
-    /**
-     * Writer to the log file
-     */
-    private Writer out;
-
-    /**
-     * Creates a new <code>RedoLog</code> instance, which stores its log in the
-     * given directory.
-     *
-     * @param dir the directory where the redo log file is located.
-     * @param fileName the name of the redo log file.
-     * @throws IOException if an error occurs while reading the redo log.
-     */
-    private RedoLog(Directory dir, String fileName) throws IOException {
-        this.dir = dir;
-        this.fileName = fileName;
-        read(ENTRY_COUNTER);
-    }
-
-    /**
-     * Creates a new <code>RedoLog</code> instance, which stores its log in the
-     * given directory.
-     *
-     * @param dir        the directory where the redo log file is located.
-     * @param generation the redo log generation number.
-     * @return the redo log.
-     * @throws IOException if the redo log cannot be created.
-     */
-    static RedoLog create(Directory dir, long generation) throws IOException {
-        String fileName;
-        if (generation == 0) {
-            fileName = RedoLog.REDO_LOG;
-        } else {
-            fileName = RedoLog.REDO_LOG_PREFIX + Long.toString(
-                    generation, Character.MAX_RADIX) + RedoLog.DOT_LOG;
-        }
-        return new RedoLog(dir, fileName);
-    }
+public interface RedoLog {
 
     /**
      * Returns <code>true</code> if this redo log contains any entries,
@@ -134,17 +34,13 @@ class RedoLog {
      * @return <code>true</code> if this redo log contains any entries,
      * <code>false</code> otherwise.
      */
-    boolean hasEntries() {
-        return entryCount > 0;
-    }
+    boolean hasEntries();
 
     /**
      * Returns the number of entries in this redo log.
      * @return the number of entries in this redo log.
      */
-    int getSize() {
-        return entryCount;
-    }
+    int getSize();
 
     /**
      * Returns a List with all {@link MultiIndex.Action} instances in the
@@ -154,15 +50,7 @@ class RedoLog {
      *         redo log.
      * @throws IOException if an error occurs while reading from the redo log.
      */
-    List<MultiIndex.Action> getActions() throws IOException {
-        final List<MultiIndex.Action> actions = new ArrayList<MultiIndex.Action>();
-        read(new ActionCollector() {
-            public void collect(MultiIndex.Action a) {
-                actions.add(a);
-            }
-        });
-        return actions;
-    }
+    List<MultiIndex.Action> getActions() throws IOException;
 
     /**
      * Appends an action to the log.
@@ -171,87 +59,19 @@ class RedoLog {
      * @throws IOException if the node cannot be written to the redo
      * log.
      */
-    void append(MultiIndex.Action action) throws IOException {
-        initOut();
-        out.write(action.toString() + "\n");
-        entryCount++;
-    }
+    void append(MultiIndex.Action action) throws IOException;
 
     /**
-     * Flushes all pending writes to the underlying file.
+     * Flushes all pending writes to the redo log.
+     *
      * @throws IOException if an error occurs while writing.
      */
-    void flush() throws IOException {
-        if (out != null) {
-            out.flush();
-        }
-    }
+    void flush() throws IOException;
 
     /**
-     * Closes this redo log.
+     * Flushes all pending writes to the redo log and closes it.
      *
-     * @throws IOException if an error occurs while flushing pending writes.
+     * @throws IOException if an error occurs while writing.
      */
-    void close() throws IOException {
-        if (out != null) {
-            out.close();
-            out = null;
-        }
-    }
-
-    /**
-     * Initializes the {@link #out} stream if it is not yet set.
-     * @throws IOException if an error occurs while creating the
-     * output stream.
-     */
-    private void initOut() throws IOException {
-        if (out == null) {
-            OutputStream os = new IndexOutputStream(dir.createOutput(fileName));
-            out = new BufferedWriter(new OutputStreamWriter(os));
-        }
-    }
-
-    /**
-     * Reads the log file and calls back {@link RedoLog.ActionCollector}.
-     *
-     * @param collector called back for each {@link MultiIndex.Action} read.
-     * @throws IOException if an error occurs while reading from the
-     * log file.
-     */
-    private void read(ActionCollector collector) throws IOException {
-        if (!dir.fileExists(fileName)) {
-            return;
-        }
-        InputStream in = new IndexInputStream(dir.openInput(fileName));
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                try {
-                    collector.collect(MultiIndex.Action.fromString(line));
-                } catch (IllegalArgumentException e) {
-                    log.warn("Malformed redo entry: " + e.getMessage());
-                }
-            }
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    log.warn("Exception while closing redo log: " + e.toString());
-                }
-            }
-        }
-    }
-
-    //-----------------------< internal >---------------------------------------
-
-    /**
-     * Helper interface to collect Actions read from the redo log.
-     */
-    interface ActionCollector {
-
-        /** Called when an action is created */
-        void collect(MultiIndex.Action action);
-    }
+    void close() throws IOException;
 }

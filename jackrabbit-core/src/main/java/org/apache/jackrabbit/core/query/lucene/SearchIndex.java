@@ -460,6 +460,16 @@ public class SearchIndex extends AbstractQueryHandler {
     private int indexMergerPoolSize = DEFAULT_INDEX_MERGER_POOL_SIZE;
 
     /**
+     * The name of the redo log factory class implementation.
+     */
+    private String redoLogFactoryClass = DefaultRedoLogFactory.class.getName();
+
+    /**
+     * The redo log factory.
+     */
+    private RedoLogFactory redoLogFactory;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -493,6 +503,7 @@ public class SearchIndex extends AbstractQueryHandler {
         extractor = createTextExtractor();
         synProvider = createSynonymProvider();
         directoryManager = createDirectoryManager();
+        redoLogFactory = createRedoLogFactory();
 
         if (context.getParentHandler() instanceof SearchIndex) {
             // use system namespace mappings
@@ -535,8 +546,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 && (index.getRedoLogApplied() || forceConsistencyCheck)) {
             log.info("Running consistency check...");
             try {
-                ConsistencyCheck check = ConsistencyCheck.run(index,
-                        context.getItemStateManager());
+                ConsistencyCheck check = runConsistencyCheck();
                 if (autoRepair) {
                     check.repair(true);
                 } else {
@@ -1000,6 +1010,23 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * @return the redo log factory for this search index.
+     */
+    public RedoLogFactory getRedoLogFactory() {
+        return redoLogFactory;
+    }
+
+    /**
+     * Runs a consistency check on this search index.
+     *
+     * @return the result of the consistency check.
+     * @throws IOException if an error occurs while running the check.
+     */
+    public ConsistencyCheck runConsistencyCheck() throws IOException {
+        return index.runConsistencyCheck();
+    }
+
+    /**
      * Returns an index reader for this search index. The caller of this method
      * is responsible for closing the index reader when he is finished using
      * it.
@@ -1196,12 +1223,34 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * Creates a redo log factory based on {@link #getRedoLogFactoryClass()}.
+     *
+     * @return the redo log factory.
+     * @throws IOException if an error occurs while creating the factory.
+     */
+    protected RedoLogFactory createRedoLogFactory() throws IOException {
+        try {
+            Class<?> clazz = Class.forName(redoLogFactoryClass);
+            if (!RedoLogFactory.class.isAssignableFrom(clazz)) {
+                throw new IOException(redoLogFactoryClass +
+                        " is not a RedoLogFactory implementation");
+            }
+            return (RedoLogFactory) clazz.newInstance();
+        } catch (Exception e) {
+            IOException ex = new IOException();
+            ex.initCause(e);
+            throw ex;
+        }
+    }
+
+    /**
      * Creates a file system resource to the synonym provider configuration.
      *
      * @return a file system resource or <code>null</code> if no path was
      *         configured.
      * @throws FileSystemException if an exception occurs accessing the file
      *                             system.
+     * @throws IOException         if another exception occurs.
      */
     protected FileSystemResource createSynonymProviderConfigResource()
             throws FileSystemException, IOException {
@@ -2241,6 +2290,23 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setMaxHistoryAge(long maxHistoryAge) {
         this.maxHistoryAge = maxHistoryAge;
+    }
+
+    /**
+     * @return the name of the redo log factory class.
+     */
+    public String getRedoLogFactoryClass() {
+        return redoLogFactoryClass;
+    }
+
+    /**
+     * Sets the name of the redo log factory class. Must implement
+     * {@link RedoLogFactory}.
+     *
+     * @param className the name of the redo log factory class.
+     */
+    public void setRedoLogFactoryClass(String className) {
+        this.redoLogFactoryClass = className;
     }
 
     //----------------------------< internal >----------------------------------
