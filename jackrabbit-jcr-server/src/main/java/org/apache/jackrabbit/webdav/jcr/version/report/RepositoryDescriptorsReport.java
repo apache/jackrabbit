@@ -29,6 +29,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.jcr.Repository;
+import javax.jcr.Value;
+import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 
 /**
  * <code>RepositoryDescriptorsReport</code> allows to retrieve the repository
@@ -96,11 +99,22 @@ public class RepositoryDescriptorsReport extends AbstractJcrReport implements It
     public Element toXml(Document document) {
         Repository repository = getRepositorySession().getRepository();
         Element report = DomUtil.createElement(document, "repositorydescriptors-report", NAMESPACE);
-        String[] keys = repository.getDescriptorKeys();
-        for (int i = 0; i < keys.length; i++) {
+        for (String key : repository.getDescriptorKeys()) {
             Element elem = DomUtil.addChildElement(report, XML_DESCRIPTOR, NAMESPACE);
-            DomUtil.addChildElement(elem, XML_DESCRIPTORKEY, NAMESPACE, keys[i]);
-            DomUtil.addChildElement(elem, XML_DESCRIPTORVALUE, NAMESPACE, repository.getDescriptor(keys[i]));
+            DomUtil.addChildElement(elem, XML_DESCRIPTORKEY, NAMESPACE, key);
+            for (Value v : repository.getDescriptorValues(key)) {
+                String value;
+                try {
+                    value = v.getString();
+                } catch (RepositoryException e) {
+                    log.error("Internal error while reading descriptor value: ", e);
+                    value = repository.getDescriptor(key);
+                }
+                Element child = DomUtil.addChildElement(elem, XML_DESCRIPTORVALUE, NAMESPACE, value);
+                if (PropertyType.STRING != v.getType()) {
+                    child.setAttribute(ATTR_VALUE_TYPE, PropertyType.nameFromValue(v.getType()));
+                }
+            }
         }
         return report;
     }

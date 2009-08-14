@@ -42,6 +42,7 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -50,6 +51,7 @@ import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
@@ -206,14 +208,29 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Map getRepositoryDescriptors() throws RepositoryException {
-        Map descriptors = new HashMap();
-        String[] keys = repository.getDescriptorKeys();
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i].equals(Repository.OPTION_TRANSACTIONS_SUPPORTED)) {
-                descriptors.put(keys[i], "false");
+    public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
+        Map<String, QValue[]> descriptors = new HashMap();
+        for (String key : repository.getDescriptorKeys()) {
+            if (key.equals(Repository.OPTION_TRANSACTIONS_SUPPORTED)) {
+                descriptors.put(key, new QValue[] {qValueFactory.create(false)});
             } else {
-                descriptors.put(keys[i], repository.getDescriptor(keys[i]));
+                Value[] vs = repository.getDescriptorValues(key);
+                QValue[] qvs = new QValue[vs.length];
+                for (int i = 0; i < vs.length; i++) {
+                    // Name and path resolver that uses a dummy namespace resolver
+                    // as Name/Path values are not expected to occur in the
+                    // descriptors. TODO: check again.
+                    NamePathResolver resolver = new DefaultNamePathResolver(new NamespaceResolver() {
+                        public String getURI(String prefix) throws NamespaceException {
+                            return prefix;
+                        }
+                        public String getPrefix(String uri) throws NamespaceException {
+                            return uri;
+                        }
+                    });
+                    qvs[i] = ValueFormat.getQValue(vs[i], resolver, qValueFactory);
+                }
+                descriptors.put(key, qvs);
             }
         }
         return descriptors;

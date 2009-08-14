@@ -86,7 +86,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     /**
      * The repository descriptors.
      */
-    protected final Map<String, String> descriptors;
+    protected final Map<String, QValue[]> descriptors;
 
     /**
      * The fixed set of namespaces known to the repository service.
@@ -120,12 +120,12 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * @throws RepositoryException if the namespace mappings are invalid.
      * @throws ParseException      if an error occurs while parsing the CND.
      */
-    public AbstractReadableRepositoryService(Map<String, String> descriptors,
+    public AbstractReadableRepositoryService(Map<String, QValue[]> descriptors,
                                              Map<String, String> namespaces,
                                              Reader cnd,
                                              List<String> wspNames)
             throws RepositoryException, ParseException {
-        this.descriptors = Collections.unmodifiableMap(new HashMap<String, String>(descriptors));
+        this.descriptors = Collections.unmodifiableMap(new HashMap<String, QValue[]>(descriptors));
         for (Map.Entry<String, String> entry : namespaces.entrySet()) {
             this.namespaces.setMapping(entry.getKey(), entry.getValue());
         }
@@ -273,7 +273,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * This default implementation returns the descriptors that were passed
      * to the constructor of this repository service.
      */
-    public Map<String, String> getRepositoryDescriptors() throws RepositoryException {
+    public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
         return descriptors;
     }
 

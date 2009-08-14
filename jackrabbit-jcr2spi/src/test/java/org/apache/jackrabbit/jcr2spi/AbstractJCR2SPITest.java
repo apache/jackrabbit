@@ -32,6 +32,7 @@ import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import junit.framework.TestCase;
@@ -63,6 +64,7 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.AbstractReadableRepositoryService;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 
 /**
@@ -148,19 +150,22 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return Collections.emptyMap();
     }
 
-    protected Map<String, String> getDescriptors() {
-        Map<String, String> descriptorKeys = new HashMap<String, String>();
+    protected Map<String, QValue[]> getDescriptors() throws RepositoryException {
+        Map<String, QValue[]> descriptorKeys = new HashMap<String, QValue[]>();
 
-        descriptorKeys.put(Repository.OPTION_LOCKING_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.OPTION_OBSERVATION_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.OPTION_TRANSACTIONS_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.OPTION_VERSIONING_SUPPORTED, Boolean.FALSE.toString());
-        descriptorKeys.put(Repository.REP_NAME_DESC, "Mock Repository");
-        descriptorKeys.put(Repository.REP_VENDOR_DESC, "Apache Software Foundation");
-        descriptorKeys.put(Repository.REP_VENDOR_URL_DESC, "http://www.apache.org/");
-        descriptorKeys.put(Repository.REP_VERSION_DESC, "1.0");
-        descriptorKeys.put(Repository.SPEC_NAME_DESC, "Content Repository API for Java(TM) Technology Specification");
-        descriptorKeys.put(Repository.SPEC_VERSION_DESC, "1.0");
+        QValueFactory qvf = QValueFactoryImpl.getInstance();
+        QValue[] vFalse = new QValue[] {qvf.create(false)};
+
+        descriptorKeys.put(Repository.OPTION_LOCKING_SUPPORTED, vFalse);
+        descriptorKeys.put(Repository.OPTION_OBSERVATION_SUPPORTED, vFalse);
+        descriptorKeys.put(Repository.OPTION_TRANSACTIONS_SUPPORTED, vFalse);
+        descriptorKeys.put(Repository.OPTION_VERSIONING_SUPPORTED, vFalse);
+        descriptorKeys.put(Repository.REP_NAME_DESC, new QValue[] {qvf.create("Mock Repository", PropertyType.STRING)});
+        descriptorKeys.put(Repository.REP_VENDOR_DESC, new QValue[] {qvf.create("Apache Software Foundation", PropertyType.STRING)});
+        descriptorKeys.put(Repository.REP_VENDOR_URL_DESC, new QValue[] {qvf.create("http://www.apache.org/", PropertyType.STRING)});
+        descriptorKeys.put(Repository.REP_VERSION_DESC, new QValue[] {qvf.create("2.0", PropertyType.STRING)});
+        descriptorKeys.put(Repository.SPEC_NAME_DESC, new QValue[] {qvf.create("Content Repository API for Java(TM) Technology Specification", PropertyType.STRING)});
+        descriptorKeys.put(Repository.SPEC_VERSION_DESC, new QValue[] {qvf.create("2.0", PropertyType.STRING)});
 
         return descriptorKeys;
     }
@@ -203,7 +208,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.getQValueFactory();
     }
 
-    public Map<String, String> getRepositoryDescriptors() throws RepositoryException {
+    public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
         return repositoryService.getRepositoryDescriptors();
     }
 
