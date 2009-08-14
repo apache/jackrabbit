@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,7 +35,7 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
  */
 public class MemoryFileSystem implements FileSystem {
 
-    private Map entries = new HashMap();
+    private Map<String, MemoryFileSystemEntry> entries = new HashMap<String, MemoryFileSystemEntry>();
 
     public void close() {
     }
@@ -77,16 +76,13 @@ public class MemoryFileSystem implements FileSystem {
 
     public void deleteFolder(String folderPath) throws FileSystemException {
         assertIsFolder(folderPath);
-        Set allNames = entries.keySet();
-        Set selectedNames = new HashSet();
-        for (Iterator iter = allNames.iterator(); iter.hasNext();) {
-            String name = (String) iter.next();
+        Set<String> selectedNames = new HashSet<String>();
+        for (String name : entries.keySet()) {
             if (name.equals(folderPath) || name.startsWith(folderPath + SEPARATOR)) {
                 selectedNames.add(name);
             }
         }
-        for (Iterator iter = selectedNames.iterator(); iter.hasNext();) {
-            String name = (String) iter.next();
+        for (String name : selectedNames) {
             entries.remove(name);
         }
     }
@@ -160,7 +156,7 @@ public class MemoryFileSystem implements FileSystem {
     }
 
     private MemoryFileSystemEntry getEntry(String path) {
-        return ((MemoryFileSystemEntry) entries.get(path));
+        return entries.get(path);
     }
 
     private void assertExistence(String path) throws FileSystemException {
@@ -191,15 +187,13 @@ public class MemoryFileSystem implements FileSystem {
         if (folderPath.equals("/")) {
             folderPath = "";
         }
-        Set allNames = entries.keySet();
-        Set selectedNames = new HashSet();
-        for (Iterator iter = allNames.iterator(); iter.hasNext();) {
-            String name = (String) iter.next();
+        Set<String> selectedNames = new HashSet<String>();
+        for (String name : entries.keySet()) {
             if (name.matches(folderPath + "/[^/]*") && !name.equals("/")) {
                 selectedNames.add(name.substring(folderPath.length() + 1));
             }
         }
-        return (String[]) selectedNames.toArray(new String[selectedNames.size()]);
+        return selectedNames.toArray(new String[selectedNames.size()]);
     }
 
     public String[] listFiles(String folderPath) {
@@ -215,13 +209,13 @@ public class MemoryFileSystem implements FileSystem {
         if (folderPath.equals("/")) {
             folderPath = "";
         }
-        Set result = new HashSet();
-        for (int i = 0; i < names.length; i++) {
-            if (getEntry(folderPath + "/" + names[i]).isFolder() == isFolder) {
-                result.add(names[i]);
+        Set<String> result = new HashSet<String>();
+        for (String n : names) {
+            if (getEntry(folderPath + "/" + n).isFolder() == isFolder) {
+                result.add(n);
             }
         }
-        return (String[]) result.toArray(new String[result.size()]);
+        return result.toArray(new String[result.size()]);
     }
 
 }
