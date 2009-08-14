@@ -74,6 +74,7 @@ public abstract class AbstractFileSystemTest extends TestCase {
 
         // Create a subfolder
         fs.createFolder("/folder2/subfolder");
+        createFile("/folder2/file2", sampleBytes);
         assertTrue(fs.exists("/folder2/subfolder"));
         assertTrue(fs.isFolder("/folder2/subfolder"));
         assertFalse(fs.isFile("/folder2/subfolder"));
@@ -112,6 +113,7 @@ public abstract class AbstractFileSystemTest extends TestCase {
         assertEquals(0, fs.listFolders("/folder2").length);
 
         // Delete the folder
+        fs.deleteFolder("/folder");
         fs.deleteFolder("/folder2");
         assertFalse(fs.exists("/folder2"));
         assertFalse(fs.isFolder("/folder2"));
