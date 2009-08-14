@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.fs.mem;
 
+/**
+ * An in-memory file or folder.
+ */
 public abstract class MemoryFileSystemEntry {
 
     private long lastModified;

@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.fs.mem;
 
+/**
+ * An in-memory folder.
+ */
 public class MemoryFolder extends MemoryFileSystemEntry {
 
     public boolean isFolder() {
