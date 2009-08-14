@@ -22,25 +22,29 @@ import java.io.IOException;
 import org.apache.jackrabbit.core.fs.AbstractFileSystemTest;
 import org.apache.jackrabbit.core.fs.FileSystem;
 
+/**
+ * Tests the local file system.
+ */
 public class LocalFileSystemTest extends AbstractFileSystemTest {
 
-    private File file;
+    private String tempDirectory;
 
     protected FileSystem getFileSystem() {
         LocalFileSystem filesystem = new LocalFileSystem();
-        filesystem.setPath(file.getPath());
+        filesystem.setPath(tempDirectory);
         return filesystem;
     }
 
     protected void setUp() throws Exception {
-        file = File.createTempFile("jackrabbit", "localfs");
+        File file = File.createTempFile("jackrabbit", "localfs");
+        tempDirectory = file.getPath();
         file.delete();
         super.setUp();
     }
 
     protected void tearDown() throws Exception {
         super.tearDown();
-        delete(file);
+        delete(new File(tempDirectory));
     }
 
     private void delete(File file) throws IOException {

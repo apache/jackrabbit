@@ -19,6 +19,9 @@ package org.apache.jackrabbit.core.fs.mem;
 import org.apache.jackrabbit.core.fs.AbstractFileSystemTest;
 import org.apache.jackrabbit.core.fs.FileSystem;
 
+/**
+ * Tests the in-memory file system.
+ */
 public class MemoryFileSystemTest extends AbstractFileSystemTest {
 
     protected FileSystem getFileSystem() {

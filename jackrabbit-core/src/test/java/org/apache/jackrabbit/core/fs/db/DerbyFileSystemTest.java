@@ -22,6 +22,9 @@ import java.io.IOException;
 import org.apache.jackrabbit.core.fs.AbstractFileSystemTest;
 import org.apache.jackrabbit.core.fs.FileSystem;
 
+/**
+ * Tests the Apache Derby file system.
+ */
 public class DerbyFileSystemTest extends AbstractFileSystemTest {
 
     private File file;
