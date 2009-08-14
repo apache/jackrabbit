@@ -28,10 +28,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 
+/**
+ * An in-memory file system implementation.
+ */
 public class MemoryFileSystem implements FileSystem {
 
     private Map entries = new HashMap();
@@ -79,7 +81,7 @@ public class MemoryFileSystem implements FileSystem {
         Set selectedNames = new HashSet();
         for (Iterator iter = allNames.iterator(); iter.hasNext();) {
             String name = (String) iter.next();
-            if (name.startsWith(folderPath)) {
+            if (name.equals(folderPath) || name.startsWith(folderPath + SEPARATOR)) {
                 selectedNames.add(name);
             }
         }

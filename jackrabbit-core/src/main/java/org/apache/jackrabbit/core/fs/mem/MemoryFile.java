@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.fs.mem;
 
+/**
+ * An in-memory file.
+ */
 public class MemoryFile extends MemoryFileSystemEntry {
 
     private byte[] data = new byte[0];
