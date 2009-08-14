@@ -229,7 +229,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private final Map nodeTypeDefinitions = new HashMap();
 
-    private Map descriptors;
+    private Map<String, QValue[]> descriptors;
 
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory,
@@ -497,7 +497,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getRepositoryDescriptors()
      */
-    public Map getRepositoryDescriptors() throws RepositoryException {
+    public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
         if (descriptors == null) {
             ReportInfo info = new ReportInfo(RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT, DEPTH_0);
             ReportMethod method = null;
@@ -514,12 +514,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     while (nsElems.hasNext()) {
                         Element elem = nsElems.nextElement();
                         String key = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORKEY, ItemResourceConstants.NAMESPACE);
-                        String descriptor = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORVALUE, ItemResourceConstants.NAMESPACE);
-                        if (key != null && descriptor != null) {
-                            descriptors.put(key, descriptor);
-                        } else {
-                            log.error("Invalid descriptor key / value pair: " + key + " -> " + descriptor);
+                        ElementIterator it = DomUtil.getChildren(elem, ItemResourceConstants.XML_DESCRIPTORVALUE, ItemResourceConstants.NAMESPACE);
+                        List<QValue> vs = new ArrayList();
+                        while (it.hasNext()) {
+                            Element dv = it.nextElement();
+                            String descriptor = DomUtil.getText(dv);
+                            if (key != null && descriptor != null) {
+                                String typeStr = (DomUtil.getAttribute(dv, ItemResourceConstants.ATTR_VALUE_TYPE, null));
+                                int type = (typeStr == null) ? PropertyType.STRING : PropertyType.valueFromName(typeStr);
+                                vs.add(getQValueFactory().create(descriptor, type));
+                            } else {
+                                log.error("Invalid descriptor key / value pair: " + key + " -> " + descriptor);
+                            }
+
                         }
+                        descriptors.put(key, vs.toArray(new QValue[vs.size()]));
                     }
                 }
             } catch (IOException e) {
@@ -1109,8 +1118,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new ItemNotFoundException("Unable to retrieve the property with id " + saveGetIdString(propertyId, resolver));
             }
 
-            PropertyInfo pInfo = new PropertyInfoImpl(propertyId, path, type, isMultiValued, values);
-            return pInfo;
+            return new PropertyInfoImpl(propertyId, path, type, isMultiValued, values);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {

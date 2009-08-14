@@ -162,7 +162,7 @@ public class RepositoryFactoryImplTest extends TestCase {
             return null;
         }
 
-        public Map getRepositoryDescriptors() throws RepositoryException {
+        public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
             return null;
         }
 

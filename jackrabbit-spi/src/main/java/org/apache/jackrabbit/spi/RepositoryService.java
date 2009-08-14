@@ -121,7 +121,7 @@ public interface RepositoryService {
      * @see javax.jcr.Repository#getDescriptorKeys()
      * @see javax.jcr.Repository#getDescriptor(String)
      */
-    public Map<String, String> getRepositoryDescriptors() throws RepositoryException;
+    public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException;
 
     //-----------------------------------< SessionInfo creation and release >---
     /**

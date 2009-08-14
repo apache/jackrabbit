@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.HashMap;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -27,6 +28,8 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.NamespaceException;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.NamingException;
@@ -40,20 +43,52 @@ import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.XASessionInfo;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RepositoryImpl</code>...
  */
 public class RepositoryImpl extends AbstractRepository implements Referenceable {
 
+    private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
+
     // configuration of the repository
     private final RepositoryConfig config;
-    private final Map descriptors;
+    private final Map<String, Value[]> descriptors;
     private Reference reference = null;
 
     private RepositoryImpl(RepositoryConfig config) throws RepositoryException {
         this.config = config;
-        descriptors = config.getRepositoryService().getRepositoryDescriptors();
+
+        // dummy value factory and dummy resolver as descriptors are not
+        // expected contain Name or Path values.
+        ValueFactory vf = ValueFactoryImpl.getInstance(); 
+        NamePathResolver resolver = new DefaultNamePathResolver(new NamespaceResolver() {
+            public String getURI(String prefix) throws NamespaceException {
+                return prefix;
+            }
+            public String getPrefix(String uri) throws NamespaceException {
+                return uri;
+            }
+        });
+
+        Map<String, QValue[]> descr = config.getRepositoryService().getRepositoryDescriptors();       
+        descriptors = new HashMap(descr.size());
+        for (String key : descr.keySet()) {
+            QValue[] qvs = descr.get(key);
+            Value[] vs = new Value[qvs.length];
+            for (int i = 0; i < qvs.length; i++) {
+                vs[i] = ValueFormat.getJCRValue(qvs[i], resolver, vf);
+            }
+            descriptors.put(key, vs);
+        }
     }
 
     public static Repository create(RepositoryConfig config) throws RepositoryException {
@@ -65,39 +100,39 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
      * @see Repository#getDescriptorKeys()
      */
     public String[] getDescriptorKeys() {
-        String[] keys = (String[]) descriptors.keySet().toArray(new String[descriptors.keySet().size()]);
-        return keys;
+        return descriptors.keySet().toArray(new String[descriptors.keySet().size()]);
     }
 
     /**
      * @see Repository#getDescriptor(String)
      */
-    public String getDescriptor(String descriptorKey) {
-        return (String) descriptors.get(descriptorKey);
+    public String getDescriptor(String key) {
+        Value v = getDescriptorValue(key);
+        try {
+            return (v == null) ? null : v.getString();
+        } catch (RepositoryException e) {
+            log.error("corrupt descriptor value: " + key, e);
+            return null;
+        }
     }
 
     /**
      * @see Repository#getDescriptorValue(String)
      */
     public Value getDescriptorValue(String key) {
-        String value = getDescriptor(key);
-        if (value != null) {
-            // TODO implementation missing
-            throw new UnsupportedOperationException("not implemented yet - see JCR-2062");
-        } else {
-            return null;
-        }
+        Value[] vs = getDescriptorValues(key);
+        return (vs == null || vs.length != 1) ? null : vs[0];
     }
 
     /**
      * @see Repository#getDescriptorValues(String)
      */
     public Value[] getDescriptorValues(String key) {
-        Value value = getDescriptorValue(key);
-        if (value != null) {
-            return new Value[] { value };
-        } else {
+        if (!descriptors.containsKey(key)) {
             return null;
+        } else {
+            return descriptors.get(key);
+
         }
     }
 
@@ -105,7 +140,8 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
      * @see Repository#isSingleValueDescriptor(String)
      */
     public boolean isSingleValueDescriptor(String key) {
-        return descriptors.containsKey(key);
+        Value[] vs = descriptors.get(key);
+        return (vs != null && vs.length == 1);
     }
 
     /**

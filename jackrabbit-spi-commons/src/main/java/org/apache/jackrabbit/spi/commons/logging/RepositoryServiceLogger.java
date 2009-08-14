@@ -109,8 +109,8 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getQValueFactory()", new Object[]{});
     }
 
-    public Map<String, String> getRepositoryDescriptors() throws RepositoryException {
-        return (Map<String, String>) execute(new Callable() {
+    public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
+        return (Map<String, QValue[]>) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getRepositoryDescriptors();
             }
