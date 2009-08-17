@@ -27,7 +27,6 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -257,7 +256,7 @@ abstract public class VersionManagerImplBase {
         if (baseVersion.isRootVersion()) {
             String msg = "Unable to checkin configuration as it has unversioned child node: " + safeGetJCRPath(root);
             log.debug(msg);
-            throw new VersionException(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
         }
         baseVersions.add(baseVersion.getId());
 
