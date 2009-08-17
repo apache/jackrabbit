@@ -282,7 +282,7 @@ abstract public class VersionManagerImplBase {
         } else {
             String msg = "Unable to perform a versioning operation on a " +
                          "non versionable node: " + safeGetJCRPath(state);
-            log.error(msg);
+            log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
     }
