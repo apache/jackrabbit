@@ -69,6 +69,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides the functionality needed for locking and unlocking nodes.
@@ -134,6 +137,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     };
 
     /**
+     * The periodically invoked lock timeout handler.
+     */
+    private final ScheduledFuture<?> timeoutHandler;
+
+    /**
      * System session
      */
     private final SessionImpl sysSession;
@@ -156,12 +164,14 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     /**
      * Create a new instance of this class.
      *
-     * @param session system session
-     * @param fs      file system for persisting locks
+     * @param session  system session
+     * @param fs       file system for persisting locks
+     * @param executor scheduled executor service for handling lock timeouts
      * @throws RepositoryException if an error occurs
      */
-    public LockManagerImpl(SessionImpl session, FileSystem fs)
-            throws RepositoryException {
+    public LockManagerImpl(
+            SessionImpl session, FileSystem fs,
+            ScheduledExecutorService executor) throws RepositoryException {
 
         this.sysSession = session;
         this.locksFile = new FileSystemResource(fs, FileSystem.SEPARATOR + LOCKS_FILE);
@@ -178,13 +188,48 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             throw new RepositoryException("I/O error while reading locks from '"
                     + locksFile.getPath() + "'", e);
         }
+
+        timeoutHandler = executor.scheduleWithFixedDelay(
+                new TimeoutHandler(), 1, 1, TimeUnit.SECONDS);
     }
 
     /**
      * Close this lock manager. Writes back all changes.
      */
     public void close() {
+        timeoutHandler.cancel(false);
         save();
+    }
+
+    /**
+     * Periodically (at one second delay) invoked timeout handler. Traverses
+     * all locks and unlocks those that have expired.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1590">JCR-1590</a>:
+     *      JSR 283: Locking
+     */
+    private class TimeoutHandler implements Runnable {
+        public void run() {
+            lockMap.traverse(new PathMap.ElementVisitor<LockInfo>() {
+                public void elementVisited(PathMap.Element<LockInfo> element) {
+                    LockInfo info = element.get();
+                    if (info != null && info.isLive() && info.isExpired()) {
+                        NodeId id = info.getId();
+                        SessionImpl holder = info.getLockHolder();
+                        if (holder == null) {
+                            info.setLockHolder(sysSession);
+                            holder = sysSession;
+                        }
+                        try {
+                            // FIXME: This session access is not thread-safe!
+                            unlock(holder.getNodeById(id));
+                        } catch (RepositoryException e) {
+                            log.warn("Unable to expire the lock " + id, e);
+                        }
+                    }
+                }
+            }, false);
+        }
     }
 
     /**

@@ -34,6 +34,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -252,6 +258,11 @@ public class RepositoryImpl extends AbstractRepository
     private WorkspaceEventChannel createWorkspaceEventChannel;
 
     /**
+     * Scheduled executor service.
+     */
+    private final ScheduledExecutorService executor;
+
+    /**
      * Protected constructor.
      *
      * @param repConfig the repository configuration.
@@ -260,6 +271,10 @@ public class RepositoryImpl extends AbstractRepository
      *                             or another error occurs.
      */
     protected RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+                Runtime.getRuntime().availableProcessors() * 2,
+                new ThreadPoolExecutor.CallerRunsPolicy());
+        this.executor = executor;
 
         // Acquire a lock on the repository home
         repLock = repConfig.getRepositoryLockMechanism();
@@ -1166,6 +1181,18 @@ public class RepositoryImpl extends AbstractRepository
         // wake up threads waiting on this instance's monitor (e.g. workspace janitor)
         notifyAll();
 
+        // Shut down the executor service 
+        executor.shutdown();
+        try {
+            // Wait for all remaining background threads to terminate
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                log.warn("Attempting to forcibly shutdown runaway threads");
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            log.warn("Interrupted while waiting for background threads", e);
+        }
+
         // finally release repository lock
         if (repLock != null) {
             try {
@@ -1841,7 +1868,8 @@ public class RepositoryImpl extends AbstractRepository
                 // lock manager is lazily instantiated in order to avoid
                 // 'chicken & egg' bootstrap problems
                 if (lockMgr == null) {
-                    lockMgr = new LockManagerImpl(getSystemSession(), fs);
+                    lockMgr =
+                        new LockManagerImpl(getSystemSession(), fs, executor);
                     if (clusterNode != null && config.isClustered()) {
                         lockChannel = clusterNode.createLockChannel(getName());
                         lockMgr.setEventChannel(lockChannel);

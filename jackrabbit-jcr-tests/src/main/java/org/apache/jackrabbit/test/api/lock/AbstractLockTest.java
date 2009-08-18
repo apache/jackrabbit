@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api.lock;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -257,39 +258,33 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     /**
      * Test expiration of the lock
      */
-    public void testLockExpiration() throws RepositoryException, NotExecutableException {
+    public synchronized void testLockExpiration()
+            throws RepositoryException, NotExecutableException {
         lockedNode.unlock();
 
-        ObservationManager obsMgr = superuser.getWorkspace().getObservationManager();
-        EventResult listener = new EventResult(((JUnitTest) this).log);
-        try {
-            obsMgr.addEventListener(listener, Event.PROPERTY_REMOVED, lockedNode.getPath(), false, new String[0], new String[0], false);
+        long hint = 1;
+        lock = lockMgr.lock(
+                lockedNode.getPath(), isDeep(), isSessionScoped(), hint, null);
 
-            boolean lockPropRemoved = false;            
-            long hint = 1;
-            lock = lockMgr.lock(lockedNode.getPath(), isDeep(), isSessionScoped(), hint, null);
-            // only test if timeout hint was respected.
-            if (lock.getSecondsRemaining() <= 1) {
-                Event[] evts = listener.getEvents(2000);
-                for (int i = 0; i < evts.length; i++) {
-                    if (evts[i].getType() == Event.PROPERTY_REMOVED &&
-                            evts[i].getPath().endsWith(jcrLockOwner)) {
-                        lockPropRemoved = true;
-                        // lock property has been removed -> make sure lock has
-                        // been released and lock.getSecondsRemaining behaves properly.
-                        assertTrue("A released lock must return a negative number of seconds", lock.getSecondsRemaining() < 0);
-                        assertFalse("If the timeout hint is respected the lock must be automatically released.", lock.isLive());
-                        assertFalse("If the timeout hint is respected the lock must be automatically released.", lockedNode.isLocked());
-                    }
-                }
-                if (!lockPropRemoved) {
-                    fail("If the timeout hint is respected the lock must be automatically released.");
-                }
-            } else {
-                throw new NotExecutableException("timeout hint was ignored.");
+        // only test if timeout hint was respected.
+        long remaining = lock.getSecondsRemaining();
+        if (remaining <= hint) {
+            try {
+                wait(remaining * 2000); // wait twice as long to be safe
+            } catch (InterruptedException ignore) {
             }
-        } finally {
-            obsMgr.removeEventListener(listener);
+            assertTrue(
+                    "A released lock must return a negative number of seconds",
+                    lock.getSecondsRemaining() < 0);
+            String message = "If the timeout hint is respected the lock"
+                + " must be automatically released.";
+            assertFalse(message, lock.isLive());
+            assertFalse(message, lockedNode.isLocked());
+            assertFalse(message, lockMgr.isLocked(lockedNode.getPath()));
+            assertFalse(message, lockedNode.hasProperty(Property.JCR_LOCK_IS_DEEP));
+            assertFalse(message, lockedNode.hasProperty(Property.JCR_LOCK_OWNER));
+        } else {
+            throw new NotExecutableException("timeout hint was ignored.");
         }
     }
 

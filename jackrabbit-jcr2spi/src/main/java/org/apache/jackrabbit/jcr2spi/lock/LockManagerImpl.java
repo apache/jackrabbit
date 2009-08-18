@@ -496,7 +496,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
                 if (lockHoldingState == nodeState) {
                     return true;
                 } else {
-                    return lockInfo.isDeep();
+                    return lockInfo != null && lockInfo.isDeep();
                 }
             }
         }
@@ -691,14 +691,20 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
          * @see Lock#getLockOwner()
          */
         public String getLockOwner() {
-            return getLockInfo().getOwner();
+            LockInfo info = getLockInfo();
+            if (info != null) {
+                return info.getOwner();
+            } else {
+                return null;
+            }
         }
 
         /**
          * @see Lock#isDeep()
          */
         public boolean isDeep() {
-            return getLockInfo().isDeep();
+            LockInfo info = getLockInfo();
+            return info != null && info.isDeep();
         }
 
         /**
@@ -719,7 +725,12 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
             }
 
             updateLockInfo();
-            return getLockInfo().getLockToken();
+            LockInfo info = getLockInfo();
+            if (info != null) {
+                return info.getLockToken();
+            } else {
+                return null;
+            }
         }
 
         /**
@@ -734,7 +745,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
          * @see Lock#isSessionScoped()
          */
         public boolean isSessionScoped() {
-            return getLockInfo().isSessionScoped();
+            LockInfo info = getLockInfo();
+            return info != null && info.isSessionScoped();
         }
 
         /**
@@ -766,7 +778,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
          * @see javax.jcr.lock.Lock#isLockOwningSession()
          */
         public boolean isLockOwningSession(){
-            return lockState.lockInfo.isLockOwner();
+            LockInfo info = getLockInfo();
+            return info != null && info.isLockOwner();
         }
 
         //----------------------------------------------< LockTokenListener >---

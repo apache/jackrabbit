@@ -227,6 +227,11 @@ public abstract class LockInfo {
         return timeoutTime;
     }
 
+    public boolean isExpired() {
+        return timeoutTime != Long.MAX_VALUE
+            && timeoutTime * 1000 > System.currentTimeMillis();
+    }
+
     /**
      * Updates the timeout time of this lock based on current time and
      * the timeout hint specified for this lock. The timeout time is always
