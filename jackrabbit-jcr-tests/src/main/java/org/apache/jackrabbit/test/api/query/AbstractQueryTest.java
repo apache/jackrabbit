@@ -148,18 +148,13 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      */
     protected Query createQuery(Session session, String statement, String language) throws RepositoryException, NotExecutableException {
         log.println("Creating query: " + statement);
-        try {
+        
+        // check for unsupported query languages early
+        if (! isSupportedLanguage(language) && !Query.JCR_SQL2.equals(language)) {
+            throw new NotExecutableException("Repository does not support " + language + " query syntax");
+        }
+        else {
             return session.getWorkspace().getQueryManager().createQuery(statement, language);
-        } catch (InvalidQueryException ex) {
-
-            // if language is optional and not reported as "supported" ->
-            // demote to NotExecutableException
-
-            if (!isSupportedLanguage(language) && !Query.JCR_SQL2.equals(language)) {
-                throw new NotExecutableException("Repository does not support " + language + " query syntax");
-            } else {
-                throw ex;
-            }
         }
     }
 
