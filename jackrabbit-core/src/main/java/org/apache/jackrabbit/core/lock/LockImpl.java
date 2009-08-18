@@ -131,18 +131,16 @@ class LockImpl implements javax.jcr.lock.Lock {
     public long getSecondsRemaining() {
         if (!info.isLive()) {
             return -1;
-        } else {
-            return Long.MAX_VALUE;
         }
 
         // TODO JCR-1590: Disabled until locks get unlocked when they timeout
-//        long timeout = info.getTimeoutTime();
-//        if (timeout == Long.MAX_VALUE) {
-//            return Long.MAX_VALUE;
-//        }
-//
-//        long now = (System.currentTimeMillis() + 999) / 1000; // round up
-//        return Math.max(timeout - now, 1); // must always be positive
+        long timeout = info.getTimeoutTime();
+        if (timeout == Long.MAX_VALUE) {
+            return Long.MAX_VALUE;
+        }
+
+        long now = (System.currentTimeMillis() + 999) / 1000; // round up
+        return Math.max(timeout - now, 1); // must always be positive
     }
 
     /**
