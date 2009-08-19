@@ -29,10 +29,10 @@ import java.util.Map;
 import javax.jcr.Credentials;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.LoginException;
+import javax.jcr.PropertyType;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import junit.framework.TestCase;
@@ -64,8 +64,8 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.AbstractReadableRepositoryService;
-import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**
  * Abstract base class for jcr2spi tests. This class implements {@link RepositoryService}
@@ -73,6 +73,8 @@ import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
  * individual methods as needed.
  */
 public abstract class AbstractJCR2SPITest extends TestCase implements RepositoryService {
+    private static final String DEFAULT_WSP = "default";
+
     protected RepositoryService repositoryService;
     protected RepositoryConfig config;
     protected Repository repository;
@@ -87,7 +89,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     protected RepositoryService getRepositoryService() throws RepositoryException, ParseException {
         return new AbstractReadableRepositoryService(getDescriptors(), getNameSpaces(), getCndReader(),
-                getWspNames()) {
+                getWspNames(), DEFAULT_WSP) {
 
             @Override
             protected void checkCredentials(Credentials credentials, String workspaceName)
@@ -171,7 +173,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     }
 
     protected List<String> getWspNames() {
-        return Collections.singletonList("default");
+        return Collections.singletonList(DEFAULT_WSP);
     }
 
     protected RepositoryConfig getRepositoryConfig() {
@@ -445,7 +447,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
             throws RepositoryException {
         return repositoryService.createConfiguration(sessionInfo, nodeId);
     }
-    
+
     //----------------------------------------------------------< Searching >---
 
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws RepositoryException {
