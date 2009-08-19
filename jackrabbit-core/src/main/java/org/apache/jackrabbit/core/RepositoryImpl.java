@@ -260,7 +260,7 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * Scheduled executor service.
      */
-    private final ScheduledExecutorService executor;
+    protected final ScheduledExecutorService executor;
 
     /**
      * Protected constructor.
