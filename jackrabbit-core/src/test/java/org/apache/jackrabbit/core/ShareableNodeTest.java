@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core;
 
 import javax.jcr.Node;
 import javax.jcr.Workspace;
+import javax.jcr.NodeIterator;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.Query;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.ObservationManager;
@@ -118,5 +121,33 @@ public class ShareableNodeTest extends AbstractJCRTest {
         b1.save();
         superuser.getWorkspace().getObservationManager().removeEventListener(el);
         assertEquals(1, el.getEventCount());
+    }
+
+    /**
+     * Verify that a shared node is removed when the ancestor is removed.
+     * See also JCR-2257.
+     */
+    public void testRemoveAncestorOfSharedNode() throws Exception {
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = a1.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        ensureMixinType(b1, mixShareable);
+        testRootNode.save();
+        //now we have a shareable node N with path a1/b1
+
+        Workspace workspace = testRootNode.getSession().getWorkspace();
+        String path = a2.getPath() + "/b2";
+        workspace.clone(workspace.getName(), b1.getPath(), path, false);
+        testRootNode.save();
+        //now we have another shareable node N' in the same shared set as N with path a1/a2/b2
+
+        a2.remove();
+        testRootNode.save();
+
+        // assert b2 is removed from index
+        QueryManager qm = superuser.getWorkspace().getQueryManager();
+        String stmt = testPath + "//b2";
+        NodeIterator it = qm.createQuery(stmt, Query.XPATH).execute().getNodes();
+        assertFalse(it.hasNext());
     }
 }
