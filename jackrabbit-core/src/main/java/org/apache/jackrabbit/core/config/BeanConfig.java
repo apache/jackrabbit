@@ -22,6 +22,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * Bean configuration class. BeanConfig instances contain the class name
@@ -31,6 +36,27 @@ import java.util.Properties;
 public class BeanConfig {
 
     private static Logger log = LoggerFactory.getLogger(BeanConfig.class);
+
+    private static final Map<String, String> DEPRECATIONS;
+
+    static {
+        try {
+            Map<String, String> temp = new HashMap<String, String>();
+            Properties props = new Properties();
+            InputStream in = BeanConfig.class.getResourceAsStream("deprecated-classes.properties");
+            try {
+                props.load(in);
+            } finally {
+                in.close();
+            }
+            for (Map.Entry<Object, Object> entry : props.entrySet()) {
+                temp.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+            DEPRECATIONS = Collections.unmodifiableMap(temp);
+        } catch (IOException e) {
+            throw new InternalError("failed to read deprecated classes");
+        }
+    }
 
     /** The default class loader used by all instances of this class */
     private static ClassLoader defaultClassLoader =
@@ -74,6 +100,11 @@ public class BeanConfig {
      * @param properties initial properties of the bean
      */
     public BeanConfig(String className, Properties properties) {
+        if (DEPRECATIONS.containsKey(className)) {
+            String replacement = DEPRECATIONS.get(className);
+            log.info("{} is deprecated. Please use {} instead", className, replacement);
+            className = replacement;
+        }
         this.className = className;
         this.properties = (Properties) properties.clone();
     }
