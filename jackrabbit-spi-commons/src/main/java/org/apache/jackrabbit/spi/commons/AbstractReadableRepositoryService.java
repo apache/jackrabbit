@@ -16,60 +16,61 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
-import org.apache.jackrabbit.spi.Batch;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.LockInfo;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.ItemInfo;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ValueFormatException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.MergeException;
-import javax.jcr.NamespaceException;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import javax.jcr.nodetype.NodeTypeExistsException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
+import javax.jcr.MergeException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.LockInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 
 /**
  * <code>AbstractReadableRepositoryService</code> provides an abstract base
@@ -109,6 +110,11 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     protected final List<String> wspNames;
 
     /**
+     * The name of the default workspace
+     */
+    protected final String defaulWsp;
+
+    /**
      * Creates a new <code>AbstractReadableRepositoryService</code>.
      *
      * @param descriptors the repository descriptors. Maps descriptor keys to
@@ -117,14 +123,21 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      *                    URIs.
      * @param cnd         a reader on the compact node type definition.
      * @param wspNames    a list of workspace names.
-     * @throws RepositoryException if the namespace mappings are invalid.
-     * @throws ParseException      if an error occurs while parsing the CND.
+     * @param defaultWsp  name of the default workspace
+     * @throws RepositoryException       if the namespace mappings are invalid.
+     * @throws ParseException            if an error occurs while parsing the CND.
+     * @throws IllegalArgumentException  if <code>defaultWsp</code> is <code>null</code>
      */
     public AbstractReadableRepositoryService(Map<String, QValue[]> descriptors,
                                              Map<String, String> namespaces,
                                              Reader cnd,
-                                             List<String> wspNames)
-            throws RepositoryException, ParseException {
+                                             List<String> wspNames,
+                                             String defaultWsp)
+            throws RepositoryException, ParseException, IllegalArgumentException {
+
+        if (defaultWsp == null) {
+            throw new IllegalArgumentException("Default workspace is null");
+        }
         this.descriptors = Collections.unmodifiableMap(new HashMap<String, QValue[]>(descriptors));
         for (Map.Entry<String, String> entry : namespaces.entrySet()) {
             this.namespaces.setMapping(entry.getKey(), entry.getValue());
@@ -134,6 +147,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
             nodeTypeDefs.put(def.getName(), def);
         }
         this.wspNames = Collections.unmodifiableList(new ArrayList<String>(wspNames));
+        this.defaulWsp = defaultWsp;
     }
 
     //---------------------------< subclass responsibility >--------------------
@@ -147,18 +161,83 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     protected abstract QNodeDefinition createRootNodeDefinition()
             throws RepositoryException;
 
+    //---------------------< may be overwritten by subclasses>------------------
+
     /**
-     * Checks if the given <code>credentials</code> are valid.
+     * Checks if the given <code>credentials</code> are valid. This default
+     * implementation is empty thus allowing all credentials.
      *
      * @param credentials the credentials to check.
      * @param workspaceName the workspace to access.
      * @throws LoginException if the credentials are invalid.
      */
-    protected abstract void checkCredentials(Credentials credentials,
-                                             String workspaceName)
-            throws LoginException;
+    protected void checkCredentials(Credentials credentials, String workspaceName) throws LoginException {
+        // empty
+    }
 
-    //---------------------< may be overwritten by subclasses>------------------
+    /**
+     * Checks whether the <code>workspaceName</code> is valid.
+     * @param workspaceName  name of the workspace to check
+     * @throws NoSuchWorkspaceException  if <code>workspaceName</code> is neither in the
+     *   list of workspaces nor null (i.e. default workspace).
+     */
+    protected void checkWorkspace(String workspaceName) throws NoSuchWorkspaceException {
+        if (workspaceName != null && !wspNames.contains(workspaceName)) {
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
+    }
+
+    /**
+     * Creates a session info instance for the given <code>credentials</code> and
+     * <code>workspaceName</code>. This default implementation creates a
+     * {@link SessionInfoImpl} instance and sets the <code>userId</code> and
+     * workspaceName. The user <code>userId</code> is <code>null</code> or the
+     * <code>userId</code> from <code>credentials</code> if it is of type
+     * {@link SimpleCredentials}.
+     *
+     * @param credentials the credentials.
+     * @param workspaceName the name of the workspace to access.
+     * @return a session info instance for the given <code>credentials</code> and
+     *         <code>workspaceName</code>.
+     * @throws RepositoryException
+     */
+    protected SessionInfo createSessionInfo(Credentials credentials, String workspaceName)
+            throws RepositoryException {
+
+        String userId = null;
+        if (credentials instanceof SimpleCredentials) {
+            userId = ((SimpleCredentials) credentials).getUserID();
+        }
+
+        SessionInfoImpl s = new SessionInfoImpl();
+        s.setUserID(userId);
+        s.setWorkspacename(workspaceName);
+        return s;
+    }
+
+    /**
+     * Creates a session info instance for the given <code>sessionInfo</code> and
+     * <code>workspaceName</code>. This default implementation creates a
+     * {@link SessionInfoImpl} instance and sets the <code>userId</code> and
+     * workspaceName. The user <code>userId</code> is set to the return value of
+     * {@link SessionInfo#getUserID()}.
+     *
+     * @param sessionInfo the sessionInfo.
+     * @param workspaceName the name of the workspace to access.
+     * @return a session info instance for the given <code>credentials</code> and
+     *         <code>workspaceName</code>.
+     * @throws RepositoryException
+     */
+    protected SessionInfo createSessionInfo(SessionInfo sessionInfo, String workspaceName)
+            throws RepositoryException {
+
+        String userId = sessionInfo.getUserID();
+
+        SessionInfoImpl s = new SessionInfoImpl();
+        s.setUserID(userId);
+        s.setWorkspacename(workspaceName);
+        return s;
+    }
 
     /**
      * Checks the type of the <code>sessionInfo</code> instance. This default
@@ -179,35 +258,16 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
                 + SessionInfoImpl.class.getName());
     }
 
-    /**
-     * Creates a session info instance for the given <code>userId</code> and
-     * <code>workspaceName</code>. This default implementation creates a
-     * {@link SessionInfoImpl} instance and sets the userId and workspaceName.
-     *
-     * @param userId the userId.
-     * @param workspaceName the name of the workspace to access.
-     * @return a session info instance for the given <code>userId</code> and
-     *         <code>workspaceName</code>.
-     */
-    protected SessionInfo createSessionInfo(String userId,
-                                            String workspaceName) {
-        SessionInfoImpl s = new SessionInfoImpl();
-        s.setUserID(userId);
-        s.setWorkspacename(workspaceName);
-        return s;
-    }
-
     //----------------------------< login >-------------------------------------
 
     /**
      * This default implementation does:
      * <ul>
      * <li>calls {@link #checkCredentials(Credentials, String)}</li>
-     * <li>checks if the given <code>workspaceName</code> is in
-     * {@link #wspNames} otherwise throws a {@link NoSuchWorkspaceException}.</li>
-     * <li>calls {@link #createSessionInfo(String, String)} with a <code>null</code>
-     * <code>userId</code> or the <code>userId</code> from <code>credentials</code>
-     * if it is of type {@link SimpleCredentials}.</li>
+     * <li>calls {@link #checkWorkspace(String)}</li>
+     * <li>calls {@link #createSessionInfo(Credentials, String)} passing
+     * <code>workspaceName</code> or the name of the default workspace if
+     * <code>null</code></li>.
      * </ul>
      * @param credentials the credentials for the login.
      * @param workspaceName the name of the workspace to log in.
@@ -219,25 +279,21 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     public SessionInfo obtain(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         checkCredentials(credentials, workspaceName);
-        if (!wspNames.contains(workspaceName)) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        String userId = null;
-        if (credentials instanceof SimpleCredentials) {
-            userId = ((SimpleCredentials) credentials).getUserID();
-        }
-        return createSessionInfo(userId, workspaceName);
+        checkWorkspace(workspaceName);
+        return createSessionInfo(credentials, workspaceName == null ? defaulWsp : workspaceName);
     }
 
     /**
      * This default implementation returns the session info retuned by the call
-     * to {@link #createSessionInfo(String, String)} with the userId taken
-     * from the passed <code>sessionInfo</code>.
+     * to {@link #createSessionInfo(SessionInfo, String)} passing
+     * <code>workspaceName</code> or the name of the default workspace if
+     * <code>null</code></li>.
      */
     public SessionInfo obtain(SessionInfo sessionInfo, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return createSessionInfo(sessionInfo.getUserID(), workspaceName);
+        return createSessionInfo(sessionInfo, workspaceName == null ? defaulWsp : workspaceName);
     }
+
 
     /**
      * This default implementation returns the session info returned by the call
@@ -782,7 +838,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
         throw new UnsupportedRepositoryOperationException();
 
     }
-    
+
     //-------------------------------< query >----------------------------------
 
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws
@@ -792,7 +848,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     }
 
     public String[] checkQueryStatement(SessionInfo sessionInfo, String statement,
-                                    String language, Map namespaces) throws
+                                    String language, Map<String, String> namespaces) throws
             InvalidQueryException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
