@@ -562,7 +562,13 @@ public final class EventStateCollection {
                 if (n.getParentId().equals(parentId)) {
                     continue;
                 }
-                NodeState parent = (NodeState) changes.get(parentId);
+                NodeState parent = null;
+                try {
+                    parent = (NodeState) changes.get(parentId);
+                } catch (NoSuchItemStateException e) {
+                    // parent has been removed as well
+                    // ignore and retrieve from stateMgr
+                }
                 if (parent == null) {
                     // happens when mix:shareable is removed from an existing
                     // node. Usually the parent node state is in the change log

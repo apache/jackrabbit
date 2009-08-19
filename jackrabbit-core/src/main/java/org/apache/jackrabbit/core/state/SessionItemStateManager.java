@@ -413,13 +413,14 @@ public class SessionItemStateManager
         // the depth is used as array index
         List[] la = new List[10];
         try {
+            HierarchyManager atticAware = getAtticAwareHierarchyMgr();
             Iterator iter = transientStore.values().iterator();
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
                 int depth;
                 try {
-                    depth = hierMgr.getShareRelativeDepth(parentId, state.getId());
+                    depth = atticAware.getShareRelativeDepth(parentId, state.getId());
                 } catch (ItemNotFoundException infe) {
                     /**
                      * one of the parents of the specified item has been
