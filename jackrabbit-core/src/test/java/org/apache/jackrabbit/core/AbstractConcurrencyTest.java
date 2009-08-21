@@ -107,11 +107,12 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
     private void executeAll(Executor[] executors, long timeout) throws RepositoryException {
         Thread[] threads = new Thread[executors.length];
         for (int i = 0; i < executors.length; i++) {
-            threads[i] = new Thread(executors[i]);
+            threads[i] = new Thread(executors[i], "Executor " + i);
         }
         for (int i = 0; i < threads.length; i++) {
             threads[i].start();
         }
+
         boolean stacksDumped = false;
         for (int i = 0; i < threads.length; i++) {
             try {
