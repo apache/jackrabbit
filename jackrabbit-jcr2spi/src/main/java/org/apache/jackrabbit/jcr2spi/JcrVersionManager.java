@@ -16,35 +16,36 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.version.VersionManager;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import java.util.Iterator;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.MergeException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.NodeIterator;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.MergeException;
-import javax.jcr.Node;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Repository;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.lock.LockException;
-import java.util.Iterator;
+
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -171,9 +172,12 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      */
     public void restore(String absPath, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         session.checkIsAlive();
-
-        Node n = itemManager.getNode(resolver.getQPath(absPath));
-        n.restore(version, removeExisting);
+        // get parent
+        int idx = absPath.lastIndexOf("/");
+        String parent = idx == 0 ? "/" : absPath.substring(0, idx);
+        String name = absPath.substring(idx + 1);
+        Node n = itemManager.getNode(resolver.getQPath(parent));
+        n.restore(version, name, removeExisting);
     }
 
     /**
