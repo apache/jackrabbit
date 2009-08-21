@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
+import java.util.Map;
+
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.spi.Path;
 
@@ -27,8 +29,9 @@ import javax.jcr.RepositoryException;
 public abstract class AbstractCompiledPermissions implements CompiledPermissions {
 
     // cache mapping a Path to a 'Result' containing permissions and privileges.
-    private final LRUMap cache;
+    private final Map<Path, Result> cache;
 
+    @SuppressWarnings("unchecked")
     protected AbstractCompiledPermissions() {
         cache = new LRUMap(1000);
     }
@@ -42,7 +45,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     public Result getResult(Path absPath) throws RepositoryException {
         Result result;
         synchronized (cache) {
-            result = (Result) cache.get(absPath);
+            result = cache.get(absPath);
             if (result == null) {
                 result = buildResult(absPath);
                 cache.put(absPath, result);

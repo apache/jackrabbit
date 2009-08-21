@@ -16,19 +16,18 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
-import org.apache.jackrabbit.value.StringValue;
-import org.apache.jackrabbit.value.ValueHelper;
+import java.security.Principal;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
-import java.security.Principal;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.value.ValueHelper;
 
 /**
  * Simple, immutable implementation of the
@@ -62,7 +61,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * Jackrabbit specific extension: the list of additional restrictions to be
      * included in the evaluation.
      */
-    private final Map restrictions;
+    private final Map<String, Value> restrictions;
 
     /**
      * Value factory
@@ -100,15 +99,16 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @throws AccessControlException if either principal or privileges are invalid.
      */
     protected AccessControlEntryImpl(Principal principal, Privilege[] privileges,
-                                     boolean isAllow, Map restrictions, ValueFactory valueFactory)
+                                     boolean isAllow, Map<String, Value> restrictions,
+                                     ValueFactory valueFactory)
             throws AccessControlException {
         if (principal == null) {
             throw new IllegalArgumentException();
         }
         // make sure no abstract privileges are passed.
-        for (int i = 0; i < privileges.length; i++) {
-            if (privileges[i].isAbstract()) {
-                throw new AccessControlException("Privilege " + privileges[i] + " is abstract.");
+        for (Privilege privilege : privileges) {
+            if (privilege.isAbstract()) {
+                throw new AccessControlException("Privilege " + privilege + " is abstract.");
             }
         }
         this.principal = principal;
@@ -118,22 +118,14 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         this.valueFactory = valueFactory;
         
         if (restrictions == null) {
-            this.restrictions = Collections.EMPTY_MAP;
+            this.restrictions = Collections.emptyMap();
         } else {
-            this.restrictions = new HashMap(restrictions.size());
+            this.restrictions = new HashMap<String, Value>(restrictions.size());
             // validate the passed restrictions and fill the map
-            for (Iterator it = restrictions.keySet().iterator(); it.hasNext();) {
-                Object key = it.next();
-                Object v = restrictions.get(key);
-                Value value;
-                if (v instanceof Value) {
-                    // create copy of the value
-                    value = ValueHelper.copy((Value) v, valueFactory);
-                } else {
-                    // fallback
-                    value = new StringValue(v.toString());
-                }
-                this.restrictions.put(key.toString(), value);
+            for (String key : restrictions.keySet()) {
+                Value value = restrictions.get(key);
+                value = ValueHelper.copy(value, valueFactory);
+                this.restrictions.put(key, value);
             }
         }
     }
@@ -187,7 +179,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry#getRestrictionNames()
      */
     public String[] getRestrictionNames() {
-        return (String[]) restrictions.keySet().toArray(new String[restrictions.size()]);
+        return restrictions.keySet().toArray(new String[restrictions.size()]);
     }
 
     /**
@@ -195,7 +187,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      */
     public Value getRestriction(String restrictionName) {
         if (restrictions.containsKey(restrictionName)) {
-            return ValueHelper.copy((Value) restrictions.get(restrictionName), valueFactory);
+            return ValueHelper.copy(restrictions.get(restrictionName), valueFactory);
         } else {
             return null;
         }

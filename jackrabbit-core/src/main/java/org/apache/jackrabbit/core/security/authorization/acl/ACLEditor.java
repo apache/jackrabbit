@@ -83,9 +83,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     /**
      *
-     * @param aclNode
-     * @return
-     * @throws RepositoryException
+     * @param aclNode the node
+     * @return the control list
+     * @throws RepositoryException if an error occurs
      */
     AccessControlList getACL(NodeImpl aclNode) throws RepositoryException {
         return new ACLTemplate(aclNode, privilegeRegistry);
@@ -171,8 +171,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         }
         
         AccessControlEntry[] entries = ((ACLTemplate) policy).getAccessControlEntries();
-        for (int i = 0; i < entries.length; i++) {
-            JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) entries[i];
+        for (AccessControlEntry entry : entries) {
+            JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) entry;
 
             Name nodeName = getUniqueNodeName(aclNode, ace.isAllow() ? "allow" : "deny");
             Name ntName = (ace.isAllow()) ? NT_REP_GRANT_ACE : NT_REP_DENY_ACE;
@@ -216,7 +216,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * defining content. It this case setting or modifying an AC-policy is
      * obviously not possible.
      *
-     * @param nodePath
+     * @param nodePath the node path
      * @throws AccessControlException If the given nodePath identifies a Node that
      * represents a ACL or ACE item.
      * @throws RepositoryException
@@ -231,9 +231,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     /**
      * Check if the specified policy can be set/removed from this editor.
      *
-     * @param nodePath
-     * @param policy
-     * @throws AccessControlException
+     * @param nodePath the node path
+     * @param policy the policy
+     * @throws AccessControlException if not allowed
      */
     private static void checkValidPolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException {
         if (policy == null || !(policy instanceof ACLTemplate)) {
@@ -247,10 +247,10 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     /**
      *
-     * @param path
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
+     * @param path the path
+     * @return the node
+     * @throws PathNotFoundException if not found
+     * @throws RepositoryException if an error occurs
      */
     private NodeImpl getNode(String path) throws PathNotFoundException, RepositoryException {
         return (NodeImpl) session.getNode(path);
@@ -261,10 +261,10 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * path or <code>null</code> if the node is not mix:AccessControllable
      * or if no policy node exists.
      *
-     * @param nodePath
+     * @param nodePath the node path
      * @return node or <code>null</code>
-     * @throws PathNotFoundException
-     * @throws RepositoryException
+     * @throws PathNotFoundException if not found
+     * @throws RepositoryException if an error occurs
      */
     private NodeImpl getAclNode(String nodePath) throws PathNotFoundException, RepositoryException {
         NodeImpl controlledNode = getNode(nodePath);
@@ -275,9 +275,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * Returns the rep:Policy node below the given Node or <code>null</code>
      * if the node is not mix:AccessControllable or if no policy node exists.
      *
-     * @param controlledNode
+     * @param controlledNode the controlled node
      * @return node or <code>null</code>
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     private NodeImpl getAclNode(NodeImpl controlledNode) throws RepositoryException {
         NodeImpl aclNode = null;
@@ -289,9 +289,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     /**
      *
-     * @param nodePath
-     * @return
-     * @throws RepositoryException
+     * @param nodePath the node path
+     * @return the new node
+     * @throws RepositoryException if an error occurs
      */
     private NodeImpl createAclNode(String nodePath) throws RepositoryException {
         NodeImpl protectedNode = getNode(nodePath);
@@ -306,8 +306,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      *
      * @param node a name for the child is resolved
      * @param name if missing the {@link #DEFAULT_ACE_NAME} is taken
-     * @return
-     * @throws RepositoryException
+     * @return the name
+     * @throws RepositoryException if an error occurs
      */
     protected static Name getUniqueNodeName(Node node, String name) throws RepositoryException {
         if (name == null) {
@@ -333,12 +333,13 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * Build an array of Value from the specified <code>privileges</code> using
      * the given <code>valueFactory</code>.
      *
-     * @param privileges
-     * @param valueFactory
+     * @param privileges the privileges
+     * @param valueFactory the value factory
      * @return an array of Value.
-     * @throws javax.jcr.ValueFormatException
+     * @throws ValueFormatException if an error occurs
      */
-    private static Value[] getPrivilegeNames(Privilege[] privileges, ValueFactory valueFactory) throws ValueFormatException {
+    private static Value[] getPrivilegeNames(Privilege[] privileges, ValueFactory valueFactory)
+            throws ValueFormatException {
         Value[] names = new Value[privileges.length];
         for (int i = 0; i < privileges.length; i++) {
             names[i] = valueFactory.createValue(privileges[i].getName(), PropertyType.NAME);

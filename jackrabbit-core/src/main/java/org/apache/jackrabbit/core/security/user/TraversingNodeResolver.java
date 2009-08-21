@@ -100,7 +100,7 @@ class TraversingNodeResolver extends NodeResolver {
     /**
      * @inheritDoc
      */
-    public NodeIterator findNodes(Set propertyNames, String value, Name ntName,
+    public NodeIterator findNodes(Set<Name> propertyNames, String value, Name ntName,
                                   boolean exact, long maxSize) throws RepositoryException {
         String sr = getSearchRoot(ntName);
         if (getSession().nodeExists(sr)) {
@@ -151,11 +151,12 @@ class TraversingNodeResolver extends NodeResolver {
      * @param exact   if set to true the value has to match exactly else a
      * substring is searched
      * @param maxSize
+     * @return
      */
-    private NodeIterator collectNodes(String value, Set props, Name ntName,
+    private NodeIterator collectNodes(String value, Set<Name> props, Name ntName,
                                       NodeIterator nodes, boolean exact,
                                       long maxSize) {
-        Set matchSet = new HashSet();
+        Set<Node> matchSet = new HashSet<Node>();
         collectNodes(value, props, ntName, nodes, matchSet, exact, maxSize);
         return new NodeIteratorAdapter(matchSet);
     }
@@ -172,9 +173,9 @@ class TraversingNodeResolver extends NodeResolver {
      * @param exact         if set to true the value has to match exact
      * @param maxSize
      */
-    private void collectNodes(String value, Set propertyNames,
+    private void collectNodes(String value, Set<Name> propertyNames,
                               Name nodeTypeName, NodeIterator itr,
-                              Set matchSet, boolean exact, long maxSize) {
+                              Set<Node> matchSet, boolean exact, long maxSize) {
         while (itr.hasNext()) {
             NodeImpl node = (NodeImpl) itr.nextNode();
             try {
@@ -203,7 +204,7 @@ class TraversingNodeResolver extends NodeResolver {
      * @throws RepositoryException
      */
     private static boolean matches(NodeImpl node, Name nodeTypeName,
-                            Collection propertyNames, String value,
+                            Collection<Name> propertyNames, String value,
                             boolean exact) throws RepositoryException {
 
         boolean match = false;
@@ -216,9 +217,9 @@ class TraversingNodeResolver extends NodeResolver {
                         match = (exact) ? node.getName().equals(value) :
                                 node.getName().matches(".*"+value+".*");
                     } else {
-                        Iterator pItr = propertyNames.iterator();
+                        Iterator<Name> pItr = propertyNames.iterator();
                         while (!match && pItr.hasNext()) {
-                            Name propertyName = (Name) pItr.next();
+                            Name propertyName = pItr.next();
                             if (node.hasProperty(propertyName)) {
                                 Property prop = node.getProperty(propertyName);
                                 if (prop.getDefinition().isMultiple()) {

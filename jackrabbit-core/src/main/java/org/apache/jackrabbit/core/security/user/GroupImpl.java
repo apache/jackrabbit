@@ -97,14 +97,14 @@ class GroupImpl extends AuthorizableImpl implements Group {
     /**
      * @see Group#getDeclaredMembers()
      */
-    public Iterator getDeclaredMembers() throws RepositoryException {
+    public Iterator<Authorizable> getDeclaredMembers() throws RepositoryException {
         return getMembers(false).iterator();
     }
 
     /**
      * @see Group#getMembers()
      */
-    public Iterator getMembers() throws RepositoryException {
+    public Iterator<Authorizable> getMembers() throws RepositoryException {
         return getMembers(true).iterator();
     }
 
@@ -169,9 +169,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * @return A collection of members of this group.
      * @throws RepositoryException If an error occurs while collecting the members.
      */
-    private Collection getMembers(boolean includeIndirect) throws RepositoryException {
+    private Collection<Authorizable> getMembers(boolean includeIndirect) throws RepositoryException {
         PropertyIterator itr = getNode().getWeakReferences(getSession().getJCRName(P_GROUPS));
-        Collection members = new HashSet((int) itr.getSize());
+        Collection<Authorizable> members = new HashSet<Authorizable>((int) itr.getSize());
         while (itr.hasNext()) {
             NodeImpl n = (NodeImpl) itr.nextProperty().getParent();
             if (n.isNodeType(NT_REP_GROUP)) {
@@ -266,7 +266,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
      */
     private class NodeBasedGroup extends NodeBasedPrincipal implements java.security.acl.Group {
 
-        private Set members;
+        private Set<Principal> members;
 
         private NodeBasedGroup(String name) {
             super(name);
@@ -289,15 +289,14 @@ class GroupImpl extends AuthorizableImpl implements Group {
          * @see java.security.acl.Group#isMember(Principal)
          */
         public boolean isMember(Principal member) {
-            Collection members = getMembers();
+            Collection<Principal> members = getMembers();
             if (members.contains(member)) {
                 // shortcut.
                 return true;
             }
 
             // test if member of a member-group
-            for (Iterator it = members.iterator(); it.hasNext();) {
-                Principal p = (Principal) it.next();
+            for (Principal p : members) {
                 if (p instanceof java.security.acl.Group &&
                         ((java.security.acl.Group) p).isMember(member)) {
                     return true;
@@ -322,7 +321,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
          *
          * @see java.security.acl.Group#members()
          */
-        public Enumeration members() {
+        public Enumeration<? extends Principal> members() {
             return Collections.enumeration(getMembers());
         }
 
@@ -340,9 +339,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
         }
 
         //----------------------------------------------------------------------
-        private Collection getMembers() {
+        private Collection<Principal> getMembers() {
             if (members == null) {
-                members = new HashSet();
+                members = new HashSet<Principal>();
                 try {
                     for (Iterator it = GroupImpl.this.getMembers(); it.hasNext();) {
                         Authorizable authrz = (Authorizable) it.next();

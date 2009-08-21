@@ -37,7 +37,7 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
     private static final Logger log = LoggerFactory.getLogger(ProviderRegistryImpl.class);
 
     private final PrincipalProvider defaultPrincipalProvider;
-    private final Map providers = new HashMap();
+    private final Map<String, PrincipalProvider> providers = new HashMap<String, PrincipalProvider>();
 
     /**
      * Create an instance of <code>ProviderRegistryImpl</code> with the given
@@ -82,7 +82,7 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
      */
     public PrincipalProvider getProvider(String className) {
         synchronized (providers) {
-            return (PrincipalProvider) providers.get(className);
+            return providers.get(className);
         }
     }
 
@@ -91,8 +91,8 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
      */
     public PrincipalProvider[] getProviders() {
         synchronized (providers) {
-            Collection pps = providers.values();
-            return (PrincipalProvider[]) pps.toArray(new PrincipalProvider[pps.size()]);
+            Collection<PrincipalProvider> pps = providers.values();
+            return pps.toArray(new PrincipalProvider[pps.size()]);
         }
     }
 

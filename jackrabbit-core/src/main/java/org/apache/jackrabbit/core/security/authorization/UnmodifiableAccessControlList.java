@@ -53,8 +53,8 @@ public class UnmodifiableAccessControlList implements AccessControlList {
      *
      * @param accessControlEntries A list of {@link AccessControlEntry access control entries}.
      */
-    public UnmodifiableAccessControlList(List accessControlEntries) {
-        this.accessControlEntries = (AccessControlEntry[]) accessControlEntries.toArray(new AccessControlEntry[accessControlEntries.size()]);
+    public UnmodifiableAccessControlList(List<AccessControlEntry> accessControlEntries) {
+        this.accessControlEntries = accessControlEntries.toArray(new AccessControlEntry[accessControlEntries.size()]);
     }
 
     //--------------------------------------------------< AccessControlList >---

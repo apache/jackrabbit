@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.security.Principal;
 
 /**
  * <code>CombinedProvider</code>...
@@ -56,8 +57,8 @@ public class CombinedProvider extends AbstractAccessControlProvider {
      * @see AccessControlUtils#isAcItem(Path)
      */
     public boolean isAcItem(Path absPath) throws RepositoryException {
-        for (int i = 0; i < providers.length; i++) {
-            if (providers[i] instanceof AccessControlUtils && ((AccessControlUtils) providers[i]).isAcItem(absPath)) {
+        for (AccessControlProvider provider : providers) {
+            if (provider instanceof AccessControlUtils && ((AccessControlUtils) provider).isAcItem(absPath)) {
                 return true;
             }
         }
@@ -68,8 +69,8 @@ public class CombinedProvider extends AbstractAccessControlProvider {
      * @see AccessControlUtils#isAcItem(ItemImpl)
      */
     public boolean isAcItem(ItemImpl item) throws RepositoryException {
-        for (int i = 0; i < providers.length; i++) {
-            if (providers[i] instanceof AccessControlUtils && ((AccessControlUtils) providers[i]).isAcItem(item)) {
+        for (AccessControlProvider provider : providers) {
+            if (provider instanceof AccessControlUtils && ((AccessControlUtils) provider).isAcItem(item)) {
                 return true;
             }
         }
@@ -81,8 +82,8 @@ public class CombinedProvider extends AbstractAccessControlProvider {
      * @see AccessControlProvider#close()
      */
     public void close() {
-        for (int i = 0; i < providers.length; i++) {
-            providers[i].close();
+        for (AccessControlProvider provider : providers) {
+            provider.close();
         }
         super.close();
     }
@@ -93,11 +94,11 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
 
-        // this provider combines the result of 2 (currently hardcoded) AC-providers
+        // this provider combines the result of 2 (currently hard coded) AC-providers
         // TODO: make this configurable
         providers = new AccessControlProvider[2];
 
-        // 1) a resource-based ACL provider, that is not inited with default
+        // 1) a resource-based ACL provider, that is not initialized with default
         //    permissions and should only be used to overrule the permissions
         //    granted or denied by the default provider (see 2).
         providers[0] = new org.apache.jackrabbit.core.security.authorization.acl.ACLProvider();
@@ -117,11 +118,11 @@ public class CombinedProvider extends AbstractAccessControlProvider {
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath)
             throws ItemNotFoundException, RepositoryException {
-        List l = new ArrayList();
-        for (int i = 0; i < providers.length; i++) {
-            l.addAll(Arrays.asList(providers[i].getEffectivePolicies(absPath)));
+        List<AccessControlPolicy> l = new ArrayList<AccessControlPolicy>();
+        for (AccessControlProvider provider : providers) {
+            l.addAll(Arrays.asList(provider.getEffectivePolicies(absPath)));
         }
-        return (AccessControlPolicy[]) l.toArray(new AccessControlPolicy[l.size()]);
+        return l.toArray(new AccessControlPolicy[l.size()]);
     }
 
     /**
@@ -129,17 +130,17 @@ public class CombinedProvider extends AbstractAccessControlProvider {
      */
     public AccessControlEditor getEditor(Session editingSession) {
         checkInitialized();
-        List editors = new ArrayList();
-        for (int i = 0; i < providers.length; i++) {
+        List<AccessControlEditor> editors = new ArrayList<AccessControlEditor>();
+        for (AccessControlProvider provider : providers) {
             try {
-                editors.add(providers[i].getEditor(editingSession));
+                editors.add(provider.getEditor(editingSession));
             } catch (RepositoryException e) {
                 log.debug(e.getMessage());
                 // ignore.
             }
         }
         if (!editors.isEmpty()) {
-            return new CombinedEditor((AccessControlEditor[]) editors.toArray(new AccessControlEditor[editors.size()]));
+            return new CombinedEditor(editors.toArray(new AccessControlEditor[editors.size()]));
         } else {
             log.debug("None of the derived access control providers supports editing.");
             return null;
@@ -149,7 +150,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     /**
      * @see AccessControlProvider#compilePermissions(Set)
      */
-    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
+    public CompiledPermissions compilePermissions(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
@@ -161,7 +162,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     /**
      * @see AccessControlProvider#canAccessRoot(Set)
      */
-    public boolean canAccessRoot(Set principals) throws RepositoryException {
+    public boolean canAccessRoot(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return true;
@@ -182,20 +183,21 @@ public class CombinedProvider extends AbstractAccessControlProvider {
      */
     private class CompiledPermissionImpl extends AbstractCompiledPermissions  {
 
-        private final List cPermissions;
+        private final List<AbstractCompiledPermissions> cPermissions;
 
         /**
-         * @param principals
+         * @param principals the principals
+         * @throws RepositoryException if an error occurs
          */
-        private CompiledPermissionImpl(Set principals) throws
+        private CompiledPermissionImpl(Set<Principal> principals) throws
                 RepositoryException {
-            this.cPermissions = new ArrayList();
-            for (int i = 0; i < providers.length; i++) {
-                CompiledPermissions cp = providers[i].compilePermissions(principals);
+            this.cPermissions = new ArrayList<AbstractCompiledPermissions>();
+            for (AccessControlProvider provider : providers) {
+                CompiledPermissions cp = provider.compilePermissions(principals);
                 if (cp instanceof AbstractCompiledPermissions) {
-                    cPermissions.add(cp);
+                    cPermissions.add((AbstractCompiledPermissions) cp);
                 } else {
-                    // TODO: deal with other impls.
+                    // TODO: deal with other implementations
                     log.warn("AbstractCompiledPermissions expected. Found " + cp.getClass().getName() + " -> ignore.");
                 }
             }
@@ -207,8 +209,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
          */
         protected Result buildResult(Path absPath) throws RepositoryException {
             Result res = null;
-            for (Iterator it = cPermissions.iterator(); it.hasNext();) {
-                AbstractCompiledPermissions acp = (AbstractCompiledPermissions) it.next();
+            for (AbstractCompiledPermissions acp : cPermissions) {
                 Result other = acp.getResult(absPath);
                 res = (res == null) ? other : res.combine(other);
             }

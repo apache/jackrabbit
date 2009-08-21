@@ -16,23 +16,23 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
  * The <code>PrivilegeRegistry</code> defines the set of <code>Privilege</code>s
@@ -46,8 +46,8 @@ public final class PrivilegeRegistry {
      */
     public static final String REP_WRITE = "{" + Name.NS_REP_URI + "}write";
 
-    private static final Set REGISTERED_PRIVILEGES = new HashSet(20);
-    private static final Map BITS_TO_PRIVILEGES = new HashMap();
+    private static final Set<InternalPrivilege> REGISTERED_PRIVILEGES = new HashSet<InternalPrivilege>(20);
+    private static final Map<Integer, InternalPrivilege[]> BITS_TO_PRIVILEGES = new HashMap<Integer, InternalPrivilege[]>();
     private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
 
     private static final Privilege[] EMPTY_ARRAY = new Privilege[0];
@@ -123,7 +123,7 @@ public final class PrivilegeRegistry {
      * Per instance map containing the instance specific representation of
      * the registered privileges.
      */
-    private final Map localCache;
+    private final Map<Name, Privilege> localCache;
 
     /**
      * Create a new <code>PrivilegeRegistry</code> instance.
@@ -133,9 +133,8 @@ public final class PrivilegeRegistry {
      */
     public PrivilegeRegistry(NameResolver resolver) {
         this.resolver = resolver;
-        localCache = new HashMap(REGISTERED_PRIVILEGES.size());
-        for (Iterator it = REGISTERED_PRIVILEGES.iterator(); it.hasNext();) {
-            InternalPrivilege ip = (InternalPrivilege) it.next();
+        localCache = new HashMap<Name, Privilege>(REGISTERED_PRIVILEGES.size());
+        for (InternalPrivilege ip : REGISTERED_PRIVILEGES) {
             Privilege priv = new PrivilegeImpl(ip, resolver);
             localCache.put(ip.name, priv);
         }
@@ -147,7 +146,7 @@ public final class PrivilegeRegistry {
      * @return all registered privileges.
      */
     public Privilege[] getRegisteredPrivileges() {
-        return (Privilege[]) localCache.values().toArray(new Privilege[localCache.size()]);
+        return localCache.values().toArray(new Privilege[localCache.size()]);
     }
 
     /**
@@ -161,7 +160,7 @@ public final class PrivilegeRegistry {
     public Privilege getPrivilege(String privilegeName) throws AccessControlException, RepositoryException {
         Name name = resolver.getQName(privilegeName);
         if (localCache.containsKey(name)) {
-            return (Privilege) localCache.get(name);
+            return localCache.get(name);
         } else {
             throw new AccessControlException("Unknown privilege " + privilegeName);
         }
@@ -187,7 +186,7 @@ public final class PrivilegeRegistry {
             InternalPrivilege[] internalPrivs = getInteralPrivileges(bits);
             privs = new Privilege[internalPrivs.length];
             for (int i = 0; i < internalPrivs.length; i++) {
-                privs[i] = (Privilege) localCache.get(internalPrivs[i].name);
+                privs[i] = localCache.get(internalPrivs[i].name);
             }
         } else {
             privs = new Privilege[0];
@@ -207,8 +206,7 @@ public final class PrivilegeRegistry {
             throw new AccessControlException("Privilege array is empty or null.");
         }
         int bits = NO_PRIVILEGE;
-        for (int i = 0; i < privileges.length; i++) {
-            Privilege priv = privileges[i];
+        for (Privilege priv : privileges) {
             if (priv instanceof PrivilegeImpl) {
                 bits |= ((PrivilegeImpl) priv).internalPrivilege.getBits();
             } else {
@@ -307,11 +305,10 @@ public final class PrivilegeRegistry {
      * @return InternalPrivilege that corresponds to the given bits.
      */
     private static InternalPrivilege[] getInteralPrivileges(int bits) {
-        Object key = new Integer(bits);
-        if (BITS_TO_PRIVILEGES.containsKey(key)) {
-            return (InternalPrivilege[]) BITS_TO_PRIVILEGES.get(key);
+        if (BITS_TO_PRIVILEGES.containsKey(bits)) {
+            return BITS_TO_PRIVILEGES.get(bits);
         } else {
-            List privileges = new ArrayList();
+            List<InternalPrivilege> privileges = new ArrayList<InternalPrivilege>();
             if ((bits & READ) == READ) {
                 privileges.add(READ_PRIVILEGE);
             }
@@ -357,8 +354,8 @@ public final class PrivilegeRegistry {
 
             InternalPrivilege[] privs;
             if (!privileges.isEmpty()) {
-                privs = (InternalPrivilege[]) privileges.toArray(new InternalPrivilege[privileges.size()]);
-                BITS_TO_PRIVILEGES.put(key, privs);
+                privs = privileges.toArray(new InternalPrivilege[privileges.size()]);
+                BITS_TO_PRIVILEGES.put(bits, privs);
             } else {
                 privs = new InternalPrivilege[0];
             }
@@ -368,7 +365,7 @@ public final class PrivilegeRegistry {
 
     private static InternalPrivilege registerPrivilege(InternalPrivilege privilege) {
         REGISTERED_PRIVILEGES.add(privilege);
-        BITS_TO_PRIVILEGES.put(new Integer(privilege.getBits()), new InternalPrivilege[] {privilege});
+        BITS_TO_PRIVILEGES.put(privilege.getBits(), new InternalPrivilege[] {privilege});
         return privilege;
     }
 
@@ -383,7 +380,7 @@ public final class PrivilegeRegistry {
         private final boolean isAbstract;
         private final boolean isAggregate;
         private final InternalPrivilege[] declaredAggregates;
-        private final Set aggregates;
+        private final Set<InternalPrivilege> aggregates;
 
         private final int bits;
 
@@ -417,10 +414,9 @@ public final class PrivilegeRegistry {
             this.name = NAME_FACTORY.create(name);
             this.isAbstract = false;
             this.declaredAggregates = declaredAggregates;
-            Set aggrgt = new HashSet();
+            Set<InternalPrivilege> aggrgt = new HashSet<InternalPrivilege>();
             int bts = 0;
-            for (int i = 0; i < declaredAggregates.length; i++) {
-                InternalPrivilege priv = declaredAggregates[i];
+            for (InternalPrivilege priv : declaredAggregates) {
                 bts |= priv.getBits();
                 if (priv.isAggregate) {
                     aggrgt.addAll(priv.aggregates);
@@ -491,7 +487,7 @@ public final class PrivilegeRegistry {
                 Privilege[] privs = new Privilege[len];
                 for (int i = 0; i < len; i++) {
                     InternalPrivilege ip = internalPrivilege.declaredAggregates[i];
-                    privs[i] = (Privilege) localCache.get(ip.name);
+                    privs[i] = localCache.get(ip.name);
                 }
                 return privs;
             } else {
@@ -503,9 +499,8 @@ public final class PrivilegeRegistry {
             if (internalPrivilege.isAggregate) {
                 Privilege[] privs = new Privilege[internalPrivilege.aggregates.size()];
                 int i = 0;
-                for (Iterator it = internalPrivilege.aggregates.iterator(); it.hasNext();) {
-                    InternalPrivilege ip = (InternalPrivilege) it.next();
-                    privs[i++] = (Privilege) localCache.get(ip.name);
+                for (InternalPrivilege ip : internalPrivilege.aggregates) {
+                    privs[i++] = localCache.get(ip.name);
                 }
                 return privs;
             } else {

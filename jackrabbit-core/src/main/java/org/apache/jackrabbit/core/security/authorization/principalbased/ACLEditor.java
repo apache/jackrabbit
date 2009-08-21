@@ -54,6 +54,7 @@ import java.security.Principal;
 public class ACLEditor extends ProtectedItemModifier implements AccessControlEditor, AccessControlConstants {
 
     private static Logger log = LoggerFactory.getLogger(ACLEditor.class);
+
     /**
      * Default name for ace nodes
      */
@@ -63,6 +64,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * the editing session
      */
     private final SessionImpl session;
+
     private final String acRootPath;
 
     ACLEditor(SessionImpl session, Path acRootPath) throws RepositoryException {
@@ -142,7 +144,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             } // else: acl has already been set before -> use getPolicies instead
         }
 
-        // nodePath not below rep:accesscontrol -> not editable
+        // nodePath not below rep:policy -> not editable
         // or policy has been set before in which case getPolicies should be used instead.
         return new AccessControlPolicy[0];
     }
@@ -175,7 +177,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     /**
      * @see AccessControlEditor#setPolicy(String,AccessControlPolicy)
      */
-    public void setPolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException, PathNotFoundException, RepositoryException {
+    public void setPolicy(String nodePath, AccessControlPolicy policy)
+            throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
         checkValidPolicy(nodePath, policy);
 
@@ -201,8 +204,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
         /* add all new entries defined on the template */
         AccessControlEntry[] aces = acl.getAccessControlEntries();
-        for (int i = 0; i < aces.length; i++) {
-            JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) aces[i];
+        for (AccessControlEntry ace1 : aces) {
+            JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) ace1;
 
             // create the ACE node
             Name nodeName = getUniqueNodeName(aclNode, "entry");
@@ -222,9 +225,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
             // store the restrictions:
             String[] restrNames = ace.getRestrictionNames();
-            for (int rnIndex = 0; rnIndex < restrNames.length; rnIndex++) {
-                Name pName = session.getQName(restrNames[rnIndex]);
-                Value value = ace.getRestriction(restrNames[rnIndex]);
+            for (String restrName : restrNames) {
+                Name pName = session.getQName(restrName);
+                Value value = ace.getRestriction(restrName);
                 setProperty(aceNode, pName, value);
             }
         }
@@ -257,16 +260,17 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     //------------------------------------------------------------< private >---
     /**
      *
-     * @param nodePath
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
+     * @param nodePath the node path
+     * @return the node
+     * @throws PathNotFoundException if the node does not exist
+     * @throws RepositoryException if an error occurs
      */
-    private NodeImpl getAcNode(String nodePath) throws PathNotFoundException, RepositoryException {
+    private NodeImpl getAcNode(String nodePath) throws PathNotFoundException,
+            RepositoryException {
         if (Text.isDescendant(acRootPath, nodePath)) {
             return (NodeImpl) session.getNode(nodePath);
         } else {
-            // node outside of rep:accesscontrol tree -> not handled by this editor.
+            // node outside of rep:policy tree -> not handled by this editor.
             return null;
         }
     }
@@ -324,7 +328,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * defining content. It this case setting or modifying an AC-policy is
      * obviously not possible.
      *
-     * @param nodePath
+     * @param nodePath the node path
      * @throws AccessControlException If the given id identifies a Node that
      * represents a ACL or ACE item.
      * @throws RepositoryException
@@ -341,9 +345,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     /**
      * Check if the specified policy can be set or removed at nodePath.
      *
-     * @param nodePath
-     * @param policy
-     * @throws AccessControlException
+     * @param nodePath the node path
+     * @param policy the policy
+     * @throws AccessControlException if not allowed
      */
     private void checkValidPolicy(String nodePath, AccessControlPolicy policy)
             throws AccessControlException {
@@ -358,9 +362,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     /**
      *
-     * @param principal
-     * @return
-     * @throws RepositoryException
+     * @param principal the principal
+     * @return the path
+     * @throws RepositoryException if an error occurs
      */
     String getPathToAcNode(Principal principal) throws RepositoryException {
         StringBuffer princPath = new StringBuffer(acRootPath);
@@ -389,9 +393,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     /**
      *
-     * @param node
-     * @return
-     * @throws RepositoryException
+     * @param node the node
+     * @return <code>true</code> if access controlled
+     * @throws RepositoryException if an error occurs
      */
     private static boolean isAccessControlled(NodeImpl node) throws RepositoryException {
         return node != null && node.isNodeType(NT_REP_PRINCIPAL_ACCESS_CONTROL) && node.hasNode(N_POLICY);
@@ -399,9 +403,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     /**
      *
-     * @param acNode
-     * @return
-     * @throws RepositoryException
+     * @param acNode the acl node
+     * @return the polict
+     * @throws RepositoryException if an error occurs
      */
     private JackrabbitAccessControlPolicy createTemplate(NodeImpl acNode) throws RepositoryException {
         if (!acNode.isNodeType(NT_REP_PRINCIPAL_ACCESS_CONTROL)) {
@@ -425,8 +429,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      *
      * @param node a name for the child is resolved
      * @param name if missing the {@link #DEFAULT_ACE_NAME} is taken
-     * @return
-     * @throws RepositoryException
+     * @return the name
+     * @throws RepositoryException if an error occurs
      */
     protected static Name getUniqueNodeName(Node node, String name) throws RepositoryException {
         if (name == null) {

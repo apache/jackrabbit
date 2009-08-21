@@ -462,7 +462,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @throws RepositoryException
      */
     boolean hasAuthorizableOrReferee(Principal principal) throws RepositoryException {
-        Set s = new HashSet(2);
+        Set<Name> s = new HashSet<Name>(2);
         s.add(P_PRINCIPAL_NAME);
         s.add(P_REFEREES);
         NodeIterator res = authResolver.findNodes(s, principal.getName(), NT_REP_AUTHORIZABLE, true, 1);
@@ -569,7 +569,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     private NodeImpl getUserNode(String userID) throws RepositoryException {
         NodeImpl n = (NodeImpl) idResolver.findNode(userID, false);
         if (n == null && compatibleJR16) {
-            // backwards-compatibiltiy with JR < 2.0 user structure that doesn't
+            // backwards-compatibility with JR < 2.0 user structure that doesn't
             // allow to determine the auth-path from the id directly.
             // search for it the node belonging to that userID
             n = (NodeImpl) authResolver.findNode(P_USERID, userID, NT_REP_USER);
@@ -587,7 +587,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     private NodeImpl getGroupNode(String groupID) throws RepositoryException {
         NodeImpl n = (NodeImpl) idResolver.findNode(groupID, true);
         if (n == null && compatibleJR16) {
-            // backwards-compatibiltiy with JR < 2.0 group structure that doesn't
+            // backwards-compatibility with JR < 2.0 group structure that doesn't
             // allow to determine the auth-path from the id directly
             // search for it the node belonging to that groupID.
             // NOTE: JR < 2.0 always returned groupIDs that didn't contain any
@@ -627,7 +627,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     private final class AuthorizableIterator implements Iterator {
 
-        private final Set served = new HashSet();
+        private final Set<String> served = new HashSet<String>();
 
         private Authorizable next;
         private NodeIterator authNodeIter;

@@ -16,39 +16,12 @@
  */
 package org.apache.jackrabbit.core;
 
-import javax.jcr.security.AccessControlException;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.core.config.AccessManagerConfig;
-import org.apache.jackrabbit.core.config.LoginModuleConfig;
-import org.apache.jackrabbit.core.config.SecurityConfig;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.config.WorkspaceSecurityConfig;
-import org.apache.jackrabbit.core.config.SecurityManagerConfig;
-import org.apache.jackrabbit.core.config.BeanConfig;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.DefaultAccessManager;
-import org.apache.jackrabbit.core.security.authentication.AuthContext;
-import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactory;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactoryImpl;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
-import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
-import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
-import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
-import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
-import org.apache.jackrabbit.core.security.user.UserManagerImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -57,13 +30,41 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.security.AccessControlException;
 import javax.security.auth.Subject;
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.config.AccessManagerConfig;
+import org.apache.jackrabbit.core.config.BeanConfig;
+import org.apache.jackrabbit.core.config.LoginModuleConfig;
+import org.apache.jackrabbit.core.config.SecurityConfig;
+import org.apache.jackrabbit.core.config.SecurityManagerConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.config.WorkspaceSecurityConfig;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.DefaultAccessManager;
+import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authentication.AuthContext;
+import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactory;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactoryImpl;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
+import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
+import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
+import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
+import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The security manager acts as central managing class for all security related
@@ -183,7 +184,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
 
         Properties[] moduleConfig = authContextProvider.getModuleConfig();
 
-        // retrieve default-ids (admin and anomymous) from login-module-configuration.
+        // retrieve default-ids (admin and anonymous) from login-module-configuration.
         for (Properties props : moduleConfig) {
             if (props.containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
                 adminId = props.getProperty(LoginModuleConfig.PARAM_ADMIN_ID);
@@ -221,7 +222,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         }
         workspaceAccessManager.init(securitySession);
 
-        // initialize principa-provider registry
+        // initialize principal-provider registry
         // 1) create default
         PrincipalProvider defaultPP = new DefaultPrincipalProvider(securitySession, (UserManagerImpl) systemUserManager);
         defaultPP.init(new Properties());
@@ -250,7 +251,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         BeanConfig umc = repository.getConfig().getSecurityConfig().getSecurityManagerConfig().getUserManagerConfig();
         Properties config = null;
         if (umc != null) {
-            // TODO: deal with other umgr implementations.
+            // TODO: deal with other user manager implementations.
             String clName = umc.getClassName();
             if (clName != null && !(UserManagerImpl.class.getName().equals(clName) || clName.length() == 0)) {
                 log.warn("Unsupported custom UserManager implementation: '" + clName + "' -> Ignored.");
@@ -279,9 +280,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     public void close() {
         checkInitialized();
         synchronized (acProviders) {
-            Iterator<AccessControlProvider> itr = acProviders.values().iterator();
-            while (itr.hasNext()) {
-                itr.next().close();
+            for (AccessControlProvider accessControlProvider : acProviders.values()) {
+                accessControlProvider.close();
             }
             acProviders.clear();
         }
@@ -390,8 +390,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             // no SimpleCredentials: retrieve authorizables corresponding to
             // a non-group principal. the first one present is used to determine
             // the userID.
-            for (Iterator<Principal> it = subject.getPrincipals().iterator(); it.hasNext();) {
-                Principal p = (Principal) it.next();
+            for (Principal p : subject.getPrincipals()) {
                 if (!(p instanceof Group)) {
                     Authorizable authorz = systemUserManager.getAuthorizable(p);
                     if (authorz != null && !authorz.isGroup()) {
@@ -522,7 +521,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         /**
          * {@inheritDoc}
          */
-        public boolean grants(Set principals, String workspaceName) throws RepositoryException {
+        public boolean grants(Set<Principal> principals, String workspaceName) throws RepositoryException {
             AccessControlProvider prov = getAccessControlProvider(workspaceName);
             return prov.canAccessRoot(principals);
         }

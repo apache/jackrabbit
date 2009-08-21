@@ -16,9 +16,20 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
+import java.security.Principal;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -30,15 +41,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import java.security.Principal;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Provides principals for the users contained within the Repository.<p/>
@@ -60,7 +62,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * a cache for group memberships: maps principal-name to a set of principals
      * representing the members.
      */
-    private final LRUMap membershipCache;
+    private final Map<String, Set<Principal>> membershipCache;
 
     /**
      * Principal-Base of this Provider
@@ -180,9 +182,9 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      */
     public PrincipalIterator getGroupMembership(Principal userPrincipal) {
         checkInitialized();
-        Set mship;
+        Set<Principal> mship;
         synchronized (membershipCache) {
-            mship = (Set) membershipCache.get(userPrincipal.getName());
+            mship = membershipCache.get(userPrincipal.getName());
             if (mship == null) {
                 // recursively collect group membership
                 mship = collectGroupMembership(userPrincipal);
@@ -275,15 +277,15 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * @return all Group principals the specified <code>princ</code> is member of
      * including inherited membership.
      */
-    private Set collectGroupMembership(Principal princ) {
-        Set membership = new ListOrderedSet();
+    private Set<Principal> collectGroupMembership(Principal princ) {
+        Set<Principal> membership = new LinkedHashSet<Principal>();
             try {
                 Authorizable auth = userManager.getAuthorizable(princ);
                 if (auth != null) {
                     addToCache(princ);
-                    Iterator itr = auth.memberOf();
+                    Iterator<Group> itr = auth.memberOf();
                     while (itr.hasNext()) {
-                        Group group = (Group) itr.next();
+                        Group group = itr.next();
                         Principal gp = group.getPrincipal();
                         addToCache(gp);
                         membership.add(gp);
@@ -324,7 +326,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             try {
                 Iterator itr = userManager.findAuthorizables(pPrincipalName, simpleFilter, UserManager.SEARCH_TYPE_GROUP);
 
-                // everyone will not be found by the usermanager -> extra test
+                // everyone will not be found by the user manager -> extra test
                 boolean addEveryone = everyonePrincipal.getName().matches(".*"+simpleFilter+".*");
                 return new PrincipalIteratorImpl(itr, addEveryone);
 

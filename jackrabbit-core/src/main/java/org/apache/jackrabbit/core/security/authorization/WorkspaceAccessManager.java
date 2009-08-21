@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.authorization;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.Set;
+import java.security.Principal;
 
 /**
  * The <code>WorkspaceAccessManager</code> is responsible for workspace access.
@@ -53,5 +54,6 @@ public interface WorkspaceAccessManager {
      * workspace with the specified name.
      * @throws RepositoryException If an error occurs. 
      */
-    boolean grants(Set principals, String workspaceName) throws RepositoryException;
+    boolean grants(Set<Principal> principals, String workspaceName)
+            throws RepositoryException;
 }
