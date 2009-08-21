@@ -80,13 +80,13 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#getPrincipals()
      */
     public PrincipalIterator getPrincipals() throws RepositoryException {
-        Collection coll = new ArrayList();
+        Collection<Principal> coll = new ArrayList<Principal>();
         // the first element is the main principal of this user.
         coll.add(getPrincipal());
         // in addition add all referees.
         PrincipalManager prMgr = getSession().getPrincipalManager();
-        for (Iterator it = getRefereeValues().iterator(); it.hasNext();) {
-            String refName = ((Value) it.next()).getString();
+        for (Object o : getRefereeValues()) {
+            String refName = ((Value) o).getString();
             Principal princ = null;
             if (prMgr.hasPrincipal(refName)) {
                 try {
@@ -96,7 +96,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 }
             }
             if (princ == null) {
-                log.warn("Principal "+ refName +" unknown to PrincipalManager.");
+                log.warn("Principal " + refName + " unknown to PrincipalManager.");
                 princ = new PrincipalImpl(refName);
             }
             coll.add(princ);
@@ -111,7 +111,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         String principalName = principal.getName();
         Value princValue = getSession().getValueFactory().createValue(principalName);
 
-        List refereeValues = getRefereeValues();
+        List<Value> refereeValues = getRefereeValues();
         if (refereeValues.contains(princValue) || getPrincipal().getName().equals(principalName)) {
             return false;
         }
@@ -120,7 +120,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         }
         refereeValues.add(princValue);
 
-        userManager.setProtectedProperty(node, P_REFEREES, (Value[]) refereeValues.toArray(new Value[refereeValues.size()]));
+        userManager.setProtectedProperty(node, P_REFEREES, refereeValues.toArray(new Value[refereeValues.size()]));
         return true;
     }
 
@@ -129,14 +129,14 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      */
     public synchronized boolean removeReferee(Principal principal) throws RepositoryException {
         Value princValue = getSession().getValueFactory().createValue(principal.getName());
-        List existingValues = getRefereeValues();
+        List<Value> existingValues = getRefereeValues();
 
         if (existingValues.remove(princValue))  {
             PropertyImpl prop = node.getProperty(P_REFEREES);
             if (existingValues.isEmpty()) {
                 userManager.removeProtectedItem(prop, node);
             } else {
-                userManager.setProtectedProperty(node, P_REFEREES, (Value[]) existingValues.toArray(new Value[existingValues.size()]));
+                userManager.setProtectedProperty(node, P_REFEREES, existingValues.toArray(new Value[existingValues.size()]));
             }
             return true;
         }
@@ -148,8 +148,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     /**
      * @see Authorizable#declaredMemberOf()
      */
-    public Iterator declaredMemberOf() throws RepositoryException {
-        List memberShip = new ArrayList();
+    public Iterator<Group> declaredMemberOf() throws RepositoryException {
+        List<Group> memberShip = new ArrayList<Group>();
         collectMembership(memberShip, false);
         return memberShip.iterator();
     }
@@ -157,8 +157,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     /**
      * @see Authorizable#memberOf()
      */
-    public Iterator memberOf() throws RepositoryException {
-        List memberShip = new ArrayList();
+    public Iterator<Group> memberOf() throws RepositoryException {
+        List<Group> memberShip = new ArrayList<Group>();
         collectMembership(memberShip, true);
         return memberShip.iterator();
     }
@@ -166,8 +166,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     /**
      * @see Authorizable#getPropertyNames()
      */
-    public Iterator getPropertyNames() throws RepositoryException {
-        List l = new ArrayList();
+    public Iterator<String> getPropertyNames() throws RepositoryException {
+        List<String> l = new ArrayList<String>();
         for (PropertyIterator it = node.getProperties(); it.hasNext();) {
             Property prop = it.nextProperty();
             if (isAuthorizableProperty(prop)) {
@@ -334,13 +334,13 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
 
         Value toRemove = getSession().getValueFactory().createValue(group.getNode(), true);
         PropertyImpl property = node.getProperty(P_GROUPS);
-        List valList = new ArrayList(Arrays.asList(property.getValues()));
+        List<Value> valList = new ArrayList<Value>(Arrays.asList(property.getValues()));
         if (valList.remove(toRemove)) {
             try {
                 if (valList.isEmpty()) {
                     userManager.removeProtectedItem(property, node);
                 } else {
-                    Value[] values = (Value[]) valList.toArray(new Value[valList.size()]);
+                    Value[] values = valList.toArray(new Value[valList.size()]);
                     userManager.setProtectedProperty(node, P_GROUPS, values);
                 }
                 return true;
@@ -356,15 +356,15 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         }
     }
 
-    private void collectMembership(List groups, boolean includedIndirect) throws RepositoryException {
+    private void collectMembership(List<Group> groups, boolean includedIndirect) throws RepositoryException {
         NodeImpl node = getNode();
         if (!node.hasProperty(P_GROUPS)) {
             return;
         }
         Value[] refs = node.getProperty(P_GROUPS).getValues();
-        for (int i = 0; i < refs.length; i++) {
+        for (Value ref : refs) {
             try {
-                NodeImpl groupNode = (NodeImpl) getSession().getNodeByUUID(refs[i].getString());
+                NodeImpl groupNode = (NodeImpl) getSession().getNodeByUUID(ref.getString());
                 Group group = GroupImpl.create(groupNode, userManager);
                 if (groups.add(group) && includedIndirect) {
                     ((AuthorizableImpl) group).collectMembership(groups, true);
@@ -372,7 +372,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             } catch (ItemNotFoundException e) {
                 // groupNode doesn't exist any more
                 log.warn("Group node referenced by " + getID() + " doesn't exist anymore -> Ignored from membership list.");
-                // TODO: ev. clean up list of group memberships
+                // TODO: possibly clean up list of group memberships
             }
         }
     }
@@ -441,14 +441,12 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         }
     }
 
-    private List getRefereeValues() throws RepositoryException {
-        List principalNames = new ArrayList();
+    private List<Value> getRefereeValues() throws RepositoryException {
+        List<Value> principalNames = new ArrayList<Value>();
         if (node.hasProperty(P_REFEREES)) {
             try {
-                Value[] refProp = node.getProperty(P_REFEREES).getValues();
-                for (int i = 0; i < refProp.length; i++) {
-                    principalNames.add(refProp[i]);
-                }
+                principalNames.addAll(Arrays.asList(
+                        node.getProperty(P_REFEREES).getValues()));
             } catch (PathNotFoundException e) {
                 // ignore. should never occur.
             }

@@ -51,7 +51,7 @@ public final class EveryonePrincipal implements java.security.acl.Group {
         return !member.equals(this);
     }
 
-    public Enumeration members() {
+    public Enumeration<? extends Principal> members() {
         throw new UnsupportedOperationException("Not implemented.");
     }
 

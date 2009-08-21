@@ -16,48 +16,48 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
-import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemImpl;
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.security.Principal;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>CombinedProvider</code>...
@@ -70,6 +70,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     private static final AccessControlPolicy effectivePolicy = EffectivePrincipalBasedPolicy.getInstance();
 
     private ACLEditor editor;
+
     private NodeImpl acRoot;
 
     //-------------------------------------------------< AccessControlUtils >---
@@ -78,8 +79,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     public boolean isAcItem(Path absPath) throws RepositoryException {
         Path.Element[] elems = absPath.getElements();
-        for (int i = 0; i < elems.length; i++) {
-            if (N_POLICY.equals(elems[i].getName())) {
+        for (Path.Element elem : elems) {
+            if (N_POLICY.equals(elem.getName())) {
                 return true;
             }
         }
@@ -117,7 +118,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 log.debug("Install initial permissions: ...");
 
                 ValueFactory vf = session.getValueFactory();
-                Map restrictions = new HashMap();
+                Map<String, Value> restrictions = new HashMap<String, Value>();
                 restrictions.put(session.getJCRName(ACLTemplate.P_NODE_PATH), vf.createValue(root.getPath(), PropertyType.PATH));
                 restrictions.put(session.getJCRName(ACLTemplate.P_GLOB), vf.createValue(GlobPattern.WILDCARD_ALL));
 
@@ -149,7 +150,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         }
     }
 
-    private static void installDefaultPermissions(Principal principal, Privilege[] privs, Map restrictions, AccessControlEditor editor) throws RepositoryException, AccessControlException {
+    private static void installDefaultPermissions(Principal principal,
+                                                  Privilege[] privs,
+                                                  Map<String, Value> restrictions,
+                                                  AccessControlEditor editor)
+            throws RepositoryException, AccessControlException {
         AccessControlPolicy[] acls = editor.editAccessControlPolicies(principal);
         if (acls.length > 0) {
             ACLTemplate acl = (ACLTemplate) acls[0];
@@ -176,7 +181,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
            most nodes in the repository isn't available anyway) doesn't
            provide the desired information.
            As tmp. solution some default policy is returned indicating.
-           TODO: add proper evalution and return a set of ACLs that take effect on the node at abspath
+           TODO: add proper evaluation and return a set of ACLs that take effect on the node at abs path
         */
         return new AccessControlPolicy[] {effectivePolicy};
     }
@@ -238,21 +243,22 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         private List<AccessControlEntry> entries;
 
         /**
-         * @param principals
-         * @throws RepositoryException
+         * @param principals the underlying principals
+         * @throws RepositoryException if an error occurs
          */
         private CompiledPermissionImpl(Set<Principal> principals) throws RepositoryException {
             this(principals, true);
         }
 
         /**
-         * @param principals
-         * @throws RepositoryException
+         * @param principals the underlying principals
+         * @param listenToEvents if <code>true</code> listens to events
+         * @throws RepositoryException if an error occurs
          */
         private CompiledPermissionImpl(Set<Principal> principals, boolean listenToEvents) throws RepositoryException {
 
             this.principals = principals;
-            acPaths = new HashSet(principals.size());
+            acPaths = new HashSet<String>(principals.size());
             entries = reload();
 
             // TODO: describe
@@ -298,9 +304,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * evaluated or <code>null</code>.
          * @param targetPath Path used for the evaluation; pointing to an
          * existing or non-existing item.
-         * @param isAcItem
-         * @return
-         * @throws RepositoryException
+         * @param isAcItem the item
+         * @return the result
+         * @throws RepositoryException if an error occurs
          */
         private Result getResult(Item target,
                                  String targetPath,
@@ -401,24 +407,23 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         /**
          *
-         * @return
-         * @throws RepositoryException
+         * @return the aces
+         * @throws RepositoryException if an error occurs
          */
         private List<AccessControlEntry> reload() throws RepositoryException {
             // reload the paths
             acPaths.clear();
 
             // acNodes must be ordered in the same order as the principals
-            // in order to obtain proper acl-evalution in case the given
+            // in order to obtain proper acl-evaluation in case the given
             // principal-set is ordered.
             List<AccessControlEntry> allACEs = new ArrayList<AccessControlEntry>();
             // build acl-hierarchy assuming that principal-order determines the
             // acl-inheritance.
-            for (Iterator it = principals.iterator(); it.hasNext();) {
-                Principal princ = (Principal) it.next();
-                ACLTemplate acl = editor.getACL(princ);
+            for (Principal p : principals) {
+                ACLTemplate acl = editor.getACL(p);
                 if (acl == null || acl.isEmpty()) {
-                    acPaths.add(editor.getPathToAcNode(princ));
+                    acPaths.add(editor.getPathToAcNode(p));
                 } else {
                     // retrieve the ACEs from the node
                     AccessControlEntry[] aces = acl.getAccessControlEntries();

@@ -29,7 +29,7 @@ public interface Group extends Authorizable {
      * members of this Group.
      * @throws RepositoryException
      */
-    Iterator getDeclaredMembers() throws RepositoryException;
+    Iterator<Authorizable> getDeclaredMembers() throws RepositoryException;
 
     /**
      * @return Iterator of <code>Authorizable</code>s which are members of
@@ -37,7 +37,7 @@ public interface Group extends Authorizable {
      * that are indirect group members.
      * @throws RepositoryException
      */
-    Iterator getMembers() throws RepositoryException;
+    Iterator<Authorizable> getMembers() throws RepositoryException;
 
     /**
      * @return true if the Authorizable to test is a direct or indirect member

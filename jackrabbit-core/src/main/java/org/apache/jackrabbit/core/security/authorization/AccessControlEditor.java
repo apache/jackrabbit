@@ -54,7 +54,8 @@ public interface AccessControlEditor {
      * <code>nodePath</code>.
      * @throws RepositoryException if an error occurs
      */
-    AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
+    AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException,
+            PathNotFoundException, RepositoryException;
 
     /**
      * Retrieves the policies that have been applied before for the given
@@ -74,7 +75,8 @@ public interface AccessControlEditor {
      * if same other access control related exception occurs.
      * @throws RepositoryException if an error occurs
      */
-    JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException;
+    JackrabbitAccessControlPolicy[] getPolicies(Principal principal)
+            throws AccessControlException, RepositoryException;
 
     /**
      * Retrieves the editable policies for the Node identified by the given
@@ -100,7 +102,8 @@ public interface AccessControlEditor {
      * <code>nodePath</code>.
      * @throws RepositoryException if an error occurs
      */
-    AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
+    AccessControlPolicy[] editAccessControlPolicies(String nodePath)
+            throws AccessControlException, PathNotFoundException, RepositoryException;
 
     /**
      * Returns an array of editable policies for the given <code>principal</code>.
@@ -115,7 +118,8 @@ public interface AccessControlEditor {
      * if same other access control related exception occurs.
      * @throws RepositoryException if another error occurs.
      */
-    JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException;
+    JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal)
+            throws AccessDeniedException, AccessControlException, RepositoryException;
 
     /**
      * Stores the policy template to the respective node.
@@ -129,7 +133,8 @@ public interface AccessControlEditor {
      * <code>nodePath</code>.
      * @throws RepositoryException if an other error occurs.
      */
-    void setPolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException, PathNotFoundException, RepositoryException;
+    void setPolicy(String nodePath, AccessControlPolicy policy)
+            throws AccessControlException, PathNotFoundException, RepositoryException;
 
     /**
      * Removes the specified policy from the node at <code>nodePath</code>.
@@ -143,5 +148,6 @@ public interface AccessControlEditor {
      * <code>nodePath</code>.
      * @throws RepositoryException if an other error occurs
      */
-    void removePolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException, PathNotFoundException, RepositoryException;
+    void removePolicy(String nodePath, AccessControlPolicy policy)
+            throws AccessControlException, PathNotFoundException, RepositoryException;
 }

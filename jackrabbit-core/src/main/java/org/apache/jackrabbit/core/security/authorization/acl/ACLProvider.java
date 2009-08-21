@@ -16,34 +16,15 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.AccessControlManager;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.ItemImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
-import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
-import org.apache.jackrabbit.core.security.authorization.AccessControlEntryIterator;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.util.Text;
-import org.apache.commons.collections.map.ListOrderedMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
@@ -54,15 +35,35 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
-import java.security.Principal;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Arrays;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEntryIterator;
+import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The ACLProvider generates access control policies out of the items stored
@@ -114,8 +115,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     public boolean isAcItem(Path absPath) throws RepositoryException {
         Path.Element[] elems = absPath.getElements();
-        for (int i = 0; i < elems.length; i++) {
-            if (N_POLICY.equals(elems[i].getName())) {
+        for (Path.Element elem : elems) {
+            if (N_POLICY.equals(elem.getName())) {
                 return true;
             }
         }
@@ -151,14 +152,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
-     * @param absPath
+     * @param absPath absolute path
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
 
         NodeImpl targetNode = (NodeImpl) session.getNode(session.getJCRPath(absPath));
         NodeImpl node = getNode(targetNode);
-        List acls = new ArrayList();
+        List<AccessControlList> acls = new ArrayList<AccessControlList>();
 
         // collect all ACLs effective at node
         collectAcls(node, acls);
@@ -169,7 +170,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             // controlled.
             log.warn("No access controlled node present in item hierarchy starting from " + targetNode.getPath());
         }
-        return (AccessControlList[]) acls.toArray(new AccessControlList[acls.size()]);
+        return acls.toArray(new AccessControlList[acls.size()]);
     }
 
     /**
@@ -215,8 +216,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * searched and returned.
      *
      * @param targetNode The node for which AC information needs to be retrieved.
-     * @return
-     * @throws RepositoryException
+     * @return the node
+     * @throws RepositoryException if an error occurs
      */
     private NodeImpl getNode(NodeImpl targetNode) throws RepositoryException {
         NodeImpl node;
@@ -238,9 +239,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * @param node the Node to collect the ACLs for, which must NOT be part of the
      * structure defined by mix:AccessControllable.
      * @param acls List used to collect the effective acls.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
-    private void collectAcls(NodeImpl node, List acls) throws RepositoryException {
+    private void collectAcls(NodeImpl node, List<AccessControlList> acls) throws RepositoryException {
         // if the given node is access-controlled, construct a new ACL and add
         // it to the list
         if (isAccessControlled(node)) {
@@ -314,10 +315,10 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * and if it has a child node named
      * {@link AccessControlConstants#N_POLICY "rep:ACL"}.
      *
-     * @param node
+     * @param node hte node
      * @return <code>true</code> if the node is access controlled;
      *         <code>false</code> otherwise.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     static boolean isAccessControlled(NodeImpl node) throws RepositoryException {
         return node.isNodeType(NT_REP_ACCESS_CONTROLLABLE) && node.hasNode(N_POLICY);
@@ -329,7 +330,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     private class AclPermissions extends AbstractCompiledPermissions implements SynchronousEventListener {
 
-        private final List principalNames;
+        private final List<String> principalNames;
         private final String jcrReadPrivilegeName;
 
         /**
@@ -343,7 +344,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         }
 
         private AclPermissions(Set<Principal> principals, boolean listenToEvents) throws RepositoryException {
-            principalNames = new ArrayList(principals.size());
+            principalNames = new ArrayList<String>(principals.size());
             for (Principal princ : principals) {
                 principalNames.add(princ.getName());
             }
@@ -381,7 +382,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * permissions for any of the principals AND denies-READ. Otherwise
          * this shortcut is not possible.
          *
-         * @param principalnames
+         * @param principalnames names of the principals
          * @return true if read is allowed everywhere.
          */
         private boolean isReadAllowed(Collection<String> principalnames) {
@@ -397,10 +398,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                     // where the rep:principalName property exactly matches any of
                     // the given principalsNames
                     int i = 0;
-                    Iterator itr = principalnames.iterator();
-                    while (itr.hasNext()) {
+                    for (String principalname : principalnames) {
                         stmt.append("@").append(resolver.getJCRName(P_PRINCIPAL_NAME)).append(" eq ");
-                        stmt.append("'").append(itr.next().toString()).append("'");
+                        stmt.append("'").append(principalname).append("'");
                         if (++i < principalnames.size()) {
                             stmt.append(" or ");
                         }
@@ -522,9 +522,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         /**
          *
-         * @param absPath
-         * @param permissions
-         * @return
+         * @param absPath absolute path
+         * @param permissions permission bits
+         * @return <code>true</code> if the permissions are granted
          * @throws RepositoryException
          * @see CompiledPermissions#grants(Path, int)
          */
@@ -560,8 +560,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                                 // ACE denies READ.
                                 if (readAllowed && n.isNodeType(NT_REP_DENY_ACE)) {
                                     Value[] vs = n.getProperty(P_PRIVILEGES).getValues();
-                                    for (int i = 0; i < vs.length; i++) {
-                                        if (jcrReadPrivilegeName.equals(vs[i].getString())) {
+                                    for (Value v : vs) {
+                                        if (jcrReadPrivilegeName.equals(v.getString())) {
                                             readAllowed = false;
                                         }
                                     }
@@ -624,12 +624,12 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     private class Entries {
 
-        private final ListOrderedMap principalNamesToEntries;
+        private final Map<String, List<AccessControlEntry>> principalNamesToEntries;
 
-        private Entries(NodeImpl node, Collection principalNames) throws RepositoryException {
-            principalNamesToEntries = new ListOrderedMap();
-            for (Iterator it = principalNames.iterator(); it.hasNext();) {
-                principalNamesToEntries.put(it.next(), new ArrayList());
+        private Entries(NodeImpl node, Collection<String> principalNames) throws RepositoryException {
+            principalNamesToEntries = new LinkedHashMap<String, List<AccessControlEntry>>();
+            for (String name : principalNames) {
+                principalNamesToEntries.put(name, new ArrayList<AccessControlEntry>());
             }
             collectEntries(node);
         }
@@ -650,11 +650,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         }
 
         private AccessControlEntryIterator iterator() {
-            List entries = new ArrayList();
-            for (Iterator it =
-                    principalNamesToEntries.asList().iterator(); it.hasNext();) {
-                Object key = it.next();
-                entries.addAll((List) principalNamesToEntries.get(key));
+            List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>();
+            for (List<AccessControlEntry> list: principalNamesToEntries.values()) {
+                entries.addAll(list);
             }
             return new AccessControlEntryIterator(entries);
         }

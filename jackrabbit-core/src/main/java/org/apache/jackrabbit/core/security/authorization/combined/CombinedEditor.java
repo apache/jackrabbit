@@ -49,8 +49,8 @@ class CombinedEditor implements AccessControlEditor {
      */
     public AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         List<AccessControlPolicy> templates = new ArrayList<AccessControlPolicy>();
-        for (int i = 0; i < editors.length; i++) {
-            AccessControlPolicy[] ts = editors[i].getPolicies(nodePath);
+        for (AccessControlEditor editor : editors) {
+            AccessControlPolicy[] ts = editor.getPolicies(nodePath);
             if (ts != null && ts.length > 0) {
                 templates.addAll(Arrays.asList(ts));
             }
@@ -63,8 +63,8 @@ class CombinedEditor implements AccessControlEditor {
      */
     public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException {
         List<JackrabbitAccessControlPolicy> templates = new ArrayList<JackrabbitAccessControlPolicy>();
-        for (int i = 0; i < editors.length; i++) {
-            JackrabbitAccessControlPolicy[] ts = editors[i].getPolicies(principal);
+        for (AccessControlEditor editor : editors) {
+            JackrabbitAccessControlPolicy[] ts = editor.getPolicies(principal);
             if (ts != null && ts.length > 0) {
                 templates.addAll(Arrays.asList(ts));
             }
@@ -77,9 +77,9 @@ class CombinedEditor implements AccessControlEditor {
      */
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         List<AccessControlPolicy> templates = new ArrayList<AccessControlPolicy>();
-        for (int i = 0; i < editors.length; i++) {
+        for (AccessControlEditor editor : editors) {
             try {
-                templates.addAll(Arrays.asList(editors[i].editAccessControlPolicies(nodePath)));
+                templates.addAll(Arrays.asList(editor.editAccessControlPolicies(nodePath)));
             } catch (AccessControlException e) {
                 log.debug(e.getMessage());
                 // ignore.
@@ -93,9 +93,9 @@ class CombinedEditor implements AccessControlEditor {
      */
     public JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws RepositoryException {
         List<JackrabbitAccessControlPolicy> templates = new ArrayList<JackrabbitAccessControlPolicy>();
-        for (int i = 0; i < editors.length; i++) {
+        for (AccessControlEditor editor : editors) {
             try {
-                templates.addAll(Arrays.asList(editors[i].editAccessControlPolicies(principal)));
+                templates.addAll(Arrays.asList(editor.editAccessControlPolicies(principal)));
             } catch (AccessControlException e) {
                 log.debug(e.getMessage());
                 // ignore.
@@ -108,12 +108,12 @@ class CombinedEditor implements AccessControlEditor {
      * @see AccessControlEditor#setPolicy(String,AccessControlPolicy)
      */
     public void setPolicy(String nodePath, AccessControlPolicy template) throws AccessControlException, PathNotFoundException, RepositoryException {
-        for (int i = 0; i < editors.length; i++) {
+        for (AccessControlEditor editor : editors) {
             try {
                 // return as soon as the first editor successfully handled the
                 // specified template
-                editors[i].setPolicy(nodePath, template);
-                log.debug("Set template " + template + " using " + editors[i]);
+                editor.setPolicy(nodePath, template);
+                log.debug("Set template " + template + " using " + editor);
                 return;
             } catch (AccessControlException e) {
                 log.debug(e.getMessage());
@@ -130,12 +130,12 @@ class CombinedEditor implements AccessControlEditor {
      */
     public void removePolicy(String nodePath,
                              AccessControlPolicy policy) throws AccessControlException, PathNotFoundException, RepositoryException {
-        for (int i = 0; i < editors.length; i++) {
+        for (AccessControlEditor editor : editors) {
             try {
                 // return as soon as the first editor successfully handled the
                 // specified template
-                editors[i].removePolicy(nodePath, policy);
-                log.debug("Removed template " + policy + " using " + editors[i]);
+                editor.removePolicy(nodePath, policy);
+                log.debug("Removed template " + policy + " using " + editor);
                 return;
             } catch (AccessControlException e) {
                 log.debug(e.getMessage());

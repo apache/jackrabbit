@@ -79,7 +79,7 @@ class IndexNodeResolver extends NodeResolver {
      * @return
      * @throws javax.jcr.RepositoryException
      */
-    public NodeIterator findNodes(Set propertyNames, String value, Name ntName,
+    public NodeIterator findNodes(Set<Name> propertyNames, String value, Name ntName,
                                   boolean exact, long maxSize) throws RepositoryException {
         Query query = buildQuery(value, propertyNames, ntName, exact, maxSize);
         return query.execute().getNodes();
@@ -115,7 +115,7 @@ class IndexNodeResolver extends NodeResolver {
      * @return
      * @throws RepositoryException
      */
-    private Query buildQuery(String value, Set props, Name ntName,
+    private Query buildQuery(String value, Set<Name> props, Name ntName,
                              boolean exact, long maxSize)
             throws RepositoryException {
         StringBuilder stmt = new StringBuilder("/jcr:root");
@@ -128,10 +128,9 @@ class IndexNodeResolver extends NodeResolver {
         } else {
             stmt.append(")[");
             int i = 0;
-            Iterator itr = props.iterator();
-            while (itr.hasNext()) {
+            for (Name prop : props) {
                 stmt.append((exact) ? "@" : "jcr:like(@");
-                String pName = getNamePathResolver().getJCRName((Name) itr.next());
+                String pName = getNamePathResolver().getJCRName(prop);
                 stmt.append(ISO9075.encode(pName));
                 if (exact) {
                     stmt.append("='");

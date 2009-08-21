@@ -16,6 +16,14 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import java.security.Principal;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.security.auth.Subject;
+
 import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
@@ -30,14 +38,6 @@ import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.value.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.security.auth.Subject;
-import java.security.Principal;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * ImpersonationImpl
@@ -59,15 +59,14 @@ class ImpersonationImpl implements Impersonation, UserConstants {
      * @see Impersonation#getImpersonators()
      */
     public PrincipalIterator getImpersonators() throws RepositoryException {
-        Set impersonators = getImpersonatorNames();
+        Set<String> impersonators = getImpersonatorNames();
         if (impersonators.isEmpty()) {
             return PrincipalIteratorAdapter.EMPTY;
         } else {
             final PrincipalManager pMgr = user.getSession().getPrincipalManager();
 
-            Set s = new HashSet();
-            for (Iterator it = impersonators.iterator(); it.hasNext();) {
-                String pName = it.next().toString();
+            Set<Principal> s = new HashSet<Principal>();
+            for (String pName: impersonators) {
                 Principal p = null;
                 if (pMgr.hasPrincipal(pName)) {
                     try {
@@ -115,7 +114,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
         }
 
         boolean granted = false;
-        Set impersonators = getImpersonatorNames();
+        Set<String> impersonators = getImpersonatorNames();
         if (impersonators.add(pName)) {
             updateImpersonatorNames(impersonators);
             granted = true;
@@ -135,7 +134,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
         boolean revoked = false;
         String pName = principal.getName();
 
-        Set impersonators = getImpersonatorNames();
+        Set<String> impersonators = getImpersonatorNames();
         if (impersonators.remove(pName)) {
             updateImpersonatorNames(impersonators);
             revoked = true;
@@ -156,9 +155,9 @@ class ImpersonationImpl implements Impersonation, UserConstants {
             return true;
         }
 
-        Set principalNames = new HashSet();
-        for (Iterator it = subject.getPrincipals().iterator(); it.hasNext();) {
-            principalNames.add(((Principal) it.next()).getName());
+        Set<String> principalNames = new HashSet<String>();
+        for (Principal p: subject.getPrincipals()) {
+            principalNames.add(p.getName());
         }
 
         boolean allows = false;
@@ -174,21 +173,21 @@ class ImpersonationImpl implements Impersonation, UserConstants {
 
     //------------------------------------------------------------< private >---
 
-    private Set getImpersonatorNames() throws RepositoryException {
-        Set princNames = new HashSet();
+    private Set<String> getImpersonatorNames() throws RepositoryException {
+        Set<String> princNames = new HashSet<String>();
         if (user.getNode().hasProperty(P_IMPERSONATORS)) {
             Value[] vs = user.getNode().getProperty(P_IMPERSONATORS).getValues();
-            for (int i = 0; i < vs.length; i++) {
-                princNames.add(vs[i].getString());
+            for (Value v : vs) {
+                princNames.add(v.getString());
             }
         }
         return princNames;
     }
 
-    private void updateImpersonatorNames(Set principalNames) throws RepositoryException {
+    private void updateImpersonatorNames(Set<String> principalNames) throws RepositoryException {
         NodeImpl userNode = user.getNode();
         try {
-            String[] pNames = (String[]) principalNames.toArray(new String[principalNames.size()]);
+            String[] pNames = principalNames.toArray(new String[principalNames.size()]);
             if (pNames.length == 0) {
                 PropertyImpl prop = userNode.getProperty(P_IMPERSONATORS);
                 userManager.removeProtectedItem(prop, userNode);

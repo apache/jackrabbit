@@ -39,14 +39,12 @@ public class AccessControlEntryIterator implements Iterator<AccessControlEntry> 
     private Iterator<AccessControlEntry> currentEntries;
     private AccessControlEntry next;
 
-    public AccessControlEntryIterator(List<AccessControlList> aces) {
+    public AccessControlEntryIterator(List<AccessControlEntry> aces) {
         this(new AccessControlList[] {new UnmodifiableAccessControlList(aces)});
     }
 
     public AccessControlEntryIterator(AccessControlList[] acls) {
-        for (AccessControlList a : acls) {
-            this.acls.add(a);
-        }
+        this.acls.addAll(Arrays.asList(acls));
         next = seekNext();
     }
 

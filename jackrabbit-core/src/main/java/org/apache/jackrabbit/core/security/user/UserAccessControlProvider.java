@@ -133,7 +133,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             userAdminGroup = (configuration.containsKey(USER_ADMIN_GROUP_NAME)) ? configuration.get(USER_ADMIN_GROUP_NAME).toString() : USER_ADMIN_GROUP_NAME;
             groupAdminGroup = (configuration.containsKey(GROUP_ADMIN_GROUP_NAME)) ? configuration.get(GROUP_ADMIN_GROUP_NAME).toString() : GROUP_ADMIN_GROUP_NAME;
 
-            // make sure the groups exist (and ev. create them).
+            // make sure the groups exist (and possibly create them).
             UserManager uMgr = sImpl.getUserManager();
             if (!initGroup(uMgr, userAdminGroup)) {
                 log.warn("Unable to initialize User admininistrator group -> no user admins.");
@@ -174,7 +174,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#compilePermissions(Set)
      */
-    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
+    public CompiledPermissions compilePermissions(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
@@ -201,11 +201,10 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
     //------------------------------------------------------------< private >---
 
-    private ItemBasedPrincipal getUserPrincipal(Set principals) {
+    private ItemBasedPrincipal getUserPrincipal(Set<Principal> principals) {
         try {
             UserManager uMgr = session.getUserManager();
-            for (Iterator it = principals.iterator(); it.hasNext();) {
-                Principal p = (Principal) it.next();
+            for (Principal p : principals) {
                 if (!(p instanceof Group) && p instanceof ItemBasedPrincipal
                         && uMgr.getAuthorizable(p) != null) {
                     return (ItemBasedPrincipal) p;
@@ -253,7 +252,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         return PrivilegeRegistry.getBits(privs);
     }
 
-    private static boolean containsGroup(Set principals, String groupName) {
+    private static boolean containsGroup(Set<Principal> principals, String groupName) {
         for (Iterator it = principals.iterator(); it.hasNext() && groupName != null;) {
             Principal p = (Principal) it.next();
             if (p.getName().equals(groupName)) {
@@ -296,7 +295,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         private boolean isUserAdmin;
         private boolean isGroupAdmin;
 
-        protected CompiledPermissionsImpl(Set principals, String userNodePath) throws RepositoryException {
+        protected CompiledPermissionsImpl(Set<Principal> principals, String userNodePath) throws RepositoryException {
             this.userNodePath = userNodePath;
             isUserAdmin = containsGroup(principals, userAdminGroup);
             isGroupAdmin = containsGroup(principals, groupAdminGroup);
@@ -321,7 +320,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
             if (userNode == null) {
                 // no Node corresponding to user for which the permissions are
-                // calculated -> no permissions/priviles.
+                // calculated -> no permissions/privileges.
                 log.debug("No node at " + userNodePath);
                 return new Result(Permission.NONE, Permission.NONE, PrivilegeRegistry.NO_PRIVILEGE, PrivilegeRegistry.NO_PRIVILEGE);
             }
@@ -493,8 +492,8 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                                 if (session.propertyExists(evPath)) {
                                     Value[] vs = session.getProperty(evPath).getValues();
                                     String princName = session.getJCRName(P_PRINCIPAL_NAME);
-                                    for (int i = 0; i < vs.length; i++) {
-                                        Node groupNode = session.getNodeByUUID(vs[i].getString());
+                                    for (Value v : vs) {
+                                        Node groupNode = session.getNodeByUUID(v.getString());
                                         String pName = groupNode.getProperty(princName).getString();
                                         if (userAdminGroup.equals(pName)) {
                                             isUserAdmin = true;

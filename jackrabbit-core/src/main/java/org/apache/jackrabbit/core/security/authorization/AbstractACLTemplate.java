@@ -16,28 +16,23 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
-import javax.jcr.Value;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+
 /**
  * <code>AbstractACLTemplate</code>...
  */
-public abstract class AbstractACLTemplate implements JackrabbitAccessControlList, AccessControlConstants {
-
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(AbstractACLTemplate.class);
+public abstract class AbstractACLTemplate implements JackrabbitAccessControlList,
+        AccessControlConstants {
 
     /**
      * Path of the node this ACL template has been created for.
@@ -84,7 +79,7 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
      */
     public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow)
             throws AccessControlException, RepositoryException {
-        return addEntry(principal, privileges, isAllow, Collections.EMPTY_MAP);
+        return addEntry(principal, privileges, isAllow, Collections.<String, Value>emptyMap());
     }
 
 
@@ -94,6 +89,6 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
      */
     public boolean addAccessControlEntry(Principal principal, Privilege[] privileges)
             throws AccessControlException, RepositoryException {
-        return addEntry(principal, privileges, true, Collections.EMPTY_MAP);
+        return addEntry(principal, privileges, true, Collections.<String, Value>emptyMap());
     }
 }

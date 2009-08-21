@@ -70,17 +70,19 @@ class ACLTemplate extends AbstractACLTemplate {
 
     private final Principal principal;
 
-    private final List entries = new ArrayList();
+    private final List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>();
 
     private final String jcrNodePathName;
     private final String jcrGlobName;
 
-    ACLTemplate(Principal principal, String path, NamePathResolver resolver, ValueFactory vf) throws RepositoryException {
+    ACLTemplate(Principal principal, String path, NamePathResolver resolver, ValueFactory vf)
+            throws RepositoryException {
         this(principal, path, null, resolver, vf);
     }
 
     ACLTemplate(Principal principal, NodeImpl acNode) throws RepositoryException {
-        this(principal, acNode.getPath(), acNode, (SessionImpl) acNode.getSession(), acNode.getSession().getValueFactory());
+        this(principal, acNode.getPath(), acNode, (SessionImpl) acNode.getSession(),
+                acNode.getSession().getValueFactory());
     }
 
     private ACLTemplate(Principal principal, String path, NodeImpl acNode,
@@ -111,7 +113,7 @@ class ACLTemplate extends AbstractACLTemplate {
                         privileges[i] = acMgr.privilegeFromName(pValues[i].getString());
                     }
                     // the restrictions:
-                    Map restrictions = new HashMap(2);
+                    Map<String, Value> restrictions = new HashMap<String, Value>(2);
                     Property prop = aceNode.getProperty(P_NODE_PATH);
                     restrictions.put(prop.getName(), prop.getValue());
 
@@ -130,7 +132,8 @@ class ACLTemplate extends AbstractACLTemplate {
     }
 
     AccessControlEntry createEntry(Principal princ, Privilege[] privileges,
-                                   boolean allow, Map<String, Value> restrictions) throws RepositoryException {
+                                   boolean allow, Map<String, Value> restrictions)
+            throws RepositoryException {
         checkValidEntry(princ, privileges, allow, restrictions);
 
         // make sure the nodePath restriction is of type PATH
@@ -159,7 +162,7 @@ class ACLTemplate extends AbstractACLTemplate {
             throw new AccessControlException("Invalid principal. Expected: " + principal);
         }
 
-        Set rNames = restrictions.keySet();
+        Set<String> rNames = restrictions.keySet();
         if (!rNames.contains(jcrNodePathName)) {
             throw new AccessControlException("Missing mandatory restriction: " + jcrNodePathName);
         }
@@ -210,7 +213,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges,
-                            boolean isAllow, Map restrictions)
+                            boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
         if (restrictions == null || restrictions.isEmpty()) {
             log.debug("Restrictions missing. Using default: rep:nodePath = " + getPath() + "; rep:glob = null.");
@@ -235,7 +238,7 @@ class ACLTemplate extends AbstractACLTemplate {
      */
     public AccessControlEntry[] getAccessControlEntries()
             throws RepositoryException {
-        return (AccessControlEntry[]) entries.toArray(new AccessControlEntry[entries.size()]);
+        return entries.toArray(new AccessControlEntry[entries.size()]);
     }
 
     /**
@@ -299,7 +302,8 @@ class ACLTemplate extends AbstractACLTemplate {
          */
         private final GlobPattern pattern;
 
-        private Entry(Principal principal, Privilege[] privileges, boolean allow, Map restrictions)
+        private Entry(Principal principal, Privilege[] privileges, boolean allow,
+                      Map<String, Value> restrictions)
                 throws AccessControlException, RepositoryException {
             super(principal, privileges, allow, restrictions, valueFactory);
 

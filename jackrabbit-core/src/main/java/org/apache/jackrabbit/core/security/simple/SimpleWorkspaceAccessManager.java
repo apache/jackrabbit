@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import java.util.Set;
+import java.security.Principal;
 
 /**
  * <code>SimpleWorkspaceAccessManager</code> always allows any set of principals
@@ -48,7 +49,8 @@ public class SimpleWorkspaceAccessManager implements WorkspaceAccessManager {
      *
      * @see WorkspaceAccessManager#grants(java.util.Set, String)
      */
-    public boolean grants(Set principals, String workspaceName) throws RepositoryException {
+    public boolean grants(Set<Principal> principals, String workspaceName)
+            throws RepositoryException {
         return true;
     }
 }

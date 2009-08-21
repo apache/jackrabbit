@@ -16,20 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.commons.collections.map.ListOrderedMap;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyType;
@@ -40,12 +32,20 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList} interface that
@@ -63,7 +63,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * name as key. The value represents a List containing maximal one grant
      * and one deny ACE per principal.
      */
-    private final Map entries = new ListOrderedMap();
+    private final Map<String, List<Entry>> entries = new LinkedHashMap<String, List<Entry>>();
 
     /**
      * The principal manager used for validation checks
@@ -78,14 +78,14 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      * Construct a new empty {@link ACLTemplate}.
      *
-     * @param path
-     * @param privilegeRegistry
-     * @param principalMgr
+     * @param path path
+     * @param privilegeRegistry registry
+     * @param valueFactory value factory
+     * @param principalMgr manager
      */
     ACLTemplate(String path, PrincipalManager principalMgr, 
                 PrivilegeRegistry privilegeRegistry, ValueFactory valueFactory) {
         super(path, valueFactory);
-
         this.principalMgr = principalMgr;
         this.privilegeRegistry = privilegeRegistry;
     }
@@ -94,9 +94,9 @@ class ACLTemplate extends AbstractACLTemplate {
      * Create a {@link ACLTemplate} that is used to edit an existing ACL
      * node.
      *
-     * @param aclNode
-     * @param privilegeRegistry
-     * @throws RepositoryException
+     * @param aclNode node
+     * @param privilegeRegistry registry
+     * @throws RepositoryException if an error occurs
      */
     ACLTemplate(NodeImpl aclNode, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
         super((aclNode != null) ? aclNode.getParent().getPath() : null, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
@@ -152,12 +152,12 @@ class ACLTemplate extends AbstractACLTemplate {
      * specified names and return a map consisting of principal name key
      * and a list of ACEs as value.
      *
-     * @param aclNode
+     * @param aclNode acl node
      * @param princToEntries Map of key = principalName and value = ArrayList
      * to be filled with ACEs matching the principal names.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
-    static void collectEntries(NodeImpl aclNode, Map princToEntries)
+    static void collectEntries(NodeImpl aclNode, Map<String, List<AccessControlEntry>> princToEntries)
             throws RepositoryException {
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
         PrincipalManager principalMgr = sImpl.getPrincipalManager();
@@ -194,31 +194,31 @@ class ACLTemplate extends AbstractACLTemplate {
                         aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE),
                         sImpl.getValueFactory());
                 // add it to the proper list (e.g. separated by principals)
-                ((List) princToEntries.get(principalName)).add(ace);
+                princToEntries.get(principalName).add(ace);
             }
         }
     }
 
-    private List internalGetEntries() {
-        List l = new ArrayList();
-        for (Iterator it = entries.values().iterator(); it.hasNext();) {
-            l.addAll((List) it.next());
+    private List<? extends AccessControlEntry> internalGetEntries() {
+        List<Entry> l = new ArrayList<Entry>();
+        for (List<Entry> o : entries.values()) {
+            l.addAll(o);
         }
         return l;
     }
 
-    private List internalGetEntries(Principal principal) {
+    private List<Entry> internalGetEntries(Principal principal) {
         String principalName = principal.getName();
         if (entries.containsKey(principalName)) {
-            return (List) entries.get(principalName);
+            return entries.get(principalName);
         } else {
-            return new ArrayList(2);
+            return new ArrayList<Entry>(2);
         }
     }
 
     private synchronized boolean internalAdd(Entry entry) throws AccessControlException {
         Principal principal = entry.getPrincipal();
-        List l = internalGetEntries(principal);
+        List<Entry> l = internalGetEntries(principal);
         if (l.isEmpty()) {
             // simple case: just add the new entry
             l.add(entry);
@@ -229,9 +229,9 @@ class ACLTemplate extends AbstractACLTemplate {
                 // the same entry is already contained -> no modification
                 return false;
             }
-            // ev. need to adjust existing entries
+            // check if need to adjust existing entries
             Entry complementEntry = null;
-            Entry[] entries = (Entry[]) l.toArray(new Entry[l.size()]);
+            Entry[] entries = l.toArray(new Entry[l.size()]);
             for (int i = 0; i < entries.length; i++) {
                 if (entry.isAllow() == entries[i].isAllow()) {
                     int existingPrivs = entries[i].getPrivilegeBits();
@@ -242,7 +242,7 @@ class ACLTemplate extends AbstractACLTemplate {
                     }
 
                     // remove the existing entry and create a new that includes
-                    // both the new privileges and the existing onces.
+                    // both the new privileges and the existing ones.
                     l.remove(i);
                     int mergedBits = entries[i].getPrivilegeBits() | entry.getPrivilegeBits();
                     Privilege[] mergedPrivs = privilegeRegistry.getPrivileges(mergedBits);
@@ -254,7 +254,7 @@ class ACLTemplate extends AbstractACLTemplate {
             }
 
             // make sure, that the complement entry (if existing) does not
-            // grant/deny the same privileges -> remove privs that are now
+            // grant/deny the same privileges -> remove privileges that are now
             // denied/granted.
             if (complementEntry != null) {
                 int complPrivs = complementEntry.getPrivilegeBits();
@@ -299,8 +299,8 @@ class ACLTemplate extends AbstractACLTemplate {
      * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
      */
     public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {
-        List l = internalGetEntries();
-        return (AccessControlEntry[]) l.toArray(new AccessControlEntry[l.size()]);
+        List<? extends AccessControlEntry> l = internalGetEntries();
+        return l.toArray(new AccessControlEntry[l.size()]);
     }
 
     /**
@@ -403,8 +403,9 @@ class ACLTemplate extends AbstractACLTemplate {
      */
     static class Entry extends AccessControlEntryImpl {
 
-        Entry(Principal principal, Privilege[] privileges, boolean allow, ValueFactory valueFactory) throws AccessControlException {
-            super(principal, privileges, allow, Collections.EMPTY_MAP, valueFactory);
+        Entry(Principal principal, Privilege[] privileges, boolean allow, ValueFactory valueFactory)
+                throws AccessControlException {
+            super(principal, privileges, allow, Collections.<String, Value>emptyMap(), valueFactory);
         }
     }
 }

@@ -16,17 +16,16 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collections;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.util.Collections;
-import java.util.Set;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**
  * Resolver: searches for Principals stored in Nodes of a {@link javax.jcr.Workspace}
@@ -34,8 +33,6 @@ import java.util.Set;
  * The principalNames are assumed to be stored in properties.
  */
 abstract class NodeResolver {
-
-    private static final Logger log = LoggerFactory.getLogger(NodeResolver.class);
 
     private final Session session;
     private final NamePathResolver resolver;
@@ -109,7 +106,7 @@ abstract class NodeResolver {
      * @return matching nodes (or an empty iterator if no match was found).
      * @throws RepositoryException If an error occurs.
      */
-    public abstract NodeIterator findNodes(Set propertyNames, String value,
+    public abstract NodeIterator findNodes(Set<Name> propertyNames, String value,
                                            Name ntName, boolean exact, long maxSize)
             throws RepositoryException;
 

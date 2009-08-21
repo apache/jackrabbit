@@ -16,28 +16,26 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
+import java.security.Principal;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.ObservationManager;
+import javax.jcr.security.Privilege;
+
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import javax.jcr.security.Privilege;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.ObservationManager;
-import java.security.Principal;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * <code>AbstractAccessControlProvider</code>...
  */
-public abstract class AbstractAccessControlProvider implements AccessControlProvider, AccessControlUtils {
-
-    private static Logger log = LoggerFactory.getLogger(AbstractAccessControlProvider.class);
+public abstract class AbstractAccessControlProvider implements AccessControlProvider,
+        AccessControlUtils {
 
     /**
      * Constant for the name of the configuration option "omit-default-permission".

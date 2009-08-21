@@ -50,8 +50,8 @@ public class PrincipalManagerImpl implements PrincipalManager {
     /**
      * Creates a new default principal manager implementation.
      *
-     * @param session
-     * @param providers
+     * @param session the underlying session
+     * @param providers the providers
      */
     public PrincipalManagerImpl(Session session, PrincipalProvider[] providers) {
         this.session = session;
@@ -84,9 +84,8 @@ public class PrincipalManagerImpl implements PrincipalManager {
      */
     public PrincipalIterator findPrincipals(String simpleFilter) {
         checkIsValid();
-        List entries = new ArrayList(providers.length);
-        for (int i = 0; i < providers.length; i++) {
-            PrincipalProvider pp = providers[i];
+        List<CheckedIteratorEntry> entries = new ArrayList<CheckedIteratorEntry>(providers.length);
+        for (PrincipalProvider pp : providers) {
             PrincipalIterator it = pp.findPrincipals(simpleFilter);
             if (it.hasNext()) {
                 entries.add(new CheckedIteratorEntry(it, pp));
@@ -100,9 +99,8 @@ public class PrincipalManagerImpl implements PrincipalManager {
      */
     public PrincipalIterator findPrincipals(String simpleFilter, int searchType) {
         checkIsValid();
-        List entries = new ArrayList(providers.length);
-        for (int i = 0; i < providers.length; i++) {
-            PrincipalProvider pp = providers[i];
+        List<CheckedIteratorEntry> entries = new ArrayList<CheckedIteratorEntry>(providers.length);
+        for (PrincipalProvider pp : providers) {
             PrincipalIterator it = pp.findPrincipals(simpleFilter, searchType);
             if (it.hasNext()) {
                 entries.add(new CheckedIteratorEntry(it, pp));
@@ -117,9 +115,8 @@ public class PrincipalManagerImpl implements PrincipalManager {
      */
     public PrincipalIterator getPrincipals(int searchType) {
         checkIsValid();
-        List entries = new ArrayList(providers.length);
-        for (int i = 0; i < providers.length; i++) {
-            PrincipalProvider pp = providers[i];
+        List<CheckedIteratorEntry> entries = new ArrayList<CheckedIteratorEntry>(providers.length);
+        for (PrincipalProvider pp : providers) {
             PrincipalIterator it = pp.getPrincipals(searchType);
             if (it.hasNext()) {
                 entries.add(new CheckedIteratorEntry(it, pp));
@@ -133,9 +130,8 @@ public class PrincipalManagerImpl implements PrincipalManager {
      */
     public PrincipalIterator getGroupMembership(Principal principal) {
         checkIsValid();
-        List entries =  new ArrayList(providers.length + 1);
-        for (int i = 0; i < providers.length; i++) {
-            PrincipalProvider pp = providers[i];
+        List<CheckedIteratorEntry> entries =  new ArrayList<CheckedIteratorEntry>(providers.length + 1);
+        for (PrincipalProvider pp : providers) {
             PrincipalIterator groups = pp.getGroupMembership(principal);
             if (groups.hasNext()) {
                 entries.add(new CheckedIteratorEntry(groups, pp));
@@ -170,17 +166,17 @@ public class PrincipalManagerImpl implements PrincipalManager {
     }
 
     /**
-     * @param principalName
+     * @param principalName the name of the principal
      * @return The principal with the given name or <code>null</code> if none
      * of the providers knows that principal of if the Session is not allowed
      * to see it.
      */
     private Principal internalGetPrincipal(String principalName) {
         checkIsValid();
-        for (int i = 0; i < providers.length; i++) {
-            Principal principal = providers[i].getPrincipal(principalName);
-            if (principal != null && providers[i].canReadPrincipal(session, principal)) {
-                return disguise(principal, providers[i]);
+        for (PrincipalProvider provider : providers) {
+            Principal principal = provider.getPrincipal(principalName);
+            if (principal != null && provider.canReadPrincipal(session, principal)) {
+                return disguise(principal, provider);
             }
         }
         // nothing found or not allowed to see it.
@@ -188,7 +184,8 @@ public class PrincipalManagerImpl implements PrincipalManager {
     }
 
     /**
-     * @param principal
+     * @param principal the principal
+     * @param provider the provider
      * @return A group that only reveals those members that are visible to the
      * current session or the specified principal if its not a group or the
      * everyone principal.
@@ -238,15 +235,15 @@ public class PrincipalManagerImpl implements PrincipalManager {
             return delegatee.isMember(member);
         }
 
-        public Enumeration members() {
+        public Enumeration<? extends Principal> members() {
             Iterator it = Collections.list(delegatee.members()).iterator();
-            final Iterator members = new CheckedPrincipalIterator(it, provider);
-            return new Enumeration() {
+            final PrincipalIterator members = new CheckedPrincipalIterator(it, provider);
+            return new Enumeration<Principal>() {
                 public boolean hasMoreElements() {
                     return members.hasNext();
                 }
-                public Object nextElement() {
-                    return members.next();
+                public Principal nextElement() {
+                    return members.nextPrincipal();
                 }
             };
         }
@@ -291,16 +288,16 @@ public class PrincipalManagerImpl implements PrincipalManager {
      */
     private class CheckedPrincipalIterator extends AbstractPrincipalIterator {
 
-        private final List entries;
+        private final List<CheckedIteratorEntry> entries;
 
         private CheckedPrincipalIterator(Iterator it, PrincipalProvider provider) {
-            entries = new ArrayList(1);
+            entries = new ArrayList<CheckedIteratorEntry>(1);
             entries.add(new CheckedIteratorEntry(it, provider));
             next = seekNext();
         }
 
-        private CheckedPrincipalIterator(List entries) {
-            this.entries = new ArrayList(entries);
+        private CheckedPrincipalIterator(List<CheckedIteratorEntry> entries) {
+            this.entries = new ArrayList<CheckedIteratorEntry>(entries);
             next = seekNext();
         }
 
@@ -309,8 +306,8 @@ public class PrincipalManagerImpl implements PrincipalManager {
          */
         protected final Principal seekNext() {
             while (!entries.isEmpty()) {
-                // first test if current-itr has more elements
-                CheckedIteratorEntry current = (CheckedIteratorEntry) entries.get(0);
+                // first test if current iterator has more elements
+                CheckedIteratorEntry current = entries.get(0);
                 Iterator iterator = current.iterator;
                 while (iterator.hasNext()) {
                     Principal chk = (Principal) iterator.next();
@@ -319,7 +316,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
                         return disguise(chk, current.provider);
                     }
                 }
-                // ino more elements in current-itr -> move to next iterator.
+                // no more elements in current iterator -> move to next iterator.
                 entries.remove(0);
             }
             return null;
