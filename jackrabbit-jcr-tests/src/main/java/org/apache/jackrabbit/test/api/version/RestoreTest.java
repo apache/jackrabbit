@@ -30,6 +30,7 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.NodeIterator;
+import javax.jcr.Session;
 
 /**
  * <code>RestoreTest</code> covers tests related to the restore methods available
@@ -799,6 +800,37 @@ public class RestoreTest extends AbstractVersionTest {
         } catch (RepositoryException e) {
             fail("Node.restore('1.3') must fail.");
         }
+    }
+
+    public void testRestoreRemoved() throws RepositoryException {
+        Node parent = versionableNode.getParent();
+        String oldName = versionableNode.getName();
+        Version v1 = versionableNode.checkin();
+        versionableNode.remove();
+        versionableNode = null;
+        parent.getSession().save();
+
+        parent.restore(v1, oldName, true);
+
+        versionableNode = parent.getNode(oldName);
+
+        String value = versionableNode.getProperty(propertyName1).getString();
+        assertEquals("Restoring a node must set the correct property.", propertyValue2, value);
+    }
+
+    public void testRestoreRemovedJcr2() throws RepositoryException {
+        String path = versionableNode.getPath();
+        Version v1 = versionManager.checkin(path);
+        versionableNode.remove();
+        versionableNode = null;
+        superuser.save();
+
+        versionManager.restore(path, v1, true);
+
+        versionableNode = superuser.getNode(path);
+
+        String value = versionableNode.getProperty(propertyName1).getString();
+        assertEquals("Restoring a node must set the correct property.", propertyValue2, value);
     }
 
     public void testRestoreChild1Jcr2() throws RepositoryException {

@@ -197,10 +197,19 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                 throw new ItemExistsException(msg);
             }
         } else {
-            // create new node below parent
-            NodeStateEx state = parent.addNode(name, fn.getFrozenPrimaryType(), fn.getFrozenId());
-            state.setMixins(fn.getFrozenMixinTypes());
-            restore(state, v, removeExisting);
+            WriteOperation ops = startWriteOperation();
+            try {
+                // create new node below parent
+                NodeStateEx state = parent.addNode(name, fn.getFrozenPrimaryType(), fn.getFrozenId());
+                state.setMixins(fn.getFrozenMixinTypes());
+                internalRestore(state, v, new DateVersionSelector(v.getCreated()), removeExisting);
+                parent.store();
+                ops.save();
+            } catch (ItemStateException e) {
+                throw new RepositoryException(e);
+            } finally {
+                ops.close();
+            }
         }
     }
 
