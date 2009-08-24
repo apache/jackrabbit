@@ -63,9 +63,8 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.tika</groupId>
-      <artifactId>tika</artifactId>
-      <version>0.3</version>
-      <classifier>jdk14</classifier>
+      <artifactId>tika-parsers</artifactId>
+      <version>0.4</version>
       <exclusions>
         <exclusion>
           <groupId>bouncycastle</groupId>
