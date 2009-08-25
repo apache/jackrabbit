@@ -29,6 +29,10 @@ import javax.jcr.nodetype.NodeTypeExistsException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
+/**
+ * This implementation of {@link NodeTypeStorage} keeps a map of the registered {@link QNodeTypeDefinition}
+ * in memory.
+ */
 public class NodeTypeStorageImpl implements NodeTypeStorage {
 
     private final Map<Name, QNodeTypeDefinition> definitions = new HashMap<Name, QNodeTypeDefinition>();
@@ -37,6 +41,11 @@ public class NodeTypeStorageImpl implements NodeTypeStorage {
         return definitions.values().iterator();
     }
 
+    /**
+     * This implementation returns an iterator over all registered {@link QNodeTypeDefinition}s if
+     * <code>nodeTypeNames</code> is <code>null</code>.
+     * {@inheritDoc}
+     */
     public Iterator<QNodeTypeDefinition> getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException,
             RepositoryException {
 
