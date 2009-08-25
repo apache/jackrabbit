@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeStorage;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
@@ -86,6 +85,7 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
