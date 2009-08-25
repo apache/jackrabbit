@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.batch;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.jcr.RepositoryException;
 
@@ -35,12 +32,7 @@ import org.apache.jackrabbit.spi.QValue;
  * applied} to a batch, all operations in the list are {@link Operation#apply(Batch) applied} to that
  * batch.
  */
-public class ChangeLogImpl implements ChangeLog {
-
-    /**
-     * {@link Operation}s kept in this change log.
-     */
-    protected final List<Operation> operations = new LinkedList<Operation>();
+public class ChangeLogImpl extends AbstractChangeLog<Operation> {
 
     public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid)
             throws RepositoryException {
@@ -86,64 +78,6 @@ public class ChangeLogImpl implements ChangeLog {
 
     public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException {
         addOperation(Operations.setValue(propertyId, values));
-    }
-
-    public Batch apply(Batch batch) throws RepositoryException {
-        if (batch == null) {
-            throw new IllegalArgumentException("Batch must not be null");
-        }
-        for (Iterator<Operation> it = operations.iterator(); it.hasNext(); ) {
-            Operation op = it.next();
-            op.apply(batch);
-        }
-        return batch;
-    }
-
-    /**
-     * This method is called when an operation is added to the list of {@link #operations}
-     * kept by this change log.
-     * @param op  {@link Operation} to add
-     * @throws RepositoryException
-     */
-    protected void addOperation(Operation op) throws RepositoryException {
-        operations.add(op);
-    }
-
-    // -----------------------------------------------------< Object >---
-
-    @Override
-    public String toString() {
-        StringBuffer b = new StringBuffer();
-        for (Iterator<Operation> it = operations.iterator(); it.hasNext(); ) {
-            b.append(it.next());
-            if (it.hasNext()) {
-                b.append(", ");
-            }
-        }
-        return b.toString();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (null == other) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (other instanceof ChangeLogImpl) {
-            return equals((ChangeLogImpl) other);
-        }
-        return false;
-    }
-
-    public boolean equals(ChangeLogImpl other) {
-        return operations.equals(other.operations);
-    }
-
-    @Override
-    public int hashCode() {
-        throw new IllegalArgumentException("Not hashable");
     }
 
 }
