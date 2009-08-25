@@ -666,7 +666,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * method returns <code>null</code>.
      *
      * @param parent parent of the <code>Journal</code> element
-     * @return journal configuration, or <code>null</code>
+     * @return cluster configuration, or <code>null</code>
      * @throws ConfigurationException if the configuration is broken
      */
     protected ClusterConfig parseClusterConfig(Element parent)

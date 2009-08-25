@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.config;
 
 /**
- * Cluster configuration. This encapsulates the security related sub
- * configuration {@link JournalConfig}.
+ * Cluster configuration. This includes the journal configuration
+ * {@link JournalConfig}.
  */
 public class ClusterConfig {
 
