@@ -20,6 +20,7 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
