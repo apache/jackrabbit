@@ -56,10 +56,12 @@ public final class Operations {
          */
         public void apply(Batch batch) throws RepositoryException { /* nothing to do */ }
 
+        @Override
         public String toString() {
             return "Empty[]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -67,6 +69,7 @@ public final class Operations {
             return other instanceof Empty;
         }
 
+        @Override
         public int hashCode() {
             return Empty.class.hashCode();
         }
@@ -115,10 +118,12 @@ public final class Operations {
             batch.addNode(parentId, nodeName, nodetypeName, uuid);
         }
 
+        @Override
         public String toString() {
             return "AddNode[" + parentId + ", " + nodeName + ", " + nodetypeName + ", " + uuid + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -139,6 +144,7 @@ public final class Operations {
                 && Operations.equals(uuid, other.uuid);
         }
 
+        @Override
         public int hashCode() {
             return 41 * (
                       41 * (
@@ -221,10 +227,12 @@ public final class Operations {
             }
         }
 
+        @Override
         public String toString() {
             return "AddProperty[" + parentId + ", " + propertyName + ", " + values + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -245,6 +253,7 @@ public final class Operations {
                 && Arrays.equals(values, other.values);
         }
 
+        @Override
         public int hashCode() {
             return 41 * (
                        41 * (
@@ -312,10 +321,12 @@ public final class Operations {
             batch.move(srcNodeId, destParentNodeId, destName);
         }
 
+        @Override
         public String toString() {
             return "Move[" + srcNodeId + ", " + destParentNodeId + ", " + destName + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -335,6 +346,7 @@ public final class Operations {
                 && Operations.equals(destName, other.destName);
         }
 
+        @Override
         public int hashCode() {
             return 41 * (
                         41 * (
@@ -383,10 +395,12 @@ public final class Operations {
             batch.remove(itemId);
         }
 
+        @Override
         public String toString() {
             return "Remove[" + itemId + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -404,6 +418,7 @@ public final class Operations {
             return Operations.equals(itemId, other.itemId);
         }
 
+        @Override
         public int hashCode() {
             return 41 + Operations.hashCode(itemId);
         }
@@ -452,10 +467,12 @@ public final class Operations {
             batch.reorderNodes(parentId, srcNodeId, beforeNodeId);
         }
 
+        @Override
         public String toString() {
             return "ReorderNodes[" + parentId + ", " + srcNodeId + ", " + beforeNodeId + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -475,6 +492,7 @@ public final class Operations {
                 && Operations.equals(beforeNodeId, other.beforeNodeId);
         }
 
+        @Override
         public int hashCode() {
             return 41 * (
                         41 * (
@@ -526,10 +544,12 @@ public final class Operations {
             batch.setMixins(nodeId, mixinNodeTypeNames);
         }
 
+        @Override
         public String toString() {
             return "SetMixins[" + nodeId + ", " + mixinNodeTypeNames + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -548,6 +568,7 @@ public final class Operations {
                 && Arrays.equals(mixinNodeTypeNames, other.mixinNodeTypeNames);
         }
 
+        @Override
         public int hashCode() {
             return 41 * (
                         41 + Operations.hashCode(nodeId))
@@ -596,10 +617,12 @@ public final class Operations {
             batch.setPrimaryType(nodeId, primaryTypeName);
         }
 
+        @Override
         public String toString() {
             return "SetPrimaryType[" + nodeId + ", " + primaryTypeName + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -618,6 +641,7 @@ public final class Operations {
                 && primaryTypeName.equals(other.primaryTypeName);
         }
 
+        @Override
         public int hashCode() {
             return 41 * (
                     41 + Operations.hashCode(nodeId))
@@ -689,10 +713,12 @@ public final class Operations {
             }
         }
 
+        @Override
         public String toString() {
             return "SetValue[" + propertyId + ", " + values + "]";
         }
 
+        @Override
         public boolean equals(Object other) {
             if (null == other) {
                 return false;
@@ -712,6 +738,7 @@ public final class Operations {
                 && Arrays.equals(values, other.values);
         }
 
+        @Override
         public int hashCode() {
             return 41 * (
                         41 + Operations.hashCode(propertyId))

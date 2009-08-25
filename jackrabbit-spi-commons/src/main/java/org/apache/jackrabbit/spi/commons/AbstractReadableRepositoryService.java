@@ -733,7 +733,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     /**
      * @throws UnsupportedRepositoryOperationException always.
      */
-    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    public Iterator<NodeId> mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
 
     }

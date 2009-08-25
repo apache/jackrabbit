@@ -418,11 +418,6 @@ public class ConsolidatedBatchTest extends TestCase {
             return this;
         }
 
-        public ChangeLog removeProperty(String propertyId) throws RepositoryException {
-            remove(createPropertyId(propertyId));
-            return this;
-        }
-
         public TestChangeLog ordNode(String nodeId) throws RepositoryException {
             NodeId srcNodeId = createNodeId(nodeId);
             NodeId parentId = createNodeId(srcNodeId.getPath());
