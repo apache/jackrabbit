@@ -39,7 +39,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
  * {@link CancelableOperation CancelableOperation} implementations document their behavior
  * concerning cancellation.
  */
-public class ConsolidatingChangeLog extends ChangeLogImpl {
+public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChangeLog.CancelableOperation> {
     private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
 
     /**
@@ -81,54 +81,44 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
 
     // -----------------------------------------------------< ChangeLog >---
 
-    @Override
     public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid)
             throws RepositoryException {
 
         addOperation(CancelableOperations.addNode(parentId, nodeName, nodetypeName, uuid));
     }
 
-    @Override
     public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
         addOperation(CancelableOperations.addProperty(parentId, propertyName, value));
     }
 
-    @Override
     public void addProperty(NodeId parentId, Name propertyName, QValue[] values) throws RepositoryException {
         addOperation(CancelableOperations.addProperty(parentId, propertyName, values));
     }
 
-    @Override
     public void move(NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         addOperation(CancelableOperations.move(srcNodeId, destParentNodeId, destName));
     }
 
-    @Override
     public void remove(ItemId itemId) throws RepositoryException {
         addOperation(CancelableOperations.remove(itemId));
     }
 
-    @Override
     public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId) throws RepositoryException {
         addOperation(CancelableOperations.reorderNodes(parentId, srcNodeId, beforeNodeId));
     }
 
-    @Override
     public void setMixins(NodeId nodeId, Name[] mixinNodeTypeNames) throws RepositoryException {
         addOperation(CancelableOperations.setMixins(nodeId, mixinNodeTypeNames));
     }
 
-    @Override
     public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
         addOperation(CancelableOperations.setPrimaryType(nodeId, primaryNodeTypeName));
     }
 
-    @Override
     public void setValue(PropertyId propertyId, QValue value) throws RepositoryException {
         addOperation(CancelableOperations.setValue(propertyId, value));
     }
 
-    @Override
     public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException {
         addOperation(CancelableOperations.setValue(propertyId, values));
     }
@@ -147,15 +137,10 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
      * </ul>
      */
     @Override
-    protected void addOperation(Operation op) throws RepositoryException {
-        if (!(op instanceof CancelableOperation)) {
-            throw new IllegalArgumentException("Operation not instance of "
-                    + CancelableOperation.class.getName());
-        }
-
-        CancelableOperation otherOp = (CancelableOperation) op;
-        for (Iterator<Operation> it = new OperationsBackwardWithSentinel(); it.hasNext(); ) {
-            CancelableOperation thisOp = (CancelableOperation) it.next();
+    public void addOperation(CancelableOperation op) throws RepositoryException {
+        CancelableOperation otherOp = op;
+        for (OperationsBackwardWithSentinel it = new OperationsBackwardWithSentinel(); it.hasNext(); ) {
+            CancelableOperation thisOp = it.next();
             switch (thisOp.cancel(otherOp)) {
                 case CancelableOperation.CANCEL_THIS:
                     it.remove();
@@ -176,8 +161,8 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
 
     // -----------------------------------------------------< private >---
 
-    private class OperationsBackwardWithSentinel implements Iterator<Operation> {
-        private final ListIterator<Operation> it = operations.listIterator(operations.size());
+    private class OperationsBackwardWithSentinel implements Iterator<CancelableOperation> {
+        private final ListIterator<CancelableOperation> it = operations.listIterator(operations.size());
         private boolean last = !it.hasPrevious();
         private boolean done;
 
@@ -185,13 +170,13 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
             return it.hasPrevious() || last;
         }
 
-        public Operation next() {
+        public CancelableOperation next() {
             if (last) {
                 done = true;
                 return CancelableOperations.empty();
             }
             else {
-                Operation o = it.previous();
+                CancelableOperation o = it.previous();
                 last = !it.hasPrevious();
                 return o;
             }
