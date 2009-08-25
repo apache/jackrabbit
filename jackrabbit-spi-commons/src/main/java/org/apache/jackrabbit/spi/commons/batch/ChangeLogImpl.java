@@ -40,7 +40,7 @@ public class ChangeLogImpl implements ChangeLog {
     /**
      * {@link Operation}s kept in this change log.
      */
-    protected final List operations = new LinkedList();
+    protected final List<Operation> operations = new LinkedList<Operation>();
 
     public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid)
             throws RepositoryException {
@@ -92,8 +92,8 @@ public class ChangeLogImpl implements ChangeLog {
         if (batch == null) {
             throw new IllegalArgumentException("Batch must not be null");
         }
-        for (Iterator it = operations.iterator(); it.hasNext(); ) {
-            Operation op = (Operation) it.next();
+        for (Iterator<Operation> it = operations.iterator(); it.hasNext(); ) {
+            Operation op = it.next();
             op.apply(batch);
         }
         return batch;
@@ -111,9 +111,10 @@ public class ChangeLogImpl implements ChangeLog {
 
     // -----------------------------------------------------< Object >---
 
+    @Override
     public String toString() {
         StringBuffer b = new StringBuffer();
-        for (Iterator it = operations.iterator(); it.hasNext(); ) {
+        for (Iterator<Operation> it = operations.iterator(); it.hasNext(); ) {
             b.append(it.next());
             if (it.hasNext()) {
                 b.append(", ");
@@ -122,6 +123,7 @@ public class ChangeLogImpl implements ChangeLog {
         return b.toString();
     }
 
+    @Override
     public boolean equals(Object other) {
         if (null == other) {
             return false;
@@ -139,6 +141,7 @@ public class ChangeLogImpl implements ChangeLog {
         return operations.equals(other.operations);
     }
 
+    @Override
     public int hashCode() {
         throw new IllegalArgumentException("Not hashable");
     }

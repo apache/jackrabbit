@@ -16,17 +16,19 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Path;
-
-import javax.jcr.RepositoryException;
-import java.util.Set;
-import java.util.HashSet;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
-import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * <code>EventFilterImpl</code> is the simple bean style implementation of an
@@ -40,9 +42,9 @@ public class EventFilterImpl implements EventFilter, Serializable {
 
     private final Path absPath;
 
-    private final Set uuids;
+    private final Set<String> uuids;
 
-    private final Set nodeTypeNames;
+    private final Set<Name> nodeTypeNames;
 
     private final boolean noLocal;
 
@@ -61,13 +63,13 @@ public class EventFilterImpl implements EventFilter, Serializable {
                     Path absPath,
                     boolean isDeep,
                     String[] uuids,
-                    Set nodeTypeNames,
+                    Set<Name> nodeTypeNames,
                     boolean noLocal) {
         this.eventTypes = eventTypes;
         this.absPath = absPath;
         this.isDeep = isDeep;
-        this.uuids = uuids != null ? new HashSet(Arrays.asList(uuids)) : null;
-        this.nodeTypeNames = nodeTypeNames != null ? new HashSet(nodeTypeNames) : null;
+        this.uuids = uuids != null ? new HashSet<String>(Arrays.asList(uuids)) : null;
+        this.nodeTypeNames = nodeTypeNames != null ? new HashSet<Name>(nodeTypeNames) : null;
         this.noLocal = noLocal;
     }
 
@@ -100,7 +102,7 @@ public class EventFilterImpl implements EventFilter, Serializable {
 
         // check node types
         if (nodeTypeNames != null) {
-            Set eventTypes = new HashSet();
+            Set<Name> eventTypes = new HashSet<Name>();
             eventTypes.addAll(Arrays.asList(event.getMixinTypeNames()));
             eventTypes.add(event.getPrimaryNodeTypeName());
             // create intersection
@@ -154,7 +156,7 @@ public class EventFilterImpl implements EventFilter, Serializable {
         if (uuids == null) {
             return null;
         } else {
-            return (String[]) uuids.toArray(new String[uuids.size()]);
+            return uuids.toArray(new String[uuids.size()]);
         }
     }
 
@@ -162,7 +164,7 @@ public class EventFilterImpl implements EventFilter, Serializable {
      * @return an unmodifiable set of node type names or <code>null</code> if
      *         this filter does not care about node types.
      */
-    public Set getNodeTypeNames() {
+    public Set<Name> getNodeTypeNames() {
         if (nodeTypeNames == null) {
             return null;
         } else {
@@ -181,6 +183,7 @@ public class EventFilterImpl implements EventFilter, Serializable {
      * Returns a string representation of this EventFilter instance.
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return new StringBuffer(getClass().getName())
             .append("[")
