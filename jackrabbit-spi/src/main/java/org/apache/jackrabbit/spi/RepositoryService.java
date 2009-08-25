@@ -37,9 +37,9 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -857,7 +857,7 @@ public interface RepositoryService {
      * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException
      */
-    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException;
+    public Iterator<NodeId> mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      *
@@ -1210,7 +1210,7 @@ public interface RepositoryService {
 
     /**
      * Unregisters the node types with the specified <code>names</code>.
-     * 
+     *
      * @param sessionInfo
      * @param nodeTypeNames
      * @throws UnsupportedRepositoryOperationException If unregistering node types
