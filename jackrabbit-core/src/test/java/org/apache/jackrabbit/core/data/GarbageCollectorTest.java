@@ -41,6 +41,50 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(GarbageCollectorTest.class);
 
+    public void testCloseSessionWhileRunningGc() throws Exception {
+        final Session session = getHelper().getReadWriteSession();
+        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
+        if (rep.getDataStore() == null) {
+            LOG.info("testConcurrentClose skipped. Data store is not used.");
+            return;
+        }
+        final GarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
+        final Exception[] ex = new Exception[1];
+        gc.setScanEventListener(new ScanEventListener() {
+            boolean closed;
+
+            public void afterScanning(Node n) throws RepositoryException {
+                closeTest();
+            }
+
+            public void beforeScanning(Node n) throws RepositoryException {
+                closeTest();
+            }
+
+            public void done() {
+            }
+
+            private void closeTest() throws RepositoryException {
+                if (closed) {
+                    ex[0] = new Exception("Scanning after the session is closed");
+                }
+                closed = true;
+                session.logout();
+            }
+
+        });
+        try {
+            gc.scan();
+            fail("Exception 'session has been closed' expected");
+        } catch (RepositoryException e) {
+            LOG.debug("Expected exception caught: " + e.getMessage());
+        }
+        if (ex[0] != null) {
+            throw ex[0];
+        }
+        gc.close();
+    }
+
     public void testConcurrentGC() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();
