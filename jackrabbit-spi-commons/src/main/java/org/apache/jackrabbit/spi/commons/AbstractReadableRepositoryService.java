@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.QValue;
@@ -126,7 +128,13 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException,
             RepositoryException {
 
-        return (NodeInfo) getItemInfos(sessionInfo, nodeId).next();
+        Iterator<? extends ItemInfo> infos = getItemInfos(sessionInfo, nodeId);
+        if (infos.hasNext()) {
+            return (NodeInfo) infos.next();
+        }
+        else {
+            throw new ItemNotFoundException();
+        }
     }
 
     //-------------------------< workspace names >------------------------------
