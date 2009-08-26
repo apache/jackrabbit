@@ -88,7 +88,7 @@ class JsonWriter {
         final NodeIterator children = node.getNodes();
         if (!children.hasNext()) {
             // no child present at all -> add special property.
-            writeKeyValue(writer, "::NodeIteratorSize", "0", false);
+            writeKeyValue(writer, "::NodeIteratorSize", 0);
         } else {
             // the child nodes
             while (children.hasNext()) {
