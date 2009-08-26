@@ -103,7 +103,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
                 return AbstractJCR2SPITest.this.createRootNodeDefinition();
             }
 
-            @Override
             public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId)
                     throws ItemNotFoundException, RepositoryException {
 
@@ -116,6 +115,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
                 return AbstractJCR2SPITest.this.getChildInfos(sessionInfo, parentId);
             }
 
+            @Override
             public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException,
                     RepositoryException {
 
@@ -156,12 +156,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         Map<String, QValue[]> descriptorKeys = new HashMap<String, QValue[]>();
 
         QValueFactory qvf = QValueFactoryImpl.getInstance();
-        QValue[] vFalse = new QValue[] {qvf.create(false)};
 
-        descriptorKeys.put(Repository.OPTION_LOCKING_SUPPORTED, vFalse);
-        descriptorKeys.put(Repository.OPTION_OBSERVATION_SUPPORTED, vFalse);
-        descriptorKeys.put(Repository.OPTION_TRANSACTIONS_SUPPORTED, vFalse);
-        descriptorKeys.put(Repository.OPTION_VERSIONING_SUPPORTED, vFalse);
         descriptorKeys.put(Repository.REP_NAME_DESC, new QValue[] {qvf.create("Mock Repository", PropertyType.STRING)});
         descriptorKeys.put(Repository.REP_VENDOR_DESC, new QValue[] {qvf.create("Apache Software Foundation", PropertyType.STRING)});
         descriptorKeys.put(Repository.REP_VENDOR_URL_DESC, new QValue[] {qvf.create("http://www.apache.org/", PropertyType.STRING)});
@@ -437,7 +432,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.removeActivity(sessionInfo, activityId);
     }
 
-    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId)
+    public Iterator<NodeId> mergeActivity(SessionInfo sessionInfo, NodeId activityId)
             throws RepositoryException {
 
         return repositoryService.mergeActivity(sessionInfo, activityId);

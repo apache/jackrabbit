@@ -74,7 +74,7 @@ public class NodeTypeStorageImpl implements NodeTypeStorage {
             throw new IllegalArgumentException("nodeTypeDefs must not be null");
         }
 
-        if (allowUpdate) {
+        if (!allowUpdate) {
             for (QNodeTypeDefinition ntd : nodeTypeDefs) {
                 Name name = ntd.getName();
                 if (definitions.containsKey(name)) {

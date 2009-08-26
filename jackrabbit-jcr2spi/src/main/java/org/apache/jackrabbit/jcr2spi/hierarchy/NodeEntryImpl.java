@@ -309,7 +309,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     private NodeId getId(boolean wspId) throws RepositoryException {
         if (parent == null) { // shortcut for root
-            return getIdFactory().createNodeId((String) null, getPathFactory().getRootPath());  // fixme: cache root
+            return getIdFactory().createNodeId((String) null, getPathFactory().getRootPath());
         }
         else if (uniqueID != null) { // shortcut for uniqueID based IDs
             return getIdFactory().createNodeId(uniqueID);
