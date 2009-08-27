@@ -455,7 +455,7 @@ public class Parser {
             }
         }
         if (currentTokenType == VALUE) {
-            Literal literal = factory.literal(currentValue);
+            Literal literal = getUncastLiteral(currentValue);
             read();
             return literal;
         } else if (currentTokenType == PARAMETER) {
@@ -471,10 +471,10 @@ public class Parser {
             }
             return var;
         } else if (readIf("TRUE")) {
-            Literal literal = factory.literal(valueFactory.createValue(true));
+            Literal literal = getUncastLiteral(valueFactory.createValue(true));
             return literal;
         } else if (readIf("FALSE")) {
-            Literal literal = factory.literal(valueFactory.createValue(false));
+            Literal literal = getUncastLiteral(valueFactory.createValue(false));
             return literal;
         } else if (readIf("CAST")) {
             read("(");
@@ -487,11 +487,25 @@ public class Parser {
             read("AS");
             value = parseCastAs(value);
             read(")");
+            // CastLiteral
             literal = factory.literal(value);
             return literal;
         } else {
             throw getSyntaxError("static operand");
         }
+    }
+
+    /**
+     * Create uncast literal from a value. According to the JCR specification,
+     * "an UncastLiteral is always interpreted as a Value of property type STRING"
+     * (JCR 2.0 Core Specification, 6.7.34 Literal, page 124).
+     * That means the value is converted to a String first.
+     *
+     * @param value the original value
+     * @return the literal
+     */
+    private Literal getUncastLiteral(Value value) throws RepositoryException {
+        return factory.literal(valueFactory.createValue(value.getString()));
     }
 
     private Value parseCastAs(Value value) throws RepositoryException {
