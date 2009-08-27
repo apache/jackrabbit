@@ -242,8 +242,7 @@
  */
 [mix:etag]
   mixin
-  // currently has a default value because auto-creation not handled see JCR-2116
-  - jcr:etag (STRING) = '' protected autocreated
+  - jcr:etag (STRING) protected autocreated
 
 //------------------------------------------------------------------------------
 // U N S T R U C T U R E D   C O N T E N T

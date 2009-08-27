@@ -11,7 +11,7 @@ PrimaryItemName
 PropertyDefinition
   Name jcr:etag
   RequiredType STRING
-  DefaultValues []
+  DefaultValues null
   AutoCreated true
   Mandatory false
   OnParentVersion COPY
