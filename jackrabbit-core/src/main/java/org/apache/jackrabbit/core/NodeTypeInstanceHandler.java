@@ -104,6 +104,12 @@ public class NodeTypeInstanceHandler {
             if (NameConstants.MIX_LASTMODIFIED.equals(declaringNT)) {
                 genValues = new InternalValue[]{InternalValue.create(userId)};
             }
+        } else if (NameConstants.JCR_ETAG.equals(name)) {
+            // jcr:etag property of a mix:etag
+            if (NameConstants.MIX_ETAG.equals(declaringNT)) {
+                // TODO: provide real implementation
+                genValues = new InternalValue[]{InternalValue.create("")};
+            }
         }
         return genValues;
     }
