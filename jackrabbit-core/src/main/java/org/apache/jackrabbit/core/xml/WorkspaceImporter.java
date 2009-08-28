@@ -16,28 +16,10 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.BatchedItemOperations;
-import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.version.VersionHistoryInfo;
-import org.apache.jackrabbit.core.version.InternalVersionManager;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
@@ -48,10 +30,30 @@ import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
+
+import org.apache.jackrabbit.core.BatchedItemOperations;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
+import org.apache.jackrabbit.core.version.VersionHistoryInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>WorkspaceImporter</code> ...
@@ -83,8 +85,8 @@ public class WorkspaceImporter implements Importer {
      * Creates a new <code>WorkspaceImporter</code> instance.
      *
      * @param parentPath   target path where to add the imported subtree
-     * @param wsp
-     * @param ntReg
+     * @param wsp the workspace to operate on
+     * @param ntReg the node type registry
      * @param uuidBehavior flag that governs how incoming UUIDs are handled
      * @throws PathNotFoundException        if no node exists at
      *                                      <code>parentPath</code> or if the
@@ -129,11 +131,11 @@ public class WorkspaceImporter implements Importer {
     }
 
     /**
-     * @param parent
-     * @param conflicting
-     * @param nodeInfo
-     * @return
-     * @throws RepositoryException
+     * @param parent parent node state
+     * @param conflicting conflicting node state
+     * @param nodeInfo the node info
+     * @return the resolved node state
+     * @throws RepositoryException if an error occurs
      */
     protected NodeState resolveUUIDConflict(NodeState parent,
                                             NodeState conflicting,
@@ -291,8 +293,8 @@ public class WorkspaceImporter implements Importer {
      * Post-process imported node (initialize properties with special
      * semantics etc.)
      *
-     * @param node
-     * @throws RepositoryException
+     * @param node the node state
+     * @throws RepositoryException if an error occurs
      */
     protected void postProcessNode(NodeState node) throws RepositoryException {
         /**
@@ -344,6 +346,73 @@ public class WorkspaceImporter implements Importer {
         }
     }
 
+    protected void processProperty(NodeState node, PropInfo pInfo) throws RepositoryException {
+        PropertyState prop;
+        PropDef def;
+
+        Name name = pInfo.getName();
+        int type = pInfo.getType();
+
+        if (node.hasPropertyName(name)) {
+            // a property with that name already exists...
+            PropertyId idExisting = new PropertyId(node.getNodeId(), name);
+            prop = (PropertyState) itemOps.getItemState(idExisting);
+            def = ntReg.getPropDef(prop.getDefinitionId());
+            if (def.isProtected()) {
+                // skip protected property
+                log.debug("skipping protected property "
+                        + itemOps.safeGetJCRPath(idExisting));
+                return;
+            }
+            if (!def.isAutoCreated()
+                    || (prop.getType() != type && type != PropertyType.UNDEFINED)
+                    || def.isMultiple() != prop.isMultiValued()) {
+                throw new ItemExistsException(itemOps.safeGetJCRPath(prop.getPropertyId()));
+            }
+        } else {
+            // there's no property with that name,
+            // find applicable definition
+            def = pInfo.getApplicablePropertyDef(itemOps.getEffectiveNodeType(node));
+            if (def.isProtected()) {
+                // skip protected property
+                log.debug("skipping protected property " + name);
+                return;
+            }
+
+            // create new property
+            prop = itemOps.createPropertyState(node, name, type, def);
+        }
+
+        // check multi-valued characteristic
+        TextValue[] values = pInfo.getTextValues();
+        if (values.length != 1 && !def.isMultiple()) {
+            throw new ConstraintViolationException(itemOps.safeGetJCRPath(prop.getPropertyId())
+                    + " is not multi-valued");
+        }
+
+        // convert serialized values to InternalValue objects
+        int targetType = pInfo.getTargetType(def);
+        InternalValue[] iva = new InternalValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            iva[i] = values[i].getInternalValue(targetType);
+        }
+
+        // set values
+        prop.setValues(iva);
+
+        // make sure property is valid according to its definition
+        itemOps.validate(prop);
+
+        if (prop.getType() == PropertyType.REFERENCE
+                || prop.getType() == PropertyType.WEAKREFERENCE) {
+            // store reference for later resolution
+            refTracker.processedReference(prop);
+        }
+
+        // store property
+        itemOps.store(prop);
+    }
+    
     /**
      * Adds the the given property to a node unless the property already
      * exists.
@@ -400,7 +469,7 @@ public class WorkspaceImporter implements Importer {
             // check sanity of workspace/session first
             wsp.sanityCheck();
 
-            parent = (NodeState) parents.peek();
+            parent = parents.peek();
 
             // process node
 
@@ -515,8 +584,8 @@ public class WorkspaceImporter implements Importer {
             }
 
             // process properties
-            for (PropInfo pi : propInfos) {
-                pi.apply(node, itemOps, ntReg, refTracker);
+            for (PropInfo propInfo : propInfos) {
+                processProperty(node, propInfo);
             }
 
             // store affected nodes
@@ -544,7 +613,7 @@ public class WorkspaceImporter implements Importer {
             // the import has been aborted, get outta here...
             return;
         }
-        NodeState node = (NodeState) parents.pop();
+        NodeState node = parents.pop();
         if (node == null) {
             // node was skipped, nothing to do here
             return;

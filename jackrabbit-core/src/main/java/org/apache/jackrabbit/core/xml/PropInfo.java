@@ -16,23 +16,15 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
@@ -49,11 +41,6 @@ import org.slf4j.LoggerFactory;
  * {@link NodeState} instance in a workspace.
  */
 public class PropInfo {
-
-    /**
-     * Logger instance.
-     */
-    private static Logger log = LoggerFactory.getLogger(PropInfo.class);
 
     /**
      * Name of the property being imported.
@@ -87,12 +74,12 @@ public class PropInfo {
      * Disposes all values contained in this property.
      */
     public void dispose() {
-        for (int i = 0; i < values.length; i++) {
-            values[i].dispose();
+        for (TextValue value : values) {
+            value.dispose();
         }
     }
 
-    private int getTargetType(PropDef def) {
+    public int getTargetType(PropDef def) {
         int target = def.getRequiredType();
         if (target != PropertyType.UNDEFINED) {
             return target;
@@ -103,7 +90,7 @@ public class PropInfo {
         }
     }
 
-    private PropDef getApplicablePropertyDef(EffectiveNodeType ent)
+    public PropDef getApplicablePropertyDef(EffectiveNodeType ent)
             throws ConstraintViolationException {
         if (values.length == 1) {
             // could be single- or multi-valued (n == 1)
@@ -114,116 +101,23 @@ public class PropInfo {
         }
     }
 
-    public void apply(
-            NodeImpl node, NamePathResolver resolver,
-            ReferenceChangeTracker refTracker) throws RepositoryException {
-        // find applicable definition
-        PropDef def = getApplicablePropertyDef(node.getEffectiveNodeType());
-        if (def.isProtected()) {
-            // skip protected property
-            log.debug("skipping protected property " + name);
-            return;
-        }
+    public Name getName() {
+        return name;
+    }
 
-        // convert serialized values to Value objects
+    public int getType() {
+        return type;
+    }
+
+    public TextValue[] getTextValues() {
+        return values;        
+    }
+
+    public Value[] getValues(int targetType, NamePathResolver resolver) throws RepositoryException {
         Value[] va = new Value[values.length];
-        int targetType = getTargetType(def);
         for (int i = 0; i < values.length; i++) {
             va[i] = values[i].getValue(targetType, resolver);
         }
-
-        // multi- or single-valued property?
-        if (va.length == 1 && !def.isMultiple()) {
-            Exception e = null;
-            try {
-                // set single-value
-                node.setProperty(name, va[0]);
-            } catch (ValueFormatException vfe) {
-                e = vfe;
-            } catch (ConstraintViolationException cve) {
-                e = cve;
-            }
-            if (e != null) {
-                // setting single-value failed, try setting value array
-                // as a last resort (in case there are ambiguous property
-                // definitions)
-                node.setProperty(name, va, type);
-            }
-        } else {
-            // can only be multi-valued (n == 0 || n > 1)
-            node.setProperty(name, va, type);
-        }
-        if (type == PropertyType.REFERENCE
-                || type == PropertyType.WEAKREFERENCE) {
-            // store reference for later resolution
-            refTracker.processedReference(node.getProperty(name));
-        }
+        return va;
     }
-
-    public void apply(
-            NodeState node, BatchedItemOperations itemOps,
-            NodeTypeRegistry ntReg, ReferenceChangeTracker refTracker)
-            throws RepositoryException {
-        PropertyState prop = null;
-        PropDef def = null;
-
-        if (node.hasPropertyName(name)) {
-            // a property with that name already exists...
-            PropertyId idExisting = new PropertyId(node.getNodeId(), name);
-            prop = (PropertyState) itemOps.getItemState(idExisting);
-            def = ntReg.getPropDef(prop.getDefinitionId());
-            if (def.isProtected()) {
-                // skip protected property
-                log.debug("skipping protected property "
-                        + itemOps.safeGetJCRPath(idExisting));
-                return;
-            }
-            if (!def.isAutoCreated()
-                    || (prop.getType() != type && type != PropertyType.UNDEFINED)
-                    || def.isMultiple() != prop.isMultiValued()) {
-                throw new ItemExistsException(itemOps.safeGetJCRPath(prop.getPropertyId()));
-            }
-        } else {
-            // there's no property with that name,
-            // find applicable definition
-            def = getApplicablePropertyDef(itemOps.getEffectiveNodeType(node));
-            if (def.isProtected()) {
-                // skip protected property
-                log.debug("skipping protected property " + name);
-                return;
-            }
-
-            // create new property
-            prop = itemOps.createPropertyState(node, name, type, def);
-        }
-
-        // check multi-valued characteristic
-        if (values.length != 1 && !def.isMultiple()) {
-            throw new ConstraintViolationException(itemOps.safeGetJCRPath(prop.getPropertyId())
-                    + " is not multi-valued");
-        }
-
-        // convert serialized values to InternalValue objects
-        int targetType = getTargetType(def);
-        InternalValue[] iva = new InternalValue[values.length];
-        for (int i = 0; i < values.length; i++) {
-            iva[i] = values[i].getInternalValue(targetType);
-        }
-
-        // set values
-        prop.setValues(iva);
-
-        // make sure property is valid according to its definition
-        itemOps.validate(prop);
-
-        if (prop.getType() == PropertyType.REFERENCE
-                || prop.getType() == PropertyType.WEAKREFERENCE) {
-            // store reference for later resolution
-            refTracker.processedReference(prop);
-        }
-
-        // store property
-        itemOps.store(prop);
-    }
-
 }
