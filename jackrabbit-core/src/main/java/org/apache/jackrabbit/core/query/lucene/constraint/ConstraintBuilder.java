@@ -188,7 +188,7 @@ public class ConstraintBuilder {
                 staticValue.getLong();
             } catch (ValueFormatException e) {
                 throw new InvalidQueryException("Static value " +
-                        staticValue.toString() + " cannot be converted to a Long");
+                        staticValue.getString() + " cannot be converted to a Long");
             }
             PropertyValueImpl propValue = (PropertyValueImpl) node.getPropertyValue();
             return new LengthOperand((PropertyValueOperand) propValue.accept(this, null));
