@@ -16,26 +16,29 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-
-import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
-import javax.jcr.ValueFactory;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
+
+import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.NamespaceException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFactory;
+
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 
 /**
  * <code>SysViewImportHandler</code>  ...
  */
+@SuppressWarnings({"ThrowableInstanceNeverThrown"})
 class SysViewImportHandler extends TargetImportHandler {
 
     /**
@@ -59,7 +62,8 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * Constructs a new <code>SysViewImportHandler</code>.
      *
-     * @param importer
+     * @param importer the underlying importer
+     * @param valueFactory the value factory
      */
     SysViewImportHandler(Importer importer, ValueFactory valueFactory) {
         super(importer, valueFactory);
@@ -121,7 +125,7 @@ class SysViewImportHandler extends TargetImportHandler {
 
             if (!stack.isEmpty()) {
                 // process current node first
-                ImportState current = (ImportState) stack.peek();
+                ImportState current = stack.peek();
                 // need to start current node
                 if (!current.started) {
                     processNode(current, true, false);
@@ -223,7 +227,7 @@ class SysViewImportHandler extends TargetImportHandler {
             throws SAXException {
         Name name = NameFactoryImpl.getInstance().create(namespaceURI, localName);
         // check element name
-        ImportState state = (ImportState) stack.peek();
+        ImportState state = stack.peek();
         if (name.equals(NameConstants.SV_NODE)) {
             // sv:node element
             if (!state.started) {
@@ -242,7 +246,7 @@ class SysViewImportHandler extends TargetImportHandler {
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
             // have been collected and create node as necessary
             if (currentPropName.equals(NameConstants.JCR_PRIMARYTYPE)) {
-                BufferedStringValue val = (BufferedStringValue) currentPropValues.get(0);
+                BufferedStringValue val = currentPropValues.get(0);
                 String s = null;
                 try {
                     s = val.retrieve();
@@ -258,9 +262,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 if (state.mixinNames == null) {
                     state.mixinNames = new ArrayList<Name>(currentPropValues.size());
                 }
-                for (int i = 0; i < currentPropValues.size(); i++) {
-                    BufferedStringValue val =
-                            (BufferedStringValue) currentPropValues.get(i);
+                for (BufferedStringValue val : currentPropValues) {
                     String s = null;
                     try {
                         s = val.retrieve();
@@ -275,7 +277,7 @@ class SysViewImportHandler extends TargetImportHandler {
                     }
                 }
             } else if (currentPropName.equals(NameConstants.JCR_UUID)) {
-                BufferedStringValue val = (BufferedStringValue) currentPropValues.get(0);
+                BufferedStringValue val = currentPropValues.get(0);
                 try {
                     state.uuid = val.retrieve();
                 } catch (IOException ioe) {
@@ -283,9 +285,9 @@ class SysViewImportHandler extends TargetImportHandler {
                 }
             } else {
                 PropInfo prop = new PropInfo(
-                        currentPropName, currentPropType,
-                        (TextValue[]) currentPropValues.toArray(
-                                new TextValue[currentPropValues.size()]));
+                        currentPropName,
+                        currentPropType,
+                        currentPropValues.toArray(new TextValue[currentPropValues.size()]));
                 state.props.add(prop);
             }
             // reset temp fields
@@ -316,7 +318,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of mixin types of current node
          */
-        ArrayList<Name> mixinNames;
+        List<Name> mixinNames;
         /**
          * uuid of current node
          */
@@ -325,7 +327,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of PropInfo instances representing properties of current node
          */
-        ArrayList<PropInfo> props = new ArrayList<PropInfo>();
+        List<PropInfo> props = new ArrayList<PropInfo>();
 
         /**
          * flag indicating whether startNode() has been called for current node

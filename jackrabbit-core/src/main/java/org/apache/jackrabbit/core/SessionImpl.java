@@ -51,6 +51,8 @@ import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.xml.ProtectedItemHandling;
+import org.apache.jackrabbit.core.xml.AccessControlImporter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -84,6 +86,7 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -1171,7 +1174,9 @@ public class SessionImpl extends AbstractSession
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkModify(parent, options, Permission.NONE);
 
-        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior);
+        ProtectedItemHandling pi = new ProtectedItemHandling();
+        pi.register(new AccessControlImporter(this, this, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW));
+        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, pi);
         return new ImportHandler(importer, this);
     }
 
@@ -1545,7 +1550,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#hasCapability(String, Object, Map)
+     * @see javax.jcr.Session#hasCapability(String, Object, Object[]) 
      * @since JCR 2.0
      */
     public boolean hasCapability(String methodName, Object target, Object[] arguments)

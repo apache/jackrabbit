@@ -16,27 +16,30 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.Node;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFactory;
+
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
-import javax.jcr.ValueFactory;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Stack;
 
 /**
  * <code>DocViewImportHandler</code> processes Document View XML SAX events
@@ -58,7 +61,8 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * Constructs a new <code>DocViewImportHandler</code>.
      *
-     * @param importer
+     * @param importer the importer
+     * @param valueFactory a value factory
      */
     DocViewImportHandler(Importer importer, ValueFactory valueFactory) {
         super(importer, valueFactory);
@@ -211,7 +215,7 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      * <p/>
-     * See also {@link DocViewSAXEventGenerator#leavingProperties(javax.jcr.Node, int)}
+     * See also {@link org.apache.jackrabbit.commons.xml.Exporter#exportProperties(Node)}
      * regarding special handling of multi-valued properties on export.
      */
     public void startElement(String namespaceURI, String localName,
@@ -230,7 +234,7 @@ class DocViewImportHandler extends TargetImportHandler {
             Name nodeTypeName = null;
             Name[] mixinTypes = null;
 
-            ArrayList<PropInfo> props = new ArrayList<PropInfo>(atts.getLength());
+            List<PropInfo> props = new ArrayList<PropInfo>(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
                 if (atts.getURI(i).equals(Name.NS_XMLNS_URI)) {
                     // skip namespace declarations reported as attributes
@@ -320,7 +324,7 @@ class DocViewImportHandler extends TargetImportHandler {
         // process buffered character data
         processCharacters();
 
-        NodeInfo node = (NodeInfo) stack.peek();
+        NodeInfo node = stack.peek();
         try {
             // call Importer
             importer.endNode(node);
