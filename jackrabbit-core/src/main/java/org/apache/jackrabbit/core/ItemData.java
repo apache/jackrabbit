@@ -17,10 +17,13 @@
 package org.apache.jackrabbit.core;
 
 import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
 
 /**
  * Data object referenced by different <code>ItemImpl</code> instances that
@@ -40,16 +43,19 @@ public abstract class ItemData {
     /** Status */
     private int status;
 
+    /** The item manager */
+    private ItemManager itemMgr;
+
     /**
      * Create a new instance of this class.
      *
      * @param state item state
-     * @param definition item definition
+     * @param itemMgr item manager
      */
-    protected ItemData(ItemState state, ItemDefinition definition) {
+    protected ItemData(ItemState state, ItemManager itemMgr) {
         this.id = state.getId();
         this.state = state;
-        this.definition = definition;
+        this.itemMgr = itemMgr;
         this.status = ItemImpl.STATUS_NORMAL;
     }
 
@@ -85,8 +91,16 @@ public abstract class ItemData {
      * Return the associated item definition.
      *
      * @return item definition
+     * @throws RepositoryException if the definition cannot be retrieved.
      */
-    public ItemDefinition getDefinition() {
+    public ItemDefinition getDefinition() throws RepositoryException {
+        if (definition == null && itemMgr != null) {
+            if (isNode()) {
+                definition = itemMgr.getDefinition((NodeState) state);
+            } else {
+                definition = itemMgr.getDefinition((PropertyState) state);
+            }
+        }
         return definition;
     }
 

@@ -163,8 +163,13 @@ public class ItemManager implements Dumpable, ItemStateListener {
         shareableNodesCache.clear();
     }
 
-    private NodeDefinition getDefinition(NodeState state)
+    NodeDefinition getDefinition(NodeState state)
             throws RepositoryException {
+        if (state.getId().equals(rootNodeId)) {
+            // special handling required for root node
+            return rootNodeDef;
+        }
+
         NodeDefId defId = state.getDefinitionId();
         NodeDefinitionImpl def = session.getNodeTypeManager().getNodeDefinition(defId);
         if (def == null) {
@@ -185,7 +190,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         return def;
     }
 
-    private PropertyDefinition getDefinition(PropertyState state)
+    PropertyDefinition getDefinition(PropertyState state)
             throws RepositoryException {
         PropDefId defId = state.getDefinitionId();
         PropertyDefinitionImpl def = session.getNodeTypeManager().getPropertyDefinition(defId);
@@ -720,16 +725,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     private ItemData createItemData(ItemState state, Path path, boolean permissionCheck) throws RepositoryException {
         ItemData data;
-        ItemId id = state.getId();
-        if (id.equals(rootNodeId)) {
-            // special handling required for root node
-            data = new NodeData((NodeState) state, rootNodeDef);
-        } else if (state.isNode()) {
+        if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
-            data = new NodeData(nodeState, getDefinition(nodeState));
+            data = new NodeData(nodeState, this);
         } else {
             PropertyState propertyState = (PropertyState) state;
-            data = new PropertyData(propertyState, getDefinition(propertyState));
+            data = new PropertyData(propertyState, this);
         }
         // make sure read-perm. is granted before returning the data.
         if (permissionCheck && !canRead(data, path)) {

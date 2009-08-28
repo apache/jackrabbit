@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core;
 
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.state.PropertyState;
 
 /**
@@ -28,10 +30,10 @@ public class PropertyData extends ItemData {
      * Create a new instance of this class.
      *
      * @param state associated property state
-     * @param definition associated property definition
+     * @param itemMgr item manager
      */
-    PropertyData(PropertyState state, PropertyDefinition definition) {
-        super(state, definition);
+    PropertyData(PropertyState state, ItemManager itemMgr) {
+        super(state, itemMgr);
     }
 
     /**
@@ -47,8 +49,9 @@ public class PropertyData extends ItemData {
      * Return the associated property definition.
      *
      * @return property definition
+     * @throws RepositoryException if the definition cannot be retrieved.
      */
-    public PropertyDefinition getPropertyDefinition() {
+    public PropertyDefinition getPropertyDefinition() throws RepositoryException {
         return (PropertyDefinition) getDefinition();
     }
 }

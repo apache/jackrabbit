@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -66,8 +67,9 @@ class NodeDataRef extends AbstractNodeData {
      * {@inheritDoc}
      *
      * This implementation returns the definition of the referenced data object.
+     * @throws RepositoryException if the definition cannot be retrieved.
      */
-    public ItemDefinition getDefinition() {
+    public ItemDefinition getDefinition() throws RepositoryException {
         return data.getDefinition();
     }
 

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -34,10 +35,10 @@ public abstract class AbstractNodeData extends ItemData {
      * Create a new instance of this class.
      *
      * @param state node state
-     * @param definition node definition
+     * @param itemMgr item manager
      */
-    protected AbstractNodeData(NodeState state, NodeDefinition definition) {
-        super(state, definition);
+    protected AbstractNodeData(NodeState state, ItemManager itemMgr) {
+        super(state, itemMgr);
 
         if (state.isShareable()) {
             this.primaryParentId = state.getParentId();
@@ -66,8 +67,9 @@ public abstract class AbstractNodeData extends ItemData {
      * Return the associated node defintion.
      *
      * @return node definition
+     * @throws RepositoryException if the definition cannot be retrieved.
      */
-    public NodeDefinition getNodeDefinition() {
+    public NodeDefinition getNodeDefinition() throws RepositoryException {
         return (NodeDefinition) getDefinition();
     }
 
