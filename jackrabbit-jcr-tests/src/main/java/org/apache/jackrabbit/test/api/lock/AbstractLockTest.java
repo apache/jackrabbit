@@ -273,9 +273,10 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
                 wait(remaining * 2000); // wait twice as long to be safe
             } catch (InterruptedException ignore) {
             }
+            long secs = lock.getSecondsRemaining();
             assertTrue(
-                    "A released lock must return a negative number of seconds",
-                    lock.getSecondsRemaining() < 0);
+                    "A released lock must return a negative number of seconds, was: " + secs,
+                    secs < 0);
             String message = "If the timeout hint is respected the lock"
                 + " must be automatically released.";
             assertFalse(message, lock.isLive());
