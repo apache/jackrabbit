@@ -69,8 +69,8 @@ class NodeStateMerger {
                  * - either session moved node
                  */
 
-                // compare current transient state with externally modified
-                // overlayed state and determine what has been changed by whom
+                // compare current state with externally modified overlayed
+                // state and determine what has been changed by whom
 
                 // child node entries order
                 if (!state.getReorderedChildNodeEntries().isEmpty()) {
