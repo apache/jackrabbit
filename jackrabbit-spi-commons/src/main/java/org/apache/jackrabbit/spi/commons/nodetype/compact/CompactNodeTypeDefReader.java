@@ -118,7 +118,7 @@ import org.apache.jackrabbit.util.ISO9075;
  * SingleQuotedString ::= ''' UnquotedString '''
  * DoubleQuotedString ::= '"' UnquotedString '"'
  * UnquotedString ::= XmlChar {XmlChar}
- * XmlChar ::= see ¤3.2.2 Local Names
+ * XmlChar ::= see 3.2.2 Local Names
  * </pre>
  */
 public class CompactNodeTypeDefReader {
