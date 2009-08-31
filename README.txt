@@ -20,7 +20,8 @@ To build this version of Jackrabbit, you first need to install the
 JCR 2.0 API jar in your local Maven repository:
 
     mvn install:install-file -Dfile=jcr-2.0.jar \
-        -DgroupId=javax.jcr -DartifactId=jcr -Dversion=2.0
+        -DgroupId=javax.jcr -DartifactId=jcr -Dversion=2.0 \
+        -Dpackaging=jar
 
 Note that the JCR 2.0 API jar will also be made available from the central
 Maven repository shortly after JSR 283 is final.
