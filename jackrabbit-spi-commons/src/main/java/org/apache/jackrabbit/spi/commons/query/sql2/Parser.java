@@ -496,26 +496,13 @@ public class Parser {
     }
 
     /**
-     * Create a literal from a parsed value. This method is (currently) not spec compliant.
+     * Create a literal from a parsed value.
      *
      * @param value the original value
      * @return the literal
      */
     private Literal getUncastLiteral(Value value) throws RepositoryException {
         return factory.literal(value);
-    }
-
-    /**
-     * Create uncast literal from a value. According to the JCR specification,
-     * "an UncastLiteral is always interpreted as a Value of property type STRING"
-     * (JCR 2.0 Core Specification, 6.7.34 Literal, page 124).
-     * That means the value is converted to a String first.
-     *
-     * @param value the original value
-     * @return the literal
-     */
-    private Literal getUncastLiteralSpecCompliant(Value value) throws RepositoryException {
-        return factory.literal(valueFactory.createValue(value.getString()));
     }
 
     private Value parseCastAs(Value value) throws RepositoryException {
