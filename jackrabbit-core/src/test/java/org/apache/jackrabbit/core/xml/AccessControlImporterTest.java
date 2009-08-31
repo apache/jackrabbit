@@ -165,7 +165,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
         try {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE.getBytes("UTF-8"));
-            ProtectedItemHandling pi = new ProtectedItemHandling();
+            ProtectedItemHandlers pi = new ProtectedItemHandlers();
             pi.register(piImporter);
             SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, pi);
             ImportHandler ih = new ImportHandler(importer, sImpl);
@@ -219,7 +219,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
         try {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE_2.getBytes("UTF-8"));
-            ProtectedItemHandling pi = new ProtectedItemHandling();
+            ProtectedItemHandlers pi = new ProtectedItemHandlers();
             pi.register(piImporter);
             SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, pi);
             ImportHandler ih = new ImportHandler(importer, sImpl);
@@ -271,7 +271,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_ONLY.getBytes("UTF-8"));
 
-            ProtectedItemHandling pi = new ProtectedItemHandling();
+            ProtectedItemHandlers pi = new ProtectedItemHandlers();
             pi.register(piImporter);
             SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, pi);
             ImportHandler ih = new ImportHandler(importer, sImpl);
@@ -311,7 +311,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_AC_TREE.getBytes("UTF-8"));
 
-            ProtectedItemHandling pi = new ProtectedItemHandling();
+            ProtectedItemHandlers pi = new ProtectedItemHandlers();
             pi.register(piImporter);
             SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, pi);
             ImportHandler ih = new ImportHandler(importer, sImpl);
