@@ -17,11 +17,14 @@
 package org.apache.jackrabbit.core;
 
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.InvalidItemStateException;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -50,29 +53,55 @@ public class ConcurrentImportTest extends AbstractConcurrencyTest {
     private static final int NUM_NODES = 10;
 
     public void testConcurrentImport() throws RepositoryException {
-        concurrentImport(new String[]{JcrConstants.MIX_REFERENCEABLE});
+        concurrentImport(new String[]{JcrConstants.MIX_REFERENCEABLE}, false);
+    }
+
+    public void testConcurrentImportSynced() throws RepositoryException {
+        concurrentImport(new String[]{JcrConstants.MIX_REFERENCEABLE}, true);
     }
 
     public void testConcurrentImportVersionable() throws RepositoryException {
-        concurrentImport(new String[]{JcrConstants.MIX_VERSIONABLE});
+        concurrentImport(new String[]{JcrConstants.MIX_VERSIONABLE}, false);
     }
 
-    private void concurrentImport(final String[] mixins) throws RepositoryException {
+    public void testConcurrentImportVersionableSynced() throws RepositoryException {
+        concurrentImport(new String[]{JcrConstants.MIX_VERSIONABLE}, true);
+    }
+
+    private void concurrentImport(final String[] mixins, final boolean sync) throws RepositoryException {
         final String[] uuids = new String[NUM_NODES];
         for (int i=0; i<uuids.length; i++) {
             uuids[i] = UUID.randomUUID().toString();
         }
         log.println("concurrentImport: c=" + CONCURRENCY + ", n=" + NUM_NODES);
         log.flush();
+
+        final Lock lock = new ReentrantLock();
         runTask(new Task() {
             public void execute(Session session, Node test) throws RepositoryException {
                 try {
                     // add versionable nodes
                     for (String uuid : uuids) {
-                        Node n = addNode(test, uuid, JcrConstants.NT_UNSTRUCTURED, uuid, mixins);
-                        session.save();
-                        log.println("Added " + n.getPath());
-                        log.flush();
+                        if (sync) {
+                            lock.lock();
+                        }
+                        try {
+                            session.refresh(false);
+                            addNode(test, uuid, JcrConstants.NT_UNSTRUCTURED, uuid, mixins);
+                            try {
+                                session.save();
+                                log.println("Added " + test.getPath() + "/" + uuid);
+                                log.flush();
+                            } catch (InvalidItemStateException e) {
+                                log.println("Ignoring expected error: " + e.toString());
+                                log.flush();
+                                session.refresh(false);
+                            }
+                        } finally {
+                            if (sync) {
+                                lock.unlock();
+                            }
+                        }
                         try {
                             Thread.sleep(1);
                         } catch (InterruptedException e) {
