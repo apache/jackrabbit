@@ -144,7 +144,7 @@ public class NodeNameTest extends AbstractQOMTest {
         }
         try {
             String stmt = "SELECT * FROM [" + testNodeType + "] AS s " +
-                    "WHERE NAME(s) = " + literal.getString();
+                    "WHERE NAME(s) = CAST(" + literal.getString() + " AS LONG)";
             qm.createQuery(stmt, Query.JCR_SQL2).execute();
             fail("NAME() comparison with LONG must fail with InvalidQueryException");
         } catch (InvalidQueryException e) {
@@ -162,7 +162,7 @@ public class NodeNameTest extends AbstractQOMTest {
         }
         try {
             String stmt = "SELECT * FROM [" + testNodeType + "] AS s " +
-                    "WHERE NAME(s) = " + literal.getString();
+                    "WHERE NAME(s) = CAST(" + literal.getString() + " AS BOOLEAN)";
             qm.createQuery(stmt, Query.JCR_SQL2).execute();
             fail("NAME() comparison with BOOLEAN must fail with InvalidQueryException");
         } catch (InvalidQueryException e) {
