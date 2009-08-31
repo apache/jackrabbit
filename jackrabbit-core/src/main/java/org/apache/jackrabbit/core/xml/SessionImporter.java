@@ -63,14 +63,14 @@ public class SessionImporter implements Importer {
     private final ReferenceChangeTracker refTracker;
 
     /**
-     * Importer for protected nodes.
+     * Current importer for protected nodes.
      */
     private ProtectedNodeImporter currentNodeImporter;
 
     /**
-     * Importer for protected items.
+     * Handlers for protected items.
      */
-    private final ProtectedItemHandling protectedItemHandling;
+    private final ProtectedItemHandlers protectedItemHandlers;
 
     /**
      * Creates a new <code>SessionImporter</code> instance.
@@ -92,18 +92,18 @@ public class SessionImporter implements Importer {
      * @param importTargetNode the target node
      * @param session session
      * @param uuidBehavior the uuid behaviro
-     * @param protectedItemHandling protected item handling
+     * @param protectedItemHandlers protected item handling
      */
     public SessionImporter(NodeImpl importTargetNode, SessionImpl session,
                            int uuidBehavior,
-                           ProtectedItemHandling protectedItemHandling) {
+                           ProtectedItemHandlers protectedItemHandlers) {
         this.importTargetNode = importTargetNode;
         this.session = session;
         this.uuidBehavior = uuidBehavior;
 
-        this.protectedItemHandling = protectedItemHandling == null
-                ? new ProtectedItemHandling()
-                : protectedItemHandling;
+        this.protectedItemHandlers = protectedItemHandlers == null
+                ? new ProtectedItemHandlers()
+                : protectedItemHandlers;
         refTracker = new ReferenceChangeTracker();
 
         parents = new Stack<NodeImpl>();
@@ -281,7 +281,7 @@ public class SessionImporter implements Importer {
             // Notify the ProtectedNodeImporter about the start of a item
             // tree that is protected by this parent. If it potentially is
             // able to deal with it, notify it about the child node.
-            currentNodeImporter = protectedItemHandling.accept(parent);
+            currentNodeImporter = protectedItemHandlers.accept(parent);
             if (currentNodeImporter != null) {
                 log.debug("Protected node -> delegated to ProtectedPropertyImporter");
                 currentNodeImporter.startChildInfo(nodeInfo, propInfos);
@@ -373,7 +373,7 @@ public class SessionImporter implements Importer {
                 log.debug("Skipping protected property " + pi.getName());
 
                 // notify the ProtectedPropertyImporter.
-                if (protectedItemHandling.handlePropInfo(node, pi, def)) {
+                if (protectedItemHandlers.handlePropInfo(node, pi, def)) {
                     // TODO: deal with reference props within the imported tree?                    
                     log.debug("Protected property -> delegated to ProtectedPropertyImporter");
                 } // else: p-i-Importer isn't able to deal with this property

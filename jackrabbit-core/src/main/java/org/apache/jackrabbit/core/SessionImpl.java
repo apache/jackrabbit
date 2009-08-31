@@ -51,7 +51,7 @@ import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.ProtectedItemHandling;
+import org.apache.jackrabbit.core.xml.ProtectedItemHandlers;
 import org.apache.jackrabbit.core.xml.AccessControlImporter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -1174,9 +1174,9 @@ public class SessionImpl extends AbstractSession
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkModify(parent, options, Permission.NONE);
 
-        ProtectedItemHandling pi = new ProtectedItemHandling();
-        pi.register(new AccessControlImporter(this, this, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW));
-        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, pi);
+        ProtectedItemHandlers pih = new ProtectedItemHandlers();
+        pih.register(new AccessControlImporter(this, this, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW));
+        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, pih);
         return new ImportHandler(importer, this);
     }
 

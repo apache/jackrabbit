@@ -29,7 +29,7 @@ import org.apache.jackrabbit.core.state.NodeState;
  * Provides a registry like helper class for the {@link ProtectedPropertyImporter}
  * and {@link ProtectedNodeImporter} classes.
  */
-public class ProtectedItemHandling implements ProtectedPropertyImporter {
+public class ProtectedItemHandlers implements ProtectedPropertyImporter {
 
     private final List<ProtectedNodeImporter> nodeImporters = new ArrayList<ProtectedNodeImporter>();
 
