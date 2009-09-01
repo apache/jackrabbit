@@ -202,6 +202,7 @@ public class SharedItemStateManager
         if (!hasNonVirtualItemState(rootNodeId)) {
             createRootNodeState(rootNodeId, ntReg);
         }
+        ensureActivitiesNode();
     }
 
     /**
@@ -1312,6 +1313,28 @@ public class SharedItemStateManager
         changeLog.persisted();
 
         return rootState;
+    }
+
+    /**
+     * Makes sure child node entry for mandatory jcr:activities exist.
+     * Repositories upgraded from 1.x do not have it.
+     * <p/>
+     * This method assumes that the jcr:system node already exists.
+     *
+     * @throws ItemStateException if an error occurs while reading or writing to
+     *                            the persistence manager.
+     */
+    private void ensureActivitiesNode() throws ItemStateException {
+        NodeState jcrSystemState = (NodeState) getNonVirtualItemState(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
+        if (!jcrSystemState.hasChildNodeEntry(RepositoryImpl.ACTIVITIES_NODE_ID)) {
+            jcrSystemState.addChildNodeEntry(NameConstants.JCR_ACTIVITIES, RepositoryImpl.ACTIVITIES_NODE_ID);
+
+            ChangeLog changeLog = new ChangeLog();
+            changeLog.modified(jcrSystemState);
+
+            persistMgr.store(changeLog);
+            changeLog.persisted();
+        }
     }
 
     /**
