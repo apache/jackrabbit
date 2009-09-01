@@ -145,12 +145,12 @@ public class RepositoryImpl extends AbstractRepository
     public static final NodeId VERSION_STORAGE_NODE_ID = NodeId.valueOf("deadbeef-face-babe-cafe-babecafebabe");
 
     /**
-     * hardcoded id of the "/jcr:system/jcr:versionStorage/jcr:activities" node
+     * hardcoded id of the "/jcr:system/jcr:activities" node
      */
     public static final NodeId ACTIVITIES_NODE_ID = NodeId.valueOf("deadbeef-face-babe-ac71-babecafebabe");
 
     /**
-     * hardcoded id of the "/jcr:system/jcr:versionStorage/jcr:configurations" node
+     * hardcoded id of the "/jcr:system/jcr:configurations" node
      */
     public static final NodeId CONFIGURATIONS_NODE_ID = NodeId.valueOf("deadbeef-face-babe-c04f-babecafebabe");
 
