@@ -88,7 +88,11 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
 
     public boolean start(NodeImpl protectedParent) throws RepositoryException {
         if (isStarted()) {
-            throw new IllegalStateException();
+            // only ok if same parent
+            if (!protectedParent.isSame(parent)) {
+                throw new IllegalStateException();
+            }
+            return true;
         }
         if (isWorkspaceImport) {
             log.debug("AccessControlImporter may not be used with the WorkspaceImporter");
