@@ -401,6 +401,10 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. check access rights, lock status, node type constraints, etc.
 
+        // JCR-2269: store target node state in changelog early as a
+        // precautionary measure in order to isolate it from concurrent 
+        // underlying changes while checking preconditions
+        stateMgr.store(destParentState);
         checkAddNode(destParentState, destName.getName(),
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
                 | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
