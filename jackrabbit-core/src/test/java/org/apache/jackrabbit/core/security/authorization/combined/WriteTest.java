@@ -29,6 +29,7 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
@@ -58,10 +59,9 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
     private JackrabbitAccessControlList getPrincipalBasedPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
         if (acM instanceof JackrabbitAccessControlManager) {
             AccessControlPolicy[] tmpls = ((JackrabbitAccessControlManager) acM).getApplicablePolicies(principal);
-            for (int i = 0; i < tmpls.length; i++) {
-                if (tmpls[i] instanceof JackrabbitAccessControlList) {
-                    JackrabbitAccessControlList acl = (JackrabbitAccessControlList) tmpls[i];
-                    return acl;
+            for (AccessControlPolicy tmpl : tmpls) {
+                if (tmpl instanceof JackrabbitAccessControlList) {
+                    return (JackrabbitAccessControlList) tmpl;
                 }
             }
         }
@@ -71,7 +71,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
     private JackrabbitAccessControlList givePrivileges(String nPath,
                                                        Principal principal,
                                                        Privilege[] privileges,
-                                                       Map restrictions,
+                                                       Map<String, Value> restrictions,
                                                        boolean nodeBased) throws NotExecutableException, RepositoryException {
         if (nodeBased) {
             return givePrivileges(nPath, principal, privileges, getRestrictions(superuser, nPath));
@@ -87,7 +87,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
     private JackrabbitAccessControlList withdrawPrivileges(String nPath,
                                                        Principal principal,
                                                        Privilege[] privileges,
-                                                       Map restrictions,
+                                                       Map<String, Value> restrictions,
                                                        boolean nodeBased) throws NotExecutableException, RepositoryException {
         if (nodeBased) {
             return withdrawPrivileges(nPath, principal, privileges, getRestrictions(superuser, nPath));
@@ -100,9 +100,9 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
         }
     }
 
-    private Map getPrincipalBasedRestrictions(String path) throws RepositoryException, NotExecutableException {
+    private Map<String, Value> getPrincipalBasedRestrictions(String path) throws RepositoryException, NotExecutableException {
         if (superuser instanceof SessionImpl) {
-            Map restr = new HashMap();
+            Map<String, Value> restr = new HashMap<String, Value>();
             restr.put("rep:nodePath", superuser.getValueFactory().createValue(path, PropertyType.PATH));
             return restr;
         } else {

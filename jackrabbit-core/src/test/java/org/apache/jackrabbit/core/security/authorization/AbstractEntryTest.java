@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.authorization;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.RepositoryException;
@@ -117,7 +116,7 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
     public void testEquals() throws RepositoryException, NotExecutableException  {
 
         JackrabbitAccessControlEntry ace = createEntry(new String[] {Privilege.JCR_ALL}, true);
-        List equalAces = new ArrayList();
+        List<JackrabbitAccessControlEntry> equalAces = new ArrayList<JackrabbitAccessControlEntry>();
         equalAces.add(createEntry(new String[] {Privilege.JCR_ALL}, true));
 
         Privilege[] privs = acMgr.privilegeFromName(Privilege.JCR_ALL).getDeclaredAggregatePrivileges();
@@ -126,14 +125,14 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
         privs = acMgr.privilegeFromName(Privilege.JCR_ALL).getAggregatePrivileges();
         equalAces.add(createEntry(testPrincipal, privs, true));
 
-        for (Iterator it = equalAces.iterator(); it.hasNext();) {
-            assertEquals(ace, it.next());
+        for (JackrabbitAccessControlEntry equalAce : equalAces) {
+            assertEquals(ace, equalAce);
         }
     }
 
     public void testNotEquals() throws RepositoryException, NotExecutableException  {
         JackrabbitAccessControlEntry ace = createEntry(new String[] {Privilege.JCR_ALL}, true);
-        List otherAces = new ArrayList();
+        List<JackrabbitAccessControlEntry> otherAces = new ArrayList<JackrabbitAccessControlEntry>();
 
         try {
             // ACE template with different principal
@@ -191,8 +190,8 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
         };
         otherAces.add(pe);
 
-        for (Iterator it = otherAces.iterator(); it.hasNext();) {
-            assertFalse(ace.equals(it.next()));
+        for (JackrabbitAccessControlEntry otherAce : otherAces) {
+            assertFalse(ace.equals(otherAce));
         }
     }
 

@@ -336,7 +336,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] dnPrivs = privilegesFromName(Privilege.JCR_READ);
         withdrawPrivileges(path, dnPrivs, getRestrictions(superuser, path));
 
-        // testUser registers a eventlistener for 'path
+        // testUser registers a event listener for 'path
         ObservationManager obsMgr = testSession.getWorkspace().getObservationManager();
         EventResult listener = new EventResult(((JUnitTest) this).log);
         try {
@@ -351,9 +351,9 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
             // since the testUser does not have read-permission on the removed
             // node, no corresponding event must be generated.
             Event[] evts = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
-            for (int i = 0; i < evts.length; i++) {
-                if (evts[i].getType() == Event.NODE_REMOVED &&
-                        evts[i].getPath().equals(childNPath)) {
+            for (Event evt : evts) {
+                if (evt.getType() == Event.NODE_REMOVED &&
+                        evt.getPath().equals(childNPath)) {
                     fail("TestUser does not have READ permission below " + path + " -> events below must not show up.");
                 }
             }
@@ -445,7 +445,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
         Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
 
-        // add 'remove_child_nodes' privilge at 'path'
+        // add 'remove_child_nodes' privilege at 'path'
         givePrivileges(path, rmChildNodes, getRestrictions(superuser, path));
         /*
          expected result:
@@ -491,7 +491,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] privs = privilegesFromNames(new String[] {
                 Privilege.JCR_REMOVE_CHILD_NODES, Privilege.JCR_REMOVE_NODE
         });
-        // add 'remove_node' and 'remove_child_nodes' privilge at 'path'
+        // add 'remove_node' and 'remove_child_nodes' privilege at 'path'
         givePrivileges(path, privs, getRestrictions(superuser, path));
         /*
          expected result:
@@ -522,9 +522,9 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
         Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
 
-        // add 'remove_child_nodes' privilge at 'path'...
+        // add 'remove_child_nodes' privilege at 'path'...
         givePrivileges(path, rmChildNodes, getRestrictions(superuser, path));
-        // ... and add 'remove_node' privilge at 'childNPath'
+        // ... and add 'remove_node' privilege at 'childNPath'
         givePrivileges(childNPath, rmNode, getRestrictions(superuser, childNPath));
         /*
          expected result:
@@ -571,7 +571,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         });
         Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
 
-        // add 'remove_child_nodes' and 'remove_node' privilge at 'path'
+        // add 'remove_child_nodes' and 'remove_node' privilege at 'path'
         givePrivileges(path, privs, getRestrictions(superuser, path));
         // ... but deny 'remove_node' at childNPath
         withdrawPrivileges(childNPath, rmNode, getRestrictions(superuser, childNPath));
@@ -610,7 +610,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          */
         assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
 
-        // additionally add remove_child_nodes priv at 'childNPath'
+        // additionally add remove_child_nodes privilege at 'childNPath'
         givePrivileges(childNPath, rmChildNodes, getRestrictions(superuser, childNPath));
         /*
          expected result:
@@ -781,7 +781,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         */
         checkReadOnly(path);
 
-        /* explicitely withdraw MODIFY_PROPERTIES for the user */
+        /* explicitly withdraw MODIFY_PROPERTIES for the user */
         Privilege[] privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
         withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
         /* give MODIFY_PROPERTIES privilege for a Group the test-user is member of */
@@ -820,7 +820,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
         /*
          give MODIFY_PROPERTIES privilege for everyone at 'childNPath'
-         -> user-privileges still overrule group privs
+         -> user-privileges still overrule group privileges
          */
         givePrivileges(childNPath, testGroup.getPrincipal(), privileges, getRestrictions(superuser, path));
         assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));

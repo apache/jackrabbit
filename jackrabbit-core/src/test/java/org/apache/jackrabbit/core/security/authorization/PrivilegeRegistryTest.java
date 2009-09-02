@@ -85,7 +85,7 @@ public class PrivilegeRegistryTest extends TestCase {
     public void testRegisteredPrivileges() throws RepositoryException {
         Privilege[] ps = privilegeRegistry.getRegisteredPrivileges();
 
-        List l = new ArrayList(Arrays.asList(ps));
+        List<Privilege> l = new ArrayList<Privilege>(Arrays.asList(ps));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_READ)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_ADD_CHILD_NODES)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_REMOVE_CHILD_NODES)));
@@ -110,7 +110,7 @@ public class PrivilegeRegistryTest extends TestCase {
         assertTrue(p.isAggregate());
         assertFalse(p.isAbstract());
 
-        List l = new ArrayList(Arrays.asList(p.getAggregatePrivileges()));
+        List<Privilege> l = new ArrayList<Privilege>(Arrays.asList(p.getAggregatePrivileges()));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_READ)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_ADD_CHILD_NODES)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_REMOVE_CHILD_NODES)));
@@ -125,7 +125,7 @@ public class PrivilegeRegistryTest extends TestCase {
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT)));
         assertTrue(l.isEmpty());
 
-        l = new ArrayList(Arrays.asList(p.getDeclaredAggregatePrivileges()));
+        l = new ArrayList<Privilege>(Arrays.asList(p.getDeclaredAggregatePrivileges()));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_READ)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_WRITE)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(PrivilegeRegistry.REP_WRITE)));

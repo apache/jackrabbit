@@ -25,11 +25,11 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -39,18 +39,17 @@ class EvaluationUtil {
 
     static boolean isExecutable(SessionImpl s, AccessControlManager acMgr) {
         if (acMgr instanceof JackrabbitAccessControlManager) {
-            for (Iterator it = s.getSubject().getPrincipals().iterator(); it.hasNext();) {
-                Principal princ = (Principal) it.next();
+            for (Principal princ : s.getSubject().getPrincipals()) {
                 try {
                     AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acMgr).getApplicablePolicies(princ);
-                    for (int i = 0; i < policies.length; i++) {
-                        if (policies[i] instanceof ACLTemplate) {
+                    for (AccessControlPolicy policy : policies) {
+                        if (policy instanceof ACLTemplate) {
                             return true;
                         }
                     }
                     policies = ((JackrabbitAccessControlManager) acMgr).getPolicies(princ);
-                    for (int i = 0; i < policies.length; i++) {
-                        if (policies[i] instanceof ACLTemplate) {
+                    for (AccessControlPolicy policy : policies) {
+                        if (policy instanceof ACLTemplate) {
                             return true;
                         }
                     }
@@ -62,33 +61,33 @@ class EvaluationUtil {
         return false;
     }
 
-    static JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException,
-            AccessDeniedException, NotExecutableException {
+    static JackrabbitAccessControlList getPolicy(AccessControlManager acM,
+                                                 String path,
+                                                 Principal principal)
+            throws RepositoryException, AccessDeniedException, NotExecutableException {
         if (acM instanceof JackrabbitAccessControlManager) {
             // first try applicable policies
             AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acM).getApplicablePolicies(principal);
-            for (int i = 0; i < policies.length; i++) {
-                if (policies[i] instanceof ACLTemplate) {
-                    ACLTemplate acl = (ACLTemplate) policies[i];
-                    return acl;
+            for (AccessControlPolicy policy : policies) {
+                if (policy instanceof ACLTemplate) {
+                    return (ACLTemplate) policy;
                 }
             }
 
             // second existing policies
             policies = ((JackrabbitAccessControlManager) acM).getPolicies(principal);
-            for (int i = 0; i < policies.length; i++) {
-                if (policies[i] instanceof ACLTemplate) {
-                    ACLTemplate acl = (ACLTemplate) policies[i];
-                    return acl;
+            for (AccessControlPolicy policy : policies) {
+                if (policy instanceof ACLTemplate) {
+                    return (ACLTemplate) policy;
                 }
             }
         }
         throw new NotExecutableException();
     }
 
-    static  Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
+    static  Map<String, Value> getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
         if (s instanceof SessionImpl) {
-            Map restr = new HashMap();
+            Map<String, Value> restr = new HashMap<String, Value>();
             restr.put(((SessionImpl) s).getJCRName(ACLTemplate.P_NODE_PATH), s.getValueFactory().createValue(path, PropertyType.PATH));
             return restr;
         } else {

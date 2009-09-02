@@ -33,7 +33,6 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +41,7 @@ import java.util.Map;
  */
 public class EntryTest extends AbstractEntryTest {
 
-    private Map restrictions;
+    private Map<String, Value> restrictions;
     private ACLTemplate acl;
 
     private String nodePath;
@@ -59,7 +58,7 @@ public class EntryTest extends AbstractEntryTest {
             throw new NotExecutableException();
         }
 
-        restrictions = new HashMap(2);
+        restrictions = new HashMap<String, Value>(2);
         restrictions.put(nodePath, superuser.getValueFactory().createValue("/a/b/c/d", PropertyType.PATH));
         restrictions.put(glob,  superuser.getValueFactory().createValue("*"));
         acl = new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser, superuser.getValueFactory());
@@ -70,7 +69,7 @@ public class EntryTest extends AbstractEntryTest {
         return (JackrabbitAccessControlEntry) acl.createEntry(principal, privileges, isAllow, restrictions);
     }
 
-    private JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map restrictions)
+    private JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions)
             throws RepositoryException {
         return (JackrabbitAccessControlEntry) acl.createEntry(principal, privileges, isAllow, restrictions);
     }
@@ -78,7 +77,7 @@ public class EntryTest extends AbstractEntryTest {
     public void testNodePathMustNotBeNull() throws RepositoryException, NotExecutableException {
         try {
             Privilege[] privs = privilegesFromName(Privilege.JCR_ALL);
-            createEntry(testPrincipal, privs, true, Collections.EMPTY_MAP);
+            createEntry(testPrincipal, privs, true, Collections.<String, Value>emptyMap());
             fail("NodePath cannot not be null");
         } catch (AccessControlException e) {
             // success
@@ -101,19 +100,19 @@ public class EntryTest extends AbstractEntryTest {
         assertEquals(restrictions.get(glob), pe.getRestriction(glob));
         assertEquals(PropertyType.STRING, pe.getRestriction(glob).getType());
 
-        Map restr = new HashMap();
+        Map<String, Value> restr = new HashMap<String, Value>();
         restr.put(nodePath,  restrictions.get(nodePath));
         pe = createEntry(testPrincipal, privs, true, restr);
         assertNull(pe.getRestriction(glob));
 
-        restr = new HashMap();
+        restr = new HashMap<String, Value>();
         restr.put(nodePath,  restrictions.get(nodePath));
         restr.put(glob,  new StringValue(""));
 
         pe = createEntry(testPrincipal, privs, true, restr);
         assertEquals("", pe.getRestriction(glob).getString());
 
-        restr = new HashMap();
+        restr = new HashMap<String, Value>();
         restr.put(nodePath,  restrictions.get(nodePath));
         restr.put(glob,  new BooleanValue(true));
         assertEquals(PropertyType.STRING, pe.getRestriction(glob).getType());
@@ -124,14 +123,14 @@ public class EntryTest extends AbstractEntryTest {
         // match the required ones.
         Privilege[] privs = privilegesFromName(Privilege.JCR_ALL);
 
-        Map restr = new HashMap();
+        Map<String, Value> restr = new HashMap<String, Value>();
         restr.put(nodePath, new StringValue("/a/b/c/d"));
         JackrabbitAccessControlEntry pe = createEntry(testPrincipal, privs, true, restr);
 
         assertEquals("/a/b/c/d", pe.getRestriction(nodePath).getString());
         assertEquals(PropertyType.PATH, pe.getRestriction(nodePath).getType());
 
-        restr = new HashMap();
+        restr = new HashMap<String, Value>();
         restr.put(nodePath,  restrictions.get(nodePath));
         restr.put(glob,  new BooleanValue(true));
         pe = createEntry(testPrincipal, privs, true, restr);
@@ -144,25 +143,22 @@ public class EntryTest extends AbstractEntryTest {
         Privilege[] privs = new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)};
         ACLTemplate.Entry ace = (ACLTemplate.Entry) createEntry(testPrincipal, privs, true);
 
-        String nPath = ((Value) restrictions.get(nodePath)).getString();
-        List toMatch = new ArrayList();
+        String nPath = restrictions.get(nodePath).getString();
+        List<String> toMatch = new ArrayList<String>();
         toMatch.add(nPath + "/any");
         toMatch.add(nPath + "/anyother");
         toMatch.add(nPath + "/f/g/h");
         toMatch.add(nPath);
-        for (Iterator it = toMatch.iterator(); it.hasNext();) {
-            String str = it.next().toString();
+        for (String str : toMatch) {
             assertTrue("Restrictions should match " + str, ace.matches(str));
         }
 
-        List notToMatch = new ArrayList();
+        List<String> notToMatch = new ArrayList<String>();
         notToMatch.add(null);
         notToMatch.add("");
         notToMatch.add("/");
         notToMatch.add("/a/b/c/");
-        for (Iterator it = notToMatch.iterator(); it.hasNext();) {
-            Object obj = it.next();
-            String str = (obj == null) ? null : obj.toString();
+        for (String str : notToMatch) {
             assertFalse("Restrictions shouldn't match " + str, ace.matches(str));
         }
     }
