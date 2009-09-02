@@ -16,35 +16,37 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
-import org.apache.jackrabbit.api.JackrabbitSession;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.Privilege;
 import javax.jcr.security.AccessControlPolicy;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Stack;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.security.Principal;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AccessControlImporter</code> implements a
@@ -282,7 +284,12 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
                 if (values == null || values.length != 1) {
                     throw new ConstraintViolationException("");
                 }
-                principal = session.getPrincipalManager().getPrincipal(values[0].getString());
+                String pName = values[0].getString();
+                principal = session.getPrincipalManager().getPrincipal(pName);
+                if (principal == null) {
+                    // create "fake" principal
+                    principal = new UnknownPrincipal(pName);
+                }
             } else if (AccessControlConstants.P_PRIVILEGES.equals(name)) {
                 Value[] values = pInfo.getValues(PropertyType.NAME, resolver);
                 privileges = new Privilege[values.length];

@@ -80,10 +80,9 @@ public interface PrincipalManager {
      * <code>PrincipalManager</code> has been built for.
      *
      * @param principalName the name of the principal to retrieve
-     * @return return the requested principal.
-     * @throws NoSuchPrincipalException If no principal with the given name exists.
+     * @return return the requested principal or <code>null</code> if not exists
      */
-    Principal getPrincipal(String principalName) throws NoSuchPrincipalException;
+    Principal getPrincipal(String principalName);
 
     /**
      * Gets the principals matching a simple filter expression applied against

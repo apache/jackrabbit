@@ -16,8 +16,23 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.PropertyDefinition;
+
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -33,21 +48,6 @@ import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.PropertyDefinition;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * AuthorizableImpl
@@ -87,14 +87,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         PrincipalManager prMgr = getSession().getPrincipalManager();
         for (Object o : getRefereeValues()) {
             String refName = ((Value) o).getString();
-            Principal princ = null;
-            if (prMgr.hasPrincipal(refName)) {
-                try {
-                    princ = prMgr.getPrincipal(refName);
-                } catch (NoSuchPrincipalException e) {
-                    // should not get here
-                }
-            }
+            Principal princ = prMgr.getPrincipal(refName);
             if (princ == null) {
                 log.warn("Principal " + refName + " unknown to PrincipalManager.");
                 princ = new PrincipalImpl(refName);

@@ -34,7 +34,6 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -44,6 +43,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,14 +115,7 @@ class ACLTemplate extends AbstractACLTemplate {
             NodeImpl aceNode = (NodeImpl) itr.nextNode();
             try {
                 String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
-                Principal princ = null;
-                if (principalMgr.hasPrincipal(principalName)) {
-                    try {
-                        princ = principalMgr.getPrincipal(principalName);
-                    } catch (NoSuchPrincipalException e) {
-                        // should not get here.
-                    }
-                }
+                Principal princ = principalMgr.getPrincipal(principalName);
                 if (princ == null) {
                     log.debug("Principal with name " + principalName + " unknown to PrincipalManager.");
                     princ = new PrincipalImpl(principalName);
@@ -169,14 +162,7 @@ class ACLTemplate extends AbstractACLTemplate {
             String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
             // only process aceNode if 'principalName' is contained in the given set
             if (princToEntries.containsKey(principalName)) {
-                Principal princ = null;
-                if (principalMgr.hasPrincipal(principalName)) {
-                    try {
-                        princ = principalMgr.getPrincipal(principalName);
-                    } catch (NoSuchPrincipalException e) {
-                        // should not get here
-                    }
-                }
+                Principal princ = principalMgr.getPrincipal(principalName);
                 if (princ == null) {
                     log.warn("Principal with name " + principalName + " unknown to PrincipalManager.");
                     princ = new PrincipalImpl(principalName);
@@ -287,9 +273,10 @@ class ACLTemplate extends AbstractACLTemplate {
         if (restrictions != null && !restrictions.isEmpty()) {
             throw new AccessControlException("This AccessControlList does not allow for additional restrictions.");
         }
-
         // validate principal
-        if (!principalMgr.hasPrincipal(principal.getName())) {
+        if (principal instanceof UnknownPrincipal) {
+            log.debug("Consider fallback principal as valid: {}", principal.getName());
+        } else if (!principalMgr.hasPrincipal(principal.getName())) {
             throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
         }
     }

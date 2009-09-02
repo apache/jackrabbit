@@ -16,6 +16,25 @@
  */
 package org.apache.jackrabbit.core.security.simple;
 
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.security.auth.Subject;
+
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -27,14 +46,14 @@ import org.apache.jackrabbit.core.config.SecurityConfig;
 import org.apache.jackrabbit.core.config.SecurityManagerConfig;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
-import org.apache.jackrabbit.core.security.UserPrincipal;
 import org.apache.jackrabbit.core.security.AnonymousPrincipal;
+import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.UserPrincipal;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
@@ -44,24 +63,6 @@ import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.SimpleCredentials;
-import javax.security.auth.Subject;
-import java.security.Principal;
-import java.security.acl.Group;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Iterator;
 
 /**
  * <code>SimpleSecurityManager</code>: simple implementation ignoring both
@@ -144,13 +145,13 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
 
         Properties[] moduleConfig = authCtxProvider.getModuleConfig();
 
-        // retrieve default-ids (admin and anomymous) from login-module-configuration.
-        for (int i = 0; i < moduleConfig.length; i++) {
-            if (moduleConfig[i].containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
-                adminID = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ADMIN_ID);
+        // retrieve default-ids (admin and anonymous) from login-module-configuration.
+        for (Properties aModuleConfig1 : moduleConfig) {
+            if (aModuleConfig1.containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
+                adminID = aModuleConfig1.getProperty(LoginModuleConfig.PARAM_ADMIN_ID);
             }
-            if (moduleConfig[i].containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
-                anonymID = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID);
+            if (aModuleConfig1.containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
+                anonymID = aModuleConfig1.getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID);
             }
         }
         // fallback:
@@ -169,8 +170,8 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
         // skip init of provider (nop)
         principalProviderRegistry = new ProviderRegistryImpl(principalProvider);
         // register all configured principal providers.
-        for (int i = 0; i < moduleConfig.length; i++) {
-            principalProviderRegistry.registerProvider(moduleConfig[i]);
+        for (Properties aModuleConfig : moduleConfig) {
+            principalProviderRegistry.registerProvider(aModuleConfig);
         }
 
         SecurityManagerConfig smc = config.getSecurityManagerConfig();

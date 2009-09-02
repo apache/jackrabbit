@@ -24,7 +24,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.security.auth.Subject;
 
-import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -67,14 +66,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
 
             Set<Principal> s = new HashSet<Principal>();
             for (String pName: impersonators) {
-                Principal p = null;
-                if (pMgr.hasPrincipal(pName)) {
-                    try {
-                        p = pMgr.getPrincipal(pName);
-                    } catch (NoSuchPrincipalException e) {
-                        // should never get here.
-                    }
-                }
+                Principal p = pMgr.getPrincipal(pName);
                 if (p == null) {
                     log.debug("Impersonator " + pName + " does not correspond to a known Principal.");
                     p = new PrincipalImpl(pName);

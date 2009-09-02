@@ -14,17 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.security.principal;
-
-import javax.jcr.RepositoryException;
+package org.apache.jackrabbit.core.security.principal;
 
 /**
- * Exception used to indicate that a <code>Principal</code> is not known to
- * the system.
+ * Implements a principal that is used by the ACL importer for unknown
+ * principals.
  */
-public class NoSuchPrincipalException extends RepositoryException {
+public class UnknownPrincipal extends PrincipalImpl {
 
-    public NoSuchPrincipalException(String message) {
-        super(message);
+    public UnknownPrincipal(String name) {
+        super(name);
     }
 }
