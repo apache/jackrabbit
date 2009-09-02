@@ -197,14 +197,14 @@ public class AccessManagerTest extends AbstractJCRTest {
     public void testCanAccessDeniedWorkspace() throws RepositoryException, NotExecutableException {
         Session s = getHelper().getReadOnlySession();
         try {
-            Set allAccessibles = new HashSet(Arrays.asList(superuser.getWorkspace().getAccessibleWorkspaceNames()));
-            Set sWorkspaceNames = new HashSet(Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames()));
+            Set<String> allAccessibles = new HashSet<String>(Arrays.asList(superuser.getWorkspace().getAccessibleWorkspaceNames()));
+            Set<String> sWorkspaceNames = new HashSet<String>(Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames()));
 
             if (!allAccessibles.removeAll(sWorkspaceNames) || allAccessibles.isEmpty()) {
                 throw new NotExecutableException("No workspace name found that exists but is not accessible for ReadOnly session.");
             }
 
-            String notAccessibleName = allAccessibles.iterator().next().toString();
+            String notAccessibleName = allAccessibles.iterator().next();
             assertFalse(getAccessManager(s).canAccess(notAccessibleName));
         } finally {
             s.logout();

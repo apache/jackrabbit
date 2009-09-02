@@ -27,6 +27,7 @@ import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
@@ -88,8 +89,8 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
 
     public void testGetRestrictionType() {
         String[] names = templ.getRestrictionNames();
-        for (int i = 0; i < names.length; i++) {
-            int type = templ.getRestrictionType(names[i]);
+        for (String name : names) {
+            int type = templ.getRestrictionType(name);
             assertTrue(type > PropertyType.UNDEFINED);
         }
     }
@@ -115,14 +116,13 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         Privilege[] priv = privilegesFromName(Privilege.JCR_ALL);
 
         List entriesBefore = Arrays.asList(templ.getAccessControlEntries());
-        if (templ.addEntry(princ, priv, true, Collections.EMPTY_MAP)) {
+        if (templ.addEntry(princ, priv, true, Collections.<String, Value>emptyMap())) {
             AccessControlEntry[] entries = templ.getAccessControlEntries();
             if (entries.length == 0) {
                 fail("GrantPrivileges was successful -> at least 1 entry for principal.");
             }
             int allows = 0;
-            for (int i = 0; i < entries.length; i++) {
-                AccessControlEntry en = entries[i];
+            for (AccessControlEntry en : entries) {
                 int bits = PrivilegeRegistry.getBits(en.getPrivileges());
                 if (en instanceof JackrabbitAccessControlEntry && ((JackrabbitAccessControlEntry) en).isAllow()) {
                     allows |= bits;
@@ -140,12 +140,11 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         Privilege[] privs = privilegesFromName(PrivilegeRegistry.REP_WRITE);
 
         int allows = 0;
-        templ.addEntry(princ, privs, true, Collections.EMPTY_MAP);
+        templ.addEntry(princ, privs, true, Collections.<String, Value>emptyMap());
         AccessControlEntry[] entries = templ.getAccessControlEntries();
         assertTrue("GrantPrivileges was successful -> at least 1 entry for principal.", entries.length > 0);
 
-        for (int i = 0; i < entries.length; i++) {
-            AccessControlEntry en = entries[i];
+        for (AccessControlEntry en : entries) {
             int bits = PrivilegeRegistry.getBits(en.getPrivileges());
             if (en instanceof JackrabbitAccessControlEntry && ((JackrabbitAccessControlEntry) en).isAllow()) {
                 allows |= bits;
@@ -159,14 +158,13 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         Privilege[] grPriv = privilegesFromName(PrivilegeRegistry.REP_WRITE);
         Privilege[] dePriv = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
 
-        templ.addEntry(princ, grPriv, true, Collections.EMPTY_MAP);
-        templ.addEntry(princ, dePriv, false, Collections.EMPTY_MAP);
+        templ.addEntry(princ, grPriv, true, Collections.<String, Value>emptyMap());
+        templ.addEntry(princ, dePriv, false, Collections.<String, Value>emptyMap());
 
         int allows = PrivilegeRegistry.NO_PRIVILEGE;
         int denies = PrivilegeRegistry.NO_PRIVILEGE;
         AccessControlEntry[] entries = templ.getAccessControlEntries();
-        for (int i = 0; i < entries.length; i++) {
-            AccessControlEntry en = entries[i];
+        for (AccessControlEntry en : entries) {
             if (princ.equals(en.getPrincipal()) && en instanceof JackrabbitAccessControlEntry) {
                 JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) en;
                 int entryBits = PrivilegeRegistry.getBits(ace.getPrivileges());
@@ -188,12 +186,12 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         Principal princ = getValidPrincipal();
         Privilege[] grPriv = privilegesFromName(PrivilegeRegistry.REP_WRITE);
 
-        templ.addEntry(princ, grPriv, true, Collections.EMPTY_MAP);
+        templ.addEntry(princ, grPriv, true, Collections.<String, Value>emptyMap());
         AccessControlEntry[] entries = templ.getAccessControlEntries();
         int length = entries.length;
         assertTrue("Grant was both successful -> at least 1 entry.", length > 0);
-        for (int i = 0; i < entries.length; i++) {
-            templ.removeAccessControlEntry(entries[i]);
+        for (AccessControlEntry entry : entries) {
+            templ.removeAccessControlEntry(entry);
             length = length - 1;
             assertEquals(length, templ.size());
             assertEquals(length, templ.getAccessControlEntries().length);

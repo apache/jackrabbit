@@ -50,8 +50,8 @@ public class PrincipalManagerTest extends AbstractJCRTest {
 
     private static Principal[] getPrincipals(Session session) {
         // TODO: get rid of SessionImpl dependency
-        Set princ = ((SessionImpl) session).getSubject().getPrincipals();
-        return (Principal[]) princ.toArray(new Principal[princ.size()]);
+        Set<Principal> princ = ((SessionImpl) session).getSubject().getPrincipals();
+        return princ.toArray(new Principal[princ.size()]);
     }
 
     private static boolean isGroup(Principal p) {
@@ -66,9 +66,9 @@ public class PrincipalManagerTest extends AbstractJCRTest {
 
     public void testSuperUserIsEveryOne() {
         Principal[] pcpls = getPrincipals(superuser);
-        for (int i = 0; i < pcpls.length; i++) {
-            if (!(pcpls[i].equals(everyone))) {
-                assertTrue(everyone.isMember(pcpls[i]));
+        for (Principal pcpl : pcpls) {
+            if (!(pcpl.equals(everyone))) {
+                assertTrue(everyone.isMember(pcpl));
             }
         }
     }
@@ -77,9 +77,9 @@ public class PrincipalManagerTest extends AbstractJCRTest {
         Session s = getHelper().getReadOnlySession();
         try {
             Principal[] pcpls = getPrincipals(s);
-            for (int i = 0; i < pcpls.length; i++) {
-                if (!(pcpls[i].equals(everyone))) {
-                    assertTrue(everyone.isMember(pcpls[i]));
+            for (Principal pcpl : pcpls) {
+                if (!(pcpl.equals(everyone))) {
+                    assertTrue(everyone.isMember(pcpl));
                 }
             }
         } finally {
@@ -91,31 +91,31 @@ public class PrincipalManagerTest extends AbstractJCRTest {
         assertTrue(principalMgr.hasPrincipal(everyone.getName()));
 
         Principal[] pcpls = getPrincipals(superuser);
-        for (int i = 0; i < pcpls.length; i++) {
-            assertTrue(principalMgr.hasPrincipal(pcpls[i].getName()));
+        for (Principal pcpl : pcpls) {
+            assertTrue(principalMgr.hasPrincipal(pcpl.getName()));
         }
     }
 
-    public void testGetPrincipal() throws NoSuchPrincipalException {
+    public void testGetPrincipal() {
         Principal p = principalMgr.getPrincipal(everyone.getName());
         assertEquals(everyone, p);
 
         Principal[] pcpls = getPrincipals(superuser);
-        for (int i = 0; i < pcpls.length; i++) {
-            Principal pp = principalMgr.getPrincipal(pcpls[i].getName());
-            assertEquals("PrincipalManager.getPrincipal returned Principal with different Name", pcpls[i].getName(), pp.getName());
+        for (Principal pcpl : pcpls) {
+            Principal pp = principalMgr.getPrincipal(pcpl.getName());
+            assertEquals("PrincipalManager.getPrincipal returned Principal with different Name", pcpl.getName(), pp.getName());
         }
     }
 
-    public void testGetPrincipalGetName() throws NoSuchPrincipalException {
+    public void testGetPrincipalGetName() {
         Principal[] pcpls = getPrincipals(superuser);
-        for (int i = 0; i < pcpls.length; i++) {
-            Principal pp = principalMgr.getPrincipal(pcpls[i].getName());
-            assertEquals("PrincipalManager.getPrincipal returned Principal with different Name", pcpls[i].getName(), pp.getName());
+        for (Principal pcpl : pcpls) {
+            Principal pp = principalMgr.getPrincipal(pcpl.getName());
+            assertEquals("PrincipalManager.getPrincipal returned Principal with different Name", pcpl.getName(), pp.getName());
         }
     }
 
-    public void testGetPrincipals() throws NoSuchPrincipalException {
+    public void testGetPrincipals() {
         PrincipalIterator it = principalMgr.getPrincipals(PrincipalManager.SEARCH_TYPE_NOT_GROUP);
         while (it.hasNext()) {
             Principal p = it.nextPrincipal();
@@ -123,7 +123,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
         }
     }
 
-    public void testGetGroupPrincipals() throws NoSuchPrincipalException {
+    public void testGetGroupPrincipals() {
         PrincipalIterator it = principalMgr.getPrincipals(PrincipalManager.SEARCH_TYPE_GROUP);
         while (it.hasNext()) {
             Principal p = it.nextPrincipal();
@@ -131,7 +131,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
         }
     }
 
-    public void testGetAllPrincipals() throws NoSuchPrincipalException {
+    public void testGetAllPrincipals() {
         PrincipalIterator it = principalMgr.getPrincipals(PrincipalManager.SEARCH_TYPE_ALL);
         while (it.hasNext()) {
             Principal p = it.nextPrincipal();
@@ -154,7 +154,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
         }
     }
 
-    public void testGroupMembership() throws NoSuchPrincipalException {
+    public void testGroupMembership() {
         testMembership(PrincipalManager.SEARCH_TYPE_NOT_GROUP);
         testMembership(PrincipalManager.SEARCH_TYPE_GROUP);
         testMembership(PrincipalManager.SEARCH_TYPE_ALL);
@@ -217,54 +217,54 @@ public class PrincipalManagerTest extends AbstractJCRTest {
 
     public void testFindPrincipal() {
         Principal[] pcpls = getPrincipals(superuser);
-        for (int i = 0; i < pcpls.length; i++) {
-            if (pcpls[i].equals(everyone)) {
+        for (Principal pcpl : pcpls) {
+            if (pcpl.equals(everyone)) {
                 continue;
             }
-            Iterator it = principalMgr.findPrincipals(pcpls[i].getName());
+            Iterator it = principalMgr.findPrincipals(pcpl.getName());
             // search must find at least a single principal
-            assertTrue("findPrincipals does not find principal with filter "+pcpls[i].getName(), it.hasNext());
+            assertTrue("findPrincipals does not find principal with filter " + pcpl.getName(), it.hasNext());
         }
     }
 
     public void testFindPrincipalByType() {
         Principal[] pcpls = getPrincipals(superuser);
-        for (int i = 0; i < pcpls.length; i++) {
-            if (pcpls[i].equals(everyone)) {
+        for (Principal pcpl : pcpls) {
+            if (pcpl.equals(everyone)) {
                 // special case covered by another test
                 continue;
             }
 
-            if (isGroup(pcpls[i])) {
-                Iterator it = principalMgr.findPrincipals(pcpls[i].getName(),
+            if (isGroup(pcpl)) {
+                Iterator it = principalMgr.findPrincipals(pcpl.getName(),
                         PrincipalManager.SEARCH_TYPE_GROUP);
                 // search must find at least a single matching group principal
-                assertTrue("findPrincipals does not find principal with filter "+pcpls[i].getName(), it.hasNext());
+                assertTrue("findPrincipals does not find principal with filter " + pcpl.getName(), it.hasNext());
             } else {
-                Iterator it = principalMgr.findPrincipals(pcpls[i].getName(),
+                Iterator it = principalMgr.findPrincipals(pcpl.getName(),
                         PrincipalManager.SEARCH_TYPE_NOT_GROUP);
                 // search must find at least a single matching non-group principal
-                assertTrue("findPrincipals does not find principal with filter "+pcpls[i].getName(), it.hasNext());
+                assertTrue("findPrincipals does not find principal with filter " + pcpl.getName(), it.hasNext());
             }
         }
     }
 
     public void testFindPrincipalByTypeAll() {
         Principal[] pcpls = getPrincipals(superuser);
-        for (int i = 0; i < pcpls.length; i++) {
-            if (pcpls[i].equals(everyone)) {
+        for (Principal pcpl : pcpls) {
+            if (pcpl.equals(everyone)) {
                 // special case covered by another test
                 continue;
             }
 
-            PrincipalIterator it = principalMgr.findPrincipals(pcpls[i].getName(), PrincipalManager.SEARCH_TYPE_ALL);
-            PrincipalIterator it2 = principalMgr.findPrincipals(pcpls[i].getName());
+            PrincipalIterator it = principalMgr.findPrincipals(pcpl.getName(), PrincipalManager.SEARCH_TYPE_ALL);
+            PrincipalIterator it2 = principalMgr.findPrincipals(pcpl.getName());
 
             // both search must reveal the same result and size
             assertTrue(it.getSize() == it2.getSize());
 
-            Set s1 = new HashSet();
-            Set s2 = new HashSet();
+            Set<Principal> s1 = new HashSet<Principal>();
+            Set<Principal> s2 = new HashSet<Principal>();
             while (it.hasNext() && it2.hasNext()) {
                 s1.add(it.nextPrincipal());
                 s2.add(it2.nextPrincipal());

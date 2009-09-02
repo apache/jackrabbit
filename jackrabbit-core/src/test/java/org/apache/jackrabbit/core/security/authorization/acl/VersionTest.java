@@ -22,6 +22,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlManager;
 import java.security.Principal;
 import java.util.Map;
@@ -37,7 +38,7 @@ public class VersionTest extends AbstractVersionManagementTest {
             RepositoryException, NotExecutableException {
         return EvaluationUtil.getPolicy(acMgr, path, princ);
     }
-    protected Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
+    protected Map<String, Value> getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
         return EvaluationUtil.getRestrictions(s, path);
     }
 }

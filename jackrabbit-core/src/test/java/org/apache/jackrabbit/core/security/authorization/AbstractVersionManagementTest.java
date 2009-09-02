@@ -169,9 +169,9 @@ public abstract class AbstractVersionManagementTest extends AbstractEvaluationTe
         } finally {
             // revert privilege modification (manually remove the ACE added)
             AccessControlEntry[] entries = tmpl.getAccessControlEntries();
-            for (int i = 0; i < entries.length; i++) {
-                if (entries[i].getPrincipal().equals(testUser.getPrincipal())) {
-                    tmpl.removeAccessControlEntry(entries[i]);
+            for (AccessControlEntry entry1 : entries) {
+                if (entry1.getPrincipal().equals(testUser.getPrincipal())) {
+                    tmpl.removeAccessControlEntry(entry1);
                 }
             }
             acMgr.setPolicy(tmpl.getPath(), tmpl);

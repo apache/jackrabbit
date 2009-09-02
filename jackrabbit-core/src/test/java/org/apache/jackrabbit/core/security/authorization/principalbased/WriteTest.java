@@ -28,13 +28,12 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
@@ -45,8 +44,6 @@ import java.util.Map;
  */
 public class WriteTest extends AbstractWriteTest {
 
-    private static Logger log = LoggerFactory.getLogger(WriteTest.class);
-
     protected boolean isExecutable() {
         return EvaluationUtil.isExecutable((SessionImpl) superuser, acMgr);
     }
@@ -55,7 +52,7 @@ public class WriteTest extends AbstractWriteTest {
         return EvaluationUtil.getPolicy(acM, path, principal);
     }
 
-    protected Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
+    protected Map<String, Value> getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
         return EvaluationUtil.getRestrictions(s, path);
     }
 
@@ -63,8 +60,8 @@ public class WriteTest extends AbstractWriteTest {
     public void testAutocreatedProperties() throws RepositoryException, NotExecutableException {
         givePrivileges(path, testUser.getPrincipal(), privilegesFromName(PrivilegeRegistry.REP_WRITE), getRestrictions(superuser, path));
 
-        // testuser is not allowed to READ the protected property jcr:created.
-        Map restr = getRestrictions(superuser, path);
+        // test user is not allowed to READ the protected property jcr:created.
+        Map<String, Value> restr = getRestrictions(superuser, path);
         restr.put(((SessionImpl) superuser).getJCRName(ACLTemplate.P_GLOB), superuser.getValueFactory().createValue("/afolder/jcr:created"));
         withdrawPrivileges(path, testUser.getPrincipal(), privilegesFromName(Privilege.JCR_READ), restr);
 

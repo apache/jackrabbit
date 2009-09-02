@@ -27,6 +27,7 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
@@ -48,8 +49,8 @@ public class WriteTest extends AbstractWriteTest {
         return EvaluationUtil.getPolicy(acM, path, principal);
     }
 
-    protected Map getRestrictions(Session s, String path) {
-        return Collections.EMPTY_MAP;
+    protected Map<String, Value> getRestrictions(Session s, String path) {
+        return Collections.emptyMap();
     }
 
     public void testAccessControlModification2() throws RepositoryException, NotExecutableException {

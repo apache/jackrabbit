@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
@@ -51,30 +52,30 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     public void testMultipleEntryEffect() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
-        pt.addEntry(testPrincipal, privileges, true, Collections.EMPTY_MAP);
+        pt.addEntry(testPrincipal, privileges, true, Collections.<String, Value>emptyMap());
 
-        // new entry extends privs.
+        // new entry extends privileges.
         privileges = privilegesFromNames(new String[] {
                 Privilege.JCR_READ,
                 Privilege.JCR_ADD_CHILD_NODES});
         assertTrue(pt.addEntry(testPrincipal,
                 privileges,
-                true, Collections.EMPTY_MAP));
+                true, Collections.<String, Value>emptyMap()));
 
         // net-effect: only a single allow-entry with both privileges
         assertTrue(pt.size() == 1);
         assertSamePrivileges(privileges, pt.getAccessControlEntries()[0].getPrivileges());
 
-        // adding just ADD_CHILD_NODES -> must not remove READ priv
+        // adding just ADD_CHILD_NODES -> must not remove READ privilege
         Privilege[] achPrivs = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
-        assertFalse(pt.addEntry(testPrincipal, achPrivs, true, Collections.EMPTY_MAP));
-        // net-effect: only a single allow-entry with add_child_nodes + read priv
+        assertFalse(pt.addEntry(testPrincipal, achPrivs, true, Collections.<String, Value>emptyMap()));
+        // net-effect: only a single allow-entry with add_child_nodes + read privilege
         assertTrue(pt.size() == 1);
         assertSamePrivileges(privileges, pt.getAccessControlEntries()[0].getPrivileges());
 
         // revoke the 'READ' privilege
         privileges = privilegesFromName(Privilege.JCR_READ);
-        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.EMPTY_MAP));
+        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.<String, Value>emptyMap()));
         // net-effect: 2 entries one allowing ADD_CHILD_NODES, the other denying READ
         assertTrue(pt.size() == 2);
         assertSamePrivileges(privilegesFromName(Privilege.JCR_ADD_CHILD_NODES),
@@ -105,8 +106,8 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         // net-effect: 2 entries with the allow entry being adjusted
         assertTrue(pt.size() == 2);
         AccessControlEntry[] entries = pt.getAccessControlEntries();
-        for (int i = 0; i < entries.length; i++) {
-            ACLTemplate.Entry entry = (ACLTemplate.Entry) entries[i];
+        for (AccessControlEntry entry1 : entries) {
+            ACLTemplate.Entry entry = (ACLTemplate.Entry) entry1;
             int privs = entry.getPrivilegeBits();
             if (entry.isAllow()) {
                 int bits = PrivilegeRegistry.getBits(privileges) ^ PrivilegeRegistry.getBits(privileges2);
@@ -137,7 +138,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         pt.addAccessControlEntry(testPrincipal, privs);
         assertFalse(pt.addAccessControlEntry(testPrincipal, privs));
 
-        // add same privs for another principal -> must modify as well.
+        // add same privileges for another principal -> must modify as well.
         assertTrue(pt.addAccessControlEntry(everyone, privs));
         // .. 2 entries must be present.
         assertTrue(pt.getAccessControlEntries().length == 2);
@@ -159,10 +160,10 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
 
-        pt.addEntry(testPrincipal, privileges, true, Collections.EMPTY_MAP);
+        pt.addEntry(testPrincipal, privileges, true, Collections.<String, Value>emptyMap());
 
         // same entry but with revers 'isAllow' flag
-        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.EMPTY_MAP));
+        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.<String, Value>emptyMap()));
 
         // net-effect: only a single deny-read entry
         assertTrue(pt.size() == 1);

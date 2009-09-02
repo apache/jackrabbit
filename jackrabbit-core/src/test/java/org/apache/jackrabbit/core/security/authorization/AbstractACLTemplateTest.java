@@ -16,6 +16,15 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
+import java.security.Principal;
+import java.util.Collections;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
@@ -24,14 +33,6 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import java.security.Principal;
-import java.util.Collections;
 
 /**
  * <code>AbstractACLTemplateTest</code>...
@@ -171,15 +172,15 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
     public void testAddEntry() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privs = privilegesFromName(Privilege.JCR_READ);
-        assertTrue(pt.addEntry(testPrincipal, privs, true, Collections.EMPTY_MAP));
+        assertTrue(pt.addEntry(testPrincipal, privs, true, Collections.<String, Value>emptyMap()));
     }
 
     public void testAddEntryTwice() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privs = privilegesFromName(Privilege.JCR_READ);
 
-        pt.addEntry(testPrincipal, privs, true, Collections.EMPTY_MAP);
-        assertFalse(pt.addEntry(testPrincipal, privs, true, Collections.EMPTY_MAP));
+        pt.addEntry(testPrincipal, privs, true, Collections.<String, Value>emptyMap());
+        assertFalse(pt.addEntry(testPrincipal, privs, true, Collections.<String, Value>emptyMap()));
     }
 
     public void testEffect() throws RepositoryException, NotExecutableException {
@@ -196,8 +197,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         int allows = PrivilegeRegistry.NO_PRIVILEGE;
         int denies = PrivilegeRegistry.NO_PRIVILEGE;
         AccessControlEntry[] entries = pt.getAccessControlEntries();
-        for (int i = 0; i < entries.length; i++) {
-            AccessControlEntry ace = entries[i];
+        for (AccessControlEntry ace : entries) {
             if (testPrincipal.equals(ace.getPrincipal()) && ace instanceof JackrabbitAccessControlEntry) {
                 int entryBits = PrivilegeRegistry.getBits(ace.getPrivileges());
                 if (((JackrabbitAccessControlEntry) ace).isAllow()) {
@@ -213,17 +213,16 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
 
     public void testEffect2() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
-        pt.addEntry(testPrincipal, privilegesFromName(Privilege.JCR_READ), true, Collections.EMPTY_MAP);
+        pt.addEntry(testPrincipal, privilegesFromName(Privilege.JCR_READ), true, Collections.<String, Value>emptyMap());
 
         // same entry but with revers 'isAllow' flag
-        assertTrue(pt.addEntry(testPrincipal, privilegesFromName(Privilege.JCR_READ), false, Collections.EMPTY_MAP));
+        assertTrue(pt.addEntry(testPrincipal, privilegesFromName(Privilege.JCR_READ), false, Collections.<String, Value>emptyMap()));
 
         // test net-effect
         int allows = PrivilegeRegistry.NO_PRIVILEGE;
         int denies = PrivilegeRegistry.NO_PRIVILEGE;
         AccessControlEntry[] entries = pt.getAccessControlEntries();
-        for (int i = 0; i < entries.length; i++) {
-            AccessControlEntry ace = entries[i];
+        for (AccessControlEntry ace : entries) {
             if (testPrincipal.equals(ace.getPrincipal()) && ace instanceof JackrabbitAccessControlEntry) {
                 int entryBits = PrivilegeRegistry.getBits(ace.getPrivileges());
                 if (((JackrabbitAccessControlEntry) ace).isAllow()) {

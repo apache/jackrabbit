@@ -30,12 +30,12 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -51,7 +51,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     private Session testSession;
     private AccessControlManager testAccessControlManager;
     private Node trn;
-    private Set toClear = new HashSet();
+    private Set<String> toClear = new HashSet<String>();
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -74,14 +74,13 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     protected void tearDown() throws Exception {
-        for (Iterator it = toClear.iterator(); it.hasNext();) {
-            String path = it.next().toString();
+        for (String path : toClear) {
             try {
                 AccessControlPolicy[] policies = acMgr.getPolicies(path);
-                for (int i = 0; i < policies.length; i++) {
-                    acMgr.removePolicy(path, policies[i]);
+                for (AccessControlPolicy policy : policies) {
+                    acMgr.removePolicy(path, policy);
                 }
-                superuser.save();                
+                superuser.save();
             } catch (RepositoryException e) {
                 // log error and ignore
                 log.debug(e.getMessage());
@@ -139,13 +138,13 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     protected abstract JackrabbitAccessControlList getPolicy(AccessControlManager acMgr, String path, Principal princ) throws RepositoryException, NotExecutableException;
-    protected abstract Map getRestrictions(Session session, String path) throws RepositoryException, NotExecutableException;
+    protected abstract Map<String, Value> getRestrictions(Session session, String path) throws RepositoryException, NotExecutableException;
 
     protected JackrabbitAccessControlList modifyPrivileges(String path, String privilege, boolean isAllow) throws NotExecutableException, RepositoryException {
         return modifyPrivileges(path, testUser.getPrincipal(), privilegesFromName(privilege), isAllow, getRestrictions(superuser, path));
     }
 
-    private JackrabbitAccessControlList modifyPrivileges(String path, Principal principal, Privilege[] privileges, boolean isAllow, Map restrictions) throws NotExecutableException, RepositoryException {
+    private JackrabbitAccessControlList modifyPrivileges(String path, Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws NotExecutableException, RepositoryException {
         JackrabbitAccessControlList tmpl = getPolicy(acMgr, path, principal);
         tmpl.addEntry(principal, privileges, isAllow, restrictions);
         
@@ -158,20 +157,24 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     protected JackrabbitAccessControlList givePrivileges(String nPath, Privilege[] privileges,
-                                                         Map restrictions) throws NotExecutableException, RepositoryException {
+                                                         Map<String, Value> restrictions)
+            throws NotExecutableException, RepositoryException {
         return modifyPrivileges(nPath, testUser.getPrincipal(), privileges, true, restrictions);
     }
 
     protected JackrabbitAccessControlList givePrivileges(String nPath, Principal principal,
-                                                         Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
+                                                         Privilege[] privileges, Map<String, Value> restrictions)
+            throws NotExecutableException, RepositoryException {
         return modifyPrivileges(nPath, principal, privileges, true, restrictions);
     }
 
-    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
+    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Privilege[] privileges, Map<String, Value> restrictions)
+            throws NotExecutableException, RepositoryException {
         return modifyPrivileges(nPath, testUser.getPrincipal(), privileges, false, restrictions);
     }
 
-    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Principal principal, Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
+    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Principal principal, Privilege[] privileges, Map<String, Value> restrictions)
+            throws NotExecutableException, RepositoryException {
         return modifyPrivileges(nPath, principal, privileges, false, restrictions);
     }
 }

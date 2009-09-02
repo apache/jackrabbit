@@ -22,6 +22,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
@@ -41,13 +42,14 @@ final class EvaluationUtil {
                 return true;
             }
         } catch (RepositoryException e) {
+            // ignore
         }
         return false;
     }
 
     static JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException,
             AccessDeniedException, NotExecutableException {
-        // try applicable (new) acls first
+        // try applicable (new) ACLs first
         AccessControlPolicyIterator itr = acM.getApplicablePolicies(path);
         while (itr.hasNext()) {
             AccessControlPolicy policy = itr.nextAccessControlPolicy();
@@ -57,8 +59,7 @@ final class EvaluationUtil {
         }
         // try if there is an acl that has been set before:
         AccessControlPolicy[] pcls = acM.getPolicies(path);
-        for (int i = 0; i < pcls.length; i++) {
-            AccessControlPolicy policy = pcls[i];
+        for (AccessControlPolicy policy : pcls) {
             if (policy instanceof ACLTemplate) {
                 return (ACLTemplate) policy;
             }
@@ -67,7 +68,7 @@ final class EvaluationUtil {
         throw new NotExecutableException();
     }
 
-    static Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
-        return Collections.EMPTY_MAP;
+    static Map<String, Value> getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
+        return Collections.emptyMap();
     }
 }
