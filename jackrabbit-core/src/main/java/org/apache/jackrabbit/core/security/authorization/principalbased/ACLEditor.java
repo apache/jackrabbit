@@ -380,11 +380,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     private Principal getPrincipal(String pathToACNode) throws RepositoryException {
         String name = getPrincipalName(pathToACNode);
         PrincipalManager pMgr = session.getPrincipalManager();
-        if (pMgr.hasPrincipal(name)) {
-            return pMgr.getPrincipal(name);
-        } else {
-            return null;
-        }
+        return pMgr.getPrincipal(name);
     }
 
     private static String getPrincipalName(String pathToACNode) {

@@ -16,16 +16,17 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * This is the default implementation of the {@link PrincipalProviderRegistry}
@@ -37,7 +38,7 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
     private static final Logger log = LoggerFactory.getLogger(ProviderRegistryImpl.class);
 
     private final PrincipalProvider defaultPrincipalProvider;
-    private final Map<String, PrincipalProvider> providers = new HashMap<String, PrincipalProvider>();
+    private final Map<String, PrincipalProvider> providers = new LinkedHashMap<String, PrincipalProvider>();
 
     /**
      * Create an instance of <code>ProviderRegistryImpl</code> with the given
