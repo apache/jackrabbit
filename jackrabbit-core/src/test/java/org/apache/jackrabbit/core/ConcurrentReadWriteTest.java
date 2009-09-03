@@ -64,7 +64,7 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
                                 try {
                                     for (PropertyIterator it = n.getProperties(); it.hasNext(); ) {
                                         Property p = it.nextProperty();
-                                        if (p.getDefinition().isMultiple()) {
+                                        if (p.isMultiple()) {
                                             p.getValues();
                                         } else {
                                             p.getValue();

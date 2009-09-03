@@ -228,12 +228,11 @@ public class PropertyImpl extends ItemImpl implements Property {
             LockException, ConstraintViolationException,
             RepositoryException {
         NodeImpl parent = (NodeImpl) getParent();
-        PropertyDefinition definition = data.getPropertyDefinition();
         // check multi-value flag
-        if (multipleValues != definition.isMultiple()) {
+        if (multipleValues != isMultiple()) {
             String msg = (multipleValues) ?
                     "Single-valued property can not be set to an array of values:" :
-                    "Multivalued property can not be set to a single value (an array of lenght one is OK): ";
+                    "Multivalued property can not be set to a single value (an array of length one is OK): ";
             throw new ValueFormatException(msg + this);
         }
 
@@ -416,7 +415,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public InternalValue[] internalGetValues() throws RepositoryException {
         final PropertyDefinition definition = data.getPropertyDefinition();
-        if (definition.isMultiple()) {
+        if (isMultiple()) {
             return getPropertyState().getValues();
         } else {
             throw new ValueFormatException(
@@ -435,7 +434,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public InternalValue internalGetValue() throws RepositoryException {
         final PropertyDefinition definition = data.getPropertyDefinition();
-        if (definition.isMultiple()) {
+        if (isMultiple()) {
             throw new ValueFormatException(
                     this + " is a multi-valued property,"
                     + " so it's values can only be retrieved as an array");
@@ -789,7 +788,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        return data.getPropertyDefinition().isMultiple();
+        return getPropertyState().isMultiValued();
     }
 
     //-----------------------------------------------------------------< Item >

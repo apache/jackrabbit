@@ -357,7 +357,7 @@ public abstract class Exporter {
 
         int type = property.getType();
         if (type != PropertyType.BINARY || binary) {
-            if (property.getDefinition().isMultiple()) {
+            if (property.isMultiple()) {
                 exportProperty(uri, local, type, property.getValues());
             } else {
                 exportProperty(uri, local, property.getValue());
@@ -365,7 +365,7 @@ public abstract class Exporter {
         } else {
             ValueFactory factory = session.getValueFactory();
             Value value = factory.createValue("", PropertyType.BINARY);
-            if (property.getDefinition().isMultiple()) {
+            if (property.isMultiple()) {
                 exportProperty(uri, local, type, new Value[] { value });
             } else {
                 exportProperty(uri, local, value);

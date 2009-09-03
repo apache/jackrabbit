@@ -335,7 +335,7 @@ public class DefaultItemResource extends AbstractItemResource {
      */
     private boolean isMultiple() {
         try {
-            if (exists() && ((Property)item).getDefinition().isMultiple()) {
+            if (exists() && ((Property)item).isMultiple()) {
                 return true;
             }
         } catch (RepositoryException e) {

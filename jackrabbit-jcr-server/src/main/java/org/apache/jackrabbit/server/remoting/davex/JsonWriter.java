@@ -162,14 +162,14 @@ class JsonWriter {
             // mark binary properties with a leading ':'
             // the value(s) reflect the jcr-values length instead of the binary data.
             String key = ":" + p.getName();
-            if (p.getDefinition().isMultiple()) {
+            if (p.isMultiple()) {
                 long[] binLengths = p.getLengths();
                 writeKeyArray(w, key, binLengths);
             } else {
                 writeKeyValue(w, key, p.getLength());
             }
         } else {
-            boolean isMultiple = p.getDefinition().isMultiple();
+            boolean isMultiple = p.isMultiple();
             if (type == PropertyType.NAME || type == PropertyType.PATH ||
                     type == PropertyType.REFERENCE || type == PropertyType.DATE ||
                     (isMultiple && p.getValues().length == 0)) {

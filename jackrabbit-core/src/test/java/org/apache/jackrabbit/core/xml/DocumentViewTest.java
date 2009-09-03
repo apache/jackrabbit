@@ -114,7 +114,7 @@ public class DocumentViewTest extends AbstractJCRTest {
                 ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         try {
             Property property = root.getProperty("multi-value-test/test");
-            assertTrue(message, property.getDefinition().isMultiple());
+            assertTrue(message, property.isMultiple());
             assertEquals(message, property.getValues().length, 2);
             assertTrue(message, property.getValues()[0].getBoolean());
             assertFalse(message, property.getValues()[1].getBoolean());

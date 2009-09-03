@@ -321,7 +321,7 @@ public class GarbageCollector {
                         } else {
                             rememberNode(n.getPath());
                         }
-                        if (p.getDefinition().isMultiple()) {
+                        if (p.isMultiple()) {
                             p.getLengths();
                         } else {
                             p.getLength();

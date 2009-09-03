@@ -222,7 +222,7 @@ class TraversingNodeResolver extends NodeResolver {
                             Name propertyName = pItr.next();
                             if (node.hasProperty(propertyName)) {
                                 Property prop = node.getProperty(propertyName);
-                                if (prop.getDefinition().isMultiple()) {
+                                if (prop.isMultiple()) {
                                     Value[] values = prop.getValues();
                                     for (int i = 0; i < values.length && !match; i++) {
                                         match = matches(value, values[i].getString(), exact);
