@@ -418,7 +418,7 @@ public class SessionImporter implements Importer {
                     && prop.getType() != PropertyType.WEAKREFERENCE) {
                 continue;
             }
-            if (prop.getDefinition().isMultiple()) {
+            if (prop.isMultiple()) {
                 Value[] values = prop.getValues();
                 Value[] newVals = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {

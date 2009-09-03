@@ -341,7 +341,7 @@ class RowIteratorImpl implements RowIterator {
                     return valueFactory.createValue(p);
                 } else if (n.hasProperty(col.getPropertyName())) {
                     Property p = n.getProperty(col.getPropertyName());
-                    if (p.getDefinition().isMultiple()) {
+                    if (p.isMultiple()) {
                         // mvp values cannot be returned
                         return null;
                     } else {

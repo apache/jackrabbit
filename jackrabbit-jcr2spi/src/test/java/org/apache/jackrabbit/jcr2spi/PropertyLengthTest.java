@@ -99,7 +99,7 @@ public class PropertyLengthTest extends AbstractJCRTest {
     }
 
     private static void checkLength(Property p) throws RepositoryException {
-        if (p.getDefinition().isMultiple()) {
+        if (p.isMultiple()) {
             Value[] vals = p.getValues();
             long[] lengths = p.getLengths();
             for (int i = 0; i < lengths.length; i++) {

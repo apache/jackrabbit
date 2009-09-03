@@ -104,7 +104,7 @@ public class PropertyValueOperand extends DynamicOperand {
         if (prop == null) {
             return EMPTY;
         } else {
-            if (prop.getDefinition().isMultiple()) {
+            if (prop.isMultiple()) {
                 return prop.getValues();
             } else {
                 return new Value[]{prop.getValue()};

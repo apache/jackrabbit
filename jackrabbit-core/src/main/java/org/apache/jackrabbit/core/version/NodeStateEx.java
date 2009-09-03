@@ -795,7 +795,7 @@ public class NodeStateEx {
      * @throws RepositoryException if an error occurs
      */
     public void copyFrom(PropertyImpl prop) throws RepositoryException {
-        if (prop.getDefinition().isMultiple()) {
+        if (prop.isMultiple()) {
             InternalValue[] values = prop.internalGetValues();
             InternalValue[] copiedValues = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {

@@ -50,7 +50,7 @@ class PropertyInfoImpl
             throws RepositoryException, NameException {
         super(resolver.getQPath(property.getPath()),
                 idFactory.createPropertyId(property, resolver),
-                property.getType(), property.getDefinition().isMultiple(),
+                property.getType(), property.isMultiple(),
                 getValues(property, resolver, qValueFactory));
     }
 
@@ -67,7 +67,7 @@ class PropertyInfoImpl
                                       NamePathResolver resolver,
                                       QValueFactory factory)
             throws RepositoryException {
-        boolean isMultiValued = property.getDefinition().isMultiple();
+        boolean isMultiValued = property.isMultiple();
         QValue[] values;
         if (isMultiValued) {
             Value[] jcrValues = property.getValues();
