@@ -26,11 +26,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
@@ -81,6 +83,11 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
 
     private boolean principalbased = false;
 
+    /**
+     * the ACL for non-principal based
+     */
+    private JackrabbitAccessControlList acl = null;
+
     public AccessControlImporter(JackrabbitSession session, NamePathResolver resolver,
                                  boolean isWorkspaceImport, int uuidBehavior) throws RepositoryException {
         super(session, resolver, isWorkspaceImport, uuidBehavior);
@@ -107,10 +114,16 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
 
         if (AccessControlConstants.N_POLICY.equals(protectedParent.getQName())
                 && protectedParent.isNodeType(AccessControlConstants.NT_REP_ACL)) {
+            acl = getACL(protectedParent.getParent().getPath());
+            if (acl == null) {
+                log.warn("AccessControlImporter cannot be started: no ACL for {}.", parent.getParent().getPath());
+                return false;
+            }
             status = STATUS_ACL;
         } else if (protectedParent.isNodeType(AccessControlConstants.NT_REP_ACCESS_CONTROL)) {
             status = STATUS_AC_FOLDER;
             principalbased = true;
+            acl = null;
         } // else: nothing this importer can deal with.
 
         if (isStarted()) {
@@ -119,6 +132,27 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         } else {
             return false;
         }
+    }
+
+    private JackrabbitAccessControlList getACL(String path) throws RepositoryException, AccessDeniedException {
+        JackrabbitAccessControlList acl = null;
+        for (AccessControlPolicy p: acMgr.getPolicies(path)) {
+            if (p instanceof JackrabbitAccessControlList) {
+                acl = (JackrabbitAccessControlList) p;
+                // don't know if this check is needed
+                if (path.equals(acl.getPath())) {
+                    break;
+                }
+                acl = null;
+            }
+        }
+        if (acl != null) {
+            // clear all existing entries
+            for (AccessControlEntry ace: acl.getAccessControlEntries()) {
+                acl.removeAccessControlEntry(ace);
+            }
+        }
+        return acl;
     }
 
     public boolean start(NodeState protectedParent) throws IllegalStateException, RepositoryException {
@@ -139,6 +173,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
 
         if (!principalbased) {
             checkStatus(STATUS_ACL, "");
+            acMgr.setPolicy(acl.getPath(), acl);
         } else {
             checkStatus(STATUS_AC_FOLDER, "");
             if (!prevStatus.isEmpty()) {
@@ -234,6 +269,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
     private void reset() {
         status = STATUS_UNDEFINED;
         parent = null;
+        acl = null;
     }
 
     private void checkStatus(int expectedStatus, String message) throws ConstraintViolationException {
@@ -304,37 +340,17 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
             }
         }
 
-
-        // try to access policies
-        List<AccessControlPolicy> policies = new ArrayList<AccessControlPolicy>();
-        if (!principalbased) {
-            // no need to retrieve the applicable policies as the policy node
-            // itself is the start point of the protected import.
-            policies.addAll(Arrays.asList(acMgr.getPolicies(parent.getParent().getPath())));
-        } else {
+        if (principalbased) {
+            // try to access policies
+            List<AccessControlPolicy> policies = new ArrayList<AccessControlPolicy>();
             if (acMgr instanceof JackrabbitAccessControlManager) {
                 JackrabbitAccessControlManager jacMgr = (JackrabbitAccessControlManager) acMgr;
                 policies.addAll(Arrays.asList(jacMgr.getPolicies(principal)));
                 policies.addAll(Arrays.asList(jacMgr.getApplicablePolicies(principal)));
             }
-        }
-
-        for (AccessControlPolicy policy : policies) {
-            if (policy instanceof JackrabbitAccessControlList) {
-                JackrabbitAccessControlList acl = (JackrabbitAccessControlList) policy;
-                // test if this acl can be used to apply the ACE
-                boolean matches;
-                if (!principalbased) {
-                    // resource-based the acl-path must correspond to the path
-                    // of the start-point of the protected import that was the
-                    // policy node itself.
-                    matches = parent.getParent().getPath().equals(acl.getPath());
-                } else {
-                    // principal based acl: just try the first one (TODO: check again)
-                    matches = true;
-                }
-
-                if (matches) {
+            for (AccessControlPolicy policy : policies) {
+                if (policy instanceof JackrabbitAccessControlList) {
+                    JackrabbitAccessControlList acl = (JackrabbitAccessControlList) policy;
                     Map<String, Value> restr = new HashMap<String, Value>();
                     for (String restName : acl.getRestrictionNames()) {
                         TextValue txtVal = restrictions.remove(restName);
@@ -349,9 +365,22 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
                     acMgr.setPolicy(acl.getPath(), acl);
                     return;
                 }
-
             }
+        } else {
+            Map<String, Value> restr = new HashMap<String, Value>();
+            for (String restName : acl.getRestrictionNames()) {
+                TextValue txtVal = restrictions.remove(restName);
+                if (txtVal != null) {
+                    restr.put(restName, txtVal.getValue(acl.getRestrictionType(restName), resolver));
+                }
+            }
+            if (!restrictions.isEmpty()) {
+                throw new ConstraintViolationException("ACE childInfo contained restrictions that could not be applied.");
+            }
+            acl.addEntry(principal, privileges, isAllow, restr);
+            return;
         }
+
 
         // could not apply the ACE. No suitable ACL found.
         throw new ConstraintViolationException("Cannot handle childInfo " + childInfo + "; No policy found to apply the ACE.");        
