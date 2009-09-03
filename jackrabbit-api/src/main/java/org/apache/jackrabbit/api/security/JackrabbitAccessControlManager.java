@@ -122,7 +122,10 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
      * <code>AccessDeniedException</code> if the session lacks
      * <code>READ_ACCESS_CONTROL</code> privilege for the <code>absPath</code>
      * node.
-     *
+     * <p>
+     * Note that this method does not resolve any group membership, as this is
+     * the job of the user manager. nor does it augment the set with the
+     * "everyone" principal.
      *
      * @param absPath an absolute path.
      * @param principals a set of <code>Principal</code>s for which is the
