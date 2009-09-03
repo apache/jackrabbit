@@ -22,8 +22,16 @@ import javax.jcr.security.AccessControlList;
 import javax.jcr.security.Privilege;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.PropertyType;
+
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
+import java.util.Collections;
+import java.util.HashMap;
+
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 
 /**
  * An implementation of the <code>AccessControlList</code> interface that only
@@ -32,9 +40,13 @@ import java.util.List;
  * and {@link #removeAccessControlEntry(AccessControlEntry) removeAccessControlEntry})
  * throw an <code>AccessControlException</code>.
  */
-public class UnmodifiableAccessControlList implements AccessControlList {
+public class UnmodifiableAccessControlList implements JackrabbitAccessControlList {
 
     private final AccessControlEntry[] accessControlEntries;
+
+    private final Map<String, Integer> restrictions;
+
+    private final String path;
 
     /**
      * Construct a new <code>UnmodifiableAccessControlList</code>
@@ -45,7 +57,20 @@ public class UnmodifiableAccessControlList implements AccessControlList {
      * specified <code>AccessControlList</code>.
      */
     public UnmodifiableAccessControlList(AccessControlList acl) throws RepositoryException {
-        accessControlEntries = acl.getAccessControlEntries();
+        if (acl instanceof JackrabbitAccessControlList) {
+            JackrabbitAccessControlList jAcl = (JackrabbitAccessControlList) acl;
+            accessControlEntries = acl.getAccessControlEntries();
+            path = jAcl.getPath();
+            Map<String, Integer> r = new HashMap<String, Integer>();
+            for (String name: jAcl.getRestrictionNames()) {
+                r.put(name, jAcl.getRestrictionType(name));
+            }
+            restrictions = Collections.unmodifiableMap(r);
+        } else {
+            accessControlEntries = acl.getAccessControlEntries();
+            path = null;
+            restrictions = Collections.emptyMap();
+        }
     }
 
     /**
@@ -55,6 +80,8 @@ public class UnmodifiableAccessControlList implements AccessControlList {
      */
     public UnmodifiableAccessControlList(List<AccessControlEntry> accessControlEntries) {
         this.accessControlEntries = accessControlEntries.toArray(new AccessControlEntry[accessControlEntries.size()]);
+        path = null;
+        restrictions = Collections.emptyMap();
     }
 
     //--------------------------------------------------< AccessControlList >---
@@ -81,5 +108,37 @@ public class UnmodifiableAccessControlList implements AccessControlList {
     public void removeAccessControlEntry(AccessControlEntry ace)
             throws AccessControlException, RepositoryException {
         throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getApplicablePolicies in order to obtain an modifiable ACL.");
+    }
+
+    public String[] getRestrictionNames() {
+        return restrictions.keySet().toArray(new String[restrictions.size()]);
+    }
+
+    public int getRestrictionType(String restrictionName) {
+        if (restrictions.containsKey(restrictionName)) {
+            return restrictions.get(restrictionName);
+        } else {
+            return PropertyType.UNDEFINED;
+        }
+    }
+
+    public boolean isEmpty() {
+        return accessControlEntries.length == 0;
+    }
+
+    public int size() {
+        return accessControlEntries.length;
+    }
+
+    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow) throws AccessControlException, RepositoryException {
+        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getApplicablePolicies in order to obtain an modifiable ACL.");
+    }
+
+    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws AccessControlException, RepositoryException {
+        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getApplicablePolicies in order to obtain an modifiable ACL.");
+    }
+
+    public String getPath() {
+        return path;
     }
 }
