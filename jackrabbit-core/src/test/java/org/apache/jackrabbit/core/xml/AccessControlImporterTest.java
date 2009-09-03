@@ -119,6 +119,25 @@ public class AccessControlImporterTest extends AbstractJCRTest {
                 "</sv:node>" +
             "</sv:node>";
 
+    private static final String XML_POLICY_TREE_5   = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+            "<sv:node sv:name=\"rep:policy\" " +
+                    "xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" xmlns:rep=\"internal\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\">" +
+                "<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">" +
+                    "<sv:value>rep:ACL</sv:value>" +
+                "</sv:property>" +
+                "<sv:node sv:name=\"allow0\">" +
+                    "<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">" +
+                        "<sv:value>rep:GrantACE</sv:value>" +
+                    "</sv:property>" +
+                    "<sv:property sv:name=\"rep:principalName\" sv:type=\"String\">" +
+                        "<sv:value>admin</sv:value>" +
+                    "</sv:property>" +
+                    "<sv:property sv:name=\"rep:privileges\" sv:type=\"Name\">" +
+                        "<sv:value>jcr:write</sv:value>" +
+                    "</sv:property>" +
+                "</sv:node>" +
+            "</sv:node>";
+
     private static final String XML_POLICY_TREE_4   = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<sv:node sv:name=\"rep:policy\" " +
                     "xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" xmlns:rep=\"internal\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\">" +
@@ -309,6 +328,52 @@ public class AccessControlImporterTest extends AbstractJCRTest {
      *
      * @throws Exception
      */
+    public void testImportACLRemoveACE() throws Exception {
+        try {
+            NodeImpl target = (NodeImpl) testRootNode.addNode(nodeName1);
+            target.addMixin("rep:AccessControllable");
+
+            InputStream in = new ByteArrayInputStream(XML_POLICY_TREE_3.getBytes("UTF-8"));
+            SessionImporter importer = new SessionImporter(target, sImpl,
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+            ImportHandler ih = new ImportHandler(importer, sImpl);
+            new ParsingContentHandler(ih).parse(in);
+
+            in = new ByteArrayInputStream(XML_POLICY_TREE_5.getBytes("UTF-8"));
+            importer = new SessionImporter(target, sImpl,
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+            ih = new ImportHandler(importer, sImpl);
+            new ParsingContentHandler(ih).parse(in);
+
+            String path = target.getPath();
+
+            AccessControlManager acMgr = sImpl.getAccessControlManager();
+            AccessControlPolicy[] policies = acMgr.getPolicies(path);
+
+            assertEquals(1, policies.length);
+            assertTrue(policies[0] instanceof JackrabbitAccessControlList);
+
+            AccessControlEntry[] entries = ((JackrabbitAccessControlList) policies[0]).getAccessControlEntries();
+            assertEquals(1, entries.length);
+
+            AccessControlEntry entry = entries[0];
+            assertEquals("admin", entry.getPrincipal().getName());
+            assertEquals(1, entry.getPrivileges().length);
+            assertEquals(acMgr.privilegeFromName(Privilege.JCR_WRITE), entry.getPrivileges()[0]);
+
+            if(entry instanceof JackrabbitAccessControlEntry) {
+                assertTrue(((JackrabbitAccessControlEntry) entry).isAllow());
+            }
+        } finally {
+            superuser.refresh(false);
+        }
+    }
+
+    /**
+     * Imports a resource-based ACL containing a single entry.
+     *
+     * @throws Exception
+     */
     public void testImportACLUnknown() throws Exception {
         try {
             NodeImpl target = (NodeImpl) testRootNode.addNode(nodeName1);
@@ -356,6 +421,12 @@ public class AccessControlImporterTest extends AbstractJCRTest {
      * @throws Exception
      */
     public void testImportPolicyExists() throws Exception {
+        // this test does not work anymore, since the normal behavior is replace
+        // all ACEs for an import. maybe control this behavior via uuid-flag.
+        if (true) {
+            return;
+        }
+
         NodeImpl target = (NodeImpl) testRootNode;
         target = (NodeImpl) target.addNode("test", "test:sameNameSibsFalseChildNodeDefinition");
         AccessControlManager acMgr = sImpl.getAccessControlManager();
