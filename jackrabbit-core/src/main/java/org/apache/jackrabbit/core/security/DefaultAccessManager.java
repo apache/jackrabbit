@@ -421,11 +421,15 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkInitialized();
         checkValidNodePath(absPath);
         checkPermission(absPath, Permission.READ_AC);
-
-        int bits = acProvider.compilePermissions(principals).getPrivileges(resolver.getQPath(absPath));
-        return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
-                new Privilege[0] :
-                privilegeRegistry.getPrivileges(bits);
+        CompiledPermissions perms = acProvider.compilePermissions(principals);
+        try {
+            int bits = perms.getPrivileges(resolver.getQPath(absPath));
+            return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
+                    new Privilege[0] :
+                    privilegeRegistry.getPrivileges(bits);
+        } finally {
+            perms.close();
+        }
     }
 
     //---------------------------------------< AbstractAccessControlManager >---
