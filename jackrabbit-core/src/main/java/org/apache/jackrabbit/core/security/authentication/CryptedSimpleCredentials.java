@@ -69,8 +69,8 @@ public class CryptedSimpleCredentials implements Credentials {
 
         String[] attNames = credentials.getAttributeNames();
         attributes = new HashMap<String, Object>(attNames.length);
-        for (int i = 0; i < attNames.length; i++) {
-            attributes.put(attNames[i], credentials.getAttribute(attNames[i]));
+        for (String attName : attNames) {
+            attributes.put(attName, credentials.getAttribute(attName));
         }
     }
 
@@ -89,7 +89,7 @@ public class CryptedSimpleCredentials implements Credentials {
             algorithm = algo;
             cryptedPassword = password;
         }
-        attributes = Collections.EMPTY_MAP;
+        attributes = Collections.emptyMap();
     }
 
     public String getUserID() {
@@ -134,7 +134,7 @@ public class CryptedSimpleCredentials implements Credentials {
                 // uncrypted pw to match -> crypt with algorithm present here.
                 return crypt(toMatch, algorithm).equals(cryptedPassword);
             } else if (algr != null && algorithm == null) {
-                // crypted pw to match but unkown algorithm here -> crypt this pw
+                // crypted pw to match but unknown algorithm here -> crypt this pw
                 return crypt(algr, cryptedPassword).equals(toMatch);
             }
 

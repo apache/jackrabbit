@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import org.apache.commons.collections.set.ListOrderedSet;
-import org.apache.jackrabbit.core.config.LoginModuleConfig;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
-import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.security.Principal;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.GuestCredentials;
@@ -37,11 +35,14 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import java.io.IOException;
-import java.security.Principal;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.core.config.LoginModuleConfig;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AbstractLoginModule</code> provides the means for the common
@@ -156,11 +157,8 @@ public abstract class AbstractLoginModule implements LoginModule {
 
             //log config values for debug
             if (log.isDebugEnabled()) {
-                Iterator itr = options.keySet().iterator();
-                while (itr.hasNext()) {
-                    String option = (String) itr.next();
-                    log.debug("- Option: "+ option +" -> '"+ options.get(option) +"'");
-
+                for (String option : options.keySet()) {
+                    log.debug("- Option: " + option + " -> '" + options.get(option) + "'");
                 }
             }
             initialized = (this.subject != null);
@@ -339,7 +337,7 @@ public abstract class AbstractLoginModule implements LoginModule {
             return false;
         }
 
-        Set principals = getPrincipals();
+        Set<Principal> principals = getPrincipals();
         subject.getPrincipals().addAll(principals);
         subject.getPublicCredentials().add(credentials);
         return true;
@@ -641,14 +639,14 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @return a Collection of principals that contains the current user
      * principal and all groups it is member of.
      */
-    protected Set getPrincipals() {
-        // use ListOrderedSet instead of Hashset in order to maintain the order
+    protected Set<Principal> getPrincipals() {
+        // use linked HashSet instead of HashSet in order to maintain the order
         // of principals (as in the Subject).
-        Set principals = new ListOrderedSet();
+        Set<Principal> principals = new LinkedHashSet<Principal>();
         principals.add(principal);
-        Iterator groups = principalProvider.getGroupMembership(principal);
+        PrincipalIterator groups = principalProvider.getGroupMembership(principal);
         while (groups.hasNext()) {
-            principals.add(groups.next());
+            principals.add(groups.nextPrincipal());
         }
         return principals;
     }

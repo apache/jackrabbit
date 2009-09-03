@@ -134,8 +134,8 @@ public class AuthContextProvider {
             AppConfigurationEntry[] entries = getJAASConfig();
             if (entries != null) {
                 List<Properties> tmp = new ArrayList<Properties>(entries.length);
-                for (int i = 0; i < entries.length; i++) {
-                    Map opt = entries[i].getOptions();
+                for (AppConfigurationEntry entry : entries) {
+                    Map opt = entry.getOptions();
                     if (opt != null) {
                         Properties prop = new Properties();
                         prop.putAll(opt);

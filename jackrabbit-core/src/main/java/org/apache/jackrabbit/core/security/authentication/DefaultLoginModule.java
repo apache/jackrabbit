@@ -105,7 +105,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
                 return authentication;
             }
         }
-        // no valid user or authencation could not handle the given creds.
+        // no valid user or authentication could not handle the given credentials
         return null;
     }
 
