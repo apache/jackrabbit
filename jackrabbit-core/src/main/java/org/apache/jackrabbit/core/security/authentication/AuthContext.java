@@ -30,13 +30,13 @@ import javax.security.auth.login.LoginException;
  *       JAAS <code>LoginModule</code></li>
  * </ul>
  */
-public abstract interface AuthContext {
+public interface AuthContext {
 
     /**
      * Perform the authentication and, if successful, associate Principals and Credentials
      * with the authenticated<code>Subject</code>.
      *
-     * @see LoginContext#login()
+     * @see javax.security.auth.login.LoginContext#login()
      * @throws LoginException if the authentication fails.
      */
     void login() throws LoginException;
@@ -44,7 +44,7 @@ public abstract interface AuthContext {
     /**
      * Return the authenticated Subject.
      *
-     * @see LoginContext#getSubject()
+     * @see javax.security.auth.login.LoginContext#getSubject()
      * @return the authenticated Subject or <code>null</code> if authentication failed.
      */
     Subject getSubject();
@@ -52,8 +52,8 @@ public abstract interface AuthContext {
     /**
      * Logout the <code>Subject</code>.
      *
-     * @see LoginContext#logout()
-     * @exception LoginException if the logout fails.
+     * @see javax.security.auth.login.LoginContext#logout()
+     * @throws LoginException if the logout fails.
      */
     void logout() throws LoginException;
 }

@@ -82,9 +82,7 @@ public class CallbackHandlerImpl implements CallbackHandler {
      */
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
 
-        for (int i = 0; i < callbacks.length; i++) {
-            Callback callback = callbacks[i];
-
+        for (Callback callback : callbacks) {
             if (callback instanceof CredentialsCallback) {
                 ((CredentialsCallback) callback).setCredentials(credentials);
             } else if (callback instanceof RepositoryCallback) {

@@ -50,7 +50,7 @@ public class JAASAuthContext implements AuthContext {
                 context = new LoginContext(appName, subject, cbHandler);
             }
         } catch (LoginException e) {
-            //all caseses it is thrown are checked -> ignore
+            //all cases it is thrown are checked -> ignore
         } finally {
             current.setContextClassLoader(orig);
         }
