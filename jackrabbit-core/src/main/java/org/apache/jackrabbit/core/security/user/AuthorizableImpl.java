@@ -29,6 +29,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 
@@ -308,7 +309,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 values = new Value[1];
             }
             values[values.length - 1] = added;
-            userManager.setProtectedProperty(node, P_GROUPS, values);
+            userManager.setProtectedProperty(node, P_GROUPS, values, PropertyType.WEAKREFERENCE);
             return true;
         } catch (RepositoryException e) {
             // revert all pending changes and rethrow.
@@ -334,7 +335,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                     userManager.removeProtectedItem(property, node);
                 } else {
                     Value[] values = valList.toArray(new Value[valList.size()]);
-                    userManager.setProtectedProperty(node, P_GROUPS, values);
+                    userManager.setProtectedProperty(node, P_GROUPS, values, PropertyType.WEAKREFERENCE);
                 }
                 return true;
             } catch (RepositoryException e) {

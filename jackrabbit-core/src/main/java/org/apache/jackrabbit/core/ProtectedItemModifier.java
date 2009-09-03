@@ -118,6 +118,17 @@ public abstract class ProtectedItemModifier {
         return parentImpl.internalSetProperty(name, intVs);
     }
 
+    protected Property setProperty(NodeImpl parentImpl, Name name, Value[] values, int type) throws RepositoryException {
+        checkPermission(parentImpl, name, getPermission(false, false));
+        // validation: make sure Node is not locked or checked-in.
+        parentImpl.checkSetProperty();
+        InternalValue[] intVs = new InternalValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            intVs[i] = InternalValue.create(values[i], parentImpl.session);
+        }
+        return parentImpl.internalSetProperty(name, intVs, type);
+    }
+
     protected void removeItem(ItemImpl itemImpl) throws RepositoryException {
         NodeImpl n;
         if (itemImpl.isNode()) {

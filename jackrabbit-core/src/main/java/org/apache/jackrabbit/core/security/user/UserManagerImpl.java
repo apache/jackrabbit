@@ -479,6 +479,11 @@ public class UserManagerImpl extends ProtectedItemModifier
         node.save();
     }
 
+    void setProtectedProperty(NodeImpl node, Name propName, Value[] values, int type) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {
+        setProperty(node, propName, values, type);
+        node.save();
+    }
+
     void removeProtectedItem(ItemImpl item, Node parent) throws RepositoryException, AccessDeniedException, VersionException {
         removeItem(item);
         parent.save();
