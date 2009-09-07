@@ -1287,8 +1287,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
             NodeTypeDef ntd = (NodeTypeDef) iter.next();
             Name name = ntd.getName();
-            if (name != null && registeredNTDefs.containsKey(name)) {
+            if (name != null && tmpNTDefCache.containsKey(name)) {
                 String msg = name + " already exists";
+                if (tmpNTDefCache.containsKey(name)) {
+                    msg += " locally";
+                }
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
