@@ -65,6 +65,14 @@ public class TestAll extends AbstractJCRTest {
     private static final String TEST_NS_CND_NODETYPES =
         "test_ns_cnd_nodetypes.cnd";
 
+    /** Name of the xml nodetype file with same node type name definitions. */
+    private static final String TEST_SAME_NT_NAME_XML_NODETYPES =
+        "test_same_nt_name_xml_nodetypes.xml";
+
+    /** Name of the cnd nodetype file with same node type name definitions. */
+    private static final String TEST_SAME_NT_NAME_CND_NODETYPES =
+        "test_same_nt_name_cnd_nodetypes.cnd";
+
     private static final NameFactory FACTORY = NameFactoryImpl.getInstance();
 
     /** Test node types definitions. */
@@ -252,6 +260,24 @@ public class TestAll extends AbstractJCRTest {
         }
     }
 
+    /** Test for same node type name on node type import. */
+    public void testInvalidXMLNodeTypes() throws Exception {
+        JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
+            superuser.getWorkspace().getNodeTypeManager();
+        try {
+            ntm.registerNodeTypes(
+                TestAll.class.getResourceAsStream(TEST_SAME_NT_NAME_XML_NODETYPES),
+                JackrabbitNodeTypeManager.TEXT_XML);
+            fail("Importing multiple node types with the same name must fail");
+        } catch (RepositoryException e) {
+            if (e.getCause() instanceof InvalidNodeTypeDefException) {
+               // Expected
+            } else {
+               throw e;
+            }
+        }
+    }
+
     /** Test for namespace registration on node type import. */
     public void testImportCNDNodeTypes() throws Exception {
         try {
@@ -267,6 +293,24 @@ public class TestAll extends AbstractJCRTest {
                 superuser.getNamespacePrefix("test-namespace3");
             } catch (NamespaceException e2) {
                 fail("cnd test3 namespace not registered");
+            }
+        }
+    }
+
+    /** Test for same node type name on node type import. */
+    public void testInvalidCNDNodeTypes() throws Exception {
+        JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
+            superuser.getWorkspace().getNodeTypeManager();
+        try {
+            ntm.registerNodeTypes(
+                TestAll.class.getResourceAsStream(TEST_SAME_NT_NAME_CND_NODETYPES),
+                JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+            fail("Importing multiple node types with the same name must fail");
+        } catch (RepositoryException e) {
+            if (e.getCause() instanceof InvalidNodeTypeDefException) {
+               // Expected
+            } else {
+               throw e;
             }
         }
     }
