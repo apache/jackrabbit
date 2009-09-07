@@ -46,7 +46,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ReferencesTest.class);
 
         // test related to NodeStateMerger
-        suite.addTestSuite(ConcurrentImportTest.class);
+        // temporarily disabled see JCR-2272 and JCR-2295
+        // suite.addTestSuite(ConcurrentImportTest.class);
         suite.addTestSuite(ConcurrentAddRemoveMoveTest.class);
         suite.addTestSuite(ConcurrentAddRemovePropertyTest.class);
         suite.addTestSuite(ConcurrentMixinModificationTest.class);
