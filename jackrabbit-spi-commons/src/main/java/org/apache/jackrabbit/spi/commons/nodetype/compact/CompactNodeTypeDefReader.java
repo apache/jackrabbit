@@ -139,7 +139,7 @@ public class CompactNodeTypeDefReader {
             throw new InternalError(e.toString());
         }
     }
-    
+
     /**
      * the list of parsed QNodeTypeDefinition
      */
@@ -292,7 +292,7 @@ public class CompactNodeTypeDefReader {
     }
 
     /**
-     * Convenience methdo that returns the list of parsed NodeTypeDefinition
+     * Convenience method that returns the list of parsed NodeTypeDefinition
      * definitions, using the {@link NodeTypeDefinitionFactory}.
      *
      * @param session repository session used for converting the definitions.
