@@ -64,4 +64,15 @@
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk</url>
   </scm>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
