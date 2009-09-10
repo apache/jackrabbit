@@ -17,10 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd ">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/maven-v4_0_0.xsd ">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -32,7 +29,7 @@
     <version>1.4</version>
   </parent>
   <artifactId>jackrabbit-core</artifactId>
-  <version>1.4.10-SNAPSHOT</version>
+  <version>1.4.10</version>
   <name>Jackrabbit Core</name>
   <description>Jackrabbit content repository implementation</description>
 
@@ -46,13 +43,13 @@
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/1.4/jackrabbit-core
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-core-1.4.10
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/1.4/jackrabbit-core
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-core-1.4.10
     </developerConnection>
     <url>
-      http://svn.apache.org/viewvc/jackrabbit/branches/1.4/jackrabbit-core
+      http://svn.apache.org/viewvc/jackrabbit/tags/jackrabbit-core-1.4.10
     </url>
   </scm>
 
@@ -139,11 +136,11 @@
                 <echo>Remove files that have been customized in Jackrabbit</echo>
                 <delete>
                   <fileset dir="${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query">
-                    <include name="sql/ASTLiteral.java"/>
-                    <include name="sql/ASTContainsExpression.java"/>
-                    <include name="sql/ASTPredicate.java"/>
-                    <include name="sql/ASTIdentifier.java"/>
-                    <include name="xpath/SimpleNode.java"/>
+                    <include name="sql/ASTLiteral.java" />
+                    <include name="sql/ASTContainsExpression.java" />
+                    <include name="sql/ASTPredicate.java" />
+                    <include name="sql/ASTIdentifier.java" />
+                    <include name="xpath/SimpleNode.java" />
                   </fileset>
                 </delete>
               </tasks>
@@ -158,7 +155,7 @@
             <configuration>
               <tasks>
                 <copy todir="${project.build.directory}/repository">
-                  <fileset dir="${basedir}/src/test/repository"/>
+                  <fileset dir="${basedir}/src/test/repository" />
                 </copy>
               </tasks>
             </configuration>
