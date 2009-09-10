@@ -17,7 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/maven-v4_0_0.xsd ">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -29,7 +29,7 @@
     <version>1.4</version>
   </parent>
   <artifactId>jackrabbit-core</artifactId>
-  <version>1.4.10</version>
+  <version>1.4.11-SNAPSHOT</version>
   <name>Jackrabbit Core</name>
   <description>Jackrabbit content repository implementation</description>
 
@@ -43,13 +43,13 @@
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-core-1.4.10
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/1.4/jackrabbit-core
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-core-1.4.10
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/1.4/jackrabbit-core
     </developerConnection>
     <url>
-      http://svn.apache.org/viewvc/jackrabbit/tags/jackrabbit-core-1.4.10
+      http://svn.apache.org/viewvc/jackrabbit/branches/1.4/jackrabbit-core
     </url>
   </scm>
 
