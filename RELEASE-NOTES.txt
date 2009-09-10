@@ -1,16 +1,15 @@
-Release Notes -- Apache Jackrabbit Core -- Version 1.4.9
+Release Notes -- Apache Jackrabbit Core -- Version 1.4.10
 
 Introduction
 ------------
 
-This is the 1.4.9 patch release of the jackrabbit-core component of
+This is the 1.4.10 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
 This release is targeted to users who are not yet ready to upgrade to
-the more recent Jackrabbit 1.5.x releases, but who still need some of the
-more important recent fixes and improvements, especially related to query
-performance. See below for the full list of changes in this release.
+the more recent Jackrabbit releases, but who still need the clustering
+performance improvement from issue JCR-1988.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -24,13 +23,7 @@ issues for more details in the Jackrabbit issue tracker at
 http://issues.apache.org/jira/browse/JCR
 
   Improvements
-  [JCR-1337] Optimize first execution queries for DescendantSelfAxisWeight/...
-  [JCR-1872] Improve performance of simple path queries
-  [JCR-1884] CachingIndexReader.initializeParents() does not scale well ...
-  [JCR-1998] Initialize hierarchy cache on startup
-
-  Bug fixes
-  [JCR-1573] Lucene Query Exception: 'attempt to access a deleted document'
+  [JCR-1988] AbstractRecord does inefficient List.indexOf()
 
 Release Contents
 ----------------
@@ -39,18 +32,18 @@ Like the previous jackrabbit-core 1.4.x releases this patch release only
 contains the jackrabbit-core component. The component is distributed both
 as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.9-src.jar)
+    * Source archive (jackrabbit-core-1.4.10-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.9" directory. Use the following commands
+        in a "jackrabbit-core-1.4.10" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.9-src.jar
-          $ cd jackrabbit-core-1.4.9
+          $ jar xf jackrabbit-core-1.4.10-src.jar
+          $ cd jackrabbit-core-1.4.10
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.9.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.10.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
