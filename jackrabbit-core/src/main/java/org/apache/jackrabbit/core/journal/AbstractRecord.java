@@ -32,12 +32,13 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.uuid.Constants;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.commons.collections.BidiMap;
+import org.apache.commons.collections.bidimap.DualHashBidiMap;
 
 import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,9 +57,9 @@ public abstract class AbstractRecord implements Record {
     private static final byte UUID_INDEX = 'I';
 
     /**
-     * UUID index.
+     * Maps NodeId to Integer index.
      */
-    private final ArrayList uuidIndex = new ArrayList();
+    private final BidiMap nodeIdIndex = new DualHashBidiMap();
 
     /**
      * Namespace resolver.
@@ -218,13 +219,13 @@ public abstract class AbstractRecord implements Record {
             if (index == -1) {
                 return null;
             } else {
-                return (NodeId) uuidIndex.get(index);
+                return (NodeId) nodeIdIndex.getKey(new Integer(index));
             }
         } else if (uuidType == UUID_LITERAL) {
             byte[] b = new byte[Constants.UUID_BYTE_LENGTH];
             readFully(b);
             NodeId nodeId = new NodeId(new UUID(b));
-            uuidIndex.add(nodeId);
+            nodeIdIndex.put(nodeId, new Integer(nodeIdIndex.size()));
             return nodeId;
         } else {
             String msg = "Unknown UUID type found: " + uuidType;
@@ -266,10 +267,12 @@ public abstract class AbstractRecord implements Record {
      * @return cache index of existing entry or <code>-1</code> to indicate the entry was added
      */
     private int getOrCreateIndex(NodeId nodeId) {
-        int index = uuidIndex.indexOf(nodeId);
-        if (index == -1) {
-            uuidIndex.add(nodeId);
+        Integer index = (Integer) nodeIdIndex.get(nodeId);
+        if (index == null) {
+            nodeIdIndex.put(nodeId, new Integer(nodeIdIndex.size()));
+            return -1;
+        } else {
+            return index.intValue();
         }
-        return index;
     }
 }
