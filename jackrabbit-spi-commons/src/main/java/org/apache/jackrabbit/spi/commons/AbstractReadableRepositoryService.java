@@ -32,13 +32,13 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 
 /**
  * <code>AbstractReadableRepositoryService</code> provides an abstract base

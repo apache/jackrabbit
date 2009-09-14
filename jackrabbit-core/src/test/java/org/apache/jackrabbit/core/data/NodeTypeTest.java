@@ -16,16 +16,20 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
+import org.apache.jackrabbit.commons.cnd.ParseException;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * Test node types with binary default values.
@@ -35,16 +39,18 @@ public class NodeTypeTest extends AbstractJCRTest {
     /**
      * Test a node type with a binary default value
      * @throws RepositoryException
+     * @throws ParseException
      */
     public void testNodeTypesWithBinaryDefaultValue()
-            throws RepositoryException, IOException {
+            throws RepositoryException, IOException, ParseException {
+
         doTestNodeTypesWithBinaryDefaultValue(0);
         doTestNodeTypesWithBinaryDefaultValue(10);
         doTestNodeTypesWithBinaryDefaultValue(10000);
     }
 
     public void doTestNodeTypesWithBinaryDefaultValue(int len)
-            throws RepositoryException, IOException {
+            throws RepositoryException, IOException, ParseException {
         char[] chars = new char[len];
         for (int i = 0; i < chars.length; i++) {
             chars[i] = 'a';
@@ -58,9 +64,8 @@ public class NodeTypeTest extends AbstractJCRTest {
         JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
             superuser.getWorkspace().getNodeTypeManager();
         if (!manager.hasNodeType(type)) {
-            manager.registerNodeTypes(
-                    new ByteArrayInputStream(cnd.getBytes("UTF-8")),
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+            Reader cndReader = new InputStreamReader(new ByteArrayInputStream(cnd.getBytes("UTF-8")));
+            CndImporter.registerNodeTypes(cndReader, superuser);
         }
 
         Node root = superuser.getRootNode();

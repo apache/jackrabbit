@@ -28,12 +28,14 @@ import java.util.Map;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
+import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
 
 /**
  * <code>NodeTypeDefStore</code> ...
@@ -66,7 +68,7 @@ public class NodeTypeDefStore {
 
     /**
      * Loads node types from a CND stream.
-     * 
+     *
      * @param in reader containing the nodetype definitions
      * @param systemId optional name of the stream
      *
@@ -76,7 +78,10 @@ public class NodeTypeDefStore {
     public void loadCND(Reader in, String systemId)
             throws IOException, InvalidNodeTypeDefException {
         try {
-            CompactNodeTypeDefReader r = new CompactNodeTypeDefReader(in, systemId);
+            CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> r =
+                new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
+                    in, systemId, new QItemDefinitionsBuilder());
+
             for (QNodeTypeDefinition qdef: r.getNodeTypeDefinitions()) {
                 add(new NodeTypeDef(qdef));
             }

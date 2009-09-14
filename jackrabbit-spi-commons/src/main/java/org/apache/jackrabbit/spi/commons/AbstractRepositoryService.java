@@ -48,6 +48,8 @@ import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
@@ -75,8 +77,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorageImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
+import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**
@@ -205,9 +206,11 @@ public abstract class AbstractRepositoryService implements RepositoryService {
             this.namespaces.setMapping(entry.getKey(), entry.getValue());
         }
 
-        CompactNodeTypeDefReader reader;
+        CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> reader;
         try {
-            reader = new CompactNodeTypeDefReader(cnd, "", this.namespaces);
+            reader = new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(cnd, "",
+                    this.namespaces, new QItemDefinitionsBuilder());
+
             List<QNodeTypeDefinition> ntds = reader.getNodeTypeDefinitions();
             nodeTypeDefs.registerNodeTypes(ntds.toArray(new QNodeTypeDefinition[ntds.size()]), true);
         }

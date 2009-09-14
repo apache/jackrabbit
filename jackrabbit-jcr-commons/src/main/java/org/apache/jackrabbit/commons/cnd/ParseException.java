@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.nodetype.compact;
+package org.apache.jackrabbit.commons.cnd;
 
 /**
  * ParseException
@@ -35,7 +35,6 @@ public class ParseException extends Exception {
      * the systemid of the source that produced the error
      */
     private final String systemId;
-
 
     /**
      * Constructs a new instance of this class with <code>null</code> as its
@@ -105,7 +104,8 @@ public class ParseException extends Exception {
      * {@inheritDoc}
      */
     public String getMessage() {
-        StringBuffer b = new StringBuffer(super.getMessage());
+        String message = super.getMessage();
+        StringBuffer b = new StringBuffer(message == null ? "" : message);
         String delim = " (";
         if (systemId != null && !systemId.equals("")) {
             b.append(delim);

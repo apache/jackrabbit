@@ -25,6 +25,8 @@ import javax.jcr.NamespaceException;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
+import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
@@ -37,9 +39,8 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 
 /**
  * Base implementation for a record.
@@ -248,8 +249,12 @@ public abstract class AbstractRecord implements Record {
     public NodeTypeDef readNodeTypeDef() throws JournalException {
         try {
             StringReader sr = new StringReader(readString());
-            CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
-                    sr, "(internal)", new NamespaceMapping(nsResolver));
+
+            CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> reader =
+                new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
+                    sr, "(internal)", new NamespaceMapping(nsResolver),
+                    new QItemDefinitionsBuilder());
+
             Collection<QNodeTypeDefinition> ntds = reader.getNodeTypeDefinitions();
             if (ntds.size() != 1) {
                 throw new JournalException("Expected one node type definition: got " + ntds.size());

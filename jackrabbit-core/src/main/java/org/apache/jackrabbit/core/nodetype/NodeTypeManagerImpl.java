@@ -50,6 +50,8 @@ import javax.jcr.nodetype.PropertyDefinition;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.NamespaceHelper;
+import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataStore;
@@ -64,8 +66,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
+import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -208,7 +209,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
     }
 
     /**
-     * @see org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager#getNamePathResolver() 
+     * @see org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager#getNamePathResolver()
      */
     public NamePathResolver getNamePathResolver() {
         return session;
@@ -267,8 +268,11 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
             } else if (contentType.equalsIgnoreCase(TEXT_X_JCR_CND)) {
                 try {
                     NamespaceMapping mapping = new NamespaceMapping(session);
-                    CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
-                            new InputStreamReader(in), "cnd input stream", mapping);
+
+                    CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> reader =
+                        new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
+                            new InputStreamReader(in), "cnd input stream", mapping,
+                            new QItemDefinitionsBuilder());
 
                     namespaceMap.putAll(mapping.getPrefixToURIMapping());
                     for (QNodeTypeDefinition ntDef: reader.getNodeTypeDefinitions()) {
