@@ -37,6 +37,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import junit.framework.TestCase;
 
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ChildInfo;
@@ -64,7 +65,6 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.AbstractReadableRepositoryService;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**

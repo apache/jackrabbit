@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.nodetype.compact;
+package org.apache.jackrabbit.commons.cnd;
 
-import java.io.StreamTokenizer;
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StreamTokenizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -196,13 +196,17 @@ public class Lexer {
         return systemId;
     }
 
+    public int getLineNumber() {
+        return st.lineno();
+    }
+
     /**
      * Creates a failure exception including the current line number and systemid.
      * @param message message
      * @throws ParseException the created exception
      */
     public void fail(String message) throws ParseException {
-        throw new ParseException(message, st.lineno(), -1, systemId);
+        throw new ParseException(message, getLineNumber(), -1, systemId);
     }
 
     /**
@@ -212,7 +216,7 @@ public class Lexer {
      * @throws ParseException the created exception
      */
     public void fail(String message, Throwable e) throws ParseException {
-        throw new ParseException(message, e, st.lineno(), -1, systemId);
+        throw new ParseException(message, e, getLineNumber(), -1, systemId);
     }
 
     /**
@@ -221,6 +225,6 @@ public class Lexer {
      * @throws ParseException the created exception
      */
     public void fail(Throwable e) throws ParseException {
-        throw new ParseException(e, st.lineno(), -1, systemId);
+        throw new ParseException(e, getLineNumber(), -1, systemId);
     }
 }

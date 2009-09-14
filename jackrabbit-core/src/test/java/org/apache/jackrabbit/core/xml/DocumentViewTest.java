@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.xml;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
@@ -28,6 +30,7 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -43,6 +46,7 @@ public class DocumentViewTest extends AbstractJCRTest {
      *
      * @throws Exception if an unexpected error occurs
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
@@ -51,9 +55,8 @@ public class DocumentViewTest extends AbstractJCRTest {
             manager.getNodeType("DocViewMultiValueTest");
         } catch (NoSuchNodeTypeException e) {
             String cnd = "[DocViewMultiValueTest] - test (boolean) multiple";
-            manager.registerNodeTypes(
-                    new ByteArrayInputStream(cnd.getBytes("UTF-8")),
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+            Reader cndReader = new InputStreamReader(new ByteArrayInputStream(cnd.getBytes("UTF-8")));
+            CndImporter.registerNodeTypes(cndReader, superuser);
         }
     }
 
@@ -62,6 +65,7 @@ public class DocumentViewTest extends AbstractJCRTest {
      *
      * @throws Exception if an unexpected error occurs
      */
+    @Override
     protected void tearDown() throws Exception {
         // TODO: Unregister the MultiValueTestType node type once Jackrabbit
         // supports node type removal.

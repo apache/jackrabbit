@@ -36,6 +36,7 @@ import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
+import org.apache.jackrabbit.commons.cnd.Lexer;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;

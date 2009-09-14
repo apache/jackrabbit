@@ -16,34 +16,38 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import junit.framework.AssertionFailedError;
-
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.InternalValueFactory;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.test.AbstractJCRTest;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Arrays;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
+
+import junit.framework.AssertionFailedError;
+
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
+import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValueFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * Test cases for reading and writing node type definition files.
@@ -284,11 +288,9 @@ public class TestAll extends AbstractJCRTest {
             superuser.getNamespacePrefix("test-namespace3");
             // Ignore test case, node type and namespace already registered
         } catch (NamespaceException e1) {
-            JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
-                superuser.getWorkspace().getNodeTypeManager();
-            ntm.registerNodeTypes(
-                    TestAll.class.getResourceAsStream(TEST_NS_CND_NODETYPES),
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+            Reader cnd = new InputStreamReader(TestAll.class.getResourceAsStream(TEST_NS_CND_NODETYPES));
+            CndImporter.registerNodeTypes(cnd, superuser);
+            cnd.close();
             try {
                 superuser.getNamespacePrefix("test-namespace3");
             } catch (NamespaceException e2) {

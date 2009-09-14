@@ -16,19 +16,23 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.RepositoryException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Calendar;
+
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-
-import java.io.ByteArrayInputStream;
-import java.util.Calendar;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 
 /**
  * Tests if mixin types are queried correctly when using element test: element()
  */
 public class MixinTest extends AbstractQueryTest {
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -38,9 +42,9 @@ public class MixinTest extends AbstractQueryTest {
             String cnd =
                 "<test='http://www.apache.org/jackrabbit/test'>\n"
                 + "[test:mimeType] > mix:mimeType mixin";
-            manager.registerNodeTypes(
-                    new ByteArrayInputStream(cnd.getBytes()),
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+
+            Reader cndReader = new InputStreamReader(new ByteArrayInputStream(cnd.getBytes()));
+            CndImporter.registerNodeTypes(cndReader, superuser);
         }
     }
 
