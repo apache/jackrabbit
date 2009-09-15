@@ -16,15 +16,16 @@
  */
 package org.apache.jackrabbit.client;
 
-import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
-import java.util.Map;
+
+import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RepositoryFactoryImpl</code>...
@@ -66,7 +67,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
     public Repository getRepository(Map parameters) throws RepositoryException {
         RepositoryConfig config = null;
         if (parameters == null) {
-            config = org.apache.jackrabbit.client.spi2dav.RepositoryConfigImpl.create((Map) null);
+            config = org.apache.jackrabbit.client.spi2davex.RepositoryConfigImpl.create((Map) null);
         } else {
             Object param = parameters.get(REPOSITORY_CONFIG);
             if (param != null && param instanceof RepositoryConfig) {
