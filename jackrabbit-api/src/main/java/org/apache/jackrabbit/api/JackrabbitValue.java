@@ -48,9 +48,9 @@ public interface JackrabbitValue extends Value {
      * The identifier is opaque, meaning it can have any format and size, however
      * it is at normally about 50 characters and at most 255 characters long.
      * The string only contains Unicode code points from 32 to 127 (including).
-     * 
+     *
      * @return the unique identifier or null
      */
-    public String getContentIdentity();
+    String getContentIdentity();
 
 }
