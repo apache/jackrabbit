@@ -16,64 +16,66 @@
  */
 package org.apache.jackrabbit.client;
 
-import junit.framework.TestCase;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.PropertyInfo;
-import org.apache.jackrabbit.spi.Batch;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.LockInfo;
-import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.commons.logging.Slf4jLogWriterProvider;
-import org.apache.jackrabbit.client.spilogger.RepositoryConfigImpl;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Repository;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ValueFormatException;
 import javax.jcr.AccessDeniedException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ItemExistsException;
+import javax.jcr.Credentials;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
 import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
-import javax.jcr.query.InvalidQueryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeExistsException;
-import java.util.Map;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.InputStream;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.version.VersionException;
+
+import junit.framework.TestCase;
+
+import org.apache.jackrabbit.client.spilogger.RepositoryConfigImpl;
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.LockInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.PropertyInfo;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.commons.logging.Slf4jLogWriterProvider;
 
 /**
  * <code>RepositoryFactoryImplTest</code>...
@@ -132,7 +134,7 @@ public class RepositoryFactoryImplTest extends TestCase {
             params.put(RepositoryConfigImpl.PARAM_LOG_WRITER_PROVIDER, lwprovider.get(i));
             Repository repo = factory.getRepository(params);
             assertNotNull(repo);
-        }        
+        }
     }
 
     public void testGetRepositoryUnknownParams() throws RepositoryException {
@@ -163,7 +165,7 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
-            return null;
+            return Collections.emptyMap();
         }
 
         public SessionInfo obtain(Credentials credentials, String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
