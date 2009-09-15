@@ -16,28 +16,11 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import java.util.EventListener;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
+import org.apache.jackrabbit.api.management.MarkEventListener;
 
 /**
  * The listener interface for receiving garbage collection scan events.
  */
-public interface ScanEventListener extends EventListener {
+public interface ScanEventListener extends MarkEventListener {
 
-    /**
-     * This method is called before a node is scanned.
-     */
-    void beforeScanning(Node n) throws RepositoryException;
-
-    /**
-     * This method is called after a node is scanned.
-     */
-    void afterScanning(Node n) throws RepositoryException;
-
-    /**
-     * This method is called when the garbage collection scan is finished.
-     */
-    void done();
 }

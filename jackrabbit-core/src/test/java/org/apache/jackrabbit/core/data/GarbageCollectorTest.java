@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
+import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -48,20 +50,13 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
             LOG.info("testConcurrentClose skipped. Data store is not used.");
             return;
         }
-        final GarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
+        final DataStoreGarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
         final Exception[] ex = new Exception[1];
-        gc.setScanEventListener(new ScanEventListener() {
+        gc.setMarkEventListener(new MarkEventListener() {
             boolean closed;
-
-            public void afterScanning(Node n) throws RepositoryException {
-                closeTest();
-            }
 
             public void beforeScanning(Node n) throws RepositoryException {
                 closeTest();
-            }
-
-            public void done() {
             }
 
             private void closeTest() throws RepositoryException {
@@ -74,7 +69,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         });
         try {
-            gc.scan();
+            gc.mark();
             fail("Exception 'session has been closed' expected");
         } catch (RepositoryException e) {
             LOG.debug("Expected exception caught: " + e.getMessage());
@@ -127,10 +122,9 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
             }
         }.start();
         assertEquals("x", sync.take());
-        GarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
-        gc.scan();
-        gc.stopScan();
-        gc.deleteUnused();
+        DataStoreGarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
+        gc.mark();
+        gc.sweep();
         sync.put("deleted");
         assertEquals("saved", sync.take());
         InputStream in = node.getProperty("slowBlob").getBinary().getStream();
@@ -176,13 +170,13 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
 
         LOG.debug("scanning...");
-        gc.scan();
+        gc.mark();
         int count = listIdentifiers(gc);
         LOG.debug("stop scanning; currently " + count + " identifiers");
         gc.stopScan();
         LOG.debug("deleting...");
         gc.getDataStore().clearInUse();
-        assertTrue(gc.deleteUnused() > 0);
+        assertTrue(gc.sweep() > 0);
         int count2 = listIdentifiers(gc);
         assertEquals(count - 1, count2);
 
@@ -193,17 +187,17 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
     private void runGC(Session session, boolean all) throws Exception {
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
-        gc.setScanEventListener(this);
+        gc.setMarkEventListener(this);
         if (gc.getDataStore() instanceof FileDataStore) {
             // make sure the file is old (access time resolution is 2 seconds)
             Thread.sleep(2000);
         }
-        gc.scan();
+        gc.mark();
         gc.stopScan();
         if (all) {
             gc.getDataStore().clearInUse();
         }
-        gc.deleteUnused();
+        gc.sweep();
         gc.close();
     }
 

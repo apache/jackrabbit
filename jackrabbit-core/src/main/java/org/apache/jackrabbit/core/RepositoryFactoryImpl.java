@@ -16,20 +16,23 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
-import javax.jcr.RepositoryFactory;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.api.JackrabbitRepositoryFactory;
+import org.apache.jackrabbit.api.management.RepositoryManager;
 
 /**
  * <code>RepositoryFactoryImpl</code> implements a repository factory that
  * creates a {@link TransientRepository} on {@link #getRepository(Map)}.
  */
-public class RepositoryFactoryImpl implements RepositoryFactory {
+public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
 
     /**
      * Name of the repository home parameter.
@@ -48,6 +51,11 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
      * instance.
      */
     private static final Map<String, JackrabbitRepository> REPOSITORY_INSTANCES = new HashMap<String, JackrabbitRepository>();
+
+    /**
+     * The repository instances that were created by this factory.
+     */
+    private final Set<TransientRepository> ownRepositories = new HashSet<TransientRepository>();
 
     public Repository getRepository(Map parameters) throws RepositoryException {
         JackrabbitRepository repo;
@@ -91,8 +99,19 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
                 tr = new TransientRepository(conf, home);
             }
             REPOSITORY_INSTANCES.put(tr.getHomeDir(), tr);
+            ownRepositories.add(tr);
             repo = tr;
         }
         return repo;
+    }
+
+    public RepositoryManager getRepositoryManager(JackrabbitRepository repo) throws RepositoryException {
+        if (repo instanceof TransientRepository) {
+            throw new RepositoryException("The repository was not created in this factory");
+        }
+        if (!ownRepositories.contains(repo)) {
+            throw new RepositoryException("The repository was not created in this factory");
+        }
+        return new RepositoryManagerImpl((TransientRepository) repo);
     }
 }

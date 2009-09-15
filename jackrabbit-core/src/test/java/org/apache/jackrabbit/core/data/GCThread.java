@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
+import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +31,7 @@ import javax.jcr.Session;
 /**
  * Helper class that runs data store garbage collection as a background thread.
  */
-public class GCThread implements Runnable, ScanEventListener {
+public class GCThread implements Runnable, MarkEventListener {
 
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(GCThread.class);
@@ -45,15 +47,16 @@ public class GCThread implements Runnable, ScanEventListener {
     public void run() {
 
         try {
-            GarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
-            gc.setScanEventListener(this);
+            GarbageCollector gc = ((SessionImpl) session)
+                    .createDataStoreGarbageCollector();
+            gc.setMarkEventListener(this);
             while (!stop) {
                 LOG.debug("Scanning...");
-                gc.scan();
+                gc.mark();
                 int count = listIdentifiers(gc);
                 LOG.debug("Stop; currently " + count + " identifiers");
                 gc.stopScan();
-                int numDeleted = gc.deleteUnused();
+                int numDeleted = gc.sweep();
                 if (numDeleted > 0) {
                     LOG.debug("Deleted " + numDeleted + " identifiers");
                 }
@@ -75,8 +78,9 @@ public class GCThread implements Runnable, ScanEventListener {
         return exception;
     }
 
-    private int listIdentifiers(GarbageCollector gc) throws DataStoreException {
-        Iterator<DataIdentifier> it = gc.getDataStore().getAllIdentifiers();
+    private int listIdentifiers(DataStoreGarbageCollector gc) throws DataStoreException {
+        DataStore ds = ((GarbageCollector) gc).getDataStore();
+        Iterator<DataIdentifier> it = ds.getAllIdentifiers();
         int count = 0;
         while (it.hasNext()) {
             DataIdentifier id = it.next();

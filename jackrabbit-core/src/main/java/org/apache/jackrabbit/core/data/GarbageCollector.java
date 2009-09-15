@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
+import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
@@ -32,7 +34,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,20 +65,25 @@ import javax.jcr.observation.ObservationManager;
  * <p>
  * Example code to run the data store garbage collection:
  * <pre>
- * GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
- * gc.scan();
- * gc.stopScan();
- * gc.deleteUnused();
+ * JackrabbitRepositoryFactory jf = (JackrabbitRepositoryFactory) factory;
+ * RepositoryManager m = factory.getRepositoryManager((JackrabbitRepository) rep);
+ * GarbageCollector gc = m.createDataStoreGarbageCollector();
+ * try {
+ *     gc.mark();
+ *     gc.sweep();
+ * } finally {
+ *     gc.close();
+ * }
  * </pre>
  */
-public class GarbageCollector {
+public class GarbageCollector implements DataStoreGarbageCollector {
 
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(GarbageCollector.class);
 
-    private ScanEventListener callback;
+    private MarkEventListener callback;
 
-    private int sleepBetweenNodes;
+    private long sleepBetweenNodes;
 
     private int testDelay;
 
@@ -90,13 +96,11 @@ public class GarbageCollector {
     private final IterablePersistenceManager[] pmList;
 
     private final Session[] sessionList;
-    private final SessionListener sessionListener;
+    private SessionListener sessionListener;
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
     private boolean persistenceManagerScan;
-
-    // TODO It should be possible to stop and restart a garbage collection scan.
 
     /**
      * Create a new garbage collector.
@@ -114,26 +118,25 @@ public class GarbageCollector {
         this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;
 
-        // Auto-close if the main session logs out
-        this.sessionListener = new SessionListener() {
-            public void loggedOut(SessionImpl session) {
-            }
-            public void loggingOut(SessionImpl session) {
-                close();
-            }
-        };
-        session.addListener(sessionListener);
+        if (session != null) {
+            // Auto-close if the main session logs out
+            this.sessionListener = new SessionListener() {
+                public void loggedOut(SessionImpl session) {
+                }
+                public void loggingOut(SessionImpl session) {
+                    close();
+                }
+            };
+            session.addListener(sessionListener);
+        }
     }
 
-    /**
-     * Set the delay between scanning items.
-     * The main scan loop sleeps this many milliseconds after
-     * scanning a node. The default is 0, meaning the scan should run at full speed.
-     *
-     * @param millis the number of milliseconds to sleep
-     */
-    public void setSleepBetweenNodes(int millis) {
+    public void setSleepBetweenNodes(long millis) {
         this.sleepBetweenNodes = millis;
+    }
+
+    public long getSleepBetweenNodes() {
+        return sleepBetweenNodes;
     }
 
     /**
@@ -146,29 +149,24 @@ public class GarbageCollector {
     }
 
     /**
-     * Set the event listener. If set, the event listener will be called
-     * for each item that is scanned. This mechanism can be used
-     * to display the progress.
-     *
-     * @param callback if set, this is called while scanning
+     * @deprecated use setMarkEventListener().
      */
     public void setScanEventListener(ScanEventListener callback) {
+        setMarkEventListener(callback);
+    }
+
+    public void setMarkEventListener(MarkEventListener callback) {
         this.callback = callback;
     }
 
     /**
-     * Scan the repository. The garbage collector will iterate over all nodes in the repository
-     * and update the last modified date. If all persistence managers implement the
-     * IterablePersistenceManager interface, this mechanism will be used; if not, the garbage
-     * collector will scan the repository using the JCR API starting from the root node.
-     *
-     * @throws RepositoryException
-     * @throws IllegalStateException
-     * @throws IOException
-     * @throws ItemStateException
+     * @deprecated use mark().
      */
-    public void scan() throws RepositoryException,
-            IllegalStateException, IOException, ItemStateException {
+    public void scan() throws RepositoryException {
+        mark();
+    }
+
+    public void mark() throws RepositoryException {
         if (store == null) {
             throw new RepositoryException("No DataStore configured.");
         }
@@ -183,12 +181,15 @@ public class GarbageCollector {
                 scanNodes(s);
             }
         } else {
-            scanPersistenceManagers();
+            try {
+                scanPersistenceManagers();
+            } catch (ItemStateException e) {
+                throw new RepositoryException(e);
+            }
         }
     }
 
-    private void scanNodes(Session session)
-        throws RepositoryException, IllegalStateException, IOException {
+    private void scanNodes(Session session) throws RepositoryException {
 
         // add a listener to get 'new' nodes
         // actually, new nodes are not the problem, but moved nodes
@@ -199,28 +200,22 @@ public class GarbageCollector {
         recurse(session.getRootNode(), sleepBetweenNodes);
     }
 
-    /**
-     * Enable or disable using the IterablePersistenceManager interface
-     * to scan the items. This is important for clients that need
-     * the complete Node implementation in the ScanEventListener
-     * callback.
-     *
-     * @param allow true if using the IterablePersistenceManager interface is allowed
-     */
     public void setPersistenceManagerScan(boolean allow) {
         persistenceManagerScan = allow;
     }
 
-    /**
-     * Check if using the IterablePersistenceManager interface is allowed.
-     *
-     * @return true if using IterablePersistenceManager is possible.
-     */
-    public boolean getPersistenceManagerScan() {
+    public boolean isPersistenceManagerScan() {
         return persistenceManagerScan;
     }
 
-    private void scanPersistenceManagers() throws ItemStateException, RepositoryException {
+    /**
+     * @deprecated use isPersistenceManagerScan().
+     */
+    public boolean getPersistenceManagerScan() {
+        return isPersistenceManagerScan();
+    }
+
+    private void scanPersistenceManagers() throws RepositoryException, ItemStateException {
         for (IterablePersistenceManager pm : pmList) {
             for (NodeId id : pm.getAllNodeIds(null, 0)) {
                 if (callback != null) {
@@ -244,50 +239,39 @@ public class GarbageCollector {
                     // the node may have been deleted or moved in the meantime
                     // ignore it
                 }
-                if (callback != null) {
-                    callback.afterScanning(null);
-                }
             }
         }
     }
 
     /**
-     * The repository was scanned. This method will stop the observation
-     * listener.
+     * Stop the observation listener if any are installed.
      */
     public void stopScan() throws RepositoryException {
-        checkScanStarted();
-        for (Listener listener : listeners) {
-            try {
-                listener.stop();
-            } catch (Exception e) {
-                throw new RepositoryException(e);
+        if (listeners.size() > 0) {
+            for (Listener listener : listeners) {
+                try {
+                    listener.stop();
+                } catch (Exception e) {
+                    throw new RepositoryException(e);
+                }
             }
+            listeners.clear();
         }
-        listeners.clear();
     }
 
     /**
-     * Delete all unused items in the data store.
-     *
-     * @return the number of deleted items
+     * @deprecated use sweep().
      */
     public int deleteUnused() throws RepositoryException {
-        checkScanStarted();
-        checkScanStopped();
-        return store.deleteAllOlderThan(startScanTimestamp);
+        return sweep();
     }
 
-    private void checkScanStarted() throws RepositoryException {
+    public int sweep() throws RepositoryException {
         if (startScanTimestamp == 0) {
             throw new RepositoryException("scan must be called first");
         }
-    }
-
-    private void checkScanStopped() throws RepositoryException {
-        if (listeners.size() > 0) {
-            throw new RepositoryException("stopScan must be called first");
-        }
+        stopScan();
+        return store.deleteAllOlderThan(startScanTimestamp);
     }
 
     /**
@@ -299,8 +283,7 @@ public class GarbageCollector {
         return store;
     }
 
-    private void recurse(final Node n, int sleep) throws RepositoryException,
-            IllegalStateException, IOException {
+    private void recurse(final Node n, long sleep) throws RepositoryException {
         if (sleep > 0) {
             try {
                 Thread.sleep(sleep);
@@ -333,9 +316,6 @@ public class GarbageCollector {
             }
         } catch (InvalidItemStateException e) {
             LOG.debug("Node removed concurrently - ignoring", e);
-        }
-        if (callback != null) {
-            callback.afterScanning(n);
         }
         try {
             for (NodeIterator it = n.getNodes(); it.hasNext();) {
@@ -382,11 +362,13 @@ public class GarbageCollector {
          */
     }
 
-    /**
-     * Cleanup resources used internally by this instance.
-     */
     public void close() {
         if (!closed.getAndSet(true)) {
+            try {
+                stopScan();
+            } catch (RepositoryException e) {
+                LOG.warn("An error occured when stopping the event listener", e);
+            }
             for (Session s : sessionList) {
                 s.logout();
             }
