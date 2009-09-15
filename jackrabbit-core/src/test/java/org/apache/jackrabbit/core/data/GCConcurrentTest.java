@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
+import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -52,22 +54,19 @@ public class GCConcurrentTest extends AbstractJCRTest {
         final String testNodeName = "testConcurrentDelete";
         node(root, testNodeName);
         session.save();
-        GarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
+        DataStoreGarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
         gc.setPersistenceManagerScan(false);
-        gc.setScanEventListener(new ScanEventListener() {
+        gc.setMarkEventListener(new MarkEventListener() {
             public void beforeScanning(Node n) throws RepositoryException {
                 if (n.getName().equals(testNodeName)) {
                     n.remove();
                     n.getSession().save();
                 }
             }
-            public void afterScanning(Node n) throws RepositoryException {
-            }
-            public void done() {
-            }
+
         });
-        gc.scan();
-        gc.stopScan();
+        gc.mark();
+        gc.close();
     }
 
     public void testGC() throws Exception {

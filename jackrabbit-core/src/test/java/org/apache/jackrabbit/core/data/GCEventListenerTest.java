@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
+import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
@@ -35,16 +37,16 @@ import javax.jcr.ValueFactory;
  *
  * @author Thomas Mueller
  */
-public class GCEventListenerTest extends AbstractJCRTest implements ScanEventListener {
+public class GCEventListenerTest extends AbstractJCRTest implements MarkEventListener {
 
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(GCEventListenerTest.class);
 
+    private static final String TEST_NODE_NAME = "testGCEventListener";
+
     private boolean gotNullNode;
     private boolean gotNode;
     private int count;
-
-    private static final String TEST_NODE_NAME = "testGCEventListener";
 
     public void testEventListener() throws Exception {
         doTestEventListener(true);
@@ -74,16 +76,16 @@ public class GCEventListenerTest extends AbstractJCRTest implements ScanEventLis
         }
         session.save();
         SessionImpl si = (SessionImpl) session;
-        GarbageCollector gc = si.createDataStoreGarbageCollector();
-        if (gc.getDataStore() != null) {
-            gc.getDataStore().clearInUse();
-            boolean pmScan = gc.getPersistenceManagerScan();
+        DataStoreGarbageCollector gc = si.createDataStoreGarbageCollector();
+        DataStore ds = ((GarbageCollector) gc).getDataStore();
+        if (ds != null) {
+            ds.clearInUse();
+            boolean pmScan = gc.isPersistenceManagerScan();
             gc.setPersistenceManagerScan(allowPmScan);
             gotNullNode = false;
             gotNode = false;
-            gc.setScanEventListener(this);
-            gc.scan();
-            gc.stopScan();
+            gc.setMarkEventListener(this);
+            gc.mark();
             if (pmScan && allowPmScan) {
                 assertTrue("PM scan without null Node", gotNullNode);
                 assertFalse("PM scan, but got a real node", gotNode);
@@ -91,7 +93,7 @@ public class GCEventListenerTest extends AbstractJCRTest implements ScanEventLis
                 assertFalse("Not a PM scan - but got a null Node", gotNullNode);
                 assertTrue("Not a PM scan - without a real node", gotNode);
             }
-            int deleted = gc.deleteUnused();
+            int deleted = gc.sweep();
             LOG.debug("Deleted " + deleted);
             assertTrue("Should delete at least one item", deleted >= 0);
             gc.close();

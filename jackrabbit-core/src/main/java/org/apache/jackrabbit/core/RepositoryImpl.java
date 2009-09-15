@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Iterator;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -1181,7 +1179,7 @@ public class RepositoryImpl extends AbstractRepository
         // wake up threads waiting on this instance's monitor (e.g. workspace janitor)
         notifyAll();
 
-        // Shut down the executor service 
+        // Shut down the executor service
         executor.shutdown();
         try {
             // Wait for all remaining background threads to terminate

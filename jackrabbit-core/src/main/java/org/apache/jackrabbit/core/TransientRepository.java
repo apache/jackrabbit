@@ -418,4 +418,13 @@ public class TransientRepository extends AbstractRepository
     public void loggingOut(SessionImpl session) {
     }
 
+    /**
+     * Get the current repository.
+     *
+     * @return the repository
+     */
+    RepositoryImpl getRepository() {
+        return repository;
+    }
+
 }
