@@ -636,7 +636,7 @@ public class DbDataStore implements DataStore {
         } catch (IOException e) {
             String msg = "Configuration error: Could not read properties '" + databaseType + ".properties'";
             log.debug(msg);
-            throw new DataStoreException(msg);
+            throw new DataStoreException(msg, e);
         }
         if (driver == null) {
             driver = getProperty(prop, "driver", driver);
