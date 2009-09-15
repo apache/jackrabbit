@@ -54,4 +54,5 @@ public interface JackrabbitSession extends Session {
      * @see UserManager
      */
     UserManager getUserManager() throws AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+
 }
