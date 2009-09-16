@@ -16,73 +16,73 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.extractor.DefaultTextExtractor;
-import org.apache.jackrabbit.extractor.TextExtractor;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Token;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.SortComparatorSource;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.HitCollector;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Fieldable;
-import org.xml.sax.SAXException;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortComparatorSource;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
+import org.apache.tika.parser.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.File;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Collection;
+import org.xml.sax.SAXException;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -207,20 +207,12 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The analyzer we use for indexing.
      */
-    private JackrabbitAnalyzer analyzer;
+    private final JackrabbitAnalyzer analyzer = new JackrabbitAnalyzer();
 
     /**
-     * List of text extractor and text filter class names. The configured
-     * classes will be instantiated and used to extract text content from
-     * binary properties.
+     * The parser for extracting text content from binary properties.
      */
-    private String textFilterClasses =
-        DefaultTextExtractor.class.getName();
-
-    /**
-     * Text extractor for extracting text content of binary properties.
-     */
-    private TextExtractor extractor;
+    private final JackrabbitParser parser = new JackrabbitParser();
 
     /**
      * The namespace mappings used internally.
@@ -476,13 +468,6 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean closed = false;
 
     /**
-     * Default constructor.
-     */
-    public SearchIndex() {
-        this.analyzer = new JackrabbitAnalyzer();
-    }
-
-    /**
      * Initializes this <code>QueryHandler</code>. This implementation requires
      * that a path parameter is set in the configuration. If this condition
      * is not met, a <code>IOException</code> is thrown.
@@ -500,7 +485,6 @@ public class SearchIndex extends AbstractQueryHandler {
             excludedIDs.add(context.getExcludedNodeId());
         }
 
-        extractor = createTextExtractor();
         synProvider = createSynonymProvider();
         directoryManager = createDirectoryManager();
         redoLogFactory = createRedoLogFactory();
@@ -792,10 +776,6 @@ public class SearchIndex extends AbstractQueryHandler {
                 log.warn("Exception while closing FileSystem", e);
             }
         }
-        // shutdown extractor
-        if (extractor instanceof PooledTextExtractor) {
-            ((PooledTextExtractor) extractor).shutdown();
-        }
         if (spellChecker != null) {
             spellChecker.close();
         }
@@ -910,12 +890,13 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Returns the text extractor in use for indexing.
+     * Returns the parser used for extracting text content
+     * from binary properties for full text indexing.
      *
-     * @return the text extractor in use for indexing.
+     * @return the configured parser
      */
-    public TextExtractor getTextExtractor() {
-        return extractor;
+    public Parser getParser() {
+        return parser;
     }
 
     /**
@@ -1114,8 +1095,9 @@ public class SearchIndex extends AbstractQueryHandler {
                                       NamespaceMappings nsMappings,
                                       IndexFormatVersion indexFormatVersion)
             throws RepositoryException {
-        NodeIndexer indexer = new NodeIndexer(node,
-                getContext().getItemStateManager(), nsMappings, extractor);
+        NodeIndexer indexer = new NodeIndexer(
+                node, getContext().getItemStateManager(), nsMappings,
+                getContext().getExecutor(), parser);
         indexer.setSupportHighlighting(supportHighlighting);
         indexer.setIndexingConfiguration(indexingConfig);
         indexer.setIndexFormatVersion(indexFormatVersion);
@@ -1138,21 +1120,6 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected SortComparatorSource getSortComparatorSource() {
         return scs;
-    }
-
-    /**
-     * Factory method to create the <code>TextExtractor</code> instance.
-     *
-     * @return the <code>TextExtractor</code> instance this index should use.
-     */
-    protected TextExtractor createTextExtractor() {
-        TextExtractor txtExtr = new JackrabbitTextExtractor(textFilterClasses);
-        if (extractorPoolSize > 0) {
-            // wrap with pool
-            txtExtr = new PooledTextExtractor(txtExtr, extractorPoolSize,
-                    extractorBackLog, extractorTimeout);
-        }
-        return txtExtr;
     }
 
     /**
@@ -1881,9 +1848,10 @@ public class SearchIndex extends AbstractQueryHandler {
      * constructor.
      *
      * @param filterClasses comma separated list of class names
+     * @deprecated 
      */
     public void setTextFilterClasses(String filterClasses) {
-        this.textFilterClasses = filterClasses;
+        parser.setTextFilterClasses(filterClasses);
     }
 
     /**
@@ -1891,9 +1859,10 @@ public class SearchIndex extends AbstractQueryHandler {
      * currently in use. The names are comma separated.
      *
      * @return class names of the text filters in use.
+     * @deprecated 
      */
     public String getTextFilterClasses() {
-        return textFilterClasses;
+        return "deprectated";
     }
 
     /**

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
@@ -141,6 +142,11 @@ public class SearchManager implements SynchronousEventListener {
     private Path excludePath;
 
     /**
+     * Background task executor.
+     */
+    private final Executor executor;
+
+    /**
      * Creates a new <code>SearchManager</code>.
      *
      * @param config         the search configuration.
@@ -163,7 +169,8 @@ public class SearchManager implements SynchronousEventListener {
                          PersistenceManager pm,
                          NodeId rootNodeId,
                          SearchManager parentMgr,
-                         NodeId excludedNodeId) throws RepositoryException {
+                         NodeId excludedNodeId,
+                         Executor executor) throws RepositoryException {
         this.fs = config.getFileSystem();
         this.config = config;
         this.ntReg = ntReg;
@@ -173,6 +180,7 @@ public class SearchManager implements SynchronousEventListener {
         this.rootNodeId = rootNodeId;
         this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
         this.excludedNodeId = excludedNodeId;
+        this.executor = executor;
 
         // register namespaces
         safeRegisterNamespace(NS_XS_PREFIX, NS_XS_URI);
@@ -505,9 +513,9 @@ public class SearchManager implements SynchronousEventListener {
         // initialize query handler
         try {
             handler = (QueryHandler) config.newInstance();
-            QueryHandlerContext context
-                    = new QueryHandlerContext(fs, itemMgr, pm, rootNodeId,
-                            ntReg, nsReg, parentHandler, excludedNodeId);
+            QueryHandlerContext context = new QueryHandlerContext(
+                    fs, itemMgr, pm, rootNodeId, ntReg, nsReg,
+                    parentHandler, excludedNodeId, executor);
             handler.init(context);
         } catch (Exception e) {
             throw new RepositoryException(e.getMessage(), e);

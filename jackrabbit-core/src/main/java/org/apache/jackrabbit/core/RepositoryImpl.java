@@ -666,9 +666,11 @@ public class RepositoryImpl extends AbstractRepository
             throws RepositoryException {
         if (systemSearchMgr == null) {
             if (repConfig.getSearchConfig() != null) {
-                systemSearchMgr = new SearchManager(repConfig.getSearchConfig(),
-                        nsReg, ntReg, getWorkspaceInfo(wspName).itemStateMgr,
-                        vMgr.getPersistenceManager(), SYSTEM_ROOT_NODE_ID, null, null);
+                systemSearchMgr = new SearchManager(
+                        repConfig.getSearchConfig(), nsReg, ntReg,
+                        getWorkspaceInfo(wspName).itemStateMgr,
+                        vMgr.getPersistenceManager(), SYSTEM_ROOT_NODE_ID,
+                        null, null, executor);
 
                 SystemSession defSysSession = getSystemSession(wspName);
                 ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
@@ -1838,13 +1840,9 @@ public class RepositoryImpl extends AbstractRepository
                     // search manager is lazily instantiated in order to avoid
                     // 'chicken & egg' bootstrap problems
                     searchMgr = new SearchManager(config.getSearchConfig(),
-                            nsReg,
-                            ntReg,
-                            itemStateMgr,
-                            persistMgr,
-                            rootNodeId,
+                            nsReg, ntReg, itemStateMgr, persistMgr, rootNodeId,
                             getSystemSearchManager(getName()),
-                            SYSTEM_ROOT_NODE_ID);
+                            SYSTEM_ROOT_NODE_ID, executor);
                 }
                 return searchMgr;
             }

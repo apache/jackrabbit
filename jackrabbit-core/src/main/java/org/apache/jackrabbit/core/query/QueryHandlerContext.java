@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import java.util.concurrent.Executor;
+
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -84,6 +86,11 @@ public class QueryHandlerContext {
     private final NodeId excludedNodeId;
 
     /**
+     * Background task executor.
+     */
+    private final Executor executor;
+
+    /**
      * Creates a new context instance.
      *
      * @param fs               a {@link FileSystem} this <code>QueryHandler</code>
@@ -100,6 +107,7 @@ public class QueryHandlerContext {
      * @param excludedNodeId   id of the node that should be excluded from
      *                         indexing. Any descendant of that node is also
      *                         excluded from indexing.
+     * @param executor         background task executor
      */
     public QueryHandlerContext(FileSystem fs,
                                SharedItemStateManager stateMgr,
@@ -108,7 +116,8 @@ public class QueryHandlerContext {
                                NodeTypeRegistry ntRegistry,
                                NamespaceRegistryImpl nsRegistry,
                                QueryHandler parentHandler,
-                               NodeId excludedNodeId) {
+                               NodeId excludedNodeId,
+                               Executor executor) {
         this.fs = fs;
         this.stateMgr = stateMgr;
         this.hmgr = new CachingHierarchyManager(rootId, stateMgr);
@@ -120,6 +129,7 @@ public class QueryHandlerContext {
         propRegistry = new PropertyTypeRegistry(ntRegistry);
         this.parentHandler = parentHandler;
         this.excludedNodeId = excludedNodeId;
+        this.executor =  executor;
         ntRegistry.addListener(propRegistry);
     }
 
@@ -219,4 +229,14 @@ public class QueryHandlerContext {
     public void destroy() {
         ntRegistry.removeListener(propRegistry);
     }
+
+    /**
+     * Returns the background task executor.
+     *
+     * @return background task executor
+     */
+    public Executor getExecutor() {
+        return executor;
+    }
+
 }

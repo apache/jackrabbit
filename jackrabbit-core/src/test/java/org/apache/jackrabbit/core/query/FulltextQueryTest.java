@@ -16,10 +16,17 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * Performs tests with the <code>CONTAINS</code> function.
@@ -276,6 +283,39 @@ public class FulltextQueryTest extends AbstractQueryTest {
         testRootNode.addNode(nodeName1).setProperty("text", content);
         testRootNode.save();
 
+        assertContainsQuery(statement, match);
+    }
+
+    public void testFileContains() throws Exception {
+        assertFileContains(
+                "test.txt", "text/plain", "AE502DBEA2C411DEBD340AD156D89593");
+        assertFileContains(
+                "test.rtf", "text/rtf", "quick brown fox");
+    }
+
+    private void assertFileContains(
+            String name, String type, String... statements) throws Exception {
+        while (testRootNode.hasNode(nodeName1)) {
+            testRootNode.getNode(nodeName1).remove();
+        }
+        Node resource = testRootNode.addNode(nodeName1, NodeType.NT_RESOURCE);
+        resource.setProperty("jcr:mimeType", type);
+        InputStream stream = FulltextQueryTest.class.getResourceAsStream(name);
+        try {
+            resource.setProperty("jcr:data", stream);
+        } finally {
+            stream.close();
+        }
+        testRootNode.save();
+        getSearchIndex().flush();
+
+        for (String statement : statements) {
+            assertContainsQuery(statement, true);
+        }
+    }
+
+    private void assertContainsQuery(String statement, boolean match)
+            throws InvalidQueryException, RepositoryException {
         StringBuffer stmt = new StringBuffer();
         stmt.append("/jcr:root").append(testRoot).append("/*");
         stmt.append("[jcr:contains(., '").append(statement);
@@ -292,4 +332,5 @@ public class FulltextQueryTest extends AbstractQueryTest {
         q = superuser.getWorkspace().getQueryManager().createQuery(stmt.toString(), Query.SQL);
         checkResult(q.execute(), match ? 1 : 0);
     }
+
 }
