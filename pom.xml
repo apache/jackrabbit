@@ -44,7 +44,6 @@
     <module>jackrabbit-jcr-commons</module>
     <module>jackrabbit-jcr-tests</module>
     <module>jackrabbit-core</module>
-    <module>jackrabbit-text-extractors</module>
     <module>jackrabbit-webdav</module>
     <module>jackrabbit-jcr-server</module>
     <module>jackrabbit-webapp</module>
