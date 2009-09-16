@@ -123,8 +123,7 @@ public class NameParserTest extends TestCase {
         valid.add(new String[] {"{http://jackrabbit.apache.org:80}abc", "http://jackrabbit.apache.org:80", "abc"});
         valid.add(new String[] {"{http://jackrabbit.apache.org/info}abc", "http://jackrabbit.apache.org/info", "abc"});
         valid.add(new String[] {"{jcr:jackrabbit}abc", "jcr:jackrabbit", "abc"});
-        valid.add(new String[] {"{/jackrabbit/a/b/c}abc", "/jackrabbit/a/b/c", "abc"});
-        valid.add(new String[] {"{abc}def", "abc", "def"});
+        valid.add(new String[] {"{abc:}def", "abc:", "def"});
         valid.add(new String[] {"{}abc", "", "abc"});
 
         for (Iterator it = valid.iterator(); it.hasNext();) {
@@ -146,7 +145,7 @@ public class NameParserTest extends TestCase {
         invalid.add("a{b:c");
         invalid.add("a}b:c");
         // unknown uri -> but invalid local name with ':' and or '/'
-        invalid.add("{http//:test.apache.org}abc");
+        invalid.add("{http//test.apache.org}abc");
         invalid.add("{test/test/test}abc");
         // invalid local name containing '/'
         invalid.add("{http://jackrabbit.apache.org}abc/dfg");
@@ -157,7 +156,6 @@ public class NameParserTest extends TestCase {
         // invalid local name containing '/'
         invalid.add("/a/b/c");
         // known uri but local name missing -> must fail.
-        invalid.add("{abc}");
         invalid.add("{http://jackrabbit.apache.org}");
         invalid.add("{}");
 
@@ -202,7 +200,6 @@ public class NameParserTest extends TestCase {
         valid.add(new String[] {"{http://jackrabbit.apache.org:80}abc", "http://jackrabbit.apache.org:80", "abc"});
         valid.add(new String[] {"{http://jackrabbit.apache.org/info}abc", "http://jackrabbit.apache.org/info", "abc"});
         valid.add(new String[] {"{jcr:jackrabbit}abc", "jcr:jackrabbit", "abc"});
-        valid.add(new String[] {"{/jackrabbit/a/b/c}abc", "/jackrabbit/a/b/c", "abc"});
         valid.add(new String[] {"{abc}def", "abc", "def"});
         valid.add(new String[] {"{}abc", "", "abc"});
 
@@ -231,9 +228,11 @@ public class NameParserTest extends TestCase {
         // invalid local name containing '/'
         invalid.add("/a/b/c");
         // known uri but local name missing -> must fail.
-        invalid.add("{abc}");
         invalid.add("{http://jackrabbit.apache.org}");
         invalid.add("{}");
+        // invalid URI part
+        invalid.add("{/jackrabbit/a/b/c}abc");
+
 
         for (Iterator it = invalid.iterator(); it.hasNext();) {
             String jcrName = (String) it.next();

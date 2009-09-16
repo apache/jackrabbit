@@ -54,8 +54,10 @@ public final class JcrName {
         list.add(new JcrName("{}a", "", "a"));
         list.add(new JcrName("{}name", "", "name"));
         list.add(new JcrName("{}na me", "", "na me"));
-        list.add(new JcrName("{prefix}name", "prefix", "name"));
-        list.add(new JcrName("{prefix}na me", "prefix", "na me"));        
+        list.add(new JcrName("{uri:}name", "uri:", "name"));
+        list.add(new JcrName("{uri:}na me", "uri:", "na me"));
+        list.add(new JcrName("{nouri}name", "", "{nouri}name"));
+        list.add(new JcrName("{nouri}na me", "", "{nouri}na me"));
         list.add(new JcrName("{}...", "", "..."));
         list.add(new JcrName("{}.a.", "", ".a."));
 
