@@ -16,15 +16,22 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.concurrent.Executor;
+
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.AbstractField;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.LoggerFactory;
+import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.Field.TermVector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.sax.BodyContentHandler;
 import org.slf4j.Logger;
-
-import java.io.Reader;
-import java.io.IOException;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
 
 /**
  * <code>LazyTextExtractorField</code> implements a Lucene field with a String
@@ -37,24 +44,16 @@ import java.io.IOException;
 public class LazyTextExtractorField extends AbstractField {
 
     /**
-     * The serial version UID.
-     */
-    private static final long serialVersionUID = -2707986404659820071L;
-
-    /**
      * The logger instance for this class.
      */
-    private static final Logger log = LoggerFactory.getLogger(LazyTextExtractorField.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(LazyTextExtractorField.class);
 
     /**
-     * The reader from where to read the text extract.
+     * The extracted text content of the given binary value.
+     * Set to non-null when the text extraction task finishes.
      */
-    private final Reader reader;
-
-    /**
-     * The extract as obtained lazily from {@link #reader}.
-     */
-    private String extract;
+    private volatile String extract = null;
 
     /**
      * Creates a new <code>LazyTextExtractorField</code> with the given
@@ -62,84 +61,114 @@ public class LazyTextExtractorField extends AbstractField {
      *
      * @param name the name of the field.
      * @param reader the reader where to obtain the string from.
-     * @param store when set <code>true</code> the string value is stored in the
-     *          index.
-     * @param withOffsets when set <code>true</code> a term vector with offsets
-     *          is written into the index.
+     * @param highlighting set to <code>true</code> to
+     *                     enable result highlighting support
      */
-    public LazyTextExtractorField(String name,
-                                  Reader reader,
-                                  boolean store,
-                                  boolean withOffsets) {
-        super(name,
-                store ? Field.Store.YES : Field.Store.NO,
+    public LazyTextExtractorField(
+            Parser parser, InternalValue value, Metadata metadata,
+            Executor executor, boolean highlighting) {
+        super(FieldNames.FULLTEXT,
+                highlighting ? Store.YES : Store.NO,
                 Field.Index.ANALYZED,
-                withOffsets ? Field.TermVector.WITH_OFFSETS : Field.TermVector.NO);
-        this.reader = reader;
+                highlighting ? TermVector.WITH_OFFSETS : TermVector.NO);
+        executor.execute(new ParsingTask(parser, value, metadata));
     }
 
     /**
-     * @return the string value of this field.
+     * Returns the extracted text. This method blocks until the text
+     * extraction task has been completed.
+     *
+     * @return the string value of this field
      */
-    public String stringValue() {
-        if (extract == null) {
-            StringBuffer textExtract = new StringBuffer();
-            char[] buffer = new char[1024];
-            int len;
-            try {
-                while ((len = reader.read(buffer)) > -1) {
-                    textExtract.append(buffer, 0, len);
-                }
-            } catch (IOException e) {
-                log.warn("Exception reading value for field: "
-                        + e.getMessage());
-                log.debug("Dump:", e);
-            } finally {
-                IOUtils.closeQuietly(reader);
+    public synchronized String stringValue() {
+        try {
+            while (!isExtractorFinished()) {
+                wait();
             }
-            extract = textExtract.toString();
+            return extract;
+        } catch (InterruptedException e) {
+            log.error("Text extraction thread was interrupted", e);
+            return "";
         }
-        return extract;
     }
 
     /**
-     * @return always <code>null</code>.
+     * @return always <code>null</code>
      */
     public Reader readerValue() {
         return null;
     }
 
     /**
-     * @return always <code>null</code>.
+     * @return always <code>null</code>
      */
     public byte[] binaryValue() {
         return null;
     }
 
     /**
-     * @return always <code>null</code>.
+     * @return always <code>null</code>
      */
     public TokenStream tokenStreamValue() {
         return null;
     }
 
     /**
-     * @return <code>true</code> if the underlying reader is ready to provide
-     *          extracted text.
+     * Checks whether the text extraction task has finished.
+     *
+     * @return <code>true</code> if the extracted text is available
      */
     public boolean isExtractorFinished() {
-        if (reader instanceof TextExtractorReader) {
-            return ((TextExtractorReader) reader).isExtractorFinished();
-        }
-        return true;
+        return extract != null;
+    }
+
+    private synchronized void setExtractedText(String value) {
+        extract = value;
+        notify();
     }
 
     /**
-     * Disposes this field and closes the underlying reader.
-     *
-     * @throws IOException if an error occurs while closing the reader.
+     * Releases all resources associated with this field.
      */
-    public void dispose() throws IOException {
-        reader.close();
+    public void dispose() {
+        // TODO: Cause the ContentHandler below to throw an exception
     }
+
+    /**
+     * The background task for extracting text from a binary value.
+     */
+    private class ParsingTask implements Runnable {
+
+        private final Parser parser;
+
+        private final InternalValue value;
+
+        private final Metadata metadata;
+
+        public ParsingTask(
+                Parser parser, InternalValue value, Metadata metadata) {
+            this.parser = parser;
+            this.value = value;
+            this.metadata = metadata;
+        }
+
+        public void run() {
+            ContentHandler handler = new BodyContentHandler();
+            try {
+                InputStream stream = value.getStream();
+                try {
+                    parser.parse(stream, handler, metadata);
+                } finally {
+                    stream.close();
+                }
+            } catch (Throwable t) {
+                log.warn("Failed to extract text from a binary property", t);
+            } finally {
+                value.discard();
+            }
+            setExtractedText(handler.toString());
+        }
+
+    }
+
 }

@@ -16,24 +16,22 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.extractor.TextExtractor;
-import org.apache.jackrabbit.core.query.AbstractIndexingTest;
-import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.TestHelper;
-import org.apache.jackrabbit.core.fs.local.FileUtil;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
-import java.io.Reader;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.Calendar;
+
+import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.TestHelper;
+import org.apache.jackrabbit.core.fs.local.FileUtil;
+import org.apache.jackrabbit.core.query.AbstractIndexingTest;
 
 /**
  * <code>IndexingQueueTest</code> checks if the indexing queue properly indexes
@@ -44,15 +42,15 @@ public class IndexingQueueTest extends AbstractIndexingTest {
 
     private static final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir")); 
 
-    private static final String CONTENT_TYPE = "application/indexing-queue-test";
+    private static final String CONTENT_TYPE = "text/plain";
 
     private static final String ENCODING = "UTF-8";
 
     public void testQueue() throws Exception {
-        Extractor.sleepTime = 200;
         SearchIndex index = getSearchIndex();
         IndexingQueue queue = index.getIndex().getIndexingQueue();
 
+        JackrabbitParser.block();
         assertEquals(0, queue.getNumPendingDocuments());
 
         String text = "the quick brown fox jumps over the lazy dog.";
@@ -70,6 +68,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         NodeIterator nodes = q.execute().getNodes();
         assertFalse(nodes.hasNext());
 
+        JackrabbitParser.unblock();
         index.flush();
         assertEquals(0, queue.getNumPendingDocuments());
 
@@ -79,7 +78,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
     }
 
     public void testInitialIndex() throws Exception {
-        Extractor.sleepTime = 200;
+        JackrabbitParser.block();
         File indexDir = new File(getSearchIndex().getPath());
 
         // fill workspace
@@ -105,7 +104,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
 
         int initialNumExtractorFiles = getNumExtractorFiles();
 
-        Extractor.sleepTime = 20;
+        JackrabbitParser.unblock();
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -140,7 +139,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
      * Test case for JCR-2082
      */
     public void testReaderUpToDate() throws Exception {
-        Extractor.sleepTime = 10;
+        JackrabbitParser.block();
         SearchIndex index = getSearchIndex();
         File indexDir = new File(index.getPath());
 
@@ -159,6 +158,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
             fail("Unable to delete index directory");
         }
 
+        JackrabbitParser.unblock();
         // start workspace again by getting a session
         session = getHelper().getSuperuserSession(WORKSPACE_NAME);
 
@@ -202,22 +202,4 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         }).length;
     }
 
-    public static final class Extractor implements TextExtractor {
-
-        protected static volatile int sleepTime = 200;
-
-        public String[] getContentTypes() {
-            return new String[]{CONTENT_TYPE};
-        }
-
-        public Reader extractText(InputStream stream, String type, String encoding)
-        throws IOException {
-            try {
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException e) {
-                throw new IOException();
-            }
-            return new InputStreamReader(stream, encoding);
-        }
-    }
 }

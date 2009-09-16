@@ -16,39 +16,39 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.extractor.TextExtractor;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Fieldable;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executor;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.Calendar;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Date;
-import java.net.URI;
-import java.math.BigDecimal;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -87,9 +87,15 @@ public class NodeIndexer {
     protected final NamePathResolver resolver;
 
     /**
-     * Content extractor.
+     * Background task executor used for full text extraction.
      */
-    protected final TextExtractor extractor;
+    private final Executor executor;
+
+    /**
+     * Parser used for extracting text content from binary properties
+     * for full text indexing.
+     */
+    private final Parser parser;
 
     /**
      * The indexing configuration or <code>null</code> if none is available.
@@ -119,17 +125,18 @@ public class NodeIndexer {
      * @param node          the node state to index.
      * @param stateProvider the persistent item state manager to retrieve properties.
      * @param mappings      internal namespace mappings.
-     * @param extractor     content extractor
+     * @param executor      background task executor for text extraction
+     * @param parser        parser for binary properties
      */
-    public NodeIndexer(NodeState node,
-                       ItemStateManager stateProvider,
-                       NamespaceMappings mappings,
-                       TextExtractor extractor) {
+    public NodeIndexer(
+            NodeState node, ItemStateManager stateProvider,
+            NamespaceMappings mappings, Executor executor, Parser parser) {
         this.node = node;
         this.stateProvider = stateProvider;
         this.mappings = mappings;
         this.resolver = NamePathResolverImpl.create(mappings);
-        this.extractor = extractor;
+        this.executor = executor;
+        this.parser = parser;
     }
 
     /**
@@ -413,20 +420,19 @@ public class NodeIndexer {
                 return;
             }
 
-            InternalValue typeValue = getValue(NameConstants.JCR_MIMETYPE);
-            if (typeValue != null) {
-                String type = typeValue.getString();
+            InternalValue type = getValue(NameConstants.JCR_MIMETYPE);
+            if (type != null) {
+                Metadata metadata = new Metadata();
+                metadata.set(Metadata.CONTENT_TYPE, type.getString());
 
                 // jcr:encoding is not mandatory
-                String encoding = null;
-                InternalValue encodingValue = getValue(NameConstants.JCR_ENCODING);
-                if (encodingValue != null) {
-                    encoding = encodingValue.getString();
+                InternalValue encoding = getValue(NameConstants.JCR_ENCODING);
+                if (encoding != null) {
+                    metadata.set(
+                            Metadata.CONTENT_ENCODING, encoding.getString());
                 }
 
-                InputStream stream = internalValue.getStream();
-                Reader reader = extractor.extractText(stream, type, encoding);
-                doc.add(createFulltextField(reader));
+                doc.add(createFulltextField(internalValue, metadata));
             }
         } catch (Throwable t) {
             // TODO: How to recover from a transient indexing failure?
@@ -805,15 +811,14 @@ public class NodeIndexer {
     /**
      * Creates a fulltext field for the reader <code>value</code>.
      *
-     * @param value the reader value.
+     * @param value the binary value
+     * @param metadata document metatadata
      * @return a lucene field.
      */
-    protected Fieldable createFulltextField(Reader value) {
-        if (supportHighlighting) {
-            return new LazyTextExtractorField(FieldNames.FULLTEXT, value, true, true);
-        } else {
-            return new LazyTextExtractorField(FieldNames.FULLTEXT, value, false, false);
-        }
+    protected Fieldable createFulltextField(
+            InternalValue value, Metadata metadata) {
+        return new LazyTextExtractorField(
+                parser, value, metadata, executor, supportHighlighting);
     }
 
     /**
