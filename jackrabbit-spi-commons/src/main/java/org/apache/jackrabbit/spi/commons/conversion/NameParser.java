@@ -119,24 +119,29 @@ public class NameParser {
             } else if (c == '}') {
                 if (state == STATE_URI_START || state == STATE_URI) {
                     String tmp = jcrName.substring(1, i);
-                    try {
-                        // make sure the uri is a known namespace uri
-                        // TODO: since namespace registration does not validate
-                        //       the URI format validation is omitted here
-                        if (!checkFormat) {
-                            resolver.getPrefix(tmp);
-                        }
+                    if (tmp.length() == 0 || tmp.indexOf(':') != -1) {
+                        // The leading "{...}" part is empty or contains
+                        // a colon, so we treat it as a valid namespace URI.
+                        // More detailed validity checks (is it well formed,
+                        // registered, etc.) are not needed here.
                         uri = tmp;
                         state = STATE_NAME_START;
-                    } catch (NamespaceException e) {
-                        // unknown uri -> apparently a localname starting with {
-                        // -> make sure there are no invalid characters
-                        if (tmp.indexOf(':') == -1 && tmp.indexOf('/') == -1) {
-                            state = STATE_NAME;
-                            nameStart = 0;
-                        } else {
-                            throw new IllegalNameException("Unknown uri " + tmp + ". But ':' and '/' are not allowed in a local name.");
-                        }
+                    } else if (tmp.equals("internal")) {
+                        // As a special Jackrabbit backwards compatibility
+                        // feature, support {internal} as a valid URI prefix
+                        uri = tmp;
+                        state = STATE_NAME_START;
+                    } else if (tmp.indexOf('/') == -1) {
+                        // The leading "{...}" contains neither a colon nor
+                        // a slash, so we can interpret it as a a part of a
+                        // normal local name.
+                        state = STATE_NAME;
+                        nameStart = 0;
+                    } else {
+                        throw new IllegalNameException(
+                                "The URI prefix of the name " + jcrName
+                                + " is neither a valid URI nor a valid part"
+                                + " of a local name.");
                     }
                 } else if (state == STATE_PREFIX_START) {
                     state = STATE_PREFIX; // prefix start -> validation later on will fail.
