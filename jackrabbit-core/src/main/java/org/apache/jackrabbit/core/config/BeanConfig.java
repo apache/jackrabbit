@@ -20,7 +20,6 @@ import org.apache.commons.collections.BeanMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Map;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ import java.io.IOException;
  * and property information required to instantiate a class that conforms
  * with the JavaBean conventions.
  */
-public class BeanConfig {
+public class BeanConfig<T> {
 
     private static Logger log = LoggerFactory.getLogger(BeanConfig.class);
 
@@ -155,27 +154,24 @@ public class BeanConfig {
     public Object newInstance() throws ConfigurationException {
         try {
             // Instantiate the object using the default constructor
-            Class objectClass =
+            Class<?> objectClass =
                 Class.forName(getClassName(), true, getClassLoader());
             Object object = objectClass.newInstance();
 
             // Set all configured bean properties
             BeanMap map = new BeanMap(object);
-            Iterator iterator = map.keyIterator();
-            while (iterator.hasNext()) {
-                String name = (String) iterator.next();
-                String value = properties.getProperty(name);
+            for (Object key : map.keySet()) {
+                String value = properties.getProperty(key.toString());
                 if (value != null) {
-                    map.put(name, properties.getProperty(name));
+                    map.put(key, value);
                 }
             }
 
             if (validate) {
                 // Check that no invalid property names were configured
-                Iterator it = properties.keySet().iterator();
-                while (it.hasNext()) {
-                    String key = (String) it.next();
-                    if (!map.containsKey(key) && properties.getProperty(key) != null) {
+                for (Object key : properties.keySet()) {
+                    if (!map.containsKey(key)
+                            && properties.getProperty(key.toString()) != null) {
                         String msg =
                             "Configured class " + object.getClass().getName()
                             + " does not contain the property " + key
@@ -186,7 +182,7 @@ public class BeanConfig {
                 }
             }
 
-            return object;
+            return (T) object;
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(
                     "Configured bean implementation class " + getClassName()

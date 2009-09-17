@@ -14,24 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.config;
+package org.apache.jackrabbit.core.journal;
+
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
 /**
- * Journal configuration. This bean configuration class
- * is used to create configured journal.
- * <p>
- * This class is currently only used to assign a static type to
- * more generic bean configuration information.
+ * Factory interface for creating {@link Journal} instances. Used
+ * to decouple the repository internals from the repository configuration
+ * mechanism.
  */
-public class JournalConfig extends BeanConfig {
+public interface JournalFactory {
 
     /**
-     * Creates a journal configuration object from the given bean configuration.
+     * Creates, initializes, and returns a {@link Journal} instance
+     * for use by the repository.
      *
-     * @param config bean configuration
+     * @param resolver namespace resolver
+     * @return initialized journal
+     * @throws RepositoryException if the journal can not be created
      */
-    public JournalConfig(BeanConfig config) {
-        super(config);
-    }
+    Journal getJournal(NamespaceResolver resolver) throws RepositoryException;
 
 }

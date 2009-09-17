@@ -142,7 +142,7 @@
     <!--
         Cluster configuration with system variables.
     -->
-    <Cluster id="${cluster.id}" syncDelay="${cluster.syncDelay}">
+    <Cluster syncDelay="${cluster.syncDelay}">
         <Journal class="org.apache.jackrabbit.core.journal.JNDIDatabaseJournal">
             <param name="schema" value="oracle" />
         </Journal>

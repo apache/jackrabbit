@@ -16,24 +16,33 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreFactory;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
+import org.apache.jackrabbit.core.journal.AbstractJournal;
+import org.apache.jackrabbit.core.journal.Journal;
+import org.apache.jackrabbit.core.journal.JournalException;
+import org.apache.jackrabbit.core.journal.JournalFactory;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ISMLockingFactory;
 import org.apache.jackrabbit.core.util.RepositoryLock;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanismFactory;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.jcr.RepositoryException;
 
@@ -169,6 +178,11 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     private static final String AC_PROVIDER_ELEMENT = "AccessControlProvider";
 
     /**
+     * Name of the cluster node id file.
+     */
+    private static final String CLUSTER_NODE_ID_FILE = "cluster_node.id";
+
+    /**
      * Creates a new configuration parser with the given parser variables.
      *
      * @param variables parser variables
@@ -265,7 +279,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         SearchConfig sc = parseSearchConfig(root);
 
         // Optional journal configuration
-        ClusterConfig cc = parseClusterConfig(root);
+        ClusterConfig cc = parseClusterConfig(root, new File(home));
 
         // Optional data store factory
         DataStoreFactory dsf = getDataStoreFactory(root, home);
@@ -666,10 +680,11 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * method returns <code>null</code>.
      *
      * @param parent parent of the <code>Journal</code> element
+     * @param home repository home directory
      * @return cluster configuration, or <code>null</code>
      * @throws ConfigurationException if the configuration is broken
      */
-    protected ClusterConfig parseClusterConfig(Element parent)
+    protected ClusterConfig parseClusterConfig(Element parent, File home)
             throws ConfigurationException {
 
         NodeList children = parent.getChildNodes();
@@ -679,17 +694,32 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     && CLUSTER_ELEMENT.equals(child.getNodeName())) {
                 Element element = (Element) child;
 
-                String id = null;
-
+                // Find the cluster node id
+                String id =
+                    System.getProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID);
                 String value = getAttribute(element, ID_ATTRIBUTE, null);
                 if (value != null) {
                     id = replaceVariables(value);
+                } else if (id == null) {
+                    File file = new File(home, CLUSTER_NODE_ID_FILE);
+                    try {
+                        if (file.exists() && file.canRead()) {
+                            id = FileUtils.readFileToString(file);
+                        } else {
+                            id = UUID.randomUUID().toString();
+                            FileUtils.writeStringToFile(file, id);
+                        }
+                    } catch (IOException e) {
+                        throw new ConfigurationException(
+                                "Failed to access cluster node id: " + file, e);
+                    }
                 }
-                value = getAttribute(element, SYNC_DELAY_ATTRIBUTE, DEFAULT_SYNC_DELAY);
-                long syncDelay = Long.parseLong(replaceVariables(value));
 
-                JournalConfig jc = parseJournalConfig(element);
-                return new ClusterConfig(id, syncDelay, jc);
+                long syncDelay = Long.parseLong(replaceVariables(getAttribute(
+                        element, SYNC_DELAY_ATTRIBUTE, DEFAULT_SYNC_DELAY)));
+
+                JournalFactory jf = getJournalFactory(element, home, id);
+                return new ClusterConfig(id, syncDelay, jf);
             }
         }
         return null;
@@ -708,14 +738,39 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * element.
      *
      * @param cluster parent cluster element
-     * @return journal configuration, or <code>null</code>
+     * @param home repository home directory
+     * @param id cluster node id
+     * @return journal factory
      * @throws ConfigurationException if the configuration is broken
      */
-    protected JournalConfig parseJournalConfig(Element cluster)
+    protected JournalFactory getJournalFactory(
+            final Element cluster, final File home, final String id)
             throws ConfigurationException {
-
-        return new JournalConfig(
-                parseBeanConfig(cluster, JOURNAL_ELEMENT));
+        return new JournalFactory() {
+            public Journal getJournal(NamespaceResolver resolver)
+                    throws RepositoryException {
+                BeanConfig config = parseBeanConfig(cluster, JOURNAL_ELEMENT);
+                Object object = config.newInstance();
+                if (object instanceof Journal) {
+                    Journal journal = (Journal) object;
+                    if (journal instanceof AbstractJournal) {
+                        ((AbstractJournal) journal).setRepositoryHome(home);
+                    }
+                    try {
+                        journal.init(id, resolver);
+                    } catch (JournalException e) {
+                        // TODO: Should JournalException extend RepositoryException?
+                        throw new RepositoryException(
+                                "Journal initialization failed: " + journal, e);
+                    }
+                    return journal;
+                } else {
+                    throw new RepositoryException(
+                            "Invalid Journal implementation class: "
+                            + config.getClassName());
+                }
+            }
+        };
     }
 
     /**

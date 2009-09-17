@@ -16,23 +16,16 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.cluster.WorkspaceRecord.CreateWorkspaceAction;
 import org.apache.jackrabbit.core.config.ClusterConfig;
-import org.apache.jackrabbit.core.config.ConfigurationException;
-import org.apache.jackrabbit.core.config.JournalConfig;
-import org.apache.jackrabbit.core.journal.AbstractJournal;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.journal.InstanceRevision;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.JournalException;
@@ -61,11 +54,6 @@ public class ClusterNode implements Runnable,
      * System property specifying a node id to use.
      */
     public static final String SYSTEM_PROPERTY_NODE_ID = "org.apache.jackrabbit.core.cluster.node_id";
-
-    /**
-     * Cluster node id file.
-     */
-    private static final String CLUSTER_NODE_ID_FILE = "cluster_node.id";
 
     /**
      * Producer identifier.
@@ -209,35 +197,20 @@ public class ClusterNode implements Runnable,
      */
     protected void init() throws ClusterException {
         ClusterConfig cc = clusterContext.getClusterConfig();
-        clusterNodeId = getClusterNodeId(cc.getId());
+        clusterNodeId = cc.getId();
         syncDelay = cc.getSyncDelay();
 
         try {
-            JournalConfig jc = cc.getJournalConfig();
-            journal = (Journal) jc.newInstance();
-            setRepositoryHome(journal, clusterContext.getRepositoryHome());
-            journal.init(clusterNodeId, clusterContext.getNamespaceResolver());
+            journal = cc.getJournal(clusterContext.getNamespaceResolver());
             instanceRevision = journal.getInstanceRevision();
             journal.register(this);
             producer = journal.getProducer(PRODUCER_ID);
-        } catch (ConfigurationException e) {
-            throw new ClusterException(e.getMessage(), e.getCause());
+        } catch (RepositoryException e) {
+            throw new ClusterException(
+                    "Cluster initialization failed: " + this, e);
         } catch (JournalException e) {
-            throw new ClusterException(e.getMessage(), e.getCause());
-        }
-    }
-
-    /**
-     * Set a journal's repository home, if possible, i.e. if it is an
-     * <code>AbstractJournal</code>
-     *
-     * @param journal journal instance
-     * @param repHome repository home
-     */
-    private void setRepositoryHome(Journal journal, File repHome) {
-        if (journal instanceof AbstractJournal) {
-            AbstractJournal aj = (AbstractJournal) journal;
-            aj.setRepositoryHome(repHome);
+            throw new ClusterException(
+                    "Journal initialization failed: " + this, e);
         }
     }
 
@@ -392,44 +365,6 @@ public class ClusterNode implements Runnable,
      */
     public Journal getJournal() {
         return journal;
-    }
-
-    /**
-     * Return the instance id to be used for this node in the cluster.
-     * @param id configured id, <code>null</code> to generate a unique id
-     */
-    private String getClusterNodeId(String id) throws ClusterException {
-        if (id == null) {
-            id = System.getProperty(SYSTEM_PROPERTY_NODE_ID);
-            if (id == null) {
-                try {
-                    id = getClusterNodeIdFromFile();
-                } catch (IOException e) {
-                    throw new ClusterException(e.getMessage(), e.getCause());
-                }
-            }
-        }
-        return id;
-    }
-
-    /**
-     * Return a cluster node from a file, creating it if necessary.
-     *
-     * @return stored or generated cluster id
-     * @throws IOException if an I/O error occurs
-     */
-    protected String getClusterNodeIdFromFile() throws IOException {
-        String filename = clusterContext.getRepositoryHome() + File.separator + CLUSTER_NODE_ID_FILE;
-        File f = new File(filename);
-
-        if (f.exists() && f.canRead()) {
-            return FileUtils.readFileToString(f);
-        }
-
-        String id = UUID.randomUUID().toString();
-        FileUtils.writeStringToFile(f, id);
-        return id;
-
     }
 
     //-----------------------------------------------< NamespaceEventListener >

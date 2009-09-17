@@ -16,11 +16,16 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.journal.Journal;
+import org.apache.jackrabbit.core.journal.JournalFactory;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+
 /**
- * Cluster configuration. This includes the journal configuration
- * {@link JournalConfig}.
+ * Cluster configuration.
  */
-public class ClusterConfig {
+public class ClusterConfig implements JournalFactory {
 
     /**
      * Identifier.
@@ -33,9 +38,9 @@ public class ClusterConfig {
     private final long syncDelay;
 
     /**
-     * Journal configuration.
+     * Journal factory.
      */
-    private final JournalConfig jc;
+    private final JournalFactory jf;
 
     /**
      * Creates a new cluster configuration.
@@ -44,10 +49,10 @@ public class ClusterConfig {
      * @param syncDelay syncDelay, in milliseconds
      * @param jc journal configuration
      */
-    public ClusterConfig(String id, long syncDelay, JournalConfig jc) {
+    public ClusterConfig(String id, long syncDelay, JournalFactory jf) {
         this.id = id;
         this.syncDelay = syncDelay;
-        this.jc = jc;
+        this.jf = jf;
     }
 
     /**
@@ -69,11 +74,16 @@ public class ClusterConfig {
     }
 
     /**
-     * Returns the journal configuration.
+     * Returns an initialized journal instance.
      *
-     * @return journal configuration
+     * @param resolver namespace resolver
+     * @return initialized journal
+     * @throws RepositoryException 
+     * @throws RepositoryException if the journal can not be created
      */
-    public JournalConfig getJournalConfig() {
-        return jc;
+    public Journal getJournal(NamespaceResolver resolver)
+            throws RepositoryException {
+        return jf.getJournal(resolver);
     }
+
 }
