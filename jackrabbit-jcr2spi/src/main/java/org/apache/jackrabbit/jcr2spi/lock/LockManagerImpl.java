@@ -220,7 +220,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      */
     public void removeLockToken(String lt) throws LockException, RepositoryException {
         // JSR170 v. 1.0.1 defines that the token of a session-scoped lock may
-        // not be moved over to another session. thus removal ist not possible
+        // not be moved over to another session. Thus removal is not possible
         // and the lock is always present in the lock map.
         Iterator<LockImpl> it = lockMap.values().iterator();
         boolean found = false;
@@ -285,7 +285,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * Note, that this methods does NOT check if the given node state would
      * be affected by the lock present on an ancestor state.
      * Note, that in certain cases it might not be possible to detect a lock
-     * being present due to the fact that the hierarchy might be imcomplete or
+     * being present due to the fact that the hierarchy might be incomplete or
      * not even readable completely. For this reason it seem equally reasonable
      * to search for jcr:lockIsDeep property only and omitting all kind of
      * verification regarding nodetypes present.
@@ -798,7 +798,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
                 // unless this lock is session-scoped (token is never transfered)
                 // and the session isn't the owner yet (token already present),
                 // it could be that this affects this lock and session became
-                // lock holder -> releoad info to assert.
+                // lock holder -> reload info to assert.
                 lockState.reloadLockInfo();
             }
         }
