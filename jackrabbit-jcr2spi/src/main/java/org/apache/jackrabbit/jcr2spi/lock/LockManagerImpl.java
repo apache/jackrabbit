@@ -76,16 +76,16 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * only if a lock ends his life by {@link Node#unlock()} or by implicit
      * unlock upon {@link Session#logout()}.
      */
-    private final Map lockMap;
+    private final Map<NodeState, LockImpl> lockMap;
 
     public LockManagerImpl(WorkspaceManager wspManager, ItemManager itemManager,
                            CacheBehaviour cacheBehaviour) {
         this.wspManager = wspManager;
         this.itemManager = itemManager;
         this.cacheBehaviour = cacheBehaviour;
-        // use hard references in order to make sure, that entries refering
+        // use hard references in order to make sure, that entries referring
         // to locks created by the current session are not removed.
-        lockMap = new HashMap();
+        lockMap = new HashMap<NodeState, LockImpl>();
     }
 
     //----------------< org.apache.jackrabbit.jcr2spi.lock.LockStateManager >---
@@ -129,11 +129,11 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         Operation op = LockRelease.create(nodeState);
         wspManager.execute(op);
 
-        // if unlock was successfull: clean up lock map and lock life cycle
+        // if unlock was successful: clean up lock map and lock life cycle
         // in case the corresponding Lock object exists (and thus has been
         // added to the map.
         if (lockMap.containsKey(nodeState)) {
-            LockImpl l = (LockImpl) lockMap.remove(nodeState);
+            LockImpl l = lockMap.remove(nodeState);
             l.lockState.unlocked();
         }
     }
@@ -222,12 +222,12 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         // JSR170 v. 1.0.1 defines that the token of a session-scoped lock may
         // not be moved over to another session. thus removal ist not possible
         // and the lock is always present in the lock map.
-        Iterator it = lockMap.values().iterator();
+        Iterator<LockImpl> it = lockMap.values().iterator();
         boolean found = false;
         // loop over cached locks to determine if the token belongs to a session
         // scoped lock, in which case the removal must fail immediately.
         while (it.hasNext() && !found) {
-            LockImpl l = (LockImpl) it.next();
+            LockImpl l = it.next();
             if (lt.equals(l.getLockToken())) {
                 // break as soon as the lock associated with the given token was found.
                 found = true;
@@ -250,10 +250,10 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      */
     public void loggingOut(Session session) {
         // remove any session scoped locks:
-        NodeState[] lhStates = (NodeState[]) lockMap.keySet().toArray(new NodeState[lockMap.size()]);
+        NodeState[] lhStates = lockMap.keySet().toArray(new NodeState[lockMap.size()]);
         for (int i = 0; i < lhStates.length; i++) {
             NodeState nState = lhStates[i];
-            LockImpl l = (LockImpl) lockMap.get(nState);
+            LockImpl l = lockMap.get(nState);
             if (l.isSessionScoped() && l.isLockOwningSession()) {
                 try {
                     unlock(nState);
@@ -271,7 +271,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      */
     public void loggedOut(Session session) {
         // release all remaining locks without modifying their lock status
-        LockImpl[] locks = (LockImpl[]) lockMap.values().toArray(new LockImpl[lockMap.size()]);
+        LockImpl[] locks = lockMap.values().toArray(new LockImpl[lockMap.size()]);
         for (int i = 0; i < locks.length; i++) {
             locks[i].lockState.release();
         }
@@ -419,7 +419,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
 
     private LockImpl getLockFromMap(NodeState nodeState) {
         try {
-            LockImpl l = (LockImpl) lockMap.get(nodeState);
+            LockImpl l = lockMap.get(nodeState);
             if (l != null && l.isLive()) {
                 return l;
             }
@@ -439,7 +439,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * @throws RepositoryException
      */
     private void notifyTokenAdded(String lt) throws RepositoryException {
-        LockTokenListener[] listeners = (LockTokenListener[]) lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
+        LockTokenListener[] listeners = lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
         for (int i = 0; i < listeners.length; i++) {
             listeners[i].lockTokenAdded(lt);
         }
@@ -453,7 +453,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * @throws RepositoryException
      */
     private void notifyTokenRemoved(String lt) throws RepositoryException {
-        LockTokenListener[] listeners = (LockTokenListener[]) lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
+        LockTokenListener[] listeners = lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
         for (int i = 0; i < listeners.length; i++) {
             listeners[i].lockTokenRemoved(lt);
         }
