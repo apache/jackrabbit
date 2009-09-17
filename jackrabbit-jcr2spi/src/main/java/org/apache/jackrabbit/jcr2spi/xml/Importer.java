@@ -41,7 +41,7 @@ public interface Importer {
      * context.
      * @throws RepositoryException
      */
-    void startNode(NodeInfo nodeInfo, List propInfos, NamePathResolver resolver)
+    void startNode(NodeInfo nodeInfo, List<PropInfo> propInfos, NamePathResolver resolver)
             throws RepositoryException;
 
     /**

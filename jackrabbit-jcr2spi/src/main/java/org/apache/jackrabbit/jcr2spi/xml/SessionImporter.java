@@ -68,7 +68,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
@@ -86,7 +85,7 @@ public class SessionImporter implements Importer, SessionListener {
     private final SessionImpl session;
     private final SessionItemStateManager stateMgr;
 
-    private final Stack parents;
+    private final Stack<NodeState> parents;
 
     private boolean importerClosed;
     private boolean sessionClosed;
@@ -131,7 +130,7 @@ public class SessionImporter implements Importer, SessionListener {
             session.getValidator().checkIsWritable(importTarget, options);
 
             refTracker = new ReferenceChangeTracker();
-            parents = new Stack();
+            parents = new Stack<NodeState>();
             parents.push(importTarget);
         } catch (ItemNotFoundException e) {
             throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getPathResolver()));
@@ -143,21 +142,21 @@ public class SessionImporter implements Importer, SessionListener {
      * {@inheritDoc}
      */
     public void start() throws RepositoryException {
-        // explicitely set status of importer and start listening on session
+        // explicitly set status of importer and start listening on session
         setClosed(false);
     }
 
    /**
      * {@inheritDoc}
      */
-    public void startNode(NodeInfo nodeInfo, List propInfos, NamePathResolver resolver)
+    public void startNode(NodeInfo nodeInfo, List<PropInfo> propInfos, NamePathResolver resolver)
             throws RepositoryException {
        if (isClosed()) {
            // workspace-importer only: ignore if import has been aborted before.
            return;
        }
        checkSession();
-       NodeState parent = (NodeState) parents.peek();
+       NodeState parent = parents.peek();
        if (parent == null) {
            // parent node was skipped, skip this child node also
            parents.push(null); // push null onto stack for skipped node
@@ -226,9 +225,7 @@ public class SessionImporter implements Importer, SessionListener {
        // node state may be 'null' if applicable def is protected
        if (nodeState != null) {
            // process properties
-           Iterator iter = propInfos.iterator();
-           while (iter.hasNext()) {
-               PropInfo pi = (PropInfo) iter.next();
+    	   for (PropInfo pi : propInfos) {
                importProperty(pi, nodeState, resolver);
            }
        }
@@ -632,7 +629,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @throws RepositoryException
      */
     private void checkIncludesMixReferenceable(Importer.NodeInfo nodeInfo) throws RepositoryException {
-        List l = new ArrayList();
+        List<Name> l = new ArrayList<Name>();
         l.add(nodeInfo.getNodeTypeName());
         Name[] mixinNames = nodeInfo.getMixinNames();
         if (mixinNames != null && mixinNames.length > 0) {
@@ -642,7 +639,7 @@ public class SessionImporter implements Importer, SessionListener {
             // shortcut
             return;
         }
-        Name[] ntNames = (Name[]) l.toArray(new Name[l.size()]);
+        Name[] ntNames = l.toArray(new Name[l.size()]);
         EffectiveNodeType ent = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
         if (!ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
             throw new ConstraintViolationException("XML defines jcr:uuid without defining import node to be referenceable.");

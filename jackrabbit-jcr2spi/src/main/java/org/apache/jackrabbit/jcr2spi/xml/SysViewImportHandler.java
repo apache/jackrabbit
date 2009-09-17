@@ -29,7 +29,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -58,7 +58,7 @@ class SysViewImportHandler extends TargetImportHandler {
      * the same instance is popped from the stack in the endElement method
      * when the corresponding sv:node element is encountered.
      */
-    private final Stack stack = new Stack();
+    private final Stack<ImportState> stack = new Stack<ImportState>();
 
     /**
      * fields used temporarily while processing sv:property and sv:value elements
@@ -66,7 +66,7 @@ class SysViewImportHandler extends TargetImportHandler {
     private Name currentPropName;
     private int currentPropType = PropertyType.UNDEFINED;
     // list of AppendableValue objects
-    private ArrayList currentPropValues = new ArrayList();
+    private List<Importer.TextValue> currentPropValues = new ArrayList<Importer.TextValue>();
     private AppendableValue currentPropValue;
 
     /**
@@ -86,7 +86,7 @@ class SysViewImportHandler extends TargetImportHandler {
         }
         Name[] mixins = null;
         if (state.mixinNames != null) {
-            mixins = (Name[]) state.mixinNames.toArray(new Name[state.mixinNames.size()]);
+            mixins = state.mixinNames.toArray(new Name[state.mixinNames.size()]);
         }
         Importer.NodeInfo nodeInfo = new Importer.NodeInfo(state.nodeName, state.nodeTypeName, mixins, state.uuid);
 
@@ -98,8 +98,7 @@ class SysViewImportHandler extends TargetImportHandler {
             if (start) {
                 importer.startNode(nodeInfo, state.props, resolver);
                 // dispose temporary property values
-                for (Iterator iter = state.props.iterator(); iter.hasNext();) {
-                    Importer.PropInfo pi = (Importer.PropInfo) iter.next();
+                for (Importer.PropInfo pi : state.props) {
                     disposePropertyValues(pi);
                 }
             }
@@ -136,7 +135,7 @@ class SysViewImportHandler extends TargetImportHandler {
 
             if (!stack.isEmpty()) {
                 // process current node first
-                ImportState current = (ImportState) stack.peek();
+                ImportState current = stack.peek();
                 // need to start current node
                 if (!current.started) {
                     processNode(current, true, false);
@@ -232,7 +231,7 @@ class SysViewImportHandler extends TargetImportHandler {
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
         // check element name
-        ImportState state = (ImportState) stack.peek();
+        ImportState state = stack.peek();
         if (NODE.equals(localName)) {
             // sv:node element
             if (!state.started) {
@@ -265,7 +264,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 }
             } else if (currentPropName.equals(NameConstants.JCR_MIXINTYPES)) {
                 if (state.mixinNames == null) {
-                    state.mixinNames = new ArrayList(currentPropValues.size());
+                    state.mixinNames = new ArrayList<Name>(currentPropValues.size());
                 }
                 for (int i = 0; i < currentPropValues.size(); i++) {
                     AppendableValue val =
@@ -291,7 +290,7 @@ class SysViewImportHandler extends TargetImportHandler {
                     throw new SAXException("error while retrieving value", ioe);
                 }
             } else {
-                Importer.TextValue[] values = (Importer.TextValue[]) currentPropValues.toArray(new Importer.TextValue[currentPropValues.size()]);
+                Importer.TextValue[] values = currentPropValues.toArray(new Importer.TextValue[currentPropValues.size()]);
                 Importer.PropInfo prop = new Importer.PropInfo(currentPropName, currentPropType, values);
                 state.props.add(prop);
             }
@@ -320,7 +319,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of mixin types of current node
          */
-        ArrayList mixinNames;
+        List<Name> mixinNames;
         /**
          * uuid of current node
          */
@@ -329,7 +328,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of PropInfo instances representing properties of current node
          */
-        ArrayList props = new ArrayList();
+        List<Importer.PropInfo> props = new ArrayList<Importer.PropInfo>();
 
         /**
          * flag indicating whether startNode() has been called for current node
