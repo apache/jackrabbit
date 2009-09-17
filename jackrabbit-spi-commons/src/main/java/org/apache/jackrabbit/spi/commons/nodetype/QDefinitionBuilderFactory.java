@@ -22,18 +22,14 @@ import java.util.List;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.commons.cnd.AbstractItemTypeDefinitionsBuilder;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory;
 import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -41,23 +37,21 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.util.ISO9075;
 
 /**
- * This implementation of {@link AbstractItemTypeDefinitionsBuilder} can be used with
+ * This implementation of {@link DefinitionBuilderFactory} can be used with
  * the {@link CompactNodeTypeDefReader} to produce node type definitions of type
  * {@link QNodeTypeDefinition} and a namespace map of type {@link NamespaceMapping}.
- * It uses {@link QNodeTypeDefinitionBuilder} for building node type definitions,
- * {@link QPropertyDefinitionBuilder} for building property definitions, and
- * {@link QNodeDefinitionBuilder} for building node definitions. It further uses
+ * It uses {@link QNodeTypeDefinitionBuilderImpl} for building node type definitions,
+ * {@link QPropertyDefinitionBuilderImpl} for building property definitions, and
+ * {@link QNodeDefinitionBuilderImpl} for building node definitions. It further uses
  * {@link NameFactoryImpl} for creating <code>Name</code>s and {@link QValueFactoryImpl} for
  * creating <code>QValue</code>s.
  */
-public class QItemDefinitionsBuilder extends
-        AbstractItemTypeDefinitionsBuilder<QNodeTypeDefinition, NamespaceMapping> {
+public class QDefinitionBuilderFactory extends DefinitionBuilderFactory<QNodeTypeDefinition, NamespaceMapping> {
 
     private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
 
@@ -83,7 +77,7 @@ public class QItemDefinitionsBuilder extends
 
     @Override
     public AbstractNodeTypeDefinitionBuilder<QNodeTypeDefinition> newNodeTypeDefinitionBuilder() {
-        return new QNodeTypeDefinitionBuilder();
+        return new QNodeTypeDefinitionBuilderImpl();
     }
 
     @Override
@@ -107,7 +101,7 @@ public class QItemDefinitionsBuilder extends
         }
     }
 
-    public class QNodeTypeDefinitionBuilder extends AbstractNodeTypeDefinitionBuilder<QNodeTypeDefinition> {
+    private class QNodeTypeDefinitionBuilderImpl extends AbstractNodeTypeDefinitionBuilder<QNodeTypeDefinition> {
         private Name name;
         private final List<Name> supertypes = new ArrayList<Name>();
         private Name primaryItem;
@@ -116,12 +110,12 @@ public class QItemDefinitionsBuilder extends
 
         @Override
         public AbstractNodeDefinitionBuilder<QNodeTypeDefinition> newNodeDefinitionBuilder() {
-            return new QNodeDefinitionBuilder(this);
+            return new QNodeDefinitionBuilderImpl(this);
         }
 
         @Override
         public AbstractPropertyDefinitionBuilder<QNodeTypeDefinition> newPropertyDefinitionBuilder() {
-            return new QPropertyDefinitionBuilder(this);
+            return new QPropertyDefinitionBuilderImpl(this);
         }
 
         @Override
@@ -157,14 +151,12 @@ public class QItemDefinitionsBuilder extends
 
     }
 
-    public class QPropertyDefinitionBuilder extends AbstractPropertyDefinitionBuilder<QNodeTypeDefinition> {
-        private Name name;
-        private final QNodeTypeDefinitionBuilder ntd;
-        private final List<QValue> values = new ArrayList<QValue>();
-        private final List<QValueConstraint> constraints = new ArrayList<QValueConstraint>();
-        private Name declaringType;
+    private class QPropertyDefinitionBuilderImpl extends AbstractPropertyDefinitionBuilder<QNodeTypeDefinition> {
 
-        public QPropertyDefinitionBuilder(QNodeTypeDefinitionBuilder ntd) {
+        private final QNodeTypeDefinitionBuilderImpl ntd;
+        private final QPropertyDefinitionBuilder builder = new QPropertyDefinitionBuilder();
+
+        public QPropertyDefinitionBuilderImpl(QNodeTypeDefinitionBuilderImpl ntd) {
             super();
             this.ntd = ntd;
         }
@@ -173,60 +165,101 @@ public class QItemDefinitionsBuilder extends
         public void setName(String name) throws RepositoryException {
             super.setName(name);
             if ("*".equals(name)) {
-                this.name = NameConstants.ANY_NAME;
+                builder.setName(NameConstants.ANY_NAME);
             }
             else {
-                this.name = toName(name);
+                builder.setName(toName(name));
             }
+        }
+
+        @Override
+        public void setRequiredType(int type) throws RepositoryException {
+            super.setRequiredType(type);
+            builder.setRequiredType(type);
+        }
+
+        @Override
+        public void setMultiple(boolean isMultiple) throws RepositoryException {
+            super.setMultiple(isMultiple);
+            builder.setMultiple(isMultiple);
+        }
+
+        @Override
+        public void setFullTextSearchable(boolean fullTextSearchable)
+                throws RepositoryException {
+            super.setFullTextSearchable(fullTextSearchable);
+            builder.setFullTextSearchable(fullTextSearchable);
+        }
+
+        @Override
+        public void setQueryOrderable(boolean queryOrderable)
+                throws RepositoryException {
+            super.setQueryOrderable(queryOrderable);
+            builder.setQueryOrderable(queryOrderable);
+        }
+
+        @Override
+        public void setAvailableQueryOperators(String[] queryOperators)
+                throws RepositoryException {
+            super.setAvailableQueryOperators(queryOperators);
+            builder.setAvailableQueryOperators(queryOperators);
+        }
+
+        @Override
+        public void setAutoCreated(boolean autocreate)
+                throws RepositoryException {
+            super.setAutoCreated(autocreate);
+            builder.setAutoCreated(autocreate);
+        }
+
+        @Override
+        public void setOnParentVersion(int onParent)
+                throws RepositoryException {
+            super.setOnParentVersion(onParent);
+            builder.setOnParentVersion(onParent);
+        }
+
+        @Override
+        public void setProtected(boolean isProtected)
+                throws RepositoryException {
+            super.setProtected(isProtected);
+            builder.setProtected(isProtected);
+        }
+
+        @Override
+        public void setMandatory(boolean isMandatory)
+                throws RepositoryException {
+            super.setMandatory(isMandatory);
+            builder.setMandatory(isMandatory);
         }
 
         @Override
         public void addDefaultValues(String value) throws RepositoryException {
-            values.add(ValueFormat.getQValue(value, getRequiredType(), resolver, QValueFactoryImpl.getInstance()));
+            builder.addDefaultValue(ValueFormat.getQValue(value, getRequiredType(), resolver, QValueFactoryImpl.getInstance()));
         }
 
         @Override
         public void addValueConstraint(String constraint) throws InvalidConstraintException {
-            constraints.add(ValueConstraint.create(getRequiredType(), constraint, resolver));
+            builder.addValueConstraint(ValueConstraint.create(getRequiredType(), constraint, resolver));
         }
 
         @Override
         public void setDeclaringNodeType(String name) throws IllegalNameException, NamespaceException {
-            this.declaringType = toName(name);
+            builder.setDeclaringNodeType(toName(name));
         }
 
         @Override
         public void build() throws IllegalStateException {
-            if (queryOperators == null) {
-                queryOperators = Operator.getAllQueryOperators();
-            }
-
-            ntd.propertyDefs.add(new QPropertyDefinitionImpl(
-                    name,
-                    declaringType,
-                    super.autocreate,
-                    super.isMandatory,
-                    super.onParent,
-                    super.isProtected,
-                    values.toArray(new QValue[values.size()]),
-                    super.isMultiple,
-                    super.requiredType,
-                    constraints.toArray(new QValueConstraint[constraints.size()]),
-                    super.queryOperators,
-                    super.fullTextSearchable,
-                    super.queryOrderable));
+            ntd.propertyDefs.add(builder.build());
         }
-
     }
 
-    public class QNodeDefinitionBuilder extends AbstractNodeDefinitionBuilder<QNodeTypeDefinition> {
-        private final QNodeTypeDefinitionBuilder ntd;
-        private Name name;
-        private final List<Name> requiredPrimaryTypes = new ArrayList<Name>();
-        private Name defaultPrimaryType;
-        private Name declaringNodeType;
+    private class QNodeDefinitionBuilderImpl extends AbstractNodeDefinitionBuilder<QNodeTypeDefinition> {
+        private final QNodeTypeDefinitionBuilderImpl ntd;
 
-        public QNodeDefinitionBuilder(QNodeTypeDefinitionBuilder ntd) {
+        private final QNodeDefinitionBuilder builder = new QNodeDefinitionBuilder();
+
+        public QNodeDefinitionBuilderImpl(QNodeTypeDefinitionBuilderImpl ntd) {
             super();
             this.ntd = ntd;
         }
@@ -235,46 +268,71 @@ public class QItemDefinitionsBuilder extends
         public void setName(String name) throws RepositoryException {
             super.setName(name);
             if ("*".equals(name)) {
-                this.name = NameConstants.ANY_NAME;
+                builder.setName(NameConstants.ANY_NAME);
             }
             else {
-                this.name = toName(name);
+                builder.setName(toName(name));
             }
+        }
+
+        @Override
+        public void setAllowsSameNameSiblings(boolean allowSns)
+                throws RepositoryException {
+            super.setAllowsSameNameSiblings(allowSns);
+            builder.setAllowsSameNameSiblings(allowSns);
+        }
+
+        @Override
+        public void setAutoCreated(boolean autocreate)
+                throws RepositoryException {
+            super.setAutoCreated(autocreate);
+            builder.setAutoCreated(autocreate);
+        }
+
+        @Override
+        public void setOnParentVersion(int onParent)
+                throws RepositoryException {
+            super.setOnParentVersion(onParent);
+            builder.setOnParentVersion(onParent);
+        }
+
+        @Override
+        public void setProtected(boolean isProtected)
+                throws RepositoryException {
+            super.setProtected(isProtected);
+            builder.setProtected(isProtected);
+        }
+
+        @Override
+        public void setMandatory(boolean isMandatory)
+                throws RepositoryException {
+            super.setMandatory(isMandatory);
+            builder.setMandatory(isMandatory);
         }
 
         @Override
         public void addRequiredPrimaryType(String name) throws IllegalNameException, NamespaceException {
-            requiredPrimaryTypes.add(toName(name));
+            builder.addRequiredPrimaryType(toName(name));
         }
 
         @Override
         public void setDefaultPrimaryType(String name) throws IllegalNameException, NamespaceException {
-            defaultPrimaryType = toName(name);
+            builder.setDefaultPrimaryType(toName(name));
         }
 
         @Override
         public void setDeclaringNodeType(String name) throws IllegalNameException, NamespaceException {
-            declaringNodeType = toName(name);
+            builder.setDeclaringNodeType(toName(name));
         }
 
         @Override
         public void build() {
-            if (requiredPrimaryTypes.isEmpty()) {
-                requiredPrimaryTypes.add(NameConstants.NT_BASE);
+            if (builder.getRequiredPrimaryTypes() == null) {
+                builder.addRequiredPrimaryType(NameConstants.NT_BASE);
             }
 
-            ntd.childNodeDefs.add(new QNodeDefinitionImpl(
-                    name,
-                    declaringNodeType,
-                    super.autocreate,
-                    super.isMandatory,
-                    super.onParent,
-                    super.isProtected,
-                    defaultPrimaryType,
-                    requiredPrimaryTypes.toArray(new Name[requiredPrimaryTypes.size()]),
-                    super.allowSns));
+            ntd.childNodeDefs.add(builder.build());
         }
-
     }
 
 

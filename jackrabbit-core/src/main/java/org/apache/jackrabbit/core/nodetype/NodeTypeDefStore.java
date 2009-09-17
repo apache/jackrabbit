@@ -35,7 +35,7 @@ import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
-import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 
 /**
  * <code>NodeTypeDefStore</code> ...
@@ -80,7 +80,7 @@ public class NodeTypeDefStore {
         try {
             CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> r =
                 new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
-                    in, systemId, new QItemDefinitionsBuilder());
+                    in, systemId, new QDefinitionBuilderFactory());
 
             for (QNodeTypeDefinition qdef: r.getNodeTypeDefinitions()) {
                 add(new NodeTypeDef(qdef));

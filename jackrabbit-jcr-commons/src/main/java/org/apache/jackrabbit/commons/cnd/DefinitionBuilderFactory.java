@@ -26,7 +26,7 @@ import javax.jcr.nodetype.PropertyDefinition;
  * @param <T>  type of the node type definition
  * @param <N>  type of the namespace mapping
  */
-public abstract class AbstractItemTypeDefinitionsBuilder<T, N> {
+public abstract class DefinitionBuilderFactory<T, N> {
 
     /**
      * Create a new instance of a {@link AbstractNodeTypeDefinitionBuilder}
@@ -149,7 +149,7 @@ public abstract class AbstractItemTypeDefinitionsBuilder<T, N> {
         }
 
         /**
-         * Create a new instance of a {@link AbstractItemTypeDefinitionsBuilder.AbstractPropertyDefinitionBuilder}
+         * Create a new instance of a {@link DefinitionBuilderFactory.AbstractPropertyDefinitionBuilder}
          * which can be used to add property definitions to the node type definition being built.
          * @return
          * @throws RepositoryException
@@ -158,7 +158,7 @@ public abstract class AbstractItemTypeDefinitionsBuilder<T, N> {
                 throws RepositoryException;
 
         /**
-         * Create a new instance fo a {@link AbstractItemTypeDefinitionsBuilder.AbstractNodeDefinitionBuilder}
+         * Create a new instance fo a {@link DefinitionBuilderFactory.AbstractNodeDefinitionBuilder}
          * which can be used to add child node definitions to the node type definition being built.
          * @return
          * @throws RepositoryException

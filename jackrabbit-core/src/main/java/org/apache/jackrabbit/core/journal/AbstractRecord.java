@@ -39,7 +39,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
 
 /**
@@ -253,7 +253,7 @@ public abstract class AbstractRecord implements Record {
             CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> reader =
                 new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
                     sr, "(internal)", new NamespaceMapping(nsResolver),
-                    new QItemDefinitionsBuilder());
+                    new QDefinitionBuilderFactory());
 
             Collection<QNodeTypeDefinition> ntds = reader.getNodeTypeDefinitions();
             if (ntds.size() != 1) {

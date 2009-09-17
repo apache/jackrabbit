@@ -31,7 +31,7 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefDiff;
-import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 
 public class CompactNodeTypeDefTest extends TestCase {
 
@@ -43,7 +43,7 @@ public class CompactNodeTypeDefTest extends TestCase {
         Reader reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream(TEST_FILE));
         CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> cndReader =
             new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
-                reader, TEST_FILE, new QItemDefinitionsBuilder());
+                reader, TEST_FILE, new QDefinitionBuilderFactory());
 
         List<QNodeTypeDefinition> ntdList1 = cndReader.getNodeTypeDefinitions();
         NamespaceMapping nsm = cndReader.getNamespaceMapping();
@@ -55,7 +55,7 @@ public class CompactNodeTypeDefTest extends TestCase {
 
         // Rerun the reader on the product of the writer
         cndReader = new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
-                new StringReader(sw.toString()), TEST_FILE, new QItemDefinitionsBuilder());
+                new StringReader(sw.toString()), TEST_FILE, new QDefinitionBuilderFactory());
 
         List<QNodeTypeDefinition> ntdList2 = cndReader.getNodeTypeDefinitions();
 

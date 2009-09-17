@@ -25,9 +25,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.jackrabbit.commons.cnd.AbstractItemTypeDefinitionsBuilder.AbstractNodeDefinitionBuilder;
-import org.apache.jackrabbit.commons.cnd.AbstractItemTypeDefinitionsBuilder.AbstractNodeTypeDefinitionBuilder;
-import org.apache.jackrabbit.commons.cnd.AbstractItemTypeDefinitionsBuilder.AbstractPropertyDefinitionBuilder;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractNodeDefinitionBuilder;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractNodeTypeDefinitionBuilder;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractPropertyDefinitionBuilder;
 
 /**
  * CompactNodeTypeDefReader. Parses node type definitions written in the compact
@@ -37,7 +37,7 @@ import org.apache.jackrabbit.commons.cnd.AbstractItemTypeDefinitionsBuilder.Abst
  * The CompactNodeTypeDefReader is parameterizable in the type of the node type
  * definition <code>T</code> and the type of the namespace mapping <code>N</code>
  * which the parser should build. For types <code>T</code> and <code>N</code> the
- * parser's constructor takes a {@link AbstractItemTypeDefinitionsBuilder} for
+ * parser's constructor takes a {@link DefinitionBuilderFactory} for
  * <code>T</code> and <code>N</code>.
  *
  * <p/>
@@ -124,20 +124,20 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * The builder for QNodeTypeDefinitions
      */
-    private final AbstractItemTypeDefinitionsBuilder<T, N> builder;
+    private final DefinitionBuilderFactory<T, N> factory;
 
     /**
      * Creates a new CND reader and parses the given stream.
      *
      * @param r a reader to the CND
      * @param systemId a informative id of the given stream
-     * @param builder builder for creating new definitions and handling namespaces
+     * @param factory builder for creating new definitions and handling namespaces
      * @throws ParseException if an error occurs
      */
     public CompactNodeTypeDefReader(Reader r, String systemId,
-            AbstractItemTypeDefinitionsBuilder<T, N> builder) throws ParseException {
+            DefinitionBuilderFactory<T, N> factory) throws ParseException {
 
-        this(r, systemId, null, builder);
+        this(r, systemId, null, factory);
     }
 
     /**
@@ -146,18 +146,18 @@ public class CompactNodeTypeDefReader<T, N> {
      * @param r a reader to the CND
      * @param systemId a informative id of the given stream
      * @param nsMapping default namespace mapping to use
-     * @param builder builder for creating new definitions and handling namespaces
+     * @param factory builder for creating new definitions and handling namespaces
      * @throws ParseException if an error occurs
      */
     public CompactNodeTypeDefReader(Reader r, String systemId, N nsMapping,
-            AbstractItemTypeDefinitionsBuilder<T, N> builder) throws ParseException {
+            DefinitionBuilderFactory<T, N> factory) throws ParseException {
 
         super();
 
-        this.builder = builder;
+        this.factory = factory;
         lexer = new Lexer(r, systemId);
         if (nsMapping != null) {
-            builder.setNamespaceMapping(nsMapping);
+            factory.setNamespaceMapping(nsMapping);
         }
 
         nextToken();
@@ -187,7 +187,7 @@ public class CompactNodeTypeDefReader<T, N> {
      * @return
      */
     public N getNamespaceMapping() {
-        return builder.getNamespaceMapping();
+        return factory.getNamespaceMapping();
     }
 
     /**
@@ -203,7 +203,7 @@ public class CompactNodeTypeDefReader<T, N> {
         }
         try {
             while (!currentTokenEquals(Lexer.EOF)) {
-                AbstractNodeTypeDefinitionBuilder<T> ntd = builder.newNodeTypeDefinitionBuilder();
+                AbstractNodeTypeDefinitionBuilder<T> ntd = factory.newNodeTypeDefinitionBuilder();
                 ntd.setOrderableChildNodes(false);
                 ntd.setMixin(false);
                 ntd.setAbstract(false);
@@ -244,7 +244,7 @@ public class CompactNodeTypeDefReader<T, N> {
             lexer.fail("Missing > in namespace decl.");
         }
         try {
-            builder.setNamespace(prefix, uri);
+            factory.setNamespace(prefix, uri);
         }
         catch (RepositoryException e) {
             lexer.fail("Error setting namespace mapping " + currentToken, e);

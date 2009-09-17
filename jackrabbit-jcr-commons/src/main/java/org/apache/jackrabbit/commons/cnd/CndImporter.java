@@ -39,7 +39,7 @@ import javax.jcr.nodetype.PropertyDefinitionTemplate;
 /**
  * Utility class for importing compact node type definitions.
  * @see CompactNodeTypeDefReader
- * @see ItemTemplatesBuilder
+ * @see TemplateBuilderFactory
  */
 public final class CndImporter {
 
@@ -105,11 +105,11 @@ public final class CndImporter {
             UnsupportedRepositoryOperationException, RepositoryException, IOException {
 
         try {
-            AbstractItemTypeDefinitionsBuilder<NodeTypeTemplate, NamespaceRegistry> builder =
-                    new ItemTemplatesBuilder(nodeTypeManager, valueFactory, namespaceRegistry);
+            DefinitionBuilderFactory<NodeTypeTemplate, NamespaceRegistry> factory =
+                    new TemplateBuilderFactory(nodeTypeManager, valueFactory, namespaceRegistry);
 
             CompactNodeTypeDefReader<NodeTypeTemplate, NamespaceRegistry> cndReader =
-                new CompactNodeTypeDefReader<NodeTypeTemplate, NamespaceRegistry>(cnd, systemId, builder);
+                new CompactNodeTypeDefReader<NodeTypeTemplate, NamespaceRegistry>(cnd, systemId, factory);
 
             List<NodeTypeTemplate> ntts = cndReader.getNodeTypeDefinitions();
 

@@ -33,21 +33,20 @@ import javax.jcr.nodetype.PropertyDefinitionTemplate;
 
 
 /**
- * This implementation of {@link AbstractItemTypeDefinitionsBuilder} can be used with
+ * This implementation of {@link DefinitionBuilderFactory} can be used with
  * the {@link CompactNodeTypeDefReader} to produce node type definitions of type
  * {@link NodeTypeTemplate} and a namespace map of type {@link NamespaceRegistry}.
  * It uses {@link NodeTypeTemplateBuilder} for building node type definitions,
  * {@link PropertyDefinitionTemplateBuilder} for building property definitions, and
  * {@link NodeDefinitionTemplateBuilder} for building node definitions.
  */
-public class ItemTemplatesBuilder extends
-        AbstractItemTypeDefinitionsBuilder<NodeTypeTemplate, NamespaceRegistry> {
+public class TemplateBuilderFactory extends DefinitionBuilderFactory<NodeTypeTemplate, NamespaceRegistry> {
 
     private final NodeTypeManager nodeTypeManager;
     private final ValueFactory valueFactory;
     private NamespaceRegistry namespaceRegistry;
 
-    public ItemTemplatesBuilder(NodeTypeManager nodeTypeManager, ValueFactory valueFactory,
+    public TemplateBuilderFactory(NodeTypeManager nodeTypeManager, ValueFactory valueFactory,
             NamespaceRegistry namespaceRegistry) {
 
         this.nodeTypeManager = nodeTypeManager;

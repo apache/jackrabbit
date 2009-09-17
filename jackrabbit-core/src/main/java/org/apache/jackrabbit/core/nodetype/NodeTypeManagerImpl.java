@@ -66,7 +66,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
-import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -272,7 +272,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                     CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> reader =
                         new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
                             new InputStreamReader(in), "cnd input stream", mapping,
-                            new QItemDefinitionsBuilder());
+                            new QDefinitionBuilderFactory());
 
                     namespaceMap.putAll(mapping.getPrefixToURIMapping());
                     for (QNodeTypeDefinition ntDef: reader.getNodeTypeDefinitions()) {
