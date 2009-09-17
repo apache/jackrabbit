@@ -27,6 +27,8 @@ import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Simple helper class that can be used to keep track of uuid mappings
@@ -41,11 +43,11 @@ public class ReferenceChangeTracker {
     /**
      * mapping <original uuid> to <new uuid> of mix:referenceable nodes
      */
-    private final HashMap uuidMap = new HashMap();
+    private final Map<String, String> uuidMap = new HashMap<String, String>();
     /**
      * list of processed reference properties that might need correction
      */
-    private final ArrayList references = new ArrayList();
+    private final List<PropertyState> references = new ArrayList<PropertyState>();
 
     /**
      * Creates a new instance.
@@ -91,7 +93,7 @@ public class ReferenceChangeTracker {
             try {
                 String oldValue = oldReference.getString();
                 if (uuidMap.containsKey(oldValue)) {
-                    String newValue = uuidMap.get(oldValue).toString();
+                    String newValue = uuidMap.get(oldValue);
                     remapped = factory.create(newValue, PropertyType.REFERENCE);
                 }
             } catch (RepositoryException e) {
@@ -113,7 +115,7 @@ public class ReferenceChangeTracker {
         }
     }
 
-    public Iterator getReferences() {
+    public Iterator<PropertyState> getReferences() {
         return references.iterator();
     }
 }
