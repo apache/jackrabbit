@@ -122,19 +122,18 @@ public class UserTransactionImpl implements UserTransaction {
 
             status = Status.STATUS_COMMITTING;
             if (distributedThreadAccess) {
-                try {
-                    Thread distributedThread = new Thread() {
-                        public void run() {
-                            try {
-                                xares.commit(xid, false);
-                            } catch (Exception e) {
-                                throw new RuntimeException(e.getMessage());
-                            }
+                Thread distributedThread = new Thread() {
+                    public void run() {
+                        try {
+                            xares.commit(xid, false);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e.getMessage());
                         }
-                    };
-                    distributedThread.start();
-                    distributedThread.join(1000);
-                } catch (InterruptedException e) {
+                    }
+                };
+                distributedThread.start();
+                distributedThread.join(1000);
+                if (distributedThread.isAlive()) {
                     throw new SystemException(
                             "Commit from different thread but same XID must not block");
                 }
@@ -158,6 +157,8 @@ public class UserTransactionImpl implements UserTransaction {
                 se.initCause(e.getCause());
                 throw se;
             }
+        } catch (InterruptedException e) {
+            throw new SystemException("Thread.join() interrupted");
         }
     }
 
