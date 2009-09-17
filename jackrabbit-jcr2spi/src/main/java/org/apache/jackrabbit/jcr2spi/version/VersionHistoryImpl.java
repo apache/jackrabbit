@@ -104,7 +104,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         checkStatus();
         refreshEntry(vhEntry);
         Iterator childIter = vhEntry.getNodeEntries();
-        List versionEntries = new ArrayList();
+        List<NodeEntry> versionEntries = new ArrayList<NodeEntry>();
         // all child-nodes except from jcr:versionLabels point to Versions.
         while (childIter.hasNext()) {
             NodeEntry entry = (NodeEntry) childIter.next();
@@ -124,7 +124,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         // TODO: improve and use lazy loading of versions as needed.
         // TODO: change session.getNodeByUUID to Session.getNodeByIdentifier as soon as implemented
 
-        List versions = new ArrayList();
+        List<Version> versions = new ArrayList<Version>();
         Version rootV = getRootVersion();
         Node vn = session.getNodeByUUID(getVersionableUUID());
         Version v = vn.getBaseVersion();
@@ -247,7 +247,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         checkValidVersion(version);
         String vUUID = version.getUUID();
 
-        List vlabels = new ArrayList();
+        List<String> vlabels = new ArrayList<String>();
         Name[] qLabels = getQLabels();
         for (int i = 0; i < qLabels.length; i++) {
             String uuid = getVersionByLabel(qLabels[i]).getUUID();
@@ -255,7 +255,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 vlabels.add(session.getNameResolver().getJCRName(qLabels[i]));
             }
         }
-        return (String[]) vlabels.toArray(new String[vlabels.size()]);
+        return vlabels.toArray(new String[vlabels.size()]);
     }
 
     /**
@@ -324,7 +324,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     private Name[] getQLabels() throws RepositoryException {
         refreshEntry(labelNodeEntry);
-        List labelNames = new ArrayList();
+        List<Name> labelNames = new ArrayList<Name>();
         for (Iterator it = labelNodeEntry.getPropertyEntries(); it.hasNext(); ) {
             PropertyEntry pe = (PropertyEntry) it.next();
             if (! NameConstants.JCR_PRIMARYTYPE.equals(pe.getName()) &&
@@ -332,7 +332,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 labelNames.add(pe.getName());
             }
         }
-        return (Name[]) labelNames.toArray(new Name[labelNames.size()]);
+        return labelNames.toArray(new Name[labelNames.size()]);
     }
 
     /**
