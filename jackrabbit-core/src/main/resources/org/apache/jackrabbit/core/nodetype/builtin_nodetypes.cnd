@@ -92,7 +92,7 @@
  *
  * @since 1.0
  */
-[nt:resource] > mix:mimeType, mix:lastModified
+[nt:resource] > mix:mimeType, mix:lastModified, mix:referenceable
   primaryitem jcr:data
   - jcr:data (BINARY) mandatory
   
