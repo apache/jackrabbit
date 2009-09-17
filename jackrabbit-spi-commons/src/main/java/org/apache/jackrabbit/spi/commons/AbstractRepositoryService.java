@@ -77,7 +77,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorageImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.QItemDefinitionsBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**
@@ -209,7 +209,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> reader;
         try {
             reader = new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(cnd, "",
-                    this.namespaces, new QItemDefinitionsBuilder());
+                    this.namespaces, new QDefinitionBuilderFactory());
 
             List<QNodeTypeDefinition> ntds = reader.getNodeTypeDefinitions();
             nodeTypeDefs.registerNodeTypes(ntds.toArray(new QNodeTypeDefinition[ntds.size()]), true);
