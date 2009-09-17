@@ -172,7 +172,7 @@ public interface VersionManager {
      * @see #resolveMergeConflict(NodeState,NodeState,boolean)
      * @see javax.jcr.Node#merge(String, boolean)
      */
-    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public Iterator<NodeId> merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param nodeState
@@ -190,7 +190,7 @@ public interface VersionManager {
      * @see #resolveMergeConflict(NodeState,NodeState,boolean)
      * @see javax.jcr.Node#merge(String, boolean)
      */
-    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public Iterator<NodeId> merge(NodeState nodeState, String workspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
 
     /**
@@ -239,7 +239,7 @@ public interface VersionManager {
      * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException
      */
-    public Iterator mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException;
+    public Iterator<NodeId> mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      *
