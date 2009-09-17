@@ -106,13 +106,13 @@ public class SetPropertyValue extends AbstractOperation {
     public static Operation create(PropertyState propState, QValue[] qValues,
                                    int valueType) throws RepositoryException {
         // compact array (purge null entries)
-        List list = new ArrayList();
+        List<QValue> list = new ArrayList<QValue>();
         for (int i = 0; i < qValues.length; i++) {
             if (qValues[i] != null) {
                 list.add(qValues[i]);
             }
         }
-        QValue[] cleanValues = (QValue[]) list.toArray(new QValue[list.size()]);
+        QValue[] cleanValues = list.toArray(new QValue[list.size()]);
         SetPropertyValue sv = new SetPropertyValue(propState, valueType, cleanValues);
         return sv;
     }

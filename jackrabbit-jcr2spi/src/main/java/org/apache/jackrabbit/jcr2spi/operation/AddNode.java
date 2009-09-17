@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
@@ -46,7 +47,7 @@ public class AddNode extends AbstractOperation {
     private final Name nodeTypeName;
     private final String uuid;
 
-    private List addedStates = new ArrayList();
+    private List<ItemState> addedStates = new ArrayList<ItemState>();
 
     private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid)
             throws RepositoryException {
@@ -110,11 +111,11 @@ public class AddNode extends AbstractOperation {
         return uuid;
     }
 
-    public void addedState(List newStates) {
+    public void addedState(List<ItemState> newStates) {
         addedStates.addAll(newStates);
     }
 
-    public List getAddedStates() {
+    public List<ItemState> getAddedStates() {
         return addedStates;
     }
 

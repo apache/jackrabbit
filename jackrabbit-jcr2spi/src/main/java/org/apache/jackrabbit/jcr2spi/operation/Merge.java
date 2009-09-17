@@ -20,6 +20,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class Merge extends AbstractOperation {
     private final boolean isShallow;
     private final VersionManager mgr;
 
-    private Iterator failedIds = null;
+    private Iterator<ItemId> failedIds = null;
 
     private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, boolean isShallow, VersionManager mgr) {
         this.nodeState = nodeState;
@@ -117,7 +118,7 @@ public class Merge extends AbstractOperation {
         return srcWorkspaceName == null;
     }
 
-    public void setFailedIds(Iterator failedIds) {
+    public void setFailedIds(Iterator<ItemId> failedIds) {
         if (failedIds == null) {
             throw new IllegalArgumentException("IdIterator must not be null.");
         }
@@ -127,7 +128,7 @@ public class Merge extends AbstractOperation {
         this.failedIds = failedIds;
     }
 
-    public Iterator getFailedIds() {
+    public Iterator<ItemId> getFailedIds() {
         if (failedIds == null) {
             throw new IllegalStateException("Merge operation has not been executed yet.");
         }

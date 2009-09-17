@@ -56,7 +56,7 @@ public interface Operation {
      *
      * @return collection of affected <code>ItemState</code>s.
      */
-    public Collection getAffectedItemStates();
+    public Collection<ItemState> getAffectedItemStates();
 
     /**
      * Informs this Operation that it has been successfully executed.

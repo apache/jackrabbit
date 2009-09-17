@@ -33,9 +33,9 @@ import java.util.Collections;
 public abstract class AbstractOperation implements Operation {
 
     /**
-     * The collection of affected ItemIds.
+     * The collection of affected ItemStates.
      */
-    private final Collection affectedStates = new ArrayList();
+    private final Collection<ItemState> affectedStates = new ArrayList<ItemState>();
     protected int status;
 
     /**
@@ -51,8 +51,13 @@ public abstract class AbstractOperation implements Operation {
     /**
      * @inheritDoc
      */
-    public Collection getAffectedItemStates() {
-        return (affectedStates.isEmpty()) ? Collections.EMPTY_LIST : Collections.unmodifiableCollection(affectedStates);
+    public Collection<ItemState> getAffectedItemStates() {
+    	if (affectedStates.isEmpty()) {
+    		return Collections.emptySet();
+    	}
+    	else {
+    		return Collections.unmodifiableCollection(affectedStates);
+    	}
     }
 
     /**
