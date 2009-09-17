@@ -129,6 +129,7 @@
             <exclude>src/main/javadoc/**/*.uxf</exclude>
             <exclude>src/test/repository/**</exclude>
             <exclude>src/test/resources/**/*.txt</exclude>
+            <exclude>src/test/resources/**/*.rtf</exclude>
             <exclude>src/test/resources/**/*.cnd</exclude>
             <exclude>repository/**</exclude>
             <exclude>*.log</exclude>
