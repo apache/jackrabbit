@@ -80,7 +80,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         });
 
         Map<String, QValue[]> descr = config.getRepositoryService().getRepositoryDescriptors();       
-        descriptors = new HashMap(descr.size());
+        descriptors = new HashMap<String, Value[]>(descr.size());
         for (String key : descr.keySet()) {
             QValue[] qvs = descr.get(key);
             Value[] vs = new Value[qvs.length];
@@ -172,8 +172,8 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
             if (reference == null) {
                 reference = new Reference(RepositoryImpl.class.getName(), RepositoryImpl.Factory.class.getName(), null);
                 // carry over all addresses from referenceable config
-                for (Enumeration en = confref.getReference().getAll(); en.hasMoreElements(); ) {
-                    reference.add((RefAddr)(en.nextElement()));
+                for (Enumeration<RefAddr> en = confref.getReference().getAll(); en.hasMoreElements(); ) {
+                    reference.add(en.nextElement());
                 }
 
                 // also add the information required by factory class
@@ -223,7 +223,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         public static final String RCF = RepositoryImpl.class.getName() + ".factory";
         public static final String RCC = RepositoryImpl.class.getName() + ".class";
 
-        public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable environment) throws Exception {
+        public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?,?> environment) throws Exception {
 
             Object res = null;
             if (obj instanceof Reference) {
@@ -255,8 +255,8 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
                         configFactoryClassName, null);
 
                     // carry over all arguments except our own
-                    for (Enumeration en = ref.getAll(); en.hasMoreElements(); ){
-                        RefAddr ra = (RefAddr)en.nextElement();
+                    for (Enumeration<RefAddr> en = ref.getAll(); en.hasMoreElements(); ){
+                        RefAddr ra = en.nextElement();
                         String type = ra.getType();
                         if (! RCF.equals(type) && ! RCC.equals(type)) {
                             newref.add(ra);
