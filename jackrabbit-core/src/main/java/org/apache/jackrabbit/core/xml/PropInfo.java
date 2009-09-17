@@ -23,12 +23,10 @@ import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Information about a property being imported. This class is used
@@ -79,7 +77,7 @@ public class PropInfo {
         }
     }
 
-    public int getTargetType(PropDef def) {
+    public int getTargetType(QPropertyDefinition def) {
         int target = def.getRequiredType();
         if (target != PropertyType.UNDEFINED) {
             return target;
@@ -90,7 +88,7 @@ public class PropInfo {
         }
     }
 
-    public PropDef getApplicablePropertyDef(EffectiveNodeType ent)
+    public QPropertyDefinition getApplicablePropertyDef(EffectiveNodeType ent)
             throws ConstraintViolationException {
         if (values.length == 1) {
             // could be single- or multi-valued (n == 1)

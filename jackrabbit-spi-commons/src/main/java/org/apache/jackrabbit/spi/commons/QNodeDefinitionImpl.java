@@ -21,6 +21,8 @@ import org.apache.jackrabbit.spi.Name;
 
 import java.util.Arrays;
 import java.util.TreeSet;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * <code>QNodeDefinitionImpl</code> implements a <code>QNodeDefinition</code>.
@@ -35,8 +37,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     /**
      * The names of the required primary types.
      */
-    private final Name[] requiredPrimaryTypes;
-
+    private final Set<Name> requiredPrimaryTypes = new HashSet<Name>();
     /**
      * The 'allowsSameNameSiblings' flag.
      */
@@ -77,7 +78,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
         super(name, declaringNodeType, isAutoCreated, isMandatory,
                 onParentVersion, isProtected);
         this.defaultPrimaryType = defaultPrimaryType;
-        this.requiredPrimaryTypes = requiredPrimaryTypes;
+        this.requiredPrimaryTypes.addAll(Arrays.asList(requiredPrimaryTypes));
         this.allowsSameNameSiblings = allowsSameNameSiblings;
     }
 
@@ -93,7 +94,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      * {@inheritDoc}
      */
     public Name[] getRequiredPrimaryTypes() {
-        return requiredPrimaryTypes;
+        return requiredPrimaryTypes.toArray(new Name[requiredPrimaryTypes.size()]);
     }
 
     /**
@@ -130,7 +131,8 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
         if (obj instanceof QNodeDefinition) {
             QNodeDefinition other = (QNodeDefinition) obj;
             return super.equals(obj)
-                    && Arrays.equals(requiredPrimaryTypes, other.getRequiredPrimaryTypes())
+                    && requiredPrimaryTypes.equals(new HashSet<Name>(
+                            Arrays.asList(other.getRequiredPrimaryTypes())))
                     && (defaultPrimaryType == null
                             ? other.getDefaultPrimaryType() == null
                             : defaultPrimaryType.equals(other.getDefaultPrimaryType()))

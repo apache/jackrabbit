@@ -17,21 +17,23 @@
 package org.apache.jackrabbit.spi.commons.nodetype;
 
 import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * A builder for {@link QItemDefinition}.
  */
 public abstract class QItemDefinitionBuilder {
 
-    private Name name;
-    private Name declaringType;
-    private boolean isAutocreated;
-    private int onParentVersion;
-    private boolean isProtected;
-    private boolean isMandatory;
+    private Name name = NameConstants.ANY_NAME;
+    private Name declaringType = null;
+    private boolean isAutocreated = false;
+    private int onParentVersion = OnParentVersionAction.COPY;
+    private boolean isProtected = false;
+    private boolean isMandatory = false;
 
     /**
      * @param name  the name of the child item definition being build

@@ -23,7 +23,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
@@ -70,7 +69,7 @@ public abstract class ProtectedItemModifier {
         parentImpl.checkSetProperty();
 
         NodeTypeImpl nodeType = parentImpl.session.getNodeTypeManager().getNodeType(ntName);
-        NodeDefinitionImpl def = parentImpl.getApplicableChildNodeDefinition(name, ntName);
+        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl def = parentImpl.getApplicableChildNodeDefinition(name, ntName);
 
         // check for name collisions
         // TODO: improve. copied from NodeImpl
@@ -90,7 +89,7 @@ public abstract class ProtectedItemModifier {
             }
         }
 
-        return parentImpl.createChildNode(name, def, nodeType, null);
+        return parentImpl.createChildNode(name, nodeType, null);
     }
 
     protected Property setProperty(NodeImpl parentImpl, Name name, Value value) throws RepositoryException {

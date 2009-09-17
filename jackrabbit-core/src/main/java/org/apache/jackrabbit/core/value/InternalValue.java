@@ -242,6 +242,18 @@ public class InternalValue extends AbstractQValue {
         }
     }
 
+    public static InternalValue[] create(QValue[] values)
+            throws RepositoryException {
+        if (values == null) {
+            return null;
+        }
+        InternalValue[] tmp = new InternalValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            tmp[i] = InternalValue.create(values[i]);
+        }
+        return tmp;
+    }
+
     static InternalValue getInternalValue(DataIdentifier identifier, DataStore store) throws DataStoreException {
         // access the record to ensure it is not garbage collected
         if (store.getRecordIfStored(identifier) != null) {

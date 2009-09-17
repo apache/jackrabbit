@@ -27,6 +27,9 @@ import java.util.Map;
 import javax.jcr.PropertyType;
 
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
@@ -97,7 +100,7 @@ public class NodeTypeDefDiff {
     private final NodeTypeDef newDef;
     private int type;
 
-    private List propDefDiffs = new ArrayList();
+    private List<PropDefDiff> propDefDiffs = new ArrayList<PropDefDiff>();
     private List childNodeDefDiffs = new ArrayList();
 
     /**
@@ -249,45 +252,38 @@ public class NodeTypeDefDiff {
          */
 
         int maxType = NONE;
-        PropDef[] pda1 = oldDef.getPropertyDefs();
-        HashMap defs1 = new HashMap();
-        for (int i = 0; i < pda1.length; i++) {
-            defs1.put(pda1[i].getId(), pda1[i]);
+        Map<PropDefId, QPropertyDefinition> oldDefs = new HashMap<PropDefId, QPropertyDefinition>();
+        for (QPropertyDefinition def : oldDef.getPropertyDefs()) {
+            oldDefs.put(new PropDefId(def), def);
         }
 
-        PropDef[] pda2 = newDef.getPropertyDefs();
-        HashMap defs2 = new HashMap();
-        for (int i = 0; i < pda2.length; i++) {
-            defs2.put(pda2[i].getId(), pda2[i]);
+        Map<PropDefId, QPropertyDefinition> newDefs = new HashMap<PropDefId, QPropertyDefinition>();
+        for (QPropertyDefinition def : newDef.getPropertyDefs()) {
+            newDefs.put(new PropDefId(def), def);
         }
 
         /**
          * walk through defs1 and process all entries found in
          * both defs1 & defs2 and those found only in defs1
          */
-        Iterator iter = defs1.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            PropDefId id = (PropDefId) entry.getKey();
-            PropDef def1 = (PropDef) entry.getValue();
-            PropDef def2 = (PropDef) defs2.get(id);
+        for (Map.Entry<PropDefId, QPropertyDefinition> entry : oldDefs.entrySet()) {
+            PropDefId id = entry.getKey();
+            QPropertyDefinition def1 = entry.getValue();
+            QPropertyDefinition def2 = newDefs.get(id);
             PropDefDiff diff = new PropDefDiff(def1, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
             }
             propDefDiffs.add(diff);
-            defs2.remove(id);
+            newDefs.remove(id);
         }
 
         /**
          * defs2 by now only contains entries found in defs2 only;
          * walk through defs2 and process all remaining entries
          */
-        iter = defs2.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            PropDefId id = (PropDefId) entry.getKey();
-            PropDef def = (PropDef) entry.getValue();
+        for (Map.Entry<PropDefId, QPropertyDefinition> entry : newDefs.entrySet()) {
+            QPropertyDefinition def = entry.getValue();
             PropDefDiff diff = new PropDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -308,16 +304,16 @@ public class NodeTypeDefDiff {
          */
 
         int maxType = NONE;
-        NodeDef[] cnda1 = oldDef.getChildNodeDefs();
+        QNodeDefinition[] cnda1 = oldDef.getChildNodeDefs();
         HashMap defs1 = new HashMap();
         for (int i = 0; i < cnda1.length; i++) {
-            defs1.put(cnda1[i].getId(), cnda1[i]);
+            defs1.put(new NodeDefId(cnda1[i]), cnda1[i]);
         }
 
-        NodeDef[] cnda2 = newDef.getChildNodeDefs();
+        QNodeDefinition[] cnda2 = newDef.getChildNodeDefs();
         HashMap defs2 = new HashMap();
         for (int i = 0; i < cnda2.length; i++) {
-            defs2.put(cnda2[i].getId(), cnda2[i]);
+            defs2.put(new NodeDefId(cnda2[i]), cnda2[i]);
         }
 
         /**
@@ -328,8 +324,8 @@ public class NodeTypeDefDiff {
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             NodeDefId id = (NodeDefId) entry.getKey();
-            NodeDef def1 = (NodeDef) entry.getValue();
-            NodeDef def2 = (NodeDef) defs2.get(id);
+            QItemDefinition def1 = (QItemDefinition) entry.getValue();
+            QItemDefinition def2 = (QItemDefinition) defs2.get(id);
             ChildNodeDefDiff diff = new ChildNodeDefDiff(def1, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -346,7 +342,7 @@ public class NodeTypeDefDiff {
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             NodeDefId id = (NodeDefId) entry.getKey();
-            NodeDef def = (NodeDef) entry.getValue();
+            QItemDefinition def = (QItemDefinition) entry.getValue();
             ChildNodeDefDiff diff = new ChildNodeDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -408,11 +404,11 @@ public class NodeTypeDefDiff {
     //--------------------------------------------------------< inner classes >
 
     abstract class ChildItemDefDiff {
-        protected final ItemDef oldDef;
-        protected final ItemDef newDef;
+        protected final QItemDefinition oldDef;
+        protected final QItemDefinition newDef;
         protected int type;
 
-        ChildItemDefDiff(ItemDef oldDef, ItemDef newDef) {
+        ChildItemDefDiff(QItemDefinition oldDef, QItemDefinition newDef) {
             this.oldDef = oldDef;
             this.newDef = newDef;
             init();
@@ -495,7 +491,7 @@ public class NodeTypeDefDiff {
                 operationString = "NONE";
             }
 
-            ItemDef itemDefinition = (oldDef != null) ? oldDef : newDef;
+            QItemDefinition itemDefinition = (oldDef != null) ? oldDef : newDef;
 
             return getClass().getName() + "[itemName="
                     + itemDefinition.getName() + ", type=" + typeString
@@ -506,16 +502,16 @@ public class NodeTypeDefDiff {
 
     public class PropDefDiff extends ChildItemDefDiff {
 
-        PropDefDiff(PropDef oldDef, PropDef newDef) {
+        PropDefDiff(QPropertyDefinition oldDef, QPropertyDefinition newDef) {
             super(oldDef, newDef);
         }
 
-        public PropDef getOldDef() {
-            return (PropDef) oldDef;
+        public QPropertyDefinition getOldDef() {
+            return (QPropertyDefinition) oldDef;
         }
 
-        public PropDef getNewDef() {
-            return (PropDef) newDef;
+        public QPropertyDefinition getNewDef() {
+            return (QPropertyDefinition) newDef;
         }
 
         protected void init() {
@@ -584,16 +580,16 @@ public class NodeTypeDefDiff {
 
     public class ChildNodeDefDiff extends ChildItemDefDiff {
 
-        ChildNodeDefDiff(NodeDef oldDef, NodeDef newDef) {
+        ChildNodeDefDiff(QItemDefinition oldDef, QItemDefinition newDef) {
             super(oldDef, newDef);
         }
 
-        public NodeDef getOldDef() {
-            return (NodeDef) oldDef;
+        public QNodeDefinition getOldDef() {
+            return (QNodeDefinition) oldDef;
         }
 
-        public NodeDef getNewDef() {
-            return (NodeDef) newDef;
+        public QNodeDefinition getNewDef() {
+            return (QNodeDefinition) newDef;
         }
 
         protected void init() {

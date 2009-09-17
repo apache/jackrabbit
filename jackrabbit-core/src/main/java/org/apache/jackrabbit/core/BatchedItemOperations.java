@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -40,11 +39,8 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -62,6 +58,9 @@ import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -106,7 +105,8 @@ public class BatchedItemOperations extends ItemValidator {
                                  LockManager lockMgr,
                                  SessionImpl session,
                                  HierarchyManager hierMgr) throws RepositoryException {
-        super(ntReg, hierMgr, session, lockMgr, session.getAccessManager(), session.getRetentionRegistry());
+        super(ntReg, hierMgr, session, lockMgr, session.getAccessManager(),
+                session.getRetentionRegistry(), session.getItemManager());
         this.stateMgr = stateMgr;
         this.session = session;
     }
@@ -432,12 +432,6 @@ public class BatchedItemOperations extends ItemValidator {
         // add to new parent
         destParentState.addChildNodeEntry(destName.getName(), newState.getNodeId());
 
-        // change definition (id) of new node
-        NodeDef newNodeDef =
-                findApplicableNodeDefinition(destName.getName(),
-                        srcState.getNodeTypeName(), destParentState);
-        newState.setDefinitionId(newNodeDef.getId());
-
         // adjust references that refer to uuid's which have been mapped to
         // newly generated uuid's on copy/clone
         Iterator<Object> iter = refTracker.getProcessedReferences();
@@ -589,12 +583,6 @@ public class BatchedItemOperations extends ItemValidator {
             destParent.addChildNodeEntry(destName.getName(), target.getNodeId());
         }
 
-        // change definition (id) of target node
-        NodeDef newTargetDef =
-                findApplicableNodeDefinition(destName.getName(),
-                        target.getNodeTypeName(), destParent);
-        target.setDefinitionId(newTargetDef.getId());
-
         // store states
         stateMgr.store(target);
         if (renameOnly) {
@@ -725,7 +713,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 4. node type constraints
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
-            NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+            QItemDefinition parentDef = itemMgr.getDefinition(parentState).unwrap();
             // make sure parent node is not protected
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(
@@ -735,7 +723,7 @@ public class BatchedItemOperations extends ItemValidator {
             // make sure there's an applicable definition for new child node
             EffectiveNodeType entParent = getEffectiveNodeType(parentState);
             entParent.checkAddNodeConstraints(nodeName, nodeTypeName, ntReg);
-            NodeDef newNodeDef =
+            QNodeDefinition newNodeDef =
                     findApplicableNodeDefinition(nodeName, nodeTypeName,
                             parentState);
 
@@ -756,8 +744,7 @@ public class BatchedItemOperations extends ItemValidator {
                     log.debug(msg);
                     throw new RepositoryException(msg, ise);
                 }
-                NodeDef conflictingTargetDef =
-                        ntReg.getNodeDef(conflictingState.getDefinitionId());
+                QNodeDefinition conflictingTargetDef = itemMgr.getDefinition(conflictingState).unwrap();
                 // check same-name sibling setting of both target and existing node
                 if (!conflictingTargetDef.allowsSameNameSiblings()
                         || !newNodeDef.allowsSameNameSiblings()) {
@@ -900,12 +887,12 @@ public class BatchedItemOperations extends ItemValidator {
         // 4. node type constraints
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
-            NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+            QItemDefinition parentDef = itemMgr.getDefinition(parentState).unwrap();
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(safeGetJCRPath(parentId)
                         + ": cannot remove child node of protected parent node");
             }
-            NodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
+            QItemDefinition targetDef = itemMgr.getDefinition(targetState).unwrap();
             if (targetDef.isMandatory()) {
                 throw new ConstraintViolationException(safeGetJCRPath(targetPath)
                         + ": cannot remove mandatory node");
@@ -1071,7 +1058,7 @@ public class BatchedItemOperations extends ItemValidator {
                     + " because manager is not in edit mode");
         }
 
-        NodeDef def = findApplicableNodeDefinition(nodeName, nodeTypeName, parent);
+        QNodeDefinition def = findApplicableNodeDefinition(nodeName, nodeTypeName, parent);
         return createNodeState(parent, nodeName, nodeTypeName, mixinNames, id, def);
     }
 
@@ -1099,7 +1086,7 @@ public class BatchedItemOperations extends ItemValidator {
                                      Name nodeTypeName,
                                      Name[] mixinNames,
                                      NodeId id,
-                                     NodeDef def)
+                                     QNodeDefinition def)
             throws ItemExistsException, ConstraintViolationException,
             RepositoryException, IllegalStateException {
 
@@ -1128,7 +1115,6 @@ public class BatchedItemOperations extends ItemValidator {
         if (mixinNames != null && mixinNames.length > 0) {
             node.setMixinTypeNames(new HashSet<Name>(Arrays.asList(mixinNames)));
         }
-        node.setDefinitionId(def.getId());
 
         // now add new child node entry to parent
         parent.addChildNodeEntry(nodeName, id);
@@ -1142,18 +1128,18 @@ public class BatchedItemOperations extends ItemValidator {
 
         if (!node.getMixinTypeNames().isEmpty()) {
             // create jcr:mixinTypes property
-            PropDef pd = ent.getApplicablePropertyDef(NameConstants.JCR_MIXINTYPES,
+            QPropertyDefinition pd = ent.getApplicablePropertyDef(NameConstants.JCR_MIXINTYPES,
                     PropertyType.NAME, true);
             createPropertyState(node, pd.getName(), pd.getRequiredType(), pd);
         }
 
         // add 'auto-create' properties defined in node type
-        for (PropDef pd : ent.getAutoCreatePropDefs()) {
+        for (QPropertyDefinition pd : ent.getAutoCreatePropDefs()) {
             createPropertyState(node, pd.getName(), pd.getRequiredType(), pd);
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        for (NodeDef nd : ent.getAutoCreateNodeDefs()) {
+        for (QNodeDefinition nd : ent.getAutoCreateNodeDefs()) {
             createNodeState(node, nd.getName(), nd.getDefaultPrimaryType(),
                     null, null, nd);
         }
@@ -1198,7 +1184,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         // find applicable definition
-        PropDef def;
+        QPropertyDefinition def;
         // multi- or single-valued property?
         if (numValues == 1) {
             // could be single- or multi-valued (n == 1)
@@ -1237,7 +1223,7 @@ public class BatchedItemOperations extends ItemValidator {
     public PropertyState createPropertyState(NodeState parent,
                                              Name propName,
                                              int type,
-                                             PropDef def)
+                                             QPropertyDefinition def)
             throws ItemExistsException, RepositoryException {
 
         // check for name collisions with existing properties
@@ -1249,7 +1235,6 @@ public class BatchedItemOperations extends ItemValidator {
         // create property
         PropertyState prop = stateMgr.createNew(propName, parent.getNodeId());
 
-        prop.setDefinitionId(def.getId());
         if (def.getRequiredType() != PropertyType.UNDEFINED) {
             prop.setType(def.getRequiredType());
         } else if (type != PropertyType.UNDEFINED) {
@@ -1265,7 +1250,7 @@ public class BatchedItemOperations extends ItemValidator {
         if (genValues != null) {
             prop.setValues(genValues);
         } else if (def.getDefaultValues() != null) {
-            prop.setValues(def.getDefaultValues());
+            prop.setValues(InternalValue.create(def.getDefaultValues()));
         }
 
         // now add new property entry to parent
@@ -1442,8 +1427,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws PathNotFoundException, ConstraintViolationException,
             RepositoryException {
         NodeState node = getNodeState(nodePath);
-        NodeDef parentDef = ntReg.getNodeDef(node.getDefinitionId());
-        if (parentDef.isProtected()) {
+        if (itemMgr.getDefinition(node).isProtected()) {
             throw new ConstraintViolationException(safeGetJCRPath(nodePath)
                     + ": node is protected");
         }
@@ -1686,7 +1670,6 @@ public class BatchedItemOperations extends ItemValidator {
             newState = stateMgr.createNew(id, srcState.getNodeTypeName(), destParentId);
             // copy node state
             newState.setMixinTypeNames(srcState.getMixinTypeNames());
-            newState.setDefinitionId(srcState.getDefinitionId());
             if (shareable) {
                 // initialize shared set
                 newState.addShare(destParentId);
@@ -1773,15 +1756,16 @@ public class BatchedItemOperations extends ItemValidator {
                  *
                  * todo FIXME delegate to 'node type instance handler'
                  */
-                PropDefId defId = srcChildState.getDefinitionId();
-                PropDef def = ntReg.getPropDef(defId);
+                QPropertyDefinition def = ent.getApplicablePropertyDef(
+                        srcChildState.getName(), srcChildState.getType(),
+                        srcChildState.isMultiValued());
                 if (def.getDeclaringNodeType().equals(NameConstants.MIX_LOCKABLE)) {
                     // skip properties defined by mix:lockable
                     continue;
                 }
 
                 PropertyState newChildState =
-                        copyPropertyState(srcChildState, id, propName);
+                        copyPropertyState(srcChildState, id, propName, def);
 
                 if (history != null) {
                     if (fullVersionable) {
@@ -1830,23 +1814,21 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Copies the specified property state.
      *
-     * @param srcState
-     * @param parentId
-     * @param propName
-     * @return
-     * @throws RepositoryException
+     * @param srcState the property state to copy.
+     * @param parentId the id of the parent node.
+     * @param propName the name of the property.
+     * @param def      the definition of the property.
+     * @return a copy of the property state.
+     * @throws RepositoryException if an error occurs while copying.
      */
     private PropertyState copyPropertyState(PropertyState srcState,
                                             NodeId parentId,
-                                            Name propName)
+                                            Name propName,
+                                            QPropertyDefinition def)
             throws RepositoryException {
-
-        PropDefId defId = srcState.getDefinitionId();
-        PropDef def = ntReg.getPropDef(defId);
 
         PropertyState newState = stateMgr.createNew(propName, parentId);
 
-        newState.setDefinitionId(defId);
         newState.setType(srcState.getType());
         newState.setMultiValued(srcState.isMultiValued());
         InternalValue[] values = srcState.getValues();
@@ -1858,8 +1840,8 @@ public class BatchedItemOperations extends ItemValidator {
              *
              * todo FIXME delegate to 'node type instance handler'
              */
-            if (def.getDeclaringNodeType().equals(NameConstants.MIX_REFERENCEABLE)
-                    && propName.equals(NameConstants.JCR_UUID)) {
+            if (propName.equals(NameConstants.JCR_UUID)
+                    && def.getDeclaringNodeType().equals(NameConstants.MIX_REFERENCEABLE)) {
                 // set correct value of jcr:uuid property
                 newState.setValues(new InternalValue[]{InternalValue.create(parentId.toString())});
             } else {

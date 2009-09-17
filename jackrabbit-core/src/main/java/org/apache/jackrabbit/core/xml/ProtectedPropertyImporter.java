@@ -19,12 +19,12 @@ package org.apache.jackrabbit.core.xml;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 
 /**
  * <code>ProtectedPropertyImporter</code> is in charge of importing single
- * properties whith a protected <code>PropDef</code>.
+ * properties whith a protected <code>QPropertyDefinition</code>.
  *
  * @see ProtectedNodeImporter for an abstract class used to import protected
  * nodes and the subtree below them.
@@ -42,7 +42,7 @@ public interface ProtectedPropertyImporter {
      * <code>false</code> otherwise.
      * @throws RepositoryException If an error occurs.
      */
-    boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, PropDef def)
+    boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, QPropertyDefinition def)
             throws RepositoryException;
 
     /**
@@ -56,7 +56,7 @@ public interface ProtectedPropertyImporter {
      * <code>false</code> otherwise.
      * @throws RepositoryException If an error occurs.
      */
-    boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, PropDef def)
+    boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, QPropertyDefinition def)
             throws RepositoryException;
 
 

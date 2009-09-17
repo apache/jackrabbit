@@ -35,10 +35,10 @@ import javax.jcr.nodetype.NodeDefinition;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +153,7 @@ public class SessionImporter implements Importer {
     }
 
 
-    protected void createProperty(NodeImpl node, PropInfo pInfo, PropDef def) throws RepositoryException {
+    protected void createProperty(NodeImpl node, PropInfo pInfo, QPropertyDefinition def) throws RepositoryException {
         // convert serialized values to Value objects
         Value[] va = pInfo.getValues(pInfo.getTargetType(def), session);
 
@@ -369,7 +369,7 @@ public class SessionImporter implements Importer {
 
         for (PropInfo pi : propInfos) {
             // find applicable definition
-            PropDef def = pi.getApplicablePropertyDef(node.getEffectiveNodeType());
+            QPropertyDefinition def = pi.getApplicablePropertyDef(node.getEffectiveNodeType());
             if (def.isProtected()) {
                 // skip protected property
                 log.debug("Skipping protected property " + pi.getName());

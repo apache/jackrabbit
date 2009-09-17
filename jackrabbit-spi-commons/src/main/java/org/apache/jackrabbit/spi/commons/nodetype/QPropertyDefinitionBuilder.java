@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.PropertyType;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
@@ -33,10 +34,10 @@ import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
  */
 public class QPropertyDefinitionBuilder extends QItemDefinitionBuilder {
 
-    private int requiredType;
+    private int requiredType = PropertyType.UNDEFINED;
     private List<QValueConstraint> valueConstraints = new ArrayList<QValueConstraint>();
     private List<QValue> defaultValues;
-    private boolean isMultiple;
+    private boolean isMultiple = false;
     private boolean fullTextSearchable = true;
     private boolean queryOrderable = true;
     private String[] queryOperators = Operator.getAllQueryOperators();

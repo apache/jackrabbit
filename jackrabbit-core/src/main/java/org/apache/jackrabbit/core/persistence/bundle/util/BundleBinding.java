@@ -26,8 +26,6 @@ import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -100,7 +98,7 @@ public class BundleBinding extends ItemStateBinding {
         bundle.setParentId(readID(in));
 
         // definitionId
-        bundle.setNodeDefId(NodeDefId.valueOf(in.readUTF()));
+        in.readUTF();
 
         // mixin types
         Set<Name> mixinTypeNames = new HashSet<Name>();
@@ -273,7 +271,7 @@ public class BundleBinding extends ItemStateBinding {
         writeID(out, bundle.getParentId());
 
         // definitionId
-        out.writeUTF(bundle.getNodeDefId().toString());
+        out.writeUTF("");
 
         // mixin types
         for (Name name : bundle.getMixinTypeNames()) {
@@ -342,7 +340,7 @@ public class BundleBinding extends ItemStateBinding {
         // multiValued
         entry.setMultiValued(in.readBoolean());
         // definitionId
-        entry.setPropDefId(PropDefId.valueOf(in.readUTF()));
+        in.readUTF();
         // values
         int count = in.readInt();   // count
         InternalValue[] values = new InternalValue[count];
@@ -598,7 +596,7 @@ public class BundleBinding extends ItemStateBinding {
         // multiValued
         out.writeBoolean(state.isMultiValued());
         // definitionId
-        out.writeUTF(state.getPropDefId().toString());
+        out.writeUTF("");
         // values
         InternalValue[] values = state.getValues();
         out.writeInt(values.length); // count
@@ -736,7 +734,7 @@ public class BundleBinding extends ItemStateBinding {
      * Write a small binary value and return the data.
      *
      * @param out the output stream to write
-     * @param blobVal the binary value
+     * @param value the binary value
      * @param state the property state (for error messages)
      * @param i the index (for error messages)
      * @return the data

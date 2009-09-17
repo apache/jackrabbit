@@ -48,13 +48,10 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -69,6 +66,8 @@ import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -373,9 +372,9 @@ public abstract class ItemImpl implements Item {
         for (ItemState itemState : dirty) {
             ItemDefinition def;
             if (itemState.isNode()) {
-                def = ntMgr.getNodeDefinition(((NodeState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((NodeState) itemState);
             } else {
-                def = ntMgr.getPropertyDefinition(((PropertyState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((PropertyState) itemState);
             }
             /* check permissions for non-protected items. protected items are
                only added through API methods which need to assert that
@@ -444,9 +443,9 @@ public abstract class ItemImpl implements Item {
                 }
 
                 // mandatory child properties
-                PropDef[] pda = ent.getMandatoryPropDefs();
+                QPropertyDefinition[] pda = ent.getMandatoryPropDefs();
                 for (int i = 0; i < pda.length; i++) {
-                    PropDef pd = pda[i];
+                    QPropertyDefinition pd = pda[i];
                     if (pd.getDeclaringNodeType().equals(NameConstants.MIX_VERSIONABLE)
                             || pd.getDeclaringNodeType().equals(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
                         /**
@@ -465,9 +464,9 @@ public abstract class ItemImpl implements Item {
                     }
                 }
                 // mandatory child nodes
-                NodeDef[] cnda = ent.getMandatoryNodeDefs();
+                QItemDefinition[] cnda = ent.getMandatoryNodeDefs();
                 for (int i = 0; i < cnda.length; i++) {
-                    NodeDef cnd = cnda[i];
+                    QItemDefinition cnd = cnda[i];
                     if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                         String msg = itemMgr.safeGetJCRPath(id)
                                 + ": mandatory child node " + cnd.getName()
@@ -480,7 +479,7 @@ public abstract class ItemImpl implements Item {
                 // the transient item is a property
                 PropertyState propState = (PropertyState) itemState;
                 ItemId propId = propState.getPropertyId();
-                PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) def;
+                org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl propDef = (org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl) def;
 
                 /**
                  * check value constraints
@@ -579,11 +578,11 @@ public abstract class ItemImpl implements Item {
 
         // walk through list of removed transient items and check REMOVE permission
         for (ItemState itemState : removed) {
-            ItemDefinition def;
+            QItemDefinition def;
             if (itemState.isNode()) {
-                def = ntMgr.getNodeDefinition(((NodeState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((NodeState) itemState).unwrap();
             } else {
-                def = ntMgr.getPropertyDefinition(((PropertyState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((PropertyState) itemState).unwrap();
             }
             if (!def.isProtected()) {
                 Path path = stateMgr.getAtticAwareHierarchyMgr().getPath(itemState.getId());

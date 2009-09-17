@@ -20,9 +20,9 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 
 /**
  * Default implementation that isn't able to handle any protected properties.
@@ -46,18 +46,18 @@ public class DefaultProtectedPropertyImporter implements ProtectedPropertyImport
     /**
      * Always returns <code>false</code>.
      *
-     * @see ProtectedPropertyImporter#handlePropInfo(org.apache.jackrabbit.core.NodeImpl, PropInfo, org.apache.jackrabbit.core.nodetype.PropDef)
+     * @see ProtectedPropertyImporter#handlePropInfo(org.apache.jackrabbit.core.NodeImpl, PropInfo, QPropertyDefinition)
      */
-    public boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, PropDef def) {
+    public boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, QPropertyDefinition def) {
         return false;
     }
 
     /**
      * Always returns <code>false</code>.
      *
-     * @see ProtectedPropertyImporter#handlePropInfo(org.apache.jackrabbit.core.state.NodeState, PropInfo, PropDef)
+     * @see ProtectedPropertyImporter#handlePropInfo(org.apache.jackrabbit.core.state.NodeState, PropInfo, QPropertyDefinition)
      */
-    public boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, PropDef def) throws RepositoryException {
+    public boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, QPropertyDefinition def) throws RepositoryException {
         return false;
     }
 }

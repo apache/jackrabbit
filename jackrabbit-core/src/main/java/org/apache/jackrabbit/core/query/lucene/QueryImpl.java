@@ -28,10 +28,10 @@ import javax.jcr.query.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
@@ -43,6 +43,7 @@ import org.apache.jackrabbit.spi.commons.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.QueryParser;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,9 +175,9 @@ public class QueryImpl extends AbstractQueryImpl {
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
             PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
             for (PropertyDefinition pd : propDefs) {
-                PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) pd;
+                QPropertyDefinition propDef = ((PropertyDefinitionImpl) pd).unwrap();
                 if (!propDef.definesResidual() && !propDef.isMultiple()) {
-                    columns.put(propDef.getQName(), columnForName(propDef.getQName()));
+                    columns.put(propDef.getName(), columnForName(propDef.getName()));
                 }
             }
         }

@@ -18,14 +18,16 @@ package org.apache.jackrabbit.core.nodetype;
 
 import java.io.Serializable;
 
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+
 /**
- * <code>PropDefId</code> serves as identifier for a given <code>PropDef</code>.
+ * <code>PropDefId</code> serves as identifier for a given <code>QPropertyDefinition</code>.
  *
  *
- * uniquely identifies a <code>PropDef</code> in the
+ * uniquely identifies a <code>QPropertyDefinition</code> in the
  * node type registry.
  */
-public class PropDefId implements Serializable {
+class PropDefId implements Serializable {
 
     /**
      * Serialization UID of this class.
@@ -34,20 +36,20 @@ public class PropDefId implements Serializable {
 
     /**
      * The internal id is computed based on the characteristics of the
-     * <code>PropDef</code> that this <code>PropDefId</code> identifies.
+     * <code>QPropertyDefinition</code> that this <code>PropDefId</code> identifies.
      */
     private final int id;
 
     /**
      * Creates a new <code>PropDefId</code> that serves as identifier for
-     * the given <code>PropDef</code>. An internal id is computed based on
-     * the characteristics of the <code>PropDef</code> that it identifies.
+     * the given <code>QPropertyDefinition</code>. An internal id is computed based on
+     * the characteristics of the <code>QPropertyDefinition</code> that it identifies.
      *
-     * @param def <code>PropDef</code> to create identifier for
+     * @param def <code>QPropertyDefinition</code> to create identifier for
      */
-    PropDefId(PropDef def) {
+    public PropDefId(QPropertyDefinition def) {
         if (def == null) {
-            throw new IllegalArgumentException("PropDef argument can not be null");
+            throw new IllegalArgumentException("QPropertyDefinition argument can not be null");
         }
         // build key (format: <declaringNodeType>/<name>/<requiredType>/<multiple>)
         StringBuffer sb = new StringBuffer();

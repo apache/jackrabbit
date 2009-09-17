@@ -63,7 +63,17 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
         super(itemDef, ntMgr, resolver);
     }
 
+    /**
+     * Returns the wrapped node definition.
+     *
+     * @return the wrapped node definition.
+     */
+    public QNodeDefinition unwrap() {
+        return (QNodeDefinition) itemDef;
+    }
+
     //-------------------------------------------------------< NodeDefinition >
+
     /**
      * {@inheritDoc}
      */

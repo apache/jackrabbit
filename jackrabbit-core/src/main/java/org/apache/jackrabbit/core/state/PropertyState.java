@@ -19,9 +19,9 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 
 import javax.jcr.PropertyType;
 
@@ -51,9 +51,9 @@ public class PropertyState extends ItemState {
     private boolean multiValued;
 
     /**
-     * the property definition id
+     * the property definition
      */
-    private PropDefId defId;
+    private QPropertyDefinition def;
 
     /**
      * Constructs a new property state that is initially connected to an
@@ -92,7 +92,7 @@ public class PropertyState extends ItemState {
             PropertyState propState = (PropertyState) state;
             id = propState.id;
             type = propState.type;
-            defId = propState.defId;
+            def = propState.def;
             values = propState.values;
             multiValued = propState.multiValued;
             if (syncModCount) {
@@ -180,24 +180,6 @@ public class PropertyState extends ItemState {
      */
     public boolean isMultiValued() {
         return multiValued;
-    }
-
-    /**
-     * Returns the id of the definition applicable to this property state.
-     *
-     * @return the id of the definition
-     */
-    public PropDefId getDefinitionId() {
-        return defId;
-    }
-
-    /**
-     * Sets the id of the definition applicable to this property state.
-     *
-     * @param defId the id of the definition
-     */
-    public void setDefinitionId(PropDefId defId) {
-        this.defId = defId;
     }
 
     /**

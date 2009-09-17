@@ -20,7 +20,6 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import java.io.Serializable;
 
@@ -30,12 +29,6 @@ import java.io.Serializable;
  * various item definition attributes.
  */
 public abstract class QItemDefinitionImpl implements QItemDefinition, Serializable {
-
-    /**
-     * The special wildcard name used as the name of residual item definitions.
-     * TODO don't rely on specific factory impl
-     */
-    public static final Name ANY_NAME = NameFactoryImpl.getInstance().create("", "*");
 
     /**
      * The name of the child item.

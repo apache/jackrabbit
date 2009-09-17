@@ -31,10 +31,8 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
@@ -43,6 +41,9 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,6 +131,8 @@ public class ItemValidator {
 
     protected final RetentionRegistry retentionReg;
 
+    protected final ItemManager itemMgr;
+
     /**
      * Creates a new <code>ItemValidator</code> instance.
      *
@@ -140,7 +143,9 @@ public class ItemValidator {
     public ItemValidator(NodeTypeRegistry ntReg,
                          HierarchyManager hierMgr,
                          SessionImpl session) throws RepositoryException {
-        this(ntReg, hierMgr, session, session.getLockManager(), session.getAccessManager(), session.getRetentionRegistry());
+        this(ntReg, hierMgr, session, session.getLockManager(),
+                session.getAccessManager(), session.getRetentionRegistry(),
+                session.getItemManager());
     }
 
     /**
@@ -152,19 +157,22 @@ public class ItemValidator {
      * @param lockMgr    lockMgr
      * @param accessMgr  accessMgr
      * @param retentionReg
+     * @param itemMgr    the item manager
      */
     public ItemValidator(NodeTypeRegistry ntReg,
                          HierarchyManager hierMgr,
                          PathResolver resolver,
                          LockManager lockMgr,
                          AccessManager accessMgr,
-                         RetentionRegistry retentionReg) {
+                         RetentionRegistry retentionReg,
+                         ItemManager itemMgr) {
         this.ntReg = ntReg;
         this.hierMgr = hierMgr;
         this.resolver = resolver;
         this.lockMgr = lockMgr;
         this.accessMgr = accessMgr;
         this.retentionReg = retentionReg;
+        this.itemMgr = itemMgr;
     }
 
     /**
@@ -190,7 +198,7 @@ public class ItemValidator {
                 ntReg.getEffectiveNodeType(nodeState.getNodeTypeName());
         // effective node type (primary type incl. mixins)
         EffectiveNodeType entPrimaryAndMixins = getEffectiveNodeType(nodeState);
-        NodeDef def = ntReg.getNodeDef(nodeState.getDefinitionId());
+        QNodeDefinition def = itemMgr.getDefinition(nodeState).unwrap();
 
         // check if primary type satisfies the 'required node types' constraint
         Name[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
@@ -204,9 +212,9 @@ public class ItemValidator {
             }
         }
         // mandatory properties
-        PropDef[] pda = entPrimaryAndMixins.getMandatoryPropDefs();
+        QPropertyDefinition[] pda = entPrimaryAndMixins.getMandatoryPropDefs();
         for (int i = 0; i < pda.length; i++) {
-            PropDef pd = pda[i];
+            QPropertyDefinition pd = pda[i];
             if (!nodeState.hasPropertyName(pd.getName())) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory property " + pd.getName()
@@ -216,9 +224,9 @@ public class ItemValidator {
             }
         }
         // mandatory child nodes
-        NodeDef[] cnda = entPrimaryAndMixins.getMandatoryNodeDefs();
+        QItemDefinition[] cnda = entPrimaryAndMixins.getMandatoryNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
-            NodeDef cnd = cnda[i];
+            QItemDefinition cnd = cnda[i];
             if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory child node " + cnd.getName()
@@ -246,7 +254,7 @@ public class ItemValidator {
      */
     public void validate(PropertyState propState)
             throws ConstraintViolationException, RepositoryException {
-        PropDef def = ntReg.getPropDef(propState.getDefinitionId());
+        QPropertyDefinition def = itemMgr.getDefinition(propState).unwrap();
         InternalValue[] values = propState.getValues();
         int type = PropertyType.UNDEFINED;
         for (int i = 0; i < values.length; i++) {
@@ -451,12 +459,12 @@ public class ItemValidator {
      * @param name
      * @param nodeTypeName
      * @param parentState
-     * @return a <code>NodeDef</code>
+     * @return a <code>QNodeDefinition</code>
      * @throws ConstraintViolationException if no applicable child node definition
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public NodeDef findApplicableNodeDefinition(Name name,
+    public QNodeDefinition findApplicableNodeDefinition(Name name,
                                                 Name nodeTypeName,
                                                 NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
@@ -479,12 +487,12 @@ public class ItemValidator {
      * @param type
      * @param multiValued
      * @param parentState
-     * @return a <code>PropDef</code>
+     * @return a <code>QPropertyDefinition</code>
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public PropDef findApplicablePropertyDefinition(Name name,
+    public QPropertyDefinition findApplicablePropertyDefinition(Name name,
                                                     int type,
                                                     boolean multiValued,
                                                     NodeState parentState)
@@ -510,12 +518,12 @@ public class ItemValidator {
      * @param name
      * @param type
      * @param parentState
-     * @return a <code>PropDef</code>
+     * @return a <code>QPropertyDefinition</code>
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public PropDef findApplicablePropertyDefinition(Name name,
+    public QPropertyDefinition findApplicablePropertyDefinition(Name name,
                                                     int type,
                                                     NodeState parentState)
             throws RepositoryException, ConstraintViolationException {

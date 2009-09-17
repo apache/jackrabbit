@@ -25,11 +25,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -38,6 +35,8 @@ import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
@@ -74,9 +73,6 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      */
     protected VirtualNodeState createRootNodeState() throws RepositoryException {
         VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId, NameConstants.REP_NODETYPES, null);
-        NodeDefId id = ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
-                NameConstants.JCR_NODETYPES, NameConstants.REP_NODETYPES, ntReg).getId();
-        root.setDefinitionId(id);
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
         for (int i = 0; i < ntNames.length; i++) {
             NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntNames[i]);
@@ -168,7 +164,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         }
 
         // add property defs
-        PropDef[] propDefs = ntDef.getPropertyDefs();
+        QPropertyDefinition[] propDefs = ntDef.getPropertyDefs();
         for (int i = 0; i < propDefs.length; i++) {
             VirtualNodeState pdState = createPropertyDefState(ntState, propDefs[i], ntDef, i);
             ntState.addChildNodeEntry(NameConstants.JCR_PROPERTYDEFINITION, pdState.getNodeId());
@@ -177,7 +173,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         }
 
         // add child node defs
-        NodeDef[] cnDefs = ntDef.getChildNodeDefs();
+        QNodeDefinition[] cnDefs = ntDef.getChildNodeDefs();
         for (int i = 0; i < cnDefs.length; i++) {
             VirtualNodeState cnState = createChildNodeDefState(ntState, cnDefs[i], ntDef, i);
             ntState.addChildNodeEntry(NameConstants.JCR_CHILDNODEDEFINITION, cnState.getNodeId());
@@ -197,7 +193,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      * @throws RepositoryException
      */
     private VirtualNodeState createPropertyDefState(VirtualNodeState parent,
-                                                    PropDef propDef,
+                                                    QPropertyDefinition propDef,
                                                     NodeTypeDef ntDef, int n)
             throws RepositoryException {
         NodeId id = calculateStableId(
@@ -218,7 +214,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         pState.setPropertyValue(
                 NameConstants.JCR_REQUIREDTYPE,
                 InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType()).toUpperCase()));
-        InternalValue[] defVals = propDef.getDefaultValues();
+        InternalValue[] defVals = InternalValue.create(propDef.getDefaultValues());
         // retrieve the property type from the first default value present with
         // the property definition. in case no default values are defined,
         // fallback to PropertyType.STRING in order to avoid creating a property
@@ -227,7 +223,9 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         if (defVals != null && defVals.length > 0) {
             defValsType = defVals[0].getType();
         }
-        pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, defValsType, defVals);
+        if (defVals != null) {
+            pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, defValsType, defVals);
+        }
         QValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
         for (int i = 0; i < vc.length; i++) {
@@ -246,7 +244,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      * @throws RepositoryException
      */
     private VirtualNodeState createChildNodeDefState(VirtualNodeState parent,
-                                                     NodeDef cnDef,
+                                                     QNodeDefinition cnDef,
                                                      NodeTypeDef ntDef, int n)
             throws RepositoryException {
         NodeId id = calculateStableId(

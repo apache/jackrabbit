@@ -38,9 +38,7 @@ import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -50,6 +48,8 @@ import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
@@ -348,7 +348,7 @@ public class WorkspaceImporter implements Importer {
 
     protected void processProperty(NodeState node, PropInfo pInfo) throws RepositoryException {
         PropertyState prop;
-        PropDef def;
+        QPropertyDefinition def;
 
         Name name = pInfo.getName();
         int type = pInfo.getType();
@@ -357,7 +357,7 @@ public class WorkspaceImporter implements Importer {
             // a property with that name already exists...
             PropertyId idExisting = new PropertyId(node.getNodeId(), name);
             prop = (PropertyState) itemOps.getItemState(idExisting);
-            def = ntReg.getPropDef(prop.getDefinitionId());
+            def = itemOps.findApplicablePropertyDefinition(prop.getName(), prop.getType(), prop.isMultiValued(), node);
             if (def.isProtected()) {
                 // skip protected property
                 log.debug("skipping protected property "
@@ -429,7 +429,7 @@ public class WorkspaceImporter implements Importer {
             InternalValue value)
             throws RepositoryException {
         if (!node.hasPropertyName(name)) {
-            PropDef def = itemOps.findApplicablePropertyDefinition(
+            QPropertyDefinition def = itemOps.findApplicablePropertyDefinition(
                     name, type, multiple, node);
             PropertyState prop = itemOps.createPropertyState(
                     node, name, type, def);
@@ -492,7 +492,8 @@ public class WorkspaceImporter implements Importer {
                         parent.getChildNodeEntry(nodeName, 1);
                 NodeId idExisting = entry.getId();
                 NodeState existing = (NodeState) itemOps.getItemState(idExisting);
-                NodeDef def = ntReg.getNodeDef(existing.getDefinitionId());
+                QNodeDefinition def = itemOps.findApplicableNodeDefinition(
+                        nodeName, existing.getNodeTypeName(), parent);
 
                 if (!def.allowsSameNameSiblings()) {
                     // existing doesn't allow same-name siblings,
@@ -528,7 +529,7 @@ public class WorkspaceImporter implements Importer {
                 // there's no node with that name...
                 if (id == null) {
                     // no potential uuid conflict, always create new node
-                    NodeDef def = itemOps.findApplicableNodeDefinition(
+                    QNodeDefinition def = itemOps.findApplicableNodeDefinition(
                             nodeName, ntName, parent);
                     if (def.isProtected()) {
                         // skip protected node
@@ -561,7 +562,7 @@ public class WorkspaceImporter implements Importer {
                         }
                     } catch (ItemNotFoundException e) {
                         // create new with given uuid
-                        NodeDef def = itemOps.findApplicableNodeDefinition(
+                        QNodeDefinition def = itemOps.findApplicableNodeDefinition(
                                 nodeName, ntName, parent);
                         if (def.isProtected()) {
                             // skip protected node

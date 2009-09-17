@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * A builder for a {@link QNodeDefinition}.
@@ -30,7 +31,7 @@ import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
 public class QNodeDefinitionBuilder extends QItemDefinitionBuilder {
 
     private Name defaultPrimaryType;
-    private List<Name> requiredPrimaryTypes;
+    private Set<Name> requiredPrimaryTypes = new HashSet<Name>();
     private boolean allowsSameNameSiblings;
 
     /**
@@ -55,9 +56,6 @@ public class QNodeDefinitionBuilder extends QItemDefinitionBuilder {
      * @param name the name of a required primary type.
      */
     public void addRequiredPrimaryType(Name name) {
-        if (requiredPrimaryTypes == null) {
-            requiredPrimaryTypes = new ArrayList<Name>();
-        }
         requiredPrimaryTypes.add(name);
     }
 
@@ -66,10 +64,9 @@ public class QNodeDefinitionBuilder extends QItemDefinitionBuilder {
      *              definition being built.
      */
     public void setRequiredPrimaryTypes(Name[] names) {
-        if (names == null) {
-            requiredPrimaryTypes = null;
-        } else {
-            requiredPrimaryTypes = new ArrayList<Name>(Arrays.asList(names));
+        requiredPrimaryTypes.clear();
+        if (names != null) {
+            requiredPrimaryTypes.addAll(Arrays.asList(names));
         }
     }
 
@@ -78,8 +75,8 @@ public class QNodeDefinitionBuilder extends QItemDefinitionBuilder {
      *         definition being built.
      */
     public Name[] getRequiredPrimaryTypes() {
-        if (requiredPrimaryTypes == null) {
-            return null;
+        if (requiredPrimaryTypes.isEmpty()) {
+            return new Name[]{NameConstants.NT_BASE};
         } else {
             return requiredPrimaryTypes.toArray(new Name[requiredPrimaryTypes.size()]);
         }
@@ -111,7 +108,10 @@ public class QNodeDefinitionBuilder extends QItemDefinitionBuilder {
      *                               instance.
      */
     public QNodeDefinition build() throws IllegalStateException {
-        return new QNodeDefinitionImpl(getName(), getDeclaringNodeType(), getAutoCreated(), getMandatory(), getOnParentVersion(), getProtected(), getDefaultPrimaryType(), getRequiredPrimaryTypes(), getAllowsSameNameSiblings());
+        return new QNodeDefinitionImpl(getName(), getDeclaringNodeType(),
+                getAutoCreated(), getMandatory(), getOnParentVersion(),
+                getProtected(), getDefaultPrimaryType(),
+                getRequiredPrimaryTypes(), getAllowsSameNameSiblings());
     }
 
 }

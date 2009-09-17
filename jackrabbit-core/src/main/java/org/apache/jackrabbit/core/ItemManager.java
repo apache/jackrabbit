@@ -29,23 +29,19 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -55,6 +51,8 @@ import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,12 +84,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
-    private final NodeDefinition rootNodeDef;
+    private final org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef;
     private final NodeId rootNodeId;
 
     protected final SessionImpl session;
 
-    private final ItemStateManager itemStateProvider;
+    private final SessionItemStateManager sism;
     private final HierarchyManager hierMgr;
 
     /**
@@ -107,17 +105,19 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
-     * @param itemStateProvider the item state provider associated with
-     *                          the new instance
-     * @param hierMgr           the hierarchy manager
-     * @param session           the session associated with the new instance
-     * @param rootNodeDef       the definition of the root node
-     * @param rootNodeId        the id of the root node
+     * @param sism        the item state manager associated with the new
+     *                    instance
+     * @param hierMgr     the hierarchy manager
+     * @param session     the session associated with the new instance
+     * @param rootNodeDef the definition of the root node
+     * @param rootNodeId  the id of the root node
      */
-    protected ItemManager(SessionItemStateManager itemStateProvider, HierarchyManager hierMgr,
-                          SessionImpl session, NodeDefinition rootNodeDef,
+    protected ItemManager(SessionItemStateManager sism,
+                          HierarchyManager hierMgr,
+                          SessionImpl session,
+                          org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef,
                           NodeId rootNodeId) {
-        this.itemStateProvider = itemStateProvider;
+        this.sism = sism;
         this.hierMgr = hierMgr;
         this.session = session;
         this.rootNodeDef = rootNodeDef;
@@ -145,7 +145,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             SessionItemStateManager itemStateProvider,
             HierarchyManager hierMgr,
             SessionImpl session,
-            NodeDefinition rootNodeDef,
+            org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef,
             NodeId rootNodeId) {
         ItemManager mgr = new ItemManager(itemStateProvider, hierMgr,
                 session, rootNodeDef, rootNodeId);
@@ -163,52 +163,76 @@ public class ItemManager implements Dumpable, ItemStateListener {
         shareableNodesCache.clear();
     }
 
-    NodeDefinition getDefinition(NodeState state)
+    org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl getDefinition(NodeState state)
             throws RepositoryException {
         if (state.getId().equals(rootNodeId)) {
             // special handling required for root node
             return rootNodeDef;
         }
 
-        NodeDefId defId = state.getDefinitionId();
-        NodeDefinitionImpl def = session.getNodeTypeManager().getNodeDefinition(defId);
-        if (def == null) {
-            /**
-             * todo need proper way of handling inconsistent/corrupt definition
-             * e.g. 'flag' items that refer to non-existent definitions
-             */
-            log.warn("node at " + safeGetJCRPath(state.getNodeId())
-                    + " has invalid definitionId (" + defId + ")");
-
-            // fallback: try finding applicable definition
-            NodeImpl parent = (NodeImpl) getItem(state.getParentId());
-            NodeState parentState = parent.getNodeState();
-            ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
-            def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
-            state.setDefinitionId(def.unwrap().getId());
+        NodeId parentId = state.getParentId();
+        if (parentId == null) {
+            // removed state has parentId set to null
+            // get from overlayed state
+            parentId = state.getOverlayedState().getParentId();
         }
-        return def;
+        NodeState parentState;
+        try {
+            NodeImpl parent = (NodeImpl) getItem(parentId);
+            parentState = parent.getNodeState();
+            if (state.getParentId() == null) {
+                // indicates state has been removed, must use
+                // overlayed state of parent, otherwise child node entry
+                // cannot be found
+                parentState = (NodeState) parentState.getOverlayedState();
+            }
+        } catch (ItemNotFoundException e) {
+            // parent probably removed, get it from attic
+            try {
+                // use overlayed state if available
+                parentState = (NodeState) sism.getAttic().getItemState(
+                        parentId).getOverlayedState();
+            } catch (ItemStateException ex) {
+                throw new RepositoryException(ex);
+            }
+        }
+        // get child node entry
+        ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
+        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        try {
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(
+                    parentState.getNodeTypeName(), parentState.getMixinTypeNames());
+            QNodeDefinition def = ent.getApplicableChildNodeDef(
+                    cne.getName(), state.getNodeTypeName(), ntReg);
+            return session.getNodeTypeManager().getNodeDefinition(def);
+        } catch (NodeTypeConflictException e) {
+            throw new RepositoryException(e);
+        }
     }
 
-    PropertyDefinition getDefinition(PropertyState state)
+    org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl getDefinition(PropertyState state)
             throws RepositoryException {
-        PropDefId defId = state.getDefinitionId();
-        PropertyDefinitionImpl def = session.getNodeTypeManager().getPropertyDefinition(defId);
-        if (def == null) {
-            /**
-             * todo need proper way of handling inconsistent/corrupt definition
-             * e.g. 'flag' items that refer to non-existent definitions
-             */
-            log.warn("property at " + safeGetJCRPath(state.getPropertyId())
-                    + " has invalid definitionId (" + defId + ")");
-
-            // fallback: try finding applicable definition
+        try {
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
-            def = parent.getApplicablePropertyDefinition(
+            return parent.getApplicablePropertyDefinition(
                     state.getName(), state.getType(), state.isMultiValued(), true);
-            state.setDefinitionId(def.unwrap().getId());
+        } catch (ItemNotFoundException e) {
+            // parent probably removed, get it from attic
         }
-        return def;
+        try {
+            NodeState parent = (NodeState) sism.getAttic().getItemState(
+                    state.getParentId()).getOverlayedState();
+            NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(
+                    parent.getNodeTypeName(), parent.getMixinTypeNames());
+            QPropertyDefinition def = ent.getApplicablePropertyDef(
+                    state.getName(), state.getType(), state.isMultiValued());
+            return session.getNodeTypeManager().getPropertyDefinition(def);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } catch (NodeTypeConflictException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -228,7 +252,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             session.sanityCheck();
 
             // shortcut: check if state exists for the given item
-            if (!itemStateProvider.hasItemState(itemId)) {
+            if (!sism.hasItemState(itemId)) {
                 return false;
             }
             getItemData(itemId, path, true);
@@ -310,7 +334,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             // NOTE: permission check & caching within createItemData
             ItemState state;
             try {
-                state = itemStateProvider.getItemState(itemId);
+                state = sism.getItemState(itemId);
             } catch (NoSuchItemStateException nsise) {
                 throw new ItemNotFoundException(itemId.toString());
             } catch (ItemStateException ise) {

@@ -71,16 +71,10 @@ import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.ItemDef;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -92,6 +86,9 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -108,6 +105,8 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LIFECYCLE
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_CURRENT_LIFECYCLE_STATE;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_LIFECYCLE;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_REFERENCEABLE;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
@@ -143,6 +142,23 @@ public class NodeImpl extends ItemImpl implements Node {
             log.warn("Fallback to nt:unstructured due to unknown node type '"
                     + state.getNodeTypeName() + "' of " + this);
             data.getNodeState().setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
+        }
+        List<Name> unknown = null;
+        for (Name mixinName : state.getMixinTypeNames()) {
+            if (!ntReg.isRegistered(mixinName)) {
+                if (unknown == null) {
+                    unknown = new ArrayList<Name>();
+                }
+                unknown.add(mixinName);
+                log.warn("Ignoring unknown mixin type '" + mixinName +
+                        "' of " + this);
+            }
+        }
+        if (unknown != null) {
+            // ignore unknown mixin type names
+            Set<Name> known = new HashSet<Name>(state.getMixinTypeNames());
+            known.removeAll(unknown);
+            state.setMixinTypeNames(known);
         }
     }
 
@@ -359,7 +375,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (isNew() && !hasProperty(name)) {
             // this is a new node and the property does not exist yet
             // -> no need to check item manager
-            PropertyDefinitionImpl def = getApplicablePropertyDefinition(
+            org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl def = getApplicablePropertyDefinition(
                     name, type, multiValued, exactTypeMatch);
             PropertyImpl prop = createChildProperty(name, type, def);
             status.set(CREATED);
@@ -396,7 +412,7 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (ItemNotFoundException e) {
             // does not exist yet:
             // find definition for the specified property and create property
-            PropertyDefinitionImpl def = getApplicablePropertyDefinition(
+            org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl def = getApplicablePropertyDefinition(
                     name, type, multiValued, exactTypeMatch);
             PropertyImpl prop = createChildProperty(name, type, def);
             status.set(CREATED);
@@ -405,24 +421,23 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     protected synchronized PropertyImpl createChildProperty(Name name, int type,
-                                                            PropertyDefinitionImpl def)
+                                                            org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl def)
             throws RepositoryException {
 
         // create a new property state
         PropertyState propState;
         try {
-            PropDef propDef = def.unwrap();
+            QPropertyDefinition propDef = def.unwrap();
             propState =
                     stateMgr.createTransientPropertyState(getNodeId(), name,
                             ItemState.STATUS_NEW);
             propState.setType(type);
             propState.setMultiValued(propDef.isMultiple());
-            propState.setDefinitionId(propDef.getId());
             // compute system generated values if necessary
             InternalValue[] genValues = session.getNodeTypeInstanceHandler()
                     .computeSystemGeneratedPropertyValues(data.getNodeState(), propDef);
             if (genValues == null) {
-                genValues = propDef.getDefaultValues();
+                genValues = InternalValue.create(propDef.getDefaultValues());
             }
             if (genValues != null) {
                 propState.setValues(genValues);
@@ -450,7 +465,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     protected synchronized NodeImpl createChildNode(Name name,
-                                                    NodeDefinitionImpl def,
                                                     NodeTypeImpl nodeType,
                                                     NodeId id)
             throws RepositoryException {
@@ -463,7 +477,6 @@ public class NodeImpl extends ItemImpl implements Node {
             nodeState =
                     stateMgr.createTransientNodeState(id, nodeType.getQName(),
                             getNodeId(), ItemState.STATUS_NEW);
-            nodeState.setDefinitionId(def.unwrap().getId());
         } catch (ItemStateException ise) {
             String msg = "failed to add child node " + name + " to " + this;
             log.debug(msg);
@@ -495,15 +508,14 @@ public class NodeImpl extends ItemImpl implements Node {
         PropertyDefinition[] pda = nodeType.getAutoCreatedPropertyDefinitions();
         for (int i = 0; i < pda.length; i++) {
             PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
-            node.createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+            node.createChildProperty(pd.unwrap().getName(), pd.getRequiredType(), pd);
         }
 
         // recursively add 'auto-create' child nodes defined in node type
         NodeDefinition[] nda = nodeType.getAutoCreatedNodeDefinitions();
         for (int i = 0; i < nda.length; i++) {
             NodeDefinitionImpl nd = (NodeDefinitionImpl) nda[i];
-            node.createChildNode(nd.getQName(), nd,
-                    (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+            node.createChildNode(nd.unwrap().getName(), (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
         }
 
         return node;
@@ -570,13 +582,12 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
-    protected void onRedefine(NodeDefId defId) throws RepositoryException {
-        NodeDefinitionImpl newDef =
-                session.getNodeTypeManager().getNodeDefinition(defId);
+    protected void onRedefine(QNodeDefinition def) throws RepositoryException {
+        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl newDef =
+                session.getNodeTypeManager().getNodeDefinition(def);
         // modify the state of 'this', i.e. the target node
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        // set id of new definition
-        thisState.setDefinitionId(defId);
+        getOrCreateTransientItemState();
+        // set new definition
         data.setDefinition(newDef);
     }
 
@@ -641,7 +652,7 @@ public class NodeImpl extends ItemImpl implements Node {
             prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getNodeId(), NameConstants.JCR_MIXINTYPES));
         } else {
             // find definition for the jcr:mixinTypes property and create property
-            PropertyDefinitionImpl def = getApplicablePropertyDefinition(
+            org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl def = getApplicablePropertyDefinition(
                     NameConstants.JCR_MIXINTYPES, PropertyType.NAME, true, true);
             prop = createChildProperty(NameConstants.JCR_MIXINTYPES, PropertyType.NAME, def);
         }
@@ -704,13 +715,13 @@ public class NodeImpl extends ItemImpl implements Node {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    protected NodeDefinitionImpl getApplicableChildNodeDefinition(Name nodeName,
+    protected org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl getApplicableChildNodeDefinition(Name nodeName,
                                                                   Name nodeTypeName)
             throws ConstraintViolationException, RepositoryException {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(
+        QNodeDefinition cnd = getEffectiveNodeType().getApplicableChildNodeDef(
                 nodeName, nodeTypeName, ntMgr.getNodeTypeRegistry());
-        return ntMgr.getNodeDefinition(cnd.getId());
+        return ntMgr.getNodeDefinition(cnd);
     }
 
     /**
@@ -726,12 +737,12 @@ public class NodeImpl extends ItemImpl implements Node {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    protected PropertyDefinitionImpl getApplicablePropertyDefinition(Name propertyName,
+    protected org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl getApplicablePropertyDefinition(Name propertyName,
                                                                      int type,
                                                                      boolean multiValued,
                                                                      boolean exactTypeMatch)
             throws ConstraintViolationException, RepositoryException {
-        PropDef pd;
+        QPropertyDefinition pd;
         if (exactTypeMatch || type == PropertyType.UNDEFINED) {
             pd = getEffectiveNodeType().getApplicablePropertyDef(
                     propertyName, type, multiValued);
@@ -746,7 +757,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         propertyName, PropertyType.UNDEFINED, multiValued);
             }
         }
-        return session.getNodeTypeManager().getPropertyDefinition(pd.getId());
+        return session.getNodeTypeManager().getPropertyDefinition(pd);
     }
 
     protected void makePersistent() throws InvalidItemStateException {
@@ -779,8 +790,6 @@ public class NodeImpl extends ItemImpl implements Node {
             persistentState.setNodeTypeName(transientState.getNodeTypeName());
             // mixin types
             persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
-            // id of definition
-            persistentState.setDefinitionId(transientState.getDefinitionId());
             // child node entries
             persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
             // property entries
@@ -816,7 +825,6 @@ public class NodeImpl extends ItemImpl implements Node {
         thisState.setParentId(transientState.getParentId());
         thisState.setNodeTypeName(transientState.getNodeTypeName());
         thisState.setMixinTypeNames(transientState.getMixinTypeNames());
-        thisState.setDefinitionId(transientState.getDefinitionId());
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
         thisState.setPropertyNames(transientState.getPropertyNames());
         thisState.setSharedSet(transientState.getSharedSet());
@@ -902,7 +910,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 // or existing mixin's
                 NodeTypeImpl declaringNT = (NodeTypeImpl) pd.getDeclaringNodeType();
                 if (!entExisting.includesNodeType(declaringNT.getQName())) {
-                    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+                    createChildProperty(pd.unwrap().getName(), pd.getRequiredType(), pd);
                 }
             }
 
@@ -914,7 +922,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 // or existing mixin's
                 NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
                 if (!entExisting.includesNodeType(declaringNT.getQName())) {
-                    createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+                    createChildNode(nd.unwrap().getName(), (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
                 }
             }
         } catch (RepositoryException re) {
@@ -1021,7 +1029,7 @@ public class NodeImpl extends ItemImpl implements Node {
             for (Name propName : set) {
                 PropertyState propState = (PropertyState) stateMgr.getItemState(new PropertyId(thisState.getNodeId(), propName));
                 // check if property has been defined by mixin type (or one of its supertypes)
-                PropertyDefinition def = ntMgr.getPropertyDefinition(propState.getDefinitionId());
+                PropertyDefinition def = itemMgr.getDefinition(propState);
                 NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
                 if (!entResulting.includesNodeType(declaringNT.getQName())) {
                     // the resulting effective node type doesn't include the
@@ -1036,7 +1044,7 @@ public class NodeImpl extends ItemImpl implements Node {
                             removeChildProperty(propName);
                             continue;
                         }
-                        PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
+                        org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
                                 propName, propState.getType(),
                                 propState.isMultiValued(), false);
                         if (pdi.getRequiredType() != PropertyType.UNDEFINED
@@ -1050,7 +1058,7 @@ public class NodeImpl extends ItemImpl implements Node {
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(values);
                             } else {
@@ -1061,13 +1069,13 @@ public class NodeImpl extends ItemImpl implements Node {
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(value);
                             }
                         } else {
                             // redefine property
-                            prop.onRedefine(pdi.unwrap().getId());
+                            prop.onRedefine(pdi.unwrap());
                         }
                     } catch (ValueFormatException vfe) {
                         // value conversion failed, remove it
@@ -1085,7 +1093,7 @@ public class NodeImpl extends ItemImpl implements Node {
             for (int i = list.size() - 1; i >= 0; i--) {
                 ChildNodeEntry entry = list.get(i);
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
-                NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
+                NodeDefinition def = itemMgr.getDefinition(nodeState);
                 // check if node has been defined by mixin type (or one of its supertypes)
                 NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
                 if (!entResulting.includesNodeType(declaringNT.getQName())) {
@@ -1099,11 +1107,11 @@ public class NodeImpl extends ItemImpl implements Node {
                             removeChildNode(entry.getName(), entry.getIndex());
                             continue;
                         }
-                        NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
+                        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
                                 entry.getName(),
                                 nodeState.getNodeTypeName());
                         // redefine node
-                        node.onRedefine(ndi.unwrap().getId());
+                        node.onRedefine(ndi.unwrap());
                     } catch (ConstraintViolationException cve) {
                         // no suitable definition found for this child node,
                         // remove it
@@ -1451,7 +1459,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // Get the applicable child node definition for this node.
-        NodeDefinitionImpl def;
+        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl def;
         try {
             def = getApplicableChildNodeDefinition(nodeName, nodeTypeName);
         } catch (RepositoryException e) {
@@ -1493,7 +1501,7 @@ public class NodeImpl extends ItemImpl implements Node {
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // now do create the child node
-        return createChildNode(nodeName, def, nt, id);
+        return createChildNode(nodeName, nt, id);
     }
 
     /**
@@ -1890,7 +1898,7 @@ public class NodeImpl extends ItemImpl implements Node {
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // (4) check for name collisions
-        NodeDefinitionImpl def;
+        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl def;
         try {
             def = getApplicableChildNodeDefinition(name, null);
         } catch (RepositoryException re) {
@@ -3677,26 +3685,26 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // get applicable definition for this node using new primary type
-        NodeDefId defId;
+        QNodeDefinition nodeDef;
         try {
             NodeImpl parent = (NodeImpl) getParent();
-            defId = parent.getApplicableChildNodeDefinition(getQName(), ntName).unwrap().getId();
+            nodeDef = parent.getApplicableChildNodeDefinition(getQName(), ntName).unwrap();
         } catch (RepositoryException re) {
             String msg = this + ": no applicable definition found in parent node's node type";
             log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
 
-        if (!defId.equals(state.getDefinitionId())) {
-            onRedefine(defId);
+        if (!nodeDef.equals(itemMgr.getDefinition(state).unwrap())) {
+            onRedefine(nodeDef);
         }
 
-        Set<ItemDef> oldDefs = new HashSet<ItemDef>(Arrays.asList(entOld.getAllItemDefs()));
-        Set<ItemDef> newDefs = new HashSet<ItemDef>(Arrays.asList(entNew.getAllItemDefs()));
-        Set<ItemDef> allDefs = new HashSet<ItemDef>(Arrays.asList(entAll.getAllItemDefs()));
+        Set<QItemDefinition> oldDefs = new HashSet<QItemDefinition>(Arrays.asList(entOld.getAllItemDefs()));
+        Set<QItemDefinition> newDefs = new HashSet<QItemDefinition>(Arrays.asList(entNew.getAllItemDefs()));
+        Set<QItemDefinition> allDefs = new HashSet<QItemDefinition>(Arrays.asList(entAll.getAllItemDefs()));
 
         // added child item definitions
-        Set<ItemDef> addedDefs = new HashSet<ItemDef>(newDefs);
+        Set<QItemDefinition> addedDefs = new HashSet<QItemDefinition>(newDefs);
         addedDefs.removeAll(oldDefs);
 
         // referential integrity check
@@ -3732,7 +3740,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 PropertyState propState =
                         (PropertyState) stateMgr.getItemState(
                                 new PropertyId(thisState.getNodeId(), propName));
-                if (!allDefs.contains(ntReg.getPropDef(propState.getDefinitionId()))) {
+                if (!allDefs.contains(itemMgr.getDefinition(propState).unwrap())) {
                     // try to find new applicable definition first and
                     // redefine property if possible
                     try {
@@ -3742,7 +3750,7 @@ public class NodeImpl extends ItemImpl implements Node {
                             removeChildProperty(propName);
                             continue;
                         }
-                        PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
+                        org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
                                 propName, propState.getType(),
                                 propState.isMultiValued(), false);
                         if (pdi.getRequiredType() != PropertyType.UNDEFINED
@@ -3756,7 +3764,7 @@ public class NodeImpl extends ItemImpl implements Node {
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(values);
                             } else {
@@ -3767,13 +3775,13 @@ public class NodeImpl extends ItemImpl implements Node {
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(value);
                             }
                         } else {
                             // redefine property
-                            prop.onRedefine(pdi.unwrap().getId());
+                            prop.onRedefine(pdi.unwrap());
                         }
                         // update collection of added definitions
                         addedDefs.remove(pdi.unwrap());
@@ -3800,7 +3808,7 @@ public class NodeImpl extends ItemImpl implements Node {
             ChildNodeEntry entry = list.get(i);
             try {
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
-                if (!allDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
+                if (!allDefs.contains(itemMgr.getDefinition(nodeState).unwrap())) {
                     // try to find new applicable definition first and
                     // redefine node if possible
                     try {
@@ -3810,11 +3818,11 @@ public class NodeImpl extends ItemImpl implements Node {
                             removeChildNode(entry.getName(), entry.getIndex());
                             continue;
                         }
-                        NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
+                        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
                                 entry.getName(),
                                 nodeState.getNodeTypeName());
                         // redefine node
-                        node.onRedefine(ndi.unwrap().getId());
+                        node.onRedefine(ndi.unwrap());
                         // update collection of added definitions
                         addedDefs.remove(ndi.unwrap());
                     } catch (ConstraintViolationException cve) {
@@ -3832,15 +3840,14 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // create items that are defined as auto-created by the new primary node
         // type and at the same time were not present with the old nt
-        for (Iterator<ItemDef> iter = addedDefs.iterator(); iter.hasNext();) {
-            ItemDef def = iter.next();
+        for (QItemDefinition def : addedDefs) {
             if (def.isAutoCreated()) {
                 if (def.definesNode()) {
-                    NodeDefinitionImpl ndi = ntMgr.getNodeDefinition(((NodeDef) def).getId());
-                    createChildNode(ndi.getQName(), ndi, (NodeTypeImpl) ndi.getDefaultPrimaryType(), null);
+                    NodeDefinitionImpl ndi = ntMgr.getNodeDefinition((QNodeDefinition) def);
+                    createChildNode(def.getName(), (NodeTypeImpl) ndi.getDefaultPrimaryType(), null);
                 } else {
-                    PropertyDefinitionImpl pdi = ntMgr.getPropertyDefinition(((PropDef) def).getId());
-                    createChildProperty(pdi.getQName(), pdi.getRequiredType(), pdi);
+                    PropertyDefinitionImpl pdi = ntMgr.getPropertyDefinition((QPropertyDefinition) def);
+                    createChildProperty(pdi.unwrap().getName(), pdi.getRequiredType(), pdi);
                 }
             }
         }

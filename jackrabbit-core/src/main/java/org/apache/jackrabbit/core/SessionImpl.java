@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
@@ -1081,7 +1080,7 @@ public class SessionImpl extends AbstractSession
         // check constraints
         // get applicable definition of target node at new location
         NodeTypeImpl nt = (NodeTypeImpl) targetNode.getPrimaryNodeType();
-        NodeDefinitionImpl newTargetDef;
+        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl newTargetDef;
         try {
             newTargetDef = destParentNode.getApplicableChildNodeDefinition(destName.getName(), nt.getQName());
         } catch (RepositoryException re) {
@@ -1140,7 +1139,7 @@ public class SessionImpl extends AbstractSession
         }
 
         // change definition of target
-        targetNode.onRedefine(newTargetDef.unwrap().getId());
+        targetNode.onRedefine(newTargetDef.unwrap());
     }
 
     /**

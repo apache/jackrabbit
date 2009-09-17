@@ -54,8 +54,8 @@ public class NodeTypeDef implements Cloneable {
     private boolean abstractStatus;
     private Name primaryItemName;
 
-    private Set<PropDef> propDefs;
-    private Set<NodeDef> nodeDefs;
+    private Set<QPropertyDefinition> propDefs;
+    private Set<QNodeDefinition> nodeDefs;
     private Set<Name> dependencies;
 
     /**
@@ -70,8 +70,8 @@ public class NodeTypeDef implements Cloneable {
         orderableChildNodes = false;
         abstractStatus = false;
         queryable = true;
-        nodeDefs = new HashSet<NodeDef>();
-        propDefs = new HashSet<PropDef>();
+        nodeDefs = new HashSet<QNodeDefinition>();
+        propDefs = new HashSet<QPropertyDefinition>();
     }
 
     /**
@@ -86,13 +86,13 @@ public class NodeTypeDef implements Cloneable {
         orderableChildNodes = def.hasOrderableChildNodes();
         abstractStatus = def.isAbstract();
         queryable = def.isQueryable();
-        nodeDefs = new HashSet<NodeDef>();
+        nodeDefs = new HashSet<QNodeDefinition>();
         for (QNodeDefinition nd: def.getChildNodeDefs()) {
-            nodeDefs.add(new NodeDefImpl(nd));
+            nodeDefs.add(nd);
         }
-        propDefs = new HashSet<PropDef>();
+        propDefs = new HashSet<QPropertyDefinition>();
         for (QPropertyDefinition pd: def.getPropertyDefs()) {
-            propDefs.add(new PropDefImpl(pd));
+            propDefs.add(pd);
         }
     }
 
@@ -101,17 +101,6 @@ public class NodeTypeDef implements Cloneable {
      * @return the QNodeTypeDefintion
      */
     public QNodeTypeDefinition getQNodeTypeDefinition() {
-        QNodeDefinition[] qNodeDefs = new QNodeDefinition[nodeDefs.size()];
-        int i=0;
-        for (NodeDef nd: nodeDefs) {
-            qNodeDefs[i++] = ((NodeDefImpl) nd).getQNodeDefinition();
-        }
-        QPropertyDefinition[] qPropDefs = new QPropertyDefinition[propDefs.size()];
-        i=0;
-        for (PropDef pd: propDefs) {
-            qPropDefs[i++] = ((PropDefImpl) pd).getQPropertyDefinition();
-        }
-
         return new QNodeTypeDefinitionImpl(
                 getName(),
                 getSupertypes(),
@@ -121,8 +110,8 @@ public class NodeTypeDef implements Cloneable {
                 isQueryable(),
                 hasOrderableChildNodes(),
                 getPrimaryItemName(),
-                qPropDefs,
-                qNodeDefs
+                propDefs.toArray(new QPropertyDefinition[propDefs.size()]),
+                nodeDefs.toArray(new QNodeDefinition[nodeDefs.size()])
         );
     }
 
@@ -144,7 +133,7 @@ public class NodeTypeDef implements Cloneable {
             // supertypes
             dependencies.addAll(Arrays.asList(supertypes));
             // child node definitions
-            for (NodeDef nd: nodeDefs) {
+            for (QNodeDefinition nd: nodeDefs) {
                 // default primary type
                 Name ntName = nd.getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
@@ -159,7 +148,7 @@ public class NodeTypeDef implements Cloneable {
                 }
             }
             // property definitions
-            for (PropDef pd : propDefs) {
+            for (QPropertyDefinition pd : propDefs) {
                 // [WEAK]REFERENCE value constraints
                 if (pd.getRequiredType() == PropertyType.REFERENCE
                         || pd.getRequiredType() == PropertyType.WEAKREFERENCE) {
@@ -263,7 +252,7 @@ public class NodeTypeDef implements Cloneable {
      *
      * @param defs An array of <code>PropertyDef</code> objects.
      */
-    public void setPropertyDefs(PropDef[] defs) {
+    public void setPropertyDefs(QPropertyDefinition[] defs) {
         resetDependencies();
         propDefs.clear();
         propDefs.addAll(Arrays.asList(defs));
@@ -272,9 +261,9 @@ public class NodeTypeDef implements Cloneable {
     /**
      * Sets the child node definitions.
      *
-     * @param defs An array of <code>NodeDef</code> objects
+     * @param defs An array of <code>QNodeDefinition</code> objects
      */
-    public void setChildNodeDefs(NodeDef[] defs) {
+    public void setChildNodeDefs(QNodeDefinition[] defs) {
         resetDependencies();
         nodeDefs.clear();
         nodeDefs.addAll(Arrays.asList(defs));
@@ -362,11 +351,11 @@ public class NodeTypeDef implements Cloneable {
      * @return an array containing the property definitions or
      *         <code>null</code> if not set.
      */
-    public PropDef[] getPropertyDefs() {
+    public QPropertyDefinition[] getPropertyDefs() {
         if (propDefs.isEmpty()) {
-            return PropDef.EMPTY_ARRAY;
+            return QPropertyDefinition.EMPTY_ARRAY;
         }
-        return propDefs.toArray(new PropDef[propDefs.size()]);
+        return propDefs.toArray(new QPropertyDefinition[propDefs.size()]);
     }
 
     /**
@@ -376,11 +365,11 @@ public class NodeTypeDef implements Cloneable {
      * @return an array containing the child node definitions or
      *         <code>null</code> if not set.
      */
-    public NodeDef[] getChildNodeDefs() {
+    public QNodeDefinition[] getChildNodeDefs() {
         if (nodeDefs.isEmpty()) {
-            return NodeDef.EMPTY_ARRAY;
+            return QNodeDefinition.EMPTY_ARRAY;
         }
-        return nodeDefs.toArray(new NodeDef[nodeDefs.size()]);
+        return nodeDefs.toArray(new QNodeDefinition[nodeDefs.size()]);
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -393,10 +382,10 @@ public class NodeTypeDef implements Cloneable {
         clone.orderableChildNodes = orderableChildNodes;
         clone.abstractStatus = abstractStatus;
         clone.queryable = queryable;
-        clone.nodeDefs = new HashSet<NodeDef>();
+        clone.nodeDefs = new HashSet<QNodeDefinition>();
         // todo: itemdefs should be cloned as well, since mutable
-        clone.nodeDefs = new HashSet<NodeDef>(nodeDefs);
-        clone.propDefs = new HashSet<PropDef>(propDefs);
+        clone.nodeDefs = new HashSet<QNodeDefinition>(nodeDefs);
+        clone.propDefs = new HashSet<QPropertyDefinition>(propDefs);
         return clone;
     }
 
