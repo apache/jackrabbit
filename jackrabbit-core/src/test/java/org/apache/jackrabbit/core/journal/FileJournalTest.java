@@ -17,14 +17,14 @@
 package org.apache.jackrabbit.core.journal;
 
 import java.io.File;
-import java.util.Properties;
+
+import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.cluster.SimpleClusterContext;
-import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.ClusterConfig;
-import org.apache.jackrabbit.core.config.JournalConfig;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.test.JUnitTest;
 
 /**
@@ -87,20 +87,25 @@ public class FileJournalTest extends JUnitTest {
      * @see <a href="http://issues.apache.org/jira/browse/JCR-904">JCR-904</a>
      */
     public void testRevisionIsOptional() throws Exception {
-        Properties params = new Properties();
-        params.setProperty("directory", journalDirectory.getPath());
-
-        BeanConfig bc = new BeanConfig(FileJournal.class.getName(), params);
-        JournalConfig jc = new JournalConfig(bc);
-
-        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jc);
+        final FileJournal journal = new FileJournal();
+        journal.setDirectory(journalDirectory.getPath());
+        JournalFactory jf = new JournalFactory() {
+            public Journal getJournal(NamespaceResolver resolver) {
+                return journal;
+            }
+        };
+        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jf);
         SimpleClusterContext context = new SimpleClusterContext(cc, repositoryHome);
+
+        journal.setRepositoryHome(repositoryHome);
+        journal.init(CLUSTER_NODE_ID, context.getNamespaceResolver());
 
         ClusterNode clusterNode = new ClusterNode();
         clusterNode.init(context);
 
         try {
-            File revisionFile = new File(repositoryHome, FileJournal.DEFAULT_INSTANCE_FILE_NAME);
+            File revisionFile =
+                new File(repositoryHome, FileJournal.DEFAULT_INSTANCE_FILE_NAME);
             assertTrue(revisionFile.exists());
         } finally {
             clusterNode.stop();
@@ -114,12 +119,13 @@ public class FileJournalTest extends JUnitTest {
      * @throws Exception
      */
     public void testClusterInitIncompleteBadJournalClass() throws Exception {
-        Properties params = new Properties();
-
-        BeanConfig bc = new BeanConfig(Object.class.getName(), params);
-        JournalConfig jc = new JournalConfig(bc);
-
-        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jc);
+        JournalFactory jf = new JournalFactory() {
+            public Journal getJournal(NamespaceResolver resolver)
+                    throws RepositoryException {
+                throw new RepositoryException("Journal not available");
+            }
+        };
+        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jf);
         SimpleClusterContext context = new SimpleClusterContext(cc);
 
         ClusterNode clusterNode = new ClusterNode();
@@ -142,16 +148,23 @@ public class FileJournalTest extends JUnitTest {
      * @throws Exception
      */
     public void testClusterInitIncompleteMissingParam() throws Exception {
-        Properties params = new Properties();
-
-        BeanConfig bc = new BeanConfig(FileJournal.class.getName(), params);
-        JournalConfig jc = new JournalConfig(bc);
-
-        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jc);
+        JournalFactory jf = new JournalFactory() {
+            public Journal getJournal(NamespaceResolver resolver)
+                    throws RepositoryException {
+                try {
+                    FileJournal journal = new FileJournal();
+                    // no setDirectory() call here
+                    journal.init(CLUSTER_NODE_ID, resolver);
+                    return journal;
+                } catch (JournalException e) {
+                    throw new RepositoryException("Expected failure", e);
+                }
+            }
+        };
+        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jf);
         SimpleClusterContext context = new SimpleClusterContext(cc);
 
         ClusterNode clusterNode = new ClusterNode();
-
         try {
             clusterNode.init(context);
             fail("Bad cluster configuration.");

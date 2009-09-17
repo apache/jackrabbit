@@ -20,6 +20,7 @@ package org.apache.jackrabbit.core.config;
 import org.xml.sax.InputSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.ClosedInputStream;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 
 import java.io.File;
@@ -259,16 +260,56 @@ public class RepositoryConfigTest extends TestCase {
         final String id = "testvalue";
         final long syncDelay = 11;
 
-        System.setProperty("cluster.id", id);
+        System.setProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID, id);
         System.setProperty("cluster.syncDelay", Long.toString(syncDelay));
+        try {
+            InputStream in = getClass().getResourceAsStream(
+                    "/org/apache/jackrabbit/core/cluster/repository.xml");
+            RepositoryConfig config = RepositoryConfig.create(in, DIR.getPath());
 
-        InputStream in = getClass().getResourceAsStream(
-                "/org/apache/jackrabbit/core/cluster/repository.xml");
-        RepositoryConfig config = RepositoryConfig.create(in, DIR.getPath());
+            ClusterConfig clusterConfig = config.getClusterConfig();
+            assertEquals(id, clusterConfig.getId());
+            assertEquals(syncDelay, clusterConfig.getSyncDelay());
+        } finally {
+            System.clearProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID);
+            System.clearProperty("cluster.syncDelay");
+        }
+    }
 
-        ClusterConfig clusterConfig = config.getClusterConfig();
-        assertEquals(id, clusterConfig.getId());
-        assertEquals(syncDelay, clusterConfig.getSyncDelay());
+    public void testAutomaticClusterNodeIdCreation() throws Exception {
+        final long syncDelay = 12;
+
+        System.setProperty("cluster.syncDelay", Long.toString(syncDelay));
+        try {
+            File file = new File(DIR, "cluster_node.id");
+            assertFalse(file.exists());
+
+            // Check that a new cluster node id is automatically persisted
+            InputStream in = getClass().getResourceAsStream(
+                    "/org/apache/jackrabbit/core/cluster/repository.xml");
+            RepositoryConfig config = RepositoryConfig.create(in, DIR.getPath());
+
+            assertTrue(file.exists());
+            String id = FileUtils.readFileToString(file);
+
+            ClusterConfig clusterConfig = config.getClusterConfig();
+            assertEquals(id, clusterConfig.getId());
+            assertEquals(syncDelay, clusterConfig.getSyncDelay());
+
+            // Check that the persisted cluster node id is used when it exists
+            in = getClass().getResourceAsStream(
+                    "/org/apache/jackrabbit/core/cluster/repository.xml");
+            config = RepositoryConfig.create(in, DIR.getPath());
+
+            assertTrue(file.exists());
+            assertEquals(id, FileUtils.readFileToString(file));
+
+            clusterConfig = config.getClusterConfig();
+            assertEquals(id, clusterConfig.getId());
+            assertEquals(syncDelay, clusterConfig.getSyncDelay());
+        } finally {
+            System.clearProperty("cluster.syncDelay");
+        }
     }
 
 }

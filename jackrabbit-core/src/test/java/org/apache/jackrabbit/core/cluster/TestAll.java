@@ -38,7 +38,6 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite();
 
         suite.addTestSuite(ClusterRecordTest.class);
-        suite.addTestSuite(ClusterTest.class);
 
         return suite;
     }

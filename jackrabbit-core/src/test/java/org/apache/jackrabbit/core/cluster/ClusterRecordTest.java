@@ -17,22 +17,25 @@
 package org.apache.jackrabbit.core.cluster;
 
 import java.util.ArrayList;
-import java.util.Properties;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.LockEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NamespaceEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NodeTypeEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.UnlockEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.UpdateEvent;
-import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.ClusterConfig;
-import org.apache.jackrabbit.core.config.JournalConfig;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.journal.Journal;
+import org.apache.jackrabbit.core.journal.JournalFactory;
 import org.apache.jackrabbit.core.journal.MemoryJournal;
+import org.apache.jackrabbit.core.journal.MemoryJournal.MemoryRecord;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.test.JUnitTest;
 
 /**
@@ -59,7 +62,7 @@ public class ClusterRecordTest extends JUnitTest {
     /**
      * Records shared among multiple memory journals.
      */
-    private ArrayList records = new ArrayList();
+    private ArrayList<MemoryRecord> records = new ArrayList<MemoryRecord>();
 
     /**
      * Master.
@@ -179,7 +182,7 @@ public class ClusterRecordTest extends JUnitTest {
         ntd.setName(NameFactoryImpl.getInstance().create("", "test"));
         ntd.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
-        ArrayList list = new ArrayList();
+        ArrayList<NodeTypeDef> list = new ArrayList<NodeTypeDef>();
         list.add(ntd);
 
         NodeTypeEvent event = new NodeTypeEvent(NodeTypeEvent.REGISTER, list);
@@ -202,7 +205,7 @@ public class ClusterRecordTest extends JUnitTest {
         ntd.setName(NameFactoryImpl.getInstance().create("", "test"));
         ntd.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
-        ArrayList list = new ArrayList();
+        ArrayList<NodeTypeDef> list = new ArrayList<NodeTypeDef>();
         list.add(ntd);
 
         NodeTypeEvent event = new NodeTypeEvent(NodeTypeEvent.REREGISTER, list);
@@ -223,7 +226,7 @@ public class ClusterRecordTest extends JUnitTest {
     public void testNodeTypeUnregistration() throws Exception {
         Name name = NameFactoryImpl.getInstance().create("", "test");
 
-        ArrayList list = new ArrayList();
+        ArrayList<Name> list = new ArrayList<Name>();
         list.add(name);
 
         NodeTypeEvent event = new NodeTypeEvent(NodeTypeEvent.UNREGISTER, list);
@@ -277,19 +280,26 @@ public class ClusterRecordTest extends JUnitTest {
      * @param id cluster node id
      * @param records memory journal's list of records
      */
-    private ClusterNode createClusterNode(String id, ArrayList records)
-            throws ClusterException {
-
-        BeanConfig bc = new BeanConfig(MemoryJournal.class.getName(), new Properties());
-        JournalConfig jc = new JournalConfig(bc);
-        ClusterConfig cc = new ClusterConfig(id, SYNC_DELAY, jc);
+    private ClusterNode createClusterNode(
+            String id, ArrayList<MemoryRecord> records) throws Exception {
+        final MemoryJournal journal = new MemoryJournal();
+        JournalFactory jf = new JournalFactory() {
+            public Journal getJournal(NamespaceResolver resolver)
+                    throws RepositoryException {
+                return journal;
+            }
+        };
+        ClusterConfig cc = new ClusterConfig(id, SYNC_DELAY, jf);
         SimpleClusterContext context = new SimpleClusterContext(cc);
+
+        journal.setRepositoryHome(context.getRepositoryHome());
+        journal.init(id, context.getNamespaceResolver());
+        if (records != null) {
+            journal.setRecords(records);
+        }
 
         ClusterNode clusterNode = new ClusterNode();
         clusterNode.init(context);
-        if (records != null) {
-            ((MemoryJournal) clusterNode.getJournal()).setRecords(records);
-        }
         return clusterNode;
     }
 }
