@@ -34,6 +34,8 @@ import javax.jcr.nodetype.PropertyDefinition;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
@@ -123,10 +125,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * @see NodeDefinition#isAutoCreated
      */
     public NodeDefinition[] getAutoCreatedNodeDefinitions() {
-        NodeDef[] cnda = ent.getAutoCreateNodeDefs();
+        QNodeDefinition[] cnda = ent.getAutoCreateNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
         }
         return nodeDefs;
     }
@@ -141,10 +143,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * @see PropertyDefinition#isAutoCreated
      */
     public PropertyDefinition[] getAutoCreatedPropertyDefinitions() {
-        PropDef[] pda = ent.getAutoCreatePropDefs();
+        QPropertyDefinition[] pda = ent.getAutoCreatePropDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
         }
         return propDefs;
     }
@@ -159,10 +161,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * @see PropertyDefinition#isMandatory
      */
     public PropertyDefinition[] getMandatoryPropertyDefinitions() {
-        PropDef[] pda = ent.getMandatoryPropDefs();
+        QPropertyDefinition[] pda = ent.getMandatoryPropDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
         }
         return propDefs;
     }
@@ -177,10 +179,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * @see NodeDefinition#isMandatory
      */
     public NodeDefinition[] getMandatoryNodeDefinitions() {
-        NodeDef[] cnda = ent.getMandatoryNodeDefs();
+        QNodeDefinition[] cnda = ent.getMandatoryNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
         }
         return nodeDefs;
     }
@@ -349,10 +351,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * {@inheritDoc}
      */
     public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        NodeDef[] cnda = ntd.getChildNodeDefs();
+        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
         }
         return nodeDefs;
     }
@@ -397,10 +399,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * {@inheritDoc}
      */
     public NodeDefinition[] getChildNodeDefinitions() {
-        NodeDef[] cnda = ent.getAllNodeDefs();
+        QNodeDefinition[] cnda = ent.getAllNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
         }
         return nodeDefs;
     }
@@ -409,10 +411,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * {@inheritDoc}
      */
     public PropertyDefinition[] getPropertyDefinitions() {
-        PropDef[] pda = ent.getAllPropDefs();
+        QPropertyDefinition[] pda = ent.getAllPropDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
         }
         return propDefs;
     }
@@ -427,7 +429,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
         }
         try {
             Name name = resolver.getQName(propertyName);
-            PropDef def;
+            QPropertyDefinition def;
             try {
                 // try to get definition that matches the given value type
                 def = ent.getApplicablePropertyDef(name, value.getType(), false);
@@ -498,7 +500,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
                     return false;
                 }
             }
-            PropDef def;
+            QPropertyDefinition def;
             try {
                 // try to get definition that matches the given value type
                 def = ent.getApplicablePropertyDef(name, type, true);
@@ -607,10 +609,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * {@inheritDoc}
      */
     public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        PropDef[] pda = ntd.getPropertyDefs();
+        QPropertyDefinition[] pda = ntd.getPropertyDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
         }
         return propDefs;
     }

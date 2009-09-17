@@ -18,7 +18,11 @@ package org.apache.jackrabbit.core.nodetype;
 
 import javax.jcr.nodetype.NodeTypeDefinition;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,7 +167,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
      * {@inheritDoc}
      */
     public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        NodeDef[] cnda = ntd.getChildNodeDefs();
+        QItemDefinition[] cnda = ntd.getChildNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
             nodeDefs[i] = new NodeDefinitionImpl(cnda[i], null, resolver);
@@ -175,7 +179,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
      * {@inheritDoc}
      */
     public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        PropDef[] pda = ntd.getPropertyDefs();
+        QPropertyDefinition[] pda = ntd.getPropertyDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
             propDefs[i] = new PropertyDefinitionImpl(pda[i], null, resolver, valueFactory);

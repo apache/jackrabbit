@@ -61,13 +61,17 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
-import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
-import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.spi.commons.nodetype.*;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -108,13 +112,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      * A cache for <code>PropertyDefinition</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map<PropDefId, PropertyDefinitionImpl> pdCache;
+    private final Map<QPropertyDefinition, PropertyDefinitionImpl> pdCache;
 
     /**
      * A cache for <code>NodeDefinition</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map<NodeDefId, NodeDefinitionImpl> ndCache;
+    private final Map<QNodeDefinition, NodeDefinitionImpl> ndCache;
 
     private final DataStore store;
 
@@ -144,7 +148,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
 
         rootNodeDef =
             new NodeDefinitionImpl(ntReg.getRootNodeDef(), this, session);
-        ndCache.put(rootNodeDef.unwrap().getId(), rootNodeDef);
+        ndCache.put(rootNodeDef.unwrap(), rootNodeDef);
     }
 
     /**
@@ -155,36 +159,30 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
     }
 
     /**
-     * @param id node def id
+     * @param def the QNodeDefinition
      * @return the node definition
      */
-    public NodeDefinitionImpl getNodeDefinition(NodeDefId id) {
+    public NodeDefinitionImpl getNodeDefinition(QNodeDefinition def) {
         synchronized (ndCache) {
-            NodeDefinitionImpl ndi = ndCache.get(id);
+            NodeDefinitionImpl ndi = ndCache.get(def);
             if (ndi == null) {
-                NodeDef nd = ntReg.getNodeDef(id);
-                if (nd != null) {
-                    ndi = new NodeDefinitionImpl(nd, this, session);
-                    ndCache.put(id, ndi);
-                }
+                ndi = new NodeDefinitionImpl(def, this, session);
+                ndCache.put(def, ndi);
             }
             return ndi;
         }
     }
 
     /**
-     * @param id prop def id
+     * @param def prop def
      * @return the property definition
      */
-    public PropertyDefinitionImpl getPropertyDefinition(PropDefId id) {
+    public PropertyDefinitionImpl getPropertyDefinition(QPropertyDefinition def) {
         synchronized (pdCache) {
-            PropertyDefinitionImpl pdi = pdCache.get(id);
+            PropertyDefinitionImpl pdi = pdCache.get(def);
             if (pdi == null) {
-                PropDef pd = ntReg.getPropDef(id);
-                if (pd != null) {
-                    pdi = new PropertyDefinitionImpl(pd, this, session, valueFactory);
-                    pdCache.put(id, pdi);
-                }
+                pdi = new PropertyDefinitionImpl(def, this, session, valueFactory);
+                pdCache.put(def, pdi);
             }
             return pdi;
         }
@@ -351,7 +349,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
         synchronized (ndCache) {
             Iterator iter = ndCache.values().iterator();
             while (iter.hasNext()) {
-                NodeDefinitionImpl nd = (NodeDefinitionImpl) iter.next();
+                NodeDefinitionImpl nd = (org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl) iter.next();
                 if (ntName.equals(nd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
@@ -695,16 +693,16 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
         // child nodes
         NodeDefinition[] ndefs = definition.getDeclaredChildNodeDefinitions();
         if (ndefs != null) {
-            NodeDef[] qndefs = new NodeDef[ndefs.length];
+            QNodeDefinition[] qndefs = new QNodeDefinition[ndefs.length];
             for (int i = 0; i < ndefs.length; i++) {
-                NodeDefImpl qndef = new NodeDefImpl();
+                QNodeDefinitionBuilder qndef = new QNodeDefinitionBuilder();
                 // declaring node type
                 qndef.setDeclaringNodeType(def.getName());
                 // name
                 name = ndefs[i].getName();
                 if (name != null) {
                     if (name.equals("*")) {
-                        qndef.setName(ItemDef.ANY_NAME);
+                        qndef.setName(NameConstants.ANY_NAME);
                     } else {
                         try {
                             qndef.setName(session.getQName(name));
@@ -747,7 +745,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                 qndef.setOnParentVersion(ndefs[i].getOnParentVersion());
                 qndef.setAllowsSameNameSiblings(ndefs[i].allowsSameNameSiblings());
 
-                qndefs[i] = qndef;
+                qndefs[i] = qndef.build();
             }
             def.setChildNodeDefs(qndefs);
         }
@@ -755,16 +753,16 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
         // properties
         PropertyDefinition[] pdefs = definition.getDeclaredPropertyDefinitions();
         if (pdefs != null) {
-            PropDef[] qpdefs = new PropDef[pdefs.length];
+            QPropertyDefinition[] qpdefs = new QPropertyDefinition[pdefs.length];
             for (int i = 0; i < pdefs.length; i++) {
-                PropDefImpl qpdef = new PropDefImpl();
+                QPropertyDefinitionBuilder qpdef = new QPropertyDefinitionBuilder();
                 // declaring node type
                 qpdef.setDeclaringNodeType(def.getName());
                 // name
                 name = pdefs[i].getName();
                 if (name != null) {
                     if (name.equals("*")) {
-                        qpdef.setName(ItemDef.ANY_NAME);
+                        qpdef.setName(NameConstants.ANY_NAME);
                     } else {
                         try {
                             qpdef.setName(session.getQName(name));
@@ -812,7 +810,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                     qpdef.setDefaultValues(qvalues);
                 }
 
-                qpdefs[i] = qpdef;
+                qpdefs[i] = qpdef.build();
             }
             def.setPropertyDefs(qpdefs);
         }

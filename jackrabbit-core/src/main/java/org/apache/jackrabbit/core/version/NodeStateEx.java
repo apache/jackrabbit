@@ -30,10 +30,8 @@ import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -42,6 +40,8 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
@@ -68,6 +68,11 @@ public class NodeStateEx {
      * the cached name
      */
     private Name name;
+
+    /**
+     * the cached node definition
+     */
+    private QNodeDefinition def;
 
     /**
      * Creates a new persistent node
@@ -280,13 +285,9 @@ public class NodeStateEx {
                 throw new RepositoryException("Unable to create property: " + e.toString());
             }
         } else {
-
-            PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(name, type, multiple);
-
             PropertyState propState = stateMgr.createNew(name, nodeState.getNodeId());
             propState.setType(type);
             propState.setMultiValued(multiple);
-            propState.setDefinitionId(pd.getId());
             propState.setValues(values);
 
             // need to store node state
@@ -560,10 +561,6 @@ public class NodeStateEx {
         }
         NodeState state = stateMgr.createNew(id, nodeTypeName, parentId);
 
-        NodeDef cnd =
-                getEffectiveNodeType().getApplicableChildNodeDef(name, nodeTypeName, ntReg);
-        state.setDefinitionId(cnd.getId());
-
         // create Node instance wrapping new node state
         NodeStateEx node = new NodeStateEx(stateMgr, ntReg, state, name);
         node.setPropertyValue(NameConstants.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
@@ -589,10 +586,11 @@ public class NodeStateEx {
         if (name == null) {
             name = src.getName();
         }
+        EffectiveNodeType ent = getEffectiveNodeType();
         // (4) check for name collisions
-        NodeDef def;
+        QNodeDefinition def;
         try {
-            def = getEffectiveNodeType().getApplicableChildNodeDef(name, nodeState.getNodeTypeName(), ntReg);
+            def = ent.getApplicableChildNodeDef(name, nodeState.getNodeTypeName(), ntReg);
         } catch (RepositoryException re) {
             String msg = "no definition found in parent node's node type for new node";
             throw new ConstraintViolationException(msg, re);
@@ -611,7 +609,9 @@ public class NodeStateEx {
             } catch (ItemStateException e) {
                 throw new RepositoryException(e);
             }
-            if (!ntReg.getNodeDef(existingChild.getDefinitionId()).allowsSameNameSiblings()) {
+            QNodeDefinition existingChildDef = ent.getApplicableChildNodeDef(
+                    cne.getName(), existingChild.getNodeTypeName(), ntReg);
+            if (!existingChildDef.allowsSameNameSiblings()) {
                 throw new ItemExistsException(existingChild.toString());
             }
         } else {
@@ -646,8 +646,7 @@ public class NodeStateEx {
             }
             NodeState srcState = src.getState();
             srcState.setParentId(getNodeId());
-            srcState.setDefinitionId(def.getId());
-            
+
             if (srcState.getStatus() == ItemState.STATUS_EXISTING) {
                 srcState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
             }
@@ -823,20 +822,29 @@ public class NodeStateEx {
     }
 
     /**
-     * Returns the NodeDef for this state
+     * Returns the QNodeDefinition for this state
      * @return the node def
+     * @throws RepositoryException if an error occurs
      */
-    public NodeDef getDefinition() {
-        return ntReg.getNodeDef(nodeState.getDefinitionId());
+    public QNodeDefinition getDefinition() throws RepositoryException {
+        if (def == null) {
+            EffectiveNodeType ent = getParent().getEffectiveNodeType();
+            def = ent.getApplicableChildNodeDef(getName(),
+                    nodeState.getNodeTypeName(), ntReg);
+        }
+        return def;
     }
 
     /**
      * Returns the property definition for the property state
      * @param prop the property state
      * @return the prop def
+     * @throws RepositoryException if an error occurs
      */
-    public PropDef getDefinition(PropertyState prop) {
-        return ntReg.getPropDef(prop.getDefinitionId());
+    public QPropertyDefinition getDefinition(PropertyState prop)
+            throws RepositoryException {
+        return getEffectiveNodeType().getApplicablePropertyDef(
+                prop.getName(), prop.getType(), prop.isMultiValued());
     }
 
     /**

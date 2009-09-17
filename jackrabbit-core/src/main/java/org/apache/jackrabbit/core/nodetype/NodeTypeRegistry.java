@@ -47,11 +47,14 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.QNodeDefinitionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +72,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME =
             "custom_nodetypes.xml";
 
-    // file system where node type registrations are persisted
-    private final FileSystem ntStore;
     /**
      * resource holding custom node type definitions which are represented as
      * nodes in the repository; it is needed in order to make the registrations
@@ -89,12 +90,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private final Map<Name, NodeTypeDef> registeredNTDefs;
 
     // definition of the root node
-    private final NodeDef rootNodeDef;
-
-    // map of id's and property definitions
-    private final Map<PropDefId, PropDef> propDefs;
-    // map of id's and node definitions
-    private final Map<NodeDefId, NodeDef> nodeDefs;
+    private final QNodeDefinition rootNodeDef;
 
     /**
      * namespace registry for resolving prefixes and namespace URI's;
@@ -558,22 +554,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param id node def id
-     * @return the node definition for the given id.
-     */
-    public NodeDef getNodeDef(NodeDefId id) {
-        return nodeDefs.get(id);
-    }
-
-    /**
-     * @param id property def id
-     * @return the property definition for the given id.
-     */
-    public PropDef getPropDef(PropDefId id) {
-        return propDefs.get(id);
-    }
-
-    /**
      * Add a <code>NodeTypeRegistryListener</code>
      *
      * @param listener the new listener to be informed on (un)registration
@@ -613,10 +593,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             ps.println("\tMixin\t" + ntd.isMixin());
             ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
             ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
-            PropDef[] pd = ntd.getPropertyDefs();
-            for (PropDef aPd : pd) {
+            QPropertyDefinition[] pd = ntd.getPropertyDefs();
+            for (QPropertyDefinition aPd : pd) {
                 ps.print("\tPropertyDefinition");
-                ps.println(" (declared in " + aPd.getDeclaringNodeType() + ") id=" + aPd.getId());
+                ps.println(" (declared in " + aPd.getDeclaringNodeType() + ")");
                 ps.println("\t\tName\t\t" + (aPd.definesResidual() ? "*" : aPd.getName().toString()));
                 String type = aPd.getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(aPd.getRequiredType());
                 ps.println("\t\tRequiredType\t" + type);
@@ -633,12 +613,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                     }
                 }
                 ps.println("\t\tValueConstraints\t" + constraints.toString());
-                InternalValue[] defVals = aPd.getDefaultValues();
+                QValue[] defVals = aPd.getDefaultValues();
                 StringBuffer defaultValues = new StringBuffer();
                 if (defVals == null) {
                     defaultValues.append("<null>");
                 } else {
-                    for (InternalValue defVal : defVals) {
+                    for (QValue defVal : defVals) {
                         if (defaultValues.length() > 0) {
                             defaultValues.append(", ");
                         }
@@ -652,10 +632,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                 ps.println("\t\tProtected\t" + aPd.isProtected());
                 ps.println("\t\tMultiple\t" + aPd.isMultiple());
             }
-            NodeDef[] nd = ntd.getChildNodeDefs();
-            for (NodeDef aNd : nd) {
+            QNodeDefinition[] nd = ntd.getChildNodeDefs();
+            for (QNodeDefinition aNd : nd) {
                 ps.print("\tNodeDefinition");
-                ps.println(" (declared in " + aNd.getDeclaringNodeType() + ") id=" + aNd.getId());
+                ps.println(" (declared in " + aNd.getDeclaringNodeType() + ")");
                 ps.println("\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()));
                 Name[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
                 if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
@@ -721,9 +701,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     protected NodeTypeRegistry(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
         this.nsReg = nsReg;
-        this.ntStore = ntStore;
         customNodeTypesResource =
-                new FileSystemResource(this.ntStore, CUSTOM_NODETYPES_RESOURCE_NAME);
+                new FileSystemResource(ntStore, CUSTOM_NODETYPES_RESOURCE_NAME);
         try {
             // make sure path to resource exists
             if (!customNodeTypesResource.exists()) {
@@ -741,12 +720,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // for the old one)
         entCache = new BitsetENTCacheImpl();
         registeredNTDefs = new ConcurrentReaderHashMap();
-        propDefs = new ConcurrentReaderHashMap();
-        nodeDefs = new ConcurrentReaderHashMap();
 
         // setup definition of root node
         rootNodeDef = createRootNodeDef();
-        nodeDefs.put(rootNodeDef.getId(), rootNodeDef);
 
         // load and register pre-defined (i.e. built-in) node types
         builtInNTDefs = new NodeTypeDefStore();
@@ -979,7 +955,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * @return the definition of the root node
      */
-    public NodeDef getRootNodeDef() {
+    public QNodeDefinition getRootNodeDef() {
         return rootNodeDef;
     }
 
@@ -1183,8 +1159,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             }
         }
 
-        NodeDef[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
-        for (NodeDef nodeDef : nodeDefs) {
+        QNodeDefinition[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
+        for (QNodeDefinition nodeDef : nodeDefs) {
             Name dnt = nodeDef.getDefaultPrimaryType();
             Name definingNT = nodeDef.getDeclaringNodeType();
             try {
@@ -1223,16 +1199,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // register clone of node type definition
         ntd = (NodeTypeDef) ntd.clone();
         registeredNTDefs.put(name, ntd);
-
-        // store property & child node definitions of new node type by id
-        PropDef[] pda = ntd.getPropertyDefs();
-        for (PropDef aPda : pda) {
-            propDefs.put(aPda.getId(), aPda);
-        }
-        NodeDef[] nda = ntd.getChildNodeDefs();
-        for (NodeDef aNda : nda) {
-            nodeDefs.put(aNda.getId(), aNda);
-        }
 
         return ent;
     }
@@ -1309,15 +1275,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             // register clone of node type definition
             ntd = (NodeTypeDef) ntd.clone();
             registeredNTDefs.put(ntd.getName(), ntd);
-            // store property & child node definitions of new node type by id
-            PropDef[] pda = ntd.getPropertyDefs();
-            for (PropDef aPda : pda) {
-                propDefs.put(aPda.getId(), aPda);
-            }
-            NodeDef[] nda = ntd.getChildNodeDefs();
-            for (NodeDef aNda : nda) {
-                nodeDefs.put(aNda.getId(), aNda);
-            }
         }
 
         // finally add newly created effective node types to entCache
@@ -1331,16 +1288,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
         registeredNTDefs.remove(name);
         entCache.invalidate(name);
-
-        // remove property & child node definitions
-        PropDef[] pda = ntd.getPropertyDefs();
-        for (PropDef aPda : pda) {
-            propDefs.remove(aPda.getId());
-        }
-        NodeDef[] nda = ntd.getChildNodeDefs();
-        for (NodeDef aNda : nda) {
-            nodeDefs.remove(aNda.getId());
-        }
     }
 
     private void internalUnregister(Collection<Name> ntNames)
@@ -1525,8 +1472,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         checkNamespace(ntd.getPrimaryItemName(), nsReg);
 
         // validate property definitions
-        PropDef[] pda = ntd.getPropertyDefs();
-        for (PropDef pd : pda) {
+        QPropertyDefinition[] pda = ntd.getPropertyDefs();
+        for (QPropertyDefinition pd : pda) {
             /**
              * sanity check:
              * make sure declaring node type matches name of node type definition
@@ -1557,10 +1504,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
              * check default values:
              * make sure type of value is consistent with required property type
              */
-            InternalValue[] defVals = pd.getDefaultValues();
+            QValue[] defVals = pd.getDefaultValues();
             if (defVals != null && defVals.length != 0) {
                 int reqType = pd.getRequiredType();
-                for (InternalValue defVal : defVals) {
+                for (QValue defVal : defVals) {
                     if (reqType == PropertyType.UNDEFINED) {
                         reqType = defVal.getType();
                     } else {
@@ -1590,7 +1537,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             if (constraints != null && constraints.length > 0) {
                 if (defVals != null && defVals.length > 0) {
                     // check value constraints on every value
-                    for (InternalValue defVal : defVals) {
+                    for (QValue defVal : defVals) {
                         // constraints are OR-ed together
                         boolean satisfied = false;
                         ConstraintViolationException cve = null;
@@ -1638,8 +1585,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // validate child-node definitions
-        NodeDef[] cnda = ntd.getChildNodeDefs();
-        for (NodeDef cnd : cnda) {
+        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
+        for (QNodeDefinition cnd : cnda) {
             /**
              * sanity check:
              * make sure declaring node type matches name of node type definition
@@ -1816,8 +1763,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         return ent;
     }
 
-    private static NodeDef createRootNodeDef() {
-        NodeDefImpl def = new NodeDefImpl();
+    private static QNodeDefinition createRootNodeDef() {
+        QNodeDefinitionBuilder def = new QNodeDefinitionBuilder();
 
         // FIXME need a fake declaring node type:
         // rep:root is not quite correct but better than a non-existing node type
@@ -1829,7 +1776,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         def.setOnParentVersion(OnParentVersionAction.VERSION);
         def.setAllowsSameNameSiblings(false);
         def.setAutoCreated(true);
-        return def;
+        return def.build();
     }
 
     /**

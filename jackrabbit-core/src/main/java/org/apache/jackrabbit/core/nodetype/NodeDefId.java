@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -25,7 +26,7 @@ import java.util.Arrays;
  * <code>NodeDefId</code> uniquely identifies a <code>NodeDef</code> in the
  * node type registry.
  */
-public class NodeDefId implements Serializable {
+class NodeDefId implements Serializable {
 
     /**
      * Serialization UID of this class.
@@ -45,7 +46,7 @@ public class NodeDefId implements Serializable {
      *
      * @param def <code>NodeDef</code> to create identifier for
      */
-    NodeDefId(NodeDef def) {
+    public NodeDefId(QNodeDefinition def) {
         if (def == null) {
             throw new IllegalArgumentException("NodeDef argument can not be null");
         }

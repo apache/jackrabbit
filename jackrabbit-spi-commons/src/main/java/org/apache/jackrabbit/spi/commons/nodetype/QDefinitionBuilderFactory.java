@@ -327,10 +327,6 @@ public class QDefinitionBuilderFactory extends DefinitionBuilderFactory<QNodeTyp
 
         @Override
         public void build() {
-            if (builder.getRequiredPrimaryTypes() == null) {
-                builder.addRequiredPrimaryType(NameConstants.NT_BASE);
-            }
-
             ntd.childNodeDefs.add(builder.build());
         }
     }

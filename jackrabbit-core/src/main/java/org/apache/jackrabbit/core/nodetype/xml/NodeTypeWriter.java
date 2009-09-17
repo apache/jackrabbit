@@ -16,11 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.util.DOMBuilder;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -30,6 +27,9 @@ import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -165,14 +165,14 @@ public final class NodeTypeWriter {
         }
 
         // property definitions
-        PropDef[] properties = def.getPropertyDefs();
-        for (PropDef property : properties) {
+        QPropertyDefinition[] properties = def.getPropertyDefs();
+        for (QPropertyDefinition property : properties) {
             addPropDef(property);
         }
 
         // child node definitions
-        NodeDef[] nodes = def.getChildNodeDefs();
-        for (NodeDef node : nodes) {
+        QNodeDefinition[] nodes = def.getChildNodeDefs();
+        for (QNodeDefinition node : nodes) {
             addChildNodeDef(node);
         }
 
@@ -188,7 +188,7 @@ public final class NodeTypeWriter {
      * @throws NamespaceException if the property definition contains
      *                                   invalid namespace references
      */
-    private void addPropDef(PropDef def)
+    private void addPropDef(QPropertyDefinition def)
             throws NamespaceException, RepositoryException {
         builder.startElement(Constants.PROPERTYDEFINITION_ELEMENT);
 
@@ -261,10 +261,10 @@ public final class NodeTypeWriter {
         }
 
         // default values
-        InternalValue[] defaults = def.getDefaultValues();
+        QValue[] defaults = def.getDefaultValues();
         if (defaults != null && defaults.length > 0) {
             builder.startElement(Constants.DEFAULTVALUES_ELEMENT);
-            for (InternalValue v : defaults) {
+            for (QValue v : defaults) {
                 builder.addContentElement(
                         Constants.DEFAULTVALUE_ELEMENT,
                         factory.createValue(v).getString());
@@ -282,7 +282,7 @@ public final class NodeTypeWriter {
      * @throws NamespaceException if the child node definition contains
      *                                   invalid namespace references
      */
-    private void addChildNodeDef(NodeDef def)
+    private void addChildNodeDef(QNodeDefinition def)
             throws NamespaceException {
         builder.startElement(Constants.CHILDNODEDEFINITION_ELEMENT);
 

@@ -24,8 +24,6 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -87,7 +85,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     private static final String UUID_ATTRIBUTE = "uuid";
     private static final String NODETYPE_ATTRIBUTE = "nodeType";
     private static final String PARENTUUID_ATTRIBUTE = "parentUUID";
-    private static final String DEFINITIONID_ATTRIBUTE = "definitionId";
     private static final String MODCOUNT_ATTRIBUTE = "modCount";
 
     private static final String MIXINTYPES_ELEMENT = "mixinTypes";
@@ -243,10 +240,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             state.setParentId(NodeId.valueOf(parentUUID));
         }
 
-        // definition id
-        String definitionId = walker.getAttribute(DEFINITIONID_ATTRIBUTE);
-        state.setDefinitionId(NodeDefId.valueOf(definitionId));
-
         // modification count
         String modCount = walker.getAttribute(MODCOUNT_ATTRIBUTE);
         state.setModCount(Short.parseShort(modCount));
@@ -323,10 +316,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         // multiValued
         String multiValued = walker.getAttribute(MULTIVALUED_ATTRIBUTE);
         state.setMultiValued(Boolean.getBoolean(multiValued));
-
-        // definition id
-        String definitionId = walker.getAttribute(DEFINITIONID_ATTRIBUTE);
-        state.setDefinitionId(PropDefId.valueOf(definitionId));
 
         // modification count
         String modCount = walker.getAttribute(MODCOUNT_ATTRIBUTE);
@@ -567,7 +556,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.write("<" + NODE_ELEMENT + " "
                         + UUID_ATTRIBUTE + "=\"" + id + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + parentId + "\" "
-                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId() + "\" "
                         + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
                         + NODETYPE_ATTRIBUTE + "=\"" + encodedNodeType + "\">\n");
 
@@ -650,7 +638,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getName().toString()) + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentId() + "\" "
                         + MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" "
-                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
                         + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
                         + TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
                 // values

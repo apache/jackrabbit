@@ -34,7 +34,6 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -43,6 +42,7 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -428,7 +428,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         }
 
         // add 'auto-create' properties that do not exist yet
-        for (PropDef def: state.getEffectiveNodeType().getAutoCreatePropDefs()) {
+        for (QPropertyDefinition def: state.getEffectiveNodeType().getAutoCreatePropDefs()) {
             if (!state.hasProperty(def.getName())) {
                 InternalValue[] values = computeAutoValues(state, def, true);
                 if (values != null) {
@@ -644,14 +644,16 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
      * @param def property definition
      * @param useDefaultValues if <code>true</code> the default values are respected
      * @return the values or <code>null</code>
+     * @throws RepositoryException if the values cannot be computed.
      */
-    private InternalValue[] computeAutoValues(NodeStateEx state, PropDef def,
-                                                     boolean useDefaultValues) {
+    private InternalValue[] computeAutoValues(NodeStateEx state, QPropertyDefinition def,
+                                              boolean useDefaultValues)
+            throws RepositoryException {
         // compute system generated values if necessary
         InternalValue[] values = session.getNodeTypeInstanceHandler().
                 computeSystemGeneratedPropertyValues(state.getState(), def);
         if (values == null && useDefaultValues) {
-            values = def.getDefaultValues();
+            values = InternalValue.create(def.getDefaultValues());
         }
         // avoid empty value array for single value property
         if (values != null && values.length == 0 && !def.isMultiple()) {

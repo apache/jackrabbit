@@ -72,7 +72,17 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
         this.valueFactory = valueFactory;
     }
 
+    /**
+     * Returns the wrapped property definition.
+     *
+     * @return the wrapped property definition.
+     */
+    public QPropertyDefinition unwrap() {
+        return (QPropertyDefinition) itemDef;
+    }
+
     //-------------------------------------------------< PropertyDefinition >---
+
     /**
      * {@inheritDoc}
      */

@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.nodetype.NodeDefinition;
@@ -44,7 +45,7 @@ class QNodeDefinitionImpl
     QNodeDefinitionImpl(NodeDefinition nodeDef,
                         NamePathResolver resolver)
             throws NameException, NamespaceException {
-        super(nodeDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : resolver.getQName(nodeDef.getName()),
+        super(nodeDef.getName().equals(NameConstants.ANY_NAME.getLocalName()) ? NameConstants.ANY_NAME : resolver.getQName(nodeDef.getName()),
                 nodeDef.getDeclaringNodeType() != null ? resolver.getQName(nodeDef.getDeclaringNodeType().getName()) : null,
                 nodeDef.isAutoCreated(), nodeDef.isMandatory(),
                 nodeDef.getOnParentVersion(), nodeDef.isProtected(),

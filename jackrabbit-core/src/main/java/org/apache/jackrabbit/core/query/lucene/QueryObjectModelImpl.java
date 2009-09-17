@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
 import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
@@ -39,6 +38,7 @@ import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisit
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 
 /**
  * <code>QueryObjectModelImpl</code>...
@@ -123,7 +123,7 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
                 NodeTypeImpl nt = ntMgr.getNodeType(selector.getNodeTypeQName());
                 for (PropertyDefinition pd : nt.getPropertyDefinitions()) {
                     PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) pd;
-                    if (!propDef.definesResidual() && !propDef.isMultiple()) {
+                    if (!propDef.unwrap().definesResidual() && !propDef.isMultiple()) {
                         String sn = selector.getSelectorName();
                         String pn = propDef.getName();
                         columns.add((ColumnImpl) qomFactory.column(sn, pn, sn + "." + pn));

@@ -19,10 +19,10 @@ package org.apache.jackrabbit.core;
 import java.util.Calendar;
 import java.util.Set;
 
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
@@ -60,7 +60,7 @@ public class NodeTypeInstanceHandler {
      * @return the computed values
      */
     public InternalValue[] computeSystemGeneratedPropertyValues(NodeState parent, 
-                                                                PropDef def) {
+                                                                QPropertyDefinition def) {
 
         InternalValue[] genValues = null;
 

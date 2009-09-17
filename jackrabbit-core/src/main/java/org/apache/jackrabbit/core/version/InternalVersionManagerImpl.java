@@ -190,12 +190,8 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             if (false && !pMgr.exists(systemId)) {
                 NodeState root = pMgr.createNew(systemId);
                 root.setParentId(RepositoryImpl.ROOT_NODE_ID);
-                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_ROOT).getApplicableChildNodeDef(
-                        NameConstants.JCR_SYSTEM, NameConstants.REP_SYSTEM, ntReg).getId());
                 root.setNodeTypeName(NameConstants.REP_SYSTEM);
                 PropertyState pt = pMgr.createNew(new PropertyId(systemId, NameConstants.JCR_PRIMARYTYPE));
-                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicablePropertyDef(
-                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
                 pt.setType(PropertyType.NAME);
                 pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_SYSTEM)});
@@ -215,12 +211,8 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             if (!pMgr.exists(historiesId)) {
                 NodeState root = pMgr.createNew(historiesId);
                 root.setParentId(systemId);
-                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
-                        NameConstants.JCR_VERSIONSTORAGE, NameConstants.REP_VERSIONSTORAGE, ntReg).getId());
                 root.setNodeTypeName(NameConstants.REP_VERSIONSTORAGE);
                 PropertyState pt = pMgr.createNew(new PropertyId(historiesId, NameConstants.JCR_PRIMARYTYPE));
-                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_VERSIONSTORAGE).getApplicablePropertyDef(
-                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
                 pt.setType(PropertyType.NAME);
                 pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_VERSIONSTORAGE)});
@@ -235,12 +227,8 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             if (!pMgr.exists(activitiesId)) {
                 NodeState root = pMgr.createNew(activitiesId);
                 root.setParentId(systemId);
-                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
-                        NameConstants.JCR_ACTIVITIES, NameConstants.REP_ACTIVITIES, ntReg).getId());
                 root.setNodeTypeName(NameConstants.REP_ACTIVITIES);
                 PropertyState pt = pMgr.createNew(new PropertyId(activitiesId, NameConstants.JCR_PRIMARYTYPE));
-                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_ACTIVITIES).getApplicablePropertyDef(
-                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
                 pt.setType(PropertyType.NAME);
                 pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_ACTIVITIES)});

@@ -17,12 +17,7 @@
 package org.apache.jackrabbit.core.nodetype.xml;
 
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.ItemDef;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
@@ -34,9 +29,14 @@ import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.spi.commons.nodetype.QNodeDefinitionBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QPropertyDefinitionBuilder;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.PropertyType;
@@ -183,22 +183,22 @@ public class NodeTypeReader {
         }
 
         // property definitions
-        List<PropDef> properties = new ArrayList<PropDef>();
+        List<QPropertyDefinition> properties = new ArrayList<QPropertyDefinition>();
         while (walker.iterateElements(Constants.PROPERTYDEFINITION_ELEMENT)) {
-            PropDefImpl def = getPropDef();
+            QPropertyDefinitionBuilder def = getPropDef();
             def.setDeclaringNodeType(type.getName());
-            properties.add(def);
+            properties.add(def.build());
         }
-        type.setPropertyDefs(properties.toArray(new PropDef[properties.size()]));
+        type.setPropertyDefs(properties.toArray(new QPropertyDefinition[properties.size()]));
 
         // child node definitions
-        List<NodeDef> nodes = new ArrayList<NodeDef>();
+        List<QNodeDefinition> nodes = new ArrayList<QNodeDefinition>();
         while (walker.iterateElements(Constants.CHILDNODEDEFINITION_ELEMENT)) {
-            NodeDefImpl def = getChildNodeDef();
+            QNodeDefinitionBuilder def = getChildNodeDef();
             def.setDeclaringNodeType(type.getName());
-            nodes.add(def);
+            nodes.add(def.build());
         }
-        type.setChildNodeDefs(nodes.toArray(new NodeDef[nodes.size()]));
+        type.setChildNodeDefs(nodes.toArray(new QNodeDefinition[nodes.size()]));
 
         return type;
     }
@@ -212,26 +212,23 @@ public class NodeTypeReader {
      *                                     illegal name
      * @throws NamespaceException if a namespace is not defined
      */
-    private PropDefImpl getPropDef()
+    private QPropertyDefinitionBuilder getPropDef()
             throws InvalidNodeTypeDefException, NameException, NamespaceException {
-        PropDefImpl def = new PropDefImpl();
+        QPropertyDefinitionBuilder def = new QPropertyDefinitionBuilder();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
-            def.setName(ItemDef.ANY_NAME);
+            def.setName(NameConstants.ANY_NAME);
         } else {
             def.setName(resolver.getQName(name));
         }
 
         // simple attributes
         def.setAutoCreated(Boolean.valueOf(
-                walker.getAttribute(Constants.AUTOCREATED_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.AUTOCREATED_ATTRIBUTE)));
         def.setMandatory(Boolean.valueOf(
-                walker.getAttribute(Constants.MANDATORY_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.MANDATORY_ATTRIBUTE)));
         def.setProtected(Boolean.valueOf(
-                walker.getAttribute(Constants.PROTECTED_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.PROTECTED_ATTRIBUTE)));
         def.setOnParentVersion(OnParentVersionAction.valueFromName(
                 walker.getAttribute(Constants.ONPARENTVERSION_ATTRIBUTE)));
         def.setMultiple(Boolean.valueOf(
@@ -320,25 +317,22 @@ public class NodeTypeReader {
      * @throws NameException if the definition contains an illegal name
      * @throws NamespaceException if a namespace is not defined
      */
-    private NodeDefImpl getChildNodeDef() throws NameException, NamespaceException {
-        NodeDefImpl def = new NodeDefImpl();
+    private QNodeDefinitionBuilder getChildNodeDef() throws NameException, NamespaceException {
+        QNodeDefinitionBuilder def = new QNodeDefinitionBuilder();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
-            def.setName(ItemDef.ANY_NAME);
+            def.setName(NameConstants.ANY_NAME);
         } else {
             def.setName(resolver.getQName(name));
         }
 
         // simple attributes
         def.setAutoCreated(Boolean.valueOf(
-                walker.getAttribute(Constants.AUTOCREATED_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.AUTOCREATED_ATTRIBUTE)));
         def.setMandatory(Boolean.valueOf(
-                walker.getAttribute(Constants.MANDATORY_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.MANDATORY_ATTRIBUTE)));
         def.setProtected(Boolean.valueOf(
-                walker.getAttribute(Constants.PROTECTED_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.PROTECTED_ATTRIBUTE)));
         def.setOnParentVersion(OnParentVersionAction.valueFromName(
                 walker.getAttribute(Constants.ONPARENTVERSION_ATTRIBUTE)));
         def.setAllowsSameNameSiblings(Boolean.valueOf(

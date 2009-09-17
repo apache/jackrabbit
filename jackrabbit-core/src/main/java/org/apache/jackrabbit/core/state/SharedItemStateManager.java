@@ -24,7 +24,6 @@ import java.util.Set;
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
@@ -33,11 +32,8 @@ import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
@@ -47,6 +43,7 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -621,18 +618,28 @@ public class SharedItemStateManager
                                         }
 
                                         public boolean allowsSameNameSiblings(NodeId id) {
-                                            NodeState ns;
                                             try {
-                                                if (local.has(id)) {
-                                                    ns = (NodeState) local.get(id);
-                                                } else {
-                                                    ns = (NodeState) getItemState(id);
-                                                }
-                                            } catch (ItemStateException e) {
+                                                NodeState ns = getNodeState(id);
+                                                NodeState parent = getNodeState(ns.getParentId());
+                                                Name name = parent.getChildNodeEntry(id).getName();
+                                                EffectiveNodeType ent = ntReg.getEffectiveNodeType(
+                                                        parent.getNodeTypeName(),
+                                                        parent.getMixinTypeNames());
+                                                QNodeDefinition def = ent.getApplicableChildNodeDef(name, ns.getNodeTypeName(), ntReg);
+                                                return def != null ? def.allowsSameNameSiblings() : false;
+                                            } catch (Exception e) {
+                                                log.warn("Unable to get node definition", e);
                                                 return false;
                                             }
-                                            NodeDef def = ntReg.getNodeDef(ns.getDefinitionId());
-                                            return def != null ? def.allowsSameNameSiblings() : false;
+                                        }
+
+                                        protected NodeState getNodeState(NodeId id)
+                                                throws ItemStateException {
+                                            if (local.has(id)) {
+                                                return (NodeState) local.get(id);
+                                            } else {
+                                                return (NodeState) getItemState(id);
+                                            }
                                         }
                                     };
 
@@ -1248,47 +1255,21 @@ public class SharedItemStateManager
         // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
         // @todo delegate setup of root node to NodeTypeInstanceHandler
 
-        // id of the root node's definition
-        NodeDefId nodeDefId;
-        // definition of jcr:primaryType property
-        PropDef propDef;
-        // id of the jcr:system node's definition
-        NodeDefId jcrSystemDefId;
-        try {
-            nodeDefId = ntReg.getRootNodeDef().getId();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NameConstants.REP_ROOT);
-            propDef = ent.getApplicablePropertyDef(NameConstants.JCR_PRIMARYTYPE,
-                    PropertyType.NAME, false);
-            jcrSystemDefId = ent.getApplicableChildNodeDef(NameConstants.JCR_SYSTEM, NameConstants.REP_SYSTEM, ntReg).getId();
-        } catch (NoSuchNodeTypeException nsnte) {
-            String msg = "internal error: failed to create root node";
-            log.error(msg, nsnte);
-            throw new ItemStateException(msg, nsnte);
-        } catch (ConstraintViolationException cve) {
-            String msg = "internal error: failed to create root node";
-            log.error(msg, cve);
-            throw new ItemStateException(msg, cve);
-        }
-        rootState.setDefinitionId(nodeDefId);
-        jcrSystemState.setDefinitionId(jcrSystemDefId);
-
         // create jcr:primaryType property on root node state
-        rootState.addPropertyName(propDef.getName());
+        rootState.addPropertyName(NameConstants.JCR_PRIMARYTYPE);
 
-        PropertyState prop = createInstance(propDef.getName(), rootNodeId);
+        PropertyState prop = createInstance(NameConstants.JCR_PRIMARYTYPE, rootNodeId);
         prop.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_ROOT)});
-        prop.setType(propDef.getRequiredType());
-        prop.setMultiValued(propDef.isMultiple());
-        prop.setDefinitionId(propDef.getId());
+        prop.setType(PropertyType.NAME);
+        prop.setMultiValued(false);
 
         // create jcr:primaryType property on jcr:system node state
-        jcrSystemState.addPropertyName(propDef.getName());
+        jcrSystemState.addPropertyName(NameConstants.JCR_PRIMARYTYPE);
 
-        PropertyState primaryTypeProp = createInstance(propDef.getName(), jcrSystemState.getNodeId());
+        PropertyState primaryTypeProp = createInstance(NameConstants.JCR_PRIMARYTYPE, jcrSystemState.getNodeId());
         primaryTypeProp.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_SYSTEM)});
-        primaryTypeProp.setType(propDef.getRequiredType());
-        primaryTypeProp.setMultiValued(propDef.isMultiple());
-        primaryTypeProp.setDefinitionId(propDef.getId());
+        primaryTypeProp.setType(PropertyType.NAME);
+        primaryTypeProp.setMultiValued(false);
 
         // add child node entry for jcr:system node
         rootState.addChildNodeEntry(NameConstants.JCR_SYSTEM, RepositoryImpl.SYSTEM_ROOT_NODE_ID);

@@ -38,8 +38,6 @@ import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -47,6 +45,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -137,7 +136,6 @@ public class PropertyImpl extends ItemImpl implements Property {
                 throw new InvalidItemStateException(msg);
             }
             // copy state from transient state
-            persistentState.setDefinitionId(transientState.getDefinitionId());
             persistentState.setType(transientState.getType());
             persistentState.setMultiValued(transientState.isMultiValued());
             persistentState.setValues(transientState.getValues());
@@ -162,19 +160,14 @@ public class PropertyImpl extends ItemImpl implements Property {
             stateMgr.disconnectTransientItemState(thisState);
         }
         // reapply transient changes
-        thisState.setDefinitionId(transientState.getDefinitionId());
         thisState.setType(transientState.getType());
         thisState.setMultiValued(transientState.isMultiValued());
         thisState.setValues(transientState.getValues());
     }
 
-    protected void onRedefine(PropDefId defId) throws RepositoryException {
-        PropertyDefinitionImpl newDef =
-                session.getNodeTypeManager().getPropertyDefinition(defId);
-        // modify the state of 'this', i.e. the target property
-        PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
-        // set id of new definition
-        thisState.setDefinitionId(defId);
+    protected void onRedefine(QPropertyDefinition def) throws RepositoryException {
+        org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl newDef =
+                session.getNodeTypeManager().getPropertyDefinition(def);
         data.setDefinition(newDef);
     }
 
@@ -433,7 +426,6 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @throws RepositoryException
      */
     public InternalValue internalGetValue() throws RepositoryException {
-        final PropertyDefinition definition = data.getPropertyDefinition();
         if (isMultiple()) {
             throw new ValueFormatException(
                     this + " is a multi-valued property,"
