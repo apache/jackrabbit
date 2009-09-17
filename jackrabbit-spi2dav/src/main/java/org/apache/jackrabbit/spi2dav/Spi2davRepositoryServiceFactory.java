@@ -14,33 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.client.spi2dav;
+package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.client.AbstractRepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.RepositoryServiceFactory;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
-import org.apache.jackrabbit.spi2dav.RepositoryServiceImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import java.util.Collections;
-import java.util.Map;
 
 /**
- * <code>RepositoryFactoryImpl</code>...
+ * This {@link RepositoryServiceFactory} implementation is responsible
+ * for creating {@link RepositoryServiceImpl} instances.
  */
-public class RepositoryConfigImpl extends AbstractRepositoryConfig {
-
-    private static Logger log = LoggerFactory.getLogger(org.apache.jackrabbit.client.spilogger.RepositoryConfigImpl.class);
+public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory {
 
     /**
      * Mandatory configuration parameter: It's value is expected to specify the
@@ -48,69 +43,47 @@ public class RepositoryConfigImpl extends AbstractRepositoryConfig {
      *
      * @see org.apache.jackrabbit.webdav.jcr.JCRWebdavServerServlet
      */
-    public static final String REPOSITORY_SPI2DAV_URI = "org.apache.jackrabbit.repository.spi2dav.uri";
+    public static final String PARAM_REPOSITORY_URI = "org.apache.jackrabbit.spi2dav.uri";
+
     /**
      * Optional configuration parameter: It's value is expected to be an instance
      * of {@link IdFactory}. If missing {@link IdFactoryImpl} is used.
      */
-    public static final String REPOSITORY_SPI2DAV_IDFACTORY = "org.apache.jackrabbit.repository.spi2dav.idfactory";
+    public static final String PARAM_ID_FACTORY = "org.apache.jackrabbit.spi2dav.IdFactory";
+
     /**
      * Optional configuration parameter: It's value is expected to be an instance
      * of {@link NameFactory}. If missing {@link NameFactoryImpl} is used.
      */
-    public static final String REPOSITORY_SPI2DAV_NAMEFACTORY = "org.apache.jackrabbit.repository.spi2dav.namefactory";
+    public static final String PARAM_NAME_FACTORY = "org.apache.jackrabbit.spi2dav.NameFactory";
+
     /**
      * Optional configuration parameter: It's value is expected to be an instance
      * of {@link PathFactory}. If missing {@link PathFactoryImpl} is used.
      */
-    public static final String REPOSITORY_SPI2DAV_PATHFACTORY = "org.apache.jackrabbit.repository.spi2dav.pathfactory";
+    public static final String PARAM_PATH_FACTORY = "org.apache.jackrabbit.spi2dav.PathFactory";
+
     /**
      * Optional configuration parameter: It's value is expected to be an instance
      * of {@link QValueFactory}. If missing {@link QValueFactoryImpl} is used.
      */
-    public static final String REPOSITORY_SPI2DAV_VALUEFACTORY = "org.apache.jackrabbit.repository.spi2dav.valuefactory";
+    public static final String PARAM_QVALUE_FACTORY = "org.apache.jackrabbit.spi2dav.QValueFactory";
 
-    private final RepositoryService service;
-
-    public static RepositoryConfig create(Map parameters) {
-        if (!parameters.containsKey(REPOSITORY_SPI2DAV_URI)) {
-            return null;
+    public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
+        if (parameters == null) {
+            throw new RepositoryException("Parameter " + PARAM_REPOSITORY_URI + " missing");
         }
 
-        String uri = parameters.get(REPOSITORY_SPI2DAV_URI).toString();
-        try {
-            return new RepositoryConfigImpl(uri, parameters);
-        } catch (RepositoryException e) {
-            log.warn(e.getMessage());
-            return null;
+        String uri;
+        if (parameters.get(PARAM_REPOSITORY_URI) == null) {
+            throw new RepositoryException("Parameter " + PARAM_REPOSITORY_URI + " missing");
         }
-    }
-
-    public static RepositoryConfig create(String uri) {
-        if (uri == null) {
-            return null;
+        else {
+            uri = parameters.get(PARAM_REPOSITORY_URI).toString();
         }
-        try {
-            return new RepositoryConfigImpl(uri);
-        } catch (RepositoryException e) {
-            log.warn(e.getMessage());
-            return null;
-        }
-    }
 
-    private RepositoryConfigImpl(String uri) throws RepositoryException {
-        super();
-        service = createService(uri, Collections.EMPTY_MAP);
-    }
-
-    private RepositoryConfigImpl(String uri, Map parameters) throws RepositoryException {
-        super(parameters);
-        service = createService(uri, parameters);
-    }
-
-    private static RepositoryService createService(String uri, Map parameters) throws RepositoryException {
         IdFactory idFactory;
-        Object param = parameters.get(REPOSITORY_SPI2DAV_IDFACTORY);
+        Object param = parameters.get(PARAM_ID_FACTORY);
         if (param != null && param instanceof IdFactory) {
             idFactory = (IdFactory) param;
         } else {
@@ -118,7 +91,7 @@ public class RepositoryConfigImpl extends AbstractRepositoryConfig {
         }
 
         NameFactory nameFactory;
-        param = parameters.get(REPOSITORY_SPI2DAV_NAMEFACTORY);
+        param = parameters.get(PARAM_NAME_FACTORY);
         if (param != null && param instanceof NameFactory) {
             nameFactory = (NameFactory) param;
         } else {
@@ -126,7 +99,7 @@ public class RepositoryConfigImpl extends AbstractRepositoryConfig {
         }
 
         PathFactory pathFactory;
-        param = parameters.get(REPOSITORY_SPI2DAV_PATHFACTORY);
+        param = parameters.get(PARAM_PATH_FACTORY);
         if (param != null && param instanceof PathFactory) {
             pathFactory = (PathFactory) param;
         } else {
@@ -134,7 +107,7 @@ public class RepositoryConfigImpl extends AbstractRepositoryConfig {
         }
 
         QValueFactory vFactory;
-        param = parameters.get(REPOSITORY_SPI2DAV_VALUEFACTORY);
+        param = parameters.get(PARAM_QVALUE_FACTORY);
         if (param != null && param instanceof QValueFactory) {
             vFactory = (QValueFactory) param;
         } else {
@@ -143,7 +116,4 @@ public class RepositoryConfigImpl extends AbstractRepositoryConfig {
         return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory);
     }
 
-    public RepositoryService getRepositoryService() throws RepositoryException {
-        return service;
-    }
 }

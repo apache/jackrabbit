@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.client;
 
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,13 +51,15 @@ import javax.jcr.version.VersionException;
 
 import junit.framework.TestCase;
 
-import org.apache.jackrabbit.client.spilogger.RepositoryConfigImpl;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -73,67 +76,97 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.RepositoryServiceFactory;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.logging.Slf4jLogWriterProvider;
 
-/**
- * <code>RepositoryFactoryImplTest</code>...
- */
 public class RepositoryFactoryImplTest extends TestCase {
-
     private final RepositoryFactory factory = new RepositoryFactoryImpl();
-    private final RepositoryService service = new RepositoryServiceImpl();
 
-    public void testGetDefaultRepository() throws RepositoryException {
-        try {
-            Repository repo = factory.getRepository(null);
-            assertNotNull(repo);
-        } catch (RepositoryException e) {
-            // repository on top of spi2davex can only be initialized if the
-            // server is running. ok.
-        }
+    public void testGetRepositoryFromServiceFactory() throws RepositoryException {
+        Map<String, RepositoryServiceFactory> parameters = Collections.singletonMap(
+                "org.apache.jackrabbit.spi.RepositoryServiceFactory",
+                RepositoryServiceFactoryImpl.INSTANCE);
 
-        try {
-            System.setProperty(org.apache.jackrabbit.client.spi2davex.RepositoryConfigImpl.REPOSITORY_SPI2DAVEX_URI, org.apache.jackrabbit.client.spi2davex.RepositoryConfigImpl.DEFAULT_URI);
-            Repository repo = factory.getRepository(null);
-            assertNotNull(repo);
-        } catch (RepositoryException e) {
-            // repository on top of spi2davex can only be initialized if the
-            // server is running. ok.
-        }
+        Repository repo = factory.getRepository(parameters);
+        assertNotNull(repo);
     }
 
-    public void testGetRepository() throws RepositoryException {
-        RepositoryConfig config = new AbstractRepositoryConfig() {
-            public RepositoryService getRepositoryService() throws RepositoryException {
-                return service;
-            }
-        };
+    public void testGetRepositoryFromRepositoryConfig() throws RepositoryException {
+        Map<String, RepositoryConfig> parameters = Collections.singletonMap(
+                "org.apache.jackrabbit.jcr2spi.RepositoryConfig",
+                RepositoryConfigImpl.INSTANCE);
 
-        Repository repo = factory.getRepository(Collections.singletonMap(RepositoryFactoryImpl.REPOSITORY_CONFIG, config));
+        Repository repo = factory.getRepository(parameters);
         assertNotNull(repo);
     }
 
     public void testGetRepositoryWithLogger() throws RepositoryException {
-        RepositoryConfig config = new AbstractRepositoryConfig() {
-            public RepositoryService getRepositoryService() throws RepositoryException {
-                return service;
-            }
-        };
-
-        List lwprovider = new ArrayList();
+        List<Object> lwprovider = new ArrayList<Object>();
         lwprovider.add(null);
         lwprovider.add(new Boolean(true));
         lwprovider.add(new Slf4jLogWriterProvider());
 
-        Map params = new HashMap();
-        params.put(RepositoryFactoryImpl.REPOSITORY_CONFIG, config);
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("org.apache.jackrabbit.jcr2spi.RepositoryConfig", RepositoryConfigImpl.INSTANCE);
 
         for (int i = 0; i < lwprovider.size(); i++) {
-            params.put(RepositoryConfigImpl.PARAM_LOG_WRITER_PROVIDER, lwprovider.get(i));
+            params.put("org.apache.jackrabbit.spi.commons.logging.LogWriterProvider", lwprovider.get(i));
             Repository repo = factory.getRepository(params);
             assertNotNull(repo);
+        }
+    }
+
+    public void testGetDefaultRepository() throws RepositoryException {
+        Repository repo = factory.getRepository(null);
+        assertNotNull(repo);
+        assertEquals("Jackrabbit", repo.getDescriptor(Repository.REP_NAME_DESC));
+    }
+
+    public void testGetSpi2jcrRepository() throws RepositoryException {
+        Repository coreRepo = factory.getRepository(null);
+
+        HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("org.apache.jackrabbit.spi.RepositoryServiceFactory",
+                       "org.apache.jackrabbit.spi2jcr.Spi2jcrRepositoryServiceFactory");
+        parameters.put("org.apache.jackrabbit.spi2jcr.Repository", coreRepo);
+
+        Repository jcr2spiRepo = factory.getRepository(parameters);
+        assertNotNull(jcr2spiRepo);
+        assertEquals("Jackrabbit", jcr2spiRepo.getDescriptor(Repository.REP_NAME_DESC));
+    }
+
+    public void testGetSpi2davRepository() throws RepositoryException {
+        Map<String, String> parameters = new HashMap<String, String>();
+
+        parameters.put("org.apache.jackrabbit.spi.RepositoryServiceFactory",
+                       "org.apache.jackrabbit.spi2dav.Spi2davRepositoryServiceFactory");
+        parameters.put("org.apache.jackrabbit.spi2dav.uri",
+                       "http://localhost/");
+
+        try {
+            Repository repo = factory.getRepository(parameters);
+            assertNotNull(repo);
+        } catch (RepositoryException e) {
+            if (!ConnectException.class.isInstance(e.getCause())) {
+                throw e;
+            }
+        }
+    }
+
+    public void testGetSpi2davexRepository() throws RepositoryException {
+        Map<String, String> parameters = Collections.singletonMap(
+                "org.apache.jackrabbit.spi.RepositoryServiceFactory",
+                "org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory");
+
+        try {
+            Repository repo = factory.getRepository(parameters);
+            assertNotNull(repo);
+        } catch (RepositoryException e) {
+            if (!ConnectException.class.isInstance(e.getCause())) {
+                throw e;
+            }
         }
     }
 
@@ -142,11 +175,60 @@ public class RepositoryFactoryImplTest extends TestCase {
         assertNull(repo);
     }
 
-    //--------------------------------------------------------------------------
+    // -----------------------------------------------------< private >---
+
+    /**
+     * Dummy RepositoryServiceFactory
+     */
+    private static final class RepositoryServiceFactoryImpl implements RepositoryServiceFactory {
+        public static final RepositoryServiceFactory INSTANCE = new RepositoryServiceFactoryImpl();
+
+        private RepositoryServiceFactoryImpl() {
+            super();
+        }
+
+        public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
+            return RepositoryServiceImpl.INSTANCE;
+        }
+    }
+
+    /**
+     * Dummy RepositoryConfig
+     */
+    private static final class RepositoryConfigImpl implements RepositoryConfig {
+        public static final RepositoryConfig INSTANCE = new RepositoryConfigImpl();
+
+        private RepositoryConfigImpl() {
+            super();
+        }
+
+        public CacheBehaviour getCacheBehaviour() {
+            return CacheBehaviour.INVALIDATE;
+        }
+
+        public int getItemCacheSize() {
+            return 1234;
+        }
+
+        public int getPollTimeout() {
+            return 1234;
+        }
+
+        public RepositoryService getRepositoryService() throws RepositoryException {
+            return RepositoryServiceImpl.INSTANCE;
+        }
+
+    }
+
     /**
      * Dummy RepositoryService
      */
     private static final class RepositoryServiceImpl implements RepositoryService {
+        public static final RepositoryService INSTANCE = new RepositoryServiceImpl();
+
+        private RepositoryServiceImpl() {
+            super();
+        }
 
         public IdFactory getIdFactory() throws RepositoryException {
             return null;
@@ -181,6 +263,7 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void dispose(SessionInfo sessionInfo) throws RepositoryException {
+            // empty
         }
 
         public String[] getWorkspaceNames(SessionInfo sessionInfo) throws RepositoryException {
@@ -203,11 +286,11 @@ public class RepositoryFactoryImplTest extends TestCase {
             return null;
         }
 
-        public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException {
+        public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException {
             return null;
         }
 
-        public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException {
+        public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException {
             return null;
         }
 
@@ -224,21 +307,27 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void submit(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+            // empty
         }
 
         public void importXml(SessionInfo sessionInfo, NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+            // empty
         }
 
         public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+            // empty
         }
 
         public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+            // empty
         }
 
         public void update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
+            // empty
         }
 
         public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+            // empty
         }
 
         public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId) throws AccessDeniedException, RepositoryException {
@@ -254,9 +343,11 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
+            // empty
         }
 
         public void unlock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
+            // empty
         }
 
         public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException {
@@ -264,9 +355,11 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+            // empty
         }
 
         public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+            // empty
         }
 
         public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -274,29 +367,35 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId) throws ReferentialIntegrityException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+            // empty
         }
 
         public void restore(SessionInfo sessionInfo, NodeId nodeId, NodeId versionId, boolean removeExisting) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+            // empty
         }
 
         public void restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException {
+            // empty
         }
 
-        public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+        public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             return null;
         }
 
-        public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+        public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             return null;
         }
 
         public void resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
+            // empty
         }
 
         public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label, boolean moveLabel) throws VersionException, RepositoryException {
+            // empty
         }
 
         public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label) throws VersionException, RepositoryException {
+            // empty
         }
 
         public NodeId createActivity(SessionInfo sessionInfo, String title) throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -304,10 +403,10 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void removeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
-
+            // empty
         }
 
-        public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        public Iterator<NodeId> mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
             return null;
         }
 
@@ -319,7 +418,7 @@ public class RepositoryFactoryImplTest extends TestCase {
             return new String[0];
         }
 
-        public String[] checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws InvalidQueryException, RepositoryException {
+        public String[] checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws InvalidQueryException, RepositoryException {
             return new String[0];
         }
 
@@ -336,6 +435,7 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void updateEventFilters(Subscription subscription, EventFilter[] filters) throws RepositoryException {
+            // empty
         }
 
         public EventBundle[] getEvents(Subscription subscription, long timeout) throws RepositoryException, InterruptedException {
@@ -347,9 +447,10 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void dispose(Subscription subscription) throws RepositoryException {
+            // empty
         }
 
-        public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
+        public Map<String, String> getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
             return null;
         }
 
@@ -362,33 +463,36 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public void registerNamespace(SessionInfo sessionInfo, String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+            // empty
         }
 
         public void unregisterNamespace(SessionInfo sessionInfo, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+            // empty
         }
 
-        public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+        public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
             return null;
         }
 
-        public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
+        public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
             return null;
         }
 
         public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
-
+            // empty
         }
 
         public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
-
+            // empty
         }
 
         public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
-
+            // empty
         }
 
         public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
-
+            // empty
         }
     }
+
 }

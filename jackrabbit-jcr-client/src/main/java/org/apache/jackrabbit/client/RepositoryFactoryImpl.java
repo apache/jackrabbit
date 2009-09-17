@@ -22,74 +22,60 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
 
-import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * <code>RepositoryFactoryImpl</code>...
+ * This {@link RepositoryFactory} implementations is capable of creating any
+ * repository which is covered by the Apache Jackrabbit project. It does so by
+ * delegating back to secondary RepositoryFactory implementations. The
+ * parameters passed to the {@link #getRepository(Map)} method determine which
+ * secondare RepositoryFactory this factory delegates to.
  */
 public class RepositoryFactoryImpl implements RepositoryFactory {
 
-    private static Logger log = LoggerFactory.getLogger(RepositoryFactoryImpl.class);
+    /**
+     * When this key parameter is present, this factory delegates to
+     * {@link org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}
+     */
+    public static final String PARAM_REPOSITORY_SERVICE_FACTORY = "org.apache.jackrabbit.spi.RepositoryServiceFactory";
 
-    public static final String REPOSITORY_CONFIG = "org.apache.jackrabbit.repository.config";
+    /**
+     * When this key parameter is present, this factory delegates to
+     * {@link org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}
+     */
+    public static final String PARAM_REPOSITORY_CONFIG = "org.apache.jackrabbit.jcr2spi.RepositoryConfig";
 
-    //--------------------------------------------------< RepositoryFactory >---
     /**
      * Creates a JCR repository from the given <code>parameters</code>.
-     * If the <code>parameters</code> map is <code>null</code> the default
-     * repository  (i.e. JCR2SPI repository on top of SPI2DAVex) is returned.<p/>
-     * If the <code>parameters</code> map contains a {@link #REPOSITORY_CONFIG}
-     * entry it's value is expected to be a implementation of
-     * {@link org.apache.jackrabbit.jcr2spi.config.RepositoryConfig} and the
-     * repository will be created based on this configuration.<p/>
-     * If the <code>parameters</code> map does not contain a {@link #REPOSITORY_CONFIG}
-     * entry or if the corresponding value isn't a valid <code>RepositoryConfig</code>
-     * an attempt is made to create a
-     * {@link org.apache.jackrabbit.jcr2spi.config.RepositoryConfig} for any of
-     * the known SPI implementations:
-     * <ul>
-     * <li>SPI2DAVex (see jackrabbit-spi2dav module)</li>
-     * <li>SPI2DAV (see jackrabbit-spi2dav module)</li>
-     * <li>SPI2JCR (see jackrabbit-spi2jcr module)</li>
-     * </ul>
-     * NOTE: If the <code>parameters</code> map contains an
-     * {@link org.apache.jackrabbit.client.spilogger.RepositoryConfigImpl#PARAM_LOG_WRITER_PROVIDER PARAM_LOG_WRITER_PROVIDER}
-     * entry the {@link org.apache.jackrabbit.spi.RepositoryService RepositoryService} obtained
-     * from the configuration is wrapped by a SPI logger. See the
-     * {@link org.apache.jackrabbit.spi.commons.logging.SpiLoggerFactory SpiLoggerFactory}
-     * for details.
+     * If either {@link #PARAM_REPOSITORY_SERVICE_FACTORY} or
+     * {@link #PARAM_REPOSITORY_CONFIG} is present, this factory delegates
+     * to {@link org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}.
+     * Otherwise it delegates to
+     * {@link org.apache.jackrabbit.core.RepositoryFactoryImpl}.
      *
      * @see RepositoryFactory#getRepository(java.util.Map)
      */
-    public Repository getRepository(Map parameters) throws RepositoryException {
-        RepositoryConfig config = null;
-        if (parameters == null) {
-            config = org.apache.jackrabbit.client.spi2davex.RepositoryConfigImpl.create((Map) null);
-        } else {
-            Object param = parameters.get(REPOSITORY_CONFIG);
-            if (param != null && param instanceof RepositoryConfig) {
-                config = (RepositoryConfig) param;
-            }
-            if (config == null) {
-                config = org.apache.jackrabbit.client.spi2davex.RepositoryConfigImpl.create(parameters);
-                if (config == null) {
-                    config = org.apache.jackrabbit.client.spi2dav.RepositoryConfigImpl.create(parameters);
-                }
-                if (config == null) {
-                    config = org.apache.jackrabbit.client.spi2jcr.RepositoryConfigImpl.create(parameters);
-                }
-            }
+    public Repository getRepository(@SuppressWarnings("unchecked") Map parameters) throws RepositoryException {
+        String repositoryFactoryName = parameters != null && (
+                                       parameters.containsKey(PARAM_REPOSITORY_SERVICE_FACTORY) ||
+                                       parameters.containsKey(PARAM_REPOSITORY_CONFIG))
+                ? "org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory"
+                : "org.apache.jackrabbit.core.RepositoryFactoryImpl";
+
+        Object repositoryFactory;
+        try {
+            Class<?> repositoryFactoryClass = Class.forName(repositoryFactoryName, true,
+                    Thread.currentThread().getContextClassLoader());
+
+            repositoryFactory = repositoryFactoryClass.newInstance();
+        }
+        catch (Exception e) {
+            throw new RepositoryException(e);
         }
 
-        if (config != null) {
-            config = org.apache.jackrabbit.client.spilogger.RepositoryConfigImpl.create(config, parameters);
-            return RepositoryImpl.create(config);
-        } else {
-            log.debug("Unable to create Repository: Unknown parameters.");
-            return null;
+        if (repositoryFactory instanceof RepositoryFactory) {
+            return ((RepositoryFactory) repositoryFactory).getRepository(parameters);
+        }
+        else {
+            throw new RepositoryException(repositoryFactory + " is not a RepositoryFactory");
         }
     }
 }
