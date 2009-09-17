@@ -33,6 +33,7 @@ import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -49,7 +50,7 @@ class DocViewImportHandler extends TargetImportHandler {
      * in the startElement method and is popped from the stack in the
      * endElement method.
      */
-    private final Stack stack = new Stack();
+    private final Stack<Importer.NodeInfo> stack = new Stack<Importer.NodeInfo>();
     // buffer used to merge adjacent character data
     private BufferedStringValue textHandler = new BufferedStringValue();
 
@@ -133,7 +134,7 @@ class DocViewImportHandler extends TargetImportHandler {
                         new Importer.NodeInfo(NameConstants.JCR_XMLTEXT, null, null, null);
                 Importer.TextValue[] values =
                         new Importer.TextValue[]{textHandler};
-                ArrayList props = new ArrayList();
+                List<Importer.PropInfo> props = new ArrayList<Importer.PropInfo>();
                 Importer.PropInfo prop =
                         new Importer.PropInfo(NameConstants.JCR_XMLCHARACTERS, PropertyType.STRING, values);
                 props.add(prop);
@@ -177,7 +178,7 @@ class DocViewImportHandler extends TargetImportHandler {
             Name nodeTypeName = null;
             Name[] mixinTypes = null;
 
-            ArrayList props = new ArrayList(atts.getLength());
+            List<Importer.PropInfo> props = new ArrayList<Importer.PropInfo>(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
                 if (atts.getURI(i).equals(Name.NS_XMLNS_URI)) {
                     // skip namespace declarations reported as attributes
@@ -287,7 +288,7 @@ class DocViewImportHandler extends TargetImportHandler {
         // process buffered character data
         processCharacters();
 
-        Importer.NodeInfo node = (Importer.NodeInfo) stack.peek();
+        Importer.NodeInfo node = stack.peek();
         try {
             // call Importer
             importer.endNode(node);
