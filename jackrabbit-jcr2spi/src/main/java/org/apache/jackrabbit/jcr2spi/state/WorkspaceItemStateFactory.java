@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Collections;
+import java.util.Set;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -33,6 +34,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Name;
@@ -88,7 +90,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             throws ItemNotFoundException, RepositoryException {
         // build new node state from server information
         try {
-            Iterator infos = service.getItemInfos(sessionInfo, nodeId);
+            Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
             NodeState nodeState = createItemStates(nodeId, infos, entry, false);
 
             if (nodeState == null) {
@@ -106,7 +108,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         try {
-            Iterator infos = service.getItemInfos(sessionInfo, nodeId);
+            Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
             return createItemStates(nodeId, infos, anyParent, true);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
@@ -152,7 +154,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @see ItemStateFactory#getChildNodeInfos(NodeId)
      * @param nodeId
      */
-    public Iterator getChildNodeInfos(NodeId nodeId)
+    public Iterator<ChildInfo> getChildNodeInfos(NodeId nodeId)
             throws ItemNotFoundException, RepositoryException {
         return service.getChildInfos(sessionInfo, nodeId);
     }
@@ -167,7 +169,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         if (entry.getUniqueID() == null
                 || !entry.hasPropertyEntry(NameConstants.JCR_UUID)) {
             // for sure not referenceable
-            return Collections.EMPTY_SET.iterator();
+            Set<PropertyId> t = Collections.emptySet();
+            return t.iterator();
         }
 
         // nodestate has a unique ID and is potentially mix:referenceable
@@ -176,7 +179,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             return service.getReferences(sessionInfo, entry.getWorkspaceId(), propertyName, weak);
         } catch (RepositoryException e) {
             log.debug("Unable to determine references to {}", nodeState);
-            return Collections.EMPTY_SET.iterator();
+            Set<PropertyId> t = Collections.emptySet();
+            return t.iterator();
         }
     }
 
@@ -191,7 +195,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private synchronized NodeState createItemStates(NodeId nodeId, Iterator itemInfos,
+    private synchronized NodeState createItemStates(NodeId nodeId, Iterator<? extends ItemInfo> itemInfos,
                                                     NodeEntry entry, boolean isDeep)
             throws ItemNotFoundException, RepositoryException {
         NodeState nodeState;
@@ -222,7 +226,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         // optimization results in about 25% speed up.
         NodeEntry approxParentEntry = nodeState.getNodeEntry();
         while (infos.hasNext()) {
-            ItemInfo info = (ItemInfo) infos.next();
+            ItemInfo info = infos.next();
             if (info.denotesNode()) {
                 approxParentEntry = createDeepNodeState((NodeInfo) info, approxParentEntry, infos).getNodeEntry();
             } else {
@@ -263,9 +267,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         }
 
         // update NodeEntry from the information present in the NodeInfo (prop entries)
-        List propNames = new ArrayList();
-        for (Iterator it = info.getPropertyIds(); it.hasNext(); ) {
-            PropertyId pId = (PropertyId) it.next();
+        List<Name> propNames = new ArrayList<Name>();
+        for (Iterator<PropertyId> it = info.getPropertyIds(); it.hasNext(); ) {
+            PropertyId pId = it.next();
             Name propertyName = pId.getName();
             propNames.add(propertyName);
         }
@@ -278,7 +282,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
         // unless the child-info are omitted by the SPI impl -> make sure
         // the childentries the nodeentry are initialized or updated.
-        Iterator childInfos = info.getChildInfos();
+        Iterator<ChildInfo> childInfos = info.getChildInfos();
         if (childInfos != null) {
             entry.setNodeEntries(childInfos);
         }
@@ -448,7 +452,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                                                          Name name, int index,
                                                          ItemInfos infos) throws RepositoryException {
         if (infos != null) {
-            Iterator childInfos = infos.getChildInfos(parentEntry.getWorkspaceId());
+            Iterator<ChildInfo> childInfos = infos.getChildInfos(parentEntry.getWorkspaceId());
             if (childInfos != null) {
                 parentEntry.setNodeEntries(childInfos);
             }
@@ -531,13 +535,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     /**
      * Iterator
      */
-    private class ItemInfos implements Iterator {
+    private class ItemInfos implements Iterator<ItemInfo> {
 
-        private final List prefetchQueue = new ArrayList();
-        private final Map nodeInfos = new HashMap();
-        private final Iterator infos;
+        private final List<ItemInfo> prefetchQueue = new ArrayList<ItemInfo>();
+        private final Map<NodeId, NodeInfo> nodeInfos = new HashMap<NodeId, NodeInfo>();
+        private final Iterator<? extends ItemInfo> infos;
 
-        private ItemInfos(Iterator infos) {
+        private ItemInfos(Iterator<? extends ItemInfo> infos) {
             super();
             this.infos = infos;
         }
@@ -557,11 +561,11 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         /**
          * @see Iterator#next()
          */
-        public Object next() {
+        public ItemInfo next() {
             if (prefetchQueue.isEmpty()) {
                 throw new NoSuchElementException();
             } else {
-                Object next = prefetchQueue.remove(0);
+                ItemInfo next = prefetchQueue.remove(0);
                 if (next instanceof NodeInfo) {
                     nodeInfos.remove(((NodeInfo) next).getId());
                 }
@@ -584,10 +588,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
          * has not been read yet, has already been processed (childInfo is up
          * to date) or does not provide child infos.
          */
-        private Iterator getChildInfos(NodeId parentId) {
-            NodeInfo nodeInfo = (NodeInfo) nodeInfos.get(parentId);
+        private Iterator<ChildInfo> getChildInfos(NodeId parentId) {
+            NodeInfo nodeInfo = nodeInfos.get(parentId);
             while (nodeInfo == null && prefetch()) {
-                nodeInfo = (NodeInfo) nodeInfos.get(parentId);
+                nodeInfo = nodeInfos.get(parentId);
             }
             return nodeInfo == null? null : nodeInfo.getChildInfos();
         }
@@ -597,7 +601,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
          */
         private boolean prefetch() {
             if (infos.hasNext()) {
-                ItemInfo info = (ItemInfo) infos.next();
+                ItemInfo info = infos.next();
                 prefetchQueue.add(info);
                 if (info.denotesNode()) {
                     NodeInfo nodeInfo = (NodeInfo) info;

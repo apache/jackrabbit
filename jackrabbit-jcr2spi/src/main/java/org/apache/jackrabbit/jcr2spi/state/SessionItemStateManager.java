@@ -246,7 +246,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         NodeState parent = operation.getParentState();
         ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
         QNodeDefinition def = defProvider.getQNodeDefinition(parent.getAllNodeTypeNames(), operation.getNodeName(), operation.getNodeTypeName());
-        List newStates = addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, options);
+        List<ItemState> newStates = addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, options);
         operation.addedState(newStates);
 
         transientStateMgr.addOperation(operation);
@@ -454,7 +454,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         return transientStateMgr.createNewPropertyState(propertyName, parent, pDef, values, propertyType);
     }
 
-    private List addNodeState(NodeState parent, Name nodeName, Name nodeTypeName,
+    private List<ItemState> addNodeState(NodeState parent, Name nodeName, Name nodeTypeName,
                               String uuid, QNodeDefinition definition, int options)
             throws RepositoryException, ConstraintViolationException, AccessDeniedException,
             UnsupportedRepositoryOperationException, NoSuchNodeTypeException,
@@ -478,7 +478,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
             }
         }
 
-        List addedStates = new ArrayList();
+        List<ItemState> addedStates = new ArrayList<ItemState>();
 
         // create new nodeState. NOTE, that the uniqueID is not added to the
         // state for consistency between 'addNode' and importXML
