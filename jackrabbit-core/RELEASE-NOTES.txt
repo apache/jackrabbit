@@ -1,15 +1,15 @@
-Release Notes -- Apache Jackrabbit Core -- Version 1.4.10
+Release Notes -- Apache Jackrabbit Core -- Version 1.4.11
 
 Introduction
 ------------
 
-This is the 1.4.10 patch release of the jackrabbit-core component of
+This is the 1.4.11 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
 This release is targeted to users who are not yet ready to upgrade to
-the more recent Jackrabbit releases, but who still need the clustering
-performance improvement from issue JCR-1988.
+the more recent Jackrabbit releases, but who still need the XPath
+formatting fix from issue JCR-2052.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -22,8 +22,8 @@ title is listed for each change and known issue. You can look up individual
 issues for more details in the Jackrabbit issue tracker at
 http://issues.apache.org/jira/browse/JCR
 
-  Improvements
-  [JCR-1988] AbstractRecord does inefficient List.indexOf()
+  Bug fixes
+  [JCR-2052] XPath QueryFormat may produce malformed XPath statement
 
 Release Contents
 ----------------
@@ -32,18 +32,18 @@ Like the previous jackrabbit-core 1.4.x releases this patch release only
 contains the jackrabbit-core component. The component is distributed both
 as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.10-src.jar)
+    * Source archive (jackrabbit-core-1.4.11-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.10" directory. Use the following commands
+        in a "jackrabbit-core-1.4.11" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.10-src.jar
-          $ cd jackrabbit-core-1.4.10
+          $ jar xf jackrabbit-core-1.4.11-src.jar
+          $ cd jackrabbit-core-1.4.11
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.10.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.11.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
