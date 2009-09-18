@@ -234,7 +234,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      */
     public QNodeTypeDefinition getNodeTypeDefinition(Name nodeTypeName)
         throws NoSuchNodeTypeException {
-        QNodeTypeDefinition def = (QNodeTypeDefinition) registeredNTDefs.get(nodeTypeName);
+        QNodeTypeDefinition def = registeredNTDefs.get(nodeTypeName);
         if (def == null) {
             throw new NoSuchNodeTypeException("Nodetype " + nodeTypeName + " doesn't exist");
         }
@@ -616,7 +616,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     }
 
     private void internalUnregister(Name name) {
-        QNodeTypeDefinition ntd = (QNodeTypeDefinition) registeredNTDefs.remove(name);
+        QNodeTypeDefinition ntd = registeredNTDefs.remove(name);
         entCache.invalidate(name);
 
         if (ntd != null) {
@@ -662,10 +662,20 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      * Inner class representing the map of <code>QNodeTypeDefinition</code>s
      * that have been loaded yet.
      */
-    private class NodeTypeDefinitionMap implements Map, Dumpable {
+    private class NodeTypeDefinitionMap implements Map<Name, QNodeTypeDefinition>, Dumpable {
 
         // map of node type names and node type definitions
         private final ConcurrentReaderHashMap nodetypeDefinitions = new ConcurrentReaderHashMap();
+
+        @SuppressWarnings("unchecked")
+        private Collection<QNodeTypeDefinition> getValues() {
+            return nodetypeDefinitions.values();
+        }
+
+        @SuppressWarnings("unchecked")
+        private Set<Name> getKeySet() {
+            return nodetypeDefinitions.keySet();
+        }
 
         /**
          * Returns the names of those registered node types that have
@@ -678,16 +688,16 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
          * @return a set of node type <code>Name</code>s
          * @throws NoSuchNodeTypeException
          */
-        private Set getDependentNodeTypes(Name nodeTypeName) throws NoSuchNodeTypeException {
+        private Set<Name> getDependentNodeTypes(Name nodeTypeName) throws NoSuchNodeTypeException {
             if (!nodetypeDefinitions.containsKey(nodeTypeName)) {
                 throw new NoSuchNodeTypeException(nodeTypeName.toString());
             }
             // get names of those node types that have dependencies on the
             // node type with the given nodeTypeName.
-            HashSet names = new HashSet();
-            Iterator iter = nodetypeDefinitions.values().iterator();
+            HashSet<Name> names = new HashSet<Name>();
+            Iterator<QNodeTypeDefinition> iter = getValues().iterator();
             while (iter.hasNext()) {
-                QNodeTypeDefinition ntd = (QNodeTypeDefinition) iter.next();
+                QNodeTypeDefinition ntd = iter.next();
                 if (ntd.getDependencies().contains(nodeTypeName)) {
                     names.add(ntd.getName());
                 }
@@ -695,12 +705,12 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             return names;
         }
 
-        private void updateInternalMap(Iterator definitions) {
-            // since definition were retrieved from the storage, valiation
+        private void updateInternalMap(Iterator<QNodeTypeDefinition> definitions) {
+            // since definition were retrieved from the storage, validation
             // can be omitted -> register without building effective-nodetype.
             // TODO: check if correct
             while (definitions.hasNext()) {
-                internalRegister((QNodeTypeDefinition) definitions.next(), null);
+                internalRegister(definitions.next(), null);
             }
         }
 
@@ -731,41 +741,42 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             return get(((QNodeTypeDefinition)value).getName()) != null;
         }
 
-        public Set keySet() {
+        public Set<Name> keySet() {
             // to be aware of all (recently) registered nodetypes retrieve
             // complete set from the storage again and add missing / replace
             // existing definitions.
             try {
-                Iterator it = storage.getAllDefinitions();
+                Iterator<QNodeTypeDefinition> it = storage.getAllDefinitions();
                 updateInternalMap(it);
             } catch (RepositoryException e) {
                 log.error(e.getMessage());
             }
-            return nodetypeDefinitions.keySet();
+            return getKeySet();
         }
 
-        public Collection values() {
+        public Collection<QNodeTypeDefinition> values() {
             // make sure all node type definitions have been loaded.
             keySet();
             // and retrieve the collection containing all definitions.
-            return nodetypeDefinitions.values();
+            return getValues();
         }
 
-        public Object put(Object key, Object value) {
-            return nodetypeDefinitions.put(key, value);
+        public QNodeTypeDefinition put(Name key, QNodeTypeDefinition value) {
+            return (QNodeTypeDefinition) nodetypeDefinitions.put(key, value);
         }
 
-        public void putAll(Map t) {
+        public void putAll(Map<? extends Name, ? extends QNodeTypeDefinition> t) {
             throw new UnsupportedOperationException("Implementation missing");
         }
 
-        public Set entrySet() {
+        @SuppressWarnings("unchecked")
+        public Set<Map.Entry<Name, QNodeTypeDefinition>> entrySet() {
             // make sure all node type definitions have been loaded.
             keySet();
             return nodetypeDefinitions.entrySet();
         }
 
-        public Object get(Object key) {
+        public QNodeTypeDefinition get(Object key) {
             if (!(key instanceof Name)) {
                 throw new IllegalArgumentException();
             }
@@ -773,7 +784,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             if (def == null) {
                 try {
                     // node type does either not exist or hasn't been loaded yet
-                    Iterator it = storage.getDefinitions(new Name[] {(Name) key});
+                    Iterator<QNodeTypeDefinition> it = storage.getDefinitions(new Name[] {(Name) key});
                     updateInternalMap(it);
                 } catch (RepositoryException e) {
                     log.debug(e.getMessage());
@@ -783,15 +794,15 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             return def;
         }
 
-        public Object remove(Object key) {
+        public QNodeTypeDefinition remove(Object key) {
             return (QNodeTypeDefinition) nodetypeDefinitions.remove(key);
         }
 
         //-------------------------------------------------------< Dumpable >---
         public void dump(PrintStream ps) {
-            Iterator iter = nodetypeDefinitions.values().iterator();
+            Iterator<QNodeTypeDefinition> iter = getValues().iterator();
             while (iter.hasNext()) {
-                QNodeTypeDefinition ntd = (QNodeTypeDefinition) iter.next();
+                QNodeTypeDefinition ntd = iter.next();
                 ps.println(ntd.getName());
                 Name[] supertypes = ntd.getSupertypes();
                 ps.println("\tSupertypes");
