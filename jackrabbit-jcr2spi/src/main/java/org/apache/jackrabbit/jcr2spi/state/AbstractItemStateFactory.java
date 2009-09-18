@@ -29,7 +29,7 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
 
     private static Logger log = LoggerFactory.getLogger(AbstractItemStateFactory.class);
 
-    private final Set creationListeners = new HashSet();
+    private final Set<ItemStateCreationListener> creationListeners = new HashSet<ItemStateCreationListener>();
 
     //---------------------------------------------------< ItemStateFactory >---
     /**
@@ -59,7 +59,7 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
      */
     private ItemStateCreationListener[] getListeners() {
         synchronized (creationListeners) {
-            return (ItemStateCreationListener[]) creationListeners.toArray(new ItemStateCreationListener[creationListeners.size()]);
+            return creationListeners.toArray(new ItemStateCreationListener[creationListeners.size()]);
         }
     }
 
