@@ -425,7 +425,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
          *
          * @see Comparable#compareTo(Object)
          */
-        public int compareTo(Object other) {
+        public int compareTo(Key other) {
             BitsetKey o = (BitsetKey) other;
             int res = o.names.length - names.length;
             if (res == 0) {
