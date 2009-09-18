@@ -69,9 +69,9 @@ public class ResolveMergeConflict extends AbstractOperation {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
         // non-recursive invalidation BUT including all properties
-        Iterator propEntries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
+        Iterator<PropertyEntry> propEntries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
         while (propEntries.hasNext()) {
-            PropertyEntry pe = (PropertyEntry) propEntries.next();
+            PropertyEntry pe = propEntries.next();
             pe.invalidate(false);
         }
         nodeState.getHierarchyEntry().invalidate(false);

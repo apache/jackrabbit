@@ -61,18 +61,18 @@ public class RemoveVersion extends Remove {
 
     /**
      * Invalidates the <code>NodeState</code> that has been updated and all
-     * its decendants. Second, the parent state gets invalidated.
+     * its descendants. Second, the parent state gets invalidated.
      *
      * @see Operation#persisted()
      */
     public void persisted() {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
-        // invaliate the versionable node as well (version related properties)
+        // Invalidate the versionable node as well (version related properties)
         if (versionableEntry != null) {
-            Iterator propEntries = versionableEntry.getPropertyEntries();
+            Iterator<PropertyEntry> propEntries = versionableEntry.getPropertyEntries();
             while (propEntries.hasNext()) {
-                PropertyEntry pe = (PropertyEntry) propEntries.next();
+                PropertyEntry pe = propEntries.next();
                 pe.invalidate(false);
             }
             versionableEntry.invalidate(false);

@@ -75,9 +75,9 @@ public class Checkpoint extends AbstractOperation {
         }
         // non-recursive invalidation (but including all properties)
         NodeEntry nodeEntry = (NodeEntry) nodeState.getHierarchyEntry();
-        Iterator entries = nodeEntry.getPropertyEntries();
+        Iterator<PropertyEntry> entries = nodeEntry.getPropertyEntries();
         while (entries.hasNext()) {
-            PropertyEntry pe = (PropertyEntry) entries.next();
+            PropertyEntry pe = entries.next();
             pe.invalidate(false);
         }
         nodeEntry.invalidate(false);

@@ -66,7 +66,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
     }
 
     /**
-     * Test if a new registred namespace is immediately visible through another
+     * Test if a new registered namespace is immediately visible through another
      * session object.
      *
      * @throws RepositoryException
@@ -194,7 +194,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @return an unused namespace prefix.
      */
     private String getUnusedPrefix() throws RepositoryException {
-        Set prefixes = new HashSet(Arrays.asList(nsRegistry.getPrefixes()));
+        Set<String> prefixes = new HashSet<String>(Arrays.asList(nsRegistry.getPrefixes()));
         String prefix = TEST_PREFIX;
         int i = 0;
         while (prefixes.contains(prefix)) {
@@ -209,7 +209,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @return an unused namespace URI.
      */
     private String getUnusedURI() throws RepositoryException {
-        Set uris = new HashSet(Arrays.asList(nsRegistry.getURIs()));
+        Set<String> uris = new HashSet<String>(Arrays.asList(nsRegistry.getURIs()));
         String uri = TEST_URI;
         int i = 0;
         while (uris.contains(uri)) {

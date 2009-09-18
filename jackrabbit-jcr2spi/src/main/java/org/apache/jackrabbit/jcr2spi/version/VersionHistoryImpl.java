@@ -103,11 +103,11 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public VersionIterator getAllVersions() throws RepositoryException {
         checkStatus();
         refreshEntry(vhEntry);
-        Iterator childIter = vhEntry.getNodeEntries();
+        Iterator<NodeEntry> childIter = vhEntry.getNodeEntries();
         List<NodeEntry> versionEntries = new ArrayList<NodeEntry>();
         // all child-nodes except from jcr:versionLabels point to Versions.
         while (childIter.hasNext()) {
-            NodeEntry entry = (NodeEntry) childIter.next();
+            NodeEntry entry = childIter.next();
             if (!NameConstants.JCR_VERSIONLABELS.equals(entry.getName())) {
                 versionEntries.add(entry);
             }
@@ -325,8 +325,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     private Name[] getQLabels() throws RepositoryException {
         refreshEntry(labelNodeEntry);
         List<Name> labelNames = new ArrayList<Name>();
-        for (Iterator it = labelNodeEntry.getPropertyEntries(); it.hasNext(); ) {
-            PropertyEntry pe = (PropertyEntry) it.next();
+        for (Iterator<PropertyEntry> it = labelNodeEntry.getPropertyEntries(); it.hasNext(); ) {
+            PropertyEntry pe = it.next();
             if (! NameConstants.JCR_PRIMARYTYPE.equals(pe.getName()) &&
                 ! NameConstants.JCR_MIXINTYPES.equals(pe.getName())) {
                 labelNames.add(pe.getName());
