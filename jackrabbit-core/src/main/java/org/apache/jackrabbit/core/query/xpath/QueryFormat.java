@@ -106,9 +106,6 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(QueryRootNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         node.getLocationNode().accept(this, data);
-        if (node.getOrderNode() != null) {
-            node.getOrderNode().accept(this, data);
-        }
         Name[] selectProps = node.getSelectProperties();
         if (selectProps.length > 0) {
             sb.append('/');
@@ -130,6 +127,9 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             if (union) {
                 sb.append(')');
             }
+        }
+        if (node.getOrderNode() != null) {
+            node.getOrderNode().accept(this, data);
         }
         return data;
     }
