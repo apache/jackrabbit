@@ -86,19 +86,19 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      * A cache for <code>NodeType</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map ntCache;
+    private final Map<Name, NodeTypeImpl> ntCache;
 
     /**
      * A cache for <code>PropertyDefinition</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map pdCache;
+    private final Map<QPropertyDefinition, PropertyDefinition> pdCache;
 
     /**
      * A cache for <code>NodeDefinition</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map ndCache;
+    private final Map<QNodeDefinition, NodeDefinition> ndCache;
 
     /**
      * Creates a new <code>NodeTypeManagerImpl</code> instance.
@@ -134,7 +134,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public NodeTypeImpl getNodeType(Name name) throws NoSuchNodeTypeException {
         synchronized (ntCache) {
-            NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
+            NodeTypeImpl nt = ntCache.get(name);
             if (nt == null) {
                 EffectiveNodeType ent = entProvider().getEffectiveNodeType(name);
                 QNodeTypeDefinition def = ntReg.getNodeTypeDefinition(name);
@@ -174,7 +174,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public NodeDefinition getNodeDefinition(QNodeDefinition def) {
         synchronized (ndCache) {
-            NodeDefinition ndi = (NodeDefinition) ndCache.get(def);
+            NodeDefinition ndi = ndCache.get(def);
             if (ndi == null) {
                 ndi = new NodeDefinitionImpl(def, this, getNamePathResolver());
                 ndCache.put(def, ndi);
@@ -192,7 +192,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public PropertyDefinition getPropertyDefinition(QPropertyDefinition def) {
         synchronized (pdCache) {
-            PropertyDefinition pdi = (PropertyDefinition) pdCache.get(def);
+            PropertyDefinition pdi = pdCache.get(def);
             if (pdi == null) {
                 pdi = new PropertyDefinitionImpl(def, this, getNamePathResolver(), valueFactory);
                 pdCache.put(def, pdi);
@@ -234,18 +234,18 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         try {
             String name = getNamePathResolver().getJCRName(ntName);
             synchronized (pdCache) {
-                Iterator iter = pdCache.values().iterator();
+                Iterator<PropertyDefinition> iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
-                    PropertyDefinition pd = (PropertyDefinition) iter.next();
+                    PropertyDefinition pd = iter.next();
                     if (name.equals(pd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
                 }
             }
             synchronized (ndCache) {
-                Iterator iter = ndCache.values().iterator();
+                Iterator<NodeDefinition> iter = ndCache.values().iterator();
                 while (iter.hasNext()) {
-                    NodeDefinition nd = (NodeDefinition) iter.next();
+                    NodeDefinition nd = iter.next();
                     if (name.equals(nd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
@@ -271,18 +271,18 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         try {
             String name = getNamePathResolver().getJCRName(ntName);
             synchronized (pdCache) {
-                Iterator iter = pdCache.values().iterator();
+                Iterator<PropertyDefinition> iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
-                    PropertyDefinition pd = (PropertyDefinition) iter.next();
+                    PropertyDefinition pd = iter.next();
                     if (name.equals(pd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
                 }
             }
             synchronized (ndCache) {
-                Iterator iter = ndCache.values().iterator();
+                Iterator<NodeDefinition> iter = ndCache.values().iterator();
                 while (iter.hasNext()) {
-                    NodeDefinition nd = (NodeDefinition) iter.next();
+                    NodeDefinition nd = iter.next();
                     if (name.equals(nd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
@@ -305,7 +305,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
-        ArrayList list = new ArrayList(ntNames.length);
+        ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (int i = 0; i < ntNames.length; i++) {
             list.add(getNodeType(ntNames[i]));
         }
@@ -317,7 +317,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
-        ArrayList list = new ArrayList(ntNames.length);
+        ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (int i = 0; i < ntNames.length; i++) {
             NodeType nt = getNodeType(ntNames[i]);
             if (!nt.isMixin()) {
@@ -332,7 +332,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
-        ArrayList list = new ArrayList(ntNames.length);
+        ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (int i = 0; i < ntNames.length; i++) {
             NodeType nt = getNodeType(ntNames[i]);
             if (nt.isMixin()) {
@@ -399,7 +399,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      * @see NodeTypeManager#unregisterNodeTypes(String[])
      */
     public void unregisterNodeTypes(String[] names) throws RepositoryException {
-        HashSet ntNames = new HashSet();
+        HashSet<Name> ntNames = new HashSet<Name>();
         for (String name : names) {
             ntNames.add(getNamePathResolver().getQName(name));
         }
