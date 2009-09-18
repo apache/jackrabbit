@@ -24,7 +24,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -51,7 +50,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
-    private final QNodeTypeDefinition ntd;
     private final EffectiveNodeType ent;
     private final NodeTypeManagerImpl ntMgr;
     private final ManagerProvider mgrProvider;
@@ -70,15 +68,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
      */
     NodeTypeImpl(EffectiveNodeType ent, QNodeTypeDefinition ntd,
                  NodeTypeManagerImpl ntMgr, ManagerProvider mgrProvider) {
-        super(ntMgr);
+        super(ntd, ntMgr, mgrProvider.getNamePathResolver());
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.mgrProvider = mgrProvider;
-        this.ntd = ntd;
-    }
-
-    private NamespaceResolver nsResolver() {
-        return mgrProvider.getNamespaceResolver();
     }
 
     private NamePathResolver resolver() {
@@ -106,27 +99,10 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * Test if this nodetype equals or is directly or indirectly derived from
-     * the node type with the specified <code>nodeTypeName</code>, without
-     * checking of a node type of that name really exists.
-     *
-     * @param nodeTypeName A node type name.
-     * @return true if this node type represents the type with the given
-     * <code>nodeTypeName</code> or if it is directly or indirectly derived
-     * from it; otherwise <code>false</code>. If no node type exists with the
-     * specified name this method will also return <code>false</code>.
+     * {@inheritDoc}
      */
     public boolean isNodeType(Name nodeTypeName) {
         return ent.includesNodeType(nodeTypeName);
-    }
-
-    /**
-     * Returns the node type definition.
-     *
-     * @return the internal node type definition.
-     */
-    QNodeTypeDefinition getDefinition() {
-        return ntd;
     }
 
     /**
@@ -149,43 +125,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
     
     //-------------------------------------------------< NodeTypeDefinition >---
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getName()
-     */
-    public String getName() {
-        try {
-            return resolver().getJCRName(ntd.getName());
-        } catch (NamespaceException e) {
-            // should never get here
-            log.error("encountered unregistered namespace in node type name", e);
-            return ntd.getName().toString();
-        }
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getPrimaryItemName()
-     */
-    public String getPrimaryItemName() {
-        try {
-            Name piName = ntd.getPrimaryItemName();
-            if (piName != null) {
-                return resolver().getJCRName(piName);
-            } else {
-                return null;
-            }
-        } catch (NamespaceException e) {
-            // should never get here
-            log.error("encountered unregistered namespace in name of primary item", e);
-            return ntd.getName().toString();
-        }
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#isMixin()
-     */
-    public boolean isMixin() {
-        return ntd.isMixin();
-    }
 
     /**
      * @see javax.jcr.nodetype.NodeTypeDefinition#hasOrderableChildNodes()
@@ -194,80 +133,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
         return ntd.hasOrderableChildNodes();
     }
 
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#isAbstract()
-     */
-    public boolean isAbstract() {
-        return ntd.isAbstract();
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#isQueryable()
-     */
-    public boolean isQueryable() {
-        return ntd.isQueryable();
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredPropertyDefinitions()
-     */
-    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
-        for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
-        }
-        return propDefs;
-    }
-
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredChildNodeDefinitions()
-     */
-    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
-        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
-        for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
-        }
-        return nodeDefs;
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredSupertypeNames()
-     */
-    public String[] getDeclaredSupertypeNames() {
-        Name[] stNames = ntd.getSupertypes();
-        String[] dstn = new String[stNames.length];
-        for (int i = 0; i < stNames.length; i++) {
-            try {
-                dstn[i] = resolver().getJCRName(stNames[i]);
-            } catch (NamespaceException e) {
-                // should never get here
-                log.error("invalid node type name: " + stNames[i], e);
-                dstn[i] = stNames.toString();
-            }
-        }
-        return dstn;
-    }
-
     //-----------------------------------------------------------< NodeType >---
-    /**
-     * @see javax.jcr.nodetype.NodeType#isNodeType(String)
-     */
-    public boolean isNodeType(String nodeTypeName) {
-        Name ntName;
-        try {
-            ntName = resolver().getQName(nodeTypeName);
-        } catch (NamespaceException e) {
-            log.warn("invalid node type name: " + nodeTypeName, e);
-            return false;
-        } catch (NameException e) {
-            log.warn("invalid node type name: " + nodeTypeName, e);
-            return false;
-        }
-        return isNodeType(ntName);
-    }
 
     /**
      * @see javax.jcr.nodetype.NodeType#getSupertypes()
@@ -309,24 +175,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
         }
         return propDefs;
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypes()
-     */
-    public NodeType[] getDeclaredSupertypes() {
-        Name[] ntNames = ntd.getSupertypes();
-        NodeType[] supertypes = new NodeType[ntNames.length];
-        for (int i = 0; i < ntNames.length; i++) {
-            try {
-                supertypes[i] = ntMgr.getNodeType(ntNames[i]);
-            } catch (NoSuchNodeTypeException e) {
-                // should never get here
-                log.error("undefined supertype", e);
-                return new NodeType[0];
-            }
-        }
-        return supertypes;
     }
 
     /**

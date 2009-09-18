@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -53,11 +52,8 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
-    private final QNodeTypeDefinition ntd;
     private final EffectiveNodeType ent;
     private final NodeTypeManagerImpl ntMgr;
-    // resolver used to translate translate <code>Name</code>s to JCR name strings.
-    private final NamePathResolver resolver;
     // value factory used for type conversion
     private final ValueFactory valueFactory;
     private final DataStore store;
@@ -84,20 +80,15 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
                  NamePathResolver resolver,
                  ValueFactory valueFactory,
                  DataStore store) {
-        super(ntMgr);
+        super(ntd, ntMgr, resolver);
         this.ent = ent;
         this.ntMgr = ntMgr;
-        this.resolver = resolver;
         this.valueFactory = valueFactory;
-        this.ntd = ntd;
         this.store = store;
     }
 
     /**
-     * Checks if the effective node type includes the given <code>nodeTypeName</code>.
-     *
-     * @param nodeTypeName the name of a node type.
-     * @return true if the effective node type includes the given <code>nodeTypeName</code>.
+     * {@inheritDoc}
      */
     public boolean isNodeType(Name nodeTypeName) {
         return ent.includesNodeType(nodeTypeName);
@@ -113,15 +104,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      */
     public boolean isDerivedFrom(Name nodeTypeName) {
         return !nodeTypeName.equals(ntd.getName()) && ent.includesNodeType(nodeTypeName);
-    }
-
-    /**
-     * Returns the definition of this node type.
-     *
-     * @return the definition of this node type
-     */
-    public QNodeTypeDefinition getDefinition() {
-        return ntd;
     }
 
     /**
@@ -241,76 +223,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
 
 
     //---------------------------------------------------< NodeTypeDefinition >
-    /**
-     * {@inheritDoc}
-     */
-    public String getName() {
-        try {
-            return resolver.getJCRName(ntd.getName());
-        } catch (NamespaceException e) {
-            // should never get here
-            log.error("encountered unregistered namespace in node type name", e);
-            return ntd.getName().toString();
-        }
-    }
-
-    /**
-     * Returns the names of the supertypes actually declared in this node type.
-     * <p/>
-     * In implementations that support node type registration, if this
-     * <code>NodeTypeDefinition</code> object is actually a newly-created empty
-     * <code>NodeTypeTemplate</code>, then this method will return an array
-     * containing a single string indicating the node type
-     * <code>nt:base</code>.
-     *
-     * @return an array of <code>String</code>s
-     * @since JCR 2.0
-     */
-    public String[] getDeclaredSupertypeNames() {
-        Name[] ntNames = ntd.getSupertypes();
-        String[] supertypes = new String[ntNames.length];
-        for (int i = 0; i < ntNames.length; i++) {
-            try {
-                supertypes[i] = resolver.getJCRName(ntNames[i]);
-            } catch (NamespaceException e) {
-                // should never get here
-                log.error("encountered unregistered namespace in node type name", e);
-                supertypes[i] = ntNames[i].toString();
-            }
-        }
-        return supertypes;
-    }
-
-    /**
-     * Returns <code>true</code> if this is an abstract node type; returns
-     * <code>false</code> otherwise.
-     * <p/>
-     * An abstract node type is one that cannot be assigned as the primary or
-     * mixin type of a node but can be used in the definitions of other node
-     * types as a superclass.
-     * <p/>
-     * In implementations that support node type registration, if this
-     * <code>NodeTypeDefinition</code> object is actually a newly-created empty
-     * <code>NodeTypeTemplate</code>, then this method will return
-     * <code>false</code>.
-     *
-     * @return a <code>boolean</code>
-     * @since JCR 2.0
-     */
-    public boolean isAbstract() {
-        return ntd.isAbstract();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isMixin() {
-        return ntd.isMixin();
-    }
-
-    public boolean isQueryable() {
-        return ntd.isQueryable();
-    }
 
     /**
      * {@inheritDoc}
@@ -319,72 +231,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
         return ent.hasOrderableChildNodes();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getPrimaryItemName() {
-        // TODO JCR-1947: JSR 283: Node Type Attribute Subtyping Rules
-        try {
-            Name piName = ntd.getPrimaryItemName();
-            if (piName != null) {
-                return resolver.getJCRName(piName);
-            } else {
-                return null;
-            }
-        } catch (NamespaceException e) {
-            // should never get here
-            log.error("encountered unregistered namespace in name of primary item", e);
-            return ntd.getName().toString();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeType[] getDeclaredSupertypes() {
-        Name[] ntNames = ntd.getSupertypes();
-        NodeType[] supertypes = new NodeType[ntNames.length];
-        for (int i = 0; i < ntNames.length; i++) {
-            try {
-                supertypes[i] = ntMgr.getNodeType(ntNames[i]);
-            } catch (NoSuchNodeTypeException e) {
-                // should never get here
-                log.error("undefined supertype", e);
-                return new NodeType[0];
-            }
-        }
-        return supertypes;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
-        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
-        for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
-        }
-        return nodeDefs;
-    }
-
     //-------------------------------------------------------------< NodeType >
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isNodeType(String nodeTypeName) {
-        Name ntName;
-        try {
-            ntName = resolver.getQName(nodeTypeName);
-        } catch (NamespaceException e) {
-            log.warn("invalid node type name: " + nodeTypeName, e);
-            return false;
-        } catch (NameException e) {
-            log.warn("invalid node type name: " + nodeTypeName, e);
-            return false;
-        }
-        return isNodeType(ntName);
-    }
 
     /**
      * {@inheritDoc}
@@ -610,18 +457,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
             // fall through
         }
         return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
-        for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
-        }
-        return propDefs;
     }
 
     //--------------------------------------------------< new JSR 283 methods >

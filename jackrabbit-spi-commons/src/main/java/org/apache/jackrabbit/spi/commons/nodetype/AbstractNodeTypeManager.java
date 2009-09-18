@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.nodetype.NodeTypeManager;
@@ -28,6 +28,8 @@ import javax.jcr.nodetype.NodeDefinitionTemplate;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 
@@ -38,11 +40,6 @@ import javax.jcr.RepositoryException;
 public abstract class AbstractNodeTypeManager implements NodeTypeManager {
 
     /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(AbstractNodeTypeManager.class);
-
-    /**
      * Return the node type with the specified <code>ntName</code>.
      *
      * @param ntName Name of the node type to be returned.
@@ -50,6 +47,24 @@ public abstract class AbstractNodeTypeManager implements NodeTypeManager {
      * @throws NoSuchNodeTypeException If no such node type exists.
      */
     public abstract NodeType getNodeType(Name ntName) throws NoSuchNodeTypeException;
+
+    /**
+     * Retrieve the <code>NodeDefinition</code> for the given
+     * <code>QNodeDefinition</code>.
+     *
+     * @param nd the QNodeDefinition.
+     * @return the node definition.
+     */
+    public abstract NodeDefinition getNodeDefinition(QNodeDefinition nd);
+
+    /**
+     * Retrieve the <code>PropertyDefinition</code> for the given
+     * <code>QPropertyDefinition</code>.
+     *
+     * @param pd the QPropertyDefinition.
+     * @return the property definition.
+     */
+    public abstract PropertyDefinition getPropertyDefinition(QPropertyDefinition pd);
 
     /**
      * Returns the NamePathResolver used to validate JCR names.
