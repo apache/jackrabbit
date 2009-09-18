@@ -35,6 +35,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 
+import java.util.List;
 import java.util.Stack;
 import java.util.Map;
 import java.util.Collection;
@@ -67,18 +68,18 @@ class DefinitionValidator {
      * @throws InvalidNodeTypeDefinitionException
      * @throws RepositoryException
      */
-    public Map validateNodeTypeDefs(Collection ntDefs, Map validatedDefs)
+    public Map<QNodeTypeDefinition, EffectiveNodeType> validateNodeTypeDefs(Collection<QNodeTypeDefinition> ntDefs,
+    															Map<Name, QNodeTypeDefinition> validatedDefs)
         throws InvalidNodeTypeDefinitionException, RepositoryException {
         // tmp. map containing names/defs of validated nodetypes
-        Map tmpMap = new HashMap(validatedDefs);
-        for (Iterator it = ntDefs.iterator(); it.hasNext();) {
-            QNodeTypeDefinition ntd = (QNodeTypeDefinition) it.next();
+        Map<Name, QNodeTypeDefinition> tmpMap = new HashMap<Name, QNodeTypeDefinition>(validatedDefs);
+        for (QNodeTypeDefinition ntd : ntDefs) {
             tmpMap.put(ntd.getName(), ntd);
         }
 
         // map of nodetype definitions and effective nodetypes to be registered
-        Map ntMap = new HashMap();
-        ArrayList list = new ArrayList(ntDefs);
+        Map<QNodeTypeDefinition, EffectiveNodeType> ntMap = new HashMap<QNodeTypeDefinition, EffectiveNodeType>();
+        List<QNodeTypeDefinition> list = new ArrayList<QNodeTypeDefinition>(ntDefs);
 
         // iterate over definitions until there are no more definitions with
         // unresolved (i.e. unregistered) dependencies or an error occurs;
@@ -86,12 +87,12 @@ class DefinitionValidator {
         int count = -1;  // number of validated nt's per iteration
         while (list.size() > 0 && count != 0) {
             count = 0;
-            Iterator iterator = list.iterator();
+            Iterator<QNodeTypeDefinition> iterator = list.iterator();
             while (iterator.hasNext()) {
-                QNodeTypeDefinition ntd = (QNodeTypeDefinition) iterator.next();
+                QNodeTypeDefinition ntd = iterator.next();
                 // check if definition has unresolved dependencies
                 /* Note: don't compared to 'registered' nodetypes since registr. is performed later on */
-                Collection dependencies = ntd.getDependencies();
+                Collection<Name> dependencies = ntd.getDependencies();
                 if (tmpMap.keySet().containsAll(dependencies)) {
                     EffectiveNodeType ent = validateNodeTypeDef(ntd, tmpMap);
                     ntMap.put(ntd, ent);
@@ -105,9 +106,9 @@ class DefinitionValidator {
         if (list.size() > 0) {
             StringBuffer msg = new StringBuffer();
             msg.append("the following node types could not be registered because of unresolvable dependencies: ");
-            Iterator iterator = list.iterator();
+            Iterator<QNodeTypeDefinition> iterator = list.iterator();
             while (iterator.hasNext()) {
-                msg.append(((QNodeTypeDefinition) iterator.next()).getName());
+                msg.append(iterator.next().getName());
                 msg.append(" ");
             }
             log.error(msg.toString());
@@ -126,7 +127,7 @@ class DefinitionValidator {
      * @throws InvalidNodeTypeDefinitionException
      * @throws RepositoryException
      */
-    public EffectiveNodeType validateNodeTypeDef(QNodeTypeDefinition ntDef, Map validatedDefs)
+    public EffectiveNodeType validateNodeTypeDef(QNodeTypeDefinition ntDef, Map<Name, QNodeTypeDefinition> validatedDefs)
             throws InvalidNodeTypeDefinitionException, RepositoryException {
         /**
          * the effective (i.e. merged and resolved) node type resulting from
@@ -173,7 +174,7 @@ class DefinitionValidator {
              * check for circularity in inheritance chain
              * ('a' extends 'b' extends 'a')
              */
-            Stack inheritanceChain = new Stack();
+            Stack<Name> inheritanceChain = new Stack<Name>();
             inheritanceChain.push(name);
             checkForCircularInheritance(supertypes, inheritanceChain, validatedDefs);
         }
@@ -353,7 +354,7 @@ class DefinitionValidator {
                          * of auto-created child nodes (node type 'a' defines
                          * auto-created child node with default primary type 'a')
                          */
-                        Stack definingNTs = new Stack();
+                        Stack<Name> definingNTs = new Stack<Name>();
                         definingNTs.push(name);
                         checkForCircularNodeAutoCreation(defaultENT, definingNTs, validatedDefs);
                     }
@@ -466,7 +467,7 @@ class DefinitionValidator {
      * @throws InvalidNodeTypeDefinitionException
      * @throws RepositoryException
      */
-    private void checkForCircularInheritance(Name[] supertypes, Stack inheritanceChain, Map ntdMap)
+    private void checkForCircularInheritance(Name[] supertypes, Stack<Name> inheritanceChain, Map<Name, QNodeTypeDefinition> ntdMap)
         throws InvalidNodeTypeDefinitionException, RepositoryException {
         for (int i = 0; i < supertypes.length; i++) {
             Name stName = supertypes[i];
@@ -486,7 +487,7 @@ class DefinitionValidator {
             }
 
             if (ntdMap.containsKey(stName)) {
-                Name[] sta = ((QNodeTypeDefinition)ntdMap.get(stName)).getSupertypes();
+                Name[] sta = ntdMap.get(stName).getSupertypes();
                 if (sta.length > 0) {
                     // check recursively
                     inheritanceChain.push(stName);
@@ -507,7 +508,7 @@ class DefinitionValidator {
      * @throws InvalidNodeTypeDefinitionException
      */
     private void checkForCircularNodeAutoCreation(EffectiveNodeType childNodeENT,
-                                                  Stack definingParentNTs, Map ntdMap)
+                                                  Stack<Name> definingParentNTs, Map<Name, QNodeTypeDefinition> ntdMap)
         throws InvalidNodeTypeDefinitionException {
         // check for circularity through default node types of auto-created child nodes
         // (node type 'a' defines auto-created child node with default node type 'a')
@@ -562,7 +563,7 @@ class DefinitionValidator {
      * is registered; a <code>null</code> argument is silently ignored.
      * @param name name whose namespace is to be checked
      * @throws RepositoryException if the namespace of the given name is not
-     *                             registered or if an unspecified error occured
+     *                             registered or if an unspecified error occurred
      */
     private void checkNamespace(Name name) throws RepositoryException {
         if (name != null) {
