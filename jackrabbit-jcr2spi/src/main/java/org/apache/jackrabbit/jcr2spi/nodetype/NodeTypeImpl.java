@@ -31,7 +31,6 @@ import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -272,7 +271,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
                 targetType = type;
             }
 
-            ArrayList list = new ArrayList();
+            ArrayList<QValue> list = new ArrayList<QValue>();
             // convert values and compact array (purge null entries)
             for (int i = 0; i < values.length; i++) {
                 if (values[i] != null) {
@@ -283,7 +282,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
                     list.add(qValue);
                 }
             }
-            QValue[] internalValues = (QValue[]) list.toArray(new QValue[list.size()]);
+            QValue[] internalValues = list.toArray(new QValue[list.size()]);
             checkSetPropertyValueConstraints(def, internalValues);
             return true;
         } catch (NameException be) {
