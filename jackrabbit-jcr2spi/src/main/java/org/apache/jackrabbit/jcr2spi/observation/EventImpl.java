@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.observation;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -118,12 +117,11 @@ final class EventImpl implements Event {
     /**
      * @see javax.jcr.observation.Event#getInfo()
      */
-    public Map getInfo() throws RepositoryException {
-        Map<String, String> jcrInfo = new HashMap();
-        Map<Name, QValue> infos = event.getInfo();
-        for (Iterator<Name> it = event.getInfo().keySet().iterator(); it.hasNext(); ) {
-            Name key = it.next();
-            QValue value = infos.get(key);
+    public Map<String, String> getInfo() throws RepositoryException {
+        Map<String, String> jcrInfo = new HashMap<String, String>();
+        for (Map.Entry<Name, QValue> entry : event.getInfo().entrySet()) {
+            Name key = entry.getKey();
+            QValue value = entry.getValue();
             String strValue = null;
             if (value != null) {
                 strValue = ValueFormat.getJCRString(value, resolver);
