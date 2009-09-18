@@ -29,7 +29,7 @@
     <version>1.4</version>
   </parent>
   <artifactId>jackrabbit-core</artifactId>
-  <version>1.4.11-SNAPSHOT</version>
+  <version>1.4.11</version>
   <name>Jackrabbit Core</name>
   <description>Jackrabbit content repository implementation</description>
 
@@ -43,13 +43,13 @@
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/1.4/jackrabbit-core
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-core-1.4.11
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/1.4/jackrabbit-core
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-core-1.4.11
     </developerConnection>
     <url>
-      http://svn.apache.org/viewvc/jackrabbit/branches/1.4/jackrabbit-core
+      http://svn.apache.org/viewvc/jackrabbit/tags/jackrabbit-core-1.4.11
     </url>
   </scm>
 
