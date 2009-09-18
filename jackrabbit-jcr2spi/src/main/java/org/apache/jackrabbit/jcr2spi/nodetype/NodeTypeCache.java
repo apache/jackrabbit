@@ -40,12 +40,12 @@ public class NodeTypeCache {
     /**
      * The caches per repository service instance
      */
-    private static final Map CACHES_PER_SERVICE = new WeakHashMap();
+    private static final Map<RepositoryService, Map> CACHES_PER_SERVICE = new WeakHashMap<RepositoryService, Map>();
 
     /**
      * Maps node type Names to QNodeTypeDefinition
      */
-    private final Map nodeTypes = new HashMap();
+    private final Map<Name, QNodeTypeDefinition> nodeTypes = new HashMap<Name, QNodeTypeDefinition>();
 
     /**
      * @param service the repository service.
@@ -61,7 +61,7 @@ public class NodeTypeCache {
         }
         Map caches;
         synchronized (CACHES_PER_SERVICE) {
-            caches = (Map) CACHES_PER_SERVICE.get(service);
+            caches = CACHES_PER_SERVICE.get(service);
             if (caches == null) {
                 // use soft references for the node type caches
                 caches = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
@@ -87,11 +87,11 @@ public class NodeTypeCache {
      * @return
      * @throws javax.jcr.RepositoryException
      */
-    public Iterator getAllDefinitions(NodeTypeStorage storage)
+    public Iterator<QNodeTypeDefinition> getAllDefinitions(NodeTypeStorage storage)
             throws RepositoryException {
-        Map allNts = new HashMap();
-        for (Iterator it = storage.getAllDefinitions(); it.hasNext(); ) {
-            QNodeTypeDefinition def = (QNodeTypeDefinition) it.next();
+        Map<Name, QNodeTypeDefinition> allNts = new HashMap<Name, QNodeTypeDefinition>();
+        for (Iterator<QNodeTypeDefinition> it = storage.getAllDefinitions(); it.hasNext(); ) {
+            QNodeTypeDefinition def = it.next();
             allNts.put(def.getName(), def);
         }
         // update the cache
@@ -112,16 +112,16 @@ public class NodeTypeCache {
      * @throws javax.jcr.nodetype.NoSuchNodeTypeException
      * @throws RepositoryException
      */
-    public Iterator getDefinitions(NodeTypeStorage storage, Name[] nodeTypeNames)
+    public Iterator<QNodeTypeDefinition> getDefinitions(NodeTypeStorage storage, Name[] nodeTypeNames)
             throws NoSuchNodeTypeException, RepositoryException {
-        List nts = new ArrayList();
-        List missing = null;
+        List<QNodeTypeDefinition> nts = new ArrayList<QNodeTypeDefinition>();
+        List<Name> missing = null;
         synchronized (nodeTypes) {
             for (int i = 0; i < nodeTypeNames.length; i++) {
-                QNodeTypeDefinition def = (QNodeTypeDefinition) nodeTypes.get(nodeTypeNames[i]);
+                QNodeTypeDefinition def = nodeTypes.get(nodeTypeNames[i]);
                 if (def == null) {
                     if (missing == null) {
-                        missing = new ArrayList();
+                        missing = new ArrayList<Name>();
                     }
                     missing.add(nodeTypeNames[i]);
                 } else {
@@ -130,11 +130,11 @@ public class NodeTypeCache {
             }
         }
         if (missing != null) {
-            Name[] ntNames = (Name[]) missing.toArray(new Name[missing.size()]);
-            Iterator it = storage.getDefinitions(ntNames);
+            Name[] ntNames = missing.toArray(new Name[missing.size()]);
+            Iterator<QNodeTypeDefinition> it = storage.getDefinitions(ntNames);
             synchronized (nodeTypes) {
                 while (it.hasNext()) {
-                    QNodeTypeDefinition def = (QNodeTypeDefinition) it.next();
+                    QNodeTypeDefinition def = it.next();
                     nts.add(def);
                     nodeTypes.put(def.getName(), def);
                 }
@@ -166,10 +166,10 @@ public class NodeTypeCache {
      */
     public NodeTypeStorage wrap(final NodeTypeStorage storage) {
         return new NodeTypeStorage() {
-            public Iterator getAllDefinitions() throws RepositoryException {
+            public Iterator<QNodeTypeDefinition> getAllDefinitions() throws RepositoryException {
                 return NodeTypeCache.this.getAllDefinitions(storage);
             }
-            public Iterator getDefinitions(Name[] nodeTypeNames)
+            public Iterator<QNodeTypeDefinition> getDefinitions(Name[] nodeTypeNames)
                     throws NoSuchNodeTypeException, RepositoryException {
                 return NodeTypeCache.this.getDefinitions(storage, nodeTypeNames);
             }
