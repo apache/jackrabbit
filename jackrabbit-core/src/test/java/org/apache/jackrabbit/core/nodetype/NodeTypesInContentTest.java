@@ -20,6 +20,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.ItemVisitor;
 import javax.jcr.Property;
@@ -45,7 +46,7 @@ public class NodeTypesInContentTest extends AbstractJCRTest {
         super.setUp();
         
         InputStream xml = getClass().getClassLoader().getResourceAsStream(TEST_NODETYPES);
-        NodeTypeDef[] ntDefs = NodeTypeReader.read(xml);
+        QNodeTypeDefinition[] ntDefs = NodeTypeReader.read(xml);
         NodeTypeRegistry ntReg = ((SessionImpl) superuser).getNodeTypeManager().getNodeTypeRegistry();
         if (!ntReg.isRegistered(ntDefs[0].getName())) {
             ntReg.registerNodeTypes(Arrays.asList(ntDefs));

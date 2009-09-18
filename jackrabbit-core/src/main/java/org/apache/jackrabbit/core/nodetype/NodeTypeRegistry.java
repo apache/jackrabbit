@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -52,9 +54,11 @@ import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.QNodeDefinitionBuilder;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +91,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private EffectiveNodeTypeCache entCache;
 
     // map of node type names and node type definitions
-    private final Map<Name, NodeTypeDef> registeredNTDefs;
+    private final Map<Name, QNodeTypeDefinition> registeredNTDefs;
 
     // definition of the root node
     private final QNodeDefinition rootNodeDef;
@@ -119,8 +123,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     public static NodeTypeRegistry create(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
-        NodeTypeRegistry ntMgr = new NodeTypeRegistry(nsReg, ntStore);
-        return ntMgr;
+        return new NodeTypeRegistry(nsReg, ntStore);
     }
 
     //----------------------------------------< public NodeTypeRegistry 'api' >
@@ -171,7 +174,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    public synchronized EffectiveNodeType registerNodeType(NodeTypeDef ntd)
+    public synchronized EffectiveNodeType registerNodeType(QNodeTypeDefinition ntd)
             throws InvalidNodeTypeDefException, RepositoryException {
         // validate and register new node type definition
         EffectiveNodeType ent = internalRegister(ntd);
@@ -181,7 +184,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         persistCustomNodeTypeDefs(customNTDefs);
 
         if (eventChannel != null) {
-            Set<NodeTypeDef> ntDefs = new HashSet<NodeTypeDef>();
+            Set<QNodeTypeDefinition> ntDefs = new HashSet<QNodeTypeDefinition>();
             ntDefs.add(ntd);
             eventChannel.registered(ntDefs);
         }
@@ -193,18 +196,18 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * Same as <code>{@link #registerNodeType(NodeTypeDef)}</code> except
+     * Same as <code>{@link #registerNodeType(QNodeTypeDefinition)}</code> except
      * that a collection of <code>NodeTypeDef</code>s is registered instead of
      * just one.
      * <p/>
      * This method can be used to register a set of node types that have
      * dependencies on each other.
      *
-     * @param ntDefs a collection of <code>NodeTypeDef<code> objects
+     * @param ntDefs a collection of <code>QNodeTypeDefinition<code> objects
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    public void registerNodeTypes(Collection<NodeTypeDef> ntDefs)
+    public void registerNodeTypes(Collection<QNodeTypeDefinition> ntDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
 
         registerNodeTypes(ntDefs, false);
@@ -213,19 +216,19 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Internal implementation of {@link #registerNodeTypes(Collection)}
      *
-     * @param ntDefs a collection of <code>NodeTypeDef<code> objects
+     * @param ntDefs a collection of <code>QNodeTypeDefinition<code> objects
      * @param external whether this invocation should be considered external
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    private synchronized void registerNodeTypes(Collection<NodeTypeDef> ntDefs,
+    private synchronized void registerNodeTypes(Collection<QNodeTypeDefinition> ntDefs,
                                                 boolean external)
             throws InvalidNodeTypeDefException, RepositoryException {
 
         // validate and register new node type definitions
         internalRegister(ntDefs);
         // persist new node type definitions
-        for (NodeTypeDef ntDef: ntDefs) {
+        for (QNodeTypeDefinition ntDef: ntDefs) {
             customNTDefs.add(ntDef);
         }
         persistCustomNodeTypeDefs(customNTDefs);
@@ -236,7 +239,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // notify listeners
-        for (NodeTypeDef ntDef : ntDefs) {
+        for (QNodeTypeDefinition ntDef : ntDefs) {
             notifyRegistered(ntDef.getName());
         }
     }
@@ -353,7 +356,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *                                     is invalid
      * @throws RepositoryException if another error occurs
      */
-    public EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
+    public EffectiveNodeType reregisterNodeType(QNodeTypeDefinition ntd)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
 
@@ -361,7 +364,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * Internal implementation of {@link #reregisterNodeType(NodeTypeDef)}.
+     * Internal implementation of {@link #reregisterNodeType(QNodeTypeDefinition)}.
      *
      * @param ntd node type definition
      * @param external whether this invocation should be considered external
@@ -372,7 +375,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *                                     is invalid
      * @throws RepositoryException if another error occurs
      */
-    private synchronized EffectiveNodeType reregisterNodeType(NodeTypeDef ntd,
+    private synchronized EffectiveNodeType reregisterNodeType(QNodeTypeDefinition ntd,
                                                               boolean external)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
@@ -389,13 +392,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         /**
          * validate new node type definition
          */
-        checkNtBaseSubtyping(ntd, registeredNTDefs);
+        ntd = checkNtBaseSubtyping(ntd, registeredNTDefs);
         validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
 
         /**
          * build diff of current and new definition and determine type of change
          */
-        NodeTypeDef ntdOld = registeredNTDefs.get(name);
+        QNodeTypeDefinition ntdOld = registeredNTDefs.get(name);
         NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
         if (!diff.isModified()) {
             // the definition has not been modified, there's nothing to do here...
@@ -509,7 +512,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
          * node type
          */
         HashSet<Name> names = new HashSet<Name>();
-        for (NodeTypeDef ntd : registeredNTDefs.values()) {
+        for (QNodeTypeDefinition ntd : registeredNTDefs.values()) {
             if (ntd.getDependencies().contains(nodeTypeName)) {
                 names.add(ntd.getName());
             }
@@ -525,14 +528,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws NoSuchNodeTypeException if a node type with the given name
      *                                 does not exist
      */
-    public NodeTypeDef getNodeTypeDef(Name nodeTypeName)
+    public QNodeTypeDefinition getNodeTypeDef(Name nodeTypeName)
             throws NoSuchNodeTypeException {
-        NodeTypeDef def = registeredNTDefs.get(nodeTypeName);
+        QNodeTypeDefinition def = registeredNTDefs.get(nodeTypeName);
         if (def == null) {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
         }
-        // return clone to make sure nobody messes around with the 'live' definition
-        return (NodeTypeDef) def.clone();
+        return def;
     }
 
     /**
@@ -583,7 +585,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         ps.println();
         ps.println("Registered NodeTypes:");
         ps.println();
-        for (NodeTypeDef ntd : registeredNTDefs.values()) {
+        for (QNodeTypeDefinition ntd : registeredNTDefs.values()) {
             ps.println(ntd.getName());
             Name[] supertypes = ntd.getSupertypes();
             ps.println("\tSupertypes");
@@ -664,7 +666,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * {@inheritDoc}
      */
-    public void externalRegistered(Collection ntDefs)
+    public void externalRegistered(Collection<QNodeTypeDefinition> ntDefs)
             throws RepositoryException, InvalidNodeTypeDefException {
 
         registerNodeTypes(ntDefs, true);
@@ -673,7 +675,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * {@inheritDoc}
      */
-    public void externalReregistered(NodeTypeDef ntDef)
+    public void externalReregistered(QNodeTypeDefinition ntDef)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
 
@@ -683,7 +685,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * {@inheritDoc}
      */
-    public void externalUnregistered(Collection ntNames)
+    public void externalUnregistered(Collection<Name> ntNames)
             throws RepositoryException, NoSuchNodeTypeException {
 
         unregisterNodeTypes(ntNames, true);
@@ -910,7 +912,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws RepositoryException If there is conflicting content or if the
      *                             check failed for some other reason.
      */
-    protected void checkForConflictingContent(NodeTypeDef ntd)
+    protected void checkForConflictingContent(QNodeTypeDefinition ntd)
             throws RepositoryException {
         /**
          * collect names of node types that have dependencies on the given
@@ -979,7 +981,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     static EffectiveNodeType getEffectiveNodeType(Name ntName,
                                                   EffectiveNodeTypeCache entCache,
-                                                  Map<Name, NodeTypeDef> ntdCache)
+                                                  Map<Name, QNodeTypeDefinition> ntdCache)
             throws NoSuchNodeTypeException {
         // 1. check if effective node type has already been built
         EffectiveNodeTypeCache.Key key = entCache.getKey(new Name[]{ntName});
@@ -989,7 +991,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // 2. make sure we've got the definition of the specified node type
-        NodeTypeDef ntd = ntdCache.get(ntName);
+        QNodeTypeDefinition ntd = ntdCache.get(ntName);
         if (ntd == null) {
             throw new NoSuchNodeTypeException(ntName.toString());
         }
@@ -1025,7 +1027,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     static EffectiveNodeType getEffectiveNodeType(Name[] ntNames,
                                                   EffectiveNodeTypeCache entCache,
-                                                  Map<Name, NodeTypeDef> ntdCache)
+                                                  Map<Name, QNodeTypeDefinition> ntdCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
 
         EffectiveNodeTypeCache.Key key = entCache.getKey(ntNames);
@@ -1068,7 +1070,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                      */
                     Name[] remainder = key.getNames();
                     for (Name aRemainder : remainder) {
-                        NodeTypeDef ntd = ntdCache.get(aRemainder);
+                        QNodeTypeDefinition ntd = ntdCache.get(aRemainder);
                         EffectiveNodeType ent =
                                 EffectiveNodeType.create(ntd, entCache, ntdCache);
                         // store new effective node type
@@ -1096,7 +1098,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
     static void checkForCircularInheritance(Name[] supertypes,
                                             Stack<Name> inheritanceChain,
-                                            Map<Name, NodeTypeDef> ntDefCache)
+                                            Map<Name, QNodeTypeDefinition> ntDefCache)
             throws InvalidNodeTypeDefException, RepositoryException {
         for (Name nt : supertypes) {
             int pos = inheritanceChain.lastIndexOf(nt);
@@ -1115,7 +1117,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             }
 
             try {
-                NodeTypeDef ntd = ntDefCache.get(nt);
+                QNodeTypeDefinition ntd = ntDefCache.get(nt);
                 Name[] sta = ntd.getSupertypes();
                 if (sta.length > 0) {
                     // check recursively
@@ -1134,7 +1136,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     static void checkForCircularNodeAutoCreation(EffectiveNodeType childNodeENT,
                                                  Stack<Name> definingParentNTs,
                                                  EffectiveNodeTypeCache anEntCache,
-                                                 Map<Name, NodeTypeDef> ntDefCache)
+                                                 Map<Name, QNodeTypeDefinition> ntDefCache)
             throws InvalidNodeTypeDefException {
         // check for circularity through default node types of auto-created child nodes
         // (node type 'a' defines auto-created child node with default node type 'a')
@@ -1180,7 +1182,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
     }
 
-    private EffectiveNodeType internalRegister(NodeTypeDef ntd)
+    private EffectiveNodeType internalRegister(QNodeTypeDefinition ntd)
             throws InvalidNodeTypeDefException, RepositoryException {
         Name name = ntd.getName();
         if (name != null && registeredNTDefs.containsKey(name)) {
@@ -1189,15 +1191,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             throw new InvalidNodeTypeDefException(msg);
         }
 
-        checkNtBaseSubtyping(ntd, registeredNTDefs);
+        ntd = checkNtBaseSubtyping(ntd, registeredNTDefs);
         EffectiveNodeType ent =
                 validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
 
         // store new effective node type instance
         entCache.put(ent);
 
-        // register clone of node type definition
-        ntd = (NodeTypeDef) ntd.clone();
         registeredNTDefs.put(name, ntd);
 
         return ent;
@@ -1216,7 +1216,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws RepositoryException if an error occurs
      * @see #registerNodeType
      */
-    private void internalRegister(Collection<NodeTypeDef> ntDefs)
+    private void internalRegister(Collection<QNodeTypeDefinition> ntDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
         internalRegister(ntDefs, false);
     }
@@ -1231,15 +1231,18 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * that can be exposed in a property definition because it is
      * system-generated (such as jcr:primaryType in nt:base).
      */
-    private void internalRegister(Collection<NodeTypeDef> ntDefs, boolean lenient)
+    private void internalRegister(Collection<QNodeTypeDefinition> ntDefs, boolean lenient)
             throws InvalidNodeTypeDefException, RepositoryException {
 
+        // need a list/collection that can be modified
+        List<QNodeTypeDefinition> defs = new ArrayList<QNodeTypeDefinition>(ntDefs);
+
         // map of node type names and node type definitions
-        Map<Name, NodeTypeDef> tmpNTDefCache = new HashMap<Name, NodeTypeDef>(registeredNTDefs);
+        Map<Name, QNodeTypeDefinition> tmpNTDefCache = new HashMap<Name, QNodeTypeDefinition>(registeredNTDefs);
 
         // temporarily register the node type definition
         // and do some preliminary checks
-        for (NodeTypeDef ntd : ntDefs) {
+        for (QNodeTypeDefinition ntd : defs) {
             Name name = ntd.getName();
             if (name != null && tmpNTDefCache.containsKey(name)) {
                 String msg = name + " already exists";
@@ -1254,14 +1257,21 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // check if all node type defs have proper nt:base subtyping
-        for (NodeTypeDef ntd : ntDefs) {
-            checkNtBaseSubtyping(ntd, tmpNTDefCache);
+        for (int i = 0; i < defs.size(); i++) {
+            QNodeTypeDefinition ntd = defs.get(i);
+            QNodeTypeDefinition mod = checkNtBaseSubtyping(ntd, tmpNTDefCache);
+            if (mod != ntd) {
+                // check fixed subtyping
+                // -> update cache and list of defs
+                tmpNTDefCache.put(mod.getName(), mod);
+                defs.set(i, mod);
+            }
         }
 
         // create working copies of current ent & ntd caches:
         // cache of pre-built aggregations of node types
         EffectiveNodeTypeCache tmpENTCache = (EffectiveNodeTypeCache) entCache.clone();
-        for (NodeTypeDef ntd : ntDefs) {
+        for (QNodeTypeDefinition ntd : defs) {
             EffectiveNodeType ent = validateNodeTypeDef(ntd, tmpENTCache,
                     tmpNTDefCache, nsReg, lenient);
 
@@ -1271,9 +1281,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // since no exception was thrown so far the definitions are assumed to
         // be valid
-        for (NodeTypeDef ntd : ntDefs) {
-            // register clone of node type definition
-            ntd = (NodeTypeDef) ntd.clone();
+        for (QNodeTypeDefinition ntd : defs) {
             registeredNTDefs.put(ntd.getName(), ntd);
         }
 
@@ -1282,7 +1290,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     private void internalUnregister(Name name) throws NoSuchNodeTypeException {
-        NodeTypeDef ntd = registeredNTDefs.get(name);
+        QNodeTypeDefinition ntd = registeredNTDefs.get(name);
         if (ntd == null) {
             throw new NoSuchNodeTypeException(name.toString());
         }
@@ -1321,15 +1329,16 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *
      * @param ntd the node type def to check
      * @param ntdCache cache for lookup
-     * @return <code>true</code> if the ntd was modified
+     * @return the node type definition that was given to check or a new
+     *          instance if it had to be fixed up.
      */
-    private static boolean checkNtBaseSubtyping(NodeTypeDef ntd, Map<Name, NodeTypeDef> ntdCache) {
+    private static QNodeTypeDefinition checkNtBaseSubtyping(QNodeTypeDefinition ntd, Map<Name, QNodeTypeDefinition> ntdCache) {
         if (NameConstants.NT_BASE.equals(ntd.getName())) {
-            return false;
+            return ntd;
         }
         Set<Name> supertypes = new TreeSet<Name>(Arrays.asList(ntd.getSupertypes()));
         if (supertypes.isEmpty()) {
-            return false;
+            return ntd;
         }
         boolean modified;
         if (ntd.isMixin()) {
@@ -1340,7 +1349,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             boolean allMixins = true;
             for (Name name: supertypes) {
                 if (!name.equals(NameConstants.NT_BASE)) {
-                    NodeTypeDef def = ntdCache.get(name);
+                    QNodeTypeDefinition def = ntdCache.get(name);
                     if (def != null && !def.isMixin()) {
                         allMixins = false;
                         break;
@@ -1355,14 +1364,19 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                 // ntd is a primary node type and at least one of the supertypes
                 // is too, so ensure that no nt:base is added. note that the
                 // trivial case, where there would be no supertype left is handled
-                // in the NodeTypeDef directly
+                // in the QNodeTypeDefinition directly
                 modified = supertypes.remove(NameConstants.NT_BASE);
             }
         }
         if (modified) {
-            ntd.setSupertypes(supertypes.toArray(new Name[supertypes.size()]));
+            ntd = new QNodeTypeDefinitionImpl(ntd.getName(),
+                    supertypes.toArray(new Name[supertypes.size()]),
+                    ntd.getSupportedMixinTypes(), ntd.isMixin(),
+                    ntd.isAbstract(), ntd.isQueryable(),
+                    ntd.hasOrderableChildNodes(), ntd.getPrimaryItemName(),
+                    ntd.getPropertyDefs(), ntd.getChildNodeDefs());
         }
-        return modified;
+        return ntd;
     }
 
     /**
@@ -1374,13 +1388,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @param ntdCache cache of 'known' node type definitions, used to resolve dependencies
      * @param nsReg    namespace registry used for validatingatch names
      * @param lenient flag governing whether validation can be lenient or has to be strict
-     * @return an effective node type representation of the specified <code>NodeTypeDef</code>
+     * @return an effective node type representation of the specified <code>QNodeTypeDefinition</code>
      * @throws InvalidNodeTypeDefException if the node type is not valid
      * @throws RepositoryException         if another error occurs
      */
-    private static EffectiveNodeType validateNodeTypeDef(NodeTypeDef ntd,
+    private static EffectiveNodeType validateNodeTypeDef(QNodeTypeDefinition ntd,
                                                          EffectiveNodeTypeCache entCache,
-                                                         Map<Name, NodeTypeDef> ntdCache,
+                                                         Map<Name, QNodeTypeDefinition> ntdCache,
                                                          NamespaceRegistry nsReg,
                                                          boolean lenient)
             throws InvalidNodeTypeDefException, RepositoryException {

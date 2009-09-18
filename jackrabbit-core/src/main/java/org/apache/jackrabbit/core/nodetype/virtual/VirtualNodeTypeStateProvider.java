@@ -25,7 +25,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -37,6 +36,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
@@ -75,7 +75,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId, NameConstants.REP_NODETYPES, null);
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
         for (int i = 0; i < ntNames.length; i++) {
-            NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntNames[i]);
+            QNodeTypeDefinition ntDef = ntReg.getNodeTypeDef(ntNames[i]);
             VirtualNodeState ntState = createNodeTypeState(root, ntDef);
             root.addChildNodeEntry(ntNames[i], ntState.getNodeId());
             // add as hard reference
@@ -104,7 +104,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     public void onNodeTypeAdded(Name ntName) throws RepositoryException {
         try {
             VirtualNodeState root = (VirtualNodeState) getRootState();
-            NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntName);
+            QNodeTypeDefinition ntDef = ntReg.getNodeTypeDef(ntName);
             VirtualNodeState ntState = createNodeTypeState(root, ntDef);
             root.addChildNodeEntry(ntName, ntState.getNodeId());
 
@@ -149,7 +149,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      * @throws RepositoryException
      */
     private VirtualNodeState createNodeTypeState(VirtualNodeState parent,
-                                                 NodeTypeDef ntDef)
+                                                 QNodeTypeDefinition ntDef)
             throws RepositoryException {
         NodeId id = calculateStableId(ntDef.getName().toString());
         VirtualNodeState ntState = createNodeState(parent, ntDef.getName(), id, NameConstants.NT_NODETYPE);
@@ -194,7 +194,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      */
     private VirtualNodeState createPropertyDefState(VirtualNodeState parent,
                                                     QPropertyDefinition propDef,
-                                                    NodeTypeDef ntDef, int n)
+                                                    QNodeTypeDefinition ntDef, int n)
             throws RepositoryException {
         NodeId id = calculateStableId(
                 ntDef.getName().toString() + "/" + NameConstants.JCR_PROPERTYDEFINITION.toString() + "/" + n);
@@ -245,7 +245,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      */
     private VirtualNodeState createChildNodeDefState(VirtualNodeState parent,
                                                      QNodeDefinition cnDef,
-                                                     NodeTypeDef ntDef, int n)
+                                                     QNodeTypeDefinition ntDef, int n)
             throws RepositoryException {
         NodeId id = calculateStableId(
                 ntDef.getName().toString() + "/" + NameConstants.JCR_CHILDNODEDEFINITION.toString() + "/" + n);

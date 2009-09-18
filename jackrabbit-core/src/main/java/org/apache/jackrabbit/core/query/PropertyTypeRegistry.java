@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +86,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
 
     public void nodeTypeRegistered(Name ntName) {
         try {
-            NodeTypeDef def = registry.getNodeTypeDef(ntName);
+            QNodeTypeDefinition def = registry.getNodeTypeDef(ntName);
             QPropertyDefinition[] propDefs = def.getPropertyDefs();
             synchronized (typeMapping) {
                 for (QPropertyDefinition propDef : propDefs) {

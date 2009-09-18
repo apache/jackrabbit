@@ -20,11 +20,13 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.nodetype.QNodeDefinitionBuilder;
 import org.apache.jackrabbit.spi.commons.nodetype.QPropertyDefinitionBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QNodeTypeDefinitionBuilder;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -58,7 +60,7 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
     /**
      * The cyclic dependent node type definitions we use for the tests
      */
-    private Collection ntDefCollection;
+    private Collection<QNodeTypeDefinition> ntDefCollection;
 
     /**
      * The name factory
@@ -114,11 +116,11 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          * [bar]
          * + myFooInBar (foo)
          */
-        final NodeTypeDef foo = new NodeTypeDef();
+        final QNodeTypeDefinitionBuilder foo = new QNodeTypeDefinitionBuilder();
         foo.setName(nameFactory.create("", "foo"));
         foo.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
-        final NodeTypeDef bar = new NodeTypeDef();
+        final QNodeTypeDefinitionBuilder bar = new QNodeTypeDefinitionBuilder();
         bar.setName(nameFactory.create("", "bar"));
         bar.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
@@ -134,9 +136,9 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
 
         foo.setChildNodeDefs(new QNodeDefinition[]{myBarInFoo.build()});
         bar.setChildNodeDefs(new QNodeDefinition[]{myFooInBar.build()});
-        ntDefCollection = new LinkedList();
-        ntDefCollection.add(foo);
-        ntDefCollection.add(bar);
+        ntDefCollection = new LinkedList<QNodeTypeDefinition>();
+        ntDefCollection.add(foo.build());
+        ntDefCollection.add(bar.build());
 
         try {
             ntreg.registerNodeTypes(ntDefCollection);
@@ -162,7 +164,7 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          * + myNTInFoo (I_am_an_invalid_required_primary_type)
          *
          */
-        final NodeTypeDef foo = new NodeTypeDef();
+        final QNodeTypeDefinitionBuilder foo = new QNodeTypeDefinitionBuilder();
         foo.setName(nameFactory.create("", "foo"));
         foo.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
@@ -173,8 +175,8 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
         myBarInFoo.setDeclaringNodeType(foo.getName());
 
         foo.setChildNodeDefs(new QNodeDefinition[]{myBarInFoo.build()});
-        ntDefCollection = new LinkedList();
-        ntDefCollection.add(foo);
+        ntDefCollection = new LinkedList<QNodeTypeDefinition>();
+        ntDefCollection.add(foo.build());
 
         try {
             ntreg.registerNodeTypes(ntDefCollection);
@@ -206,10 +208,10 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          *
          */
 
-        final NodeTypeDef folder = new NodeTypeDef();
+        final QNodeTypeDefinitionBuilder folder = new QNodeTypeDefinitionBuilder();
         folder.setName(nameFactory.create("", "Folder"));
 
-        final NodeTypeDef cmsObject = new NodeTypeDef();
+        final QNodeTypeDefinitionBuilder cmsObject = new QNodeTypeDefinitionBuilder();
         cmsObject.setName(nameFactory.create("", "CmsObject"));
         cmsObject.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
@@ -220,7 +222,7 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
         cmsObject.setChildNodeDefs(new QNodeDefinition[]{parentFolder.build()});
 
 
-        final NodeTypeDef document = new NodeTypeDef();
+        final QNodeTypeDefinitionBuilder document = new QNodeTypeDefinitionBuilder();
         document.setName(nameFactory.create("", "Document"));
         document.setSupertypes(new Name[]{cmsObject.getName()});
         QPropertyDefinitionBuilder sizeProp = new QPropertyDefinitionBuilder();
@@ -244,10 +246,10 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
 
         folder.setChildNodeDefs(new QNodeDefinition[]{
                 folders.build(), documents.build()});
-        ntDefCollection = new LinkedList();
-        ntDefCollection.add(folder);
-        ntDefCollection.add(document);
-        ntDefCollection.add(cmsObject);
+        ntDefCollection = new LinkedList<QNodeTypeDefinition>();
+        ntDefCollection.add(folder.build());
+        ntDefCollection.add(document.build());
+        ntDefCollection.add(cmsObject.build());
 
         try {
             ntreg.registerNodeTypes(ntDefCollection);

@@ -28,10 +28,10 @@ import javax.jcr.RepositoryException;
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.persistence.PersistenceCopier;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -229,7 +229,7 @@ public class RepositoryCopier {
         logger.info("Copying registered node types");
         Collection<Name> existing =
             Arrays.asList(targetRegistry.getRegisteredNodeTypes());
-        Collection<NodeTypeDef> register = new ArrayList<NodeTypeDef>();
+        Collection<QNodeTypeDefinition> register = new ArrayList<QNodeTypeDefinition>();
         for (Name name : sourceRegistry.getRegisteredNodeTypes()) {
             // TODO: what about modified node types?
             if (!existing.contains(name)) {

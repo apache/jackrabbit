@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.commons.cnd;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
@@ -269,20 +271,30 @@ public abstract class DefinitionBuilderFactory<T, N> {
      */
     public static abstract class AbstractPropertyDefinitionBuilder<T> extends AbstractItemDefinitionBuilder<T> {
 
+        private static final String[] ALL_OPERATORS = new String[]{
+                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
+                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
+                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_LIKE,
+                QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
+        };
+
         /** See {@link #setRequiredType(int)} */
-        protected int requiredType;
+        protected int requiredType = PropertyType.UNDEFINED;
 
         /** See {@link #setMultiple(boolean)} */
-        protected boolean isMultiple;
+        protected boolean isMultiple = false;
 
         /** See {@link #setFullTextSearchable(boolean)} */
-        protected boolean fullTextSearchable;
+        protected boolean fullTextSearchable = true;
 
         /** See {@link #setQueryOrderable(boolean)} */
-        protected boolean queryOrderable;
+        protected boolean queryOrderable = true;
 
         /** See {@link #setAvailableQueryOperators(String[])} */
-        protected String[] queryOperators;
+        protected String[] queryOperators = ALL_OPERATORS;
 
         /**
          * @param type the required type of the property definition being built.
@@ -351,6 +363,9 @@ public abstract class DefinitionBuilderFactory<T, N> {
          * @see PropertyDefinition#getAvailableQueryOperators()
          */
         public void setAvailableQueryOperators(String[] queryOperators) throws RepositoryException {
+            if (queryOperators == null) {
+                throw new NullPointerException("queryOperators");
+            }
             this.queryOperators = queryOperators;
         }
     }

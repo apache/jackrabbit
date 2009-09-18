@@ -43,13 +43,13 @@ import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 public class NodeTypeDefStore {
 
     /** Map of node type names to node type definitions. */
-    private final Map<Name, NodeTypeDef> ntDefs;
+    private final Map<Name, QNodeTypeDefinition> ntDefs;
 
     /**
      * Empty default constructor.
      */
     public NodeTypeDefStore() throws RepositoryException {
-        ntDefs = new HashMap<Name, NodeTypeDef>();
+        ntDefs = new HashMap<Name, QNodeTypeDefinition>();
     }
 
     /**
@@ -60,8 +60,8 @@ public class NodeTypeDefStore {
     public void load(InputStream in)
             throws IOException, InvalidNodeTypeDefException,
             RepositoryException {
-        NodeTypeDef[] types = NodeTypeReader.read(in);
-        for (NodeTypeDef type : types) {
+        QNodeTypeDefinition[] types = NodeTypeReader.read(in);
+        for (QNodeTypeDefinition type : types) {
             add(type);
         }
     }
@@ -83,7 +83,7 @@ public class NodeTypeDefStore {
                     in, systemId, new QDefinitionBuilderFactory());
 
             for (QNodeTypeDefinition qdef: r.getNodeTypeDefinitions()) {
-                add(new NodeTypeDef(qdef));
+                add(qdef);
             }
         } catch (ParseException e) {
             throw new InvalidNodeTypeDefException("Unable to parse CND stream.", e);
@@ -98,14 +98,14 @@ public class NodeTypeDefStore {
      */
     public void store(OutputStream out, NamespaceRegistry registry)
             throws IOException, RepositoryException {
-        NodeTypeDef[] types = ntDefs.values().toArray(new NodeTypeDef[ntDefs.size()]);
+        QNodeTypeDefinition[] types = ntDefs.values().toArray(new QNodeTypeDefinition[ntDefs.size()]);
         NodeTypeWriter.write(out, types, registry);
     }
 
     /**
      * @param ntd
      */
-    public void add(NodeTypeDef ntd) {
+    public void add(QNodeTypeDefinition ntd) {
         ntDefs.put(ntd.getName(), ntd);
     }
 
@@ -136,14 +136,14 @@ public class NodeTypeDefStore {
      * @param name
      * @return
      */
-    public NodeTypeDef get(Name name) {
+    public QNodeTypeDefinition get(Name name) {
         return ntDefs.get(name);
     }
 
     /**
      * @return
      */
-    public Collection<NodeTypeDef> all() {
+    public Collection<QNodeTypeDefinition> all() {
         return Collections.unmodifiableCollection(ntDefs.values());
     }
 }

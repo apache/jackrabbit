@@ -30,6 +30,7 @@ import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
@@ -96,8 +97,8 @@ public class NodeTypeDefDiff {
      */
     public static final int MAJOR = 3;
 
-    private final NodeTypeDef oldDef;
-    private final NodeTypeDef newDef;
+    private final QNodeTypeDefinition oldDef;
+    private final QNodeTypeDefinition newDef;
     private int type;
 
     private List<PropDefDiff> propDefDiffs = new ArrayList<PropDefDiff>();
@@ -106,7 +107,7 @@ public class NodeTypeDefDiff {
     /**
      * Constructor
      */
-    private NodeTypeDefDiff(NodeTypeDef oldDef, NodeTypeDef newDef) {
+    private NodeTypeDefDiff(QNodeTypeDefinition oldDef, QNodeTypeDefinition newDef) {
         this.oldDef = oldDef;
         this.newDef = newDef;
         init();
@@ -165,7 +166,7 @@ public class NodeTypeDefDiff {
      * @param newDef
      * @return
      */
-    public static NodeTypeDefDiff create(NodeTypeDef oldDef, NodeTypeDef newDef) {
+    public static NodeTypeDefDiff create(QNodeTypeDefinition oldDef, QNodeTypeDefinition newDef) {
         if (oldDef == null || newDef == null) {
             throw new IllegalArgumentException("arguments can not be null");
         }

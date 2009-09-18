@@ -29,9 +29,9 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 /**
  * Simple event listener that can be registered for all cluster event listener
@@ -206,7 +206,7 @@ public class SimpleEventListener implements LockEventListener,
     /**
      * {@inheritDoc}
      */
-    public void externalReregistered(NodeTypeDef ntDef)
+    public void externalReregistered(QNodeTypeDefinition ntDef)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
 

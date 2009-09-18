@@ -22,6 +22,7 @@ import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,9 +95,9 @@ public class EffectiveNodeType implements Cloneable {
      * @throws NoSuchNodeTypeException if a node type reference (e.g. a supertype)
      *                                 could not be resolved.
      */
-    static EffectiveNodeType create(NodeTypeDef ntd,
+    static EffectiveNodeType create(QNodeTypeDefinition ntd,
                                     EffectiveNodeTypeCache entCache,
-                                    Map<Name, NodeTypeDef> ntdCache)
+                                    Map<Name, QNodeTypeDefinition> ntdCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
         EffectiveNodeType ent = new EffectiveNodeType();
@@ -220,7 +221,7 @@ public class EffectiveNodeType implements Cloneable {
         } else {
             Name[] nta = ent.getInheritedNodeTypes();
             for (Name aNta : nta) {
-                NodeTypeDef def = ntdCache.get(aNta);
+                QNodeTypeDefinition def = ntdCache.get(aNta);
                 if (def.hasOrderableChildNodes()) {
                     ent.orderableChildNodes = true;
                     break;
@@ -234,7 +235,7 @@ public class EffectiveNodeType implements Cloneable {
         } else {
             Name[] nta = ent.getInheritedNodeTypes();
             for (Name aNta : nta) {
-                NodeTypeDef def = ntdCache.get(aNta);
+                QNodeTypeDefinition def = ntdCache.get(aNta);
                 if (def.getPrimaryItemName() != null) {
                     ent.primaryItemName = def.getPrimaryItemName();
                     break;
@@ -658,7 +659,7 @@ public class EffectiveNodeType implements Cloneable {
                                         NodeTypeRegistry ntReg)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         if (nodeTypeName != null) {
-            NodeTypeDef ntDef = ntReg.getNodeTypeDef(nodeTypeName);
+            QNodeTypeDefinition ntDef = ntReg.getNodeTypeDef(nodeTypeName);
             if (ntDef.isAbstract()) {
                 throw new ConstraintViolationException(nodeTypeName + " is abstract.");
             }

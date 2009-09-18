@@ -29,7 +29,6 @@ import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -144,11 +143,11 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
-    public void writeNodeTypeDef(NodeTypeDef ntd) throws JournalException {
+    public void writeNodeTypeDef(QNodeTypeDefinition ntd) throws JournalException {
         try {
             StringWriter sw = new StringWriter();
             CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, nsResolver, resolver);
-            writer.write(ntd.getQNodeTypeDefinition());
+            writer.write(ntd);
             writer.close();
 
             writeString(sw.toString());
@@ -246,7 +245,7 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
-    public NodeTypeDef readNodeTypeDef() throws JournalException {
+    public QNodeTypeDefinition readNodeTypeDef() throws JournalException {
         try {
             StringReader sr = new StringReader(readString());
 
@@ -259,7 +258,7 @@ public abstract class AbstractRecord implements Record {
             if (ntds.size() != 1) {
                 throw new JournalException("Expected one node type definition: got " + ntds.size());
             }
-            return new NodeTypeDef(ntds.iterator().next());
+            return ntds.iterator().next();
         } catch (ParseException e) {
             String msg = "Parse error while reading node type definition.";
             throw new JournalException(msg, e);

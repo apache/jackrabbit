@@ -31,11 +31,12 @@ import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.JournalFactory;
 import org.apache.jackrabbit.core.journal.MemoryJournal;
 import org.apache.jackrabbit.core.journal.MemoryJournal.MemoryRecord;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.QNodeTypeDefinitionBuilder;
 import org.apache.jackrabbit.test.JUnitTest;
 
 /**
@@ -178,12 +179,12 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testNodeTypeRegistration() throws Exception {
-        NodeTypeDef ntd = new NodeTypeDef();
+        QNodeTypeDefinitionBuilder ntd = new QNodeTypeDefinitionBuilder();
         ntd.setName(NameFactoryImpl.getInstance().create("", "test"));
         ntd.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
-        ArrayList<NodeTypeDef> list = new ArrayList<NodeTypeDef>();
-        list.add(ntd);
+        ArrayList<QNodeTypeDefinition> list = new ArrayList<QNodeTypeDefinition>();
+        list.add(ntd.build());
 
         NodeTypeEvent event = new NodeTypeEvent(NodeTypeEvent.REGISTER, list);
         master.registered(event.getCollection());
@@ -201,15 +202,15 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testNodeTypeReregistration() throws Exception {
-        NodeTypeDef ntd = new NodeTypeDef();
+        QNodeTypeDefinitionBuilder ntd = new QNodeTypeDefinitionBuilder();
         ntd.setName(NameFactoryImpl.getInstance().create("", "test"));
         ntd.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
-        ArrayList<NodeTypeDef> list = new ArrayList<NodeTypeDef>();
-        list.add(ntd);
+        ArrayList<QNodeTypeDefinition> list = new ArrayList<QNodeTypeDefinition>();
+        list.add(ntd.build());
 
         NodeTypeEvent event = new NodeTypeEvent(NodeTypeEvent.REREGISTER, list);
-        master.reregistered(ntd);
+        master.reregistered(ntd.build());
 
         SimpleEventListener listener = new SimpleEventListener();
         slave.setListener((NodeTypeEventListener) listener);

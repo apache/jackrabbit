@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import java.util.Collection;
 
@@ -31,14 +31,14 @@ public interface NodeTypeEventChannel {
      *
      * @param ntDefs collection of node type definitions
      */
-    void registered(Collection<NodeTypeDef> ntDefs);
+    void registered(Collection<QNodeTypeDefinition> ntDefs);
 
     /**
      * Called when a node types has been re-registered.
      *
      * @param ntDef node type definition
      */
-    void reregistered(NodeTypeDef ntDef);
+    void reregistered(QNodeTypeDefinition ntDef);
 
     /**
      * Called when one or more node types have been unregistered.
