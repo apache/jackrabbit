@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
@@ -51,9 +50,9 @@ public class ChangeLog {
     /**
      * Set of operations
      */
-    private final Set operations;
+    private final Set<Operation> operations;
 
-    private final Set affectedStates;
+    private final Set<ItemState> affectedStates;
 
     /**
      * Create a new change log and populates it with operations and states
@@ -65,7 +64,7 @@ public class ChangeLog {
      * @throws InvalidItemStateException
      * @throws ConstraintViolationException
      */
-    ChangeLog(ItemState target, Set operations, Set affectedStates)
+    ChangeLog(ItemState target, Set<Operation> operations, Set<ItemState> affectedStates)
             throws InvalidItemStateException, ConstraintViolationException {
         this.target = target;
         this.operations = operations;
@@ -74,7 +73,7 @@ public class ChangeLog {
 
     //-----------------------------------------------< Inform the ChangeLog >---
     /**
-     * Call this method when this change log has been sucessfully persisted.
+     * Call this method when this change log has been successfully persisted.
      * This implementation will call {@link Operation#persisted() on the
      * individual operations followed by setting all remaining modified
      * states to EXISTING.
@@ -83,7 +82,7 @@ public class ChangeLog {
         List<NodeState> changedMixins = new ArrayList<NodeState>();
         List<NodeState> changedPrimaryTypes = new ArrayList<NodeState>();
 
-        Operation[] ops = (Operation[]) operations.toArray(new Operation[operations.size()]);
+        Operation[] ops = operations.toArray(new Operation[operations.size()]);
         for (int i = 0; i < ops.length; i++) {
             ops[i].persisted();
             if (ops[i] instanceof SetMixin) {
@@ -94,8 +93,7 @@ public class ChangeLog {
         }
         // process all remaining states that were not covered by the
         // operation persistence.
-        for (Iterator it = affectedStates.iterator(); it.hasNext();) {
-            ItemState state = (ItemState) it.next();
+        for (ItemState state : affectedStates) {
             HierarchyEntry he = state.getHierarchyEntry();
 
             switch (state.getStatus()) {
@@ -148,15 +146,14 @@ public class ChangeLog {
      * Revert the changes listed within this changelog
      */
     public void undo() throws RepositoryException {
-        Operation[] ops = (Operation[]) operations.toArray(new Operation[operations.size()]);
+        Operation[] ops = operations.toArray(new Operation[operations.size()]);
         for (int i = ops.length - 1; i >= 0; i--) {
             ops[i].undo();
         }
 
         // process all remaining states that were not covered by the
         // operation undo.
-        for (Iterator it = affectedStates.iterator(); it.hasNext();) {
-            ItemState state = (ItemState) it.next();
+        for (ItemState state : affectedStates) {
             switch (state.getStatus()) {
                 case Status.EXISTING_MODIFIED:
                 case Status.EXISTING_REMOVED:
@@ -200,14 +197,14 @@ public class ChangeLog {
     /**
      * @return set of operations.
      */
-    public Set getOperations() {
+    public Set<Operation> getOperations() {
         return operations;
     }
 
     /**
      * @return set of the affected states.
      */
-    public Set getAffectedStates() {
+    public Set<ItemState> getAffectedStates() {
         return affectedStates;
     }
 

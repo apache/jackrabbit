@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.Name;
@@ -107,7 +108,7 @@ public interface ItemStateFactory {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public Iterator getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+    public Iterator<ChildInfo> getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the identifiers of all reference properties that  point to

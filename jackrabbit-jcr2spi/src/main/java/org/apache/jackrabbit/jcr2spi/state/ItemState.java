@@ -57,7 +57,7 @@ public abstract class ItemState {
     /**
      * Listeners (weak references)
      */
-    private final transient Collection listeners = new WeakIdentityCollection(5);
+    private final transient Collection<ItemStateLifeCycleListener> listeners = new WeakIdentityCollection(5);
 
     /**
      * The <code>ItemStateFactory</code> which is used to create new
@@ -240,11 +240,11 @@ public abstract class ItemState {
         } else {
             throw new IllegalArgumentException("Invalid new status " + Status.getName(newStatus) + " for state with status " + Status.getName(oldStatus));
         }
-        // notifiy listeners about status change
+        // Notify listeners about status change
         // copy listeners to array to avoid ConcurrentModificationException
         ItemStateLifeCycleListener[] la;
         synchronized (listeners) {
-            la = (ItemStateLifeCycleListener[]) listeners.toArray(new ItemStateLifeCycleListener[listeners.size()]);
+            la = listeners.toArray(new ItemStateLifeCycleListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -307,7 +307,7 @@ public abstract class ItemState {
      *
      * @return iterator over <code>ItemStateLifeCycleListener</code>s.
      */
-    public Iterator getListeners() {
+    public Iterator<ItemStateLifeCycleListener> getListeners() {
         return Collections.unmodifiableCollection(listeners).iterator();
     }
 

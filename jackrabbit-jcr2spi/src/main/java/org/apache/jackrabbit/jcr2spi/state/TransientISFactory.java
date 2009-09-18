@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
@@ -33,6 +34,7 @@ import javax.jcr.ItemNotFoundException;
 
 import java.util.Iterator;
 import java.util.Collections;
+import java.util.Set;
 
 /**
  * <code>TransientISFactory</code>...
@@ -134,7 +136,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @inheritDoc
      * @see ItemStateFactory#getChildNodeInfos(NodeId)
      */
-    public Iterator getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException {
+    public Iterator<ChildInfo> getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException {
         return workspaceStateFactory.getChildNodeInfos(nodeId);
     }
 
@@ -144,7 +146,8 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      */
     public Iterator<PropertyId> getNodeReferences(NodeState nodeState, Name propertyName, boolean weak) {
         if (nodeState.getStatus() == Status.NEW) {
-            return Collections.EMPTY_SET.iterator();
+            Set<PropertyId> t = Collections.emptySet();
+            return t.iterator();
         }
         return workspaceStateFactory.getNodeReferences(nodeState, propertyName, weak);
     }

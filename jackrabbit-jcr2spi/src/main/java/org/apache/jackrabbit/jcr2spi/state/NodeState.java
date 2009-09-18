@@ -145,7 +145,7 @@ public class NodeState extends ItemState {
 
                 // since 'mixinTypeNames' are modified upon save only, no special
                 // merging is required here. just reset the mixinTypeNames.
-                List mixN = Arrays.asList(nState.mixinTypeNames);
+                List<Name> mixN = Arrays.asList(nState.mixinTypeNames);
                 if (mixN.size() != mixinTypeNames.length || !mixN.containsAll(Arrays.asList(mixinTypeNames))) {
                     setMixinTypeNames(nState.mixinTypeNames);
                     modified = true;

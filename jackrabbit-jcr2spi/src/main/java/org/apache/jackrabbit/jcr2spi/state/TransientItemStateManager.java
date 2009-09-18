@@ -56,26 +56,26 @@ public class TransientItemStateManager implements ItemStateCreationListener {
     /**
      * Added states
      */
-    private final Set addedStates = new LinkedHashSet();
+    private final Set<ItemState> addedStates = new LinkedHashSet<ItemState>();
 
     /**
      * Modified states
      */
-    private final Set modifiedStates = new LinkedHashSet();
+    private final Set<ItemState> modifiedStates = new LinkedHashSet<ItemState>();
 
     /**
      * Removed states
      */
-    private final Set removedStates = new LinkedHashSet();
+    private final Set<ItemState> removedStates = new LinkedHashSet<ItemState>();
     /**
      * Stale states
      */
-    private final Set staleStates = new LinkedHashSet();
+    private final Set<ItemState> staleStates = new LinkedHashSet<ItemState>();
 
     /**
      * Set of operations
      */
-    private Set operations = new LinkedHashSet();
+    private Set<Operation> operations = new LinkedHashSet<Operation>();
 
     /**
      *
@@ -86,7 +86,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
     /**
      * @return the operations that have been recorded until now.
      */
-    Iterator getOperations() {
+    Iterator<Operation> getOperations() {
         return operations.iterator();
     }
 
@@ -110,14 +110,14 @@ public class TransientItemStateManager implements ItemStateCreationListener {
     /**
      * Create the change log for the tree starting at <code>target</code>. This
      * includes a  check if the ChangeLog to be created is totally 'self-contained'
-     * and independant; items within the scope of this update operation (i.e.
+     * and independent; items within the scope of this update operation (i.e.
      * below the target) must not have dependencies outside of this tree (e.g.
      * moving a node requires that the target node including both old and new
      * parents are saved).
      *
      * @param target
      * @param throwOnStale Throws InvalidItemStateException if either the given
-     * <code>ItemState</code> or any of its decendants is stale and the flag is true.
+     * <code>ItemState</code> or any of its descendants is stale and the flag is true.
      * @return
      * @throws InvalidItemStateException if a stale <code>ItemState</code> is
      * encountered while traversing the state hierarchy. The <code>changeLog</code>
@@ -138,8 +138,8 @@ public class TransientItemStateManager implements ItemStateCreationListener {
             throw new InvalidItemStateException(msg);
         }
 
-        Set ops = new LinkedHashSet();
-        Set affectedStates = new LinkedHashSet();
+        Set<Operation> ops = new LinkedHashSet<Operation>();
+        Set<ItemState> affectedStates = new LinkedHashSet<ItemState>();
 
         HierarchyEntry he = target.getHierarchyEntry();
         if (he.getParent() == null) {
@@ -160,8 +160,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
             // not root entry:
             // - check if there is a stale state in the scope (save only)
             if (throwOnStale) {
-                for (Iterator it = staleStates.iterator(); it.hasNext();) {
-                    ItemState state = (ItemState) it.next();
+                for (ItemState state : staleStates) {
                     if (containedInTree(target, state)) {
                         String msg = "Cannot save changes: States has been modified externally.";
                         log.debug(msg);
@@ -189,11 +188,9 @@ public class TransientItemStateManager implements ItemStateCreationListener {
             //   check if the affected states listed by the operations are all
             //   listed in the modified,removed or added states collected by this
             //   changelog.
-            for (Iterator it = operations.iterator(); it.hasNext();) {
-                Operation op = (Operation) it.next();
-                Collection opStates = op.getAffectedItemStates();
-                for (Iterator osIt = opStates.iterator(); osIt.hasNext();) {
-                    ItemState state = (ItemState) osIt.next();
+            for (Operation op : operations) {
+                Collection<ItemState> opStates = op.getAffectedItemStates();
+                for (ItemState state : opStates) {
                     if (affectedStates.contains(state)) {
                         // operation needs to be included
                         if (!affectedStates.containsAll(opStates)) {
@@ -289,7 +286,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
      * @param subChangeLog
      */
     void dispose(ChangeLog subChangeLog) {
-        Set affectedStates = subChangeLog.getAffectedStates();
+        Set<ItemState> affectedStates = subChangeLog.getAffectedStates();
         addedStates.removeAll(affectedStates);
         modifiedStates.removeAll(affectedStates);
         removedStates.removeAll(affectedStates);
