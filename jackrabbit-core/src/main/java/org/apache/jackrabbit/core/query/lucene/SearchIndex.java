@@ -768,7 +768,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * Closes this <code>QueryHandler</code> and frees resources attached
      * to this handler.
      */
-    public void close() {
+    public void close() throws IOException {
         if (synonymProviderConfigFs != null) {
             try {
                 synonymProviderConfigFs.close();
@@ -781,6 +781,7 @@ public class SearchIndex extends AbstractQueryHandler {
         }
         index.close();
         getContext().destroy();
+        super.close();
         closed = true;
         log.info("Index closed: " + path);
     }
@@ -1229,7 +1230,6 @@ public class SearchIndex extends AbstractQueryHandler {
                         "Invalid synonymProviderConfigPath: "
                         + synonymProviderConfigPath);
             }
-            FileSystem fs = getContext().getFileSystem();
             if (fs == null) {
                 fs = new LocalFileSystem();
                 int lastSeparator = synonymProviderConfigPath.lastIndexOf(

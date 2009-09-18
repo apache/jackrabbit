@@ -58,15 +58,7 @@ public class WorkspaceConfigTest extends TestCase {
                 pmc.getClassName());
         assertTrue(pmc.getParameters().isEmpty());
 
-        SearchConfig sc = config.getSearchConfig();
-        assertEquals(
-                "org.apache.jackrabbit.core.query.lucene.SearchIndex",
-                sc.getClassName());
-        assertEquals(4, sc.getParameters().size());
-        assertEquals("true", sc.getParameters().getProperty("useCompoundFile"));
-        assertEquals("1000", sc.getParameters().getProperty("minMergeDocs"));
-        assertEquals("10000", sc.getParameters().getProperty("maxMergeDocs"));
-        assertEquals("10", sc.getParameters().getProperty("mergeFactor"));
+        assertTrue(config.isSearchEnabled());
 
         WorkspaceSecurityConfig ws = config.getSecurityConfig();
         if (ws != null) {

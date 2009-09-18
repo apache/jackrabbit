@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.commons.io.IOExceptionWithCause;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.slf4j.Logger;
@@ -34,6 +37,11 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      * Logger instance for this class
      */
     private static final Logger log = LoggerFactory.getLogger(AbstractQueryHandler.class);
+
+    /**
+     * Search index file system, or <code>null</code>
+     */
+    protected FileSystem fs;
 
     /**
      * The context for this query handler.
@@ -60,11 +68,25 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      * Initializes this query handler by setting all properties in this class
      * with appropriate parameter values.
      *
+     * @param fs search index file system, or <code>null</code>
      * @param context the context for this query handler.
      */
-    public final void init(QueryHandlerContext context) throws IOException {
+    public final void init(FileSystem fs, QueryHandlerContext context)
+            throws IOException {
+        this.fs = fs;
         this.context = context;
         doInit();
+    }
+
+    public void close() throws IOException {
+        if (fs != null) {
+            try {
+                fs.close();
+            } catch (FileSystemException e) {
+                throw new IOExceptionWithCause(
+                        "Unable to close search index file system: " + fs, e);
+            }
+        }
     }
 
     /**
@@ -172,5 +194,5 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     public String getIdleTime() {
         return idleTime;
     }
-        
+
 }

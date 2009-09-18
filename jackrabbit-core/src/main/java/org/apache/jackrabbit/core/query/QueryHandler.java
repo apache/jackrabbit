@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
@@ -39,11 +40,16 @@ public interface QueryHandler {
     /**
      * Initializes this query handler. This method is called after the
      * <code>QueryHandler</code> is instantiated.
+     * <p>
+     * If a file system has been configured (i.e. the fs argument is not
+     * <code>null</code>), then the query handler is expected to close
+     * the given file system when the {@link #close()} method is called.
      *
+     * @param fs the configured search index file system, or <code>null</code>
      * @param context the context for this query handler.
      * @throws IOException if an error occurs during initialization.
      */
-    void init(QueryHandlerContext context) throws IOException;
+    void init(FileSystem fs, QueryHandlerContext context) throws IOException;
 
     /**
      * Returns the query handler context that passed in {@link

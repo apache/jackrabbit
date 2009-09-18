@@ -27,6 +27,9 @@ import org.apache.jackrabbit.core.journal.AbstractJournal;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.JournalFactory;
+import org.apache.jackrabbit.core.query.QueryHandler;
+import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.query.QueryHandlerFactory;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ISMLockingFactory;
@@ -275,8 +278,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Versioning configuration
         VersioningConfig vc = parseVersioningConfig(root);
 
-        // Optional search configuration
-        SearchConfig sc = parseSearchConfig(root);
+        // Query handler implementation
+        QueryHandlerFactory qhf = getQueryHandlerFactory(root);
 
         // Optional journal configuration
         ClusterConfig cc = parseClusterConfig(root, new File(home));
@@ -288,7 +291,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         return new RepositoryConfig(home, securityConfig, fsf,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                maxIdleTime, template, vc, sc, cc, dsf, rlf, this);
+                maxIdleTime, template, vc, qhf, cc, dsf, rlf, this);
     }
 
     /**
@@ -483,8 +486,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Persistence manager implementation
         PersistenceManagerConfig pmc = tmpParser.parsePersistenceManagerConfig(root);
 
-        // Search implementation (optional)
-        SearchConfig sc = tmpParser.parseSearchConfig(root);
+        // Query handler implementation
+        QueryHandlerFactory qhf = tmpParser.getQueryHandlerFactory(root);
 
         // Item state manager locking configuration (optional)
         ISMLockingFactory ismLockingFactory =
@@ -494,7 +497,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         WorkspaceSecurityConfig workspaceSecurityConfig = tmpParser.parseWorkspaceSecurityConfig(root);
 
         return new WorkspaceConfig(
-                home, name, clustered, fsf, pmc, sc,
+                home, name, clustered, fsf, pmc, qhf,
                 ismLockingFactory, workspaceSecurityConfig);
     }
 
@@ -522,32 +525,43 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * However some implementations may require a FileSystem.
      *
      * @param parent parent of the <code>SearchIndex</code> element
-     * @return search configuration, or <code>null</code>
-     * @throws ConfigurationException if the configuration is broken
+     * @return query handler factory
      */
-    protected SearchConfig parseSearchConfig(Element parent)
-            throws ConfigurationException {
+    protected QueryHandlerFactory getQueryHandlerFactory(final Element parent) {
         NodeList children = parent.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
+            final Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE
                     && SEARCH_INDEX_ELEMENT.equals(child.getNodeName())) {
-                Element element = (Element) child;
+                return new QueryHandlerFactory() {
+                    public QueryHandler getQueryHandler(QueryHandlerContext context)
+                            throws RepositoryException {
+                        Element element = (Element) child;
 
-                // Search implementation class
-                String className = getAttribute(
-                        element, CLASS_ATTRIBUTE, DEFAULT_QUERY_HANDLER);
+                        // Optional file system implementation
+                        FileSystem fs = null;
+                        if (getElement(element, FILE_SYSTEM_ELEMENT, false) != null) {
+                            fs = getFileSystemFactory(
+                                    element, FILE_SYSTEM_ELEMENT).getFileSystem();
+                        }
 
-                // Search parameters
-                Properties parameters = parseParameters(element);
+                        // Search implementation class
+                        String className = getAttribute(
+                                element, CLASS_ATTRIBUTE, DEFAULT_QUERY_HANDLER);
+                        BeanConfig config = new BeanConfig(
+                                className, parseParameters(element));
 
-                // Optional file system implementation
-                FileSystemFactory fsf = null;
-                if (getElement(element, FILE_SYSTEM_ELEMENT, false) != null) {
-                    fsf = getFileSystemFactory(element, FILE_SYSTEM_ELEMENT);
-                }
-
-                return new SearchConfig(className, parameters, fsf);
+                        QueryHandler handler =
+                            (QueryHandler) config.newInstance();
+                        try {
+                            handler.init(fs, context);
+                            return handler;
+                        } catch (IOException e) {
+                            throw new RepositoryException(
+                                    "Unable to initialize query handler: " + handler, e);
+                        }
+                    }
+                };
             }
         }
         return null;

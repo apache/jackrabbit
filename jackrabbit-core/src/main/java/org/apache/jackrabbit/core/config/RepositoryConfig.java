@@ -24,6 +24,9 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
+import org.apache.jackrabbit.core.query.QueryHandler;
+import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.query.QueryHandlerFactory;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanismFactory;
 import org.slf4j.Logger;
@@ -69,7 +72,8 @@ import java.util.Properties;
  * addition the workspace configuration object keeps track of all configured
  * workspaces.
  */
-public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
+public class RepositoryConfig
+        implements FileSystemFactory, DataStoreFactory, QueryHandlerFactory {
 
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(RepositoryConfig.class);
@@ -325,9 +329,9 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
     private final VersioningConfig vc;
 
     /**
-     * Optional search configuration for system search manager.
+     * Query handler factory, or <code>null</code> if not configured.
      */
-    private final SearchConfig sc;
+    private final QueryHandlerFactory qhf;
 
     /**
      * Optional cluster configuration.
@@ -356,7 +360,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
      * @param workspaceMaxIdleTime maximum workspace idle time in seconds
      * @param template workspace configuration template
      * @param vc versioning configuration
-     * @param sc search configuration for system search manager.
+     * @param qhf query handler factory for the system search manager
      * @param cc optional cluster configuration
      * @param dsf data store factory
      * @param parser configuration parser
@@ -365,7 +369,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
             String home, SecurityConfig sec, FileSystemFactory fsf,
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,
-            Element template, VersioningConfig vc, SearchConfig sc,
+            Element template, VersioningConfig vc, QueryHandlerFactory qhf,
             ClusterConfig cc, DataStoreFactory dsf,
             RepositoryLockMechanismFactory rlf,
             RepositoryConfigurationParser parser) {
@@ -379,7 +383,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
         this.defaultWorkspace = defaultWorkspace;
         this.template = template;
         this.vc = vc;
-        this.sc = sc;
+        this.qhf = qhf;
         this.cc = cc;
         this.dsf = dsf;
         this.rlf = rlf;
@@ -878,13 +882,28 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
     }
 
     /**
-     * Returns the system search index configuration. Returns
-     * <code>null</code> if no search index has been configured.
+     * Checks whether search configuration is present.
      *
-     * @return search index configuration, or <code>null</code>
+     * @return <code>true</code> if search is configured,
+     *         <code>false</code> otherwise
      */
-    public SearchConfig getSearchConfig() {
-        return sc;
+    public boolean isSearchEnabled() {
+        return qhf != null;
+    }
+
+    /**
+     * Returns the initialized query handler, or <code>null</code> if one
+     * has not been configured.
+     *
+     * @return initialized query handler, or <code>null</code>
+     */
+    public QueryHandler getQueryHandler(QueryHandlerContext context)
+            throws RepositoryException {
+        if (qhf != null) {
+            return qhf.getQueryHandler(context);
+        } else {
+            return null;
+        }
     }
 
     /**

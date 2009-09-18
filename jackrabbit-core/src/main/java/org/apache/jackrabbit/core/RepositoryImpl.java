@@ -665,9 +665,9 @@ public class RepositoryImpl extends AbstractRepository
     private SearchManager getSystemSearchManager(String wspName)
             throws RepositoryException {
         if (systemSearchMgr == null) {
-            if (repConfig.getSearchConfig() != null) {
+            if (repConfig.isSearchEnabled()) {
                 systemSearchMgr = new SearchManager(
-                        repConfig.getSearchConfig(), nsReg, ntReg,
+                        repConfig, nsReg, ntReg,
                         getWorkspaceInfo(wspName).itemStateMgr,
                         vMgr.getPersistenceManager(), SYSTEM_ROOT_NODE_ID,
                         null, null, executor);
@@ -1833,13 +1833,9 @@ public class RepositoryImpl extends AbstractRepository
 
             synchronized (this) {
                 if (searchMgr == null) {
-                    if (config.getSearchConfig() == null) {
-                        // no search index configured
-                        return null;
-                    }
                     // search manager is lazily instantiated in order to avoid
                     // 'chicken & egg' bootstrap problems
-                    searchMgr = new SearchManager(config.getSearchConfig(),
+                    searchMgr = new SearchManager(config,
                             nsReg, ntReg, itemStateMgr, persistMgr, rootNodeId,
                             getSystemSearchManager(getName()),
                             SYSTEM_ROOT_NODE_ID, executor);
