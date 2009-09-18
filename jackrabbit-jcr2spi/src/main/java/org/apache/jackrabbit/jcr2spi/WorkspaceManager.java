@@ -162,7 +162,7 @@ public class WorkspaceManager
      * List of event listener that are set on this WorkspaceManager to get
      * notifications about local and external changes.
      */
-    private final Set listeners = new HashSet();
+    private final Set<InternalEventListener> listeners = new HashSet<InternalEventListener>();
 
     /**
      * The current subscription for change events if there are listeners.
@@ -306,7 +306,7 @@ public class WorkspaceManager
      */
     public String[] checkQueryStatement(String statement,
                                         String language,
-                                        Map namespaces)
+                                        Map<String, String> namespaces)
             throws InvalidQueryException, RepositoryException {
         return service.checkQueryStatement(sessionInfo, statement, language, namespaces);
     }
@@ -322,7 +322,7 @@ public class WorkspaceManager
      * @return
      * @throws RepositoryException
      */
-    public QueryInfo executeQuery(String statement, String language, Map namespaces,
+    public QueryInfo executeQuery(String statement, String language, Map<String, String> namespaces,
                                   long limit, long offset, Map<String, QValue> boundValues) throws RepositoryException {
         return service.executeQuery(sessionInfo, statement, language, namespaces, limit, offset, boundValues);
     }
@@ -430,13 +430,12 @@ public class WorkspaceManager
      *
      * @param listeners the internal event listeners.
      */
-    private static EventFilter[] getEventFilters(Collection listeners) {
-        List filters = new ArrayList();
-        for (Iterator it = listeners.iterator(); it.hasNext(); ) {
-            InternalEventListener listener = (InternalEventListener) it.next();
+    private static EventFilter[] getEventFilters(Collection<InternalEventListener> listeners) {
+        List<EventFilter> filters = new ArrayList<EventFilter>();
+        for (InternalEventListener listener : listeners) {
             filters.addAll(listener.getEventFilters());
         }
-        return (EventFilter[]) filters.toArray(new EventFilter[filters.size()]);
+        return filters.toArray(new EventFilter[filters.size()]);
     }
 
     /**
@@ -469,10 +468,10 @@ public class WorkspaceManager
      */
     private NodeTypeRegistryImpl createNodeTypeRegistry(NamespaceRegistry nsRegistry) {
         NodeTypeStorage ntst = new NodeTypeStorage() {
-            public Iterator getAllDefinitions() throws RepositoryException {
+            public Iterator<QNodeTypeDefinition> getAllDefinitions() throws RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo);
             }
-            public Iterator getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
+            public Iterator<QNodeTypeDefinition> getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo, nodeTypeNames);
             }
             public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs, boolean allowUpdate) throws RepositoryException {
@@ -681,7 +680,7 @@ public class WorkspaceManager
 
     //---------------------------------------------------< NamespaceStorage >---
 
-    public Map getRegisteredNamespaces() throws RepositoryException {
+    public Map<String, String> getRegisteredNamespaces() throws RepositoryException {
         return service.getRegisteredNamespaces(sessionInfo);
     }
 
@@ -730,8 +729,8 @@ public class WorkspaceManager
             log.debug("received {} event bundles.", new Integer(eventBundles.length));
             for (int i = 0; i < eventBundles.length; i++) {
                 log.debug("IsLocal:  {}", Boolean.valueOf(eventBundles[i].isLocal()));
-                for (Iterator it = eventBundles[i].getEvents(); it.hasNext(); ) {
-                    Event e = (Event) it.next();
+                for (Iterator<Event> it = eventBundles[i].getEvents(); it.hasNext(); ) {
+                    Event e = it.next();
                     String type;
                     switch (e.getType()) {
                         case Event.NODE_ADDED:
@@ -802,9 +801,7 @@ public class WorkspaceManager
             try {
                 ItemState target = changeLog.getTarget();
                 batch = service.createBatch(sessionInfo, target.getId());
-                Iterator it = changeLog.getOperations().iterator();
-                while (it.hasNext()) {
-                    Operation op = (Operation) it.next();
+                for (Operation op : changeLog.getOperations()) {
                     log.debug("executing " + op.getName());
                     op.accept(this);
                 }
@@ -1015,7 +1012,7 @@ public class WorkspaceManager
          */
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeId();
-            Iterator failed;
+            Iterator<NodeId> failed;
             if (operation.isActivityMerge()) {
                 failed = service.mergeActivity(sessionInfo, nId);
             } else {
@@ -1151,7 +1148,7 @@ public class WorkspaceManager
                         while (listeners.isEmpty()) {
                             listeners.wait();
                         }
-                        iel = (InternalEventListener[]) listeners.toArray(new InternalEventListener[0]);
+                        iel = listeners.toArray(new InternalEventListener[0]);
                         subscr = subscription;
                     }
 

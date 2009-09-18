@@ -47,7 +47,7 @@ public class Merge extends AbstractOperation {
     private final boolean isShallow;
     private final VersionManager mgr;
 
-    private Iterator<ItemId> failedIds = null;
+    private Iterator<? extends ItemId> failedIds = null;
 
     private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, boolean isShallow, VersionManager mgr) {
         this.nodeState = nodeState;
@@ -118,7 +118,7 @@ public class Merge extends AbstractOperation {
         return srcWorkspaceName == null;
     }
 
-    public void setFailedIds(Iterator<ItemId> failedIds) {
+    public void setFailedIds(Iterator<? extends ItemId> failedIds) {
         if (failedIds == null) {
             throw new IllegalArgumentException("IdIterator must not be null.");
         }
@@ -128,7 +128,7 @@ public class Merge extends AbstractOperation {
         this.failedIds = failedIds;
     }
 
-    public Iterator<ItemId> getFailedIds() {
+    public Iterator<? extends ItemId> getFailedIds() {
         if (failedIds == null) {
             throw new IllegalStateException("Merge operation has not been executed yet.");
         }

@@ -65,16 +65,16 @@ public class NamespaceRegistryImpl implements NamespaceRegistry {
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      */
     public String[] getPrefixes() throws RepositoryException {
-        Collection prefixes = storage.getRegisteredNamespaces().keySet();
-        return (String[]) prefixes.toArray(new String[prefixes.size()]);
+        Collection<String> prefixes = storage.getRegisteredNamespaces().keySet();
+        return prefixes.toArray(new String[prefixes.size()]);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURIs()
      */
     public String[] getURIs() throws RepositoryException {
-        Collection uris = storage.getRegisteredNamespaces().values();
-        return (String[]) uris.toArray(new String[uris.size()]);
+        Collection<String> uris = storage.getRegisteredNamespaces().values();
+        return uris.toArray(new String[uris.size()]);
     }
 
     /**

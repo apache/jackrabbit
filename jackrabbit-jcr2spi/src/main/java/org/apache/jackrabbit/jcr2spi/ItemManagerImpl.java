@@ -225,11 +225,11 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         // check sanity of session
         session.checkIsAlive();
 
-        Iterator iter = parentEntry.getNodeEntries();
+        Iterator<NodeEntry> iter = parentEntry.getNodeEntries();
         while (iter.hasNext()) {
             try {
                 // check read access by accessing the nodeState (implicit validation check)
-                NodeEntry entry = (NodeEntry) iter.next();
+                NodeEntry entry = iter.next();
                 entry.getNodeState();
                 return true;
             } catch (ItemNotFoundException e) {
@@ -248,7 +248,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         // check sanity of session
         session.checkIsAlive();
 
-        Iterator it = parentEntry.getNodeEntries();
+        Iterator<NodeEntry> it = parentEntry.getNodeEntries();
         return new LazyItemIterator(this, it);
     }
 
@@ -260,10 +260,10 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         // check sanity of session
         session.checkIsAlive();
 
-        Iterator iter = parentEntry.getPropertyEntries();
+        Iterator<PropertyEntry> iter = parentEntry.getPropertyEntries();
         while (iter.hasNext()) {
             try {
-                PropertyEntry entry = (PropertyEntry) iter.next();
+                PropertyEntry entry = iter.next();
                 // check read access by accessing the propState (also implicit validation).
                 entry.getPropertyState();
                 return true;
@@ -283,7 +283,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         // check sanity of session
         session.checkIsAlive();
 
-        Iterator propEntries = parentEntry.getPropertyEntries();
+        Iterator<PropertyEntry> propEntries = parentEntry.getPropertyEntries();
         return new LazyItemIterator(this, propEntries);
     }
 

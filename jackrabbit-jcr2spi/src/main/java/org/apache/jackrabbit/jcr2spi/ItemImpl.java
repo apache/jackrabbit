@@ -69,7 +69,8 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     /**
      * Listeners (weak references)
      */
-    protected final Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    protected final Map<ItemLifeCycleListener, ItemLifeCycleListener> listeners =
+        Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     public ItemImpl(SessionImpl session, ItemState state,
                     ItemLifeCycleListener[] listeners) {
@@ -365,7 +366,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = (ItemLifeCycleListener[]) listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
+        ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             la[i].itemCreated(this);
         }
@@ -376,7 +377,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyUpdated(boolean modified) {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = (ItemLifeCycleListener[]) listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
+        ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].itemUpdated(this, modified);
@@ -389,7 +390,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = (ItemLifeCycleListener[]) listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
+        ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].itemDestroyed(this);

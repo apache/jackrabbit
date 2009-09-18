@@ -214,7 +214,7 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);
         
-        Iterator failedIds = session.getVersionStateManager().merge((NodeState) n.getItemState(), srcWorkspace, bestEffort, isShallow);
+        Iterator<NodeId> failedIds = session.getVersionStateManager().merge((NodeState) n.getItemState(), srcWorkspace, bestEffort, isShallow);
         return new LazyItemIterator(itemManager, session.getHierarchyManager(), failedIds);
     }
 
@@ -322,7 +322,7 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
     public NodeIterator merge(Node activityNode) throws VersionException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         session.checkIsAlive();
         NodeImpl activity = getValidActivity(activityNode, "merge");
-        Iterator failedIds = vMgr.mergeActivity((NodeState) activity.getItemState());
+        Iterator<NodeId> failedIds = vMgr.mergeActivity((NodeState) activity.getItemState());
         return new LazyItemIterator(itemManager, session.getHierarchyManager(), failedIds);
     }
 

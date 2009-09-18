@@ -712,7 +712,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // get mixin types present in the jcr:mixintypes property without
         // modifying the NodeState.
-        List mixinValue = getMixinTypes();
+        List<Name> mixinValue = getMixinTypes();
         if (!mixinValue.contains(mixinQName) && !isNodeType(mixinQName)) {
             if (!canAddMixin(mixinQName)) {
                 throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
@@ -720,7 +720,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
             mixinValue.add(mixinQName);
             // perform the operation
-            Operation op = SetMixin.create(getNodeState(), (Name[]) mixinValue.toArray(new Name[mixinValue.size()]));
+            Operation op = SetMixin.create(getNodeState(), mixinValue.toArray(new Name[mixinValue.size()]));
             session.getSessionItemStateManager().execute(op);
         }
     }
@@ -732,7 +732,7 @@ public class NodeImpl extends ItemImpl implements Node {
         VersionException, ConstraintViolationException, LockException, RepositoryException {
         checkIsWritable();
         Name ntName = getQName(mixinName);
-        List mixinValue = getMixinTypes();
+        List<Name> mixinValue = getMixinTypes();
         // remove name of target mixin
         if (!mixinValue.remove(ntName)) {
             throw new NoSuchNodeTypeException("Cannot remove mixin '" + mixinName + "': Nodetype is not present on this node.");
@@ -763,7 +763,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // delegate to operation
-        Name[] mixins = (Name[]) mixinValue.toArray(new Name[mixinValue.size()]);
+        Name[] mixins = mixinValue.toArray(new Name[mixinValue.size()]);
         Operation op = SetMixin.create(getNodeState(), mixins);
         session.getSessionItemStateManager().execute(op);
     }
@@ -777,7 +777,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return mixin names present with the jcr:mixinTypes property.
      */
-    private List getMixinTypes() {
+    private List<Name> getMixinTypes() {
         Name[] mixinValue;
         if (getNodeState().getStatus() == Status.EXISTING) {
             // jcr:mixinTypes must correspond to the mixins present on the nodestate.
@@ -799,7 +799,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 mixinValue = new Name[0];
             }
         }
-        List l = new ArrayList();
+        List<Name> l = new ArrayList<Name>();
         l.addAll(Arrays.asList(mixinValue));
         return l;
     }
@@ -812,9 +812,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    private EffectiveNodeType getRemainingENT(List remainingMixins)
+    private EffectiveNodeType getRemainingENT(List<Name> remainingMixins)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        Name[] allRemaining = (Name[]) remainingMixins.toArray(new Name[remainingMixins.size() + 1]);
+        Name[] allRemaining = remainingMixins.toArray(new Name[remainingMixins.size() + 1]);
         allRemaining[remainingMixins.size()] = getPrimaryNodeTypeName();
         return session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
     }
@@ -829,7 +829,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         try {
             // first check if node is writable regarding protection status,
-            // locks, versioning, acces restriction.
+            // locks, versioning, access restriction.
             session.getValidator().checkIsWritable(getNodeState(), ItemStateValidator.CHECK_ALL);
             // then make sure the new mixin would not conflict.
             return canAddMixin(getQName(mixinName));
@@ -1012,7 +1012,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
 
             // if root is common ancestor, corresponding path is same as ours
-            // otherwise access referenceable ancestor and calcuate correspond. path.
+            // otherwise access referenceable ancestor and calculate correspond. path.
             String correspondingPath;
             if (referenceableNode.getDepth() == Path.ROOT_DEPTH) {
                 if (!srcSession.getItemManager().nodeExists(getQPath())) {
@@ -1434,8 +1434,8 @@ public class NodeImpl extends ItemImpl implements Node {
         session.getSessionItemStateManager().execute(an);
 
         // finally retrieve the new node
-        List addedStates = ((AddNode) an).getAddedStates();
-        ItemState nState = (ItemState) addedStates.get(0);
+        List<ItemState> addedStates = ((AddNode) an).getAddedStates();
+        ItemState nState = addedStates.get(0);
         return (Node) getItemManager().getItem(nState.getHierarchyEntry());
     }
 

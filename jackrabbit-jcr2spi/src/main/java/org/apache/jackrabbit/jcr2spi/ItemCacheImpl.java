@@ -25,7 +25,6 @@ import org.apache.commons.collections.map.LRUMap;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import java.util.Map;
-import java.util.Iterator;
 import java.io.PrintStream;
 
 /**
@@ -35,7 +34,7 @@ public class ItemCacheImpl implements ItemCache, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(ItemCacheImpl.class);
 
-    private final Map cache;
+    private final Map<ItemState, Item> cache;
 
     ItemCacheImpl(int maxSize) {
         cache = new LRUMap(maxSize);
@@ -46,7 +45,7 @@ public class ItemCacheImpl implements ItemCache, Dumpable {
      * @see ItemCache#getItem(ItemState)
      */
     public Item getItem(ItemState state) {
-        return (Item) cache.get(state);
+        return cache.get(state);
     }
 
     /**
@@ -141,10 +140,9 @@ public class ItemCacheImpl implements ItemCache, Dumpable {
      * @see Dumpable#dump(PrintStream)
      */
     public void dump(PrintStream ps) {
-        Iterator iter = cache.keySet().iterator();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            Item item = (Item) cache.get(state);
+        for (Map.Entry<ItemState, Item> entry : cache.entrySet()) {
+            ItemState state = entry.getKey();
+            Item item = entry.getValue();
             if (item.isNode()) {
                 ps.print("Node: ");
             } else {
