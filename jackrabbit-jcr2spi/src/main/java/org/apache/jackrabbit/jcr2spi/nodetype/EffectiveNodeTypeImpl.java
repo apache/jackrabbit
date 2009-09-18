@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.Arrays;
@@ -47,38 +46,35 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     private static Logger log = LoggerFactory.getLogger(EffectiveNodeTypeImpl.class);
 
     // list of explicitly aggregated {i.e. merged) node types
-    private final TreeSet mergedNodeTypes = new TreeSet();
+    private final TreeSet<Name> mergedNodeTypes = new TreeSet<Name>();
     // list of implicitly aggregated {through inheritance) node types
-    private final TreeSet inheritedNodeTypes = new TreeSet();
+    private final TreeSet<Name> inheritedNodeTypes = new TreeSet<Name>();
     // list of all either explicitly (through aggregation) or implicitly
     // (through inheritance) included node types.
-    private final TreeSet allNodeTypes = new TreeSet();
+    private final TreeSet<Name> allNodeTypes = new TreeSet<Name>();
     // map of named item definitions (maps name to list of definitions)
-    private final Map namedItemDefs = new HashMap();
+    private final Map<Name, List<QItemDefinition>> namedItemDefs = new HashMap<Name, List<QItemDefinition>>();
     // list of unnamed item definitions (i.e. residual definitions)
-    private final List unnamedItemDefs = new ArrayList();
+    private final List<QItemDefinition> unnamedItemDefs = new ArrayList<QItemDefinition>();
     // (optional) set of additional mixins supported on node type
-    private Set supportedMixins;
+    private Set<Name> supportedMixins;
 
     /**
      * constructor.
      */
-    EffectiveNodeTypeImpl(TreeSet mergedNodeTypes, TreeSet inheritedNodeTypes,
-                          TreeSet allNodeTypes, Map namedItemDefs,
-                          List unnamedItemDefs, Set supportedMixins) {
+    EffectiveNodeTypeImpl(TreeSet<Name> mergedNodeTypes, TreeSet<Name> inheritedNodeTypes,
+                          TreeSet<Name> allNodeTypes, Map<Name, List<QItemDefinition>> namedItemDefs,
+                          List<QItemDefinition> unnamedItemDefs, Set<Name> supportedMixins) {
         this.mergedNodeTypes.addAll(mergedNodeTypes);
         this.inheritedNodeTypes.addAll(inheritedNodeTypes);
         this.allNodeTypes.addAll(allNodeTypes);
-        Iterator iter = namedItemDefs.keySet().iterator();
-        while (iter.hasNext()) {
-            Object key = iter.next();
-            List list = (List) namedItemDefs.get(key);
-            this.namedItemDefs.put(key, new ArrayList(list));
+        for (Map.Entry<Name, List<QItemDefinition>> entry : namedItemDefs.entrySet()) {
+            this.namedItemDefs.put(entry.getKey(), new ArrayList<QItemDefinition>(entry.getValue()));
         }
         this.unnamedItemDefs.addAll(unnamedItemDefs);
 
         if (supportedMixins != null) {
-            this.supportedMixins = new HashSet();
+            this.supportedMixins = new HashSet<Name>();
             this.supportedMixins.addAll(supportedMixins);
         }
     }
@@ -88,21 +84,21 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @see EffectiveNodeType#getInheritedNodeTypes()
      */
     public Name[] getInheritedNodeTypes() {
-        return (Name[]) inheritedNodeTypes.toArray(new Name[inheritedNodeTypes.size()]);
+        return inheritedNodeTypes.toArray(new Name[inheritedNodeTypes.size()]);
     }
 
     /**
      * @see EffectiveNodeType#getAllNodeTypes()
      */
     public Name[] getAllNodeTypes() {
-        return (Name[]) allNodeTypes.toArray(new Name[allNodeTypes.size()]);
+        return allNodeTypes.toArray(new Name[allNodeTypes.size()]);
     }
 
     /**
      * @see EffectiveNodeType#getMergedNodeTypes()
      */
     public Name[] getMergedNodeTypes() {
-        return (Name[]) mergedNodeTypes.toArray(new Name[mergedNodeTypes.size()]);
+        return mergedNodeTypes.toArray(new Name[mergedNodeTypes.size()]);
     }
 
     /**
@@ -112,20 +108,15 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size() + unnamedItemDefs.size());
+        for (QItemDefinition qDef : unnamedItemDefs) {
             if (qDef.definesNode()) {
                 defs.add(qDef);
             }
         }
-        iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
+        
+        for (List<QItemDefinition> list : namedItemDefs.values()) {
+            for (QItemDefinition qDef : list) {
                 if (qDef.definesNode()) {
                     defs.add(qDef);
                 }
@@ -134,7 +125,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
+        return defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
     /**
@@ -144,20 +135,14 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size() + unnamedItemDefs.size());
+        for (QItemDefinition qDef : unnamedItemDefs) {
             if (!qDef.definesNode()) {
                 defs.add(qDef);
             }
         }
-        iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
+        for (List<QItemDefinition> list : namedItemDefs.values()) {
+            for (QItemDefinition qDef : list) {
                 if (!qDef.definesNode()) {
                     defs.add(qDef);
                 }
@@ -166,7 +151,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
+        return defs.toArray(new QPropertyDefinition[defs.size()]);
     }
 
     /**
@@ -178,13 +163,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (namedItemDefs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
+        for (List<QItemDefinition> list : namedItemDefs.values()) {
+            for (QItemDefinition qDef : list) {
                 if (qDef.definesNode() && qDef.isAutoCreated()) {
                     defs.add(qDef);
                 }
@@ -193,7 +174,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
+        return defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
     /**
@@ -205,13 +186,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (namedItemDefs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
+        for (List<QItemDefinition> list : namedItemDefs.values()) {
+            for (QItemDefinition qDef : list) {
                 if (!qDef.definesNode() && qDef.isAutoCreated()) {
                     defs.add(qDef);
                 }
@@ -220,7 +197,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
+        return defs.toArray(new QPropertyDefinition[defs.size()]);
     }
 
     /**
@@ -232,13 +209,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (namedItemDefs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
+        for (List<QItemDefinition> list : namedItemDefs.values()) {
+            for (QItemDefinition qDef : list) {
                 if (!qDef.definesNode() && qDef.isMandatory()) {
                     defs.add(qDef);
                 }
@@ -247,7 +220,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
+        return defs.toArray(new QPropertyDefinition[defs.size()]);
     }
 
     /**
@@ -259,13 +232,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (namedItemDefs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
+        for (List<QItemDefinition> list : namedItemDefs.values()) {
+            for (QItemDefinition qDef : list) {
                 if (qDef.definesNode() && qDef.isMandatory()) {
                     defs.add(qDef);
                 }
@@ -274,21 +243,19 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
+        return defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
     /**
      * @see EffectiveNodeType#getNamedQNodeDefinitions(Name)
      */
     public QNodeDefinition[] getNamedQNodeDefinitions(Name name) {
-        List list = (List) namedItemDefs.get(name);
+        List<QItemDefinition> list = namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(list.size());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(list.size());
+        for (QItemDefinition qDef : list) {
             if (qDef.definesNode()) {
                 defs.add(qDef);
             }
@@ -296,7 +263,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
+        return defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
     /**
@@ -306,10 +273,8 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (unnamedItemDefs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(unnamedItemDefs.size());
+        for (QItemDefinition qDef : unnamedItemDefs) {
             if (qDef.definesNode()) {
                 defs.add(qDef);
             }
@@ -317,21 +282,19 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
+        return defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
     /**
      * @see EffectiveNodeType#getNamedQPropertyDefinitions(Name)
      */
     public QPropertyDefinition[] getNamedQPropertyDefinitions(Name name) {
-        List list = (List) namedItemDefs.get(name);
+        List<QItemDefinition> list = namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(list.size());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(list.size());
+        for (QItemDefinition qDef : list) {
             if (!qDef.definesNode()) {
                 defs.add(qDef);
             }
@@ -339,7 +302,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
+        return defs.toArray(new QPropertyDefinition[defs.size()]);
     }
 
     /**
@@ -349,10 +312,8 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (unnamedItemDefs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(unnamedItemDefs.size());
+        for (QItemDefinition qDef : unnamedItemDefs) {
             if (!qDef.definesNode()) {
                 defs.add(qDef);
             }
@@ -360,7 +321,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (defs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
+        return defs.toArray(new QPropertyDefinition[defs.size()]);
     }
 
     /**
@@ -490,30 +451,29 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         if (namedItemDefs.size() == 0) {
             return QItemDefinition.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            defs.addAll((List) iter.next());
+        ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
+        for (List<QItemDefinition> list : namedItemDefs.values()) {
+            defs.addAll(list);
         }
         if (defs.size() == 0) {
             return QItemDefinition.EMPTY_ARRAY;
         }
-        return (QItemDefinition[]) defs.toArray(new QItemDefinition[defs.size()]);
+        return defs.toArray(new QItemDefinition[defs.size()]);
     }
 
     private QItemDefinition[] getNamedItemDefs(Name name) {
-        List list = (List) namedItemDefs.get(name);
+        List<QItemDefinition> list = namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
-        return (QItemDefinition[]) list.toArray(new QItemDefinition[list.size()]);
+        return list.toArray(new QItemDefinition[list.size()]);
     }
 
     private QItemDefinition[] getUnnamedItemDefs() {
         if (unnamedItemDefs.size() == 0) {
             return QItemDefinition.EMPTY_ARRAY;
         }
-        return (QItemDefinition[]) unnamedItemDefs.toArray(new QItemDefinition[unnamedItemDefs.size()]);
+        return unnamedItemDefs.toArray(new QItemDefinition[unnamedItemDefs.size()]);
     }
 
     /**
@@ -527,7 +487,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     EffectiveNodeTypeImpl merge(EffectiveNodeTypeImpl other)
             throws ConstraintViolationException {
         // create a clone of this instance and perform the merge on
-        // the 'clone' to avoid a potentially inconsistant state
+        // the 'clone' to avoid a potentially inconsistent state
         // of this instance if an exception is thrown during
         // the merge.
         EffectiveNodeTypeImpl copy = (EffectiveNodeTypeImpl) clone();
@@ -573,12 +533,12 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 continue;
             }
             Name name = qDef.getName();
-            List existingDefs = (List) namedItemDefs.get(name);
+            List<QItemDefinition> existingDefs = namedItemDefs.get(name);
             if (existingDefs != null) {
                 if (existingDefs.size() > 0) {
                     // there already exists at least one definition with that name
                     for (int j = 0; j < existingDefs.size(); j++) {
-                        QItemDefinition qItemDef = (QItemDefinition) existingDefs.get(j);
+                        QItemDefinition qItemDef = existingDefs.get(j);
                         // make sure none of them is auto-create
                         if (qDef.isAutoCreated() || qItemDef.isAutoCreated()) {
                             // conflict
@@ -628,7 +588,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                     }
                 }
             } else {
-                existingDefs = new ArrayList();
+                existingDefs = new ArrayList<QItemDefinition>();
                 namedItemDefs.put(name, existingDefs);
             }
             existingDefs.add(qDef);
@@ -642,9 +602,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 // ignore redundant definitions
                 continue;
             }
-            Iterator iter = unnamedItemDefs.iterator();
-            while (iter.hasNext()) {
-                QItemDefinition existing = (QItemDefinition) iter.next();
+            for (QItemDefinition existing : unnamedItemDefs) {
                 // compare with existing definition
                 if (qDef.definesNode() == existing.definesNode()) {
                     if (!qDef.definesNode()) {
