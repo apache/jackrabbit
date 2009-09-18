@@ -60,7 +60,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     private final ItemManager itemMgr;
 
     /** Iterator over HierarchyEntry elements */
-    private final Iterator iter;
+    private final Iterator<? extends HierarchyEntry> iter;
 
     /**
      * The number of items.
@@ -81,7 +81,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * @param itemMgr item manager
      * @param hierarchyEntryIterator Iterator over HierarchyEntries
      */
-    public LazyItemIterator(ItemManager itemMgr, Iterator hierarchyEntryIterator) {
+    public LazyItemIterator(ItemManager itemMgr, Iterator<? extends HierarchyEntry> hierarchyEntryIterator) {
         this.itemMgr = itemMgr;
         this.iter = hierarchyEntryIterator;
         if (hierarchyEntryIterator instanceof RangeIterator) {
@@ -102,12 +102,12 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * @param itemIds
      */
     public LazyItemIterator(ItemManager itemMgr, HierarchyManager hierarchyMgr,
-                            Iterator itemIds)
+                            Iterator<? extends ItemId> itemIds)
         throws ItemNotFoundException, RepositoryException {
         this.itemMgr = itemMgr;
-        List entries = new ArrayList();
+        List<HierarchyEntry> entries = new ArrayList<HierarchyEntry>();
         while (itemIds.hasNext()) {
-            ItemId id = (ItemId) itemIds.next();
+            ItemId id = itemIds.next();
             HierarchyEntry entry;
             if (id.denotesNode()) {
                 entry = hierarchyMgr.getNodeEntry((NodeId) id);
@@ -125,14 +125,14 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
 
     /**
      * Prefetches next item.
-     * <p/>
+     * <p>
      * {@link #next} is set to the next available item in this iterator or to
      * <code>null</code> in case there are no more items.
      */
     private Item prefetchNext() {
         Item nextItem = null;
         while (nextItem == null && iter.hasNext()) {
-            HierarchyEntry entry = (HierarchyEntry) iter.next();
+            HierarchyEntry entry = iter.next();
             try {
                 nextItem = itemMgr.getItem(entry);
             } catch (RepositoryException e) {
@@ -182,7 +182,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
 
     /**
      * Returns the number of <code>Item</code>s in this iterator or -1 if the
-     * size is unkown.
+     * size is unknown.
      * </p>
      * Note: The number returned by this method may differ from the number
      * of <code>Item</code>s actually returned by calls to hasNext() / getNextNode().
@@ -216,11 +216,11 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         // skip the first (skipNum - 1) items without actually retrieving them
         while (--skipNum > 0) {
             pos++;
-            HierarchyEntry entry = (HierarchyEntry) iter.next();
+            HierarchyEntry entry = iter.next();
             // check if item exists but don't build Item instance.
             while (!itemMgr.itemExists(entry)) {
                 log.debug("Ignoring nonexistent item " + entry);
-                entry = (HierarchyEntry) iter.next();
+                entry = iter.next();
             }
         }
         // prefetch final item (the one to be returned on next())
