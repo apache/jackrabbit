@@ -178,9 +178,9 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
      * @throws RepositoryException
      */
     public void adjustReferences(ReferenceChangeTracker refTracker) throws ConstraintViolationException, RepositoryException {
-        Iterator it = refTracker.getReferences();
+        Iterator<PropertyState> it = refTracker.getReferences();
         while (it.hasNext()) {
-            PropertyState propState = (PropertyState) it.next();
+            PropertyState propState = it.next();
             boolean modified = false;
             QValue[] values = propState.getValues();
             QValue[] newVals = new QValue[values.length];
