@@ -37,7 +37,6 @@ import javax.jcr.query.qom.QueryObjectModel;
 
 import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.EventImpl;
@@ -46,6 +45,7 @@ import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.query.QueryHandlerFactory;
 import org.apache.jackrabbit.core.query.QueryObjectModelImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -85,34 +85,9 @@ public class SearchManager implements SynchronousEventListener {
     public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
 
     /**
-     * The search configuration.
-     */
-    private final SearchConfig config;
-
-    /**
-     * The node type registry.
-     */
-    private final NodeTypeRegistry ntReg;
-
-    /**
      * The shared item state manager instance for the workspace.
      */
     private final SharedItemStateManager itemMgr;
-
-    /**
-     * The underlying persistence manager.
-     */
-    private final PersistenceManager pm;
-
-    /**
-     * Storage for search index
-     */
-    private final FileSystem fs;
-
-    /**
-     * The root node for this search manager.
-     */
-    private final NodeId rootNodeId;
 
     /**
      * QueryHandler where query execution is delegated to
@@ -131,20 +106,9 @@ public class SearchManager implements SynchronousEventListener {
     private final NamespaceRegistryImpl nsReg;
 
     /**
-     * ID of the node that should be excluded from indexing or <code>null</code>
-     * if no node should be excluded.
-     */
-    private final NodeId excludedNodeId;
-
-    /**
      * Path that will be excluded from indexing.
      */
     private Path excludePath;
-
-    /**
-     * Background task executor.
-     */
-    private final Executor executor;
 
     /**
      * Creates a new <code>SearchManager</code>.
@@ -162,7 +126,7 @@ public class SearchManager implements SynchronousEventListener {
      *                       excluded from indexing.
      * @throws RepositoryException if the search manager cannot be initialized
      */
-    public SearchManager(SearchConfig config,
+    public SearchManager(QueryHandlerFactory qhf,
                          final NamespaceRegistryImpl nsReg,
                          NodeTypeRegistry ntReg,
                          SharedItemStateManager itemMgr,
@@ -171,16 +135,9 @@ public class SearchManager implements SynchronousEventListener {
                          SearchManager parentMgr,
                          NodeId excludedNodeId,
                          Executor executor) throws RepositoryException {
-        this.fs = config.getFileSystem();
-        this.config = config;
-        this.ntReg = ntReg;
         this.nsReg = nsReg;
         this.itemMgr = itemMgr;
-        this.pm = pm;
-        this.rootNodeId = rootNodeId;
         this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
-        this.excludedNodeId = excludedNodeId;
-        this.executor = executor;
 
         // register namespaces
         safeRegisterNamespace(NS_XS_PREFIX, NS_XS_URI);
@@ -213,7 +170,9 @@ public class SearchManager implements SynchronousEventListener {
         }
 
         // initialize query handler
-        initializeQueryHandler();
+        this.handler = qhf.getQueryHandler(new QueryHandlerContext(
+                itemMgr, pm, rootNodeId, ntReg, nsReg,
+                parentHandler, excludedNodeId, executor));
     }
 
     /**
@@ -260,14 +219,8 @@ public class SearchManager implements SynchronousEventListener {
     public void close() {
         try {
             shutdownQueryHandler();
-
-            if (fs != null) {
-                fs.close();
-            }
         } catch (IOException e) {
             log.error("Exception closing QueryHandler.", e);
-        } catch (FileSystemException e) {
-            log.error("Exception closing FileSystem.", e);
         }
     }
 
@@ -503,24 +456,6 @@ public class SearchManager implements SynchronousEventListener {
     }
 
     //------------------------< internal >--------------------------------------
-
-    /**
-     * Initializes the query handler.
-     *
-     * @throws RepositoryException if the query handler cannot be initialized.
-     */
-    private void initializeQueryHandler() throws RepositoryException {
-        // initialize query handler
-        try {
-            handler = (QueryHandler) config.newInstance();
-            QueryHandlerContext context = new QueryHandlerContext(
-                    fs, itemMgr, pm, rootNodeId, ntReg, nsReg,
-                    parentHandler, excludedNodeId, executor);
-            handler.init(context);
-        } catch (Exception e) {
-            throw new RepositoryException(e.getMessage(), e);
-        }
-    }
 
     /**
      * Shuts down the query handler. If the query handler is already shut down

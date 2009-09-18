@@ -18,15 +18,14 @@ package org.apache.jackrabbit.core.query;
 
 import java.util.concurrent.Executor;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.CachingHierarchyManager;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.CachingHierarchyManager;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
 
 /**
  * Acts as an argument for the {@link QueryHandler} to keep the interface
@@ -34,11 +33,6 @@ import org.apache.jackrabbit.core.persistence.PersistenceManager;
  * handler is running in.
  */
 public class QueryHandlerContext {
-
-    /**
-     * A <code>FileSystem</code> to store the search index
-     */
-    private final FileSystem fs;
 
     /**
      * The persistent <code>ItemStateManager</code>
@@ -93,10 +87,6 @@ public class QueryHandlerContext {
     /**
      * Creates a new context instance.
      *
-     * @param fs               a {@link FileSystem} this <code>QueryHandler</code>
-     *                         may use to store its index. If no
-     *                         <code>FileSystem</code> has been configured
-     *                         <code>fs</code> is <code>null</code>.
      * @param stateMgr         provides persistent item states.
      * @param pm               the underlying persistence manager.
      * @param rootId           the id of the root node.
@@ -109,8 +99,7 @@ public class QueryHandlerContext {
      *                         excluded from indexing.
      * @param executor         background task executor
      */
-    public QueryHandlerContext(FileSystem fs,
-                               SharedItemStateManager stateMgr,
+    public QueryHandlerContext(SharedItemStateManager stateMgr,
                                PersistenceManager pm,
                                NodeId rootId,
                                NodeTypeRegistry ntRegistry,
@@ -118,7 +107,6 @@ public class QueryHandlerContext {
                                QueryHandler parentHandler,
                                NodeId excludedNodeId,
                                Executor executor) {
-        this.fs = fs;
         this.stateMgr = stateMgr;
         this.hmgr = new CachingHierarchyManager(rootId, stateMgr);
         this.stateMgr.addListener(hmgr);
@@ -159,18 +147,6 @@ public class QueryHandlerContext {
      */
     public PersistenceManager getPersistenceManager() {
         return pm;
-    }
-
-    /**
-     * Returns the {@link FileSystem} instance this <code>QueryHandler</code>
-     * may use to store its index. If no <code>FileSystem</code> has been
-     * configured this method returns <code>null</code>.
-     *
-     * @return the <code>FileSystem</code> instance for this
-     *         <code>QueryHandler</code>.
-     */
-    public FileSystem getFileSystem() {
-        return fs;
     }
 
     /**

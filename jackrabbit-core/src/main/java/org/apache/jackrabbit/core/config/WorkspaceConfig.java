@@ -20,6 +20,9 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
+import org.apache.jackrabbit.core.query.QueryHandler;
+import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.query.QueryHandlerFactory;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ISMLockingFactory;
 
@@ -32,7 +35,8 @@ import org.apache.jackrabbit.core.state.ISMLockingFactory;
  * the item state manager locking configuration. The search index and the item
  * state manager locking and the security config are optional parts.
  */
-public class WorkspaceConfig implements FileSystemFactory, ISMLockingFactory {
+public class WorkspaceConfig
+        implements FileSystemFactory, ISMLockingFactory, QueryHandlerFactory {
 
     /**
      * Workspace home directory.
@@ -60,9 +64,9 @@ public class WorkspaceConfig implements FileSystemFactory, ISMLockingFactory {
     private PersistenceManagerConfig pmc;
 
     /**
-     * Workspace search index configuration. Can be <code>null</code>.
+     * Query handler factory, or <code>null</code> if search is not configured.
      */
-    private SearchConfig sc;
+    private QueryHandlerFactory qhf;
 
     /**
      * The item state manager locking factory.
@@ -82,20 +86,21 @@ public class WorkspaceConfig implements FileSystemFactory, ISMLockingFactory {
      * @param clustered
      * @param fsf file system factory
      * @param pmc persistence manager configuration
-     * @param sc search index configuration
+     * @param qhf query handler factory, or <code>null</code> if not configured
      * @param ismLockingFactory the item state manager locking factory
      * @param workspaceSecurityConfig the workspace specific security configuration.
      */
     public WorkspaceConfig(String home, String name, boolean clustered,
                            FileSystemFactory fsf, PersistenceManagerConfig pmc,
-                           SearchConfig sc, ISMLockingFactory ismLockingFactory,
+                           QueryHandlerFactory qhf,
+                           ISMLockingFactory ismLockingFactory,
                            WorkspaceSecurityConfig workspaceSecurityConfig) {
         this.home = home;
         this.name = name;
         this.clustered = clustered;
         this.fsf = fsf;
         this.pmc = pmc;
-        this.sc = sc;
+        this.qhf = qhf;
         this.ismLockingFactory = ismLockingFactory;
         this.workspaceSecurityConfig = workspaceSecurityConfig;
     }
@@ -158,13 +163,28 @@ public class WorkspaceConfig implements FileSystemFactory, ISMLockingFactory {
     }
 
     /**
-     * Returns the workspace search index configuration. Returns
-     * <code>null</code> if a search index has not been configured.
+     * Checks whether search configuration is present.
      *
-     * @return search index configuration, or <code>null</code>
+     * @return <code>true</code> if search is configured,
+     *         <code>false</code> otherwise
      */
-    public SearchConfig getSearchConfig() {
-        return sc;
+    public boolean isSearchEnabled() {
+        return qhf != null;
+    }
+
+    /**
+     * Returns an initialized query handler, or <code>null</code> if one
+     * was not configured.
+     *
+     * @return initialized query handler, or <code>null</code>
+     */
+    public QueryHandler getQueryHandler(QueryHandlerContext context)
+            throws RepositoryException {
+        if (qhf != null) {
+            return qhf.getQueryHandler(context);
+        } else {
+            return null;
+        }
     }
     /**
      * @return workspace-specific security settings.
