@@ -204,7 +204,7 @@ public class SessionImportTest extends AbstractJCRTest {
     private static String getUnknownURI(Session session, String uriHint) throws RepositoryException {
         String uri = uriHint;
         int index = 0;
-        List uris = Arrays.asList(session.getWorkspace().getNamespaceRegistry().getURIs());
+        List<String> uris = Arrays.asList(session.getWorkspace().getNamespaceRegistry().getURIs());
         while (uris.contains(uri)) {
             uri = uriHint + index;
             index++;

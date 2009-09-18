@@ -77,9 +77,9 @@ public class Checkin extends AbstractOperation {
         } catch (RepositoryException e) {
             log.debug("Failed to access Version history entry -> skip invalidation.", e);
         }
-        Iterator entries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
+        Iterator<PropertyEntry> entries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
         while (entries.hasNext()) {
-            PropertyEntry pe = (PropertyEntry) entries.next();
+            PropertyEntry pe = entries.next();
             pe.invalidate(false);
         }
         nodeState.getHierarchyEntry().invalidate(false);

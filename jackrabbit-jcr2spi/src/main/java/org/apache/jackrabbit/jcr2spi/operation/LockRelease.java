@@ -63,9 +63,9 @@ public class LockRelease extends AbstractOperation {
         status = STATUS_PERSISTED;
         // non-recursive invalidation but including all properties
         NodeEntry nodeEntry = nodeState.getNodeEntry();
-        Iterator entries = nodeEntry.getPropertyEntries();
+        Iterator<PropertyEntry> entries = nodeEntry.getPropertyEntries();
         while (entries.hasNext()) {
-            PropertyEntry pe = (PropertyEntry) entries.next();
+            PropertyEntry pe = entries.next();
             pe.invalidate(false);
         }
         nodeEntry.invalidate(false);

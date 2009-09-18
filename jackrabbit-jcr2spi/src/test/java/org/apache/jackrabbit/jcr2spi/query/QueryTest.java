@@ -35,11 +35,11 @@ public class QueryTest extends AbstractQueryTest {
      * @throws NotExecutableException 
      */
     public void testQueryChildNodesOfRoot() throws RepositoryException, NotExecutableException {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         for (NodeIterator it = superuser.getRootNode().getNodes(); it.hasNext(); ) {
             nodes.add(it.nextNode());
         }
-        Node[] children = (Node[]) nodes.toArray(new Node[nodes.size()]);
+        Node[] children = nodes.toArray(new Node[nodes.size()]);
         executeXPathQuery(superuser, "/jcr:root/*", children);
     }
 
