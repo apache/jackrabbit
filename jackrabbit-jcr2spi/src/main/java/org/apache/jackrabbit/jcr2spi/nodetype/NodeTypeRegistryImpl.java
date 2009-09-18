@@ -65,9 +65,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     private final NodeTypeDefinitionMap registeredNTDefs;
 
     // set of property definitions
-    private final Set propDefs;
+    private final Set<QPropertyDefinition> propDefs;
     // set of node definitions
-    private final Set nodeDefs;
+    private final Set<QNodeDefinition> nodeDefs;
 
     /**
      * Object used to persist new nodetypes and modified nodetype definitions.
@@ -121,8 +121,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         //registeredNTDefs = new ConcurrentReaderHashMap();
         registeredNTDefs = new NodeTypeDefinitionMap();
 
-        propDefs = new HashSet();
-        nodeDefs = new HashSet();
+        propDefs = new HashSet<QPropertyDefinition>();
+        nodeDefs = new HashSet<QNodeDefinition>();
     }
 
     //---------------------------------------------------< NodeTypeRegistry >---
@@ -146,8 +146,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      * @see NodeTypeRegistry#getRegisteredNodeTypes()
      */
     public Name[] getRegisteredNodeTypes() throws RepositoryException {
-        Set qNames = registeredNTDefs.keySet();
-        return (Name[]) qNames.toArray(new Name[registeredNTDefs.size()]);
+        Set<Name> qNames = registeredNTDefs.keySet();
+        return qNames.toArray(new Name[registeredNTDefs.size()]);
     }
 
 
@@ -174,7 +174,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
 
         // validate new nodetype definitions
-        Map defMap = validator.validateNodeTypeDefs(ntDefs, registeredNTDefs);
+        Map<QNodeTypeDefinition, EffectiveNodeType> defMap = validator.validateNodeTypeDefs(ntDefs, registeredNTDefs);
         storage.registerNodeTypes(ntDefs.toArray(new QNodeTypeDefinition[ntDefs.size()]), allowUpdate);
 
         // update internal cache:
@@ -201,12 +201,12 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         for (Name ntName : nodeTypeNames) {
             // Best effort check for node types other than those to be
             // unregistered that depend on the given node types
-            Set dependents = registeredNTDefs.getDependentNodeTypes(ntName);
+            Set<Name> dependents = registeredNTDefs.getDependentNodeTypes(ntName);
             dependents.removeAll(nodeTypeNames);
             if (dependents.size() > 0) {
                 StringBuffer msg = new StringBuffer();
                 msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
-                for (Iterator depIter = dependents.iterator(); depIter.hasNext();) {
+                for (Iterator<Name> depIter = dependents.iterator(); depIter.hasNext();) {
                     msg.append(depIter.next());
                     msg.append(" ");
                 }
@@ -223,8 +223,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         internalUnregister(nodeTypeNames);
 
         // notify listeners
-        for (Iterator iter = nodeTypeNames.iterator(); iter.hasNext();) {
-            Name ntName = (Name) iter.next();
+        for (Iterator<Name> iter = nodeTypeNames.iterator(); iter.hasNext();) {
+            Name ntName = iter.next();
             notifyUnregistered(ntName);
         }
     }
@@ -258,24 +258,24 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     }
 
     /**
-     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(Name[], Map)
+     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(Name[], Map<Name, QNodeTypeDefinition>)
      */
-    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames, Map ntdMap)
+    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames, Map<Name, QNodeTypeDefinition> ntdMap)
         throws ConstraintViolationException, NoSuchNodeTypeException {
         return getEffectiveNodeType(ntNames, entCache, ntdMap);
     }
 
     /**
-     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(QNodeTypeDefinition, Map)
+     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(QNodeTypeDefinition, Map<Name, QNodeTypeDefinition>)
      */
-    public EffectiveNodeType getEffectiveNodeType(QNodeTypeDefinition ntd, Map ntdMap)
+    public EffectiveNodeType getEffectiveNodeType(QNodeTypeDefinition ntd, Map<Name, QNodeTypeDefinition> ntdMap)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        TreeSet mergedNodeTypes = new TreeSet();
-        TreeSet inheritedNodeTypes = new TreeSet();
-        TreeSet allNodeTypes = new TreeSet();
-        Map namedItemDefs = new HashMap();
-        List unnamedItemDefs = new ArrayList();
-        Set supportedMixins = null;
+        TreeSet<Name> mergedNodeTypes = new TreeSet<Name>();
+        TreeSet<Name> inheritedNodeTypes = new TreeSet<Name>();
+        TreeSet<Name> allNodeTypes = new TreeSet<Name>();
+        Map<Name, List<QItemDefinition>> namedItemDefs = new HashMap<Name, List<QItemDefinition>>();
+        List<QItemDefinition> unnamedItemDefs = new ArrayList<QItemDefinition>();
+        Set<Name> supportedMixins = null;
 
         Name ntName = ntd.getName();
         // prepare new instance
@@ -285,7 +285,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         Name[] smixins = ntd.getSupportedMixinTypes();
 
         if (smixins != null) {
-            supportedMixins = new HashSet();
+            supportedMixins = new HashSet<Name>();
             for (int i = 0; i < smixins.length; i++) {
                 supportedMixins.add(smixins[i]);
             }
@@ -294,7 +294,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         // map of all item definitions (maps id to definition)
         // used to effectively detect ambiguous child definitions where
         // ambiguity is defined in terms of definition identity
-        Set itemDefIds = new HashSet();
+        Set<QItemDefinition> itemDefIds = new HashSet<QItemDefinition>();
 
         QNodeDefinition[] cnda = ntd.getChildNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
@@ -320,9 +320,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             } else {
                 // named node definition
                 Name name = cnda[i].getName();
-                List defs = (List) namedItemDefs.get(name);
+                List<QItemDefinition> defs = namedItemDefs.get(name);
                 if (defs == null) {
-                    defs = new ArrayList();
+                    defs = new ArrayList<QItemDefinition>();
                     namedItemDefs.put(name, defs);
                 }
                 if (defs.size() > 0) {
@@ -331,7 +331,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                      * name; make sure none of them is auto-create
                      */
                     for (int j = 0; j < defs.size(); j++) {
-                        QItemDefinition qDef = (QItemDefinition) defs.get(j);
+                        QItemDefinition qDef = defs.get(j);
                         if (cnda[i].isAutoCreated() || qDef.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
@@ -368,9 +368,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             } else {
                 // named property definition
                 Name name = pda[i].getName();
-                List defs = (List) namedItemDefs.get(name);
+                List<QItemDefinition> defs = namedItemDefs.get(name);
                 if (defs == null) {
-                    defs = new ArrayList();
+                    defs = new ArrayList<QItemDefinition>();
                     namedItemDefs.put(name, defs);
                 }
                 if (defs.size() > 0) {
@@ -379,7 +379,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                      * name; make sure none of them is auto-create
                      */
                     for (int j = 0; j < defs.size(); j++) {
-                        QItemDefinition qDef = (QItemDefinition) defs.get(j);
+                        QItemDefinition qDef = defs.get(j);
                         if (pda[i].isAutoCreated() || qDef.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
@@ -417,7 +417,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      */
     private EffectiveNodeType getEffectiveNodeType(Name ntName,
                                                    EffectiveNodeTypeCache entCache,
-                                                   Map ntdCache)
+                                                   Map<Name, QNodeTypeDefinition> ntdCache)
         throws NoSuchNodeTypeException {
         // 1. check if effective node type has already been built
         EffectiveNodeTypeCache.Key key = entCache.getKey(new Name[]{ntName});
@@ -427,7 +427,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
 
         // 2. make sure we've got the definition of the specified node type
-        QNodeTypeDefinition ntd = (QNodeTypeDefinition) ntdCache.get(ntName);
+        QNodeTypeDefinition ntd = ntdCache.get(ntName);
         if (ntd == null) {
             throw new NoSuchNodeTypeException(ntName.toString());
         }
@@ -458,7 +458,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      */
     private EffectiveNodeType getEffectiveNodeType(Name[] ntNames,
                                                    EffectiveNodeTypeCache entCache,
-                                                   Map ntdCache)
+                                                   Map<Name, QNodeTypeDefinition> ntdCache)
         throws ConstraintViolationException, NoSuchNodeTypeException {
 
         EffectiveNodeTypeCache.Key key = entCache.getKey(ntNames);
@@ -500,7 +500,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                      */
                     Name[] remainder = key.getNames();
                     for (int i = 0; i < remainder.length; i++) {
-                        QNodeTypeDefinition ntd = (QNodeTypeDefinition) ntdCache.get(remainder[i]);
+                        QNodeTypeDefinition ntd = ntdCache.get(remainder[i]);
                         EffectiveNodeType ent = getEffectiveNodeType(ntd, ntdCache);
                         // store new effective node type
                         entCache.put(ent);
@@ -581,11 +581,10 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
     }
 
-    private void internalRegister(Map defMap) {
-        for (Iterator it = defMap.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry)it.next();
-            QNodeTypeDefinition ntd = (QNodeTypeDefinition)entry.getKey();
-            internalRegister(ntd, (EffectiveNodeTypeImpl)entry.getValue());
+    private void internalRegister(Map<QNodeTypeDefinition, EffectiveNodeType> defMap) {
+        for (Map.Entry<QNodeTypeDefinition, EffectiveNodeType> entry : defMap.entrySet()) {
+            QNodeTypeDefinition ntd = entry.getKey();
+            internalRegister(ntd, entry.getValue());
         }
     }
 

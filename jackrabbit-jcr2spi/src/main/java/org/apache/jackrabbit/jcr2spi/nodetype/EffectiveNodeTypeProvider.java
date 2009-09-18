@@ -58,7 +58,7 @@ public interface EffectiveNodeTypeProvider {
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames, Map ntdMap)
+    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames, Map<Name, QNodeTypeDefinition> ntdMap)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**
@@ -74,6 +74,6 @@ public interface EffectiveNodeTypeProvider {
      * @throws NoSuchNodeTypeException
      */
     public EffectiveNodeType getEffectiveNodeType(QNodeTypeDefinition ntd,
-                                                  Map ntdMap)
+                                                  Map<Name, QNodeTypeDefinition> ntdMap)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 }
