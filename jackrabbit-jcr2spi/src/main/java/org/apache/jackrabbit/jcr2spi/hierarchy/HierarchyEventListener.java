@@ -31,9 +31,9 @@ import org.apache.jackrabbit.spi.ItemId;
 import javax.jcr.RepositoryException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -119,8 +119,8 @@ public class HierarchyEventListener implements InternalEventListener {
         // separately collect the add events
         Set<Event> addEvents = new HashSet<Event>();
 
-        for (Iterator it = events.iterator(); it.hasNext();) {
-            Event event = (Event) it.next();
+        for (Iterator<Event> it = events.iterator(); it.hasNext();) {
+            Event event = it.next();
             int type = event.getType();
             if (type == Event.NODE_REMOVED) {
                 // remember removed nodes separately for proper handling later on.
@@ -148,8 +148,8 @@ public class HierarchyEventListener implements InternalEventListener {
         boolean progress = true;
         while (!addEvents.isEmpty() && progress) {
             progress = false;
-            for (Iterator it = addEvents.iterator(); it.hasNext();) {
-                Event ev = (Event) it.next();
+            for (Iterator<Event> it = addEvents.iterator(); it.hasNext();) {
+                Event ev = it.next();
                 NodeId parentId = ev.getParentId();
                 HierarchyEntry parent = null;
                 if (parentId != null) {

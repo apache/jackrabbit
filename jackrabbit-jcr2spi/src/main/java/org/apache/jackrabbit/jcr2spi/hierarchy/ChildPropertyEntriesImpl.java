@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.Map;
-import java.util.Iterator;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
@@ -37,12 +36,12 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
 
     private static Logger log = LoggerFactory.getLogger(ChildPropertyEntriesImpl.class);
 
-    private final Map properties;
+    private final Map<Name, Reference<PropertyEntry>> properties;
     private final NodeEntry parent;
     private final EntryFactory factory;
 
     ChildPropertyEntriesImpl(NodeEntry parent, EntryFactory factory) {
-        properties = new HashMap();
+        this.properties = new HashMap<Name, Reference<PropertyEntry>>();
         this.parent = parent;
         this.factory = factory;
     }
@@ -58,13 +57,13 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
      * @see ChildPropertyEntries#get(Name)
      */
     public PropertyEntry get(Name propertyName) {
-        Object ref = properties.get(propertyName);
+        Reference<PropertyEntry> ref = properties.get(propertyName);
         if (ref == null) {
             // no entry exists with the given name
             return null;
         }
 
-        PropertyEntry entry = (PropertyEntry) ((Reference) ref).get();
+        PropertyEntry entry = ref.get();
         if (entry == null) {
             // entry has been g-collected -> create new entry and return it.
             entry = factory.createPropertyEntry(parent, propertyName);
@@ -76,11 +75,10 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     /**
      * @see ChildPropertyEntries#getPropertyEntries()
      */
-    public Collection getPropertyEntries() {
+    public Collection<PropertyEntry> getPropertyEntries() {
         synchronized (properties) {
-            Set entries = new HashSet(properties.size());
-            for (Iterator it = properties.keySet().iterator(); it.hasNext();) {
-                Name propName = (Name) it.next();
+            Set<PropertyEntry> entries = new HashSet<PropertyEntry>(properties.size());
+            for (Name propName : properties.keySet()) {
                 entries.add(get(propName));
             }
             return Collections.unmodifiableCollection(entries);
@@ -90,7 +88,7 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     /**
      * @see ChildPropertyEntries#getPropertyNames()
      */
-    public Collection getPropertyNames() {
+    public Collection<Name> getPropertyNames() {
         return Collections.unmodifiableCollection(properties.keySet());
     }
 
@@ -99,7 +97,7 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
      */
     public void add(PropertyEntry propertyEntry) {
         synchronized (properties) {
-            Reference ref = new SoftReference(propertyEntry);
+            Reference<PropertyEntry> ref = new SoftReference<PropertyEntry>(propertyEntry);
             properties.put(propertyEntry.getName(), ref);
         }
     }
@@ -107,12 +105,9 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     /**
      * @see ChildPropertyEntries#addAll(Collection)
      */
-    public void addAll(Collection propertyEntries) {
-        for (Iterator it = propertyEntries.iterator(); it.hasNext();) {
-            Object pe = it.next();
-            if (pe instanceof PropertyEntry) {
-                add((PropertyEntry) pe);
-            }
+    public void addAll(Collection<PropertyEntry> propertyEntries) {
+        for (PropertyEntry pe : propertyEntries) {
+            add(pe);
         }
     }
 

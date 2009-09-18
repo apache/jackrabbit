@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
@@ -180,7 +181,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @return iterator of <code>NodeEntry</code> objects
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public Iterator getNodeEntries() throws RepositoryException;
+    public Iterator<NodeEntry> getNodeEntries() throws RepositoryException;
 
     /**
      * Returns a unmodifiable List of <code>NodeEntry</code>s with the
@@ -190,7 +191,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @return list of <code>NodeEntry</code> objects
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public List getNodeEntries(Name nodeName) throws RepositoryException;
+    public List<NodeEntry> getNodeEntries(Name nodeName) throws RepositoryException;
 
     /**
      * Creates or updates the <code>ChildNodeEntries</code> of this node.
@@ -198,7 +199,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @param childInfos
      * @throws RepositoryException
      */
-    public void setNodeEntries(Iterator childInfos) throws RepositoryException;
+    public void setNodeEntries(Iterator<ChildInfo> childInfos) throws RepositoryException;
 
     /**
      * Adds a child NodeEntry to this entry if it not yet present with this
@@ -266,7 +267,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @return an unmodifiable Iterator over those children that represent valid
      * PropertyEntries.
      */
-    public Iterator getPropertyEntries();
+    public Iterator<PropertyEntry> getPropertyEntries();
 
     /**
      * Add an existing <code>PropertyEntry</code> with the given name if it is
@@ -291,7 +292,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @throws ItemExistsException
      * @throws RepositoryException if an unexpected error occurs.
      */
-    public void setPropertyEntries(Collection propNames) throws ItemExistsException, RepositoryException;
+    public void setPropertyEntries(Collection<Name> propNames) throws ItemExistsException, RepositoryException;
 
     /**
      * Add a new, transient <code>PropertyEntry</code> to this <code>NodeEntry</code>

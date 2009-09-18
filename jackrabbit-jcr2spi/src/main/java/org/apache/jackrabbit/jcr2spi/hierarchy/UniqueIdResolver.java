@@ -44,7 +44,7 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
     /**
      * Maps a String uniqueID to a {@link NodeEntry}.
      */
-    private final Map lookUp;
+    private final Map<String, NodeEntry> lookUp;
 
     /**
      * Creates a new <code>UniqueIdResolver</code>.
@@ -64,7 +64,7 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
         if (uniqueId == null) {
             throw new IllegalArgumentException();
         }
-        return (NodeEntry) lookUp.get(uniqueId);
+        return lookUp.get(uniqueId);
     }
 
     public NodeEntry resolve(NodeId nodeId, NodeEntry rootEntry) throws ItemNotFoundException, RepositoryException {
@@ -94,7 +94,7 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
                     NodeEntry entry = (NodeEntry) state.getHierarchyEntry();
                     String uniqueID = entry.getUniqueID();
                     if (uniqueID != null) {
-                        NodeEntry mapEntry = (NodeEntry) lookUp.get(uniqueID);
+                        NodeEntry mapEntry = lookUp.get(uniqueID);
                         if (mapEntry == entry) {
                             lookUp.remove(uniqueID);
                         } // else: removed entry is not present in lookup but
@@ -167,7 +167,7 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
             // some other entry existed before with the same uniqueID
             if (!sameEntry((NodeEntry) previous, entry)) {
                 // if the new entry represents the externally moved/renamed
-                // correspondance of the previous the latter needs to marked
+                // correspondence of the previous the latter needs to marked
                 // removed/stale-destroyed.
                 // otherwise (both represent the same entry) the creation
                 // of entry is the result of gc of the node or any of the

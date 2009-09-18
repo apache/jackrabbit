@@ -39,10 +39,10 @@ final class EntryValidation {
      * @return <code>true</code> if one of the entries is valid; otherwise
      *         <code>false</code>.
      */
-    static boolean containsValidNodeEntry(Iterator nodeEntries) {
+    static boolean containsValidNodeEntry(Iterator<NodeEntry> nodeEntries) {
         boolean hasValid = false;
         while (nodeEntries.hasNext() && !hasValid) {
-            NodeEntry cne = (NodeEntry) nodeEntries.next();
+            NodeEntry cne = nodeEntries.next();
             hasValid = isValidNodeEntry(cne);
         }
         return hasValid;

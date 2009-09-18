@@ -101,7 +101,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * Map of properties which are deleted and have been re-created as transient
      * property with the same name.
      */
-    private final Map propertiesInAttic;
+    private final Map<Name, PropertyEntry> propertiesInAttic;
 
     /**
      * Upon transient 'move' ('rename') or 'reorder' of SNSs this
@@ -631,8 +631,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     public synchronized Iterator getNodeEntries() throws RepositoryException {
         Collection entries = new ArrayList();
-        for (Iterator it = getCompleteChildNodeEntries().iterator(); it.hasNext();) {
-            NodeEntry entry = (NodeEntry) it.next();
+        for (Iterator<NodeEntry> it = getCompleteChildNodeEntries().iterator(); it.hasNext();) {
+            NodeEntry entry = it.next();
             if (EntryValidation.isValidNodeEntry(entry)) {
                 entries.add(entry);
             }
@@ -1326,7 +1326,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @return iterator over all children entries, that currently are loaded
      * with this NodeEntry
      */
-    private Iterator getAllChildEntries(boolean includeAttic) {
+    private Iterator<HierarchyEntry> getAllChildEntries(boolean includeAttic) {
         IteratorChain chain = new IteratorChain();
         // attic
         if (includeAttic) {

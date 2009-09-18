@@ -48,14 +48,14 @@ public interface ChildPropertyEntries {
      *
      * @return Collection of all <code>PropertyEntry</code> objects present.
      */
-    public Collection getPropertyEntries();
+    public Collection<PropertyEntry> getPropertyEntries();
 
     /**
      * Returns an unmodifiable collection containing all existing property names.
      *
      * @return Collection of <code>Name</code>
      */
-    public Collection getPropertyNames();
+    public Collection<Name> getPropertyNames();
 
     /**
      * Adds the new <code>PropertyEntry</code> to this <code>ChildPropertyEntries</code>.
@@ -70,7 +70,7 @@ public interface ChildPropertyEntries {
      *
      * @param propertyEntries
      */
-    public void addAll(Collection propertyEntries);
+    public void addAll(Collection<PropertyEntry> propertyEntries);
 
     /**
      * Remove the collection entry with the given <code>Name</code>.
