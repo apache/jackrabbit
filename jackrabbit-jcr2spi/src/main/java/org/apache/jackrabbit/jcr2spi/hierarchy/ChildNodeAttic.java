@@ -20,9 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Name;
 
+import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -33,7 +33,7 @@ class ChildNodeAttic {
 
     private static Logger log = LoggerFactory.getLogger(ChildNodeAttic.class);
 
-    private Set attic = new HashSet();
+    private Set<NodeEntryImpl> attic = new HashSet<NodeEntryImpl>();
 
     ChildNodeAttic() {
     }
@@ -43,8 +43,7 @@ class ChildNodeAttic {
     }
 
     boolean contains(Name name, int index) {
-        for (Iterator it = attic.iterator(); it.hasNext();) {
-            NodeEntryImpl ne = (NodeEntryImpl) it.next();
+        for (NodeEntryImpl ne : attic) {
             if (ne.matches(name, index)) {
                 return true;
             }
@@ -53,8 +52,7 @@ class ChildNodeAttic {
     }
 
     boolean contains(Name name, int index, String uniqueId) {
-        for (Iterator it = attic.iterator(); it.hasNext();) {
-            NodeEntryImpl ne = (NodeEntryImpl) it.next();
+        for (NodeEntryImpl ne : attic) {
             if (uniqueId != null && uniqueId.equals(ne.getUniqueID())) {
                 return true;
             } else if (ne.matches(name, index)) {
@@ -65,10 +63,9 @@ class ChildNodeAttic {
         return false;
     }
 
-    List get(Name name) {
-        List l = new ArrayList();
-        for (Iterator it = attic.iterator(); it.hasNext();) {
-            NodeEntryImpl ne = (NodeEntryImpl) it.next();
+    List<NodeEntryImpl> get(Name name) {
+        List<NodeEntryImpl> l = new ArrayList<NodeEntryImpl>();
+        for (NodeEntryImpl ne : attic) {
             if (ne.matches(name)) {
                 l.add(ne);
             }
@@ -83,8 +80,7 @@ class ChildNodeAttic {
      * @return
      */
     NodeEntry get(Name name, int index) {
-        for (Iterator it = attic.iterator(); it.hasNext();) {
-            NodeEntryImpl ne = (NodeEntryImpl) it.next();
+        for (NodeEntryImpl ne : attic) {
             if (ne.matches(name, index)) {
                 return ne;
             }
@@ -102,8 +98,7 @@ class ChildNodeAttic {
         if (uniqueId == null) {
             throw new IllegalArgumentException();
         }
-        for (Iterator it = attic.iterator(); it.hasNext();) {
-            NodeEntryImpl ne = (NodeEntryImpl) it.next();
+        for (NodeEntryImpl ne : attic) {
             if (uniqueId.equals(ne.getUniqueID())) {
                 return ne;
             }
@@ -123,7 +118,7 @@ class ChildNodeAttic {
         return false;
     }
 
-    Iterator iterator() {
+    Iterator<NodeEntryImpl> iterator() {
         return attic.iterator();
     }
     

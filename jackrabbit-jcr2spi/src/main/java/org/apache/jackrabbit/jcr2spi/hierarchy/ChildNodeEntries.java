@@ -53,7 +53,7 @@ public interface ChildNodeEntries {
      *
      * @return Iterator over all NodeEntry object
      */
-    Iterator iterator();
+    Iterator<NodeEntry> iterator();
 
     /**
      * Returns a <code>List</code> of <code>NodeEntry</code>s for the
@@ -63,7 +63,7 @@ public interface ChildNodeEntries {
      * @param nodeName the child node name.
      * @return same name sibling nodes with the given <code>nodeName</code>.
      */
-    List get(Name nodeName);
+    List<NodeEntry> get(Name nodeName);
 
     /**
      * Returns the <code>NodeEntry</code> with the given
