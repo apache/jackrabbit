@@ -40,7 +40,7 @@ public class NodeTypeCache {
     /**
      * The caches per repository service instance
      */
-    private static final Map<RepositoryService, Map> CACHES_PER_SERVICE = new WeakHashMap<RepositoryService, Map>();
+    private static final Map<RepositoryService, Map<String, NodeTypeCache>> CACHES_PER_SERVICE = new WeakHashMap<RepositoryService, Map<String, NodeTypeCache>>();
 
     /**
      * Maps node type Names to QNodeTypeDefinition
@@ -59,7 +59,7 @@ public class NodeTypeCache {
         if (userId == null) {
             return new NodeTypeCache();
         }
-        Map caches;
+        Map<String, NodeTypeCache> caches;
         synchronized (CACHES_PER_SERVICE) {
             caches = CACHES_PER_SERVICE.get(service);
             if (caches == null) {
@@ -69,7 +69,7 @@ public class NodeTypeCache {
             }
         }
         synchronized (caches) {
-            NodeTypeCache cache = (NodeTypeCache) caches.get(userId);
+            NodeTypeCache cache = caches.get(userId);
             if (cache == null) {
                 cache = new NodeTypeCache();
                 caches.put(userId, cache);

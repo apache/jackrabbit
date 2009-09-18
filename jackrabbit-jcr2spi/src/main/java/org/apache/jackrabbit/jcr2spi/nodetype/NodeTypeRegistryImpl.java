@@ -82,7 +82,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     /**
      * Listeners (soft references)
      */
-    private final Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     /**
      * Create a new <code>NodeTypeRegistry</codes>
@@ -206,8 +206,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             if (dependents.size() > 0) {
                 StringBuffer msg = new StringBuffer();
                 msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
-                for (Iterator<Name> depIter = dependents.iterator(); depIter.hasNext();) {
-                    msg.append(depIter.next());
+                for (Name name : dependents) {
+                    msg.append(name);
                     msg.append(" ");
                 }
                 throw new RepositoryException(msg.toString());
@@ -223,8 +223,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         internalUnregister(nodeTypeNames);
 
         // notify listeners
-        for (Iterator<Name> iter = nodeTypeNames.iterator(); iter.hasNext();) {
-            Name ntName = iter.next();
+        for (Name ntName : nodeTypeNames) {
             notifyUnregistered(ntName);
         }
     }
@@ -533,10 +532,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
                 new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
         int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
+        for (NodeTypeRegistryListener ntrl : listeners.values()) {
+            la[cnt++] = ntrl;
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -551,10 +549,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     private void notifyReRegistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
         int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
+        for (NodeTypeRegistryListener ntrl : listeners.values()) {
+            la[cnt++] = ntrl;
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -569,10 +566,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     private void notifyUnregistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
         int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
+        for (NodeTypeRegistryListener ntrl : listeners.values()) {
+            la[cnt++] = ntrl;
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -694,9 +690,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             // get names of those node types that have dependencies on the
             // node type with the given nodeTypeName.
             HashSet<Name> names = new HashSet<Name>();
-            Iterator<QNodeTypeDefinition> iter = getValues().iterator();
-            while (iter.hasNext()) {
-                QNodeTypeDefinition ntd = iter.next();
+            for (QNodeTypeDefinition ntd : getValues()) {
                 if (ntd.getDependencies().contains(nodeTypeName)) {
                     names.add(ntd.getName());
                 }
@@ -799,9 +793,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
 
         //-------------------------------------------------------< Dumpable >---
         public void dump(PrintStream ps) {
-            Iterator<QNodeTypeDefinition> iter = getValues().iterator();
-            while (iter.hasNext()) {
-                QNodeTypeDefinition ntd = iter.next();
+            for (QNodeTypeDefinition ntd : getValues()) {
                 ps.println(ntd.getName());
                 Name[] supertypes = ntd.getSupertypes();
                 ps.println("\tSupertypes");
