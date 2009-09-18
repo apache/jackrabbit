@@ -136,7 +136,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
      * @inheritDoc
      */
     public EventListenerIterator getRegisteredEventListeners() throws RepositoryException {
-        Map activeListeners;
+        Map<EventListener, EventFilter> activeListeners;
         synchronized (subscriptions) {
             ensureReadOnlyMap();
             activeListeners = readOnlySubscriptions;
