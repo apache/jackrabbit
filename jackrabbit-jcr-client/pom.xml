@@ -59,6 +59,18 @@
                     <argLine>-Xmx128m -enableassertions</argLine>
                 </configuration>
             </plugin>
+            
+          <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <configuration>
+                  <excludes>
+                      <exclude>repository/**</exclude>
+                      <exclude>repository.xml</exclude>
+                      <exclude>derby.log</exclude>
+                  </excludes>
+              </configuration>
+            </plugin>
         </plugins>
     </build>
 
