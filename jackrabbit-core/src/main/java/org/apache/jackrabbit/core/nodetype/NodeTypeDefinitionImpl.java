@@ -20,6 +20,7 @@ import javax.jcr.nodetype.NodeTypeDefinition;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
@@ -33,7 +34,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  * This class implements the <code>NodeTypeDefinition</code> interface.
- * All method calls are delegated to the wrapped {@link NodeTypeDef},
+ * All method calls are delegated to the wrapped {@link QNodeTypeDefinition},
  * performing the translation from <code>Name</code>s to JCR names
  * (and vice versa) where necessary.
  */
@@ -41,12 +42,12 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeDefinitionImpl.class);
 
-    private final NodeTypeDef ntd;
+    private final QNodeTypeDefinition ntd;
     // resolver used to translate <code>Name</code>s to JCR name strings.
     private final NamePathResolver resolver;
     private final ValueFactory valueFactory;
 
-    public NodeTypeDefinitionImpl(NodeTypeDef ntd, NamePathResolver resolver, ValueFactory valueFactory) {
+    public NodeTypeDefinitionImpl(QNodeTypeDefinition ntd, NamePathResolver resolver, ValueFactory valueFactory) {
         this.ntd = ntd;
         this.resolver = resolver;
         this.valueFactory = valueFactory;

@@ -24,8 +24,8 @@ import java.util.Iterator;
 
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.Record;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 /**
  * Cluster record representing a node type registration, re-registration or
@@ -106,7 +106,7 @@ public class NodeTypeRecord extends ClusterRecord {
      * @param ntDef node type definition
      * @param record journal record
      */
-    public NodeTypeRecord(NodeTypeDef ntDef, Record record) {
+    public NodeTypeRecord(QNodeTypeDefinition ntDef, Record record) {
         super(record);
 
         this.collection = new ArrayList();
@@ -173,7 +173,7 @@ public class NodeTypeRecord extends ClusterRecord {
             if (operation == UNREGISTER) {
                 record.writeQName((Name) iter.next());
             } else {
-                record.writeNodeTypeDef((NodeTypeDef) iter.next());
+                record.writeNodeTypeDef((QNodeTypeDefinition) iter.next());
             }
         }
     }

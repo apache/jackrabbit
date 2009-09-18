@@ -20,10 +20,19 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  * <code>QPropertyDefinitionImpl</code> implements SPI property
@@ -31,6 +40,8 @@ import java.util.Set;
  */
 public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         implements QPropertyDefinition {
+
+    private static final long serialVersionUID = 1064686456661663541L;
 
     /**
      * The required type.
@@ -61,7 +72,6 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
      * The 'fullTextSearcheable' flag
      */
     private final boolean fullTextSearchable;
-
     /**
      * The 'queryOrderable' flag
      */
@@ -101,7 +111,8 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
      * @param availableQueryOperators the available query operators
      * @param isFullTextSearchable if this is fulltext searchable
      * @param isQueryOrderable   if this is queryable
-     * @throws NullPointerException if <code>valueConstraints</code> is
+     * @throws NullPointerException if <code>valueConstraints</code> or
+     *                              <code>availableQueryOperators</code> is
      *                              <code>null</code>.
      * @since JCR 2.0
      */
@@ -119,6 +130,9 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         if (valueConstraints == null) {
             throw new NullPointerException("valueConstraints");
         }
+        if (availableQueryOperators == null) {
+            throw new NullPointerException("availableQueryOperators");
+        }
         this.defaultValues = defaultValues;
         this.multiple = isMultiple;
         this.requiredType = requiredType;
@@ -126,6 +140,31 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         this.availableQueryOperators = availableQueryOperators;
         this.fullTextSearchable = isFullTextSearchable;
         this.queryOrderable = isQueryOrderable;
+    }
+
+    /**
+     * Creates a new property definition based on <code>propDef</code>.
+     *
+     * @param propDef       the JCR property definition.
+     * @param resolver      the name/path resolver of the session that provided
+     *                      the property definition.
+     * @param qValueFactory the QValue factory.
+     * @throws RepositoryException if an error occurs while reading from
+     *                             <code>propDef</code>.
+     */
+    public QPropertyDefinitionImpl(PropertyDefinition propDef,
+                                   NamePathResolver resolver,
+                                   QValueFactory qValueFactory)
+            throws RepositoryException {
+        this(propDef.getName().equals(NameConstants.ANY_NAME.getLocalName()) ? NameConstants.ANY_NAME : resolver.getQName(propDef.getName()),
+                resolver.getQName(propDef.getDeclaringNodeType().getName()),
+                propDef.isAutoCreated(), propDef.isMandatory(),
+                propDef.getOnParentVersion(), propDef.isProtected(),
+                convertValues(propDef.getDefaultValues(), resolver, qValueFactory),
+                propDef.isMultiple(), propDef.getRequiredType(),
+                ValueConstraint.create(propDef.getRequiredType(), propDef.getValueConstraints(), resolver),
+                propDef.getAvailableQueryOperators(),
+                propDef.isFullTextSearchable(), propDef.isQueryOrderable());
     }
 
     //------------------------------------------------< QPropertyDefinition >---
@@ -250,5 +289,32 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
             hashCode = sb.toString().hashCode();
         }
         return hashCode;
+    }
+
+    //-------------------------------< internal >-------------------------------
+
+    /**
+     * Convers JCR {@link Value}s to {@link QValue}s.
+     *
+     * @param values   the JCR values.
+     * @param resolver the name/path resolver of the session that provided the
+     *                 values.
+     * @param factory  the QValue factory.
+     * @return the converted values.
+     * @throws RepositoryException if an error occurs while converting the
+     *                             values.
+     */
+    private static QValue[] convertValues(Value[] values,
+                                          NamePathResolver resolver,
+                                          QValueFactory factory)
+            throws RepositoryException {
+        QValue[] defaultValues = null;
+        if (values != null) {
+            defaultValues = new QValue[values.length];
+            for (int i = 0; i < values.length; i++) {
+                defaultValues[i] = ValueFormat.getQValue(values[i], resolver, factory);
+            }
+        }
+        return defaultValues;
     }
 }

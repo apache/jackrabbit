@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.nodetype.xml;
 
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
@@ -31,12 +30,14 @@ import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.spi.commons.nodetype.QNodeDefinitionBuilder;
 import org.apache.jackrabbit.spi.commons.nodetype.QPropertyDefinitionBuilder;
+import org.apache.jackrabbit.spi.commons.nodetype.QNodeTypeDefinitionBuilder;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.PropertyType;
@@ -70,7 +71,7 @@ public class NodeTypeReader {
      * @throws InvalidNodeTypeDefException if the node type definition
      *                                     format is invalid
      */
-    public static NodeTypeDef[] read(InputStream xml)
+    public static QNodeTypeDefinition[] read(InputStream xml)
             throws IOException, InvalidNodeTypeDefException {
         try {
             NodeTypeReader reader = new NodeTypeReader(xml);
@@ -130,13 +131,13 @@ public class NodeTypeReader {
      *                                     illegal name
      * @throws NamespaceException if a namespace is not defined
      */
-    public NodeTypeDef[] getNodeTypeDefs()
+    public QNodeTypeDefinition[] getNodeTypeDefs()
             throws InvalidNodeTypeDefException, NameException, NamespaceException {
-        List<NodeTypeDef> defs = new ArrayList<NodeTypeDef>();
+        List<QNodeTypeDefinition> defs = new ArrayList<QNodeTypeDefinition>();
         while (walker.iterateElements(Constants.NODETYPE_ELEMENT)) {
             defs.add(getNodeTypeDef());
         }
-        return defs.toArray(new NodeTypeDef[defs.size()]);
+        return defs.toArray(new QNodeTypeDefinition[defs.size()]);
     }
 
     /**
@@ -148,9 +149,9 @@ public class NodeTypeReader {
      *                                     illegal name
      * @throws NamespaceException if a namespace is not defined
      */
-    private NodeTypeDef getNodeTypeDef()
+    private QNodeTypeDefinition getNodeTypeDef()
             throws InvalidNodeTypeDefException, NameException, NamespaceException {
-        NodeTypeDef type = new NodeTypeDef();
+        QNodeTypeDefinitionBuilder type = new QNodeTypeDefinitionBuilder();
 
         type.setName(resolver.getQName(
                 walker.getAttribute(Constants.NAME_ATTRIBUTE)));
@@ -200,7 +201,7 @@ public class NodeTypeReader {
         }
         type.setChildNodeDefs(nodes.toArray(new QNodeDefinition[nodes.size()]));
 
-        return type;
+        return type.build();
     }
 
     /**

@@ -18,22 +18,30 @@ package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import java.util.Arrays;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.HashSet;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+
 /**
  * <code>QNodeDefinitionImpl</code> implements a <code>QNodeDefinition</code>.
  */
 public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDefinition {
 
+    private static final long serialVersionUID = -3671882394577685657L;
+
     /**
      * The name of the default primary type.
      */
     private final Name defaultPrimaryType;
-
     /**
      * The names of the required primary types.
      */
@@ -82,7 +90,32 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
         this.allowsSameNameSiblings = allowsSameNameSiblings;
     }
 
+    /**
+     * Creates a new node definition based on a JCR <code>NodeDefinition</code>.
+     *
+     * @param nodeDef  the node definition.
+     * @param resolver the name/path resolver of the session that provided the
+     *                 node definition
+     * @throws NameException      if <code>nodeDef</code> contains an illegal
+     *                            name.
+     * @throws NamespaceException if <code>nodeDef</code> contains a name with
+     *                            an namespace prefix that is unknown to
+     *                            <code>resolver</code>.
+     */
+    public QNodeDefinitionImpl(NodeDefinition nodeDef,
+                               NamePathResolver resolver)
+            throws NameException, NamespaceException {
+        this(nodeDef.getName().equals(NameConstants.ANY_NAME.getLocalName()) ? NameConstants.ANY_NAME : resolver.getQName(nodeDef.getName()),
+                nodeDef.getDeclaringNodeType() != null ? resolver.getQName(nodeDef.getDeclaringNodeType().getName()) : null,
+                nodeDef.isAutoCreated(), nodeDef.isMandatory(),
+                nodeDef.getOnParentVersion(), nodeDef.isProtected(),
+                nodeDef.getDefaultPrimaryType() != null ? resolver.getQName(nodeDef.getDefaultPrimaryType().getName()) : null,
+                getNodeTypeNames(nodeDef.getRequiredPrimaryTypes(), resolver),
+                nodeDef.allowsSameNameSiblings());
+    }
+
     //-------------------------------------------------------< QNodeDefinition >
+
     /**
      * {@inheritDoc}
      */
@@ -170,5 +203,30 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
             hashCode = sb.toString().hashCode();
         }
         return hashCode;
+    }
+
+    //-----------------------------< internal >---------------------------------
+
+    /**
+     * Returns the names of the passed node types using the namespace resolver
+     * to parse the names.
+     *
+     * @param nt       the node types
+     * @param resolver the name/path resolver of the session that provided
+     *                 <code>nt</code>.
+     * @return the names of the node types.
+     * @throws NameException      if a node type returns an illegal name.
+     * @throws NamespaceException if the name of a node type contains a prefix
+     *                            that is not known to <code>resolver</code>.
+     */
+    private static Name[] getNodeTypeNames(NodeType[] nt,
+                                           NamePathResolver resolver)
+            throws NameException, NamespaceException {
+        Name[] names = new Name[nt.length];
+        for (int i = 0; i < nt.length; i++) {
+            Name ntName = resolver.getQName(nt[i].getName());
+            names[i] = ntName;
+        }
+        return names;
     }
 }

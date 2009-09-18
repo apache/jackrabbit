@@ -35,17 +35,13 @@ import java.util.Set;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
@@ -57,10 +53,8 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -70,8 +64,8 @@ import org.apache.jackrabbit.spi.commons.nodetype.*;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -198,7 +192,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
             NodeTypeImpl nt = ntCache.get(name);
             if (nt == null) {
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
-                NodeTypeDef def = ntReg.getNodeTypeDef(name);
+                QNodeTypeDefinition def = ntReg.getNodeTypeDef(name);
                 nt = new NodeTypeImpl(ent, def, this, session, valueFactory, store);
                 ntCache.put(name, nt);
             }
@@ -241,7 +235,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
 
         try {
             Map<String, String> namespaceMap = new HashMap<String, String>();
-            List<NodeTypeDef> nodeTypeDefs = new ArrayList<NodeTypeDef>();
+            List<QNodeTypeDefinition> nodeTypeDefs = new ArrayList<QNodeTypeDefinition>();
 
             if (contentType.equalsIgnoreCase(TEXT_XML)
                     || contentType.equalsIgnoreCase(APPLICATION_XML)) {
@@ -258,7 +252,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                         }
                     }
 
-                    NodeTypeDef[] defs = ntr.getNodeTypeDefs();
+                    QNodeTypeDefinition[] defs = ntr.getNodeTypeDefs();
                     nodeTypeDefs.addAll(Arrays.asList(defs));
                 } catch (NameException e) {
                     throw new RepositoryException("Illegal JCR name", e);
@@ -274,7 +268,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
 
                     namespaceMap.putAll(mapping.getPrefixToURIMapping());
                     for (QNodeTypeDefinition ntDef: reader.getNodeTypeDefinitions()) {
-                        nodeTypeDefs.add(new NodeTypeDef(ntDef));
+                        nodeTypeDefs.add(ntDef);
                     }
                 } catch (ParseException e) {
                     IOException e2 = new IOException(e.getMessage());
@@ -292,9 +286,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                 // split the node types into new and already registered node types.
                 // this way we can register new node types together with already
                 // registered node types which make circular dependencies possible
-                List<NodeTypeDef> newNodeTypeDefs = new ArrayList<NodeTypeDef>();
-                List<NodeTypeDef> registeredNodeTypeDefs = new ArrayList<NodeTypeDef>();
-                for (NodeTypeDef nodeTypeDef: nodeTypeDefs) {
+                List<QNodeTypeDefinition> newNodeTypeDefs = new ArrayList<QNodeTypeDefinition>();
+                List<QNodeTypeDefinition> registeredNodeTypeDefs = new ArrayList<QNodeTypeDefinition>();
+                for (QNodeTypeDefinition nodeTypeDef: nodeTypeDefs) {
                     if (ntReg.isRegistered(nodeTypeDef.getName())) {
                         registeredNodeTypeDefs.add(nodeTypeDef);
                     } else {
@@ -308,7 +302,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                 nodeTypes.addAll(registerNodeTypes(newNodeTypeDefs));
 
                 // re-register already existing node types
-                for (NodeTypeDef nodeTypeDef: registeredNodeTypeDefs) {
+                for (QNodeTypeDefinition nodeTypeDef: registeredNodeTypeDefs) {
                     ntReg.reregisterNodeType(nodeTypeDef);
                     nodeTypes.add(getNodeType(nodeTypeDef.getName()));
                 }
@@ -449,17 +443,17 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      * Internal helper method for registering a list of node type definitions.
      * Returns a collection containing the registered node types.
      *
-     * @param defs a collection of <code>NodeTypeDef<code> objects
+     * @param defs a collection of <code>QNodeTypeDefinition<code> objects
      * @return registered node types
      * @throws InvalidNodeTypeDefException if a nodetype is invalid
      * @throws RepositoryException if an error occurs
      */
-    private Collection<NodeType> registerNodeTypes(List<NodeTypeDef> defs)
+    private Collection<NodeType> registerNodeTypes(List<QNodeTypeDefinition> defs)
             throws InvalidNodeTypeDefException, RepositoryException {
         ntReg.registerNodeTypes(defs);
 
         Set<NodeType> types = new HashSet<NodeType>();
-        for (NodeTypeDef def : defs) {
+        for (QNodeTypeDefinition def : defs) {
             try {
                 types.add(getNodeType(def.getName()));
             } catch (NoSuchNodeTypeException e) {
@@ -568,11 +562,11 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
         // split the node types into new and already registered node types.
         // this way we can register new node types together with already
         // registered node types which make circular dependencies possible
-        List<NodeTypeDef> addedDefs = new ArrayList<NodeTypeDef>();
-        List<NodeTypeDef> modifiedDefs = new ArrayList<NodeTypeDef>();
+        List<QNodeTypeDefinition> addedDefs = new ArrayList<QNodeTypeDefinition>();
+        List<QNodeTypeDefinition> modifiedDefs = new ArrayList<QNodeTypeDefinition>();
         for (NodeTypeDefinition definition : definitions) {
-            // convert to NodeTypeDef
-            NodeTypeDef def = toNodeTypeDef(definition);
+            // convert to QNodeTypeDefinition
+            QNodeTypeDefinition def = toNodeTypeDef(definition);
             if (ntReg.isRegistered(def.getName())) {
               if (allowUpdate) {
                   modifiedDefs.add(def);
@@ -591,7 +585,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
             result.addAll(registerNodeTypes(addedDefs));
 
             // re-register already existing node types
-            for (NodeTypeDef nodeTypeDef: modifiedDefs) {
+            for (QNodeTypeDefinition nodeTypeDef: modifiedDefs) {
                 ntReg.reregisterNodeType(nodeTypeDef);
                 result.add(getNodeType(nodeTypeDef.getName()));
             }
@@ -642,180 +636,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      * @throws InvalidNodeTypeDefinitionException if the definiton is invalid
      * @throws RepositoryException if a repository error occurs
      */
-    private NodeTypeDef toNodeTypeDef(NodeTypeDefinition definition)
+    private QNodeTypeDefinition toNodeTypeDef(NodeTypeDefinition definition)
             throws InvalidNodeTypeDefinitionException, RepositoryException {
-        NodeTypeDef def = new NodeTypeDef();
-
-        // name
-        String name = definition.getName();
-        if (name == null) {
-            throw new InvalidNodeTypeDefinitionException("No node type name specified");
-        }
-        try {
-            def.setName(session.getQName(name));
-        } catch (NamespaceException e) {
-            throw new InvalidNodeTypeDefinitionException("Invalid name: " + name, e);
-        } catch (NameException e) {
-            throw new InvalidNodeTypeDefinitionException("Invalid name: " + name, e);
-        }
-
-        // supertypes
-        String[] names = definition.getDeclaredSupertypeNames();
-        Name[] qnames = new Name[names.length];
-        for (int i = 0; i < names.length; i++) {
-            try {
-                qnames[i] = session.getQName(names[i]);
-            } catch (NamespaceException e) {
-                throw new InvalidNodeTypeDefinitionException("Invalid supertype name: " + names[i], e);
-            } catch (NameException e) {
-                throw new InvalidNodeTypeDefinitionException("Invalid supertype name: " + names[i], e);
-            }
-        }
-        def.setSupertypes(qnames);
-
-        // primary item
-        name = definition.getPrimaryItemName();
-        if (name != null) {
-            try {
-                def.setPrimaryItemName(session.getQName(name));
-            } catch (NamespaceException e) {
-                throw new InvalidNodeTypeDefinitionException("Invalid primary item name: " + name, e);
-            } catch (NameException e) {
-                throw new InvalidNodeTypeDefinitionException("Invalid primary item name: " + name, e);
-            }
-        }
-
-        // misc. flags
-        def.setMixin(definition.isMixin());
-        def.setAbstract(definition.isAbstract());
-        def.setOrderableChildNodes(definition.hasOrderableChildNodes());
-
-        // child nodes
-        NodeDefinition[] ndefs = definition.getDeclaredChildNodeDefinitions();
-        if (ndefs != null) {
-            QNodeDefinition[] qndefs = new QNodeDefinition[ndefs.length];
-            for (int i = 0; i < ndefs.length; i++) {
-                QNodeDefinitionBuilder qndef = new QNodeDefinitionBuilder();
-                // declaring node type
-                qndef.setDeclaringNodeType(def.getName());
-                // name
-                name = ndefs[i].getName();
-                if (name != null) {
-                    if (name.equals("*")) {
-                        qndef.setName(NameConstants.ANY_NAME);
-                    } else {
-                        try {
-                            qndef.setName(session.getQName(name));
-                        } catch (NamespaceException e) {
-                            throw new InvalidNodeTypeDefinitionException("Invalid node name: " + name, e);
-                        } catch (NameException e) {
-                            throw new InvalidNodeTypeDefinitionException("Invalid node name: " + name, e);
-                        }
-                    }
-                }
-                // default primary type
-                name = ndefs[i].getDefaultPrimaryTypeName();
-                if (name != null) {
-                    try {
-                        qndef.setDefaultPrimaryType(session.getQName(name));
-                    } catch (NamespaceException e) {
-                        throw new InvalidNodeTypeDefinitionException("Invalid default primary type: " + name, e);
-                    } catch (NameException e) {
-                        throw new InvalidNodeTypeDefinitionException("Invalid default primary type: " + name, e);
-                    }
-                }
-                // required primary types
-                names = ndefs[i].getRequiredPrimaryTypeNames();
-                qnames = new Name[names.length];
-                for (int j = 0; j < names.length; j++) {
-                    try {
-                        qnames[j] = session.getQName(names[j]);
-                    } catch (NamespaceException e) {
-                        throw new InvalidNodeTypeDefinitionException("Invalid required primary type: " + names[j], e);
-                    } catch (NameException e) {
-                        throw new InvalidNodeTypeDefinitionException("Invalid required primary type: " + names[j], e);
-                    }
-                }
-                qndef.setRequiredPrimaryTypes(qnames);
-
-                // misc. flags/attributes
-                qndef.setAutoCreated(ndefs[i].isAutoCreated());
-                qndef.setMandatory(ndefs[i].isMandatory());
-                qndef.setProtected(ndefs[i].isProtected());
-                qndef.setOnParentVersion(ndefs[i].getOnParentVersion());
-                qndef.setAllowsSameNameSiblings(ndefs[i].allowsSameNameSiblings());
-
-                qndefs[i] = qndef.build();
-            }
-            def.setChildNodeDefs(qndefs);
-        }
-
-        // properties
-        PropertyDefinition[] pdefs = definition.getDeclaredPropertyDefinitions();
-        if (pdefs != null) {
-            QPropertyDefinition[] qpdefs = new QPropertyDefinition[pdefs.length];
-            for (int i = 0; i < pdefs.length; i++) {
-                QPropertyDefinitionBuilder qpdef = new QPropertyDefinitionBuilder();
-                // declaring node type
-                qpdef.setDeclaringNodeType(def.getName());
-                // name
-                name = pdefs[i].getName();
-                if (name != null) {
-                    if (name.equals("*")) {
-                        qpdef.setName(NameConstants.ANY_NAME);
-                    } else {
-                        try {
-                            qpdef.setName(session.getQName(name));
-                        } catch (NamespaceException e) {
-                            throw new InvalidNodeTypeDefinitionException("Invalid property name: " + name, e);
-                        } catch (NameException e) {
-                            throw new InvalidNodeTypeDefinitionException("Invalid property name: " + name, e);
-                        }
-                    }
-                }
-                // misc. flags/attributes
-                int type = pdefs[i].getRequiredType();
-                qpdef.setRequiredType(type);
-                qpdef.setAutoCreated(pdefs[i].isAutoCreated());
-                qpdef.setMandatory(pdefs[i].isMandatory());
-                qpdef.setProtected(pdefs[i].isProtected());
-                qpdef.setOnParentVersion(pdefs[i].getOnParentVersion());
-                qpdef.setMultiple(pdefs[i].isMultiple());
-                // value constraints
-                String[] constraints = pdefs[i].getValueConstraints();
-                if (constraints != null) {
-                    QValueConstraint[] qconstraints = new QValueConstraint[constraints.length];
-                    for (int j = 0; j < constraints.length; j++) {
-                        try {
-                            qconstraints[j] = ValueConstraint.create(type, constraints[j], session);
-                        } catch (InvalidConstraintException e) {
-                            throw new InvalidNodeTypeDefinitionException(
-                                    "Invalid value constraint: " + constraints[j], e);
-                        }
-                    }
-                    qpdef.setValueConstraints(qconstraints);
-                }
-                // default values
-                Value[] values = pdefs[i].getDefaultValues();
-                if (values != null) {
-                    InternalValue[] qvalues = new InternalValue[values.length];
-                    for (int j = 0; j < values.length; j++) {
-                        try {
-                            qvalues[j] = InternalValue.create(values[j], session);
-                        } catch (ValueFormatException e) {
-                            throw new InvalidNodeTypeDefinitionException(
-                                    "Invalid default value format: " + values[j], e);
-                        }
-                    }
-                    qpdef.setDefaultValues(qvalues);
-                }
-
-                qpdefs[i] = qpdef.build();
-            }
-            def.setPropertyDefs(qpdefs);
-        }
-
-        return def;
+        return new QNodeTypeDefinitionImpl(definition, session, QValueFactoryImpl.getInstance());
     }
 
     //-------------------------------------------------------------< Dumpable >

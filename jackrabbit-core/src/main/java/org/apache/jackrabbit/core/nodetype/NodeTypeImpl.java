@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.nodetype;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.List;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -36,6 +38,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
@@ -50,7 +53,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
-    private final NodeTypeDef ntd;
+    private final QNodeTypeDefinition ntd;
     private final EffectiveNodeType ent;
     private final NodeTypeManagerImpl ntMgr;
     // resolver used to translate translate <code>Name</code>s to JCR name strings.
@@ -62,18 +65,25 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     /**
      * Package private constructor
      * <p/>
-     * Creates a valid node type instance.
-     * We assume that the node type definition is valid and all referenced
-     * node types (supertypes, required node types etc.) do exist and are valid.
+     * Creates a valid node type instance. We assume that the node type
+     * definition is valid and all referenced node types (supertypes, required
+     * node types etc.) do exist and are valid.
      *
-     * @param ent        the effective (i.e. merged and resolved) node type representation
-     * @param ntd        the definition of this node type
-     * @param ntMgr      the node type manager associated with this node type
-     * @param resolver
+     * @param ent          the effective (i.e. merged and resolved) node type
+     *                     representation
+     * @param ntd          the definition of this node type
+     * @param ntMgr        the node type manager associated with this node type
+     * @param resolver     the name path resolver of the session.
+     * @param valueFactory the value factory of the session.
+     * @param store        the data store or <code>null</code> if none is
+     *                     configured.
      */
-    NodeTypeImpl(EffectiveNodeType ent, NodeTypeDef ntd,
-                 NodeTypeManagerImpl ntMgr, NamePathResolver resolver,
-                 ValueFactory valueFactory, DataStore store) {
+    NodeTypeImpl(EffectiveNodeType ent,
+                 QNodeTypeDefinition ntd,
+                 NodeTypeManagerImpl ntMgr,
+                 NamePathResolver resolver,
+                 ValueFactory valueFactory,
+                 DataStore store) {
         super(ntMgr);
         this.ent = ent;
         this.ntMgr = ntMgr;
@@ -86,7 +96,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     /**
      * Checks if the effective node type includes the given <code>nodeTypeName</code>.
      *
-     * @param nodeTypeName
+     * @param nodeTypeName the name of a node type.
      * @return true if the effective node type includes the given <code>nodeTypeName</code>.
      */
     public boolean isNodeType(Name nodeTypeName) {
@@ -97,7 +107,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * Checks if this node type is directly or indirectly derived from the
      * specified node type.
      *
-     * @param nodeTypeName
+     * @param nodeTypeName the name of a node type.
      * @return true if this node type is directly or indirectly derived from the
      *         specified node type, otherwise false.
      */
@@ -110,9 +120,8 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      *
      * @return the definition of this node type
      */
-    public NodeTypeDef getDefinition() {
-        // return clone to make sure nobody messes around with the 'live' definition
-        return (NodeTypeDef) ntd.clone();
+    public QNodeTypeDefinition getDefinition() {
+        return ntd;
     }
 
     /**
@@ -206,19 +215,19 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     public NodeType[] getInheritedSupertypes() {
         // declared supertypes
         Name[] ntNames = ntd.getSupertypes();
-        HashSet declared = new HashSet();
-        for (int i = 0; i < ntNames.length; i++) {
-            declared.add(ntNames[i]);
+        Set<Name> declared = new HashSet<Name>();
+        for (Name ntName : ntNames) {
+            declared.add(ntName);
         }
         // all supertypes
         ntNames = ent.getInheritedNodeTypes();
 
         // filter from all supertypes those that are not declared
-        ArrayList inherited = new ArrayList();
-        for (int i = 0; i < ntNames.length; i++) {
-            if (!declared.contains(ntNames[i])) {
+        List<NodeType> inherited = new ArrayList<NodeType>();
+        for (Name ntName : ntNames) {
+            if (!declared.contains(ntName)) {
                 try {
-                    inherited.add(ntMgr.getNodeType(ntNames[i]));
+                    inherited.add(ntMgr.getNodeType(ntName));
                 } catch (NoSuchNodeTypeException e) {
                     // should never get here
                     log.error("undefined supertype", e);
@@ -227,7 +236,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
             }
         }
 
-        return (NodeType[]) inherited.toArray(new NodeType[inherited.size()]);
+        return inherited.toArray(new NodeType[inherited.size()]);
     }
 
 
@@ -488,14 +497,14 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
             Name name = resolver.getQName(propertyName);
             // determine type of values
             int type = PropertyType.UNDEFINED;
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] == null) {
+            for (Value value : values) {
+                if (value == null) {
                     // skip null values as those would be purged
                     continue;
                 }
                 if (type == PropertyType.UNDEFINED) {
-                    type = values[i].getType();
-                } else if (type != values[i].getType()) {
+                    type = value.getType();
+                } else if (type != value.getType()) {
                     // inhomogeneous types
                     return false;
                 }
@@ -526,27 +535,25 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
                 targetType = type;
             }
 
-            ArrayList list = new ArrayList();
+            List<InternalValue> list = new ArrayList<InternalValue>();
             // convert values and compact array (purge null entries)
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] != null) {
+            for (Value value : values) {
+                if (value != null) {
                     // perform type conversion as necessary and create InternalValue
                     // from (converted) Value
                     InternalValue internalValue;
                     if (targetType != type) {
                         // type conversion required
-                        Value targetVal = ValueHelper.convert(
-                                values[i], targetType, valueFactory);
+                        Value targetVal = ValueHelper.convert(value, targetType, valueFactory);
                         internalValue = InternalValue.create(targetVal, resolver, store);
                     } else {
                         // no type conversion required
-                        internalValue = InternalValue.create(values[i], resolver, store);
+                        internalValue = InternalValue.create(value, resolver, store);
                     }
                     list.add(internalValue);
                 }
             }
-            InternalValue[] internalValues =
-                    (InternalValue[]) list.toArray(new InternalValue[list.size()]);
+            InternalValue[] internalValues = list.toArray(new InternalValue[list.size()]);
             EffectiveNodeType.checkSetPropertyValueConstraints(def, internalValues);
             return true;
         } catch (NameException be) {

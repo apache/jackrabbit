@@ -42,6 +42,9 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
+import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -1229,10 +1232,10 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
-        List nodeTypes = new ArrayList();
+        List<QNodeTypeDefinition> nodeTypes = new ArrayList<QNodeTypeDefinition>();
         try {
             for (NodeTypeIterator it = ntMgr.getAllNodeTypes(); it.hasNext(); ) {
                 NodeType nt = it.nextNodeType();
@@ -1248,20 +1251,22 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
-        List defs = new ArrayList();
-        for (int i = 0; i < nodetypeNames.length; i++) {
+        List<QNodeTypeDefinition> defs = new ArrayList<QNodeTypeDefinition>();
+        for (Name nodetypeName : nodetypeNames) {
             try {
-                String ntName = sInfo.getNamePathResolver().getJCRName(nodetypeNames[i]);
+                String ntName = sInfo.getNamePathResolver().getJCRName(nodetypeName);
                 NodeType nt = ntMgr.getNodeType(ntName);
-                defs.add(new QNodeTypeDefinitionImpl(nt, sInfo.getNamePathResolver(), getQValueFactory()));
+                defs.add(new QNodeTypeDefinitionImpl(nt, 
+                        sInfo.getNamePathResolver(), getQValueFactory()));
 
                 // in addition pack all supertypes into the return value
                 NodeType[] supertypes = nt.getSupertypes();
-                for (int st = 0; st < supertypes.length; st++) {
-                    defs.add(new QNodeTypeDefinitionImpl(supertypes[i], sInfo.getNamePathResolver(), getQValueFactory()));
+                for (NodeType supertype : supertypes) {
+                    defs.add(new QNodeTypeDefinitionImpl(supertype,
+                            sInfo.getNamePathResolver(), getQValueFactory()));
                 }
             } catch (NameException e) {
                 throw new RepositoryException(e);

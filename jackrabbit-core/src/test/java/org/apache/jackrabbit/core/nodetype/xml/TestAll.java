@@ -35,13 +35,13 @@ import junit.framework.AssertionFailedError;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -81,7 +81,7 @@ public class TestAll extends AbstractJCRTest {
     private static final NameFactory FACTORY = NameFactoryImpl.getInstance();
 
     /** Test node types definitions. */
-    private NodeTypeDef[] types;
+    private QNodeTypeDefinition[] types;
 
     /** Registry for the test namespaces. */
     private NamespaceRegistry registry;
@@ -109,7 +109,7 @@ public class TestAll extends AbstractJCRTest {
      * @param name node type name
      * @return node type definition
      */
-    private NodeTypeDef getNodeType(String name) {
+    private QNodeTypeDefinition getNodeType(String name) {
         Name qname = FACTORY.create(TEST_NAMESPACE, name);
         for (int i = 0; i < types.length; i++) {
             if (qname.equals(types[i].getName())) {
@@ -139,7 +139,7 @@ public class TestAll extends AbstractJCRTest {
             name = NameConstants.ANY_NAME;
         }
 
-        NodeTypeDef def = getNodeType(typeName);
+        QNodeTypeDefinition def = getNodeType(typeName);
         QPropertyDefinition[] defs = def.getPropertyDefs();
         for (int i = 0; i < defs.length; i++) {
             if (name.equals(defs[i].getName())) {
@@ -182,7 +182,7 @@ public class TestAll extends AbstractJCRTest {
     private QNodeDefinition getChildNode(String typeName, String nodeName) {
         Name name = FACTORY.create(TEST_NAMESPACE, nodeName);
 
-        NodeTypeDef def = getNodeType(typeName);
+        QNodeTypeDefinition def = getNodeType(typeName);
         QNodeDefinition[] defs = def.getChildNodeDefs();
         for (int i = 0; i < defs.length; i++) {
             if (name.equals(defs[i].getName())) {
@@ -205,7 +205,7 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the empty node type. */
     public void testEmptyNodeType() {
-        NodeTypeDef def = getNodeType("emptyNodeType");
+        QNodeTypeDefinition def = getNodeType("emptyNodeType");
         assertNotNull("emptyNodeType exists", def);
         assertEquals("emptyNodeType mixin",
                 false, def.isMixin());
@@ -221,21 +221,21 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for the <code>mixin</code> node type attribute. */
     public void testMixinNodeType() {
-        NodeTypeDef def = getNodeType("mixinNodeType");
+        QNodeTypeDefinition def = getNodeType("mixinNodeType");
         assertEquals("mixinNodeType mixin",
                 true, def.isMixin());
     }
 
     /** Test for the <code>hasOrderableChildNodes</code> node type attribute. */
     public void testOrderedNodeType() {
-        NodeTypeDef def = getNodeType("orderedNodeType");
+        QNodeTypeDefinition def = getNodeType("orderedNodeType");
         assertEquals("orderedNodeType hasOrderableChildNodes",
                 true, def.hasOrderableChildNodes());
     }
 
     /** Test for node type item definitions. */
     public void testItemNodeType() {
-        NodeTypeDef def = getNodeType("itemNodeType");
+        QNodeTypeDefinition def = getNodeType("itemNodeType");
         assertEquals("itemNodeType primaryItemName",
                 FACTORY.create(TEST_NAMESPACE, "emptyItem"),
                 def.getPrimaryItemName());
@@ -389,7 +389,7 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for node type property definitions. */
     public void testPropertyNodeType() {
-        NodeTypeDef def = getNodeType("propertyNodeType");
+        QNodeTypeDefinition def = getNodeType("propertyNodeType");
         assertEquals("propertyNodeType propertyDefs",
                 13, def.getPropertyDefs().length);
     }
@@ -590,7 +590,7 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for node type child node definitions. */
     public void testChildNodeType() {
-        NodeTypeDef def = getNodeType("childNodeType");
+        QNodeTypeDefinition def = getNodeType("childNodeType");
         assertEquals("childNodeType childNodeDefs",
                 4, def.getChildNodeDefs().length);
     }
@@ -646,7 +646,7 @@ public class TestAll extends AbstractJCRTest {
             ByteArrayOutputStream xml = new ByteArrayOutputStream();
             NodeTypeWriter.write(xml, types, registry);
             byte[] bytes = xml.toByteArray();
-            NodeTypeDef[] output =
+            QNodeTypeDefinition[] output =
                 NodeTypeReader.read(new ByteArrayInputStream(bytes));
             assertTrue("write output", Arrays.equals(types, output));
         } catch (InvalidNodeTypeDefException e) {

@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -36,7 +36,7 @@ public interface NodeTypeEventListener {
      * @throws RepositoryException if an error occurs
      * @throws InvalidNodeTypeDefException if the node type definition is invalid
      */
-    void externalRegistered(Collection<NodeTypeDef> ntDefs)
+    void externalRegistered(Collection<QNodeTypeDefinition> ntDefs)
         throws RepositoryException, InvalidNodeTypeDefException;
 
     /**
@@ -47,7 +47,7 @@ public interface NodeTypeEventListener {
      * @throws NoSuchNodeTypeException if the node type had not yet been registered
      * @throws InvalidNodeTypeDefException if the node type definition is invalid
      */
-    void externalReregistered(NodeTypeDef ntDef)
+    void externalReregistered(QNodeTypeDefinition ntDef)
         throws NoSuchNodeTypeException, InvalidNodeTypeDefException, RepositoryException;
 
     /**

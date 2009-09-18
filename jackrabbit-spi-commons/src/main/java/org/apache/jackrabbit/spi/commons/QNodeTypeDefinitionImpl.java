@@ -50,19 +50,19 @@ import java.io.Serializable;
  * <code>QNodeTypeDefinitionImpl</code> implements a serializable SPI node
  * type definition.
  */
-public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializable, Cloneable {
+public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializable {
 
     private static final long serialVersionUID = -4065300714874671511L;
 
     /**
      * The name of the node definition.
      */
-    private Name name;
+    private final Name name;
 
     /**
      * The names of the declared super types of this node type definition.
      */
-    private Name[] supertypes;
+    private final Name[] supertypes;
 
     /**
      * The names of the supported mixins on this node type (or <code>null</code>)
@@ -72,27 +72,27 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     /**
      * Indicates whether this is a mixin node type definition.
      */
-    private boolean isMixin;
+    private final boolean isMixin;
 
     /**
      * Indicates whether this is an abstract node type definition.
      */
-    private boolean isAbstract;
+    private final boolean isAbstract;
 
     /**
      * Indicates whether this is a queryable node type definition.
      */
-    private boolean isQueryable;
+    private final boolean isQueryable;
 
     /**
      * Indicates whether this node type definition has orderable child nodes.
      */
-    private boolean hasOrderableChildNodes;
+    private final boolean hasOrderableChildNodes;
 
     /**
      * The name of the primary item or <code>null</code> if none is defined.
      */
-    private Name primaryItemName;
+    private final Name primaryItemName;
 
     /**
      * The list of child node definitions.
@@ -103,11 +103,14 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      * The list of property definitions.
      */
     private final Set<QNodeDefinition> childNodeDefs;
+
     /**
      * Unmodifiable collection of dependent node type <code>Name</code>s.
+     * Calculated on demand.
+     *
      * @see #getDependencies()
      */
-    private transient Collection<Name> dependencies;
+    private transient volatile Collection<Name> dependencies;
 
     /**
      * Default constructor.
@@ -164,7 +167,10 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         this.primaryItemName = primaryItemName;
         this.propertyDefs = getSerializablePropertyDefs(declaredPropDefs);
         this.childNodeDefs = getSerializableNodeDefs(declaredNodeDefs);
-        setSupertypes(supertypes); // make sure supertypes are sorted
+        // make sure supertypes are sorted
+        SortedSet<Name> types = new TreeSet<Name>();
+        types.addAll(Arrays.asList(supertypes));
+        this.supertypes = types.toArray(new Name[types.size()]);
     }
 
     /**
@@ -205,103 +211,6 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
                 def.getPrimaryItemName() == null ? null : resolver.getQName(def.getPrimaryItemName()),
                 createQPropertyDefinitions(name, def.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
                 createQNodeDefinitions(name, def.getDeclaredChildNodeDefinitions(), resolver));
-    }
-
-    /**
-     * Sets the name of the node type being defined.
-     *
-     * @param name The name of the node type.
-     */
-    public void setName(Name name) {
-        this.name = name;
-    }
-
-    /**
-     * Sets the supertypes.
-     *
-     * @param names the names of the supertypes.
-     */
-    public void setSupertypes(Name[] names) {
-        resetDependencies();
-        // Optimize common cases (zero or one supertypes)
-        if (names.length == 0) {
-            supertypes = Name.EMPTY_ARRAY;
-        } else if (names.length == 1) {
-            supertypes = new Name[] { names[0] };
-        } else {
-            // Sort and remove duplicates
-            SortedSet<Name> types = new TreeSet<Name>();
-            types.addAll(Arrays.asList(names));
-            supertypes = types.toArray(new Name[types.size()]);
-        }
-    }
-
-    /**
-     * Sets the mixin flag.
-     *
-     * @param mixin flag
-     */
-    public void setMixin(boolean mixin) {
-        this.isMixin = mixin;
-    }
-
-    /**
-     * Sets the orderableChildNodes flag.
-     *
-     * @param orderableChildNodes flag
-     */
-    public void setOrderableChildNodes(boolean orderableChildNodes) {
-        this.hasOrderableChildNodes = orderableChildNodes;
-    }
-
-    /**
-     * Sets the 'abstract' flag.
-     *
-     * @param abstractStatus flag
-     */
-    public void setAbstract(boolean abstractStatus) {
-        this.isAbstract = abstractStatus;
-    }
-
-    /**
-     * Sets the 'queryable' flag.
-     *
-     * @param queryable flag
-     */
-    public void setQueryable(boolean queryable) {
-        this.isQueryable = queryable;
-    }
-
-    /**
-     * Sets the name of the primary item (one of the child items of the node's
-     * of this node type)
-     *
-     * @param primaryItemName The name of the primary item.
-     */
-    public void setPrimaryItemName(Name primaryItemName) {
-        this.primaryItemName = primaryItemName;
-    }
-
-    /**
-     * Sets the property definitions.
-     *
-     * @param defs An array of <code>QPropertyDefinition</code> objects.
-     */
-    public void setPropertyDefs(QPropertyDefinition[] defs) {
-        resetDependencies();
-        propertyDefs.clear();
-        propertyDefs.addAll(Arrays.asList(defs));
-    }
-
-    /**
-     * Sets the child node definitions.
-     *
-     * @param defs An array of <code>QNodeDefinition</code> objects
-     */
-    public void setChildNodeDefs(QNodeDefinition[] defs) {
-        resetDependencies();
-        childNodeDefs.clear();
-        childNodeDefs.addAll(Arrays.asList(defs));
     }
 
     //------------------------------------------------< QNodeTypeDefinition >---
@@ -419,6 +328,9 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         return dependencies;
     }
     
+    /**
+     * {@inheritDoc}
+     */
     public Name[] getSupportedMixinTypes() {
         if (supportedMixins == null) {
             return null;
@@ -431,16 +343,6 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
     
     //-------------------------------------------< java.lang.Object overrides >
-
-    public QNodeTypeDefinitionImpl clone() {
-        try {
-            // todo: itemdefs should be cloned as well, since mutable
-            return (QNodeTypeDefinitionImpl) super.clone();
-        } catch (CloneNotSupportedException e) {
-            // does not happen, this class is cloneable
-            throw new InternalError();
-        }
-    }
 
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -473,10 +375,6 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
 
     //-------------------------------< internal >-------------------------------
-
-    private void resetDependencies() {
-        dependencies = null;
-    }
 
     /**
      * Returns a set of serializable property definitions for

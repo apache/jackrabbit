@@ -33,10 +33,10 @@ import org.apache.jackrabbit.core.journal.Record;
 import org.apache.jackrabbit.core.journal.RecordConsumer;
 import org.apache.jackrabbit.core.journal.RecordProducer;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -438,7 +438,7 @@ public class ClusterNode implements Runnable,
     /**
      * {@inheritDoc}
      */
-    public void reregistered(NodeTypeDef ntDef) {
+    public void reregistered(QNodeTypeDefinition ntDef) {
         if (status != STARTED) {
             log.info("not started: nodetype operation ignored.");
             return;
@@ -888,7 +888,7 @@ public class ClusterNode implements Runnable,
                 nodeTypeListener.externalUnregistered(coll);
                 break;
             case NodeTypeRecord.REREGISTER:
-                NodeTypeDef ntd = (NodeTypeDef) coll.iterator().next();
+                QNodeTypeDefinition ntd = (QNodeTypeDefinition) coll.iterator().next();
                 nodeTypeListener.externalReregistered(ntd);
                 break;
             }

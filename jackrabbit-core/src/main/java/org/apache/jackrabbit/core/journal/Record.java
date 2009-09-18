@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.journal;
 
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 /**
  * Record interface.
@@ -150,7 +150,7 @@ public interface Record {
      * @return node type definition
      * @throws JournalException if an error occurs
      */
-    NodeTypeDef readNodeTypeDef() throws JournalException;
+    QNodeTypeDefinition readNodeTypeDef() throws JournalException;
 
     /**
      * Write a byte to the underlying stream.
@@ -254,7 +254,7 @@ public interface Record {
      * @param ntd node type definition
      * @throws JournalException if an error occurs
      */
-    void writeNodeTypeDef(NodeTypeDef ntd) throws JournalException;
+    void writeNodeTypeDef(QNodeTypeDefinition ntd) throws JournalException;
 
     /**
      * Update the changes made to an appended record. This will also update

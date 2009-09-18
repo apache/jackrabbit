@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.util.DOMBuilder;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -30,6 +29,7 @@ import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -63,11 +63,11 @@ public final class NodeTypeWriter {
      * @throws RepositoryException on repository errors
      */
     public static void write(
-            OutputStream xml, NodeTypeDef[] types, NamespaceRegistry registry)
+            OutputStream xml, QNodeTypeDefinition[] types, NamespaceRegistry registry)
             throws IOException, RepositoryException {
         try {
             NodeTypeWriter writer = new NodeTypeWriter(registry);
-            for (NodeTypeDef type : types) {
+            for (QNodeTypeDefinition type : types) {
                 writer.addNodeTypeDef(type);
             }
             writer.write(xml);
@@ -125,7 +125,7 @@ public final class NodeTypeWriter {
      * @throws NamespaceException if the node type definition contains
      *                                   invalid namespace references
      */
-    private void addNodeTypeDef(NodeTypeDef def)
+    private void addNodeTypeDef(QNodeTypeDefinition def)
             throws NamespaceException, RepositoryException {
         builder.startElement(Constants.NODETYPE_ELEMENT);
 
