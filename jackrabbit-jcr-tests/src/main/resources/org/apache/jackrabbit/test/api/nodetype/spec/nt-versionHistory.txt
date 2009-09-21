@@ -1,8 +1,5 @@
 NodeTypeName
   nt:versionHistory
-Supertypes
-  nt:base
-  mix:referenceable
 IsMixin
   false
 HasOrderableChildNodes

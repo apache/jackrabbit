@@ -1,7 +1,5 @@
 NodeTypeName
   mix:lockable
-Supertypes
-  []
 IsMixin
   true
 HasOrderableChildNodes

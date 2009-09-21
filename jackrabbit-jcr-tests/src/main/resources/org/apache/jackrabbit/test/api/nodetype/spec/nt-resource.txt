@@ -1,9 +1,5 @@
 NodeTypeName
   nt:resource
-Supertypes
-  nt:base
-  mix:lastModified
-  mix:mimeType
 IsMixin
   false
 HasOrderableChildNodes

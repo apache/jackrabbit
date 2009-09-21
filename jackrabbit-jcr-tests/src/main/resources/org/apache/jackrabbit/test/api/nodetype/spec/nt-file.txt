@@ -1,7 +1,5 @@
 NodeTypeName
   nt:file
-Supertypes
-  nt:hierarchyNode
 IsMixin
   false
 HasOrderableChildNodes

@@ -1,8 +1,5 @@
 NodeTypeName
   mix:versionable
-Supertypes
-  mix:referenceable
-  mix:simpleVersionable
 IsMixin
   true
 HasOrderableChildNodes

@@ -1,7 +1,5 @@
 NodeTypeName
   mix:title
-Supertypes
-  []
 IsMixin
   true
 HasOrderableChildNodes
@@ -12,17 +10,13 @@ PropertyDefinition
   Name jcr:description
   RequiredType STRING
   DefaultValues null
-  AutoCreated false
   Mandatory false
-  OnParentVersion COPY
   Protected false
   Multiple false
 PropertyDefinition
   Name jcr:title
   RequiredType STRING
   DefaultValues null
-  AutoCreated false
   Mandatory false
-  OnParentVersion COPY
   Protected false
   Multiple false

@@ -1,7 +1,5 @@
 NodeTypeName
   mix:lifecycle
-Supertypes
-  []
 IsMixin
   true
 HasOrderableChildNodes
