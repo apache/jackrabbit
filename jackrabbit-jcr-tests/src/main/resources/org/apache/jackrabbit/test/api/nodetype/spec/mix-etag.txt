@@ -1,7 +1,5 @@
 NodeTypeName
   mix:etag
-Supertypes
-  []
 IsMixin
   true
 HasOrderableChildNodes

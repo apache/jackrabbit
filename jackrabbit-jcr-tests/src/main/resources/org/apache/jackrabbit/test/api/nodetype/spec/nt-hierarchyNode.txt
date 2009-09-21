@@ -1,8 +1,5 @@
 NodeTypeName
   nt:hierarchyNode
-Supertypes
-  nt:base
-  mix:created
 IsMixin
   false
 HasOrderableChildNodes

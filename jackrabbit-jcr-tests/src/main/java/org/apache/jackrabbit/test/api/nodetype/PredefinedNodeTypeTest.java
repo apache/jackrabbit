@@ -23,6 +23,11 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -49,6 +54,42 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * @keywords level1
  */
 public class PredefinedNodeTypeTest extends AbstractJCRTest {
+
+    private static final Map SUPERTYPES = new HashMap();
+
+    static {
+        SUPERTYPES.put("mix:created", new String[]{});
+        SUPERTYPES.put("mix:etag", new String[]{});
+        SUPERTYPES.put("mix:language", new String[]{});
+        SUPERTYPES.put("mix:lastModified", new String[]{});
+        SUPERTYPES.put("mix:lifecycle", new String[]{});
+        SUPERTYPES.put("mix:lockable", new String[]{});
+        SUPERTYPES.put("mix:mimeType", new String[]{});
+        SUPERTYPES.put("mix:referenceable", new String[]{});
+        SUPERTYPES.put("mix:shareable", new String[]{"mix:referenceable"});
+        SUPERTYPES.put("mix:simpleVersionable", new String[]{});
+        SUPERTYPES.put("mix:title", new String[]{});
+        SUPERTYPES.put("mix:versionable", new String[]{"mix:referenceable", "mix:simpleVersionable"});
+        SUPERTYPES.put("nt:activity", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:address", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:base", new String[]{});
+        SUPERTYPES.put("nt:childNodeDefinition", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:configuration", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:file", new String[]{"nt:hierarchyNode"});
+        SUPERTYPES.put("nt:folder", new String[]{"nt:hierarchyNode"});
+        SUPERTYPES.put("nt:frozenNode", new String[]{"nt:base", "mix:referenceable"});
+        SUPERTYPES.put("nt:hierarchyNode", new String[]{"nt:base", "mix:created"});
+        SUPERTYPES.put("nt:linkedFile", new String[]{"nt:hierarchyNode"});
+        SUPERTYPES.put("nt:nodeType", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:propertyDefinition", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:query", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:resource", new String[]{"nt:base", "mix:lastModified", "mix:mimeType"});
+        SUPERTYPES.put("nt:unstructured", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:version", new String[]{"nt:base", "mix:referenceable"});
+        SUPERTYPES.put("nt:versionedChild", new String[]{"nt:base"});
+        SUPERTYPES.put("nt:versionHistory", new String[]{"nt:base", "mix:referenceable"});
+        SUPERTYPES.put("nt:versionLabels", new String[]{"nt:base"});
+    }
 
     /**
      * The NodeTypeManager of the session
@@ -99,157 +140,157 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
 
     /** Test for the predefined mix:lifecycle node type. */
     public void testLifecycle() throws NotExecutableException {
-        testPredefinedNodeType("mix:lifecycle");
+        testPredefinedNodeType("mix:lifecycle", false);
     }
 
     /** Test for the predefined mix:lockable node type. */
     public void testLockable() throws NotExecutableException {
-        testPredefinedNodeType("mix:lockable");
+        testPredefinedNodeType("mix:lockable", false);
     }
 
     /** Test for the predefined mix:referenceable node type. */
     public void testReferenceable() throws NotExecutableException {
-        testPredefinedNodeType("mix:referenceable");
+        testPredefinedNodeType("mix:referenceable", false);
     }
 
     /** Test for the predefined mix:referenceable node type. */
     public void testShareable() throws NotExecutableException {
-        testPredefinedNodeType("mix:shareable");
+        testPredefinedNodeType("mix:shareable", false);
     }
 
     /** Test for the predefined mix:versionable node type. */
     public void testVersionable() throws NotExecutableException {
-        testPredefinedNodeType("mix:versionable");
+        testPredefinedNodeType("mix:versionable", false);
     }
 
     /** Test for the predefined mix:simpleVersionable node type. */
     public void testSimpleVersionable() throws NotExecutableException {
-        testPredefinedNodeType("mix:simpleVersionable");
+        testPredefinedNodeType("mix:simpleVersionable", false);
     }
 
     /** Test for the predefined mix:created node type. */
     public void testMixCreated() throws NotExecutableException {
-        testPredefinedNodeType("mix:created");
+        testPredefinedNodeType("mix:created", true);
     }
 
     /** Test for the predefined mix:lastModified node type. */
     public void testMixLastModified() throws NotExecutableException {
-        testPredefinedNodeType("mix:lastModified");
+        testPredefinedNodeType("mix:lastModified", true);
     }
 
     /** Test for the predefined mix:etag node type. */
     public void testMixETag() throws NotExecutableException {
-        testPredefinedNodeType("mix:etag");
+        testPredefinedNodeType("mix:etag", false);
     }
 
     /** Test for the predefined mix:title node type. */
     public void testMixTitle() throws NotExecutableException {
-        testPredefinedNodeType("mix:title");
+        testPredefinedNodeType("mix:title", true);
     }
 
     /** Test for the predefined mix:language node type. */
     public void testMixLanguage() throws NotExecutableException {
-        testPredefinedNodeType("mix:language");
+        testPredefinedNodeType("mix:language", true);
     }
 
     /** Test for the predefined mix:language node type. */
     public void testMixMimeType() throws NotExecutableException {
-        testPredefinedNodeType("mix:mimeType");
+        testPredefinedNodeType("mix:mimeType", true);
     }
 
     /** Test for the predefined nt:address node type. */
     public void testNtAddress() throws NotExecutableException {
-        testPredefinedNodeType("nt:address");
+        testPredefinedNodeType("nt:address", false);
     }
 
     /** Test for the predefined nt:base node type. */
     public void testBase() throws NotExecutableException {
-        testPredefinedNodeType("nt:base");
+        testPredefinedNodeType("nt:base", false);
     }
 
     /** Test for the predefined nt:unstructured node type. */
     public void testUnstructured() throws NotExecutableException {
-        testPredefinedNodeType("nt:unstructured");
+        testPredefinedNodeType("nt:unstructured", false);
     }
 
     /** Test for the predefined nt:hierarchyNode node type. */
     public void testHierarchyNode() throws NotExecutableException {
-        testPredefinedNodeType("nt:hierarchyNode");
+        testPredefinedNodeType("nt:hierarchyNode", false);
     }
 
     /** Test for the predefined nt:file node type. */
     public void testFile() throws NotExecutableException {
-        testPredefinedNodeType("nt:file");
+        testPredefinedNodeType("nt:file", false);
     }
 
     /** Test for the predefined nt:linkedFile node type. */
     public void testLinkedFile() throws NotExecutableException {
-        testPredefinedNodeType("nt:linkedFile");
+        testPredefinedNodeType("nt:linkedFile", false);
     }
 
     /** Test for the predefined nt:folder node type. */
     public void testFolder() throws NotExecutableException {
-        testPredefinedNodeType("nt:folder");
+        testPredefinedNodeType("nt:folder", false);
     }
 
     /** Test for the predefined nt:nodeType node type. */
     public void testNodeType() throws NotExecutableException {
-        testPredefinedNodeType("nt:nodeType");
+        testPredefinedNodeType("nt:nodeType", false);
     }
 
     /** Test for the predefined nt:propertyDef node type. */
     public void testPropertyDef() throws NotExecutableException {
-        testPredefinedNodeType("nt:propertyDefinition");
+        testPredefinedNodeType("nt:propertyDefinition", false);
     }
 
     /** Test for the predefined nt:childNodeDef node type. */
     public void testChildNodeDef() throws NotExecutableException {
-        testPredefinedNodeType("nt:childNodeDefinition");
+        testPredefinedNodeType("nt:childNodeDefinition", false);
     }
 
     /** Test for the predefined nt:versionHistory node type. */
     public void testVersionHistory() throws NotExecutableException {
-        testPredefinedNodeType("nt:versionHistory");
+        testPredefinedNodeType("nt:versionHistory", false);
     }
 
     /** Test for the predefined nt:versionLabels node type. */
     public void testVersionLabels() throws NotExecutableException {
-        testPredefinedNodeType("nt:versionLabels");
+        testPredefinedNodeType("nt:versionLabels", false);
     }
 
     /** Test for the predefined nt:version node type. */
     public void testVersion() throws NotExecutableException {
-        testPredefinedNodeType("nt:version");
+        testPredefinedNodeType("nt:version", false);
     }
 
     /** Test for the predefined nt:activity node type. */
     public void testActivity() throws NotExecutableException {
-        testPredefinedNodeType("nt:activity");
+        testPredefinedNodeType("nt:activity", false);
     }
 
     /** Test for the predefined nt:configuration node type. */
     public void testConfiguration() throws NotExecutableException {
-        testPredefinedNodeType("nt:configuration");
+        testPredefinedNodeType("nt:configuration", false);
     }
 
     /** Test for the predefined nt:frozenNode node type. */
     public void testFrozenNode() throws NotExecutableException {
-        testPredefinedNodeType("nt:frozenNode");
+        testPredefinedNodeType("nt:frozenNode", false);
     }
 
     /** Test for the predefined nt:versionedChild node type. */
     public void testVersionedChild() throws NotExecutableException {
-        testPredefinedNodeType("nt:versionedChild");
+        testPredefinedNodeType("nt:versionedChild", false);
     }
 
     /** Test for the predefined nt:query node type. */
     public void testQuery() throws NotExecutableException {
-        testPredefinedNodeType("nt:query");
+        testPredefinedNodeType("nt:query", false);
     }
 
     /** Test for the predefined nt:resource node type. */
     public void testResource() throws NotExecutableException {
-        testPredefinedNodeType("nt:resource");
+        testPredefinedNodeType("nt:resource", false);
     }
 
     /**
@@ -265,10 +306,12 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * semantics remain the same.
      *
      * @param name node type name
+     * @param propsVariant whether the properties of this node type may
+     *   have implementation variant autocreated and OPV flags.
      * @throws NotExecutableException if the node type is not supported by
      *   this repository implementation.
      */
-    private void testPredefinedNodeType(String name)
+    private void testPredefinedNodeType(String name, boolean propsVariant)
             throws NotExecutableException {
         try {
             StringBuffer spec = new StringBuffer();
@@ -282,13 +325,28 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
             }
 
             NodeType type = manager.getNodeType(name);
-            String current = getNodeTypeSpec(type).trim();
+            String current = getNodeTypeSpec(type, propsVariant).trim();
             if (!System.getProperty("line.separator").equals("\n")) {
                 current = normalizeLineSeparators(current);
             }
             String expected = normalizeLineSeparators(spec.toString()).trim();
 
             assertEquals("Predefined node type " + name, expected, current);
+
+            // check minimum declared supertypes
+            Set declaredSupertypes = new HashSet();
+            for (Iterator it = Arrays.asList(
+                    type.getDeclaredSupertypes()).iterator(); it.hasNext(); ) {
+                NodeType nt = (NodeType) it.next();
+                declaredSupertypes.add(nt.getName());
+            }
+            for (Iterator it = Arrays.asList(
+                    (String[]) SUPERTYPES.get(name)).iterator(); it.hasNext(); ) {
+                String supertype = (String) it.next();
+                assertTrue("Predefined node type " + name + " does not " +
+                        "declare supertype " + supertype,
+                        declaredSupertypes.contains(supertype));
+            }
         } catch (IOException e) {
             fail(e.getMessage());
         } catch (NoSuchNodeTypeException e) {
@@ -310,10 +368,12 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * used in the JSR 170 specification.
      *
      * @param type node type definition
+     * @param propsVariant whether the properties of this node type may
+     *   have implementation variant autocreated and OPV flags.
      * @return spec string
      * @throws RepositoryException on repository errors
      */
-    private static String getNodeTypeSpec(NodeType type)
+    private static String getNodeTypeSpec(NodeType type, boolean propsVariant)
             throws RepositoryException {
         String typeName = type.getName();
         StringWriter buffer = new StringWriter();
@@ -321,31 +381,6 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         PrintWriter writer = new PrintWriter(buffer);
         writer.println("NodeTypeName");
         writer.println("  " + typeName);
-        writer.println("Supertypes");
-        NodeType[] supertypes = type.getDeclaredSupertypes();
-        Arrays.sort(supertypes, NODE_TYPE_COMPARATOR);
-        boolean hasPrinted = false;
-        for (int i = 0; i < supertypes.length; i++) {
-            String name = supertypes[i].getName();
-            if (name.startsWith("nt:") ||
-                    name.equals("mix:simpleVersionable") ||
-                    name.equals("mix:created") ||
-                    name.equals("mix:mimeType") ||
-                    name.equals("mix:lastModified") ||
-                    (name.equals("mix:referenceable") &&
-                        (typeName.equals("mix:versionable") ||
-                            typeName.equals("mix:shareable") ||
-                            typeName.equals("nt:resource") ||
-                            typeName.equals("nt:versionHistory") ||
-                            typeName.equals("nt:version") ||
-                            typeName.equals("nt:frozenNode")))) {
-                writer.println("  " + supertypes[i].getName());
-                hasPrinted = true;
-            }
-        }
-        if (!hasPrinted) {
-            writer.println("  []");
-        }
         writer.println("IsMixin");
         writer.println("  " + type.isMixin());
         writer.println("HasOrderableChildNodes");
@@ -360,7 +395,7 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         PropertyDefinition[] properties = type.getDeclaredPropertyDefinitions();
         Arrays.sort(properties, PROPERTY_DEF_COMPARATOR);
         for (int i = 0; i < properties.length; i++) {
-            writer.print(getPropertyDefSpec(properties[i]));
+            writer.print(getPropertyDefSpec(properties[i], propsVariant));
         }
 
         return buffer.toString();
@@ -416,10 +451,13 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * used in the JSR 170 specification.
      *
      * @param property property definition
+     * @param propsVariant whether the properties of this node type may
+     *   have implementation variant autocreated and OPV flags.
      * @return spec string
      * @throws RepositoryException on repository errors
      */
-    private static String getPropertyDefSpec(PropertyDefinition property)
+    private static String getPropertyDefSpec(PropertyDefinition property,
+                                             boolean propsVariant)
             throws RepositoryException {
         StringWriter buffer = new StringWriter();
 
@@ -445,11 +483,15 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         } else {
             writer.println("  DefaultValues null");
         }
-        writer.println("  AutoCreated " + property.isAutoCreated());
+        if (!propsVariant) {
+            writer.println("  AutoCreated " + property.isAutoCreated());
+        }
         writer.println("  Mandatory " + property.isMandatory());
         String action = OnParentVersionAction.nameFromValue(
                 property.getOnParentVersion());
-        writer.println("  OnParentVersion " + action);
+        if (!propsVariant) {
+            writer.println("  OnParentVersion " + action);
+        }
         writer.println("  Protected " + property.isProtected());
         writer.println("  Multiple " + property.isMultiple());
 

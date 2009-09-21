@@ -1,7 +1,5 @@
 NodeTypeName
   nt:activity
-Supertypes
-  nt:base
 IsMixin
   false
 HasOrderableChildNodes

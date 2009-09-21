@@ -1,8 +1,5 @@
 NodeTypeName
   nt:frozenNode
-Supertypes
-  nt:base
-  mix:referenceable
 IsMixin
   false
 HasOrderableChildNodes

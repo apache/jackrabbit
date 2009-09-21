@@ -1,7 +1,5 @@
 NodeTypeName
   nt:propertyDefinition
-Supertypes
-  nt:base
 IsMixin
   false
 HasOrderableChildNodes

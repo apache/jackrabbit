@@ -1,7 +1,5 @@
 NodeTypeName
   mix:referenceable
-Supertypes
-  []
 IsMixin
   true
 HasOrderableChildNodes
