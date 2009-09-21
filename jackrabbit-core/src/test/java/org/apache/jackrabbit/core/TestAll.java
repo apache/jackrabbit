@@ -44,6 +44,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(InvalidDateTest.class);
         suite.addTestSuite(SessionGarbageCollectedTest.class);
         suite.addTestSuite(ReferencesTest.class);
+        suite.addTestSuite(ReplaceTest.class);
 
         // test related to NodeStateMerger
         // temporarily disabled see JCR-2272 and JCR-2295
