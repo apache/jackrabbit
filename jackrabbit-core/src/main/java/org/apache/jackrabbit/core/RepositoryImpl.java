@@ -1103,10 +1103,10 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
-     * Private method that performs the actual shutdown after the shutdown
+     * Protected method that performs the actual shutdown after the shutdown
      * lock has been acquired by the {@link #shutdown()} method.
      */
-    private synchronized void doShutdown() {
+    protected synchronized void doShutdown() {
         log.info("Shutting down repository...");
 
         // stop optional cluster node
