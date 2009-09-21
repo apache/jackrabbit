@@ -29,6 +29,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -54,6 +55,8 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,7 +166,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         shareableNodesCache.clear();
     }
 
-    org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl getDefinition(NodeState state)
+    NodeDefinitionImpl getDefinition(NodeState state)
             throws RepositoryException {
         if (state.getId().equals(rootNodeId)) {
             // special handling required for root node
@@ -176,18 +179,28 @@ public class ItemManager implements Dumpable, ItemStateListener {
             // get from overlayed state
             parentId = state.getOverlayedState().getParentId();
         }
-        NodeState parentState;
+        NodeState parentState = null;
         try {
             NodeImpl parent = (NodeImpl) getItem(parentId);
             parentState = parent.getNodeState();
             if (state.getParentId() == null) {
                 // indicates state has been removed, must use
                 // overlayed state of parent, otherwise child node entry
-                // cannot be found
-                parentState = (NodeState) parentState.getOverlayedState();
+                // cannot be found. unless the parentState is new, which
+                // means it was recreated in place of a removed node
+                // that used to be the actual parent
+                if (parentState.getStatus() == ItemState.STATUS_NEW) {
+                    // force getting parent from attic
+                    parentState = null;
+                } else {
+                    parentState = (NodeState) parentState.getOverlayedState();
+                }
             }
         } catch (ItemNotFoundException e) {
-            // parent probably removed, get it from attic
+            // parent probably removed, get it from attic. see below
+        }
+
+        if (parentState == null) {
             try {
                 // use overlayed state if available
                 parentState = (NodeState) sism.getAttic().getItemState(
@@ -196,21 +209,32 @@ public class ItemManager implements Dumpable, ItemStateListener {
                 throw new RepositoryException(ex);
             }
         }
+
         // get child node entry
         ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
         try {
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(
                     parentState.getNodeTypeName(), parentState.getMixinTypeNames());
-            QNodeDefinition def = ent.getApplicableChildNodeDef(
+            QNodeDefinition def;
+            try {
+                def = ent.getApplicableChildNodeDef(
                     cne.getName(), state.getNodeTypeName(), ntReg);
+            } catch (ConstraintViolationException e) {
+                // fallback to child node definition of a nt:unstructured
+                ent = ntReg.getEffectiveNodeType(NameConstants.NT_UNSTRUCTURED);
+                def = ent.getApplicableChildNodeDef(
+                        cne.getName(), state.getNodeTypeName(), ntReg);
+                log.warn("Fallback to nt:unstructured due to unknown child " +
+                        "node definition for type '" + state.getNodeTypeName() + "'");
+            }
             return session.getNodeTypeManager().getNodeDefinition(def);
         } catch (NodeTypeConflictException e) {
             throw new RepositoryException(e);
         }
     }
 
-    org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl getDefinition(PropertyState state)
+    PropertyDefinitionImpl getDefinition(PropertyState state)
             throws RepositoryException {
         try {
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
@@ -225,8 +249,17 @@ public class ItemManager implements Dumpable, ItemStateListener {
             NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(
                     parent.getNodeTypeName(), parent.getMixinTypeNames());
-            QPropertyDefinition def = ent.getApplicablePropertyDef(
+            QPropertyDefinition def;
+            try {
+                def = ent.getApplicablePropertyDef(
                     state.getName(), state.getType(), state.isMultiValued());
+            } catch (ConstraintViolationException e) {
+                ent = ntReg.getEffectiveNodeType(NameConstants.NT_UNSTRUCTURED);
+                def = ent.getApplicablePropertyDef(state.getName(),
+                        state.getType(), state.isMultiValued());
+                log.warn("Fallback to nt:unstructured due to unknown property " +
+                        "definition for '" + state.getName() + "'");
+            }
             return session.getNodeTypeManager().getPropertyDefinition(def);
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
