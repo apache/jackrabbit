@@ -1832,7 +1832,7 @@ public class RepositoryImpl extends AbstractRepository
             }
 
             synchronized (this) {
-                if (searchMgr == null) {
+                if (searchMgr == null && config.isSearchEnabled()) {
                     // search manager is lazily instantiated in order to avoid
                     // 'chicken & egg' bootstrap problems
                     searchMgr = new SearchManager(config,
