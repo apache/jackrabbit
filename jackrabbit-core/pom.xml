@@ -96,7 +96,6 @@
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
                 org.apache.jackrabbit.core.ConcurrentImportTest
-                org.apache.jackrabbit.test.api.nodetype.PredefinedNodeTypeTest#testResource
               </value>
             </property>
           </systemProperties>
