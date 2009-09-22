@@ -1293,7 +1293,7 @@ public class MultiIndex {
 
         // now update index with the remaining ones if there are any
         if (!finished.isEmpty()) {
-            log.info("updating index with {} nodes from indexing queue.",
+            log.debug("updating index with {} nodes from indexing queue.",
                     finished.size());
 
             // remove documents from the queue
