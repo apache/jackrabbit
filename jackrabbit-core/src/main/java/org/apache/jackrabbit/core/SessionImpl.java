@@ -1173,6 +1173,7 @@ public class SessionImpl extends AbstractSession
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkModify(parent, options, Permission.NONE);
 
+        // TODO: make configurable
         ProtectedNodeImporter pi = new AccessControlImporter(this, this, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, pi, null);
         return new ImportHandler(importer, this);
