@@ -62,7 +62,6 @@ import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
-import org.apache.jackrabbit.core.security.principal.FallbackPrincipalProvider;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,15 +232,6 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         for (Properties props : moduleConfig) {
             principalProviderRegistry.registerProvider(props);
         }
-
-        // add fallback PP if needed. currently disabled.
-        /*
-        if (principalProviderRegistry.getProvider(FallbackPrincipalProvider.class.getName()) == null) {
-            Properties props = new Properties();
-            props.setProperty(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS, FallbackPrincipalProvider.class.getName());
-            principalProviderRegistry.registerProvider(props);
-        }
-        */
 
         // create the principal manager for the security workspace
         systemPrincipalManager = new PrincipalManagerImpl(securitySession, principalProviderRegistry.getProviders());
