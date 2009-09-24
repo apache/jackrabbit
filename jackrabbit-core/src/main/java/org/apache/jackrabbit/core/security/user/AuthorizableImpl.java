@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +70,16 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     }
 
     //-------------------------------------------------------< Authorizable >---
+    /**
+     * Returns the unescaped name of the node that defines this <code>Authorizable</code>.
+     *
+     * @return the unescaped name of the node that defines this <code>Authorizable</code>.
+     * @see Authorizable#getID()
+     */
+    public String getID() throws RepositoryException {
+        return Text.unescapeIllegalJcrChars(getNode().getName());
+    }
+
     /**
      * @see Authorizable#declaredMemberOf()
      */
@@ -351,7 +362,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      */
     private boolean isProtectedProperty(String propertyName) throws RepositoryException {
         Name pName = getSession().getQName(propertyName);
-        return P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
+        return P_PRINCIPAL_NAME.equals(pName)
                 || P_GROUPS.equals(pName)
                 || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName);
     }

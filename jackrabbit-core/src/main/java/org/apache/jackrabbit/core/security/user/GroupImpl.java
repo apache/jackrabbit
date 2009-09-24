@@ -63,19 +63,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     //-------------------------------------------------------< Authorizable >---
     /**
-     * Returns the name of the node that defines this <code>Group</code>, that
-     * has been used taking the principal name as hint, unescaping any chars
-     * that have been escaped to circumvent incompatitibilities with JCR name
-     * limitations.
-     *
-     * @return name of the node that defines this <code>Group</code>.
-     * @see Authorizable#getID()
-     */
-    public String getID() throws RepositoryException {
-        return Text.unescapeIllegalJcrChars(getNode().getName());
-    }
-
-    /**
      * @see Authorizable#isGroup()
      */
     public boolean isGroup() {

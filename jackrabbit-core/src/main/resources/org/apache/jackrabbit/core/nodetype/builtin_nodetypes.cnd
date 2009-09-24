@@ -600,7 +600,6 @@
   - rep:impersonators (STRING) protected multiple
 
 [rep:User] > rep:Authorizable, rep:Impersonatable
-  - rep:userId (STRING) protected mandatory
   - rep:password (STRING) protected mandatory
 
 [rep:Group] > rep:Authorizable

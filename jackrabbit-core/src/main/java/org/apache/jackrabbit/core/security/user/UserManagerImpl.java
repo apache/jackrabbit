@@ -487,7 +487,6 @@ public class UserManagerImpl extends ProtectedItemModifier
         try {
             NodeImpl userNode = (NodeImpl) nodeCreator.createUserNode(userID, intermediatePath);
 
-            setProperty(userNode, P_USERID, getValue(userID), true);
             setProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)), true);
             setProperty(userNode, P_PRINCIPAL_NAME, getValue(principal.getName()), true);
             if (!batchModus) {

@@ -54,7 +54,6 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
         if (superuser instanceof SessionImpl) {
             NameResolver resolver = (SessionImpl) superuser;
-            protectedUserProps.add(resolver.getJCRName(UserConstants.P_USERID));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PASSWORD));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_GROUPS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_IMPERSONATORS));
@@ -135,7 +134,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
         UserImpl user = (UserImpl) getTestUser(superuser);
         NodeImpl n = user.getNode();
 
-        checkProtected(n.getProperty(UserConstants.P_USERID));
+        checkProtected(n.getProperty(UserConstants.P_PASSWORD));
         checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
         if (n.hasProperty(UserConstants.P_GROUPS)) {
             checkProtected(n.getProperty(UserConstants.P_GROUPS));
