@@ -117,9 +117,9 @@ public interface UserManager {
 
     /**
      * Creates an User for the given parameters. If the implementation is not
-     * able to deal with the <code>itermediatePath</code> that parameter should
+     * able to deal with the <code>intermediatePath</code> that parameter should
      * be ignored.
-     * Except for the <code>itermediatePath</code>, neither of the specified
+     * Except for the <code>intermediatePath</code>, neither of the specified
      * parameters can be <code>null</code>.
      *
      * @param userID

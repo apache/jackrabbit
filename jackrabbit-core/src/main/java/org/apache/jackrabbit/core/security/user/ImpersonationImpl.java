@@ -97,12 +97,9 @@ class ImpersonationImpl implements Impersonation, UserConstants {
 
         String pName = principal.getName();
         // make sure user does not impersonate himself
-        for (PrincipalIterator it = user.getPrincipals(); it.hasNext();) {
-            Principal p = it.nextPrincipal();
-            if (p.getName().equals(pName)) {
-                log.debug("Cannot grant impersonation to oneself.");
-                return false;
-            }
+        if (user.getPrincipal().getName().equals(pName)) {
+            log.debug("Cannot grant impersonation to oneself.");
+            return false;
         }
 
         boolean granted = false;

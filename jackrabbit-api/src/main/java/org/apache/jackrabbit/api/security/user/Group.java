@@ -47,8 +47,7 @@ public interface Group extends Authorizable {
     boolean isMember(Authorizable authorizable) throws RepositoryException;
 
     /**
-     * Add a member to this Group.<br>
-     * Changes will be persisted immediately.
+     * Add a member to this Group.
      *
      * @return true if the <code>Authorizable</code> has successfully been added
      * to this Group, false otherwise (e.g. unknown implemention
@@ -59,8 +58,7 @@ public interface Group extends Authorizable {
     boolean addMember(Authorizable authorizable) throws RepositoryException;
 
     /**
-     * Remove a member from this Group.<br>
-     * Changes will be persisted immediately.
+     * Remove a member from this Group.
      *
      * @return true if the Authorizable was successfully removed. False otherwise.
      * @throws RepositoryException

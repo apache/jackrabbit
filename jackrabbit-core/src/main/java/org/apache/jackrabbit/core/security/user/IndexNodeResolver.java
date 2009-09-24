@@ -27,7 +27,6 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 
 /**

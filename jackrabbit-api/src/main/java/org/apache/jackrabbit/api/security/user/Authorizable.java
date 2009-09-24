@@ -22,8 +22,6 @@ import java.util.Iterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-
 /**
  * The Authorizable is the common base interface for {@link User} and
  * {@link Group}. It provides access to the <code>Principal</code>s associated
@@ -44,7 +42,7 @@ import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
  * login mechanisms.<br>
  * <p/>
  * Consequently an one-to-many relationship exists between Authorizable
- * and Principal (see also {@link #getPrincipal()} and {@link #getPrincipals()}).
+ * and Principal (see also {@link #getPrincipal()}.
  * <p/>
  * <p/>
  * The interfaces derived from Authorizable are defined as follows:
@@ -80,35 +78,6 @@ public interface Authorizable {
      * @throws RepositoryException If an error occurs.
      */
     Principal getPrincipal() throws RepositoryException;
-
-    /**
-     * Add the given Principal to this Authorizable.
-     * Note, that a Principal can only be refered by a single Authorizable in
-     * the Repository. If another User or Group already refers to the given
-     * Principal a <code>AuthorizableExistsException</code> is thrown.
-     *
-     * @param principal
-     * @return AuthorizableExistsException If the given principal is already refered
-     *         to by another Authorizable.
-     * @throws RepositoryException
-     */
-    boolean addReferee(Principal principal) throws AuthorizableExistsException, RepositoryException;
-
-    /**
-     * Remove the specified Principal for the referees of this Authorizable.
-     *
-     * @param principal
-     * @return true if principal has been referee before. False otherwise.
-     * @throws RepositoryException
-     */
-    boolean removeReferee(Principal principal) throws RepositoryException;
-
-    /**
-     * @return Iterator of all Principal related to this authentication Object
-     *         including the main principal, (see {@link #getPrincipal()}).
-     * @throws RepositoryException
-     */
-    PrincipalIterator getPrincipals() throws RepositoryException;
 
     /**
      * @return all {@link Group}s, this Authorizable is declared member of.

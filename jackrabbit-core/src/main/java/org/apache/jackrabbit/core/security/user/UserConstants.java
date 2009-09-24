@@ -46,9 +46,7 @@ interface UserConstants {
      */
     String GROUP_ADMIN_GROUP_NAME = "GroupAdmin";
 
-    Name P_REFEREES = NF.create(Name.NS_REP_URI, "referees");
     Name P_PRINCIPAL_NAME = NF.create(Name.NS_REP_URI, "principalName");
-
     Name P_USERID = NF.create(Name.NS_REP_URI, "userId");
     Name P_PASSWORD = NF.create(Name.NS_REP_URI, "password");
 

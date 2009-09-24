@@ -101,9 +101,17 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             pGroupName = "rep:groups";
             pPrincipalName = "rep:principalName";
         }
+
+        // find common ancestor of all user and group nodes.
+        String userPath = userManager.getUsersPath();
+        String groupPath = userManager.getGroupsPath();
+        String obsPath = userPath;
+        while (!Text.isDescendant(obsPath, groupPath)) {
+            obsPath = Text.getRelativeParent(obsPath, 1);
+        }       
         securitySession.getWorkspace().getObservationManager().addEventListener(this,
                 Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                UserManagerImpl.SECURITY_ROOT_PATH,
+                obsPath,
                 true,
                 null,
                 ntNames,

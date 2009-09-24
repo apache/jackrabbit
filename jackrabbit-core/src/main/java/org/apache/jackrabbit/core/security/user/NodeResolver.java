@@ -26,6 +26,7 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.test.api.util.Text;
 
 /**
  * Resolver: searches for Principals stored in Nodes of a {@link javax.jcr.Workspace}
@@ -37,6 +38,10 @@ abstract class NodeResolver {
     private final Session session;
     private final NamePathResolver resolver;
 
+    private String userSearchRoot = UserConstants.USERS_PATH;
+    private String groupSearchRoot = UserConstants.GROUPS_PATH;
+    private String authorizableSearchRoot = UserConstants.AUTHORIZABLES_PATH;
+
     /**
      * Create a new <code>NodeResolver</code>.
      *
@@ -47,6 +52,16 @@ abstract class NodeResolver {
     NodeResolver(Session session, NamePathResolver resolver) {
         this.session = session;
         this.resolver = resolver;
+    }
+
+    void setSearchRoots(String userSearchRoot, String groupSearchRoot) {
+        this.userSearchRoot = userSearchRoot;
+        this.groupSearchRoot = groupSearchRoot;
+
+        authorizableSearchRoot = userSearchRoot;
+        while (!Text.isDescendant(authorizableSearchRoot, groupSearchRoot)) {
+            authorizableSearchRoot = Text.getRelativeParent(authorizableSearchRoot, 1);
+        }
     }
 
     /**
@@ -133,11 +148,11 @@ abstract class NodeResolver {
     String getSearchRoot(Name ntName) {
         String searchRoot;
         if (UserConstants.NT_REP_USER.equals(ntName)) {
-            searchRoot = UserConstants.USERS_PATH;
+            searchRoot = userSearchRoot;
         } else if (UserConstants.NT_REP_GROUP.equals(ntName)) {
-            searchRoot = UserConstants.GROUPS_PATH;
+            searchRoot = groupSearchRoot;
         } else {
-            searchRoot = UserConstants.AUTHORIZABLES_PATH;
+            searchRoot = authorizableSearchRoot;
         }
         return searchRoot;
     }

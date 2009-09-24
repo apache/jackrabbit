@@ -21,8 +21,6 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -35,15 +33,12 @@ import java.security.Principal;
  */
 public class ImpersonationImplTest extends AbstractUserTest {
 
-    private static Logger log = LoggerFactory.getLogger(ImpersonationImplTest.class);
-
     private Credentials creds;
     private String uID;
     private Session uSession;
     private UserManager uMgr;
 
     private String otherUID;
-    private Credentials otherCreds;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -61,8 +56,7 @@ public class ImpersonationImplTest extends AbstractUserTest {
         // create a second user 'below' the first user.
         p = getTestPrincipal();
         pw = buildPassword(p);
-        otherCreds = buildCredentials(p.getName(), pw);
-        User u2 = userMgr.createUser(p.getName(), pw, p, u.getNode().getPath());
+        User u2 = userMgr.createUser(p.getName(), pw);
         otherUID = u2.getID();
     }
 

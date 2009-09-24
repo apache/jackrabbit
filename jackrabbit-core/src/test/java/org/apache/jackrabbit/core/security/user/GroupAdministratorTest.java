@@ -39,7 +39,6 @@ public class GroupAdministratorTest extends AbstractUserTest {
 
     // group-admin
     private String uID;
-    private String uPath;
     private Session uSession;
 
     private String otherUID;
@@ -63,7 +62,6 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Credentials creds = buildCredentials(p.getName(), pw);
         User user = userMgr.createUser(p.getName(), pw);
         uID = user.getID();
-        uPath = ((UserImpl) user).getNode().getPath();
 
         // make other user a group-administrator:
         Authorizable grAdmin = userMgr.getAuthorizable(UserConstants.GROUP_ADMIN_GROUP_NAME);
@@ -101,7 +99,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         if (otherUID2 == null) {
             // create a third user
             Principal p = getTestPrincipal();
-            otherUID2 = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
+            otherUID2 = userMgr.createUser(p.getName(), buildPassword(p)).getID();
         }
         return otherUID2;
     }
@@ -157,7 +155,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Group testGroup = null;
         try {
             testGroup = umgr.createGroup(getTestPrincipal(), "/any/intermediate/path");
-            assertEquals("Intermediate path must be ignored.",-1, ((GroupImpl)testGroup).getNode().getPath().indexOf("/any/intermediate/path"));
+            assertTrue(Text.isDescendant(UserConstants.GROUPS_PATH + "/any/intermediate/path", ((GroupImpl)testGroup).getNode().getPath()));
         } finally {
             if (testGroup != null) {
                 testGroup.remove();
