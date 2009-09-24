@@ -609,8 +609,17 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             return data;
         }
         LocationStepQueryNode[] steps = relPath.getPathSteps();
-        Name propertyName = steps[steps.length - 1].getNameTest();
-        
+        Name propertyName;
+        if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
+            // this is a bit ugly:
+            // use the name of a dummy property because relPath actually
+            // references a property. whereas the relPath of the similar
+            // operation references a node
+            propertyName = NameConstants.JCR_PRIMARYTYPE;
+        } else {
+            propertyName = steps[steps.length - 1].getNameTest();
+        }
+
         Query query;
         String[] stringValues = new String[1];
         switch (node.getValueType()) {
@@ -658,13 +667,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }, null);
 
-        if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
-            // this is a bit ugly:
-            // use the name of a dummy property because relPath actually
-            // references a property. whereas the relPath of the similar
-            // operation references a node
-            propertyName = NameConstants.JCR_PRIMARYTYPE;
-        }
         String field = "";
         try {
             field = resolver.getJCRName(propertyName);

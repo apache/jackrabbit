@@ -61,6 +61,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(IndexingRuleTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
         suite.addTestSuite(ParentNodeTest.class);
+        suite.addTestSuite(SimilarQueryTest.class);
 
         return suite;
     }
