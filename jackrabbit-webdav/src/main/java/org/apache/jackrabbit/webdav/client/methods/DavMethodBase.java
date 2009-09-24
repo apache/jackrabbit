@@ -119,9 +119,14 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
                 responseDocument = docBuilder.parse(in);
                 return responseDocument;
             } catch (ParserConfigurationException e) {
-                throw new IOException(e.getMessage());
+                IOException exception =
+                    new IOException("XML parser configuration error");
+                exception.initCause(e);
+                throw exception;
             } catch (SAXException e) {
-                throw new IOException(e.getMessage());
+                IOException exception = new IOException("XML parsing error");
+                exception.initCause(e);
+                throw exception;
             } finally {
                 in.close();
             }
@@ -206,7 +211,10 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
             doc.appendChild(requestBody.toXml(doc));
             setRequestBody(doc);
         } catch (ParserConfigurationException e) {
-            throw new IOException(e.getMessage());
+            IOException exception =
+                new IOException("XML parser configuration error");
+            exception.initCause(e);
+            throw exception;
         }
     }
 
