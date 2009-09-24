@@ -109,7 +109,6 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
 
     public void testCreateUserWithNullUserID() throws RepositoryException {
         try {
-            Principal p = getTestPrincipal();
             User user = userMgr.createUser(null, "anyPW");
             createdUsers.add(user);
 
