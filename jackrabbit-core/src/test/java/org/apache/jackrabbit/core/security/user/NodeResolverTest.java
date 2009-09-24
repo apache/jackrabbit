@@ -125,16 +125,6 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
         }
     }
 
-    public void testFindNodeByUserID() throws NotExecutableException, RepositoryException {
-        UserImpl currentUser = getCurrentUser(superuser);
-
-        NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
-
-        Node result = nr.findNode(UserConstants.P_USERID, currentUser.getID(), UserConstants.NT_REP_USER);
-        assertNotNull(result);
-        assertTrue(currentUser.getNode().isSame(result));
-    }
-
     public void testFindNodeByMultiValueProp() throws NotExecutableException, RepositoryException {
         UserImpl currentUser = getCurrentUser(superuser);
 

@@ -43,7 +43,6 @@ import java.util.Set;
 public class UserManagerImplTest extends AbstractUserTest {
 
     private String pPrincipalName;
-    private String pUserID;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -52,7 +51,6 @@ public class UserManagerImplTest extends AbstractUserTest {
         }
         NameResolver resolver = (SessionImpl) superuser;
         pPrincipalName = resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME);
-        pUserID = resolver.getJCRName(UserConstants.P_USERID);
     }
 
     private String getTestUserId(Principal p) throws RepositoryException {
@@ -261,14 +259,6 @@ public class UserManagerImplTest extends AbstractUserTest {
                 found = nu.getPrincipal().getName().equals(p.getName());
             }
             assertTrue("Searching for principal-name must find the created user.", found);
-
-            it = userMgr.findAuthorizables(pUserID, uid, UserManager.SEARCH_TYPE_USER);
-            found = false;
-            while (it.hasNext() && !found) {
-                User nu = (User) it.next();
-                found = nu.getID().equals(uid);
-            }
-            assertTrue("Searching for user id must find the created user.", found);
 
             // but search groups should not find anything
             it = userMgr.findAuthorizables(pPrincipalName, p.getName(), UserManager.SEARCH_TYPE_GROUP);

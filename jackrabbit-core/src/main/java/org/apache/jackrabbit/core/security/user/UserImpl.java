@@ -35,19 +35,14 @@ import java.security.Principal;
  */
 public class UserImpl extends AuthorizableImpl implements User {
 
-    private final String id;
-
     private Principal principal;
     private Impersonation impersonation;
 
     protected UserImpl(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
         super(node, userManager);
-
-        id = node.getProperty(P_USERID).getString();
     }
 
     //--------------------------------------------------------------------------
-
     /**
      *
      * @param password
@@ -65,20 +60,18 @@ public class UserImpl extends AuthorizableImpl implements User {
         }
     }
 
-    //-------------------------------------------------------< Authorizable >---
-    /**
-     * @see org.apache.jackrabbit.api.security.user.Authorizable#getID()
-     */
-    public String getID() throws RepositoryException {
-        return id;
-    }
-
     //------------------------------------------------< User >------------------
     /**
      * @see User#isAdmin()
      */
     public boolean isAdmin() {
-        return userManager.isAdminId(id);
+        try {
+            return userManager.isAdminId(getID());
+        } catch (RepositoryException e) {
+            // should never get here
+            log.error("Internal error while retrieving UserID.", e);
+            return false;
+        }
     }
 
     /**
@@ -87,7 +80,7 @@ public class UserImpl extends AuthorizableImpl implements User {
     public Credentials getCredentials() throws RepositoryException {
         try {
             String password = getNode().getProperty(P_PASSWORD).getString();
-            return new CryptedSimpleCredentials(id, password);
+            return new CryptedSimpleCredentials(getID(), password);
         } catch (NoSuchAlgorithmException e) {
             throw new RepositoryException(e);
         } catch (UnsupportedEncodingException e) {

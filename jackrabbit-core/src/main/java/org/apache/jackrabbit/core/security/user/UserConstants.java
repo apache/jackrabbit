@@ -47,6 +47,11 @@ interface UserConstants {
     String GROUP_ADMIN_GROUP_NAME = "GroupAdmin";
 
     Name P_PRINCIPAL_NAME = NF.create(Name.NS_REP_URI, "principalName");
+    /**
+     * @deprecated As of 2.0 the id-hash is stored with the jcr:uuid making the
+     * rep:userId property redundant. It has been removed from the node type
+     * definition.
+     */
     Name P_USERID = NF.create(Name.NS_REP_URI, "userId");
     Name P_PASSWORD = NF.create(Name.NS_REP_URI, "password");
 
