@@ -26,7 +26,7 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.test.api.util.Text;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * Resolver: searches for Principals stored in Nodes of a {@link javax.jcr.Workspace}
