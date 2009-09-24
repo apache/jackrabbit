@@ -88,16 +88,29 @@ public class ExceptionConverter {
                                        method instanceof PutMethod)) {
                     // target item has probably while transient changes have
                     // been made.
-                    throw new InvalidItemStateException(msg);
+                    throw new InvalidItemStateException(msg, davExc);
                 } else {
-                    return new ItemNotFoundException(msg);
+                    return new ItemNotFoundException(msg, davExc);
                 }
-            case DavServletResponse.SC_LOCKED : return new LockException(msg);
-            case DavServletResponse.SC_METHOD_NOT_ALLOWED : return new ConstraintViolationException(msg);
-            case DavServletResponse.SC_CONFLICT : return new InvalidItemStateException(msg);
-            case DavServletResponse.SC_PRECONDITION_FAILED : return new LockException(msg);
-            case DavServletResponse.SC_NOT_IMPLEMENTED: throw new UnsupportedOperationException("Missing implementation. " + ((method != null) ? "Method " + method + " could not be executed." : ""));
-            default: return new RepositoryException(msg);
+            case DavServletResponse.SC_LOCKED :
+                return new LockException(msg, davExc);
+            case DavServletResponse.SC_METHOD_NOT_ALLOWED :
+                return new ConstraintViolationException(msg, davExc);
+            case DavServletResponse.SC_CONFLICT :
+                return new InvalidItemStateException(msg, davExc);
+            case DavServletResponse.SC_PRECONDITION_FAILED :
+                return new LockException(msg, davExc);
+            case DavServletResponse.SC_NOT_IMPLEMENTED:
+                if (method != null) {
+                    throw new UnsupportedOperationException(
+                            "Missing implementation: Method "
+                            + method + " could not be executed", davExc);
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Missing implementation", davExc);
+                }
+            default:
+                return new RepositoryException(msg, davExc);
         }
     }
 }
