@@ -80,6 +80,7 @@ import org.apache.jackrabbit.spi.RepositoryServiceFactory;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.logging.Slf4jLogWriterProvider;
+import org.apache.jackrabbit.webdav.DavException;
 
 public class RepositoryFactoryImplTest extends TestCase {
     private final RepositoryFactory factory = new RepositoryFactoryImpl();
@@ -149,7 +150,8 @@ public class RepositoryFactoryImplTest extends TestCase {
             Repository repo = factory.getRepository(parameters);
             assertNotNull(repo);
         } catch (RepositoryException e) {
-            if (!ConnectException.class.isInstance(e.getCause())) {
+            if (!(ConnectException.class.isInstance(e.getCause()) ||
+                  DavException.class.isInstance(e.getCause()))) {
                 throw e;
             }
         }
@@ -164,9 +166,10 @@ public class RepositoryFactoryImplTest extends TestCase {
             Repository repo = factory.getRepository(parameters);
             assertNotNull(repo);
         } catch (RepositoryException e) {
-            if (!ConnectException.class.isInstance(e.getCause())) {
-                throw e;
-            }
+            if (!(ConnectException.class.isInstance(e.getCause()) ||
+                    DavException.class.isInstance(e.getCause()))) {
+                  throw e;
+              }
         }
     }
 
