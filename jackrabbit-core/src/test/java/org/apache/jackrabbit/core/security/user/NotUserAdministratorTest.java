@@ -39,7 +39,6 @@ public class NotUserAdministratorTest extends AbstractUserTest {
 
     // test user that is NOT user admin
     private String uID;
-    private String uPath;
     private Session uSession;
     private UserManager uMgr;
 
@@ -52,7 +51,6 @@ public class NotUserAdministratorTest extends AbstractUserTest {
         String pw = buildPassword(p);
         UserImpl u = (UserImpl) userMgr.createUser(p.getName(), pw);
         uID = u.getID();
-        uPath = u.getNode().getPath();
 
         // create a session for the other user.
         uSession = getHelper().getRepository().login(new SimpleCredentials(uID, pw.toCharArray()));
@@ -118,7 +116,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testRemoveChildUser() throws RepositoryException {
         // let superuser create a child-user.
         Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
+        String childID = userMgr.createUser(p.getName(), buildPassword(p)).getID();
         try {
             Authorizable a = uMgr.getAuthorizable(childID);
             a.remove();
@@ -156,7 +154,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testModifyImpersonation() throws RepositoryException {
         // let superuser create a child-user.
         Principal p = getTestPrincipal();
-        Authorizable child = userMgr.createUser(p.getName(), buildPassword(p), p, uPath);
+        Authorizable child = userMgr.createUser(p.getName(), buildPassword(p));
         try {
             p = child.getPrincipal();
 
@@ -178,7 +176,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testModifyImpersonationOfChildUser() throws RepositoryException {
         // let superuser create a child-user.
         Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
+        String childID = userMgr.createUser(p.getName(), buildPassword(p)).getID();
         try {
             Authorizable child = uMgr.getAuthorizable(childID);
 

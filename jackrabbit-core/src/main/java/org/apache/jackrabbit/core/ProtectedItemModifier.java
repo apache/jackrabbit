@@ -64,6 +64,10 @@ public abstract class ProtectedItemModifier {
     }
 
     protected NodeImpl addNode(NodeImpl parentImpl, Name name, Name ntName) throws RepositoryException {
+        return addNode(parentImpl, name, ntName, null);
+    }
+
+    protected NodeImpl addNode(NodeImpl parentImpl, Name name, Name ntName, NodeId nodeId) throws RepositoryException {
         checkPermission(parentImpl, name, getPermission(true, false));
         // validation: make sure Node is not locked or checked-in.
         parentImpl.checkSetProperty();
@@ -89,7 +93,7 @@ public abstract class ProtectedItemModifier {
             }
         }
 
-        return parentImpl.createChildNode(name, nodeType, null);
+        return parentImpl.createChildNode(name, nodeType, nodeId);
     }
 
     protected Property setProperty(NodeImpl parentImpl, Name name, Value value) throws RepositoryException {

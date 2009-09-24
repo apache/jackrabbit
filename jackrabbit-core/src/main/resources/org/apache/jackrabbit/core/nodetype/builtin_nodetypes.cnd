@@ -591,7 +591,6 @@
   + * (rep:Authorizable) = rep:Authorizable protected VERSION
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected VERSION
   - rep:principalName (STRING) protected mandatory
-  - rep:referees (STRING) protected multiple
   - rep:groups (WEAKREFERENCE) protected multiple < 'rep:Group'
   - * (UNDEFINED)
   - * (UNDEFINED) multiple

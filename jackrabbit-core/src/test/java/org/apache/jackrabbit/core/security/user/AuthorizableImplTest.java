@@ -59,11 +59,9 @@ public class AuthorizableImplTest extends AbstractUserTest {
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_GROUPS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_IMPERSONATORS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
-            protectedUserProps.add(resolver.getJCRName(UserConstants.P_REFEREES));
 
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_GROUPS));
             protectedGroupProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
-            protectedGroupProps.add(resolver.getJCRName(UserConstants.P_REFEREES));
         } else {
             throw new NotExecutableException();
         }
@@ -86,8 +84,8 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
     public void testSetSpecialProperties() throws NotExecutableException, RepositoryException {
         Value v = superuser.getValueFactory().createValue("any_value");
-        User u = getTestUser(superuser);
 
+        User u = getTestUser(superuser);
         for (Iterator it = protectedUserProps.iterator(); it.hasNext();) {
             String pName = it.next().toString();
             try {
@@ -97,11 +95,12 @@ public class AuthorizableImplTest extends AbstractUserTest {
                 // success
             }
         }
+        
         Group g = getTestGroup(superuser);
         for (Iterator it = protectedGroupProps.iterator(); it.hasNext();) {
             String pName = it.next().toString();
             try {
-                u.setProperty(pName, v);
+                g.setProperty(pName, v);
                 fail("changing the '" +pName+ "' property on a Group should fail.");
             } catch (RepositoryException e) {
                 // success
@@ -124,7 +123,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
         for (Iterator it = protectedGroupProps.iterator(); it.hasNext();) {
             String pName = it.next().toString();
             try {
-                u.removeProperty(pName);
+                g.removeProperty(pName);
                 fail("removing the '" +pName+ "' property on a Group should fail.");
             } catch (RepositoryException e) {
                 // success
@@ -138,9 +137,6 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
         checkProtected(n.getProperty(UserConstants.P_USERID));
         checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
-        if (n.hasProperty(UserConstants.P_REFEREES)) {
-           checkProtected(n.getProperty(UserConstants.P_REFEREES));
-        }
         if (n.hasProperty(UserConstants.P_GROUPS)) {
             checkProtected(n.getProperty(UserConstants.P_GROUPS));
         }
@@ -157,9 +153,6 @@ public class AuthorizableImplTest extends AbstractUserTest {
         if (n.hasProperty(UserConstants.P_GROUPS)) {
             checkProtected(n.getProperty(UserConstants.P_GROUPS));
         }
-        if (n.hasProperty(UserConstants.P_REFEREES)) {
-           checkProtected(n.getProperty(UserConstants.P_REFEREES));
-        }
     }
 
     public void testSetSpecialPropertiesDirectly() throws NotExecutableException, RepositoryException {
@@ -175,14 +168,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
         } catch (ConstraintViolationException e) {
             // ok.
         }
-
-        try {
-            String refereeName = "anyreferee";
-            n.setProperty(UserConstants.P_REFEREES, new Value[] {new StringValue(refereeName)});
-            fail("Attempt to change protected property rep:referees should fail.");
-        } catch (ConstraintViolationException e) {
-            // ok.
-        }
+        
         try {
             String imperson = "anyimpersonator";
             n.setProperty(UserConstants.P_IMPERSONATORS, new Value[] {new StringValue(imperson)});

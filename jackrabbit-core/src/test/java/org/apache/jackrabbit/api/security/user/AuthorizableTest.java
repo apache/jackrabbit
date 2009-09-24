@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,32 +51,6 @@ public class AuthorizableTest extends AbstractUserTest {
     public void testGroupGetPrincipalNotNull() throws RepositoryException, NotExecutableException {
         Group gr = getTestGroup(superuser);
         assertNotNull(gr.getPrincipal());
-    }
-
-    public void testGetPrincipals() throws NotExecutableException, RepositoryException {
-        User user = getTestUser(superuser);
-        assertNotNull(user.getPrincipals());
-        assertTrue(user.getPrincipals().getSize() > 0);
-    }
-
-    public void testGroupGetPrincipals() throws NotExecutableException, RepositoryException {
-        Group gr = getTestGroup(superuser);
-        assertNotNull(gr.getPrincipals());
-        assertTrue(gr.getPrincipals().getSize() > 0);
-    }
-
-    public void testGetPrincipalsContainsPrincipal() throws RepositoryException, NotExecutableException {
-        Authorizable auth = getTestUser(superuser);
-        Principal p = auth.getPrincipal();
-        PrincipalIterator it = auth.getPrincipals();
-
-        while (it.hasNext()) {
-            if (it.nextPrincipal().equals(p)) {
-                // main principal is indeed present in the iterator.
-                return;
-            }
-        }
-        fail("Main principal (Authorizable.getPrincipal()) must be present in the iterator obtained by Authorizable.getPrincipals()");
     }
 
     public void testSetProperty() throws NotExecutableException, RepositoryException {
@@ -204,156 +177,16 @@ public class AuthorizableTest extends AbstractUserTest {
         }
     }
 
-    public void testAddReferee() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-
-        Principal testPrincipal = getTestPrincipal();
-        try {
-            assertTrue(auth.addReferee(testPrincipal));
-        } catch (AuthorizableExistsException e) {
-            throw new NotExecutableException(e.getMessage());
-        } finally {
-            auth.removeReferee(testPrincipal);
-        }
-    }
-
-    public void testAddRefereeTwice() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-
-        Principal testPrincipal = getTestPrincipal();
-        try {
-            auth.addReferee(testPrincipal);
-            // adding same principal again must return false;
-            assertFalse(auth.addReferee(testPrincipal));
-        } finally {
-            auth.removeReferee(testPrincipal);
-        }
-    }
-
-    public void testGetPrincipalsExposeReferees() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-
-        Principal testPrincipal = getTestPrincipal();
-        try {
-            if (auth.addReferee(testPrincipal)) {
-                // make sure the referee is part of principals-set
-                boolean found = false;
-                for (PrincipalIterator it = auth.getPrincipals(); it.hasNext() && !found;) {
-                    found = testPrincipal.equals(it.nextPrincipal());
-                }
-                assertTrue("The referee added must be part of the 'getPrincipals()' iterator.", found);
-            } else {
-                throw new NotExecutableException();
-            }
-        } finally {
-            auth.removeReferee(testPrincipal);
-        }
-    }
-
-    public void testRemoveReferee() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-
-        Principal testPrincipal = getTestPrincipal();
-        try {
-            auth.addReferee(testPrincipal);
-            assertTrue(auth.removeReferee(testPrincipal));
-        } finally {
-            auth.removeReferee(testPrincipal);
-        }
-    }
-
-    public void testRefereeNotFoundByUserManager() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-        Principal testPrincipal = getTestPrincipal();
-
-        try {
-            assertTrue(auth.addReferee(testPrincipal));
-            Authorizable a = userMgr.getAuthorizable(testPrincipal);
-            assertNull(a);
-        } catch (RepositoryException e) {
-            auth.removeReferee(testPrincipal);
-        }
-    }
-
-    public void testAddExistingReferee() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-        Authorizable auth2 = getTestGroup(superuser);
-        Principal testPrincipal = getTestPrincipal();
-        try {
-            try {
-                assertTrue(auth.addReferee(testPrincipal));
-            } catch (AuthorizableExistsException e) {
-                throw new NotExecutableException(e.getMessage());
-            }
-
-            // adding same principal to another authorizable must fail
-            try {
-                auth2.addReferee(testPrincipal);
-                fail("Adding an existing referee-principal to another authorizable must fail.");
-            } catch (AuthorizableExistsException e) {
-                // success
-            }
-        } finally {
-            auth.removeReferee(testPrincipal);
-            auth2.removeReferee(testPrincipal);
-        }
-    }
-
-    public void testAddMainPrincipalAsReferee() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-        Principal mainPrinc = auth.getPrincipal();
-        try {
-            // adding main principal as referee to another authorizable must
-            // return false
-            assertFalse(auth.addReferee(mainPrinc));
-        } finally {
-            auth.removeReferee(mainPrinc);
-        }
-    }
-
-    public void testAddMainPrincipalAsOthersReferee() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-        Authorizable auth2 = getTestGroup(superuser);
-        Principal mainPrinc = auth.getPrincipal();
-        try {
-            // adding main principal as referee to another authorizable must fail
-            try {
-                auth2.addReferee(mainPrinc);
-                fail("Adding an existing main-principal as referee to another authorizable must fail.");
-            } catch (AuthorizableExistsException e) {
-                // success
-            }
-        } finally {
-            auth2.removeReferee(mainPrinc);
-        }
-    }
-
-    public void testRemoveNotExistingReferee() throws NotExecutableException, RepositoryException {
-        Authorizable auth = getTestUser(superuser);
-        Principal testPrincipal = getTestPrincipal();
-
-        if (userMgr.getAuthorizable(testPrincipal) != null) {
-            throw new NotExecutableException("test principal " + testPrincipal.getName() + " already associated with an authorizable.");
-        }
-        for (PrincipalIterator it = auth.getPrincipals(); it.hasNext();) {
-            if (it.nextPrincipal().getName().equals(testPrincipal.getName())) {
-                throw new NotExecutableException("test principal " + testPrincipal.getName() + " already referee.");
-            }
-        }
-        assertFalse(auth.removeReferee(testPrincipal));
-    }
-
     /**
      * Removing an authorizable that is still listed as member of a group.
      */
-    /*
     public void testRemoveListedAuthorizable() throws RepositoryException, NotExecutableException {
         String newUserId = null;
         Group newGroup = null;
 
         try {
             Principal uP = getTestPrincipal();
-            User newUser = userMgr.createUser(uP.getName(), buildCredentials(uP), uP);
+            User newUser = userMgr.createUser(uP.getName(), uP.getName());
             newUserId = newUser.getID();
 
             newGroup = userMgr.createGroup(getTestPrincipal());
@@ -376,5 +209,4 @@ public class AuthorizableTest extends AbstractUserTest {
             }
         }
     }
-    */
 }

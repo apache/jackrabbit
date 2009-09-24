@@ -16,28 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.PropertyType;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.PropertyDefinition;
-
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -45,10 +25,22 @@ import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.PropertyDefinition;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * AuthorizableImpl
@@ -61,7 +53,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     private final NodeImpl node;
 
     /**
-     * @param node    the Authorizable is persisted to.
+     * @param node The node this Authorizable is persisted to.
      * @param userManager UserManager that created this Authorizable.
      * @throws IllegalArgumentException if the given node isn't of node type
      * {@link #NT_REP_AUTHORIZABLE}.
@@ -77,68 +69,6 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     }
 
     //-------------------------------------------------------< Authorizable >---
-    /**
-     * @see Authorizable#getPrincipals()
-     */
-    public PrincipalIterator getPrincipals() throws RepositoryException {
-        Collection<Principal> coll = new ArrayList<Principal>();
-        // the first element is the main principal of this user.
-        coll.add(getPrincipal());
-        // in addition add all referees.
-        PrincipalManager prMgr = getSession().getPrincipalManager();
-        for (Object o : getRefereeValues()) {
-            String refName = ((Value) o).getString();
-            Principal princ = prMgr.getPrincipal(refName);
-            if (princ == null) {
-                log.warn("Principal " + refName + " unknown to PrincipalManager.");
-                princ = new PrincipalImpl(refName);
-            }
-            coll.add(princ);
-        }
-        return new PrincipalIteratorAdapter(coll);
-    }
-
-    /**
-     * @see Authorizable#addReferee(Principal)
-     */
-    public synchronized boolean addReferee(Principal principal) throws RepositoryException {
-        String principalName = principal.getName();
-        Value princValue = getSession().getValueFactory().createValue(principalName);
-
-        List<Value> refereeValues = getRefereeValues();
-        if (refereeValues.contains(princValue) || getPrincipal().getName().equals(principalName)) {
-            return false;
-        }
-        if (userManager.hasAuthorizableOrReferee(principal)) {
-            throw new AuthorizableExistsException("Another authorizable already represented by or refeering to " +  principalName);
-        }
-        refereeValues.add(princValue);
-
-        userManager.setProtectedProperty(node, P_REFEREES, refereeValues.toArray(new Value[refereeValues.size()]));
-        return true;
-    }
-
-    /**
-     * @see Authorizable#removeReferee(Principal)
-     */
-    public synchronized boolean removeReferee(Principal principal) throws RepositoryException {
-        Value princValue = getSession().getValueFactory().createValue(principal.getName());
-        List<Value> existingValues = getRefereeValues();
-
-        if (existingValues.remove(princValue))  {
-            PropertyImpl prop = node.getProperty(P_REFEREES);
-            if (existingValues.isEmpty()) {
-                userManager.removeProtectedItem(prop, node);
-            } else {
-                userManager.setProtectedProperty(node, P_REFEREES, existingValues.toArray(new Value[existingValues.size()]));
-            }
-            return true;
-        }
-
-        // specified principal was not referee of this authorizable.
-        return false;
-    }
-
     /**
      * @see Authorizable#declaredMemberOf()
      */
@@ -211,7 +141,9 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         checkProtectedProperty(name);
         try {
             node.setProperty(name, value);
-            node.save();
+            if (!userManager.batchModus) {
+                node.save();
+            }
         } catch (RepositoryException e) {
             log.warn("Failed to set Property " + name + " for Authorizable " + getID());
             node.refresh(false);
@@ -234,7 +166,9 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         checkProtectedProperty(name);
         try {
             node.setProperty(name, values);
-            node.save();
+            if (!userManager.batchModus) {
+                node.save();
+            }
         } catch (RepositoryException e) {
             log.warn("Failed to set Property " + name + " for Authorizable " + getID());
             node.refresh(false);
@@ -255,7 +189,9 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 } else {
                     p.setValue((Value) null);
                 }
-                node.save();
+                if (!userManager.batchModus) {
+                    node.save();
+                }
                 return true;
             } else {
                 return false;
@@ -416,7 +352,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     private boolean isProtectedProperty(String propertyName) throws RepositoryException {
         Name pName = getSession().getQName(propertyName);
         return P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
-                || P_REFEREES.equals(pName) || P_GROUPS.equals(pName)
+                || P_GROUPS.equals(pName)
                 || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName);
     }
 
@@ -433,19 +369,6 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         if (isProtectedProperty(propertyName)) {
             throw new ConstraintViolationException("Attempt to modify protected property " + propertyName + " of an Authorizable.");
         }
-    }
-
-    private List<Value> getRefereeValues() throws RepositoryException {
-        List<Value> principalNames = new ArrayList<Value>();
-        if (node.hasProperty(P_REFEREES)) {
-            try {
-                principalNames.addAll(Arrays.asList(
-                        node.getProperty(P_REFEREES).getValues()));
-            } catch (PathNotFoundException e) {
-                // ignore. should never occur.
-            }
-        }
-        return principalNames;
     }
 
     //--------------------------------------------------------------------------

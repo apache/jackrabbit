@@ -209,7 +209,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
             throw new NotExecutableException();
         }
 
-        NodeIterator result = nodeResolver.findNodes(UserConstants.P_REFEREES, "anyValue", UserConstants.NT_REP_AUTHORIZABLE, true);
+        NodeIterator result = nodeResolver.findNodes(UserConstants.P_PRINCIPAL_NAME, "anyValue", UserConstants.NT_REP_AUTHORIZABLE, true);
         assertNotNull(result);
         assertFalse(result.hasNext());
     }

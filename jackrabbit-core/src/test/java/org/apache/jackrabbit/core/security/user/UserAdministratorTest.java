@@ -32,6 +32,8 @@ import javax.jcr.Session;
 import java.security.Principal;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <code>UserAdministratorTest</code>...
@@ -43,7 +45,6 @@ public class UserAdministratorTest extends AbstractUserTest {
 
     // user-admin 'below'
     private String otherUID;
-    private String otherPath;
     private Session otherSession;
 
     // the user-admin group
@@ -64,7 +65,6 @@ public class UserAdministratorTest extends AbstractUserTest {
         Credentials otherCreds = buildCredentials(p.getName(), pw);
         User other = userMgr.createUser(p.getName(), pw);
         otherUID = other.getID();
-        otherPath = ((UserImpl) other).getNode().getPath();
 
         // make other user a user-administrator:
         Authorizable ua = userMgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
@@ -136,13 +136,43 @@ public class UserAdministratorTest extends AbstractUserTest {
     public void testCreateUserWithIntermediatePath() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
         UserImpl u = null;
+
         // create a new user with intermediate-path
         // -> must succeed and user must be created
-        // -> intermediate path must be ignored.
+        // -> intermediate path must be part of the nodes path
+        Principal p = getTestPrincipal();
+        String usersPath = ((UserManagerImpl) umgr).getUsersPath();
+        Map<String, String> m = new HashMap<String, String>();
+        m.put("/some/intermediate/path", usersPath + "/some/intermediate/path/" + p.getName());
+        m.put("some/intermediate/path", usersPath + "/some/intermediate/path/" + p.getName());
+        m.put("/", usersPath + "/" + p.getName());
+        m.put("", usersPath + "/" + p.getName());
+        m.put(usersPath + "/some/intermediate/path", usersPath + "/some/intermediate/path/" + p.getName());
+
+        for (String intermediatePath : m.keySet()) {
+            try {
+                u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p), p, intermediatePath);
+                String expPath = m.get(intermediatePath);
+                assertEquals(expPath, u.getNode().getPath());
+            } finally {
+                if (u != null) {
+                    u.remove();
+                }
+            }
+        }
+    }
+
+    public void testCreateNestedUsers() throws NotExecutableException, RepositoryException {
+        UserManager umgr = getUserManager(otherSession);
+        UserImpl u = null;
+
+        String invalidIntermediatePath = ((UserImpl) umgr.getAuthorizable(otherUID)).getNode().getPath();
         try {
             Principal p = getTestPrincipal();
-            u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p), p, "/some/intermediate/path");
-            assertEquals(-1, u.getNode().getPath().indexOf("/some/intermediate/path"));
+            u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p), p, invalidIntermediatePath);
+            fail("An attempt to create a user below an existing user must fail.");
+        } catch (RepositoryException e) {
+            // success
         } finally {
             if (u != null) {
                 u.remove();

@@ -87,8 +87,7 @@ public class UserImpl extends AuthorizableImpl implements User {
     public Credentials getCredentials() throws RepositoryException {
         try {
             String password = getNode().getProperty(P_PASSWORD).getString();
-            Credentials creds = new CryptedSimpleCredentials(getID(), password);
-            return creds;
+            return new CryptedSimpleCredentials(id, password);
         } catch (NoSuchAlgorithmException e) {
             throw new RepositoryException(e);
         } catch (UnsupportedEncodingException e) {

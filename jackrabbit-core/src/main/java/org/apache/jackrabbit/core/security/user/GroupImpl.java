@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -55,7 +54,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
         if (node == null || !node.isNodeType(NT_REP_GROUP)) {
             throw new IllegalArgumentException();
         }
-        if (!Text.isDescendant(GROUPS_PATH, node.getPath())) {
+        if (!Text.isDescendant(userManager.getGroupsPath(), node.getPath())) {
             throw new IllegalArgumentException("Group has to be within the Group Path");
         }
         return new GroupImpl(node, userManager);
@@ -213,54 +212,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
     }
 
     //------------------------------------------------------< inner classes >---
-    private class MemberIterator implements Iterator {
-
-        private final Iterator ids;
-        private Authorizable next;
-
-        private MemberIterator(Iterator ids) {
-            this.ids = ids;
-            next = seekNext();
-        }
-
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        public Object next() {
-            if (next == null) {
-                throw new NoSuchElementException();
-            }
-
-            Authorizable n = next;
-            next = seekNext();
-            return n;
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        private Authorizable seekNext() {
-            Authorizable auth = null;
-            while (auth == null && ids.hasNext()) {
-                String uuid = (String) ids.next();
-                try {
-                    NodeImpl mem = (NodeImpl) getSession().getNodeByUUID(uuid);
-                    if (mem.isNodeType(NT_REP_GROUP)) {
-                        auth = userManager.createGroup(mem);
-                    } else {
-                        auth = userManager.createUser(mem);
-                    }
-                } catch (RepositoryException e) {
-                    log.warn("Internal error while building next member.", e.getMessage());
-                    // ignore and try next
-                }
-            }
-            return auth;
-        }
-    }
-
     /**
      *
      */
@@ -345,8 +296,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 try {
                     for (Iterator it = GroupImpl.this.getMembers(); it.hasNext();) {
                         Authorizable authrz = (Authorizable) it.next();
-                        // NOTE: only add main principal, since 'referees' belong
-                        // to a different provider and should not be exposed here
                         members.add(authrz.getPrincipal());
                     }
                 } catch (RepositoryException e) {

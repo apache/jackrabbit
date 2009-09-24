@@ -239,11 +239,14 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             return session.getProperty(absPath).getParent();
         } else {
             String pPath = Text.getRelativeParent(absPath, 1);
-            if (session.nodeExists(pPath)) {
-                return session.getNode(pPath);
-            } else {
-                throw new ItemNotFoundException("Unable to determine permissions: No item and no existing parent for target path " + absPath);
-            }
+            while (!"/".equals(pPath)) {
+                if (session.nodeExists(pPath)) {
+                    return session.getNode(pPath);
+                } else {
+                    pPath = Text.getRelativeParent(pPath, 1);
+                }
+            }         
+            throw new ItemNotFoundException("Unable to determine permissions: No item and no existing parent for target path " + absPath);
         }
     }
 
