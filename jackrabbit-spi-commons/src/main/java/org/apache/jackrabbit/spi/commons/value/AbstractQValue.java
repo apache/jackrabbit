@@ -368,7 +368,14 @@ public abstract class AbstractQValue implements QValue, Serializable {
             public int read(byte[] b, long position) throws IOException, RepositoryException {
                 InputStream in = getStream();
                 try {
-                    in.skip(position);
+                    long skip = position;
+                    while (skip > 0) {
+                        long skipped = in.skip(skip);
+                        if (skipped <= 0) {
+                            return -1;
+                        }
+                        skip -= skipped;
+                    }
                     return in.read(b);
                 } finally {
                     in.close();
