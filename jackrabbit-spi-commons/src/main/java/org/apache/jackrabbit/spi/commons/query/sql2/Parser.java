@@ -265,6 +265,13 @@ public class Parser {
             } else {
                 a = parseCondition(factory.propertyValue(getOnlySelectorName(), identifier));
             }
+        } else if ("[".equals(currentToken)) {
+            String name = readName();
+            if (readIf(".")) {
+                a = parseCondition(factory.propertyValue(name, readName()));
+            } else {
+                a = parseCondition(factory.propertyValue(getOnlySelectorName(), name));
+            }
         } else {
             throw getSyntaxError();
         }
