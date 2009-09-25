@@ -76,6 +76,10 @@
           <argLine>-Xmx256m</argLine>
           <systemProperties>
             <property>
+              <name>java.awt.headless</name>
+              <value>true</value>
+            </property>
+            <property>
               <name>derby.system.durability</name>
               <value>test</value>
             </property>
