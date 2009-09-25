@@ -60,6 +60,7 @@ import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -851,20 +852,12 @@ public class SessionImpl extends AbstractSession
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
         try {
             NodeImpl node = getNodeById(new NodeId(uuid));
-            // since the uuid of a node is only exposed through jcr:uuid declared
-            // by mix:referenceable it's rather unlikely that a client can possibly
-            // know the internal uuid of a non-referenceable node; omitting the
-            // check for mix:referenceable seems therefore to be a reasonable
-            // compromise in order to improve performance.
-            /*
-            if (node.isNodeType(Name.MIX_REFERENCEABLE)) {
+            if (node.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 return node;
             } else {
                 // there is a node with that uuid but the node does not expose it
-                throw new ItemNotFoundException(uuid.toString());
+                throw new ItemNotFoundException(uuid);
             }
-             */
-            return node;
         } catch (IllegalArgumentException e) {
             // Assuming the exception is from UUID.fromString()
             throw new RepositoryException("Invalid UUID: " + uuid, e);
