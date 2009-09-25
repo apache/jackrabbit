@@ -69,12 +69,14 @@ select * from test where id=2 or name='Hello'
 # 6.7.15 Not (p 110)
 select * from test where not id=2
 select * from test where not (id=2 and name='Hello')
+select * from test where not ([id]=2 and [name]='Hello')
 select * from test where id=2 or not (name='Hello' and id=3)
 
 # 6.7.16 Comparison (p 110)
 # 6.7.17 Operator (p 112)
 select * from test where id<=2 or id>=3 and name<'a' or name>'c'
 select * from test where id<>2
+select * from [test] where [id]<>2
 select * from test where name like 'H%'
 
 # 6.7.18 PropertyExistence (p 113)
@@ -114,6 +116,10 @@ select * from test as x where ISDESCENDANTNODE(x, [/a/b/c])
 # 6.7.28 Length (p 120)
 select * from test where length(name)=5
 select * from test as t where length(t.name)=5
+select * from test as t where length(name)=5
+SELECT * FROM [my:thing] WHERE [my:property] = 'abc'
+SELECT * FROM [my:thing] AS thing WHERE [my:property] = 'abc'
+SELECT * FROM [my:thing] AS [thing] WHERE [thing].[my:property] = 'abc'
 
 # 6.7.29 NodeName (p 121)
 select * from test where name()='test'
