@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAException;
@@ -41,14 +45,9 @@ public class UserTransactionImpl implements UserTransaction {
     private static byte counter = 0;
 
     /**
-     * XAResource
+     * The XAResources map
      */
-    private final XAResource xares;
-
-    /**
-     * Xid
-     */
-    private Xid xid;
+    private Map xaResources = new HashMap();
 
     /**
      * Status
@@ -75,11 +74,20 @@ public class UserTransactionImpl implements UserTransaction {
      */
     public UserTransactionImpl(Session session, boolean distributedThreadAccess) {
         if (session instanceof XASession) {
-            xares = ((XASession) session).getXAResource();
+            counter++;
+            xaResources.put(((XASession) session).getXAResource(), new XidImpl(counter));
             this.distributedThreadAccess = distributedThreadAccess; 
         } else {
             throw new IllegalArgumentException("Session not of type XASession");
         }
+    }
+
+    /**
+     * Enlists the given Session to this UserTransaction
+     * @param session
+     */
+    public void enlistXAResource(Session session) {
+        xaResources.put(session, new XidImpl(counter));
     }
 
     /**
@@ -91,8 +99,11 @@ public class UserTransactionImpl implements UserTransaction {
         }
 
         try {
-            xid = new XidImpl(counter++);
-            xares.start(xid, XAResource.TMNOFLAGS);
+            for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                XAResource resource = (XAResource) it.next();
+                XidImpl xid = (XidImpl) xaResources.get(resource);
+                resource.start(xid, XAResource.TMNOFLAGS);
+            }
             status = Status.STATUS_ACTIVE;
 
         } catch (XAException e) {
@@ -114,10 +125,18 @@ public class UserTransactionImpl implements UserTransaction {
         }
 
         try {
-            xares.end(xid, XAResource.TMSUCCESS);
+            for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                XAResource resource = (XAResource) it.next();
+                XidImpl xid = (XidImpl) xaResources.get(resource);
+                resource.end(xid, XAResource.TMSUCCESS);
+            }
 
             status = Status.STATUS_PREPARING;
-            xares.prepare(xid);
+            for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                XAResource resource = (XAResource) it.next();
+                XidImpl xid = (XidImpl) xaResources.get(resource);
+                resource.prepare(xid);
+            }
             status = Status.STATUS_PREPARED;
 
             status = Status.STATUS_COMMITTING;
@@ -125,7 +144,11 @@ public class UserTransactionImpl implements UserTransaction {
                 Thread distributedThread = new Thread() {
                     public void run() {
                         try {
-                            xares.commit(xid, false);
+                            for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                                XAResource resource = (XAResource) it.next();
+                                XidImpl xid = (XidImpl) xaResources.get(resource);
+                                resource.commit(xid, false);
+                            }
                         } catch (Exception e) {
                             throw new RuntimeException(e.getMessage());
                         }
@@ -138,7 +161,11 @@ public class UserTransactionImpl implements UserTransaction {
                             "Commit from different thread but same XID must not block");
                 }
             } else {
-                xares.commit(xid, false);
+                for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                    XAResource resource = (XAResource) it.next();
+                    XidImpl xid = (XidImpl) xaResources.get(resource);
+                    resource.commit(xid, false);
+                }
             }
             
             status = Status.STATUS_COMMITTED;
@@ -182,10 +209,18 @@ public class UserTransactionImpl implements UserTransaction {
         }
 
         try {
-            xares.end(xid, XAResource.TMFAIL);
+            for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                XAResource resource = (XAResource) it.next();
+                XidImpl xid = (XidImpl) xaResources.get(resource);
+                resource.end(xid, XAResource.TMFAIL);
+            }
 
             status = Status.STATUS_ROLLING_BACK;
-            xares.rollback(xid);
+            for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                XAResource resource = (XAResource) it.next();
+                XidImpl xid = (XidImpl) xaResources.get(resource);
+                resource.rollback(xid);
+            }
             status = Status.STATUS_ROLLEDBACK;
 
         } catch (XAException e) {
@@ -211,7 +246,9 @@ public class UserTransactionImpl implements UserTransaction {
      */
     public void setTransactionTimeout(int seconds) throws SystemException {
         try {
-            xares.setTransactionTimeout(seconds);
+            for (Iterator it = xaResources.keySet().iterator(); it.hasNext(); ) {
+                ((XAResource) it.next()).setTransactionTimeout(seconds);
+            }
         } catch (XAException e) {
             SystemException se = new SystemException(
                     "Unable to set the TransactionTiomeout: XA_ERR=" + e.errorCode);
