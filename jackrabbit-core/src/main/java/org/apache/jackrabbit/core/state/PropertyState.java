@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 
 import javax.jcr.PropertyType;
 
@@ -49,11 +48,6 @@ public class PropertyState extends ItemState {
      * flag indicating if this is a multivalue property
      */
     private boolean multiValued;
-
-    /**
-     * the property definition
-     */
-    private QPropertyDefinition def;
 
     /**
      * Constructs a new property state that is initially connected to an
@@ -92,7 +86,6 @@ public class PropertyState extends ItemState {
             PropertyState propState = (PropertyState) state;
             id = propState.id;
             type = propState.type;
-            def = propState.def;
             values = propState.values;
             multiValued = propState.multiValued;
             if (syncModCount) {
