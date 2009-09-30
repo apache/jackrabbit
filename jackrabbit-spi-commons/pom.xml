@@ -34,6 +34,7 @@
   </parent>
   <artifactId>jackrabbit-spi-commons</artifactId>
   <name>Jackrabbit SPI Commons</name>
+  <packaging>bundle</packaging>
 
   <scm>
     <connection>
@@ -47,6 +48,19 @@
 
   <build>
     <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <extensions>true</extensions>
+          <configuration>
+            <instructions>
+              <Export-Package>
+                org.apache.jackrabbit.spi.commons;version=${pom.version},
+                org.apache.jackrabbit.spi.commons.*;version=${pom.version}
+              </Export-Package>
+            </instructions>
+          </configuration>
+        </plugin>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
