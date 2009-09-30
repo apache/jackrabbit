@@ -130,16 +130,11 @@
     </servlet>
 
     <!-- ====================================================================== -->
-    <!-- R M I   B I N D I N G   S E R V L E T S                                -->
+    <!-- R M I   B I N D I N G   S E R V L E T                                  -->
     <!-- ====================================================================== -->
     <servlet>
       <servlet-name>RMI</servlet-name>
-      <servlet-class>org.apache.jackrabbit.servlet.remote.RMIRemoteBindingServlet</servlet-class>
-        <init-param>
-            <param-name>url</param-name>
-            <param-value>//localhost/jackrabbit.repository</param-value>
-        </init-param>
-        <load-on-startup>6</load-on-startup>
+      <servlet-class>org.apache.jackrabbit.servlet.remote.RemoteBindingServlet</servlet-class>
     </servlet>
 
     <!-- ====================================================================== -->
