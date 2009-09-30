@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.jca;
 
+import java.io.Serializable;
+
 import javax.resource.ResourceException;
 import javax.resource.spi.ActivationSpec;
 import javax.resource.spi.BootstrapContext;
@@ -28,8 +30,10 @@ import javax.transaction.xa.XAResource;
 /**
  * JCR ResourceAdapter.
  */
-public class JCAResourceAdapter implements ResourceAdapter {
+public class JCAResourceAdapter implements ResourceAdapter, Serializable {
 
+    private static final long serialVersionUID = 7335723888000232035L;
+    
     private final XAResource[] xaResources = new XAResource[0];
 
     /**
