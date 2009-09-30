@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.Iterator;
+
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -99,16 +101,19 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          Name name,
                                                          int index) {
-        // check removed child node entries first
-        for (ChildNodeEntry entry : parent.getRemovedChildNodeEntries()) {
-            if (entry.getName().equals(name)
-                    && entry.getIndex() == index) {
-                return entry;
+        // first look for the entry in the current child node entry list
+        ChildNodeEntry entry = super.getChildNodeEntry(parent, name, index);
+        if (entry == null) {
+            // if not found, we need to look for a removed child node entry
+            for (ChildNodeEntry candidate : parent.getRemovedChildNodeEntries()) {
+                if (candidate.getName().equals(name)
+                        && candidate.getIndex() == index) {
+                    entry = candidate;
+                    break;
+                }
             }
         }
-        // no matching removed child node entry found in parent,
-        // delegate to base class
-        return super.getChildNodeEntry(parent, name, index);
+        return entry;
     }
 
     /**
@@ -118,14 +123,17 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          NodeId id) {
-        // check removed child node entries first
-        for (ChildNodeEntry entry : parent.getRemovedChildNodeEntries()) {
-            if (entry.getId().equals(id)) {
-                return entry;
+        // first look for the entry in the current child node entry list
+        ChildNodeEntry entry = super.getChildNodeEntry(parent, id);
+        if (entry == null) {
+            // if not found, we need to look for a removed child node entry
+            for (ChildNodeEntry candidate : parent.getRemovedChildNodeEntries()) {
+                if (candidate.getId().equals(id)) {
+                    entry = candidate;
+                    break;
+                }
             }
         }
-        // no matching removed child node entry found in parent,
-        // delegate to base class
-        return super.getChildNodeEntry(parent, id);
+        return entry;
     }
 }
