@@ -55,12 +55,7 @@
               org.apache.jackrabbit.standalone
             </Export-Package>
             <Embed-Dependency>
-              *;inline=
-              *.txt|*.html|*.jsp|*.xml|*.jar|*.properties|
-              remoting/**|bootstrap/**|javax/**|repackage/**|images/**|
-              com/**|Resources/**|css/**|schema*/**|EDU/**|error/**|org/**|
-              META-INF/*.tld|META-INF/maven/**|META-INF/services/**|
-              WEB-INF/config.xml|WEB-INF/*.properties|WEB-INF/templates/**
+              *;inline=*.txt|*.html|*.jsp|*.xml|*.jar|*.properties|remoting/**|bootstrap/**|javax/**|repackage/**|images/**|com/**|Resources/**|css/**|schema*/**|EDU/**|error/**|org/**|META-INF/*.tld|META-INF/maven/**|META-INF/services/**|WEB-INF/config.xml|WEB-INF/*.properties|WEB-INF/templates/**
             </Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
             <Main-Class>org.apache.jackrabbit.standalone.Main</Main-Class>
