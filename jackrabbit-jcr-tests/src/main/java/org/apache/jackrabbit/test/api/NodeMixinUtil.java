@@ -16,14 +16,17 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import java.util.Arrays;
+import java.util.List;
+
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Node;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
-import java.util.List;
-import java.util.Arrays;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * Utility class to locate mixins in the NodeTyeManager.
@@ -40,9 +43,12 @@ public class NodeMixinUtil {
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator mixins = manager.getMixinNodeTypes();
 
+        // Skip mix:shareable since not supported by removeMixin
+        String mixShareable = session.getNamespacePrefix(AbstractJCRTest.NS_MIX_URI) + ":shareable";
+
         while (mixins.hasNext()) {
             String name = mixins.nextNodeType().getName();
-            if (node.canAddMixin(name)) {
+            if (node.canAddMixin(name) && !mixShareable.equals(name)) {
                 return name;
             }
         }
