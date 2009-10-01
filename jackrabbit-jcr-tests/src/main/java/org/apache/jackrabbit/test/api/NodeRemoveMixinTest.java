@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.test.api;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.version.VersionException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Repository;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>NodeRemoveMixinTest</code> contains the test cases for the method
@@ -211,7 +211,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         testRootNode.save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
-        if (mixinName == null) {
+        if (mixinName == null || node.isNodeType(mixinName)) {
             throw new NotExecutableException("No testable mixin node type found");
         }
 
