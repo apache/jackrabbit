@@ -34,6 +34,7 @@
   </parent>
   <artifactId>jackrabbit-jcr2spi</artifactId>
   <name>Jackrabbit JCR to SPI</name>
+  <packaging>bundle</packaging>
 
   <scm>
     <connection>
@@ -47,6 +48,19 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Export-Package>
+              org.apache.jackrabbit.jcr2spi;version=${pom.version};include:=Jcr2spiRepositoryFactory,
+              org.apache.jackrabbit.jcr2spi.config;version=${pom.version}
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
