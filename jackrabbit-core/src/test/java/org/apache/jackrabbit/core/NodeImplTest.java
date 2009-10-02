@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,10 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
@@ -34,6 +38,7 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Iterator;
+import java.util.Calendar;
 
 /** <code>NodeImplTest</code>... */
 public class NodeImplTest extends AbstractJCRTest {
@@ -153,4 +158,51 @@ public class NodeImplTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Test case for JCR-2336. Setting jcr:data (of type BINARY) must convert
+     * the String value to a binary.
+     *
+     * @throws RepositoryException -
+     */
+    public void testSetPropertyConvertValue() throws RepositoryException {
+        Node content = testRootNode.addNode("jcr:content", "nt:resource");
+        content.setProperty("jcr:lastModified", Calendar.getInstance());
+        content.setProperty("jcr:mimeType", "text/plain");
+        content.setProperty("jcr:data", "Hello");
+        superuser.save();
+    }
+
+    public void testSetPropertyConvertToString() throws RepositoryException {
+        Node n = testRootNode.addNode(nodeName1, "nt:folder");
+        n.addMixin("mix:title");
+        // must convert to string there is no other definition for this property
+        Property p = n.setProperty("jcr:title", 123);
+        assertEquals(PropertyType.nameFromValue(PropertyType.STRING),
+                PropertyType.nameFromValue(p.getType()));
+    }
+
+    public void testSetPropertyExplicitType() throws RepositoryException {
+        Node n = testRootNode.addNode(nodeName1, ntUnstructured);
+        n.addMixin("mix:title");
+        Property p = n.setProperty("jcr:title", "foo");
+        assertEquals(PropertyType.nameFromValue(PropertyType.STRING),
+                PropertyType.nameFromValue(p.getType()));
+        assertEquals(PropertyType.nameFromValue(PropertyType.STRING),
+                PropertyType.nameFromValue(p.getDefinition().getRequiredType()));
+        p.remove();
+        // must use residual definition from nt:unstructured
+        p = n.setProperty("jcr:title", 123);
+        assertEquals(PropertyType.nameFromValue(PropertyType.LONG),
+                PropertyType.nameFromValue(p.getType()));
+        assertEquals(PropertyType.nameFromValue(PropertyType.UNDEFINED),
+                PropertyType.nameFromValue(p.getDefinition().getRequiredType()));
+    }
+
+    public void testSetPropertyConvertMultiValued() throws RepositoryException {
+        Node n = testRootNode.addNode(nodeName1, "test:canSetProperty");
+        // must convert to long there is no other definition for this property
+        Property p = n.setProperty("LongMultiple", new String[]{"123", "456"});
+        assertEquals(PropertyType.nameFromValue(PropertyType.LONG),
+                PropertyType.nameFromValue(p.getType()));
+    }
 }
