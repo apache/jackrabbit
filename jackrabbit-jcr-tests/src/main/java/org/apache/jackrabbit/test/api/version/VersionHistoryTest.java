@@ -1109,7 +1109,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
         } catch (ConstraintViolationException success) {
         }
         try {
-            vHistory.setProperty(propertyName1, testRootNode);
+            vHistory.setProperty(propertyName1, vHistory);
             vHistory.getSession().save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,Node) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
