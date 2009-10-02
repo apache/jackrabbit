@@ -107,12 +107,12 @@ public class GarbageCollector implements DataStoreGarbageCollector {
      * This method is usually not called by the application, it is called
      * by SessionImpl.createDataStoreGarbageCollector().
      *
-     * @param session the session that created this object
+     * @param rep the repository
+     * @param session the session that created this object (optional)
      * @param list the persistence managers
      * @param sessionList the sessions to access the workspaces
      */
-    public GarbageCollector(SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
+    public GarbageCollector(RepositoryImpl rep, SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
         store = rep.getDataStore();
         this.pmList = list;
         this.persistenceManagerScan = list != null;

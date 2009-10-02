@@ -688,7 +688,7 @@ public class SessionImpl extends AbstractSession
             }
             ipmList[i] = (IterablePersistenceManager) pm;
         }
-        GarbageCollector gc = new GarbageCollector(this, ipmList, sessions);
+        GarbageCollector gc = new GarbageCollector(rep, this, ipmList, sessions);
         return gc;
     }
 
@@ -1542,7 +1542,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see javax.jcr.Session#hasCapability(String, Object, Object[]) 
+     * @see javax.jcr.Session#hasCapability(String, Object, Object[])
      * @since JCR 2.0
      */
     public boolean hasCapability(String methodName, Object target, Object[] arguments)
