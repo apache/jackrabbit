@@ -48,6 +48,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.slf4j.Logger;
@@ -166,7 +167,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     protected void onRedefine(QPropertyDefinition def) throws RepositoryException {
-        org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl newDef =
+        PropertyDefinitionImpl newDef =
                 session.getNodeTypeManager().getPropertyDefinition(def);
         data.setDefinition(newDef);
     }
