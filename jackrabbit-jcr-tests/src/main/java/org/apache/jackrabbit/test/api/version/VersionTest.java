@@ -859,7 +859,7 @@ public class VersionTest extends AbstractVersionTest {
         } catch (ConstraintViolationException success) {
         }
         try {
-            version.setProperty(propertyName1, testRootNode);
+            version.setProperty(propertyName1, version);
             version.getSession().save();
             fail("Version should be read-only: Version.setProperty(String,Node) did not throw a ConstraintViolationException");
         } catch (ConstraintViolationException success) {
