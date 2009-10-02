@@ -106,7 +106,7 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
     }
 
     public RepositoryManager getRepositoryManager(JackrabbitRepository repo) throws RepositoryException {
-        if (repo instanceof TransientRepository) {
+        if (!(repo instanceof TransientRepository)) {
             throw new RepositoryException("The repository was not created in this factory");
         }
         if (!ownRepositories.contains(repo)) {
