@@ -16,26 +16,27 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
-import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.ItemId;
-
-import javax.jcr.RepositoryException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>HierarchyEventListener</code>...
@@ -59,16 +60,12 @@ public class HierarchyEventListener implements InternalEventListener {
                 filter = wspManager.createEventFilter(Event.ALL_TYPES, root, true, null, null, true);
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
+                log.debug("Creating event filter for cache behavoir observation failed", e);
             }
             if (filter == null) {
                 this.eventFilter = Collections.emptyList();
             } else {
                 this.eventFilter = Collections.singletonList(filter);
-            }
-            try {
-                wspManager.addEventListener(this);
-            } catch (RepositoryException e) {
-                // spi does not support observation, or another error occurred.
             }
         } else {
             this.eventFilter = Collections.emptyList();
