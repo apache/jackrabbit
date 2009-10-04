@@ -20,6 +20,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.apache.jackrabbit.jcr2spi.observation.ObservationTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,6 +102,9 @@ public class TestAll extends TestCase {
 
         // repository
         suite.addTestSuite(LoginTest.class);
+
+        // observation
+        suite.addTestSuite(ObservationTest.class);
 
         return suite;
     }
