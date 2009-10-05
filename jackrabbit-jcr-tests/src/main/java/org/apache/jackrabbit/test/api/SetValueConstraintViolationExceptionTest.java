@@ -16,22 +16,23 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.PropertyDefinition;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.Value;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.NodeType;
-import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * <code>SetValueConstraintViolationExceptionTest</code> tests if setValue()
@@ -417,7 +418,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
                 NodeType type = types.nextNodeType();
                 String name = type.getName();
                 for (int i = 0; i < constraints.length; i++) {
-                    if (name.equals(constraints[i])) {
+                    if (name.equals(constraints[i]) || ntFrozenNode.equals(name)) {
                         continue findNodeTypeNotSatisfied;
                     }
                     nodeTypeNotSatisfied = name;
@@ -789,7 +790,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
                 NodeType type = types.nextNodeType();
                 String name = type.getName();
                 for (int i = 0; i < constraints.length; i++) {
-                    if (name.equals(constraints[i])) {
+                    if (name.equals(constraints[i]) || ntFrozenNode.equals(name)) {
                         continue findNodeTypeNotSatisfied;
                     }
                     nodeTypeNotSatisfied = name;
