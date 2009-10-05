@@ -150,6 +150,9 @@ public class RepositoryFactoryImplTest extends TestCase {
             Repository repo = factory.getRepository(parameters);
             assertNotNull(repo);
         } catch (RepositoryException e) {
+            // If there is no jcr server on localhost, one of the below
+            // exceptions will be thrown. Since this indicates that the
+            // factory is working correctly, it is safe to ignore them.
             if (!(ConnectException.class.isInstance(e.getCause()) ||
                   DavException.class.isInstance(e.getCause()))) {
                 throw e;
@@ -166,6 +169,9 @@ public class RepositoryFactoryImplTest extends TestCase {
             Repository repo = factory.getRepository(parameters);
             assertNotNull(repo);
         } catch (RepositoryException e) {
+            // If there is no jcr server on localhost, one of the below
+            // exceptions will be thrown. Since this indicates that the
+            // factory is working correctly, it is safe to ignore them.
             if (!(ConnectException.class.isInstance(e.getCause()) ||
                     DavException.class.isInstance(e.getCause()))) {
                   throw e;
