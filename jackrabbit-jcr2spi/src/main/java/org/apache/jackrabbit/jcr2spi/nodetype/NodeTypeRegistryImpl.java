@@ -16,39 +16,40 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.jcr2spi.util.Dumpable;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.version.OnParentVersionAction;
-import java.io.PrintStream;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.TreeSet;
-import java.util.HashMap;
+
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.jcr2spi.util.Dumpable;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A <code>NodeTypeRegistry</code> ...
@@ -82,6 +83,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     /**
      * Listeners (soft references)
      */
+    @SuppressWarnings("unchecked")
     private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     /**
@@ -660,14 +662,13 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     private class NodeTypeDefinitionMap implements Map<Name, QNodeTypeDefinition>, Dumpable {
 
         // map of node type names and node type definitions
-        private final ConcurrentReaderHashMap nodetypeDefinitions = new ConcurrentReaderHashMap();
+        private final ConcurrentHashMap<Name, QNodeTypeDefinition> nodetypeDefinitions =
+            new ConcurrentHashMap<Name, QNodeTypeDefinition>();
 
-        @SuppressWarnings("unchecked")
         private Collection<QNodeTypeDefinition> getValues() {
             return nodetypeDefinitions.values();
         }
 
-        @SuppressWarnings("unchecked")
         private Set<Name> getKeySet() {
             return nodetypeDefinitions.keySet();
         }
@@ -755,14 +756,13 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
 
         public QNodeTypeDefinition put(Name key, QNodeTypeDefinition value) {
-            return (QNodeTypeDefinition) nodetypeDefinitions.put(key, value);
+            return nodetypeDefinitions.put(key, value);
         }
 
         public void putAll(Map<? extends Name, ? extends QNodeTypeDefinition> t) {
             throw new UnsupportedOperationException("Implementation missing");
         }
 
-        @SuppressWarnings("unchecked")
         public Set<Map.Entry<Name, QNodeTypeDefinition>> entrySet() {
             // make sure all node type definitions have been loaded.
             keySet();
@@ -773,7 +773,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             if (!(key instanceof Name)) {
                 throw new IllegalArgumentException();
             }
-            QNodeTypeDefinition def = (QNodeTypeDefinition) nodetypeDefinitions.get(key);
+            QNodeTypeDefinition def = nodetypeDefinitions.get(key);
             if (def == null) {
                 try {
                     // node type does either not exist or hasn't been loaded yet
@@ -783,12 +783,12 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                     log.debug(e.getMessage());
                 }
             }
-            def = (QNodeTypeDefinition) nodetypeDefinitions.get(key);
+            def = nodetypeDefinitions.get(key);
             return def;
         }
 
         public QNodeTypeDefinition remove(Object key) {
-            return (QNodeTypeDefinition) nodetypeDefinitions.remove(key);
+            return nodetypeDefinitions.remove(key);
         }
 
         //-------------------------------------------------------< Dumpable >---
