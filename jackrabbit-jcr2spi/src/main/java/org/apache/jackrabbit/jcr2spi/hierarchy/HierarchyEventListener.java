@@ -82,9 +82,8 @@ public class HierarchyEventListener implements InternalEventListener {
 
     /**
      * Processes <code>events</code> and invalidates cached <code>ItemState</code>s
-     * accordingly. Note that this performed for both local and non-local changes,
-     * since workspace operations are reported as local changes as well and
-     * might have invoked changes (autocreated items etc.).
+     * accordingly. Note that this is performed for local changes only,
+     * since workspace operations are reported as local and have been applied already.
      *
      * @param eventBundle the events.
      * @see InternalEventListener#onEvent(EventBundle)
