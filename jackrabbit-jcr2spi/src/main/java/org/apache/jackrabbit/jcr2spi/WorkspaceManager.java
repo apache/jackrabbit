@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -114,9 +115,6 @@ import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import EDU.oswego.cs.dl.util.concurrent.Mutex;
-import EDU.oswego.cs.dl.util.concurrent.Sync;
-
 /**
  * <code>WorkspaceManager</code>...
  */
@@ -140,11 +138,11 @@ public class WorkspaceManager
     private final ItemDefinitionProvider definitionProvider;
 
     /**
-     * Mutex to synchronize the feed thread with client
+     * Semaphore to synchronize the feed thread with client
      * threads that call {@link #execute(Operation)} or {@link
      * #execute(ChangeLog)}.
      */
-    private final Sync updateSync = new Mutex();
+    private final Semaphore updateSync = new Semaphore(1);
 
     /**
      * This is the event polling for changes. If <code>null</code>
@@ -197,8 +195,7 @@ public class WorkspaceManager
         InternalEventListener listener = createHierarchyListener(hierarchyManager);
         if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
             addEventListener(listener);
-        }
-        else {
+        } else {
             listeners.add(listener);
         }
     }
@@ -607,6 +604,11 @@ public class WorkspaceManager
     public synchronized void dispose() {
         try {
             updateSync.acquire();
+        } catch (InterruptedException e) {
+            log.warn("Exception while disposing WorkspaceManager: " + e);
+            return;
+        }
+        try {
             if (changeFeed != null) {
                 disposeChangeFeed = true;
                 changeFeed.interrupt();

@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.spi.Name;
-
-import java.util.TreeSet;
-import java.util.HashMap;
-import java.util.ArrayList;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Implements an effective node type cache that uses a bit set for storing the
@@ -63,7 +62,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      * be stored in the node type registry since only registered node type names
      * are allowed in the keys.
      */
-    private final ConcurrentReaderHashMap nameIndex = new ConcurrentReaderHashMap();
+    private final ConcurrentHashMap<Name, Integer> nameIndex = new ConcurrentHashMap<Name, Integer>();
 
     /**
      * The reverse lookup table for bit numbers to names
@@ -166,13 +165,13 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      * @return the bit number for the given name
      */
     private int getBitNumber(Name name) {
-        Integer i = (Integer) nameIndex.get(name);
+        Integer i = nameIndex.get(name);
         if (i == null) {
             synchronized (nameIndex) {
-                i = (Integer) nameIndex.get(name);
+                i = nameIndex.get(name);
                 if (i == null) {
                     int idx = nameIndex.size();
-                    i = new Integer(idx);
+                    i = idx;
                     nameIndex.put(name, i);
                     if (idx >= names.length) {
                         Name[] newNames = new Name[names.length*2];
@@ -183,7 +182,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                 }
             }
         }
-        return i.intValue();
+        return i;
     }
 
     /**
@@ -217,6 +216,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * @see Cloneable#clone()
      */
+    @Override
     public Object clone() {
         BitsetENTCacheImpl clone = new BitsetENTCacheImpl();
         clone.sortedKeys.addAll(sortedKeys);
@@ -453,6 +453,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         /**
          * @see Object#equals(Object)
          */
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -479,6 +480,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         /**
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             return hashCode;
         }
@@ -486,6 +488,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         /**
          * @see Object#toString()
          */
+        @Override
         public String toString() {
             StringBuffer buf = new StringBuffer("w=");
             buf.append(names.length);
