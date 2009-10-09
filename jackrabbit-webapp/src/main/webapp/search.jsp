@@ -69,12 +69,12 @@
             String stmt;
             if (q.startsWith("related:")) {
                 String path = q.substring("related:".length());
-                stmt = "//element(*, nt:file)[rep:similar(jcr:content, '" + path + "/jcr:content')]/rep:excerpt(.)";
+                stmt = "//element(*, nt:file)[rep:similar(jcr:content, '" + path + "/jcr:content')]/rep:excerpt(.) order by @jcr:score descending";
                 queryTerms = "similar to <b>" + Text.encodeIllegalXMLCharacters(path) + "</b>";
             } else {
                 queryTerms = "for <b>" + Text.encodeIllegalXMLCharacters(q) + "</b>";
                 q = q.replaceAll("'", "''");
-                stmt = "//element(*, nt:file)[jcr:contains(jcr:content, '" + q + "')]/rep:excerpt(.)";
+                stmt = "//element(*, nt:file)[jcr:contains(jcr:content, '" + q + "')]/rep:excerpt(.) order by @jcr:score descending";
             }
             Query query = jcrSession.getWorkspace().getQueryManager().createQuery(stmt, Query.XPATH);
             long time = System.currentTimeMillis();
