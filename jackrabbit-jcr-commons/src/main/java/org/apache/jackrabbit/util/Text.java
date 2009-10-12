@@ -484,7 +484,7 @@ public class Text {
     }
 
     /**
-     * Escapes all illegal XPath search characters of a string.
+     * Escapes illegal XPath search characters at the end of a string.
      * <p>Example:<br>
      * A search string like 'test?' will run into a ParseException
      * documented in http://issues.apache.org/jira/browse/JCR-1248
@@ -498,8 +498,7 @@ public class Text {
         char c = s.charAt(s.length() - 1);
         // NOTE: keep this in sync with _ESCAPED_CHAR below!
         if (c == '!' || c == '(' || c == ':' || c == '^'
-            || c == '[' || c == ']' || c == '\"' || c == '{'
-            || c == '}' || c == '?') {
+            || c == '[' || c == ']' || c == '{' || c == '}' || c == '?') {
             sb.append('\\');
         }
         sb.append(c);
