@@ -66,11 +66,30 @@ public abstract class AbstractLoginModule implements LoginModule {
     private static final String KEY_CREDENTIALS = "org.apache.jackrabbit.credentials";
     private static final String KEY_LOGIN_NAME = "javax.security.auth.login.name";
 
+    /**
+     * The name of the login module configuration option providing the name
+     * of the SimpleCredentials attribute used to identify a pre-authenticated
+     * login.
+     *
+     * @see #isPreAuthenticated(Credentials)
+     */
+    private static final String PRE_AUTHENTICATED_ATTRIBUTE_OPTION = "trust_credentials_attribute";
+
     private String principalProviderClassName;
-    private boolean initialized; 
+    private boolean initialized;
 
     protected String adminId;
     protected String anonymousId;
+
+    /**
+     * The name of the credentials attribute providing a hint that the
+     * credentials should be taken as is and the user requesting access
+     * has already been authenticated outside of this LoginModule.
+     *
+     * @see #getTrustedCredentialsAttributeName()
+     */
+    private String preAuthAttributeName;
+
 
     protected CallbackHandler callbackHandler;
 
@@ -154,6 +173,14 @@ public abstract class AbstractLoginModule implements LoginModule {
             if (anonymousId == null) {
                 anonymousId = repositoryCb.getAnonymousId();
             }
+            // trusted credentials attribute name (may be missing to not
+            // support) (normalized to null aka missing aka unset if an empty
+            // string)
+            preAuthAttributeName = (String) options.get(PRE_AUTHENTICATED_ATTRIBUTE_OPTION);
+            if (preAuthAttributeName != null
+                && preAuthAttributeName.length() == 0) {
+                preAuthAttributeName = null;
+            }
 
             //log config values for debug
             if (log.isDebugEnabled()) {
@@ -221,12 +248,15 @@ public abstract class AbstractLoginModule implements LoginModule {
      * be used.<p/>
      *
      * <b>3) Verfication</b><br>
-     * There are two cases, how the User-ID can be verfied:
-     * Either the login is the result of an impersonation request (see
-     * {@link javax.jcr.Session#impersonate(Credentials)} or of a login to the Repository ({@link
-     * javax.jcr.Repository#login(Credentials)}). The concrete implementation
-     * of the LoginModule is responsible for both impersonation and login:
+     * There are four cases, how the User-ID can be verfied:
+     * The login is anonymous, preauthenticated or the login is the result of
+     * an impersonation request (see {@link javax.jcr.Session#impersonate(Credentials)}
+     * or of a login to the Repository ({@link javax.jcr.Repository#login(Credentials)}).
+     * The concrete implementation of the LoginModule is responsible for all
+     * four cases:
      * <ul>
+     * <li>{@link #isAnonymous(Credentials)}</li>
+     * <li>{@link #isPreAuthenticated(Credentials)}</li>
      * <li>{@link #authenticate(Principal, Credentials)}</li>
      * <li>{@link #impersonate(Principal, Credentials)}</li>
      * </ul>
@@ -276,8 +306,8 @@ public abstract class AbstractLoginModule implements LoginModule {
                 return false;
             }
             boolean authenticated;
-            // test for anonymous, impersonation or common authentication.
-            if (isAnonymous(creds)) {
+            // test for anonymous, pre-authentication, impersonation or common authentication.
+            if (isAnonymous(creds) || isPreAuthenticated(creds)) {
                 authenticated = true;
             } else if (isImpersonation(creds)) {
                 authenticated = impersonate(userPrincipal, creds);
@@ -704,5 +734,45 @@ public abstract class AbstractLoginModule implements LoginModule {
      */
     public void setPrincipalProvider(String principalProvider) {
         this.principalProviderClassName = principalProvider;
+    }
+
+    /**
+     * The name of the credentials attribute providing a hint that the
+     * credentials should be taken as is and the user requesting access
+     * has already been authenticated outside of this LoginModule.
+     * <p>
+     * This name is configured as the value of the LoginModule configuration
+     * parameter <code>trust_credentials_attribute</code>. If the configuration
+     * parameter is missing (or empty) the name is not set and this method
+     * returns <code>null</code>.
+     *
+     * @see #isPreAuthenticated(Credentials)
+     */
+    protected final String getPreAuthAttributeName() {
+        return preAuthAttributeName;
+    }
+
+    /**
+     * Returns <code>true</code> if the credentials should be considered as
+     * pre-authenticated and a password check is not required.
+     * <p>
+     * This base class implementation returns <code>true</code> if the
+     * <code>creds</code> object is a SimpleCredentials instance and the
+     * configured {@link #getTrustedCredentialsAttributeName() trusted
+     * credentials property} is set to a non-<code>null</code> value in the
+     * credentials attributes.
+     * <p>
+     * Extensions of this class may overwrite this method to apply more or
+     * different checks to the credentials.
+     *
+     * @param creds The Credentials to check
+     *
+     * @see #getPreAuthAttributeName()
+     */
+    protected boolean isPreAuthenticated(final Credentials creds) {
+        final String preAuthAttrName = getPreAuthAttributeName();
+        return preAuthAttrName != null
+            && (creds instanceof SimpleCredentials)
+            && ((SimpleCredentials) creds).getAttribute(preAuthAttrName) != null;
     }
 }
