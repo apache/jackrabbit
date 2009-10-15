@@ -21,6 +21,7 @@ import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.StaticOperand;
 
+import org.apache.jackrabbit.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**

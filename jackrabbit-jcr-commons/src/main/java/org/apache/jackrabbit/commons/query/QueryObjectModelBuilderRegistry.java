@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.query;
+package org.apache.jackrabbit.commons.query;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -27,18 +27,10 @@ import java.util.Collections;
 import javax.imageio.spi.ServiceRegistry;
 import javax.jcr.query.InvalidQueryException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Implements a central access to QueryObjectModelBuilder instances.
  */
 public class QueryObjectModelBuilderRegistry {
-
-    /**
-     * Logger instance for this class.
-     */
-    private static final Logger log = LoggerFactory.getLogger(QueryObjectModelBuilderRegistry.class);
 
     /**
      * List of <code>QueryObjectModelBuilder</code> instances known to the classloader.
@@ -52,16 +44,12 @@ public class QueryObjectModelBuilderRegistry {
 
     static {
         Set<String> languages = new HashSet<String>();
-        try {
-            Iterator<QueryObjectModelBuilder> it = ServiceRegistry.lookupProviders(QueryObjectModelBuilder.class,
-                    QueryObjectModelBuilder.class.getClassLoader());
-            while (it.hasNext()) {
-                QueryObjectModelBuilder builder = it.next();
-                BUILDERS.add(builder);
-                languages.addAll(Arrays.asList(builder.getSupportedLanguages()));
-            }
-        } catch (Error e) {
-            log.warn("Unable to load providers for QueryObjectModelBuilder: " + e);
+        Iterator<QueryObjectModelBuilder> it = ServiceRegistry.lookupProviders(QueryObjectModelBuilder.class,
+                QueryObjectModelBuilder.class.getClassLoader());
+        while (it.hasNext()) {
+            QueryObjectModelBuilder builder = it.next();
+            BUILDERS.add(builder);
+            languages.addAll(Arrays.asList(builder.getSupportedLanguages()));
         }
         LANGUAGES = Collections.unmodifiableSet(languages);
     }

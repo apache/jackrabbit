@@ -16,32 +16,33 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import org.apache.jackrabbit.core.util.DOMBuilder;
-import org.apache.jackrabbit.core.value.InternalValueFactory;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Arrays;
+
+import org.apache.jackrabbit.commons.query.qom.Operator;
+import org.apache.jackrabbit.core.util.DOMBuilder;
+import org.apache.jackrabbit.core.value.InternalValueFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 
 /**
  * Node type definition writer. This class is used to write the

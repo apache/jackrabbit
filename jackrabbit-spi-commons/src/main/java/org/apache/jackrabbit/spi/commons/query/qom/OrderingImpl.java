@@ -20,6 +20,7 @@ import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 
+import org.apache.jackrabbit.commons.query.qom.Order;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**

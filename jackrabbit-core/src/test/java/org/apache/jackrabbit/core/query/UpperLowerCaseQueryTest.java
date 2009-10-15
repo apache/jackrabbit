@@ -26,7 +26,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.commons.query.qom.Operator;
 
 /**
  * <code>UpperLowerCaseQueryTest</code> tests the functions fn:lower-case() and

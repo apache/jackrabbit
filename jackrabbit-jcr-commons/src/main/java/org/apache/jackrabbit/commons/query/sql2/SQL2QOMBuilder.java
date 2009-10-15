@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.query.sql2;
+package org.apache.jackrabbit.commons.query.sql2;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import javax.jcr.query.Query;
 import javax.jcr.ValueFactory;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilder;
+import org.apache.jackrabbit.commons.query.QueryObjectModelBuilder;
 
 /**
  * <code>SQL2QOMBuilder</code> implements QOM builder that understands

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.jackrabbit.commons.query.qom.JoinType;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.query.lucene.HierarchyResolver;
 import org.apache.jackrabbit.core.query.lucene.MultiColumnQueryHits;
@@ -32,7 +33,6 @@ import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.SortComparatorSource;

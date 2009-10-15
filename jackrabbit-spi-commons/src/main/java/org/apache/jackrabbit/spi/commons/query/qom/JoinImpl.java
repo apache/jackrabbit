@@ -20,6 +20,7 @@ import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.Source;
 
+import org.apache.jackrabbit.commons.query.qom.JoinType;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**

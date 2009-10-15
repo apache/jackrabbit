@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.PropertyType;
+import javax.jcr.nodetype.PropertyDefinition;
 
+import org.apache.jackrabbit.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
 
 /**

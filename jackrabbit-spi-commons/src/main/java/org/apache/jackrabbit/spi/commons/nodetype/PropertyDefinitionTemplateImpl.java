@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.PropertyType;

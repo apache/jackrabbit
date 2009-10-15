@@ -16,11 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.Path;
-
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.BindVariableValue;
@@ -56,8 +53,13 @@ import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
+
+import org.apache.jackrabbit.commons.query.qom.JoinType;
+import org.apache.jackrabbit.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**
  * <code>QueryObjectModelFactoryImpl</code> implements the query object model
