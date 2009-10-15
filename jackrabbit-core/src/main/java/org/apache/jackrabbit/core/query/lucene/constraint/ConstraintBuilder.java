@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
-import java.util.Map;
 import java.net.URLDecoder;
+import java.util.Map;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -26,6 +26,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 import javax.jcr.query.InvalidQueryException;
 
+import org.apache.jackrabbit.commons.query.qom.Operator;
 import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.qom.AndImpl;
@@ -33,6 +34,7 @@ import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ComparisonImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ConstraintImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
@@ -43,7 +45,6 @@ import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NotImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.query.qom.OrImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
@@ -51,7 +52,6 @@ import org.apache.jackrabbit.spi.commons.query.qom.SameNodeImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.StaticOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 
 /**
  * <code>ConstraintBuilder</code> builds a {@link Constraint} from a tree of

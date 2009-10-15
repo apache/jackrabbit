@@ -21,10 +21,10 @@ import java.io.IOException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
+import org.apache.jackrabbit.commons.query.qom.Operator;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.query.lucene.Util;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 
 /**

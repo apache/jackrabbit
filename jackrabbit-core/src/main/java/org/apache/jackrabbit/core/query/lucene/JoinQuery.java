@@ -18,12 +18,12 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 
-import org.apache.lucene.search.SortComparatorSource;
-import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.query.lucene.join.Join;
+import org.apache.jackrabbit.commons.query.qom.JoinType;
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.query.lucene.join.Join;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.SortComparatorSource;
 
 /**
  * <code>JoinQuery</code> implements a query that performs a join.

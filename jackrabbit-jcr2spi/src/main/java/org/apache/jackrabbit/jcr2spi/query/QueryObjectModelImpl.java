@@ -16,31 +16,31 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
-import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.Source;
-import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.Ordering;
-import javax.jcr.query.qom.Column;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.Column;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.Source;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
 import org.apache.jackrabbit.jcr2spi.ItemManager;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilderRegistry;
 
 /**
  * <code>QueryObjectModelImpl</code> implements the jcr2spi query object model.

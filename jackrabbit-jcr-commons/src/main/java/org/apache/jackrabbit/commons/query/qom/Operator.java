@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.query.qom;
+package org.apache.jackrabbit.commons.query.qom;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.Comparison;

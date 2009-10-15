@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.query.sql2;
+package org.apache.jackrabbit.commons.query.sql2;
 
 import java.util.BitSet;
 import java.util.Arrays;

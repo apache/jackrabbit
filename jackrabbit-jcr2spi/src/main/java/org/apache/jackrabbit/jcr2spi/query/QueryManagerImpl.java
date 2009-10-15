@@ -16,16 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
-import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilderRegistry;
-import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilder;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -33,8 +23,18 @@ import javax.jcr.ValueFactory;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
-import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+
+import org.apache.jackrabbit.commons.query.QueryObjectModelBuilder;
+import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
+import org.apache.jackrabbit.jcr2spi.ItemManager;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
  * This class implements the {@link QueryManager} interface.

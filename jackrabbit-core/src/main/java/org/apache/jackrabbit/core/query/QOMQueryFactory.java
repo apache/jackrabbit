@@ -25,7 +25,7 @@ import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 
-import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilderRegistry;
+import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
 
 /**
  * <code>QOMQueryFactory</code> implements a query factory that creates QOM
