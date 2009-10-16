@@ -485,6 +485,8 @@ class XAEnvironment {
                 LockInfo xaEnvLock = getLockInfo(node);
                 // Check if the lockToken has been removed in the transaction ...
                 if (xaEnvLock != null && xaEnvLock.getLockHolder() == null) {
+                    //Remove lockToken from SessionLockManager
+                    getSessionLockManager(internalLock.getLockHolder()).lockTokenRemoved(internalLock.getLockToken());
                     internalLock.setLockHolder(null);
                 }
             }
