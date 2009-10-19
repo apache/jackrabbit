@@ -552,7 +552,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                                 className, parseParameters(element));
 
                         QueryHandler handler =
-                            (QueryHandler) config.newInstance();
+                            config.newInstance(QueryHandler.class);
                         try {
                             handler.init(fs, context);
                             return handler;
@@ -622,14 +622,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             public ISMLocking getISMLocking() throws RepositoryException {
                 Element element = getElement(parent, ISM_LOCKING_ELEMENT, false);
                 if (element != null) {
-                    BeanConfig config = parseBeanConfig(element);
-                    try {
-                        return (ISMLocking) config.newInstance();
-                    } catch (ClassCastException e) {
-                        throw new RepositoryException(
-                                "Invalid ISMLocking class: "
-                                + config.getClassName(), e);
-                    }
+                    return parseBeanConfig(element).newInstance(ISMLocking.class);
                 } else {
                     return new DefaultISMLocking();
                 }
@@ -764,25 +757,18 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             public Journal getJournal(NamespaceResolver resolver)
                     throws RepositoryException {
                 BeanConfig config = parseBeanConfig(cluster, JOURNAL_ELEMENT);
-                Object object = config.newInstance();
-                if (object instanceof Journal) {
-                    Journal journal = (Journal) object;
-                    if (journal instanceof AbstractJournal) {
-                        ((AbstractJournal) journal).setRepositoryHome(home);
-                    }
-                    try {
-                        journal.init(id, resolver);
-                    } catch (JournalException e) {
-                        // TODO: Should JournalException extend RepositoryException?
-                        throw new RepositoryException(
-                                "Journal initialization failed: " + journal, e);
-                    }
-                    return journal;
-                } else {
-                    throw new RepositoryException(
-                            "Invalid Journal implementation class: "
-                            + config.getClassName());
+                Journal journal = config.newInstance(Journal.class);
+                if (journal instanceof AbstractJournal) {
+                    ((AbstractJournal) journal).setRepositoryHome(home);
                 }
+                try {
+                    journal.init(id, resolver);
+                } catch (JournalException e) {
+                    // TODO: Should JournalException extend RepositoryException?
+                    throw new RepositoryException(
+                            "Journal initialization failed: " + journal, e);
+                }
+                return journal;
             }
         };
     }
@@ -816,7 +802,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                             && DATA_STORE_ELEMENT.equals(child.getNodeName())) {
                         BeanConfig bc =
                             parseBeanConfig(parent, DATA_STORE_ELEMENT);
-                        DataStore store = (DataStore) bc.newInstance();
+                        DataStore store = bc.newInstance(DataStore.class);
                         store.init(directory);
                         return store;
                     }
@@ -846,7 +832,6 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     protected RepositoryLockMechanismFactory getRepositoryLockMechanismFactory(final Element root) {
         return new RepositoryLockMechanismFactory() {
             public RepositoryLockMechanism getRepositoryLockMechanism() throws RepositoryException {
-                RepositoryLockMechanism lock = null;
                 NodeList children = root.getChildNodes();
                 for (int i = 0; i < children.getLength(); i++) {
                     Node child = children.item(i);
@@ -854,14 +839,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                             && REPOSITORY_LOCK_MECHANISM_ELEMENT.equals(child.getNodeName())) {
                         BeanConfig bc =
                             parseBeanConfig(root, REPOSITORY_LOCK_MECHANISM_ELEMENT);
-                        lock = (RepositoryLockMechanism) bc.newInstance();
-                        break;
+                        return bc.newInstance(RepositoryLockMechanism.class);
                     }
                 }
-                if (lock == null) {
-                    lock = new RepositoryLock();
-                }
-                return lock;
+                return new RepositoryLock();
             }
         };
     }
@@ -908,13 +889,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         return new FileSystemFactory() {
             public FileSystem getFileSystem() throws RepositoryException {
                 try {
-                    FileSystem fs = (FileSystem) config.newInstance();
+                    FileSystem fs = config.newInstance(FileSystem.class);
                     fs.init();
                     return fs;
-                } catch (ClassCastException e) {
-                    throw new RepositoryException(
-                            "Invalid file system implementation class: "
-                            + config.getClassName(), e);
                 } catch (FileSystemException e) {
                     throw new RepositoryException(
                             "File system initialization failure.", e);
