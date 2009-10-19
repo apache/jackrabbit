@@ -16,23 +16,29 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.commons.collections.BeanMap;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Properties;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * Bean configuration class. BeanConfig instances contain the class name
  * and property information required to instantiate a class that conforms
  * with the JavaBean conventions.
  */
-public class BeanConfig<T> {
+public class BeanConfig {
 
     private static Logger log = LoggerFactory.getLogger(BeanConfig.class);
 
@@ -151,38 +157,40 @@ public class BeanConfig<T> {
      * @return new bean instance
      * @throws ConfigurationException on bean configuration errors
      */
-    public Object newInstance() throws ConfigurationException {
+    @SuppressWarnings("unchecked")
+    public <T> T newInstance(Class<T> klass) throws ConfigurationException {
         try {
-            // Instantiate the object using the default constructor
             Class<?> objectClass =
                 Class.forName(getClassName(), true, getClassLoader());
-            Object object = objectClass.newInstance();
+            if (!klass.isAssignableFrom(objectClass)) {
+                throw new ConfigurationException(
+                        "Configured class "+getClassName()
+                        + " does not implement " + klass.getName()
+                        + ". Please fix the repository configuration.");
+            }
+
+            // Instantiate the object using the default constructor
+            Object instance = objectClass.newInstance();
 
             // Set all configured bean properties
-            BeanMap map = new BeanMap(object);
-            for (Object key : map.keySet()) {
-                String value = properties.getProperty(key.toString());
+            List<?> names = Collections.list(properties.propertyNames());
+            BeanInfo info = Introspector.getBeanInfo(objectClass, Object.class);
+            for (PropertyDescriptor property : info.getPropertyDescriptors()) {
+                String value = properties.getProperty(property.getName());
                 if (value != null) {
-                    map.put(key, value);
+                    setProperty(instance, property, value);
+                    names.remove(property.getName());
                 }
             }
 
-            if (validate) {
-                // Check that no invalid property names were configured
-                for (Object key : properties.keySet()) {
-                    if (!map.containsKey(key)
-                            && properties.getProperty(key.toString()) != null) {
-                        String msg =
-                            "Configured class " + object.getClass().getName()
-                            + " does not contain the property " + key
-                            + ". Please fix the repository configuration.";
-                        log.error(msg);
-                        throw new ConfigurationException(msg);
-                    }
-                }
+            // Check that no invalid property names were configured
+            if (validate && !names.isEmpty()) {
+                throw new ConfigurationException(
+                        "Configured class " + getClassName()
+                        + " does not contain the properties " + names);
             }
 
-            return (T) object;
+            return (T) instance;
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(
                     "Configured bean implementation class " + getClassName()
@@ -195,6 +203,71 @@ public class BeanConfig<T> {
             throw new ConfigurationException(
                     "Configured bean implementation class " + getClassName()
                     + " is protected.", e);
+        } catch (IntrospectionException e) {
+            throw new ConfigurationException(
+                    "Configured bean implementation class " + getClassName()
+                    + " can not be introspected", e);
+        }
+    }
+
+    private void setProperty(
+            Object instance, PropertyDescriptor property, String value)
+            throws ConfigurationException {
+        Method method = property.getWriteMethod();
+        if (method == null) {
+            throw new ConfigurationException(
+                    "Property " + property.getName() + " of class "
+                    + getClassName() + " can not be written"); 
+        }
+
+        Class<?>[] types = method.getParameterTypes();
+        if (types.length != 1) {
+            throw new ConfigurationException(
+                    "Property " + property.getName() + " of class "
+                    + getClassName() + " has an invalid setter");
+        }
+
+        Class<?> type = types[0];
+        try {
+            if (types[0].isAssignableFrom(String.class)
+                || types[0].isAssignableFrom(Object.class)) {
+                method.invoke(instance, value);
+            } else if (types[0].isAssignableFrom(Boolean.TYPE)
+                    || types[0].isAssignableFrom(Boolean.class)) {
+                method.invoke(instance, Boolean.valueOf(value));
+            } else if (types[0].isAssignableFrom(Integer.TYPE)
+                    || types[0].isAssignableFrom(Integer.class)) {
+                method.invoke(instance, Integer.valueOf(value));
+            } else if (types[0].isAssignableFrom(Long.TYPE)
+                    || types[0].isAssignableFrom(Long.class)) {
+                method.invoke(instance, Long.valueOf(value));
+            } else if (types[0].isAssignableFrom(Double.TYPE)
+                    || types[0].isAssignableFrom(Double.class)) {
+                method.invoke(instance, Double.valueOf(value));
+            } else {
+                throw new ConfigurationException(
+                        "The type (" + type.getName()
+                        + ") of property " + property.getName() + " of class "
+                        + getClassName() + " is not supported");
+            }
+        } catch (NumberFormatException e) {
+            throw new ConfigurationException(
+                    "Invalid number format (" + value + ") for property "
+                    + property.getName() + " of class " + getClassName(), e);
+        } catch (InvocationTargetException e) {
+            throw new ConfigurationException(
+                    "Property " + property.getName() + " of class "
+                    + getClassName() + " can not be set to \"" + value + "\"",
+                    e);
+        } catch (IllegalAccessException e) {
+            throw new ConfigurationException(
+                    "The setter of property " + property.getName()
+                    + " of class " + getClassName() + " can not be accessed",
+                    e);
+        } catch (IllegalArgumentException e) {
+            throw new ConfigurationException(
+                    "Unable to call the setter of property "
+                    + property.getName() + " of class " + getClassName(), e);
         }
     }
 
