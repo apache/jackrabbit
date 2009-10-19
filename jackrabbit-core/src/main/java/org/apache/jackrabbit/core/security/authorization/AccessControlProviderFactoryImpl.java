@@ -74,7 +74,7 @@ public class AccessControlProviderFactoryImpl implements AccessControlProviderFa
         Map props;
         if (config != null && config.getAccessControlProviderConfig() != null) {
             BeanConfig bc = config.getAccessControlProviderConfig();
-            prov = bc.newInstance(AccessControlProvider.class);
+            prov = (AccessControlProvider) bc.newInstance();
             props = bc.getParameters();
         } else {
             log.debug("No ac-provider configuration for workspace " + workspaceName + " -> using defaults.");
