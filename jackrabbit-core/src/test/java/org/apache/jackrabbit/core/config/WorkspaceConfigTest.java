@@ -64,7 +64,7 @@ public class WorkspaceConfigTest extends TestCase {
         if (ws != null) {
             BeanConfig ppfConfig =  ws.getAccessControlProviderConfig();
             if (ppfConfig != null) {
-                ppfConfig.newInstance(AccessControlProvider.class);
+                AccessControlProvider prov = (AccessControlProvider) ppfConfig.newInstance();
             }
         }
     }

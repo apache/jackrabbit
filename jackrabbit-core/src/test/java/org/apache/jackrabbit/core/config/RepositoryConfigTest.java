@@ -213,8 +213,7 @@ public class RepositoryConfigTest extends TestCase {
 
         BeanConfig bc = smc.getWorkspaceAccessConfig();
         if (bc != null) {
-            WorkspaceAccessManager wac =
-                smc.getWorkspaceAccessConfig().newInstance(WorkspaceAccessManager.class);
+            WorkspaceAccessManager wac = (WorkspaceAccessManager) smc.getWorkspaceAccessConfig().newInstance();
             assertEquals("org.apache.jackrabbit.core.security.simple.SimpleWorkspaceAccessManager", wac.getClass().getName());
         }
 
