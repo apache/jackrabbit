@@ -87,7 +87,7 @@ public class AccessControlProviderFactoryImpl implements AccessControlProviderFa
                 prov = new ACLProvider();
             }
             log.debug("Default provider for workspace " + workspaceName + " = " + prov.getClass().getName());
-            props = Collections.EMPTY_MAP;
+            props = Collections.emptyMap();
         }
 
         prov.init(systemSession, props);
