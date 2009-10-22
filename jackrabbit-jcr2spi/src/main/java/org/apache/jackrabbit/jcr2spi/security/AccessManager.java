@@ -33,10 +33,10 @@ public interface AccessManager {
     /**
      * predefined action constants
      */
-    public String READ_ACTION = "read";
-    public String REMOVE_ACTION = "remove";
-    public String ADD_NODE_ACTION = "add_node";
-    public String SET_PROPERTY_ACTION = "set_property";
+    public String READ_ACTION = javax.jcr.Session.ACTION_READ;
+    public String REMOVE_ACTION = javax.jcr.Session.ACTION_REMOVE;
+    public String ADD_NODE_ACTION = javax.jcr.Session.ACTION_ADD_NODE;
+    public String SET_PROPERTY_ACTION = javax.jcr.Session.ACTION_SET_PROPERTY;
 
     public String[] READ = new String[] {READ_ACTION};
     public String[] REMOVE = new String[] {REMOVE_ACTION};
