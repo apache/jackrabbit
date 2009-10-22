@@ -86,7 +86,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * credentials should be taken as is and the user requesting access
      * has already been authenticated outside of this LoginModule.
      *
-     * @see #getTrustedCredentialsAttributeName()
+     * @see #getPreAuthAttributeName()
      */
     private String preAuthAttributeName;
 
@@ -410,8 +410,8 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @see javax.security.auth.spi.LoginModule#logout()
      */
     public boolean logout() throws LoginException {
-        Set thisPrincipals = subject.getPrincipals();
-        Set thisCredentials = subject.getPublicCredentials(SimpleCredentials.class);
+        Set<Principal> thisPrincipals = subject.getPrincipals();
+        Set<SimpleCredentials> thisCredentials = subject.getPublicCredentials(SimpleCredentials.class);
         if (thisPrincipals == null || thisCredentials == null
                 || thisPrincipals.isEmpty() || thisCredentials.isEmpty()) {
             return false;
@@ -758,7 +758,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * <p>
      * This base class implementation returns <code>true</code> if the
      * <code>creds</code> object is a SimpleCredentials instance and the
-     * configured {@link #getTrustedCredentialsAttributeName() trusted
+     * configured {@link #getPreAuthAttributeName() trusted
      * credentials property} is set to a non-<code>null</code> value in the
      * credentials attributes.
      * <p>
