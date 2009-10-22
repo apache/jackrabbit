@@ -36,7 +36,7 @@ public interface Impersonation {
      * @return An iterator over the <code>Principal</code>s that are allowed
      * to impersonate the <code>User</code> this <code>Impersonation</code>
      * object has been created for.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     PrincipalIterator getImpersonators() throws RepositoryException;
 
@@ -46,15 +46,16 @@ public interface Impersonation {
      * @return true if the specified <code>Principal</code> has not been allowed
      * to impersonate before and if impersonation has been successfully
      * granted to it, false otherwise.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean grantImpersonation(Principal principal) throws RepositoryException;
 
     /**
-     * @param principal
+     * @param principal The principal that should no longer be allowed to
+     * impersonate.
      * @return If the granted impersonation has been successfully revoked for
      * the given principal; false otherwise.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean revokeImpersonation(Principal principal) throws RepositoryException;
 
@@ -65,7 +66,7 @@ public interface Impersonation {
      * @param subject to impersonate.
      * @return true if this <code>Impersonation</code> allows the specified
      * Subject to impersonate.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean allows(Subject subject) throws RepositoryException;
 }
