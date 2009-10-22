@@ -69,11 +69,14 @@ public class UserTest extends AbstractUserTest {
         User user = getTestUser(superuser);
         try {
             user.changePassword("pw");
+            save(superuser);
+            
             // make sure the user can login with the new pw
             Session s = getHelper().getRepository().login(new SimpleCredentials(user.getID(), "pw".toCharArray()));
             s.logout();
         } finally {
             user.changePassword(oldPw);
+            save(superuser);
         }
     }
 
@@ -87,6 +90,7 @@ public class UserTest extends AbstractUserTest {
         User user = getTestUser(superuser);
         try {
             user.changePassword("pw");
+            save(superuser);
 
             Session s = getHelper().getRepository().login(new SimpleCredentials(user.getID(), oldPw.toCharArray()));
             s.logout();
@@ -95,6 +99,7 @@ public class UserTest extends AbstractUserTest {
             // success
         } finally {
             user.changePassword(oldPw);
+            save(superuser);
         }
     }
 }

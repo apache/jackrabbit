@@ -356,7 +356,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      *                               read the said item
      * @throws RepositoryException   if another error occurs
      */
-    private ItemData getItemData(ItemId itemId, Path path, boolean permissionCheck)
+    ItemData getItemData(ItemId itemId, Path path, boolean permissionCheck)
             throws ItemNotFoundException, AccessDeniedException,
             RepositoryException {
         ItemData data = retrieveItem(itemId);

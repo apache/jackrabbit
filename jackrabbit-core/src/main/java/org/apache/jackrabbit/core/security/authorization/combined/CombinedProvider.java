@@ -81,6 +81,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     /**
      * @see AccessControlProvider#close()
      */
+    @Override
     public void close() {
         for (AccessControlProvider provider : providers) {
             provider.close();
@@ -91,6 +92,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     /**
      * @see AccessControlProvider#init(javax.jcr.Session, java.util.Map)
      */
+    @Override
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
 
@@ -207,6 +209,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
         /**
          * @see AbstractCompiledPermissions#buildResult(Path)
          */
+        @Override
         protected Result buildResult(Path absPath) throws RepositoryException {
             Result res = null;
             for (AbstractCompiledPermissions acp : cPermissions) {
@@ -219,6 +222,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
         /**
          * @see AbstractCompiledPermissions#getResult(Path)
          */
+        @Override
         public Result getResult(Path absPath) throws RepositoryException {
             // TODO: missing caching
             return buildResult(absPath);
@@ -228,10 +232,11 @@ public class CombinedProvider extends AbstractAccessControlProvider {
         /**
          * @see CompiledPermissions#close()
          */
+        @Override
         public synchronized void close() {
             // close all c-permissions retained in the list and clear the list.
-            for (Iterator it = cPermissions.iterator(); it.hasNext();) {
-                CompiledPermissions cp = (CompiledPermissions) it.next();
+            for (Iterator<AbstractCompiledPermissions> it = cPermissions.iterator(); it.hasNext();) {
+                CompiledPermissions cp = it.next();
                 cp.close();
                 it.remove();
             }

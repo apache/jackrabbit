@@ -29,6 +29,7 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Node;
 import java.security.Principal;
 import java.util.Iterator;
 
@@ -45,6 +46,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
     private String otherUID2;
     private String grID;
 
+    private String groupsPath;
 
     private Group groupAdmin;
 
@@ -54,6 +56,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         // create a first user
         Principal p = getTestPrincipal();
         UserImpl pUser = (UserImpl) userMgr.createUser(p.getName(), buildPassword(p));
+        save(superuser);
         otherUID = pUser.getID();
 
         // create a second user and make it group-admin
@@ -61,19 +64,23 @@ public class GroupAdministratorTest extends AbstractUserTest {
         String pw = buildPassword(p);
         Credentials creds = buildCredentials(p.getName(), pw);
         User user = userMgr.createUser(p.getName(), pw);
+        save(superuser);
         uID = user.getID();
 
         // make other user a group-administrator:
         Authorizable grAdmin = userMgr.getAuthorizable(UserConstants.GROUP_ADMIN_GROUP_NAME);
         if (grAdmin == null || !grAdmin.isGroup()) {
-            throw new NotExecutableException("Cannot execute test. Group-Admin name has been changed by config.");
+            throw new NotExecutableException("Cannot execute test. No group-administrator group found.");
         }
         groupAdmin = (Group) grAdmin;
         groupAdmin.addMember(user);
+        save(superuser);
         grID = groupAdmin.getID();
 
         // create a session for the grou-admin user.
         uSession = getHelper().getRepository().login(creds);
+
+        groupsPath = (userMgr instanceof UserManagerImpl) ? ((UserManagerImpl) userMgr).getGroupsPath() : UserConstants.GROUPS_PATH;
     }
 
     protected void tearDown() throws Exception {
@@ -90,16 +97,17 @@ public class GroupAdministratorTest extends AbstractUserTest {
             if (a != null) {
                 a.remove();
             }
-
+            save(superuser);
         }
         super.tearDown();
     }
 
-    private String getYetAnotherID() throws RepositoryException {
+    private String getYetAnotherID() throws RepositoryException, NotExecutableException {
         if (otherUID2 == null) {
             // create a third user
             Principal p = getTestPrincipal();
             otherUID2 = userMgr.createUser(p.getName(), buildPassword(p)).getID();
+            save(superuser);
         }
         return otherUID2;
     }
@@ -118,10 +126,15 @@ public class GroupAdministratorTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p));
+            save(uSession);
             fail("Group administrator should not be allowed to create a new user.");
-            u.remove();
         } catch (AccessDeniedException e) {
             // success
+        } finally {
+            if (u != null) {
+                u.remove();
+                save(uSession);
+            }
         }
     }
 
@@ -131,7 +144,21 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Authorizable himself = umgr.getAuthorizable(uID);
         try {
             himself.remove();
+            save(uSession);
             fail("A GroupAdministrator should not be allowed to remove the own authorizable.");
+        } catch (AccessDeniedException e) {
+            // success
+        }
+    }
+
+    public void testRemoveGroupAdmin() throws RepositoryException, NotExecutableException {
+        UserManager umgr = getUserManager(uSession);
+
+        Authorizable groupAdmin = umgr.getAuthorizable(grID);
+        try {
+            groupAdmin.remove();
+            save(uSession);
+            fail("A GroupAdministrator should not be allowed to remove the group admin.");
         } catch (AccessDeniedException e) {
             // success
         }
@@ -142,10 +169,12 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Group testGroup = null;
         try {
             testGroup = umgr.createGroup(getTestPrincipal());
-            assertTrue(Text.isDescendant(UserConstants.GROUPS_PATH, ((GroupImpl)testGroup).getNode().getPath()));
+            save(uSession);
+            assertTrue(Text.isDescendant(groupsPath, ((GroupImpl)testGroup).getNode().getPath()));
         } finally {
             if (testGroup != null) {
                 testGroup.remove();
+                save(uSession);
             }
         }
     }
@@ -155,10 +184,12 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Group testGroup = null;
         try {
             testGroup = umgr.createGroup(getTestPrincipal(), "/any/intermediate/path");
-            assertTrue(Text.isDescendant(UserConstants.GROUPS_PATH + "/any/intermediate/path", ((GroupImpl)testGroup).getNode().getPath()));
+            save(uSession);
+            assertTrue(Text.isDescendant(groupsPath + "/any/intermediate/path", ((GroupImpl)testGroup).getNode().getPath()));
         } finally {
             if (testGroup != null) {
                 testGroup.remove();
+                save(uSession);
             }
         }
     }
@@ -168,14 +199,13 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Authorizable cU = umgr.getAuthorizable(getYetAnotherID());
         Group gr = (Group) umgr.getAuthorizable(grID);
 
-        // adding and removing the child-user as member of a group must not 
-        // succeed as long editing session is not user-admin.
+        // adding and removing the test user as member of a group must succeed.
         try {
-            assertFalse("Modifying group membership requires GroupAdmin and UserAdmin.",gr.addMember(cU));
-        } catch (AccessDeniedException e) {
-            // ok
+            assertTrue("Modifying group membership requires GroupAdmin membership.",gr.addMember(cU));
+            save(uSession);
         } finally {
             gr.removeMember(cU);
+            save(uSession);
         }
     }
 
@@ -183,75 +213,80 @@ public class GroupAdministratorTest extends AbstractUserTest {
         UserManager umgr = getUserManager(uSession);
         Authorizable cU = umgr.getAuthorizable(getYetAnotherID());
 
-        Authorizable auth = umgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
-        if (auth == null || !auth.isGroup()) {
-            throw new NotExecutableException("Cannot execute test. User-Admin name has been changed by config.");
-        }
-        Group userAdmin = (Group)auth;
-        User self = (User) umgr.getAuthorizable(uID);
-        try {
-            assertTrue(userAdmin.addMember(self));
-
-            Group gr = (Group) umgr.getAuthorizable(groupAdmin.getID());
-            assertTrue(gr.addMember(cU));
-            assertTrue(gr.removeMember(cU));
-        } finally {
-            userAdmin.removeMember(self);
-        }
+        Group gr = (Group) umgr.getAuthorizable(groupAdmin.getID());
+        assertTrue(gr.addMember(cU));
+        save(uSession);
+        assertTrue(gr.removeMember(cU));
+        save(uSession);
     }
 
     public void testAddMembersToCreatedGroup() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(uSession);
-        Authorizable auth = umgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
-        if (auth == null || !auth.isGroup()) {
-            throw new NotExecutableException("Cannot execute test. User-Admin name has been changed by config.");
-        }
-        Group userAdmin = (Group) auth;
         Group testGroup = null;
         User self = (User) umgr.getAuthorizable(uID);
         try {
             // let groupadmin create a new group
             testGroup = umgr.createGroup(getTestPrincipal(), "/a/b/c/d");
+            save(uSession);
 
             // editing session adds itself to that group -> must succeed.
             assertTrue(testGroup.addMember(self));
-
-            // editing session adds itself to user-admin group
-            userAdmin.addMember(self);
-            assertTrue(userAdmin.isMember(self));
+            save(uSession);
 
             // add child-user to test group
             Authorizable testUser = umgr.getAuthorizable(getYetAnotherID());
             assertFalse(testGroup.isMember(testUser));
             assertTrue(testGroup.addMember(testUser));
+            save(uSession);
         } finally {
             if (testGroup != null) {
-                for (Iterator it = testGroup.getDeclaredMembers(); it.hasNext();) {
-                    testGroup.removeMember((Authorizable) it.next());
+                for (Iterator<Authorizable> it = testGroup.getDeclaredMembers(); it.hasNext();) {
+                    testGroup.removeMember(it.next());
                 }
                 testGroup.remove();
+                save(uSession);
             }
-            userAdmin.removeMember(self);            
         }
     }
 
-    public void testAddMemberToForeignGroup() throws RepositoryException, NotExecutableException {
+    public void testAddMembersUserAdmins() throws RepositoryException, NotExecutableException {
+        UserManager umgr = getUserManager(uSession);
+        Authorizable auth = umgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
+        if (auth == null || !auth.isGroup()) {
+            throw new NotExecutableException("Cannot execute test. No User-Admin group found.");
+        }
+        Group userAdmin = (Group) auth;
+        Group testGroup = null;
+        User self = (User) umgr.getAuthorizable(uID);
         try {
-            // let superuser create child user below the user with uID.
-            UserManager umgr = getUserManager(uSession);
-            Authorizable cU = umgr.getAuthorizable(getYetAnotherID());
-            Group uadminGr = (Group) umgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
-            if (uadminGr.isMember(cU)) {
-                throw new RepositoryException("Test user is already member -> cannot execute.");
-            }
 
-            // adding to and removing a child user from a group the group-admin
-            // is NOT member of must fail.
-            uadminGr.addMember(cU);
-            fail("A GroupAdmin should not be allowed to add a user to a group she/he is not member of.");
+            userAdmin.addMember(self);
+            save(uSession);
 
+            userAdmin.removeMember(self);
+            save(uSession);
+            fail("Group admin cannot add member to user-admins");
         } catch (AccessDeniedException e) {
-            // success.
+            // success
+        }
+
+        try {
+            // let groupadmin create a new group
+            testGroup = umgr.createGroup(getTestPrincipal(), "/a/b/c/d");
+            save(uSession);
+
+            userAdmin.addMember(testGroup);
+            save(uSession);
+            userAdmin.removeMember(testGroup);
+            save(uSession);
+            fail("Group admin cannot add member to user-admins");
+        } catch (AccessDeniedException e) {
+            // success
+        } finally {
+            if (testGroup != null) {
+                testGroup.remove();
+                save(uSession);
+            }
         }
     }
 
@@ -261,35 +296,12 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Authorizable pU = umgr.getAuthorizable(otherUID);
         Group gr = (Group) umgr.getAuthorizable(groupAdmin.getID());
 
-        // adding and removing the parent-user as member of a group must not
-        // succeed: editing session isn't UserAdmin
         try {
-            assertFalse(gr.addMember(pU));
-        } catch (AccessDeniedException e) {
-            // ok
-        } finally {
-            gr.removeMember(pU);
-        }
-
-        // ... if the editing user becomes member of the user-admin group it
-        // must work.
-        Group uAdministrators = null;
-        try {
-            Authorizable userAdmin = userMgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
-            if (userAdmin == null || !userAdmin.isGroup()) {
-                throw new NotExecutableException("Cannot execute test. User-Admin name has been changed by config.");
-            }
-            uAdministrators = (Group) userAdmin;
-            uAdministrators.addMember(userMgr.getAuthorizable(uID));
-
             assertTrue(gr.addMember(pU));
-            gr.removeMember(pU);
+            save(uSession);
         } finally {
-            // let superuser do the clean up.
-            // remove testuser from u-admin group again.
-            if (uAdministrators != null) {
-                uAdministrators.removeMember(userMgr.getAuthorizable(uID));
-            }
+            gr.removeMember(pU);
+            save(uSession);
         }
     }
 
@@ -316,16 +328,20 @@ public class GroupAdministratorTest extends AbstractUserTest {
 
     public void testAddOwnAuthorizableToForeignGroup() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(uSession);
+        Authorizable self = umgr.getAuthorizable(uID);
 
-        Authorizable user = umgr.getAuthorizable(uID);
-        Group uadminGr = (Group) umgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
-        if (uadminGr.isMember(user)) {
-            throw new RepositoryException("Test user is already member -> cannot execute.");
+        Group gr = userMgr.createGroup(getTestPrincipal());
+        save(superuser);
+
+        try {
+            assertTrue(((Group) umgr.getAuthorizable(gr.getID())).addMember(self));
+            save(uSession);
+            assertTrue(((Group) umgr.getAuthorizable(gr.getID())).removeMember(self));
+            save(uSession);
+        } finally {
+            gr.remove();
+            save(superuser);
         }
-
-        String msg = "GroupAdmin must be able to add its own authorizable to a group she/he is not yet member of.";
-        assertTrue(msg, uadminGr.addMember(user));
-        assertTrue(msg, uadminGr.removeMember(user));
     }
 
     public void testRemoveMembersOfForeignGroup() throws RepositoryException, NotExecutableException {
@@ -336,24 +352,32 @@ public class GroupAdministratorTest extends AbstractUserTest {
         try {
             // let superuser create a group and a user a make user member of group
             nGr = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
+
             Principal p = getTestPrincipal();
             nUs = userMgr.createUser(p.getName(), buildPassword(p));
+            save(superuser);
+
             p = getTestPrincipal();
             nUs2 = userMgr.createUser(p.getName(), buildPassword(p));
+            save(superuser);
             nGr.addMember(nUs);
             nGr.addMember(nUs2);
+            save(superuser);
 
-            Group gr = (Group) getUserManager(uSession).getAuthorizable(nGr.getID());
+            UserManager umgr = getUserManager(uSession);
+            Group gr = (Group) umgr.getAuthorizable(nGr.getID());
 
             // removing any member must fail unless the testuser is user-admin
-            Iterator it = gr.getMembers();
+            Iterator<Authorizable> it = gr.getMembers();
             if (it.hasNext()) {
-                Authorizable auth = (Authorizable) it.next();
+                Authorizable auth = it.next();
 
-                String msg = "GroupAdmin cannot remove members of other user unless he/she is user-admin.";
-                assertFalse(msg, gr.removeMember(auth));
+                String msg = "GroupAdmin must be able to modify group membership.";
+                assertTrue(msg, gr.removeMember(auth));
+                save(uSession);
             } else {
-                throw new RepositoryException("Must contain members....");
+                fail("Must contain members....");
             }
 
         } catch (AccessDeniedException e) {
@@ -367,6 +391,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
             }
             if (nUs != null) nUs.remove();
             if (nUs2 != null) nUs2.remove();
+            save(superuser);
         }
     }
 
@@ -377,19 +402,23 @@ public class GroupAdministratorTest extends AbstractUserTest {
         try {
             // let superuser create a group and a user a make user member of group
             nGr = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
             Principal p = getTestPrincipal();
             nUs = userMgr.createUser(p.getName(), buildPassword(p));
             nGr.addMember(nUs);
+            save(superuser);
 
-            Group gr = (Group) getUserManager(uSession).getAuthorizable(nGr.getID());
+            UserManager umgr = getUserManager(uSession);
+            Group gr = (Group) umgr.getAuthorizable(nGr.getID());
 
             // since only 1 single member -> removal rather than modification.
             // since uSession is not user-admin this must fail.
-            for (Iterator it = gr.getMembers(); it.hasNext();) {
-                Authorizable auth = (Authorizable) it.next();
+            for (Iterator<Authorizable> it = gr.getMembers(); it.hasNext();) {
+                Authorizable auth = it.next();
 
-                String msg = "GroupAdmin cannot remove members of groups unless he/she is UserAdmin.";
-                assertFalse(msg, gr.removeMember(auth));
+                String msg = "GroupAdmin must be able to remove a member of another group.";
+                assertTrue(msg, gr.removeMember(auth));
+                save(uSession);
             }
         } catch (AccessDeniedException e) {
             // fine as well.
@@ -398,6 +427,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
             if (nGr != null && nUs != null) nGr.removeMember(nUs);
             if (nGr != null) nGr.remove();
             if (nUs != null) nUs.remove();
+            save(superuser);
         }
     }
 
@@ -410,6 +440,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         assertFalse(impers.allows(buildSubject(selfPrinc)));
         try {
             assertFalse(impers.grantImpersonation(selfPrinc));
+            save(uSession);
         } catch (AccessDeniedException e) {
             // ok.
         }
@@ -420,6 +451,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         assertFalse(impers.allows(buildSubject(selfPrinc)));
         try {
             assertFalse(impers.grantImpersonation(selfPrinc));
+            save(uSession);
         } catch (AccessDeniedException e) {
             // ok.
         }
@@ -432,14 +464,32 @@ public class GroupAdministratorTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             gr = umgr.createGroup(p);
+            save(uSession);
 
+            // must be visible for the user-mgr attached to another session.
             Authorizable az = userMgr.getAuthorizable(gr.getID());
             assertNotNull(az);
             assertEquals(gr.getID(), az.getID());
         } finally {
             if (gr != null) {
                 gr.remove();
+                save(uSession);
             }
         }
+    }
+
+    public void testAddCustomNodeToGroupAdminNode() throws RepositoryException, NotExecutableException {
+        UserManager umgr = getUserManager(uSession);
+        Node groupAdminNode = ((AuthorizableImpl) umgr.getAuthorizable(grID)).getNode();
+        Session s = groupAdminNode.getSession();
+
+        Node n = groupAdminNode.addNode(nodeName1, ntUnstructured);
+        save(uSession);
+
+        n.setProperty(propertyName1, s.getValueFactory().createValue("anyValue"));
+        save(uSession);
+
+        n.remove();
+        save(uSession);
     }
 }

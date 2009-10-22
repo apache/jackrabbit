@@ -21,6 +21,7 @@ import java.util.List;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -30,24 +31,23 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
  */
 public class DefaultProtectedNodeImporter implements ProtectedNodeImporter {
 
-    protected final JackrabbitSession session;
+    protected JackrabbitSession session;
+    protected NamePathResolver resolver;
+    protected boolean isWorkspaceImport;
+    protected int uuidBehavior;
+    protected ReferenceChangeTracker referenceTracker;
 
-    protected final NamePathResolver resolver;
+    public DefaultProtectedNodeImporter() {
+    }
 
-    protected final boolean isWorkspaceImport;
-
-    protected final int uuidBehavior;
-
-    public DefaultProtectedNodeImporter(JackrabbitSession session,
-                                 NamePathResolver resolver,
-                                 boolean isWorkspaceImport,
-                                 int uuidBehavior) {
+    public boolean init(JackrabbitSession session, NamePathResolver resolver, boolean isWorkspaceImport, int uuidBehavior, ReferenceChangeTracker referenceTracker) {
         this.session = session;
         this.resolver = resolver;
         this.isWorkspaceImport = isWorkspaceImport;
         this.uuidBehavior = uuidBehavior;
+        this.referenceTracker = referenceTracker;
+        return true;
     }
-
 
     /**
      * Always returns <code>false</code>.
@@ -97,5 +97,13 @@ public class DefaultProtectedNodeImporter implements ProtectedNodeImporter {
      * @see ProtectedNodeImporter#endChildInfo()
      */
     public void endChildInfo() throws RepositoryException {
+    }
+
+    /**
+     * Does nothing.
+     *
+     * @see ProtectedNodeImporter#processReferences()
+     */
+    public void processReferences() throws RepositoryException {
     }
 }

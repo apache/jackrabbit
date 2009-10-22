@@ -47,6 +47,7 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -425,11 +426,10 @@ public abstract class ItemImpl implements Item {
                 if (nodeState.getStatus() == ItemState.STATUS_NEW
                         || !nodeState.getNodeTypeName().equals(
                             ((NodeState) nodeState.getOverlayedState()).getNodeTypeName())) {
-                    NodeType[] nta = nodeDef.getRequiredPrimaryTypes();
-                    for (int i = 0; i < nta.length; i++) {
-                        NodeTypeImpl ntReq = (NodeTypeImpl) nta[i];
-                        if (!(pnt.getQName().equals(ntReq.getQName())
-                                || pnt.isDerivedFrom(ntReq.getQName()))) {
+                    for (NodeType ntReq : nodeDef.getRequiredPrimaryTypes()) {
+                        Name ntName = ((NodeTypeImpl) ntReq).getQName();
+                        if (!(pnt.getQName().equals(ntName)
+                                || pnt.isDerivedFrom(ntName))) {
                             /**
                              * the transient node's primary node type does not
                              * satisfy the 'required primary types' constraint
@@ -443,9 +443,7 @@ public abstract class ItemImpl implements Item {
                 }
 
                 // mandatory child properties
-                QPropertyDefinition[] pda = ent.getMandatoryPropDefs();
-                for (int i = 0; i < pda.length; i++) {
-                    QPropertyDefinition pd = pda[i];
+                for (QPropertyDefinition pd : ent.getMandatoryPropDefs()) {
                     if (pd.getDeclaringNodeType().equals(NameConstants.MIX_VERSIONABLE)
                             || pd.getDeclaringNodeType().equals(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
                         /**
@@ -455,24 +453,52 @@ public abstract class ItemImpl implements Item {
                          */
                         continue;
                     }
-                    if (!nodeState.hasPropertyName(pd.getName())) {
-                        String msg = itemMgr.safeGetJCRPath(id)
+                    String msg = itemMgr.safeGetJCRPath(id)
                                 + ": mandatory property " + pd.getName()
                                 + " does not exist";
+                    if (!nodeState.hasPropertyName(pd.getName())) {
                         log.debug(msg);
                         throw new ConstraintViolationException(msg);
+                    } else {
+                        /*
+                        there exists a property with the mandatory-name.
+                        make sure the property really has the expected mandatory
+                        property definition (and not another non-mandatory def,
+                        such as e.g. multivalued residual instead of single-value
+                        mandatory, named def).
+                        */
+                        PropertyId pi = new PropertyId(nodeState.getNodeId(), pd.getName());
+                        ItemData childData = itemMgr.getItemData(pi, null, false);
+                        if (!childData.getDefinition().isMandatory()) {
+                            throw new ConstraintViolationException(msg);
+                        }
                     }
                 }
                 // mandatory child nodes
-                QItemDefinition[] cnda = ent.getMandatoryNodeDefs();
-                for (int i = 0; i < cnda.length; i++) {
-                    QItemDefinition cnd = cnda[i];
-                    if (!nodeState.hasChildNodeEntry(cnd.getName())) {
-                        String msg = itemMgr.safeGetJCRPath(id)
+                for (QItemDefinition cnd : ent.getMandatoryNodeDefs()) {
+                    String msg = itemMgr.safeGetJCRPath(id)
                                 + ": mandatory child node " + cnd.getName()
                                 + " does not exist";
+                    if (!nodeState.hasChildNodeEntry(cnd.getName())) {                      
                         log.debug(msg);
                         throw new ConstraintViolationException(msg);
+                    } else {
+                        /*
+                        there exists a child node with the mandatory-name.
+                        make sure the node really has the expected mandatory
+                        node definition.
+                        */
+                        boolean hasMandatoryChild = false;
+                        for (ChildNodeEntry cne : nodeState.getChildNodeEntries(cnd.getName())) {
+                            ItemData childData = itemMgr.getItemData(cne.getId(), null, false);
+                            if (childData.getDefinition().isMandatory()) {
+                                hasMandatoryChild = true;
+                                break;
+                            }
+                        }
+                        if (!hasMandatoryChild) {
+                            throw new ConstraintViolationException(msg);
+                        }
                     }
                 }
             } else {
@@ -509,11 +535,11 @@ public abstract class ItemImpl implements Item {
                         if (constraints.length > 0
                                 && (propDef.getRequiredType() == PropertyType.REFERENCE
                                     || propDef.getRequiredType() == PropertyType.WEAKREFERENCE)) {
-                            for (int i = 0; i < values.length; i++) {
+                            for (InternalValue internalV : values) {
                                 boolean satisfied = false;
                                 String constraintViolationMsg = null;
                                 try {
-                                    NodeId targetId = values[i].getNodeId();
+                                    NodeId targetId = internalV.getNodeId();
                                     if (propDef.getRequiredType() == PropertyType.WEAKREFERENCE
                                         && !itemMgr.itemExists(targetId)) {
                                         // target of weakref doesn;t exist, skip
@@ -524,14 +550,13 @@ public abstract class ItemImpl implements Item {
                                      * constraints are OR-ed, i.e. at least one
                                      * has to be satisfied
                                      */
-                                    for (int j = 0; j < constraints.length; j++) {
+                                    for (String constrNtName : constraints) {
                                         /**
                                          * a [WEAK]REFERENCE value constraint specifies
                                          * the name of the required node type of
                                          * the target node
                                          */
-                                        String ntName = constraints[j];
-                                        if (targetNode.isNodeType(ntName)) {
+                                        if (targetNode.isNodeType(constrNtName)) {
                                             satisfied = true;
                                             break;
                                         }

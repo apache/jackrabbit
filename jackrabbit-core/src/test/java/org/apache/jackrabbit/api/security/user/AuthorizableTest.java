@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import java.security.Principal;
 import java.util.Arrays;
@@ -30,8 +30,6 @@ import java.util.Iterator;
  * <code>UserTest</code>...
  */
 public class AuthorizableTest extends AbstractUserTest {
-
-    private static Logger log = LoggerFactory.getLogger(AuthorizableTest.class);
 
     public void testGetId() throws NotExecutableException, RepositoryException {
         User user = getTestUser(superuser);
@@ -61,23 +59,26 @@ public class AuthorizableTest extends AbstractUserTest {
         Value v = superuser.getValueFactory().createValue("Super User");
         try {
             auth.setProperty(propName, v);
+            save(superuser);
         } catch (RepositoryException e) {
             throw new NotExecutableException("Cannot test 'Authorizable.setProperty'.");
         }
 
         try {
             boolean found = false;
-            for (Iterator it = auth.getPropertyNames(); it.hasNext() && !found;) {
-                found = propName.equals(it.next().toString());
+            for (Iterator<String> it = auth.getPropertyNames(); it.hasNext() && !found;) {
+                found = propName.equals(it.next());
             }
             assertTrue(found);
             assertTrue(auth.hasProperty(propName));
             assertTrue(auth.getProperty(propName).length == 1);
             assertEquals(v, auth.getProperty(propName)[0]);
             assertTrue(auth.removeProperty(propName));
+            save(superuser);
         } finally {
             // try to remove the property again even if previous calls failed.
             auth.removeProperty(propName);
+            save(superuser);
         }
     }
 
@@ -89,22 +90,25 @@ public class AuthorizableTest extends AbstractUserTest {
         Value[] v = new Value[] {superuser.getValueFactory().createValue("Super User")};
         try {
             auth.setProperty(propName, v);
+            save(superuser);
         } catch (RepositoryException e) {
             throw new NotExecutableException("Cannot test 'Authorizable.setProperty'.");
         }
 
         try {
             boolean found = false;
-            for (Iterator it = auth.getPropertyNames(); it.hasNext() && !found;) {
-                found = propName.equals(it.next().toString());
+            for (Iterator<String> it = auth.getPropertyNames(); it.hasNext() && !found;) {
+                found = propName.equals(it.next());
             }
             assertTrue(found);
             assertTrue(auth.hasProperty(propName));
             assertEquals(Arrays.asList(v), Arrays.asList(auth.getProperty(propName)));
             assertTrue(auth.removeProperty(propName));
+            save(superuser);
         } finally {
             // try to remove the property again even if previous calls failed.
             auth.removeProperty(propName);
+            save(superuser);
         }
     }
 
@@ -116,19 +120,21 @@ public class AuthorizableTest extends AbstractUserTest {
         Value v = superuser.getValueFactory().createValue("Super User");
         try {
             auth.setProperty(propName, v);
+            save(superuser);
         } catch (RepositoryException e) {
             throw new NotExecutableException("Cannot test 'Authorizable.setProperty'.");
         }
 
         try {
-            for (Iterator it = auth.getPropertyNames(); it.hasNext();) {
-                String name = it.next().toString();
+            for (Iterator<String> it = auth.getPropertyNames(); it.hasNext();) {
+                String name = it.next();
                 assertTrue(auth.hasProperty(name));
                 assertNotNull(auth.getProperty(name));
             }
         } finally {
             // try to remove the property again even if previous calls failed.
             auth.removeProperty(propName);
+            save(superuser);
         }
     }
 
@@ -155,12 +161,13 @@ public class AuthorizableTest extends AbstractUserTest {
             i++;
         }
         assertFalse(auth.removeProperty(propName));
+        save(superuser);
     }
 
     public void testMemberOf() throws NotExecutableException, RepositoryException {
         Authorizable auth = getTestUser(superuser);
 
-        Iterator it = auth.memberOf();
+        Iterator<Group> it = auth.memberOf();
         while (it.hasNext()) {
             Object group = it.next();
             assertTrue(group instanceof Group);
@@ -170,7 +177,7 @@ public class AuthorizableTest extends AbstractUserTest {
     public void testDeclaredMemberOf() throws NotExecutableException, RepositoryException {
         Authorizable auth = getTestUser(superuser);
 
-        Iterator it = auth.declaredMemberOf();
+        Iterator<Group> it = auth.declaredMemberOf();
         while (it.hasNext()) {
             Object group = it.next();
             assertTrue(group instanceof Group);
@@ -179,6 +186,8 @@ public class AuthorizableTest extends AbstractUserTest {
 
     /**
      * Removing an authorizable that is still listed as member of a group.
+     * @throws javax.jcr.RepositoryException
+     * @throws org.apache.jackrabbit.test.NotExecutableException
      */
     public void testRemoveListedAuthorizable() throws RepositoryException, NotExecutableException {
         String newUserId = null;
@@ -187,13 +196,16 @@ public class AuthorizableTest extends AbstractUserTest {
         try {
             Principal uP = getTestPrincipal();
             User newUser = userMgr.createUser(uP.getName(), uP.getName());
+            save(superuser);
             newUserId = newUser.getID();
 
             newGroup = userMgr.createGroup(getTestPrincipal());
             newGroup.addMember(newUser);
+            save(superuser);
 
             // remove the new user that is still listed as member.
             newUser.remove();
+            save(superuser);
         } finally {
             if (newUserId != null) {
                 Authorizable u = userMgr.getAuthorizable(newUserId);
@@ -207,6 +219,41 @@ public class AuthorizableTest extends AbstractUserTest {
             if (newGroup != null) {
                 newGroup.remove();
             }
+            save(superuser);
+        }
+    }
+
+    public void testRecreateUser() throws RepositoryException, NotExecutableException {
+        String id = "bla";
+        Authorizable auth = userMgr.getAuthorizable(id);
+        if (auth == null) {
+            auth = userMgr.createUser(id, id);
+        }
+        auth.remove();
+        save(superuser);
+
+        assertNull(userMgr.getAuthorizable(id));
+
+        // recreate the user using another session.
+        Session s2 = getHelper().getSuperuserSession();
+        User u2 = null;
+        try {
+            UserManager umgr = ((JackrabbitSession) s2).getUserManager();
+            assertNull(umgr.getAuthorizable(id));
+
+            // recreation must succeed
+            u2 = umgr.createUser(id, id);
+            
+            // must be present with both session.
+            assertNotNull(umgr.getAuthorizable(id));
+            assertNotNull(userMgr.getAuthorizable(id));
+
+        } finally {
+            if (u2 != null) {
+                u2.remove();
+                save(s2);
+            }
+            s2.logout();
         }
     }
 }

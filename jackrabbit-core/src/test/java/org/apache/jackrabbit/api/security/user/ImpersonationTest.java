@@ -38,18 +38,22 @@ public class ImpersonationTest extends AbstractUserTest {
     private User newUser;
     private Impersonation impersonation;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
         Principal test = getTestPrincipal();
         String pw = buildPassword(test);
-        Credentials creds = buildCredentials(test.getName(), pw);
         newUser = userMgr.createUser(test.getName(), pw);
+        save(superuser);
+        
         impersonation = newUser.getImpersonation();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         newUser.remove();
+        save(superuser);
         super.tearDown();
     }
 
@@ -59,12 +63,13 @@ public class ImpersonationTest extends AbstractUserTest {
         assertFalse("An unknown principal should not be allowed to impersonate.", impersonation.allows(subject));
     }
 
-    public void testGrantImpersonationUnknownUser() throws RepositoryException {
+    public void testGrantImpersonationUnknownUser() throws RepositoryException, NotExecutableException {
         Principal test = getTestPrincipal();
         try {
             assertFalse("Granting impersonation to an unknown principal should not be successful.", impersonation.grantImpersonation(test));
         }  finally {
             impersonation.revokeImpersonation(test);
+            save(superuser);
         }
     }
 
@@ -87,32 +92,37 @@ public class ImpersonationTest extends AbstractUserTest {
                 assertFalse("Granting impersonation to a Group should not be successful.", impersonation.grantImpersonation(group));
             }  finally {
                 impersonation.revokeImpersonation(group);
+                save(superuser);
             }
         } finally {
             s.logout();
         }
     }
 
-    public void testGrantImpersonation() throws RepositoryException {
+    public void testGrantImpersonation() throws RepositoryException, NotExecutableException {
         User u = null;
         Principal test = getTestPrincipal();
         try {
             u = userMgr.createUser(test.getName(), buildPassword(test));
+            save(superuser);
             assertTrue("Admin should be allowed to edit impersonation and grant to another test-user.", impersonation.grantImpersonation(test));
         }  finally {
             impersonation.revokeImpersonation(test);
             if (u != null) {
                 u.remove();
             }
+            save(superuser);
         }
     }
 
-    public void testGrantImpersonationTwice() throws RepositoryException {
+    public void testGrantImpersonationTwice() throws RepositoryException, NotExecutableException {
         Principal test = getTestPrincipal();
         User u = null;
         try {
             u = userMgr.createUser(test.getName(), buildPassword(test));
+            save(superuser);
             impersonation.grantImpersonation(test);
+            save(superuser);
             // try again
             assertFalse("Granting impersonation twice should not succeed.", impersonation.grantImpersonation(test));
         }  finally {
@@ -120,15 +130,18 @@ public class ImpersonationTest extends AbstractUserTest {
             if (u != null) {
                 u.remove();
             }
+            save(superuser);
         }
     }
 
-    public void testRevokeImpersonation() throws RepositoryException {
+    public void testRevokeImpersonation() throws RepositoryException, NotExecutableException {
         User u = null;
         Principal test = getTestPrincipal();
         try {
             u = userMgr.createUser(test.getName(), buildPassword(test));
+            save(superuser);
             impersonation.grantImpersonation(test);
+            save(superuser);
 
             assertTrue(impersonation.revokeImpersonation(test));
         }  finally {
@@ -138,13 +151,16 @@ public class ImpersonationTest extends AbstractUserTest {
         }
     }
 
-    public void testRevokeImpersonationTwice() throws RepositoryException {
+    public void testRevokeImpersonationTwice() throws RepositoryException, NotExecutableException {
         User u = null;
         Principal test = getTestPrincipal();
         try {
             u = userMgr.createUser(test.getName(), buildPassword(test));
+            save(superuser);
             impersonation.grantImpersonation(test);
+            save(superuser);
             impersonation.revokeImpersonation(test);
+            save(superuser);
             // try again
             assertFalse("Revoking impersonation twice should not succeed.", impersonation.revokeImpersonation(test));
         }  finally {
@@ -199,8 +215,7 @@ public class ImpersonationTest extends AbstractUserTest {
     }
 
     private Subject createSubject(Principal p) throws RepositoryException {
-        Set creds = Collections.singleton(buildCredentials(p.getName(), buildPassword(p)));
-        Subject subject = new Subject(true, Collections.singleton(p), creds, creds);
-        return subject;
+        Set<Credentials> creds = Collections.singleton(buildCredentials(p.getName(), buildPassword(p)));
+        return new Subject(true, Collections.singleton(p), creds, creds);
     }
 }

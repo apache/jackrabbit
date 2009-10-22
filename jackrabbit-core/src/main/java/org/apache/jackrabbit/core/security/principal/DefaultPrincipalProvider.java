@@ -16,18 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
-import java.security.Principal;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
@@ -36,11 +24,24 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.security.auth.Subject;
+import java.security.Principal;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Provides principals for the users contained within the Repository.<p/>
@@ -71,7 +72,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
 
     private final EveryonePrincipal everyonePrincipal;
 
-    private final String pGroupName;
+    private final String pMembers;
     private final String pPrincipalName;
 
     /**
@@ -93,25 +94,19 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         String[] ntNames = new String[1];
         if (securitySession instanceof SessionImpl) {
             NameResolver resolver = (SessionImpl) securitySession;
-            ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_USER);
-            pGroupName = resolver.getJCRName(UserManagerImpl.P_GROUPS);
+            ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_GROUP);
+            pMembers = resolver.getJCRName(UserManagerImpl.P_MEMBERS);
             pPrincipalName = resolver.getJCRName(UserManagerImpl.P_PRINCIPAL_NAME);
         } else {
-            ntNames[0] = "rep:User";
-            pGroupName = "rep:groups";
+            ntNames[0] = "rep:Group";
+            pMembers = "rep:members";
             pPrincipalName = "rep:principalName";
         }
 
-        // find common ancestor of all user and group nodes.
-        String userPath = userManager.getUsersPath();
         String groupPath = userManager.getGroupsPath();
-        String obsPath = userPath;
-        while (!Text.isDescendant(obsPath, groupPath)) {
-            obsPath = Text.getRelativeParent(obsPath, 1);
-        }       
         securitySession.getWorkspace().getObservationManager().addEventListener(this,
                 Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                obsPath,
+                groupPath,
                 true,
                 null,
                 ntNames,
@@ -217,18 +212,12 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     }
 
     /**
-     * Always returns true.
-     *
      * @see PrincipalProvider#canReadPrincipal(javax.jcr.Session,java.security.Principal)
      */
     public boolean canReadPrincipal(Session session, Principal principal) {
         checkInitialized();
-        // by default (UserAccessControlProvider) READ-privilege is granted to
-        // everybody -> omit any (expensive) checks.
-        return true;
-        /*
-        // TODO: uncomment code if it turns out that the previous assumption is problematic.
-        // check if the session is granted read to the node.
+        // check if the session can read the user/group associated with the
+        // given principal
         if (session instanceof SessionImpl) {
             SessionImpl sImpl = (SessionImpl) session;
             Subject subject = sImpl.getSubject();
@@ -237,14 +226,13 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
                 return true;
             }
             try {
-                UserManager umgr = ((SessionImpl)session).getUserManager();
+                UserManager umgr = sImpl.getUserManager();
                 return umgr.getAuthorizable(principal) != null;
             } catch (RepositoryException e) {
                 // ignore and return false
             }
         }
         return false;
-        */
     }
 
     //------------------------------------------------------< EventListener >---
@@ -262,7 +250,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             if (type == Event.PROPERTY_ADDED || type == Event.PROPERTY_CHANGED
                     || type == Event.PROPERTY_REMOVED) {
                 try {
-                    if (pGroupName.equals(Text.getName(ev.getPath()))) {
+                    if (pMembers.equals(Text.getName(ev.getPath()))) {
                         synchronized (membershipCache) {
                             membershipCache.clear();
                         }
@@ -286,9 +274,9 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * including inherited membership.
      */
     private Set<Principal> collectGroupMembership(Principal princ) {
-        Set<Principal> membership = new LinkedHashSet<Principal>();
+        final Set<Principal> membership = new LinkedHashSet<Principal>();
             try {
-                Authorizable auth = userManager.getAuthorizable(princ);
+                final Authorizable auth = userManager.getAuthorizable(princ);
                 if (auth != null) {
                     addToCache(princ);
                     Iterator<Group> itr = auth.memberOf();
@@ -315,7 +303,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     private PrincipalIterator findUserPrincipals(String simpleFilter) {
         synchronized (userManager) {
             try {
-                Iterator itr = userManager.findAuthorizables(pPrincipalName, simpleFilter, UserManager.SEARCH_TYPE_USER);
+                Iterator<Authorizable> itr = userManager.findAuthorizables(pPrincipalName, simpleFilter, UserManager.SEARCH_TYPE_USER);
                 return new PrincipalIteratorImpl(itr, false);
             } catch (RepositoryException e) {
                 log.error("Error while searching user principals.", e);
@@ -332,7 +320,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     private PrincipalIterator findGroupPrincipals(final String simpleFilter) {
         synchronized (userManager) {
             try {
-                Iterator itr = userManager.findAuthorizables(pPrincipalName, simpleFilter, UserManager.SEARCH_TYPE_GROUP);
+                Iterator<Authorizable> itr = userManager.findAuthorizables(pPrincipalName, simpleFilter, UserManager.SEARCH_TYPE_GROUP);
 
                 // everyone will not be found by the user manager -> extra test
                 boolean addEveryone = everyonePrincipal.getName().matches(".*"+simpleFilter+".*");
@@ -353,10 +341,10 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      */
     private class PrincipalIteratorImpl extends AbstractPrincipalIterator {
 
-        private final Iterator authorizableItr;
+        private final Iterator<Authorizable> authorizableItr;
         private boolean addEveryone;
 
-        private PrincipalIteratorImpl(Iterator authorizableItr, boolean addEveryone) {
+        private PrincipalIteratorImpl(Iterator<Authorizable> authorizableItr, boolean addEveryone) {
             this.authorizableItr = authorizableItr;
             this.addEveryone = addEveryone;
 
@@ -369,7 +357,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         protected Principal seekNext() {
             while (authorizableItr.hasNext()) {
                 try {
-                    Principal p = ((Authorizable) authorizableItr.next()).getPrincipal();
+                    Principal p = authorizableItr.next().getPrincipal();
                     addToCache(p);
                     return p;
                 } catch (RepositoryException e) {

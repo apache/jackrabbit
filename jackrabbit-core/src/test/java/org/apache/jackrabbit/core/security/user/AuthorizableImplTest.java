@@ -20,34 +20,34 @@ import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.value.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeType;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Iterator;
+import java.util.HashSet;
+import java.util.Set;
+import java.security.Principal;
 
 /**
  * <code>AuthorizableImplTest</code>...
  */
 public class AuthorizableImplTest extends AbstractUserTest {
 
-    private static Logger log = LoggerFactory.getLogger(AuthorizableImplTest.class);
-
-    private List protectedUserProps = new ArrayList();
-    private List protectedGroupProps = new ArrayList();
+    private List<String> protectedUserProps = new ArrayList();
+    private List<String> protectedGroupProps = new ArrayList();
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -55,11 +55,10 @@ public class AuthorizableImplTest extends AbstractUserTest {
         if (superuser instanceof SessionImpl) {
             NameResolver resolver = (SessionImpl) superuser;
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PASSWORD));
-            protectedUserProps.add(resolver.getJCRName(UserConstants.P_GROUPS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_IMPERSONATORS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
 
-            protectedUserProps.add(resolver.getJCRName(UserConstants.P_GROUPS));
+            protectedUserProps.add(resolver.getJCRName(UserConstants.P_MEMBERS));
             protectedGroupProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
         } else {
             throw new NotExecutableException();
@@ -85,22 +84,22 @@ public class AuthorizableImplTest extends AbstractUserTest {
         Value v = superuser.getValueFactory().createValue("any_value");
 
         User u = getTestUser(superuser);
-        for (Iterator it = protectedUserProps.iterator(); it.hasNext();) {
-            String pName = it.next().toString();
+        for (String pName : protectedUserProps) {
             try {
                 u.setProperty(pName, v);
-                fail("changing the '" +pName+ "' property on a User should fail.");
+                save(superuser);
+                fail("changing the '" + pName + "' property on a User should fail.");
             } catch (RepositoryException e) {
                 // success
             }
         }
         
         Group g = getTestGroup(superuser);
-        for (Iterator it = protectedGroupProps.iterator(); it.hasNext();) {
-            String pName = it.next().toString();
+        for (String pName : protectedGroupProps) {
             try {
                 g.setProperty(pName, v);
-                fail("changing the '" +pName+ "' property on a Group should fail.");
+                save(superuser);
+                fail("changing the '" + pName + "' property on a Group should fail.");
             } catch (RepositoryException e) {
                 // success
             }
@@ -109,21 +108,21 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
     public void testRemoveSpecialProperties() throws NotExecutableException, RepositoryException {
         User u = getTestUser(superuser);
-        for (Iterator it = protectedUserProps.iterator(); it.hasNext();) {
-            String pName = it.next().toString();
+        for (String pName : protectedUserProps) {
             try {
                 u.removeProperty(pName);
-                fail("removing the '" +pName+ "' property on a User should fail.");
+                save(superuser);
+                fail("removing the '" + pName + "' property on a User should fail.");
             } catch (RepositoryException e) {
                 // success
             }
         }
         Group g = getTestGroup(superuser);
-        for (Iterator it = protectedGroupProps.iterator(); it.hasNext();) {
-            String pName = it.next().toString();
+        for (String pName : protectedGroupProps) {
             try {
                 g.removeProperty(pName);
-                fail("removing the '" +pName+ "' property on a Group should fail.");
+                save(superuser);
+                fail("removing the '" + pName + "' property on a Group should fail.");
             } catch (RepositoryException e) {
                 // success
             }
@@ -136,9 +135,6 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
         checkProtected(n.getProperty(UserConstants.P_PASSWORD));
         checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
-        if (n.hasProperty(UserConstants.P_GROUPS)) {
-            checkProtected(n.getProperty(UserConstants.P_GROUPS));
-        }
         if (n.hasProperty(UserConstants.P_IMPERSONATORS)) {
            checkProtected(n.getProperty(UserConstants.P_IMPERSONATORS));
         }
@@ -149,8 +145,17 @@ public class AuthorizableImplTest extends AbstractUserTest {
         NodeImpl n = gr.getNode();
 
         checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
-        if (n.hasProperty(UserConstants.P_GROUPS)) {
-            checkProtected(n.getProperty(UserConstants.P_GROUPS));
+        if (n.hasProperty(UserConstants.P_MEMBERS)) {
+            checkProtected(n.getProperty(UserConstants.P_MEMBERS));
+        }
+    }
+
+    public void testMembersPropertyType() throws NotExecutableException, RepositoryException {
+        GroupImpl gr = (GroupImpl) getTestGroup(superuser);
+        NodeImpl n = gr.getNode();
+
+        if (n.hasProperty(UserConstants.P_MEMBERS)) {
+            assertEquals(PropertyType.WEAKREFERENCE, n.getProperty(UserConstants.P_MEMBERS).getType());
         }
     }
 
@@ -194,9 +199,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
         for (PropertyIterator it = n.getProperties(); it.hasNext();) {
             PropertyImpl p = (PropertyImpl) it.nextProperty();
-            NodeType declaringNt = p.getDefinition().getDeclaringNodeType();
-            if (!declaringNt.isNodeType("rep:Authorizable") ||
-                    protectedUserProps.contains(p.getName())) {
+            if (p.getDefinition().isProtected()) {
                 assertFalse(user.hasProperty(p.getName()));
                 assertNull(user.getProperty(p.getName()));
             } else {
@@ -213,9 +216,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
         for (PropertyIterator it = n.getProperties(); it.hasNext();) {
             PropertyImpl p = (PropertyImpl) it.nextProperty();
-            NodeType declaringNt = p.getDefinition().getDeclaringNodeType();
-            if (!declaringNt.isNodeType("rep:Authorizable") ||
-                    protectedGroupProps.contains(p.getName())) {
+            if (p.getDefinition().isProtected()) {
                 assertFalse(group.hasProperty(p.getName()));
                 assertNull(group.getProperty(p.getName()));
             } else {
@@ -224,5 +225,112 @@ public class AuthorizableImplTest extends AbstractUserTest {
                 assertNotNull(group.getProperty(p.getName()));
             }
         }
+    }
+
+    public void testSingleToMultiValued() throws Exception {
+        AuthorizableImpl user = (AuthorizableImpl) getTestUser(superuser);
+        UserManager uMgr = getUserManager(superuser);
+        try {
+            Value v = superuser.getValueFactory().createValue("anyValue");
+            user.setProperty("someProp", v);
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
+            Value[] vs = new Value[] {v, v};
+            user.setProperty("someProp", vs);
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
+        } finally {
+            if (user.removeProperty("someProp") && !uMgr.isAutoSave()) {
+                superuser.save();
+            }
+        }
+    }
+
+    public void testMultiValuedToSingle() throws Exception {
+        AuthorizableImpl user = (AuthorizableImpl) getTestUser(superuser);
+        UserManager uMgr = getUserManager(superuser);
+        try {
+            Value v = superuser.getValueFactory().createValue("anyValue");
+            Value[] vs = new Value[] {v, v};
+            user.setProperty("someProp", vs);
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
+            user.setProperty("someProp", v);
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
+        } finally {
+            if (user.removeProperty("someProp") && !uMgr.isAutoSave()) {
+                superuser.save();
+            }
+        }
+    }
+
+    public void testObjectMethods() throws Exception {
+        final AuthorizableImpl user = (AuthorizableImpl) getTestUser(superuser);
+        AuthorizableImpl user2 = (AuthorizableImpl) getTestUser(superuser);
+
+        assertEquals(user, user2);
+        assertEquals(user.hashCode(), user2.hashCode());
+        Set<Authorizable> s = new HashSet();
+        s.add(user);
+        assertFalse(s.add(user2));
+
+        Authorizable user3 = new Authorizable() {
+
+            public String getID() throws RepositoryException {
+                return user.getID();
+            }
+
+            public boolean isGroup() {
+                return user.isGroup();
+            }
+
+            public Principal getPrincipal() throws RepositoryException {
+                return user.getPrincipal();
+            }
+
+            public Iterator<Group> declaredMemberOf() throws RepositoryException {
+                return user.declaredMemberOf();
+            }
+
+            public Iterator<Group> memberOf() throws RepositoryException {
+                return user.memberOf();
+            }
+
+            public void remove() throws RepositoryException {
+                user.remove();
+            }
+
+            public Iterator<String> getPropertyNames() throws RepositoryException {
+                return user.getPropertyNames();
+            }
+
+            public boolean hasProperty(String name) throws RepositoryException {
+                return user.hasProperty(name);
+            }
+
+            public void setProperty(String name, Value value) throws RepositoryException {
+                user.setProperty(name, value);
+            }
+
+            public void setProperty(String name, Value[] values) throws RepositoryException {
+                user.setProperty(name, values);
+            }
+
+            public Value[] getProperty(String name) throws RepositoryException {
+                return user.getProperty(name);
+            }
+
+            public boolean removeProperty(String name) throws RepositoryException {
+                return user.removeProperty(name);
+            }
+        };
+
+        assertFalse(user.equals(user3));
+        assertTrue(s.add(user3));
     }
 }

@@ -33,9 +33,9 @@ public class UserManagerTest extends AbstractUserTest {
 
     public void testGetAuthorizableByPrincipal() throws RepositoryException, NotExecutableException {
         Authorizable auth = null;
-        Set principals = getPrincipalSetFromSession(superuser);
-        for (Iterator it = principals.iterator(); it.hasNext() && auth == null;) {
-            Principal p = (Principal) it.next();
+        Set<Principal> principals = getPrincipalSetFromSession(superuser);
+        for (Iterator<Principal> it = principals.iterator(); it.hasNext() && auth == null;) {
+            Principal p = it.next();
             auth = userMgr.getAuthorizable(p);
         }
         assertNotNull("At least one of the Sessions principal must be a known authorizable to the UserManager", auth);
@@ -43,9 +43,8 @@ public class UserManagerTest extends AbstractUserTest {
 
     public void testGetAuthorizableById() throws RepositoryException, NotExecutableException {
         Authorizable auth = null;
-        Set principals = getPrincipalSetFromSession(superuser);
-        for (Iterator it = principals.iterator(); it.hasNext();) {
-            Principal p = (Principal) it.next();
+        for (Principal principal : getPrincipalSetFromSession(superuser)) {
+            Principal p = principal;
             auth = userMgr.getAuthorizable(p);
 
             if (auth != null) {

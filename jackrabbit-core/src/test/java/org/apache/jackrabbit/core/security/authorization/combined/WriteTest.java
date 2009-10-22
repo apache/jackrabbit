@@ -49,7 +49,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
 
         // simple test to check if proper provider is present:
         try {
-            getPrincipalBasedPolicy(acMgr, path, getTestUser().getPrincipal());
+            getPrincipalBasedPolicy(acMgr, path, testUser.getPrincipal());
         } catch (Exception e) {
             superuser.logout();
             throw e;
@@ -135,7 +135,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
         assertFalse(testAcMgr.hasPrivileges(path, readPrivs));
 
         // remove the nodebased policy
-        JackrabbitAccessControlList policy = getPolicy(acMgr, path, getTestUser().getPrincipal());
+        JackrabbitAccessControlList policy = getPolicy(acMgr, path, testUser.getPrincipal());
         acMgr.removePolicy(policy.getPath(), policy);
         superuser.save();
 
@@ -152,7 +152,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
         givePrivileges(path, wrtPrivileges, getRestrictions(superuser, path));
         // userbased: deny MODIFY_PROPERTIES privileges for 'testUser'
         Privilege[] modPropPrivs = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
-        withdrawPrivileges(path, getTestUser().getPrincipal(), modPropPrivs, getPrincipalBasedRestrictions(path), false);
+        withdrawPrivileges(path, testUser.getPrincipal(), modPropPrivs, getPrincipalBasedRestrictions(path), false);
         /*
          expected result:
          - MODIFY_PROPERTIES privilege still present
@@ -162,7 +162,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
 
         // nodebased: deny MODIFY_PROPERTIES privileges for 'testUser'
         //            on a child node.
-        withdrawPrivileges(childNPath, getTestUser().getPrincipal(), modPropPrivs, getRestrictions(superuser, childNPath));
+        withdrawPrivileges(childNPath, testUser.getPrincipal(), modPropPrivs, getRestrictions(superuser, childNPath));
         /*
          expected result:
          - MODIFY_PROPERTIES privilege still present at 'path'

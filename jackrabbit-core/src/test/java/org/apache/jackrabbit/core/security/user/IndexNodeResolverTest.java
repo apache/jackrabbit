@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.NodeIterator;
 
@@ -32,11 +31,8 @@ public class IndexNodeResolverTest extends NodeResolverTest {
 
     private static Logger log = LoggerFactory.getLogger(IndexNodeResolver.class);
 
-    protected NodeResolver createNodeResolver(Session session) throws RepositoryException, NotExecutableException {
-        if (!(session instanceof SessionImpl)) {
-            throw new NotExecutableException();
-        }
-        return new IndexNodeResolver(session, (SessionImpl) session);
+    protected NodeResolver createNodeResolver(SessionImpl session) throws RepositoryException, NotExecutableException {
+        return new IndexNodeResolver(session, session);
     }
 
 
@@ -48,9 +44,10 @@ public class IndexNodeResolverTest extends NodeResolverTest {
      * @throws RepositoryException
      */
     public void testFindNodesNonExact() throws NotExecutableException, RepositoryException {
-        UserImpl currentUser = getCurrentUser(superuser);
+        UserImpl currentUser = getCurrentUser();
         Value vs = superuser.getValueFactory().createValue("value \\, containing backslash");
         currentUser.setProperty(propertyName1, vs);
+        save();
 
         Name propName = ((SessionImpl) superuser).getQName(propertyName1);
         try {
@@ -62,6 +59,7 @@ public class IndexNodeResolverTest extends NodeResolverTest {
             assertFalse("expected no more results", result.hasNext());
         } finally {
             currentUser.removeProperty(propertyName1);
+            save();
         }
     }
 }

@@ -50,8 +50,6 @@ import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.AccessControlImporter;
-import org.apache.jackrabbit.core.xml.ProtectedNodeImporter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -86,7 +84,6 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -280,7 +277,7 @@ public class SessionImpl extends AbstractSession
         this.rep = rep;
         this.subject = subject;
 
-        userId = retrieveUserId(subject);
+        userId = retrieveUserId(subject, wspConfig.getName());
 
         namePathResolver = new DefaultNamePathResolver(this, this, true);
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), this, rep.getDataStore());
@@ -300,8 +297,8 @@ public class SessionImpl extends AbstractSession
      *
      * @return the userID.
      */
-    protected String retrieveUserId(Subject subject) throws RepositoryException {
-        return rep.getSecurityManager().getUserID(subject);
+    protected String retrieveUserId(Subject subject, String workspaceName) throws RepositoryException {
+        return rep.getSecurityManager().getUserID(subject, workspaceName);
     }
 
     /**
@@ -1166,9 +1163,7 @@ public class SessionImpl extends AbstractSession
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         getValidator().checkModify(parent, options, Permission.NONE);
 
-        // TODO: make configurable
-        ProtectedNodeImporter pi = new AccessControlImporter(this, this, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
-        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, pi, null);
+        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, wsp.getConfig().getImportConfig());
         return new ImportHandler(importer, this);
     }
 

@@ -55,7 +55,12 @@ interface UserConstants {
     Name P_USERID = NF.create(Name.NS_REP_URI, "userId");
     Name P_PASSWORD = NF.create(Name.NS_REP_URI, "password");
 
+    /**
+     * @deprecated As of 2.0 group membership is stored with the group node.
+     * @see #P_MEMBERS
+     */
     Name P_GROUPS = NF.create(Name.NS_REP_URI, "groups");
+    Name P_MEMBERS = NF.create(Name.NS_REP_URI, "members");
 
     /**
      * Name of the user property containing the principal names of those allowed
@@ -67,5 +72,6 @@ interface UserConstants {
     Name NT_REP_AUTHORIZABLE_FOLDER = NF.create(Name.NS_REP_URI, "AuthorizableFolder");
     Name NT_REP_USER = NF.create(Name.NS_REP_URI, "User");
     Name NT_REP_GROUP = NF.create(Name.NS_REP_URI, "Group");
+    Name MIX_REP_IMPERSONATABLE = NF.create(Name.NS_REP_URI, "Impersonatable");
 
 }

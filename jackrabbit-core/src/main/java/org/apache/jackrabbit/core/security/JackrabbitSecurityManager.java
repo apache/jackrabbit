@@ -52,11 +52,12 @@ public interface JackrabbitSecurityManager {
      *
      * @param creds
      * @param subject
+     * @param workspaceName The name of the workspace to login.
      * @return A new <code>AuthContext</code> for the given <code>creds</code>
      * and <code>subject</code>.
      * @throws RepositoryException
      */
-    AuthContext getAuthContext(Credentials creds, Subject subject) throws RepositoryException;
+    AuthContext getAuthContext(Credentials creds, Subject subject, String workspaceName) throws RepositoryException;
 
     /**
      * Retrieve the <code>AccessManager</code> for the given <code>session</code>.
@@ -95,8 +96,9 @@ public interface JackrabbitSecurityManager {
      * the specified subject.
      *
      * @param subject
+     * @param workspaceName
      * @return userID to be displayed upon {@link Session#getUserID()}.
      * @throws RepositoryException
      */
-    String getUserID(Subject subject) throws RepositoryException;
+    String getUserID(Subject subject, String workspaceName) throws RepositoryException;
 }

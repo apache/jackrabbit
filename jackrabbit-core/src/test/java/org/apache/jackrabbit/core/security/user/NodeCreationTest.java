@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,16 +39,19 @@ import java.util.Map;
 /**
  * <code>IdResolverTest</code>...
  */
-public class IdResolverTest extends AbstractUserTest {
+public class NodeCreationTest extends AbstractUserTest {
 
     /**
      * logger instance
      */
-    private static final Logger log = LoggerFactory.getLogger(IdResolverTest.class);
+    private static final Logger log = LoggerFactory.getLogger(NodeCreationTest.class);
 
     private SessionImpl s;
     private UserManagerImpl uMgr;
     private List<NodeImpl> toRemove = new ArrayList();
+
+    private String usersPath;
+    private String groupsPath;
 
     @Override
     protected void setUp() throws Exception {
@@ -55,6 +59,9 @@ public class IdResolverTest extends AbstractUserTest {
         
         String workspaceName = ((RepositoryImpl) superuser.getRepository()).getConfig().getSecurityConfig().getSecurityManagerConfig().getWorkspaceName();
         s = (SessionImpl) ((SessionImpl) superuser).createSession(workspaceName);
+
+        usersPath = ((UserManagerImpl) userMgr).getUsersPath();
+        groupsPath = ((UserManagerImpl) userMgr).getGroupsPath();
     }
 
     @Override
@@ -62,6 +69,7 @@ public class IdResolverTest extends AbstractUserTest {
         try {
             for (NodeImpl node : toRemove) {
                 uMgr.removeProtectedItem(node, node.getParent());
+                save(s);
             }
         } finally {
             s.logout();
@@ -74,29 +82,36 @@ public class IdResolverTest extends AbstractUserTest {
         props.put(UserManagerImpl.PARAM_DEFAULT_DEPTH, depth);
         props.put(UserManagerImpl.PARAM_AUTO_EXPAND_TREE, expandTree);
         props.put(UserManagerImpl.PARAM_AUTO_EXPAND_SIZE, size);
+        props.put(UserManagerImpl.PARAM_GROUPS_PATH, groupsPath);
+        props.put(UserManagerImpl.PARAM_USERS_PATH, usersPath);
 
         uMgr = new UserManagerImpl(s, "admin", props);
     }
 
 
-    public void testRemoveTree() throws RepositoryException {
+    public void testRemoveTree() throws RepositoryException, NotExecutableException {
         UserImpl u = (UserImpl) userMgr.createUser("z", "z");
+        save(superuser);
         UserImpl u2 = (UserImpl) userMgr.createUser("zz", "zz");
+        save(superuser);
 
-        assertEquals(UserConstants.USERS_PATH + "/z/zz/z", u.getNode().getPath());
+        assertEquals(usersPath + "/z/zz/z", u.getNode().getPath());
 
         try {
             NodeImpl folder = (NodeImpl) u.getNode().getParent().getParent();
             ((UserManagerImpl) userMgr).removeProtectedItem(folder, folder.getParent());
+            save(superuser);
         } finally {
             boolean fail = false;
             if (userMgr.getAuthorizable("z") != null) {
                 fail = true;
                 u.remove();
+                save(superuser);
             }
             if (userMgr.getAuthorizable("zz") != null) {
                 fail = true;
                 u2.remove();
+                save(superuser);
             }
             if (fail) {
                 fail("Removing the top authorizable folder must remove all users contained.");
@@ -107,20 +122,20 @@ public class IdResolverTest extends AbstractUserTest {
     /**
      * If auto-expand is false all users must be created on the second level.
      */
-    public void testDefault() throws RepositoryException {
+    public void testDefault() throws RepositoryException, NotExecutableException {
         createUserManager(2, false, 1);
 
         UserImpl u = (UserImpl) uMgr.createUser("z", "z");
+        save(s);
+
         // remember the z-folder for later removal
         toRemove.add((NodeImpl) u.getNode().getParent().getParent());
-        assertEquals(UserConstants.USERS_PATH + "/z/zz/z", u.getNode().getPath());
+        assertEquals(usersPath + "/z/zz/z", u.getNode().getPath());
 
         Map<String, String> m = new ListOrderedMap();
         m.put("zz",     "/z/zz/zz");
         m.put("zzz",    "/z/zz/zzz");
         m.put("zzzz",   "/z/zz/zzzz");
-        m.put("zZ",     "/z/zZ/zZ");
-        m.put("zH",     "/z/zH/zH");
         m.put("zh",     "/z/zh/zh");
         m.put("zHzh",   "/z/zH/zHzh");
         m.put("z_Hz",   "/z/z_/z_Hz");
@@ -128,7 +143,8 @@ public class IdResolverTest extends AbstractUserTest {
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
-            assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+            save(s);
+            assertEquals(usersPath + m.get(uid), u.getNode().getPath());
         }
     }
 
@@ -137,45 +153,47 @@ public class IdResolverTest extends AbstractUserTest {
      * 
      * @throws RepositoryException
      */
-    public void testChangedDefaultLevel() throws RepositoryException {
+    public void testChangedDefaultLevel() throws RepositoryException, NotExecutableException {
         createUserManager(3, false, 1);
 
         UserImpl u = (UserImpl) uMgr.createUser("z", "z");
+        save(s);
+
         // remember the z-folder for later removal
         toRemove.add((NodeImpl) u.getNode().getParent().getParent().getParent());
-        assertEquals(UserConstants.USERS_PATH + "/z/zz/zzz/z", u.getNode().getPath());
+        assertEquals(usersPath + "/z/zz/zzz/z", u.getNode().getPath());
 
         Map<String, String> m = new ListOrderedMap();
         m.put("zz",     "/z/zz/zzz/zz");
         m.put("zzz",    "/z/zz/zzz/zzz");
         m.put("zzzz",   "/z/zz/zzz/zzzz");
-        m.put("zZ",     "/z/zZ/zZZ/zZ");
         m.put("zH",     "/z/zH/zHH/zH");
-        m.put("zh",     "/z/zh/zhh/zh");
         m.put("zHzh",   "/z/zH/zHz/zHzh");
         m.put("z_Hz",   "/z/z_/z_H/z_Hz");
         m.put("zürich", "/z/zü/zür/zürich");
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
-            assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+            save(s);
+
+            assertEquals(usersPath + m.get(uid), u.getNode().getPath());
 
             Authorizable az = uMgr.getAuthorizable(uid);
             assertNotNull(az);
         }
     }
 
-    public void testIllegalChars() throws RepositoryException {
+    public void testIllegalChars() throws RepositoryException, NotExecutableException {
         createUserManager(2, true, 2);
 
         UserImpl u = (UserImpl) uMgr.createUser("z", "z");
+        save(s);
+
         // remember the z-folder for later removal
         toRemove.add((NodeImpl) u.getNode().getParent().getParent());
 
         String zu = Text.escapeIllegalJcrChars("z*");
         String zur = Text.escapeIllegalJcrChars("z*r");
-
-        String zuri = Text.escapeIllegalJcrChars("z*.r.i");
 
         Map<String, String> m = new ListOrderedMap();
         // test illegal JCR chars in uid
@@ -189,7 +207,8 @@ public class IdResolverTest extends AbstractUserTest {
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
-            assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+            save(s);
+            assertEquals(usersPath + m.get(uid), u.getNode().getPath());
 
             Authorizable ath = uMgr.getAuthorizable(uid);
             assertNotNull("User with id " + uid + " must exist.", ath);
@@ -198,11 +217,12 @@ public class IdResolverTest extends AbstractUserTest {
 
         // test for groups as well
         GroupImpl gr = (GroupImpl) uMgr.createGroup(new TestPrincipal("z[x]"));
+        save(s);
         // remember the z-folder for later removal
         toRemove.add((NodeImpl) gr.getNode().getParent().getParent());
 
         assertEquals("z[x]", gr.getID());
-        String expectedPath = UserConstants.GROUPS_PATH + "/z/" + Text.escapeIllegalJcrChars("z[") + "/" + Text.escapeIllegalJcrChars("z[x]");
+        String expectedPath = groupsPath + "/z/" + Text.escapeIllegalJcrChars("z[") + "/" + Text.escapeIllegalJcrChars("z[x]");
         assertEquals(expectedPath, gr.getNode().getPath());
 
         Authorizable ath = uMgr.getAuthorizable(gr.getID());
@@ -212,6 +232,7 @@ public class IdResolverTest extends AbstractUserTest {
         // test if conflicting authorizables are detected.
         try {
             uMgr.createUser("z[x]", "z[x]");
+            save(s);
             fail("A group \"z[x]\" already exists.");
         } catch (AuthorizableExistsException e) {
             // success
@@ -219,6 +240,7 @@ public class IdResolverTest extends AbstractUserTest {
 
         try {
             uMgr.createGroup(new TestPrincipal("z*rik"));
+            save(s);
             fail("A user \"z*rik\" already exists");
         } catch (AuthorizableExistsException e) {
             // success
@@ -232,13 +254,15 @@ public class IdResolverTest extends AbstractUserTest {
      *
      * @throws RepositoryException
      */
-    public void testAutoExpand() throws RepositoryException {
+    public void testAutoExpand() throws RepositoryException, NotExecutableException {
         createUserManager(2, true, 5);
 
         UserImpl u = (UserImpl) uMgr.createUser("z", "z");
+        save(s);
+
         // remember the z-folder for later removal
         toRemove.add((NodeImpl) u.getNode().getParent().getParent());
-        assertEquals(UserConstants.USERS_PATH + "/z/zz/z", u.getNode().getPath());
+        assertEquals(usersPath + "/z/zz/z", u.getNode().getPath());
 
         Map<String, String> m = new ListOrderedMap();
         m.put("zz", "/z/zz/zz");
@@ -265,7 +289,8 @@ public class IdResolverTest extends AbstractUserTest {
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
-            assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+            save(s);
+            assertEquals(usersPath + m.get(uid), u.getNode().getPath());
         }
     }
 
@@ -277,14 +302,16 @@ public class IdResolverTest extends AbstractUserTest {
      *  
      * @throws RepositoryException
      */
-    public void testConflictUponChangingAutoExpandFlag() throws RepositoryException {
+    public void testConflictUponChangingAutoExpandFlag() throws RepositoryException, NotExecutableException {
         createUserManager(2, false, 1);
 
         UserImpl u = (UserImpl) uMgr.createUser("zzz", "zzz");
+        save(s);
+
         // remember the z-folder for later removal
         toRemove.add((NodeImpl) u.getNode().getParent().getParent());
 
-        assertEquals(UserConstants.USERS_PATH + "/z/zz/zzz", u.getNode().getPath());
+        assertEquals(usersPath + "/z/zz/zzz", u.getNode().getPath());
 
         // now create a second user manager that has auto-expand-tree enabled
         createUserManager(2, true, 1);
@@ -307,7 +334,9 @@ public class IdResolverTest extends AbstractUserTest {
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
-            assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+            save(s);
+
+            assertEquals(usersPath + m.get(uid), u.getNode().getPath());
             assertNotNull(uMgr.getAuthorizable(uid));
         }
     }
@@ -317,13 +346,15 @@ public class IdResolverTest extends AbstractUserTest {
      * 
      * @throws RepositoryException
      */
-    public void testFindById() throws RepositoryException {
+    public void testFindById() throws RepositoryException, NotExecutableException {
         createUserManager(2, true, 2);
 
         UserImpl u = (UserImpl) uMgr.createUser("z", "z");
+        save(s);
+
         // remember the z-folder for later removal
         toRemove.add((NodeImpl) u.getNode().getParent().getParent());
-        assertEquals(UserConstants.USERS_PATH + "/z/zz/z", u.getNode().getPath());
+        assertEquals(usersPath + "/z/zz/z", u.getNode().getPath());
 
         Map<String, String> m = new ListOrderedMap();
         // potential conflicting uid
@@ -336,11 +367,42 @@ public class IdResolverTest extends AbstractUserTest {
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
-            assertEquals(UserConstants.USERS_PATH + m.get(uid), u.getNode().getPath());
+            save(s);
+
+            assertEquals(usersPath + m.get(uid), u.getNode().getPath());
 
             User us = (User) uMgr.getAuthorizable(uid);
             assertNotNull(us);
             assertEquals(uid, us.getID());
+        }
+    }
+
+    public void testIdIsCaseSensitive() throws RepositoryException, NotExecutableException {
+        createUserManager(2, true, 2);
+
+        UserImpl u = (UserImpl) uMgr.createUser("ZuRiCh", "z");
+        save(s);
+
+        // remember the z-folder for later removal
+        toRemove.add((NodeImpl) u.getNode().getParent().getParent());
+
+        assertEquals("ZuRiCh", u.getID());
+    }
+
+    public void testUUIDIsBuildCaseInsensitive() throws RepositoryException, NotExecutableException {
+        createUserManager(2, true, 2);
+
+        UserImpl u = (UserImpl) uMgr.createUser("ZuRiCh", "z");
+        save(s);
+
+        // remember the z-folder for later removal
+        toRemove.add((NodeImpl) u.getNode().getParent().getParent());
+
+        try {
+            User u2 = uMgr.createUser("zurich", "z");
+            fail("uuid is built from insensitive userID -> must conflict");
+        } catch (AuthorizableExistsException e) {
+            // success
         }
     }
 }

@@ -31,10 +31,10 @@ public interface WorkspaceAccessManager {
     /**
      * Initialize this <code>WorkspaceAccessManager</code>.
      *
-     * @param securitySession The security session.
+     * @param systemSession Session used to initialize this instance.
      * @throws RepositoryException if an error occurs.
      */
-    void init(Session securitySession) throws RepositoryException;
+    void init(Session systemSession) throws RepositoryException;
 
     /**
      * Dispose this <code>WorkspaceAccessManager</code> and its resources.

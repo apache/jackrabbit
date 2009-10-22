@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.api.security.user;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import java.security.Principal;
 import java.util.Iterator;
 
@@ -49,9 +50,9 @@ public interface UserManager {
     /**
      * Get the Authorizable by its id.
      *
-     * @param id
+     * @param id The user or group id.
      * @return Authorizable or <code>null</code>, if not present.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      * @see Authorizable#getID()
      */
     Authorizable getAuthorizable(String id) throws RepositoryException;
@@ -61,7 +62,7 @@ public interface UserManager {
      *
      * @param principal
      * @return Authorizable or <code>null</code>, if not present.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     Authorizable getAuthorizable(Principal principal) throws RepositoryException;
 
@@ -74,10 +75,10 @@ public interface UserManager {
      * @param value
      * @return All <code>Authorizable</code>s that have a property with the given
      * name exactly matching the given value.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      * @see Authorizable#getProperty(String)
      */
-    Iterator findAuthorizables(String propertyName, String value) throws RepositoryException;
+    Iterator<Authorizable> findAuthorizables(String propertyName, String value) throws RepositoryException;
 
     /**
      * Returns all <code>Authorizable</code>s that have
@@ -94,10 +95,10 @@ public interface UserManager {
      * <li>{@link #SEARCH_TYPE_GROUP}</li>
      * <li>{@link #SEARCH_TYPE_USER}</li>
      * </ul>
-     * @return
-     * @throws RepositoryException
+     * @return An iterator of <code>Authorizable</code>.
+     * @throws RepositoryException If an error occurs.
      */
-    Iterator findAuthorizables(String propertyName, String value, int searchType) throws RepositoryException;
+    Iterator<Authorizable> findAuthorizables(String propertyName, String value, int searchType) throws RepositoryException;
 
     /**
      * Creates an User for the given userID / password pair; neither of the
@@ -106,7 +107,7 @@ public interface UserManager {
      * the specified userID is equal to the principal name and the intermediate
      * path is <code>null</code>.
      *
-     * @param userID
+     * @param userID The id of the new user.
      * @param password The initial password of this user.
      * @return The new <code>User</code>.
      * @throws AuthorizableExistsException in case the given userID is already
@@ -163,4 +164,35 @@ public interface UserManager {
      * @throws RepositoryException If another error occurs.
      */
     Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException;
+
+    /**
+     * If any write operations executed through the User API are automatically
+     * persisted this method returns <code>true</code>. In this case there are
+     * no pending transient changes left and there is no need to explicitely call
+     * {@link javax.jcr.Session#save()}. If this method returns <code>false</code>
+     * any changes must be completed by an extra save call on the
+     * <code>Session</code> associated with this <code>UserManager</code>.
+     *
+     * @return <code>true</code> if changes are automatically persisted;
+     * <code>false</code> if changes made through this API (including method
+     * calls on  {@link Authorizable} and subclasses are only transient and
+     * must be persisted using {@link javax.jcr.Session#save()}.
+     * @see #autoSave(boolean)
+     */
+    boolean isAutoSave();
+
+    /**
+     * Changes the auto save behavior of this <code>UserManager</code>.
+     * <p/>
+     * Note, that this shouldn't be allowed in cases where the associated session
+     * is different from the original session accessing the user manager.
+     *
+     * @param enable If <code>true</code> changes made through this API will
+     * be automatically saved; otherwise an explict call to
+     * {@link javax.jcr.Session#save()} is required in order to persist changes.
+     * @throws UnsupportedRepositoryOperationException If the implementation
+     * does not allow to change the auto save behavior.
+     * @throws RepositoryException If some other error occurs.
+     */
+    void autoSave(boolean enable) throws UnsupportedRepositoryOperationException, RepositoryException;
 }

@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.xml;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -29,18 +30,28 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
  */
 public class DefaultProtectedPropertyImporter implements ProtectedPropertyImporter {
 
-    protected final JackrabbitSession session;
+    protected JackrabbitSession session;
 
-    protected final NamePathResolver resolver;
+    protected NamePathResolver resolver;
 
-    protected final boolean isWorkspaceImport;
+    protected boolean isWorkspaceImport;
 
-    public DefaultProtectedPropertyImporter(JackrabbitSession session,
-                                 NamePathResolver resolver,
-                                 boolean isWorkspaceImport) {
+    protected int uuidBehavior;
+
+    protected ReferenceChangeTracker referenceTracker;
+
+    public DefaultProtectedPropertyImporter() {
+    }
+
+    public boolean init(JackrabbitSession session, NamePathResolver resolver,
+                        boolean isWorkspaceImport,
+                        int uuidBehavior, ReferenceChangeTracker referenceTracker) {
         this.session = session;
         this.resolver = resolver;
         this.isWorkspaceImport = isWorkspaceImport;
+        this.uuidBehavior = uuidBehavior;
+        this.referenceTracker = referenceTracker;
+        return true;
     }
 
     /**
@@ -48,7 +59,7 @@ public class DefaultProtectedPropertyImporter implements ProtectedPropertyImport
      *
      * @see ProtectedPropertyImporter#handlePropInfo(org.apache.jackrabbit.core.NodeImpl, PropInfo, QPropertyDefinition)
      */
-    public boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, QPropertyDefinition def) {
+    public boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, QPropertyDefinition def) throws RepositoryException {
         return false;
     }
 
@@ -59,5 +70,13 @@ public class DefaultProtectedPropertyImporter implements ProtectedPropertyImport
      */
     public boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, QPropertyDefinition def) throws RepositoryException {
         return false;
+    }
+
+    /**
+     * Always returns <code>false</code>.
+     *
+     * @see ProtectedPropertyImporter#processReferences()
+     */
+    public void processReferences() throws RepositoryException {
     }
 }

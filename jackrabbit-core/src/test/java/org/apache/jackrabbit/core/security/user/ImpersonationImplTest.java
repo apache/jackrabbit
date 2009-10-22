@@ -20,6 +20,7 @@ import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
@@ -48,7 +49,10 @@ public class ImpersonationImplTest extends AbstractUserTest {
         Principal p = getTestPrincipal();
         String pw = buildPassword(p);
         creds = buildCredentials(p.getName(), pw);
+
         UserImpl u = (UserImpl) userMgr.createUser(p.getName(), pw);
+        save(superuser);
+
         uID = u.getID();
         uSession = getHelper().getRepository().login(creds);
         uMgr = getUserManager(uSession);
@@ -56,7 +60,10 @@ public class ImpersonationImplTest extends AbstractUserTest {
         // create a second user 'below' the first user.
         p = getTestPrincipal();
         pw = buildPassword(p);
+        
         User u2 = userMgr.createUser(p.getName(), pw);
+        save(superuser);
+        
         otherUID = u2.getID();
     }
 
@@ -65,9 +72,14 @@ public class ImpersonationImplTest extends AbstractUserTest {
             uSession.logout();
         } finally {
             Authorizable a = userMgr.getAuthorizable(uID);
-            if (a != null) a.remove();
+            if (a != null) {
+                a.remove();
+            }
             a = userMgr.getAuthorizable(otherUID);
-            if (a != null) a.remove();
+            if (a != null) {
+                a.remove();
+            }
+            save(superuser);
         }
         super.tearDown();
     }
@@ -75,12 +87,24 @@ public class ImpersonationImplTest extends AbstractUserTest {
     public void testModifyOwnImpersonation() throws RepositoryException, NotExecutableException {
         User u = (User) uMgr.getAuthorizable(uID);
 
+        if (!uSession.hasPermission(((UserImpl) u).getNode().getPath(), "set_property")) {
+            throw new NotExecutableException("Users should be able to modify their properties -> Check repository config.");
+        }
+
         Principal otherP = uMgr.getAuthorizable(otherUID).getPrincipal();
 
-        assertTrue(u.getImpersonation().grantImpersonation(otherP));
-        assertTrue(u.getImpersonation().allows(buildSubject(otherP)));
-        assertTrue(u.getImpersonation().revokeImpersonation(otherP));
-        assertFalse(u.getImpersonation().allows(buildSubject(otherP)));
+        Impersonation impers = u.getImpersonation();
+        assertFalse(impers.allows(buildSubject(otherP)));
+
+        assertTrue(impers.grantImpersonation(otherP));
+        save(uSession);
+
+        assertTrue(impers.allows(buildSubject(otherP)));
+
+        assertTrue(impers.revokeImpersonation(otherP));
+        save(uSession);
+
+        assertFalse(impers.allows(buildSubject(otherP)));
     }
 
     public void testModifyOthersImpersonators() throws RepositoryException {
@@ -89,6 +113,7 @@ public class ImpersonationImplTest extends AbstractUserTest {
         User other = (User) uMgr.getAuthorizable(otherUID);
         try {
             boolean success = other.getImpersonation().grantImpersonation(p);
+            // omit save call
             assertFalse("A simple user may not add itself as impersonator to another user.",success);
         } catch (AccessDeniedException e) {
             // fine as well -> access denied.

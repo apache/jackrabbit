@@ -75,7 +75,7 @@ public abstract class AbstractVersionManagementTest extends AbstractEvaluationTe
         modifyPrivileges(trn.getPath(), Privilege.JCR_VERSION_MANAGEMENT, true);
 
         Node n = createVersionableNode(trn);
-        Version v = n.checkin();
+        n.checkin();
         n.checkout();
     }
 

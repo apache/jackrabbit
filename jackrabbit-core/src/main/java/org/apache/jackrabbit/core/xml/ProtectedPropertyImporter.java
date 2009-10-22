@@ -19,8 +19,11 @@ package org.apache.jackrabbit.core.xml;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.api.JackrabbitSession;
 
 /**
  * <code>ProtectedPropertyImporter</code> is in charge of importing single
@@ -32,6 +35,18 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 public interface ProtectedPropertyImporter {
 
     /**
+     * 
+     * @param session
+     * @param resolver
+     * @param isWorkspaceImport
+     * @param uuidBehavior
+     *@param referenceTracker  @return
+     */
+    boolean init(JackrabbitSession session, NamePathResolver resolver,
+                 boolean isWorkspaceImport, int uuidBehavior,
+                 ReferenceChangeTracker referenceTracker);
+
+    /**
      * Handles a single protected property.
      *
      * @param parent The affected parent node.
@@ -42,7 +57,8 @@ public interface ProtectedPropertyImporter {
      * <code>false</code> otherwise.
      * @throws RepositoryException If an error occurs.
      */
-    boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, QPropertyDefinition def)
+    boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo,
+                           QPropertyDefinition def)
             throws RepositoryException;
 
     /**
@@ -56,8 +72,17 @@ public interface ProtectedPropertyImporter {
      * <code>false</code> otherwise.
      * @throws RepositoryException If an error occurs.
      */
-    boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, QPropertyDefinition def)
+    boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo,
+                           QPropertyDefinition def)
             throws RepositoryException;
 
+
+    /**
+     * Post processing protected reference properties. This method is called
+     * from {@link org.apache.jackrabbit.core.xml.Importer#end()}.
+     *
+     * @throws RepositoryException If an error occurs.
+     */
+    void processReferences() throws RepositoryException;
 
 }

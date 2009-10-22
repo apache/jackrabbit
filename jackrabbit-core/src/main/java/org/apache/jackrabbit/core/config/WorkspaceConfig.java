@@ -79,6 +79,15 @@ public class WorkspaceConfig
     private final WorkspaceSecurityConfig workspaceSecurityConfig;
 
     /**
+     * Optional configuration for the xml import behavior. Up to now this consists
+     * of a single configuration point: the treatment
+     * of protected nodes and properties that is defined by a set of classes
+     * implementing {@link org.apache.jackrabbit.core.xml.ProtectedNodeImporter}
+     * or {@link org.apache.jackrabbit.core.xml.ProtectedPropertyImporter}.
+     */
+    private final ImportConfig importConfig;
+
+    /**
      * Creates a workspace configuration object.
      *
      * @param home home directory
@@ -95,6 +104,27 @@ public class WorkspaceConfig
                            QueryHandlerFactory qhf,
                            ISMLockingFactory ismLockingFactory,
                            WorkspaceSecurityConfig workspaceSecurityConfig) {
+        this(home, name, clustered, fsf, pmc, qhf, ismLockingFactory, workspaceSecurityConfig, null);
+    }
+
+    /**
+     * Creates a workspace configuration object.
+     *
+     * @param home home directory
+     * @param name workspace name
+     * @param clustered
+     * @param fsf file system factory
+     * @param pmc persistence manager configuration
+     * @param qhf query handler factory, or <code>null</code> if not configured
+     * @param ismLockingFactory the item state manager locking factory
+     * @param workspaceSecurityConfig the workspace specific security configuration.
+     */
+    public WorkspaceConfig(String home, String name, boolean clustered,
+                           FileSystemFactory fsf, PersistenceManagerConfig pmc,
+                           QueryHandlerFactory qhf,
+                           ISMLockingFactory ismLockingFactory,
+                           WorkspaceSecurityConfig workspaceSecurityConfig,
+                           ImportConfig importConfig) {
         this.home = home;
         this.name = name;
         this.clustered = clustered;
@@ -103,6 +133,7 @@ public class WorkspaceConfig
         this.qhf = qhf;
         this.ismLockingFactory = ismLockingFactory;
         this.workspaceSecurityConfig = workspaceSecurityConfig;
+        this.importConfig = importConfig;
     }
 
     /**
@@ -192,5 +223,12 @@ public class WorkspaceConfig
      */
     public WorkspaceSecurityConfig getSecurityConfig() {
         return workspaceSecurityConfig;
+    }
+
+    /**
+     * @return xml import settings
+     */
+    public ImportConfig getImportConfig() {
+        return importConfig;
     }
 }

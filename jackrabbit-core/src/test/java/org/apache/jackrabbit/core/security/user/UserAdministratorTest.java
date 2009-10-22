@@ -40,10 +40,10 @@ import java.util.HashMap;
  */
 public class UserAdministratorTest extends AbstractUserTest {
 
-    // user 'above'
+    // a test user
     private String uID;
 
-    // user-admin 'below'
+    // a test user being member of the user-admin group
     private String otherUID;
     private Session otherSession;
 
@@ -57,6 +57,8 @@ public class UserAdministratorTest extends AbstractUserTest {
         // created for that new user.
         Principal p = getTestPrincipal();
         UserImpl u = (UserImpl) userMgr.createUser(p.getName(), buildPassword(p));
+        save(superuser);
+
         uID = u.getID();
 
         // create a second user
@@ -64,12 +66,14 @@ public class UserAdministratorTest extends AbstractUserTest {
         String pw = buildPassword(p);
         Credentials otherCreds = buildCredentials(p.getName(), pw);
         User other = userMgr.createUser(p.getName(), pw);
+        save(superuser);
+
         otherUID = other.getID();
 
         // make other user a user-administrator:
         Authorizable ua = userMgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
         if (ua == null || !ua.isGroup()) {
-            throw new NotExecutableException("Cannot execute test. User-Admin name has been changed by config.");
+            throw new NotExecutableException("Cannot execute test. No user-administrator group found.");
         }
         uAdministrators = (Group) ua;
         uAdministrators.addMember(other);
@@ -86,8 +90,8 @@ public class UserAdministratorTest extends AbstractUserTest {
         } finally {
             Authorizable a = userMgr.getAuthorizable(otherUID);
             if (a != null) {
-                for (Iterator it = a.memberOf(); it.hasNext();) {
-                    Group gr = (Group) it.next();
+                for (Iterator<Group> it = a.memberOf(); it.hasNext();) {
+                    Group gr = it.next();
                     if (!gr.getPrincipal().equals(EveryonePrincipal.getInstance())) {
                         gr.removeMember(a);
                     }
@@ -98,6 +102,7 @@ public class UserAdministratorTest extends AbstractUserTest {
             if (a != null) {
                 a.remove();
             }
+            save(superuser);
         }
         super.tearDown();
     }
@@ -110,13 +115,13 @@ public class UserAdministratorTest extends AbstractUserTest {
         return (Group) auth;
     }
 
-    public void testUserIsUserAdmin() throws RepositoryException, NotExecutableException {
-        Set principals = getPrincipalSetFromSession(otherSession);
-        boolean isAdmin = false;
-        for (Iterator it = principals.iterator(); it.hasNext() && !isAdmin;) {
-           isAdmin = UserConstants.USER_ADMIN_GROUP_NAME.equals(((Principal) it.next()).getName());
+    public void testIsUserAdministrator() throws RepositoryException, NotExecutableException {
+        Set<Principal> principals = getPrincipalSetFromSession(otherSession);
+        boolean isUserAdmin = false;
+        for (Iterator<Principal> it = principals.iterator(); it.hasNext() && !isUserAdmin;) {
+           isUserAdmin = UserConstants.USER_ADMIN_GROUP_NAME.equals(it.next().getName());
         }
-        assertTrue(isAdmin);
+        assertTrue(isUserAdmin);
     }
 
     public void testCreateUser() throws RepositoryException, NotExecutableException {
@@ -126,9 +131,11 @@ public class UserAdministratorTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p));
+            save(otherSession);
         } finally {
             if (u != null) {
                 u.remove();
+                save(otherSession);
             }
         }
     }
@@ -152,11 +159,14 @@ public class UserAdministratorTest extends AbstractUserTest {
         for (String intermediatePath : m.keySet()) {
             try {
                 u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p), p, intermediatePath);
+                save(otherSession);
+
                 String expPath = m.get(intermediatePath);
                 assertEquals(expPath, u.getNode().getPath());
             } finally {
                 if (u != null) {
                     u.remove();
+                    save(otherSession);
                 }
             }
         }
@@ -170,12 +180,15 @@ public class UserAdministratorTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p), p, invalidIntermediatePath);
+            save(otherSession);
+
             fail("An attempt to create a user below an existing user must fail.");
         } catch (RepositoryException e) {
             // success
         } finally {
             if (u != null) {
                 u.remove();
+                save(otherSession);
             }
         }
     }
@@ -186,6 +199,8 @@ public class UserAdministratorTest extends AbstractUserTest {
         Authorizable himself = umgr.getAuthorizable(otherUID);
         try {
             himself.remove();
+            save(otherSession);
+
             fail("A UserAdministrator should not be allowed to remove himself.");
         } catch (AccessDeniedException e) {
             // success
@@ -203,6 +218,7 @@ public class UserAdministratorTest extends AbstractUserTest {
 
         Authorizable user = umgr.getAuthorizable(uID);
         user.remove();
+        save(otherSession);
     }
 
     public void testModifyImpersonationOfUser() throws RepositoryException, NotExecutableException {
@@ -214,26 +230,36 @@ public class UserAdministratorTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             u = umgr.createUser(p.getName(), buildPassword(p));
+            save(otherSession);
 
             Impersonation impers = u.getImpersonation();
             assertFalse(impers.allows(buildSubject(otherP)));
+
             assertTrue(impers.grantImpersonation(otherP));
+            save(otherSession);
+
             assertTrue(impers.allows(buildSubject(otherP)));
         } finally {
             // impersonation get removed while removing the user u.
             if (u != null) {
                 u.remove();
+                save(otherSession);
             }
         }
 
         // modify impersonation of another user
         u = (User) umgr.getAuthorizable(uID);
         Impersonation uImpl = u.getImpersonation();
+
         if (!uImpl.allows(buildSubject(otherP))) {
             // ... trying to modify 'impersonators of another user must succeed
             assertTrue(uImpl.grantImpersonation(otherP));
+            save(otherSession);
+
             assertTrue(uImpl.allows(buildSubject(otherP)));
+
             uImpl.revokeImpersonation(otherP);
+            save(otherSession);
         } else {
             throw new NotExecutableException("Cannot execute test. OtherP can already impersonate UID-user.");
         }
@@ -246,8 +272,14 @@ public class UserAdministratorTest extends AbstractUserTest {
         Group gr = getGroupAdminGroup(umgr);
         try {
             assertFalse(gr.addMember(userHimSelf));
+            // conditial save call omitted.
         } catch (RepositoryException e) {
             // success as well.
+        } finally {
+            // clean up using the superuser
+            if (getGroupAdminGroup(userMgr).removeMember(userMgr.getAuthorizable(otherUID))) {
+                save(superuser);
+            }
         }
     }
 
@@ -270,9 +302,13 @@ public class UserAdministratorTest extends AbstractUserTest {
         User childU = null;
         try {
             childU = umgr.createUser(cp.getName(), buildPassword(cp));
+            save(otherSession);
+
             Group gr = getGroupAdminGroup(umgr);
             try {
-                assertFalse("A UserAdmin must not be allowed to modify group memberships", gr.addMember(childU));
+                assertFalse("A UserAdmin must not be allowed to modify group " +
+                        "memberships", gr.addMember(childU));
+                // con-save call omitted.
             } catch (RepositoryException e) {
                 // success
             }
@@ -285,23 +321,49 @@ public class UserAdministratorTest extends AbstractUserTest {
 
     public void testCreateGroup() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
+        String grId = null;
         try {
             Group testGroup = umgr.createGroup(getTestPrincipal());
+            save(otherSession);
+            grId = testGroup.getID();
+
             fail("UserAdmin should not be allowed to create a new Group.");
-            testGroup.remove();
+
         } catch (RepositoryException e) {
             // success.
+        } finally {
+            // let superuser clean up
+            if (grId != null) {
+                Authorizable gr = userMgr.getAuthorizable(grId);
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
         }
     }
 
     public void testCreateGroupWithIntermediatePath() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
+        String grId = null;
         try {
             Group testGroup = umgr.createGroup(getTestPrincipal(), "/any/intermediate/path");
-            fail("UserAdmin should not be allowed to create a new Group.");
-            testGroup.remove();
+            save(otherSession);
+            grId = testGroup.getID();
+
+            fail("UserAdmin should not be allowed to create a new Group with intermediate path.");
+
         } catch (RepositoryException e) {
             // success.
+        } finally {
+            // let superuser clean up
+            if (grId != null) {
+                Authorizable gr = userMgr.getAuthorizable(grId);
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
         }
     }
 
@@ -310,13 +372,18 @@ public class UserAdministratorTest extends AbstractUserTest {
         Group g = null;
         try {
             g = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
+
             umgr.getAuthorizable(g.getID()).remove();
+            save(otherSession);
+
             fail("UserAdmin should not be allowed to remove a Group.");
         } catch (RepositoryException e) {
             // success.
         } finally {
             if (g != null) {
                 g.remove();
+                save(superuser);
             }
         }
     }
@@ -328,6 +395,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         Authorizable auth = umgr.getAuthorizable(uID);
         try {
             assertFalse(gr.addMember(auth));
+            // omit cond-save call.
         } catch (AccessDeniedException e) {
             // success as well.
         }
@@ -335,6 +403,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         auth = umgr.getAuthorizable(otherUID);
         try {
             assertFalse(gr.addMember(auth));
+            // omit cond-save call.
         } catch (AccessDeniedException e) {
             // success as well.
         }
@@ -344,6 +413,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         auth = umgr.getAuthorizable(otherUID);
         try {
             assertFalse(gr.addMember(auth));
+            // omit cond-save call.
         } catch (AccessDeniedException e) {
             // success
         }
@@ -356,6 +426,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p));
+            save(otherSession);
 
             Authorizable az = userMgr.getAuthorizable(u.getID());
             assertNotNull(az);
@@ -363,6 +434,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         } finally {
             if (u != null) {
                 u.remove();
+                save(otherSession);
             }
         }
     }

@@ -83,14 +83,14 @@ class ImpersonationImpl implements Impersonation, UserConstants {
      */
     public synchronized boolean grantImpersonation(Principal principal) throws RepositoryException {
         if (principal instanceof AdminPrincipal || principal instanceof SystemPrincipal) {
-            log.debug("Admin and System principal are already granted impersonation.");
+            log.warn("Admin and System principal are already granted impersonation.");
             return false;
         }
 
         // make sure the given principals belong to an existing authorizable
         Authorizable auth = user.userManager.getAuthorizable(principal);
         if (auth == null || auth.isGroup()) {
-            log.debug("Cannot grant impersonation to a principal that is a Group " +
+            log.warn("Cannot grant impersonation to a principal that is a Group " +
                       "or an unknown Authorizable.");
             return false;
         }
@@ -98,7 +98,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
         String pName = principal.getName();
         // make sure user does not impersonate himself
         if (user.getPrincipal().getName().equals(pName)) {
-            log.debug("Cannot grant impersonation to oneself.");
+            log.warn("Cannot grant impersonation to oneself.");
             return false;
         }
 
@@ -116,7 +116,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
      */
     public synchronized boolean revokeImpersonation(Principal principal) throws RepositoryException {
         if (principal instanceof AdminPrincipal || principal instanceof SystemPrincipal) {
-            log.debug("Admin and System principal are always granted impersonation.");
+            log.warn("Admin and System principal are always granted impersonation.");
             return false;
         }
 
@@ -151,7 +151,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
 
         boolean allows = false;
         try {
-            Set impersonators = getImpersonatorNames();
+            Set<String> impersonators = getImpersonatorNames();
             allows = impersonators.removeAll(principalNames);
         } catch (RepositoryException e) {
             // should never get here

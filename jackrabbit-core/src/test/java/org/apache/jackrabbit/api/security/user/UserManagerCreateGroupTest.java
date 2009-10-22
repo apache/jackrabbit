@@ -18,11 +18,11 @@ package org.apache.jackrabbit.api.security.user;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -32,25 +32,38 @@ public class UserManagerCreateGroupTest extends AbstractUserTest {
 
     private static Logger log = LoggerFactory.getLogger(UserManagerCreateGroupTest.class);
 
-    private List createdGroups = new ArrayList();
+    private List<Authorizable> createdGroups = new ArrayList();
 
+    @Override
     protected void tearDown() throws Exception {
         // remove all created groups again
-        for (Iterator it = createdGroups.iterator(); it.hasNext();) {
-            Authorizable gr = (Authorizable) it.next();
+        for (Authorizable createdGroup : createdGroups) {
             try {
-                gr.remove();
+                createdGroup.remove();
+                superuser.save();
             } catch (RepositoryException e) {
-                log.error("Failed to remove Group " + gr.getID() + " during tearDown.");
+                log.error("Failed to remove Group " + createdGroup.getID() + " during tearDown.");
             }
         }
 
         super.tearDown();
     }
 
-    public void testCreateGroup() throws RepositoryException {
-        Principal p = getTestPrincipal();
+    private Group createGroup(Principal p) throws RepositoryException, NotExecutableException {
         Group gr = userMgr.createGroup(p);
+        save(superuser);
+        return gr;
+    }
+
+    private Group createGroup(Principal p, String iPath) throws RepositoryException, NotExecutableException {
+        Group gr = userMgr.createGroup(p, iPath);
+        save(superuser);
+        return gr;
+    }
+
+    public void testCreateGroup() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        Group gr = createGroup(p);
         createdGroups.add(gr);
 
         assertNotNull(gr.getID());
@@ -58,9 +71,9 @@ public class UserManagerCreateGroupTest extends AbstractUserTest {
         assertFalse("A new group must not have members.",gr.getMembers().hasNext());
     }
 
-    public void testCreateGroupWithPath() throws RepositoryException {
+    public void testCreateGroupWithPath() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
-        Group gr = userMgr.createGroup(p, "/any/path/to/the/new/group");
+        Group gr = createGroup(p, "/any/path/to/the/new/group");
         createdGroups.add(gr);
 
         assertNotNull(gr.getID());
@@ -70,7 +83,7 @@ public class UserManagerCreateGroupTest extends AbstractUserTest {
 
     public void testCreateGroupWithNullPrincipal() throws RepositoryException {
         try {
-            Group gr = userMgr.createGroup(null);
+            Group gr = createGroup(null);
             createdGroups.add(gr);
 
             fail("A Group cannot be built from 'null' Principal");
@@ -79,7 +92,7 @@ public class UserManagerCreateGroupTest extends AbstractUserTest {
         }
 
         try {
-            Group gr = userMgr.createGroup(null, "/any/path/to/the/new/group");
+            Group gr = createGroup(null, "/any/path/to/the/new/group");
             createdGroups.add(gr);
 
             fail("A Group cannot be built from 'null' Principal");
@@ -88,17 +101,46 @@ public class UserManagerCreateGroupTest extends AbstractUserTest {
         }
     }
 
-    public void testCreateDuplicateGroup() throws RepositoryException {
+    public void testCreateDuplicateGroup() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
-        Group gr = userMgr.createGroup(p);
+        Group gr = createGroup(p);
         createdGroups.add(gr);
 
         try {
-            Group gr2 = userMgr.createGroup(p);
+            Group gr2 = createGroup(p);
             createdGroups.add(gr2);
             fail("Creating 2 groups with the same Principal should throw AuthorizableExistsException.");
         } catch (AuthorizableExistsException e) {
             // success.
+        }
+    }
+
+    public void testAutoSave() throws RepositoryException {
+        boolean autosave = userMgr.isAutoSave();
+        if (autosave) {
+            try {
+                userMgr.autoSave(false);
+                autosave = false;
+            } catch (RepositoryException e) {
+                // cannot change autosave behavior
+                // ignore -> test will behave differently.
+            }
+        }
+
+        Principal p = getTestPrincipal();
+        Group gr = userMgr.createGroup(p);
+        String id = gr.getID();
+        superuser.refresh(false);
+
+        if (!autosave) {
+            // transient changes must be gone after the refresh-call.
+            assertNull(userMgr.getAuthorizable(id));
+            assertNull(userMgr.getAuthorizable(p));
+        } else {
+            // no transient changes as autosave could not be disabled.
+            createdGroups.add(gr);            
+            assertNotNull(userMgr.getAuthorizable(id));
+            assertNotNull(userMgr.getAuthorizable(p));
         }
     }
 }

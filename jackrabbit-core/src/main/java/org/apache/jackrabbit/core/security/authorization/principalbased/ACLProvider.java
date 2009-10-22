@@ -99,6 +99,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#init(javax.jcr.Session, java.util.Map)
      */
+    @Override
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
 
@@ -113,6 +114,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         }
 
         editor = new ACLEditor(session, resolver.getQPath(acRoot.getPath()));
+        // TODO: replace by configurable default policy (see JCR-2331)
         if (!configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS)) {
             try {
                 log.debug("Install initial permissions: ...");
@@ -276,6 +278,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         /**
          * @see AbstractCompiledPermissions#buildResult(Path)
          */
+        @Override
         protected synchronized Result buildResult(Path absPath) throws RepositoryException {
             if (!absPath.isAbsolute()) {
                 throw new RepositoryException("Absolute path expected.");
@@ -355,6 +358,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         /**
          * @see CompiledPermissions#close()
          */
+        @Override
         public void close() {
             try {
                 observationMgr.removeEventListener(this);

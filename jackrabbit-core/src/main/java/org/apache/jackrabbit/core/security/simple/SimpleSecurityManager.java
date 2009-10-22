@@ -254,10 +254,11 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     }
 
     /**
-     * @see JackrabbitSecurityManager#getUserID(Subject)
+     * @see JackrabbitSecurityManager#getUserID(javax.security.auth.Subject, String)
      */
-    public String getUserID(Subject subject) throws RepositoryException {
+    public String getUserID(Subject subject, String workspaceName) throws RepositoryException {
         String uid = null;
+
         // if SimpleCredentials are present, the UserID can easily be retrieved.
         Iterator<SimpleCredentials> creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
         if (creds.hasNext()) {
@@ -288,7 +289,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
      * @return an {@link AuthContext} for the given Credentials, Subject
      * @throws RepositoryException in other exceptional repository states
      */
-    public AuthContext getAuthContext(Credentials creds, Subject subject)
+    public AuthContext getAuthContext(Credentials creds, Subject subject, String workspaceName)
             throws RepositoryException {
         checkInitialized();
         return authCtxProvider.getAuthContext(creds, subject, systemSession, principalProviderRegistry, adminID, anonymID);

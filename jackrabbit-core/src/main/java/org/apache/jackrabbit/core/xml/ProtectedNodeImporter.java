@@ -17,7 +17,10 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -33,10 +36,21 @@ import java.util.List;
  * with all subsequent child <code>NodeInfo</code>s present below the protected
  * parent until {@link #end(NodeImpl)} is called. The latter resets this importer
  * and makes it available for another protected import.
- *
- * TODO: check if references properties can be handled with the info present
  */
 public interface ProtectedNodeImporter {
+
+    /**
+     * 
+     * @param session
+     * @param resolver
+     * @param isWorkspaceImport
+     * @param uuidBehavior
+     * @param referenceTracker
+     * @return
+     */
+    boolean init(JackrabbitSession session, NamePathResolver resolver,
+                 boolean isWorkspaceImport, int uuidBehavior,
+                 ReferenceChangeTracker referenceTracker);
 
     /**
      * Notifies this importer about the existience of a protected node that
@@ -149,4 +163,13 @@ public interface ProtectedNodeImporter {
      */
     void endChildInfo() throws RepositoryException;
 
+    /**
+     * Post processing protected reference properties underneith a parent
+     * node that has been handled by this importer.
+     * This method is called
+     * from {@link org.apache.jackrabbit.core.xml.Importer#end()}.
+     * 
+     * @throws RepositoryException If an error occurs.
+     */
+    void processReferences() throws RepositoryException;
 }

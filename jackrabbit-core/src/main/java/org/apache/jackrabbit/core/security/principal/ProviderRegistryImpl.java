@@ -49,9 +49,10 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
      */
     public ProviderRegistryImpl(PrincipalProvider defaultPrincipalProvider) {
         this.defaultPrincipalProvider = defaultPrincipalProvider;
-        providers.put(defaultPrincipalProvider.getClass().getName(), defaultPrincipalProvider);
+        if (defaultPrincipalProvider != null) {
+            providers.put(defaultPrincipalProvider.getClass().getName(), defaultPrincipalProvider);
+        }
     }
-
 
     //------------------------------------------< PrincipalProviderRegistry >---
     /**
