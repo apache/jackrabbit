@@ -27,7 +27,7 @@ public interface Group extends Authorizable {
     /**
      * @return Iterator of <code>Authorizable</code>s which are declared
      * members of this Group.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     Iterator<Authorizable> getDeclaredMembers() throws RepositoryException;
 
@@ -35,20 +35,23 @@ public interface Group extends Authorizable {
      * @return Iterator of <code>Authorizable</code>s which are members of
      * this Group. This includes both declared members and all authorizables
      * that are indirect group members.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     Iterator<Authorizable> getMembers() throws RepositoryException;
 
     /**
+     * @param authorizable The <code>Authorizable</code> to test.
      * @return true if the Authorizable to test is a direct or indirect member
      * of this Group.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean isMember(Authorizable authorizable) throws RepositoryException;
 
     /**
      * Add a member to this Group.
      *
+     * @param authorizable The <code>Authorizable</code> to be added as
+     * member to this group.
      * @return true if the <code>Authorizable</code> has successfully been added
      * to this Group, false otherwise (e.g. unknown implemention
      * or if it already is a member or if the passed authorizable is this
@@ -60,8 +63,10 @@ public interface Group extends Authorizable {
     /**
      * Remove a member from this Group.
      *
+     * @param authorizable The <code>Authorizable</code> to be removed from
+     * the list of group members.
      * @return true if the Authorizable was successfully removed. False otherwise.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean removeMember(Authorizable authorizable) throws RepositoryException;
 }
