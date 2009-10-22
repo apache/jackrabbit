@@ -32,18 +32,11 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * A AuthContextProvider selects how the current request for login is handled.
- * It selects the mechanism and set-up according configuration.<br>
- * The handler selects if the JAAS-configuration
- * {@link javax.security.auth.login.Configuration} is taken or the fall-back as
- * configured via {@link org.apache.jackrabbit.core.config.RepositoryConfig}.<p>
- * This implementaion selects JAAS under the following condition:
- * <ul>
- * <li>a JAAS Login-{@link javax.security.auth.login.Configuration} is available
- * <li>the configuration contains the configured application name
- * </ul>
- * If the conditions are not met <b>AND</b> a LoginModule is configured in
- * {@link org.apache.jackrabbit.core.config.RepositoryConfig}, that one is taken.
+ * <code>AuthContextProvider</code> defines how the current request for login is
+ * handled. By default the {@link org.apache.jackrabbit.core.config.RepositoryConfig
+ * local repository configuration} takes precedence over JAAS configuration.
+ * If no local configuration is present a JAAS configuration must be provided
+ * otherwise {@link #getAuthContext} fails with <code>RepositoryException</code>.
  */
 public class AuthContextProvider {
 
