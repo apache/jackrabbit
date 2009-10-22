@@ -110,7 +110,6 @@ public interface PrincipalProvider {
     void close();
 
     /**
-     * // TODO: review again.
      * Tests if the provided session is allowed to read the given principal.
      * Since the principal providers do not restrict the access
      * on the prinicipals they provide, this method is used by the PrincipalManger
@@ -118,7 +117,7 @@ public interface PrincipalProvider {
      *
      * @param session
      * @param principalToRead The principal to be accessed by the specified subject.
-     * @return <code>true</code> if the subject is allowed to read the principal;
+     * @return <code>true</code> if the session is allowed to read the principal;
      * <code>false</code> otherwise.
      */
     boolean canReadPrincipal(Session session, Principal principalToRead);
