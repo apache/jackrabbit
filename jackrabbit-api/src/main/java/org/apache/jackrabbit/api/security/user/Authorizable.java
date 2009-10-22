@@ -81,14 +81,14 @@ public interface Authorizable {
 
     /**
      * @return all {@link Group}s, this Authorizable is declared member of.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     Iterator<Group> declaredMemberOf() throws RepositoryException;
 
     /**
      * @return all {@link Group}s, this Authorizable is member of included
      *         indirect group membership.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     Iterator<Group> memberOf() throws RepositoryException;
 
@@ -116,9 +116,9 @@ public interface Authorizable {
     /**
      * Tests if a the property with specified name exists.
      *
-     * @param name
-     * @return
-     * @throws RepositoryException
+     * @param name The name of the property to be tested.
+     * @return <code>true</code> if a property with the given name exists.
+     * @throws RepositoryException If an error occurs.
      * @see #getProperty(String)
      */
     boolean hasProperty(String name) throws RepositoryException;
@@ -126,8 +126,8 @@ public interface Authorizable {
     /**
      * Set an arbitrary property to this <code>Authorizable</code>.
      *
-     * @param name
-     * @param value
+     * @param name The name of the property to be added or modified.
+     * @param value The desired value.
      * @throws RepositoryException If the specified property could not be set.
      */
     void setProperty(String name, Value value) throws RepositoryException;
@@ -135,8 +135,8 @@ public interface Authorizable {
     /**
      * Set an arbitrary property to this <code>Authorizable</code>.
      *
-     * @param name
-     * @param value multiple values
+     * @param name The name of the property to be added or modified.
+     * @param value The desired property values.
      * @throws RepositoryException If the specified property could not be set.
      */
     void setProperty(String name, Value[] value) throws RepositoryException;
@@ -145,7 +145,7 @@ public interface Authorizable {
      * Returns the values for the properties with the specified name or
      * <code>null</code>.
      *
-     * @param name
+     * @param name The name of the property to be retrieved.
      * @return value of the property with the given name or <code>null</code>
      *         if no such property exists.
      * @throws RepositoryException If an error occurs.
@@ -155,7 +155,7 @@ public interface Authorizable {
     /**
      * Removes the property with the given name.
      *
-     * @param name
+     * @param name The name of the property to be removed.
      * @return true If the property with the specified name was successfully
      *         removed; false if no such property was present.
      * @throws RepositoryException If an error occurs.
