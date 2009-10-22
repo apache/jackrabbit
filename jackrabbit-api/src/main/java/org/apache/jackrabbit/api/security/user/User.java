@@ -37,11 +37,13 @@ public interface User extends Authorizable {
      * Returns <code>Credentials</code> for this user.
      *
      * @return <code>Credentials</code> for this user.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     Credentials getCredentials() throws RepositoryException;
 
     /**
      * @return <code>Impersonation</code> for this <code>User</code>.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     Impersonation getImpersonation() throws RepositoryException;
 
@@ -49,7 +51,7 @@ public interface User extends Authorizable {
      * Change the password of this user.
      *
      * @param password The new password.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     void changePassword(String password) throws RepositoryException;
 }
