@@ -520,16 +520,14 @@ public class NodeImpl extends ItemImpl implements Node {
         thisState.addChildNodeEntry(name, nodeState.getNodeId());
 
         // add 'auto-create' properties defined in node type
-        PropertyDefinition[] pda = nodeType.getAutoCreatedPropertyDefinitions();
-        for (int i = 0; i < pda.length; i++) {
-            PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
+        for (PropertyDefinition aPda : nodeType.getAutoCreatedPropertyDefinitions()) {
+            PropertyDefinitionImpl pd = (PropertyDefinitionImpl) aPda;
             node.createChildProperty(pd.unwrap().getName(), pd.getRequiredType(), pd);
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        NodeDefinition[] nda = nodeType.getAutoCreatedNodeDefinitions();
-        for (int i = 0; i < nda.length; i++) {
-            NodeDefinitionImpl nd = (NodeDefinitionImpl) nda[i];
+        for (NodeDefinition aNda : nodeType.getAutoCreatedNodeDefinitions()) {
+            NodeDefinitionImpl nd = (NodeDefinitionImpl) aNda;
             node.createChildNode(nd.unwrap().getName(), (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
         }
 
@@ -918,9 +916,8 @@ public class NodeImpl extends ItemImpl implements Node {
             setMixinTypesProperty(mixins);
 
             // add 'auto-create' properties defined in mixin type
-            PropertyDefinition[] pda = mixin.getAutoCreatedPropertyDefinitions();
-            for (int i = 0; i < pda.length; i++) {
-                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
+            for (PropertyDefinition aPda : mixin.getAutoCreatedPropertyDefinitions()) {
+                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) aPda;
                 // make sure that the property is not already defined by primary type
                 // or existing mixin's
                 NodeTypeImpl declaringNT = (NodeTypeImpl) pd.getDeclaringNodeType();
@@ -930,9 +927,8 @@ public class NodeImpl extends ItemImpl implements Node {
             }
 
             // recursively add 'auto-create' child nodes defined in mixin type
-            NodeDefinition[] nda = mixin.getAutoCreatedNodeDefinitions();
-            for (int i = 0; i < nda.length; i++) {
-                NodeDefinitionImpl nd = (NodeDefinitionImpl) nda[i];
+            for (NodeDefinition aNda : mixin.getAutoCreatedNodeDefinitions()) {
+                NodeDefinitionImpl nd = (NodeDefinitionImpl) aNda;
                 // make sure that the child node is not already defined by primary type
                 // or existing mixin's
                 NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
@@ -1786,8 +1782,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // create new child node
         NodeImpl node = addNode(nodeName, nodeTypeName, id);
         if (mixinNames != null) {
-            for (int i = 0; i < mixinNames.length; i++) {
-                node.addMixin(mixinNames[i]);
+            for (Name mixinName : mixinNames) {
+                node.addMixin(mixinName);
             }
         }
 
@@ -3409,7 +3405,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!isNodeType(NameConstants.MIX_REFERENCEABLE)) {
             return PropertyIteratorAdapter.EMPTY;
         }
-        
+
         try {
             StringBuilder stmt = new StringBuilder();
             stmt.append("//*[@").append(ISO9075.encode(name));

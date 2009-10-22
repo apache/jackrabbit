@@ -16,13 +16,26 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.io.InputStream;
-import java.util.Properties;
-
 import junit.framework.TestCase;
-
-import org.xml.sax.InputSource;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.user.UserImporter;
+import org.apache.jackrabbit.core.xml.AccessControlImporter;
+import org.apache.jackrabbit.core.xml.ProtectedNodeImporter;
+import org.apache.jackrabbit.core.xml.ProtectedPropertyImporter;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Test cases for workspace configuration handling.
@@ -68,4 +81,114 @@ public class WorkspaceConfigTest extends TestCase {
             }
         }
     }
+
+    public void testImportConfig() throws Exception {
+        // XML_1 ---------------------------------------------------------------
+        Element xml = parseXML(new InputSource(new StringReader(XML_1)), true);
+        ImportConfig config = parser.parseImportConfig(xml);
+
+        List<ProtectedNodeImporter> ln = config.getProtectedNodeImporters();
+        assertEquals(1, ln.size());
+        assertTrue(ln.get(0) instanceof AccessControlImporter);
+
+        List<ProtectedPropertyImporter> lp = config.getProtectedPropertyImporters();
+        assertEquals(1, lp.size());
+        assertTrue(lp.get(0) instanceof UserImporter);
+
+        // XML_2 ---------------------------------------------------------------
+        xml = parseXML(new InputSource(new StringReader(XML_2)), true);
+        config = parser.parseImportConfig(xml);
+
+        ln = config.getProtectedNodeImporters();
+        assertTrue(ln.isEmpty());
+
+        lp = config.getProtectedPropertyImporters();
+        assertTrue(lp.isEmpty());
+
+        // XML_3 ---------------------------------------------------------------
+        xml = parseXML(new InputSource(new StringReader(XML_3)), true);
+        config = parser.parseImportConfig(xml);
+
+        ln = config.getProtectedNodeImporters();
+        assertEquals(2, ln.size());
+
+        lp = config.getProtectedPropertyImporters();
+        assertEquals(2, lp.size());
+
+        // XML_4 ---------------------------------------------------------------
+        xml = parseXML(new InputSource(new StringReader(XML_4)), true);
+        config = parser.parseImportConfig(xml);
+
+        ln = config.getProtectedNodeImporters();
+        assertEquals(1, ln.size());
+
+        lp = config.getProtectedPropertyImporters();
+        assertEquals(1, lp.size());
+
+        // XML_5 ---------------------------------------------------------------
+        xml = parseXML(new InputSource(new StringReader(XML_5)), true);
+        config = parser.parseImportConfig(xml);
+
+        lp = config.getProtectedPropertyImporters();
+        assertEquals(1, lp.size());
+        assertTrue(lp.get(0) instanceof UserImporter);
+        assertEquals(UserImporter.ImportBehavior.NAME_BESTEFFORT, ((UserImporter)lp.get(0)).getImportBehavior());
+    }
+
+    private static Element parseXML(InputSource xml, boolean validate) throws ConfigurationException {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setValidating(validate);
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            if (validate) {
+                builder.setErrorHandler(new ConfigurationErrorHandler());
+            }
+            builder.setEntityResolver(ConfigurationEntityResolver.INSTANCE);
+            Document document = builder.parse(xml);
+            return document.getDocumentElement();
+        } catch (ParserConfigurationException e) {
+            throw new ConfigurationException("Unable to create configuration XML parser", e);
+        } catch (SAXParseException e) {
+            throw new ConfigurationException("Configuration file syntax error. (Line: " + e.getLineNumber() + " Column: " + e.getColumnNumber() + ")", e);
+        } catch (SAXException e) {
+            throw new ConfigurationException("Configuration file syntax error. ", e);
+        } catch (IOException e) {
+            throw new ConfigurationException("Configuration file could not be read.", e);
+        }
+    }
+
+
+
+    private static final String XML_1 =
+            " <Workspace><Import>\n" +
+                    "    <ProtectedNodeImporter class=\"org.apache.jackrabbit.core.xml.AccessControlImporter\"/>\n" +
+                    "    <ProtectedPropertyImporter class=\"org.apache.jackrabbit.core.security.user.UserImporter\"/>\n" +
+                    " </Import></Workspace>";
+
+    private static final String XML_2 =
+            " <Workspace><Import>\n" +
+                    " </Import></Workspace>";
+
+    private static final String XML_3 =
+            " <Workspace><Import>\n" +
+                    "    <ProtectedNodeImporter class=\"org.apache.jackrabbit.core.xml.AccessControlImporter\"/>\n" +
+                    "    <ProtectedPropertyImporter class=\"org.apache.jackrabbit.core.security.user.UserImporter\"/>\n" +
+                    "    <ProtectedNodeImporter class=\"org.apache.jackrabbit.core.xml.DefaultProtectedNodeImporter\"/>\n" +
+                    "    <ProtectedPropertyImporter class=\"org.apache.jackrabbit.core.xml.DefaultProtectedPropertyImporter\"/>\n" +
+                    " </Import></Workspace>";
+
+    private static final String XML_4 =
+            " <Workspace><Import>\n" +
+                    "    <ProtectedNodeImporter class=\"org.apache.jackrabbit.core.xml.AccessControlImporter\"/>\n" +
+                    "    <ProtectedPropertyImporter class=\"org.apache.jackrabbit.core.security.user.UserImporter\"/>\n" +
+                    "    <ProtectedNodeImporter class=\"org.apache.jackrabbit.core.InvalidImporter\"/>\n" +
+                    "    <ProtectedPropertyImporter class=\"org.apache.jackrabbit.core.InvalidImporter\"/>\n" +
+                    " </Import></Workspace>";
+
+    private static final String XML_5 =
+            " <Workspace><Import>\n" +
+                    "    <ProtectedPropertyImporter class=\"org.apache.jackrabbit.core.security.user.UserImporter\">" +
+                    "       <param name=\"importBehavior\" value=\"besteffort\"/>" +
+                    "    </ProtectedPropertyImporter>\n" +
+                    " </Import></Workspace>";
 }

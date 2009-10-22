@@ -46,6 +46,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.jcr.RepositoryException;
 
@@ -179,6 +181,19 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * implementation of AccessControlProvider should be used.
      */
     private static final String AC_PROVIDER_ELEMENT = "AccessControlProvider";
+
+    /**
+     * Element specifying the class of principals used to retrieve the userID
+     * in the 'class' attribute.
+     */
+    private static final String USERID_CLASS = "UserIdClass";
+
+    /**
+     * Name of the optional XmlImport config entry inside the workspace configuration.
+     */
+    private static final String IMPORT_ELEMENT = "Import";
+    private static final String IMPORT_PNI_ELEMENT = "ProtectedNodeImporter";
+    private static final String IMPORT_PPI_ELEMENT = "ProtectedPropertyImporter";
 
     /**
      * Name of the cluster node id file.
@@ -348,12 +363,19 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                 wac = parseBeanConfig(smElement, WORKSPACE_ACCESS_ELEMENT);
             }
 
-            BeanConfig umc = null;
+            UserManagerConfig umc = null;
             element = getElement(smElement, USER_MANAGER_ELEMENT, false);
             if (element != null) {
-                umc = parseBeanConfig(smElement, USER_MANAGER_ELEMENT);
+                umc = new UserManagerConfig(parseBeanConfig(smElement, USER_MANAGER_ELEMENT));
             }
-            return new SecurityManagerConfig(bc, wspAttr, wac, umc);
+
+            BeanConfig uidcc = null;
+            element = getElement(smElement, USERID_CLASS, false);
+            if (element != null) {
+                uidcc = parseBeanConfig(element);
+            }
+
+            return new SecurityManagerConfig(bc, wspAttr, wac, umc, uidcc);
         } else {
             return null;
         }
@@ -443,7 +465,6 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * @return workspace configuration
      * @throws ConfigurationException if the configuration is broken
      * @see #parseBeanConfig(Element, String)
-     * @see #parseSearchConfig(Element)
      * @see #parseWorkspaceSecurityConfig(Element)
      */
     public WorkspaceConfig parseWorkspaceConfig(InputSource xml)
@@ -472,7 +493,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         // Clustered attribute
         boolean clustered = Boolean.valueOf(
-                getAttribute(root, CLUSTERED_ATTRIBUTE, "true")).booleanValue();
+                getAttribute(root, CLUSTERED_ATTRIBUTE, "true"));
 
         // Create a temporary parser that contains the ${wsp.name} variable
         Properties tmpVariables = (Properties) getVariables().clone();
@@ -496,9 +517,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // workspace specific security configuration
         WorkspaceSecurityConfig workspaceSecurityConfig = tmpParser.parseWorkspaceSecurityConfig(root);
 
+        // optinal config for import handling
+        ImportConfig importConfig = tmpParser.parseImportConfig(root);
+
         return new WorkspaceConfig(
                 home, name, clustered, fsf, pmc, qhf,
-                ismLockingFactory, workspaceSecurityConfig);
+                ismLockingFactory, workspaceSecurityConfig, importConfig);
     }
 
     /**
@@ -594,6 +618,49 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             }
         }
         return new WorkspaceSecurityConfig(acProviderConfig);
+    }
+
+    /**
+     * Read the optional XmlImport Element of Workspace's configuration. It uses
+     * the following format:
+     * <pre>
+     *   &lt;XmlImport&gt;
+     *     &lt;ProtectedNodeImporter class="..." (optional)&gt;
+     *     &lt;ProtectedNodeImporter class="..." (optional)&gt;
+     *     ...
+     *     &lt;ProtectedPropertyImporter class="..." (optional)&gt;
+     *   &lt;/XmlImport&gt;
+     * </pre>
+     *
+     * @param parent Workspace-Root-Element
+     * @return a new <code>XmlImportConfig</code>
+     * @throws ConfigurationException
+     */
+    public ImportConfig parseImportConfig(Element parent) throws ConfigurationException {
+        List<BeanConfig> protectedNodeImporters = new ArrayList();
+        List<BeanConfig> protectedPropertyImporters = new ArrayList();
+
+        Element element = getElement(parent, IMPORT_ELEMENT, false);
+        if (element != null) {
+            NodeList children = element.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                Node child = children.item(i);
+                if (child.getNodeType() == Node.ELEMENT_NODE) {
+                    if (IMPORT_PNI_ELEMENT.equals(child.getNodeName())) {
+                        String className = getAttribute((Element) child, CLASS_ATTRIBUTE);
+                        BeanConfig bc = new BeanConfig(className, parseParameters((Element) child));
+                        bc.setValidate(false);
+                        protectedNodeImporters.add(bc);
+                    } else if (IMPORT_PPI_ELEMENT.equals(child.getNodeName())) {
+                        String className = getAttribute((Element) child, CLASS_ATTRIBUTE);
+                        BeanConfig bc = new BeanConfig(className, parseParameters((Element) child));
+                        bc.setValidate(false);
+                        protectedPropertyImporters.add(bc);
+                    } // else: some other entry -> ignore.
+                }
+            }
+        }
+        return new ImportConfig(protectedNodeImporters, protectedPropertyImporters);
     }
 
     /**

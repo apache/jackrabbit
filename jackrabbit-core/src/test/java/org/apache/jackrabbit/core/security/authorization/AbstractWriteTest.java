@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -87,23 +87,29 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
     protected void tearDown() throws Exception {
         // make sure all ac info is removed
-        if (testGroup != null && testUser != null) {
-            testGroup.removeMember(testUser);
-            testGroup.remove();
+        try {
+            if (testGroup != null && testUser != null) {
+                testGroup.removeMember(testUser);
+                testGroup.remove();
+                if (!getUserManager(superuser).isAutoSave() && superuser.hasPendingChanges()) {
+                    superuser.save();
+                }
+            }
+        } finally {
+            super.tearDown();
         }
-        super.tearDown();
-    }
-
-    protected User getTestUser() {
-        return testUser;
     }
 
     protected Group getTestGroup() throws RepositoryException, NotExecutableException {
         if (testGroup == null) {
             // create the testGroup
             Principal principal = new TestPrincipal("testGroup" + UUID.randomUUID());
-            testGroup = getUserManager(superuser).createGroup(principal);
+            UserManager umgr = getUserManager(superuser);
+            testGroup = umgr.createGroup(principal);
             testGroup.addMember(testUser);
+            if (!umgr.isAutoSave() && superuser.hasPendingChanges()) {
+                superuser.save();
+            }
         }
         return testGroup;
     }
@@ -945,6 +951,9 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
         // remove the test user
         testUser.remove();
+        if (!getUserManager(superuser).isAutoSave() && superuser.hasPendingChanges()) {
+            superuser.save();
+        }
         testUser = null;
 
         // try to retrieve the acl again

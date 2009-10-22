@@ -32,7 +32,7 @@ public class SimpleWorkspaceAccessManager implements WorkspaceAccessManager {
     /**
      * @see WorkspaceAccessManager#init(Session)
      */
-    public void init(Session securitySession) {
+    public void init(Session systemSession) {
         // nothing to do
     }
 

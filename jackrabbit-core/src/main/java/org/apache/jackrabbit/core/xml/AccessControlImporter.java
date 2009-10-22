@@ -41,6 +41,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
@@ -75,27 +76,44 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         ACE_NODETYPES.add(AccessControlConstants.NT_REP_GRANT_ACE);
     }
 
-    private final AccessControlManager acMgr;
     private final Stack<Integer> prevStatus = new Stack<Integer>();
-
+    
+    private AccessControlManager acMgr;
     private int status = STATUS_UNDEFINED;
     private NodeImpl parent = null;
 
     private boolean principalbased = false;
+
+    private boolean initialized = false;
 
     /**
      * the ACL for non-principal based
      */
     private JackrabbitAccessControlList acl = null;
 
-    public AccessControlImporter(JackrabbitSession session, NamePathResolver resolver,
-                                 boolean isWorkspaceImport, int uuidBehavior) throws RepositoryException {
-        super(session, resolver, isWorkspaceImport, uuidBehavior);
-
-        acMgr = session.getAccessControlManager();
+    @Override
+    public boolean init(JackrabbitSession session, NamePathResolver resolver,
+                        boolean isWorkspaceImport, int uuidBehavior,
+                        ReferenceChangeTracker referenceTracker) {
+        if (super.init(session, resolver, isWorkspaceImport, uuidBehavior, referenceTracker)) {
+            if (initialized) {
+                throw new IllegalStateException("Already initialized");
+            }
+            try {
+                acMgr = session.getAccessControlManager();
+                initialized = true;
+            } catch (RepositoryException e) {
+                // initialization failed. ac-import not possible
+            }
+        }
+        return initialized;
     }
 
+    @Override
     public boolean start(NodeImpl protectedParent) throws RepositoryException {
+        if (!initialized) {
+            throw new IllegalStateException("Not initialized");
+        }
         if (isStarted()) {
             // only ok if same parent
             if (!protectedParent.isSame(parent)) {
@@ -116,7 +134,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
                 && protectedParent.isNodeType(AccessControlConstants.NT_REP_ACL)) {
             acl = getACL(protectedParent.getParent().getPath());
             if (acl == null) {
-                log.warn("AccessControlImporter cannot be started: no ACL for {}.", parent.getParent().getPath());
+                log.warn("AccessControlImporter cannot be started: no ACL for {}.", protectedParent.getParent().getPath());
                 return false;
             }
             status = STATUS_ACL;
@@ -155,6 +173,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         return acl;
     }
 
+    @Override
     public boolean start(NodeState protectedParent) throws IllegalStateException, RepositoryException {
         if (isStarted()) {
             throw new IllegalStateException();
@@ -166,16 +185,17 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         return false;
     }
 
+    @Override
     public void end(NodeImpl protectedParent) throws RepositoryException {
         if (!isStarted()) {
             return;
         }
 
         if (!principalbased) {
-            checkStatus(STATUS_ACL, "");
+            checkStatus(STATUS_ACL, "STATUS_ACL expected.");
             acMgr.setPolicy(acl.getPath(), acl);
         } else {
-            checkStatus(STATUS_AC_FOLDER, "");
+            checkStatus(STATUS_AC_FOLDER, "STATUS_AC_FOLDER expected.");
             if (!prevStatus.isEmpty()) {
                 throw new ConstraintViolationException("Incomplete protected item tree: "+ prevStatus.size()+ " calls to 'endChildInfo' missing.");
             }
@@ -183,10 +203,12 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         reset();
     }
 
+    @Override
     public void end(NodeState protectedParent) throws IllegalStateException, ConstraintViolationException, RepositoryException {
         // nothing to do. will never get here.
     }
 
+    @Override
     public void startChildInfo(NodeInfo childInfo, List<PropInfo> propInfos) throws RepositoryException {
         if (!isStarted()) {
             return;
@@ -240,9 +262,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         prevStatus.push(previousStatus);        
     }
 
-    /**
-     * @throws javax.jcr.RepositoryException
-     */
+    @Override
     public void endChildInfo() throws RepositoryException {
         if (!isStarted()) {
             return;
@@ -260,7 +280,6 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         // reset the status
         status = prevStatus.pop();
     }
-
 
     private boolean isStarted() {
         return status > STATUS_UNDEFINED;

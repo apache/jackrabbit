@@ -19,12 +19,14 @@ package org.apache.jackrabbit.core.security.user;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,37 +43,68 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
     private static Logger log = LoggerFactory.getLogger(NodeResolverTest.class);
 
     NodeResolver nodeResolver;
+    UserManager umgr;
+    String usersPath = UserConstants.USERS_PATH;
+    String groupsPath = UserConstants.GROUPS_PATH;
+    String authorizablesPath = UserConstants.AUTHORIZABLES_PATH;
 
     protected void setUp() throws Exception {
         super.setUp();
 
         nodeResolver = createNodeResolver(superuser);
-    }
-
-    protected static UserImpl getCurrentUser(Session session) throws NotExecutableException, RepositoryException {
-        if (!(session instanceof JackrabbitSession)) {
+        if (!(superuser instanceof JackrabbitSession)) {
             throw new NotExecutableException();
         }
-        try {
-            UserManager uMgr = ((JackrabbitSession) session).getUserManager();
-            String uid = session.getUserID();
-            if (uid != null) {
-                Authorizable auth = uMgr.getAuthorizable(session.getUserID());
-                if (auth != null && auth instanceof UserImpl) {
-                    return (UserImpl) auth;
-                }
+
+        umgr = ((JackrabbitSession) superuser).getUserManager();
+        if (umgr instanceof UserManagerImpl) {
+            UserManagerImpl uImpl = (UserManagerImpl) umgr;
+            usersPath = uImpl.getUsersPath();
+            groupsPath = uImpl.getGroupsPath();
+
+            authorizablesPath = usersPath;
+            while (!Text.isDescendant(authorizablesPath, groupsPath)) {
+                authorizablesPath = Text.getRelativeParent(authorizablesPath, 1);
             }
-        } catch (RepositoryException e) {
-            // ignore
+        }
+    }
+
+    protected UserImpl getCurrentUser() throws NotExecutableException, RepositoryException {
+        String uid = superuser.getUserID();
+        if (uid != null) {
+            Authorizable auth = umgr.getAuthorizable(uid);
+            if (auth != null && auth instanceof UserImpl) {
+                return (UserImpl) auth;
+            }
         }
         // unable to retrieve current user
         throw new NotExecutableException();
     }
 
-    protected abstract NodeResolver createNodeResolver(Session session) throws RepositoryException, NotExecutableException;
+    protected void save() throws RepositoryException {
+        if (!umgr.isAutoSave() && superuser.hasPendingChanges()) {
+            superuser.save();
+        }
+    }
+
+    protected abstract NodeResolver createNodeResolver(SessionImpl session) throws RepositoryException, NotExecutableException;
+
+    protected NodeResolver createNodeResolver(Session session) throws NotExecutableException, RepositoryException {
+        if (!(session instanceof SessionImpl)) {
+            throw new NotExecutableException();
+        }
+
+        NodeResolver resolver = createNodeResolver((SessionImpl) session);
+        UserManager umr = ((SessionImpl) session).getUserManager();
+        if (umr instanceof UserManagerImpl) {
+            UserManagerImpl uImpl = (UserManagerImpl) umr;
+            resolver.setSearchRoots(uImpl.getUsersPath(), uImpl.getGroupsPath());
+        }
+        return resolver;
+    }
 
     public void testFindNode() throws NotExecutableException, RepositoryException {
-        UserImpl currentUser = getCurrentUser(superuser);
+        UserImpl currentUser = getCurrentUser();
 
         NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
 
@@ -86,7 +119,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
         result = nr.findNode(currentUser.getNode().getQName(), UserConstants.NT_REP_GROUP);
         assertNull(result);
 
-        Iterator it = currentUser.memberOf();
+        Iterator<Group> it = currentUser.memberOf();
         while (it.hasNext()) {
             GroupImpl gr = (GroupImpl) it.next();
 
@@ -104,7 +137,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
     }
 
     public void testFindNodeByPrincipalName() throws NotExecutableException, RepositoryException {
-        UserImpl currentUser = getCurrentUser(superuser);
+        UserImpl currentUser = getCurrentUser();
 
         NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
 
@@ -112,7 +145,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
         assertNotNull(result);
         assertTrue(currentUser.getNode().isSame(result));
 
-        Iterator it = currentUser.memberOf();
+        Iterator<Group> it = currentUser.memberOf();
         while (it.hasNext()) {
             GroupImpl gr = (GroupImpl) it.next();
 
@@ -126,13 +159,14 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
     }
 
     public void testFindNodeByMultiValueProp() throws NotExecutableException, RepositoryException {
-        UserImpl currentUser = getCurrentUser(superuser);
+        UserImpl currentUser = getCurrentUser();
 
         Value[] vs = new Value[] {
                 superuser.getValueFactory().createValue("blub"),
                 superuser.getValueFactory().createValue("blib")
         };
         currentUser.setProperty(propertyName1, vs);
+        save();
 
         NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
 
@@ -142,6 +176,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
         assertTrue(currentUser.getNode().isSame(result));
 
         currentUser.removeProperty(propertyName1);
+        save();
     }
 
     public void testFindNodeWithNonExistingSearchRoot() throws NotExecutableException, RepositoryException {
@@ -161,14 +196,17 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
                 superuser.getValueFactory().createValue("blib")
         };
 
-        UserImpl currentUser = getCurrentUser(superuser);
+        UserImpl currentUser = getCurrentUser();
         currentUser.setProperty(propertyName1, vs);
 
-        Iterator it = currentUser.memberOf();
+        int expResultSize = 1;
+        Iterator<Group> it = currentUser.memberOf();
         while (it.hasNext()) {
             GroupImpl gr = (GroupImpl) it.next();
             gr.setProperty(propertyName1, vs);
+            expResultSize++;
         }
+        save();
 
         Name propName = ((SessionImpl) superuser).getQName(propertyName1);
 
@@ -181,7 +219,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
             assertFalse("expected no more results", result.hasNext());
 
             result = nr.findNodes(propName, "blub", UserConstants.NT_REP_AUTHORIZABLE, false);
-            assertTrue(getSize(result) > 1);
+            assertEquals(expResultSize, getSize(result));
 
         } finally {
             currentUser.removeProperty(propertyName1);
@@ -190,6 +228,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
                 GroupImpl gr = (GroupImpl) it.next();
                 gr.removeProperty(propertyName1);
             }
+            save();
         }
     }
 
@@ -207,25 +246,25 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
     public void testGetSearchRoot() {
         String searchRoot = nodeResolver.getSearchRoot(UserConstants.NT_REP_AUTHORIZABLE);
         assertNotNull(searchRoot);
-        assertEquals(UserConstants.AUTHORIZABLES_PATH, searchRoot);
+        assertEquals(authorizablesPath, searchRoot);
 
         searchRoot = nodeResolver.getSearchRoot(UserConstants.NT_REP_GROUP);
         assertNotNull(searchRoot);
-        assertEquals(UserConstants.GROUPS_PATH, searchRoot);
+        assertEquals(groupsPath, searchRoot);
 
         searchRoot = nodeResolver.getSearchRoot(UserConstants.NT_REP_USER);
         assertNotNull(searchRoot);
-        assertEquals(UserConstants.USERS_PATH, searchRoot);
+        assertEquals(usersPath, searchRoot);
     }
 
     public void testGetSearchRootDefault() {
         String searchRoot = nodeResolver.getSearchRoot(UserConstants.NT_REP_AUTHORIZABLE_FOLDER);
         assertNotNull(searchRoot);
-        assertEquals(UserConstants.AUTHORIZABLES_PATH, searchRoot);
+        assertEquals(authorizablesPath, searchRoot);
 
         searchRoot = nodeResolver.getSearchRoot(NameConstants.NT_UNSTRUCTURED);
         assertNotNull(searchRoot);
-        assertEquals(UserConstants.AUTHORIZABLES_PATH, searchRoot);
+        assertEquals(authorizablesPath, searchRoot);
     }
 
     public void testGetNamePathResolver() {

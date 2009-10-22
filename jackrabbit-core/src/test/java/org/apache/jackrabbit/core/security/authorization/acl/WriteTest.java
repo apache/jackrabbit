@@ -17,10 +17,12 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
@@ -109,7 +111,7 @@ public class WriteTest extends AbstractWriteTest {
         // test if testuser can modify AC-items
         // 1) add an ac-entry
         ACLTemplate acl = (ACLTemplate) policies[0];
-        acl.addAccessControlEntry(getTestUser().getPrincipal(), privilegesFromName(PrivilegeRegistry.REP_WRITE));
+        acl.addAccessControlEntry(testUser.getPrincipal(), privilegesFromName(PrivilegeRegistry.REP_WRITE));
         testAcMgr.setPolicy(path, acl);
         testSession.save();
 
@@ -213,5 +215,52 @@ public class WriteTest extends AbstractWriteTest {
         // however: removing the grand-child nodes must not be allowed as
         // remove_child_node privilege is missing on the direct ancestor.
         assertFalse(testSession.hasPermission(gcPath, Session.ACTION_REMOVE));
+    }
+
+    public void testInheritedGroupPermissions() throws NotExecutableException, RepositoryException {
+        Group testGroup = getTestGroup();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+         precondition:
+         testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+
+        /* give MODIFY_PROPERTIES privilege for testGroup at 'path' */
+        givePrivileges(path, testGroup.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /*
+         withdraw MODIFY_PROPERTIES privilege for everyone at 'childNPath'
+         */
+        withdrawPrivileges(childNPath, EveryonePrincipal.getInstance(), privileges, getRestrictions(superuser, path));
+
+        // result at 'child path' must be deny
+        assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));    
+    }
+
+    public void testInheritedGroupPermissions2() throws NotExecutableException, RepositoryException {
+        Group testGroup = getTestGroup();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+         precondition:
+         testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+
+        // NOTE: same as testInheritedGroupPermissions above but using
+        // everyone on path, testgroup on childpath -> result must be the same
+
+        /* give MODIFY_PROPERTIES privilege for everyone at 'path' */
+        givePrivileges(path, EveryonePrincipal.getInstance(), privileges, getRestrictions(superuser, path));
+        /*
+         withdraw MODIFY_PROPERTIES privilege for testGroup at 'childNPath'
+         */
+        withdrawPrivileges(childNPath, testGroup.getPrincipal(), privileges, getRestrictions(superuser, path));
+
+        // result at 'child path' must be deny
+        assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
     }
 }

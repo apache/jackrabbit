@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Security manager configuration. This bean configuration class
  * is used to create configured security manager objects.
@@ -27,9 +30,19 @@ package org.apache.jackrabbit.core.config;
  */
 public class SecurityManagerConfig extends BeanConfig {
 
+    /**
+     * the default logger
+     */
+    private static final Logger log = LoggerFactory.getLogger(SecurityManagerConfig.class);
+
     private final String workspaceName;
     private final BeanConfig workspaceAccessConfig;
-    private final BeanConfig userManagerConfig;
+    private final UserManagerConfig userManagerConfig;
+
+    /**
+     * Optional class used to retrieve userID from the subject.
+     */
+    private final Class uidClass;
 
     /**
      * Creates an security manager configuration object from the
@@ -41,7 +54,7 @@ public class SecurityManagerConfig extends BeanConfig {
      */
     public SecurityManagerConfig(BeanConfig config, String workspaceName,
                                  BeanConfig workspaceAccessConfig) {
-        this(config, workspaceName, workspaceAccessConfig, null);
+        this(config, workspaceName, workspaceAccessConfig, null, null);
     }
 
     /**
@@ -55,11 +68,21 @@ public class SecurityManagerConfig extends BeanConfig {
      */
     public SecurityManagerConfig(BeanConfig config, String workspaceName,
                                  BeanConfig workspaceAccessConfig,
-                                 BeanConfig userManagerConfig) {
+                                 UserManagerConfig userManagerConfig,
+                                 BeanConfig uidClassConfig) {
         super(config);
         this.workspaceName = workspaceName;
         this.workspaceAccessConfig = workspaceAccessConfig;
         this.userManagerConfig = userManagerConfig;
+        Class cl = null;
+        if (uidClassConfig != null) {
+            try {
+                cl = Class.forName(uidClassConfig.getClassName(), true, uidClassConfig.getClassLoader());
+            } catch (ClassNotFoundException e) {
+                log.error("Configured bean implementation class " + uidClassConfig.getClassName() + " was not found -> Ignoring UserIdClass element.", e);
+            }
+        }
+        this.uidClass = cl;
     }
 
     /**
@@ -86,7 +109,16 @@ public class SecurityManagerConfig extends BeanConfig {
      * May be <code>null</code> if the configuration entry is missing (i.e.
      * the system default should be used).
      */
-    public BeanConfig getUserManagerConfig() {
+    public UserManagerConfig getUserManagerConfig() {
         return userManagerConfig;
+    }
+    
+    /**
+     * @return Class which is used to retrieve the UserID from the Subject.
+     * @see org.apache.jackrabbit.core.security.JackrabbitSecurityManager#getUserID(javax.security.auth.Subject, String) 
+     * @see javax.security.auth.Subject#getPrincipals(Class)
+     */
+    public Class getUserIdClass() {
+        return uidClass;
     }
 }

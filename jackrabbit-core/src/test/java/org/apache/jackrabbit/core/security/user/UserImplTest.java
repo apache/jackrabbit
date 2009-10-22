@@ -30,6 +30,7 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
@@ -52,7 +53,10 @@ public class UserImplTest extends AbstractUserTest {
         Principal p = getTestPrincipal();
         String pw = buildPassword(p);
         creds = new SimpleCredentials(p.getName(), pw.toCharArray());
+
         User u = userMgr.createUser(p.getName(), pw);
+        save(superuser);
+
         uID = u.getID();
         uSession = getHelper().getRepository().login(creds);
         uMgr = getUserManager(uSession);
@@ -61,6 +65,7 @@ public class UserImplTest extends AbstractUserTest {
     protected void tearDown() throws Exception {
         try {
             userMgr.getAuthorizable(uID).remove();
+            save(superuser);
         } finally {
             uSession.logout();
         }
@@ -81,17 +86,38 @@ public class UserImplTest extends AbstractUserTest {
         assertFalse(auth.isGroup());
     }
 
-    public void testUserCanModifyItsOwnProperties() throws RepositoryException {
+    public void testUserCanModifyItsOwnProperties() throws RepositoryException, NotExecutableException {
         User u = (User) uMgr.getAuthorizable(uID);
         if (u == null) {
             fail("User " +uID+ "hast not been removed and must be visible to the Session created with its credentials.");
         }
 
+        if (!uSession.hasPermission(((UserImpl) u).getNode().getPath(), "set_property")) {
+            throw new NotExecutableException("Users should be able to modify their properties -> Check repository config.");
+        }
+
+        // single valued properties
         u.setProperty("Email", new StringValue("tu@security.test"));
+        save(uSession);
+
+        assertNotNull(u.getProperty("Email"));
         assertEquals("tu@security.test", u.getProperty("Email")[0].getString());
 
         u.removeProperty("Email");
+        save(uSession);
+
         assertNull(u.getProperty("Email"));
+
+        // multivalued properties
+        u.setProperty(propertyName1, new Value[] {uSession.getValueFactory().createValue("anyValue")});
+        save(uSession);
+
+        assertNotNull(u.getProperty(propertyName1));
+
+        u.removeProperty(propertyName1);
+        save(uSession);
+        
+        assertNull(u.getProperty(propertyName1));
     }
 
     public void testChangePassword() throws RepositoryException, NotExecutableException, NoSuchAlgorithmException, UnsupportedEncodingException {
@@ -104,11 +130,13 @@ public class UserImplTest extends AbstractUserTest {
         User user = getTestUser(superuser);
         try {
             user.changePassword("pw");
+            save(superuser);
 
             SimpleCredentials creds = new SimpleCredentials(user.getID(), "pw".toCharArray());
             assertTrue(((CryptedSimpleCredentials) user.getCredentials()).matches(creds));
         } finally {
             user.changePassword(oldPw);
+            save(superuser);
         }
     }
 }

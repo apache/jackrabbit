@@ -34,7 +34,6 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -45,6 +44,7 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
 
     protected UserManager userMgr;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -53,6 +53,22 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
         } catch (Exception e) {
             superuser.logout();
             throw e;
+        }
+    }
+
+    /**
+     * Conditional save if the userManager expects an extra save() call.
+     * NOTE: only works if changes are made with UserManager affect the passed
+     * session object (i.e. if the Session hold within the UserManager is
+     * the same as the passes Session s.
+     *
+     * @param s
+     * @throws RepositoryException
+     */
+    protected static void save(Session s) throws RepositoryException, NotExecutableException {
+        UserManager umgr = getUserManager(s);
+        if (!umgr.isAutoSave() && s.hasPendingChanges()) {
+            s.save();
         }
     }
 
@@ -70,7 +86,7 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
     }
 
     protected static Subject buildSubject(Principal p) {
-        return new Subject(true, Collections.singleton(p), Collections.EMPTY_SET, Collections.EMPTY_SET);
+        return new Subject(true, Collections.singleton(p), Collections.emptySet(), Collections.emptySet());
     }
 
     protected Principal getTestPrincipal() throws RepositoryException {
@@ -79,14 +95,13 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
     }
 
     protected Principal getTestPrincipal(String name) throws RepositoryException {
-        Principal p = new TestPrincipal(name);
-        return p;
+        return new TestPrincipal(name);
     }
 
     protected String buildPassword(String uid, boolean createDigest) throws IllegalArgumentException {
         if (createDigest) {
             try {
-                StringBuffer password = new StringBuffer();
+                StringBuilder password = new StringBuilder();
                 password.append("{").append(SecurityConstants.DEFAULT_DIGEST).append("}");
                 password.append(Text.digest(SecurityConstants.DEFAULT_DIGEST, uid.getBytes("UTF-8")));
                 return password.toString();
@@ -108,7 +123,7 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
         return new SimpleCredentials(uID, pw.toCharArray());
     }
 
-    protected static Set getPrincipalSetFromSession(Session session) throws NotExecutableException {
+    protected static Set<Principal> getPrincipalSetFromSession(Session session) throws NotExecutableException {
         if (session instanceof SessionImpl) {
             return ((SessionImpl) session).getSubject().getPrincipals();
         } else {
@@ -123,13 +138,12 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
             return (User) auth;
         }
         // should never happen. An Session should always have a corresponding User.
-        throw new RepositoryException("Unable to retrieve a User.");
+        throw new NotExecutableException("Unable to retrieve a User.");
     }
 
     protected Group getTestGroup(Session session) throws NotExecutableException, RepositoryException {
-        Set principals = getPrincipalSetFromSession(session);
-        for (Iterator it = principals.iterator(); it.hasNext();) {
-            Authorizable auth = getUserManager(session).getAuthorizable((Principal) it.next());
+        for (Principal principal : getPrincipalSetFromSession(session)) {
+            Authorizable auth = getUserManager(session).getAuthorizable(principal);
             if (auth != null && auth.isGroup()) {
                 return (Group) auth;
             }

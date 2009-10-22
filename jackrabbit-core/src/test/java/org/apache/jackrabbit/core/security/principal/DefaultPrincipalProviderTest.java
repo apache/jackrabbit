@@ -64,7 +64,7 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
         assertFalse(pit.hasNext());
     }
 
-    public void testInheritedMemberShip() throws RepositoryException {
+    public void testInheritedMemberShip() throws RepositoryException, NotExecutableException {
         Principal up = getTestPrincipal();
 
         User u = null;
@@ -74,9 +74,12 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
             u = userMgr.createUser(up.getName(), buildPassword(up));
             gr1 = userMgr.createGroup(getTestPrincipal());
             gr2 = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
+
 
             gr1.addMember(gr2);
             gr2.addMember(u);
+            save(superuser);
 
             PrincipalIterator it = principalProvider.getGroupMembership(u.getPrincipal());
             while (it.hasNext()) {
@@ -96,6 +99,7 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
             if (gr1 != null) gr1.remove();
             if (gr2 != null) gr2.remove();
             if (u != null) u.remove();
+            save(superuser);
         }
     }
 }

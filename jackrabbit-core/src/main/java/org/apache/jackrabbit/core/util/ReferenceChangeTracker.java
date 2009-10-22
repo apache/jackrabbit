@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
 
 /**
  * Simple helper class that can be used to keep track of node id mappings
@@ -90,5 +91,16 @@ public class ReferenceChangeTracker {
      */
     public Iterator<Object> getProcessedReferences() {
         return references.iterator();
+    }
+
+    /**
+     * Remove the given references that have already been processed from the
+     * references list.
+     * 
+     * @param processedReferences
+     * @return <code>true</code> if the internal list of references changed.
+     */
+    public boolean removeReferences(List<Object> processedReferences) {
+        return references.removeAll(processedReferences);
     }
 }

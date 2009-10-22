@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
@@ -33,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Iterator;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -1065,7 +1063,7 @@ public class RepositoryImpl extends AbstractRepository
         } else {
             log.debug("Found preauthenticated Subject, try to extend authentication");
             // login either using JAAS or custom LoginModule
-            AuthContext authCtx = getSecurityManager().getAuthContext(null, subject);
+            AuthContext authCtx = getSecurityManager().getAuthContext(null, subject, workspaceName);
             try {
                 authCtx.login();
                 s = createSession(authCtx, workspaceName);
@@ -1320,8 +1318,8 @@ public class RepositoryImpl extends AbstractRepository
         // now set customized repository descriptor values (if any exist)
         Properties props = getCustomRepositoryDescriptors();
         if (props != null) {
-            for (Iterator it = props.keySet().iterator(); it.hasNext();) {
-                String key = (String) it.next();
+            for (Object o : props.keySet()) {
+                String key = (String) o;
                 setDescriptor(key, props.getProperty(key));
             }
         }
@@ -1462,16 +1460,15 @@ public class RepositoryImpl extends AbstractRepository
                 }
             }
             // not preauthenticated -> try login with credentials
-            AuthContext authCtx = getSecurityManager().getAuthContext(credentials, new Subject());
+            AuthContext authCtx = getSecurityManager().getAuthContext(credentials, new Subject(), workspaceName);
             authCtx.login();
 
             // create session, and add SimpleCredentials attributes (JCR-1932)
             SessionImpl session = createSession(authCtx, workspaceName);
             if (credentials instanceof SimpleCredentials) {
                 SimpleCredentials sc = (SimpleCredentials) credentials;
-                String[] names = sc.getAttributeNames();
-                for (int i = 0; i < names.length; i++) {
-                    session.setAttribute(names[i], sc.getAttribute(names[i]));
+                for (String name : sc.getAttributeNames()) {
+                    session.setAttribute(name, sc.getAttribute(name));
                 }
             }
             return session;

@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.config.ImportConfig;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
@@ -66,7 +67,6 @@ public class WorkspaceImporter implements Importer {
     private final WorkspaceImpl wsp;
     private final SessionImpl session;
     private final InternalVersionManager versionManager;
-    private final NodeTypeRegistry ntReg;
     private final HierarchyManager hierMgr;
     private final BatchedItemOperations itemOps;
 
@@ -107,10 +107,40 @@ public class WorkspaceImporter implements Importer {
                              int uuidBehavior)
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
+        this(parentPath, wsp, ntReg, uuidBehavior, null);
+    }
+
+    /**
+     * Creates a new <code>WorkspaceImporter</code> instance.
+     *
+     * @param parentPath   target path where to add the imported subtree
+     * @param wsp the workspace to operate on
+     * @param ntReg the node type registry
+     * @param uuidBehavior flag that governs how incoming UUIDs are handled
+     * @param config import configuration.
+     * @throws PathNotFoundException        if no node exists at
+     *                                      <code>parentPath</code> or if the
+     *                                      current session is not granted read
+     *                                      access.
+     * @throws ConstraintViolationException if the node at
+     *                                      <code>parentPath</code> is protected
+     * @throws VersionException             if the node at
+     *                                      <code>parentPath</code> is not
+     *                                      checked-out
+     * @throws LockException                if a lock prevents the addition of
+     *                                      the subtree
+     * @throws RepositoryException          if another error occurs
+     */
+    public WorkspaceImporter(Path parentPath,
+                             WorkspaceImpl wsp,
+                             NodeTypeRegistry ntReg,
+                             int uuidBehavior,
+                             ImportConfig config)
+            throws PathNotFoundException, ConstraintViolationException,
+            VersionException, LockException, RepositoryException {
         this.wsp = wsp;
         this.session = (SessionImpl) wsp.getSession();
         this.versionManager = session.getInternalVersionManager();
-        this.ntReg = ntReg;
         this.uuidBehavior = uuidBehavior;
 
         itemOps = new BatchedItemOperations(
@@ -128,6 +158,24 @@ public class WorkspaceImporter implements Importer {
 
         parents = new Stack<NodeState>();
         parents.push(importTarget);
+
+        // TODO: TOBEFIXED importer doesn't yet pass protected items to the configured importers.
+        // for the time being throw exception if an importer is configured that
+        // is expected to work with workspace import.
+        if (config != null) {
+            List<ProtectedNodeImporter> ln = config.getProtectedNodeImporters();
+            for (ProtectedNodeImporter pni : ln) {
+                if (pni.init(session, session, true, uuidBehavior, refTracker)) {
+                    throw new UnsupportedOperationException("Workspace-Import of protected nodes: Not yet implement. ");
+                }
+            }
+            List<ProtectedPropertyImporter> lp = config.getProtectedPropertyImporters();
+            for (ProtectedPropertyImporter ppi : lp) {
+                if (ppi.init(session, session, true, uuidBehavior, refTracker)) {
+                    throw new UnsupportedOperationException("Workspace-Import of protected properties: Not yet implement. ");
+                }
+            }
+        }
     }
 
     /**
@@ -660,7 +708,7 @@ public class WorkspaceImporter implements Importer {
              * adjust references that refer to uuid's which have been mapped to
              * newly gererated uuid's on import
              */
-            Iterator iter = refTracker.getProcessedReferences();
+            Iterator<Object> iter = refTracker.getProcessedReferences();
             while (iter.hasNext()) {
                 PropertyState prop = (PropertyState) iter.next();
                 // being paranoid...

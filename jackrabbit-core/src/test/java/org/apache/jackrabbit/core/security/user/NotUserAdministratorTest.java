@@ -49,7 +49,10 @@ public class NotUserAdministratorTest extends AbstractUserTest {
         // created for that new user.
         Principal p = getTestPrincipal();
         String pw = buildPassword(p);
+
         UserImpl u = (UserImpl) userMgr.createUser(p.getName(), pw);
+        save(superuser);
+        
         uID = u.getID();
 
         // create a session for the other user.
@@ -66,15 +69,18 @@ public class NotUserAdministratorTest extends AbstractUserTest {
             Authorizable a = userMgr.getAuthorizable(uID);
             if (a != null) {
                 a.remove();
+                save(superuser);
             }
         }
         super.tearDown();
     }
 
-    public void testCreateUser() {
+    public void testCreateUser() throws NotExecutableException {
         try {
             Principal p = getTestPrincipal();
             User u = uMgr.createUser(p.getName(), buildPassword(p));
+            save(uSession);
+
             fail("A non-UserAdmin should not be allowed to create a new User.");
 
             // clean-up: let superuser remove the user created by fault.
@@ -87,10 +93,12 @@ public class NotUserAdministratorTest extends AbstractUserTest {
         }
     }
 
-    public void testCreateUserWithItermediatePath() {
+    public void testCreateUserWithItermediatePath() throws NotExecutableException {
         try {
             Principal p = getTestPrincipal();
             User u = uMgr.createUser(p.getName(), buildPassword(p), p, "/any/intermediate/path");
+            save(uSession);
+
             fail("A non-UserAdmin should not be allowed to create a new User.");
 
             // clean-up: let superuser remove the user created by fault.
@@ -103,101 +111,96 @@ public class NotUserAdministratorTest extends AbstractUserTest {
         }
     }
 
-    public void testRemoveOwnAuthorizable() throws RepositoryException {
+    public void testRemoveOwnAuthorizable() throws RepositoryException, NotExecutableException {
         Authorizable himself = uMgr.getAuthorizable(uID);
         try {
             himself.remove();
+            save(uSession);
+
             fail("A user should not be allowed to remove him/herself.");
         } catch (AccessDeniedException e) {
             // success
         }
     }
 
-    public void testRemoveChildUser() throws RepositoryException {
-        // let superuser create a child-user.
+    public void testRemoveUser() throws RepositoryException, NotExecutableException {
+        // let superuser create another user.
         Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildPassword(p)).getID();
-        try {
-            Authorizable a = uMgr.getAuthorizable(childID);
-            a.remove();
-            fail("A non-administrator user should not be allowed to remove a child-user.");
-        } catch (AccessDeniedException e) {
-            // success
-        }
+        String user2ID = userMgr.createUser(p.getName(), buildPassword(p)).getID();
+        save(superuser);
 
-        // let superuser do clean up.
-        Authorizable child = userMgr.getAuthorizable(childID);
-        if (child != null) {
-            child.remove();
-        }
-    }
-
-    public void testRemoveOtherUser() throws RepositoryException {
-        // let superuser create a child-user.
-        Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildPassword(p), p, "/any/intermediate/path").getID();
         try {
-            Authorizable a = uMgr.getAuthorizable(childID);
+            Authorizable a = uMgr.getAuthorizable(user2ID);
             a.remove();
+            save(uSession);
+
             fail("A non-administrator user should not be allowed to remove another user.");
         } catch (AccessDeniedException e) {
             // success
         }
 
         // let superuser do clean up.
-        Authorizable child = userMgr.getAuthorizable(childID);
-        if (child != null) {
-            child.remove();
+        Authorizable user2 = userMgr.getAuthorizable(user2ID);
+        if (user2 != null) {
+            user2.remove();
+            save(superuser);
         }
     }
 
-    public void testModifyImpersonation() throws RepositoryException {
-        // let superuser create a child-user.
+    public void testRemoveOtherUser() throws RepositoryException, NotExecutableException {
+        // let superuser create another user.
         Principal p = getTestPrincipal();
-        Authorizable child = userMgr.createUser(p.getName(), buildPassword(p));
+        String user2ID = userMgr.createUser(p.getName(), buildPassword(p), p, "/any/intermediate/path").getID();
+        save(superuser);
+
         try {
-            p = child.getPrincipal();
+            Authorizable a = uMgr.getAuthorizable(user2ID);
+            a.remove();
+            save(uSession);
 
-            Authorizable himself = uMgr.getAuthorizable(uID);
-            Impersonation impers = ((User) himself).getImpersonation();
-
-            assertFalse(impers.allows(buildSubject(p)));
-            assertTrue(impers.grantImpersonation(p));
-            assertTrue(impers.allows(buildSubject(p)));
-            assertTrue(impers.revokeImpersonation(p));
-            assertFalse(impers.allows(buildSubject(p)));
-
-        } finally {
-            // let superuser do clean up.
-            child.remove();
-        }
-    }
-
-    public void testModifyImpersonationOfChildUser() throws RepositoryException {
-        // let superuser create a child-user.
-        Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildPassword(p)).getID();
-        try {
-            Authorizable child = uMgr.getAuthorizable(childID);
-
-            Impersonation impers = ((User) child).getImpersonation();
-            Principal himselfP = uMgr.getAuthorizable(uID).getPrincipal();
-            assertFalse(impers.allows(buildSubject(himselfP)));
-            impers.grantImpersonation(himselfP);
-            fail("A non-administrator user should not be allowed modify Impersonation of a child user.");
+            fail("A non-administrator user should not be allowed to remove another user.");
         } catch (AccessDeniedException e) {
             // success
         }
 
         // let superuser do clean up.
-        Authorizable child = userMgr.getAuthorizable(childID);
-        if (child != null) {
-            child.remove();
+        Authorizable user2 = userMgr.getAuthorizable(user2ID);
+        if (user2 != null) {
+            user2.remove();
+            save(superuser);
+        }
+    }
+
+    public void testModifyImpersonationOfAnotherUser() throws RepositoryException, NotExecutableException {
+        // let superuser create another user.
+        Principal p = getTestPrincipal();
+        String user2ID = userMgr.createUser(p.getName(), buildPassword(p)).getID();
+        save(superuser);
+
+        try {
+            Authorizable a = uMgr.getAuthorizable(user2ID);
+
+            Impersonation impers = ((User) a).getImpersonation();
+            Principal himselfP = uMgr.getAuthorizable(uID).getPrincipal();
+            assertFalse(impers.allows(buildSubject(himselfP)));
+            impers.grantImpersonation(himselfP);
+            save(uSession);
+
+            fail("A non-administrator user should not be allowed modify Impersonation of another user.");
+        } catch (AccessDeniedException e) {
+            // success
+        }
+
+        // let superuser do clean up.
+        Authorizable user2 = userMgr.getAuthorizable(user2ID);
+        if (user2 != null) {
+            user2.remove();
+            save(superuser);
         }
     }
 
     public void testAddToGroup() throws NotExecutableException, RepositoryException {
-        Authorizable auth = userMgr.getAuthorizable(SecurityConstants.ADMINISTRATORS_NAME);
+        Authorizable auth = uMgr.getAuthorizable(SecurityConstants.ADMINISTRATORS_NAME);
         if (auth == null || !auth.isGroup()) {
             throw new NotExecutableException("Couldn't find 'administrators' group");
         }
@@ -206,10 +209,15 @@ public class NotUserAdministratorTest extends AbstractUserTest {
         try {
             auth = uMgr.getAuthorizable(uID);
             gr.addMember(auth);
+            save(uSession);
+
             fail("a common user should not be allowed to modify any groups.");
-            gr.removeMember(auth);
         } catch (AccessDeniedException e) {
             // success
+        } finally {
+            if (gr.removeMember(auth)) {
+                save(uSession);
+            }
         }
     }
 }

@@ -22,17 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 /** <code>TraversingNodeResolverTest</code>... */
 public class TraversingNodeResolverTest extends NodeResolverTest {
 
     private static Logger log = LoggerFactory.getLogger(TraversingNodeResolverTest.class);
 
-    protected NodeResolver createNodeResolver(Session session) throws RepositoryException, NotExecutableException {
-        if (!(session instanceof SessionImpl)) {
-            throw new NotExecutableException();
-        }
-        return new TraversingNodeResolver(session, (SessionImpl) session);
+    protected NodeResolver createNodeResolver(SessionImpl session) throws RepositoryException, NotExecutableException {
+        return new TraversingNodeResolver(session, session);
     }
 }

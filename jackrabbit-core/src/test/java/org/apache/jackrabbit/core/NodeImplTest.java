@@ -37,7 +37,6 @@ import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.Iterator;
 import java.util.Calendar;
 
 /** <code>NodeImplTest</code>... */
@@ -66,9 +65,9 @@ public class NodeImplTest extends AbstractJCRTest {
         }
         if (acl == null) {
             AccessControlPolicy[] acps = acMgr.getPolicies(n.getPath());
-            for (int i = 0; i < acps.length; i++) {
-                if (acps[i] instanceof JackrabbitAccessControlList) {
-                    acl = (JackrabbitAccessControlList) acps[i];
+            for (AccessControlPolicy acp : acps) {
+                if (acp instanceof JackrabbitAccessControlList) {
+                    acl = (JackrabbitAccessControlList) acp;
                     break;
                 }
             }
@@ -87,8 +86,7 @@ public class NodeImplTest extends AbstractJCRTest {
     private Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {
         SessionImpl s = (SessionImpl) getHelper().getReadOnlySession();
         try {
-            for (Iterator it = s.getSubject().getPrincipals().iterator(); it.hasNext();) {
-                Principal p = (Principal) it.next();
+            for (Principal p : s.getSubject().getPrincipals()) {
                 if (!(p instanceof Group)) {
                     return p;
                 }
@@ -157,7 +155,6 @@ public class NodeImplTest extends AbstractJCRTest {
         } catch (ItemExistsException e) {
         }
     }
-
     /**
      * Test case for JCR-2336. Setting jcr:data (of type BINARY) must convert
      * the String value to a binary.

@@ -73,10 +73,14 @@ public class WriteTest extends AbstractWriteTest {
     }
 
     public void testEditor() throws NotExecutableException, RepositoryException {
+        UserManager uMgr = getUserManager(superuser);        
         User u = null;
         try {
-            UserManager uMgr = getUserManager(superuser);
             u = uMgr.createUser("t", "t");
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
+
             Principal p = u.getPrincipal();
 
             JackrabbitAccessControlManager acMgr = (JackrabbitAccessControlManager) getAccessControlManager(superuser);
@@ -103,19 +107,23 @@ public class WriteTest extends AbstractWriteTest {
             superuser.refresh(false);
             if (u != null) {
                 u.remove();
+                if (!uMgr.isAutoSave()) {
+                    superuser.save();
+                }
             }
         }
     }
 
     public void testEditor2() throws NotExecutableException, RepositoryException {
+        UserManager uMgr = getUserManager(superuser);
         User u = null;
         User u2 = null;
-
         try {
-            UserManager uMgr = getUserManager(superuser);
-
             u = uMgr.createUser("t", "t");
             u2 = uMgr.createUser("tt", "tt", new TestPrincipal("tt"), "t/tt");
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
 
             Principal p = u.getPrincipal();
             Principal p2 = u2.getPrincipal();
@@ -140,7 +148,10 @@ public class WriteTest extends AbstractWriteTest {
             superuser.refresh(false);
             if (u2 != null) u2.remove();
             if (u != null) u.remove();
-     }
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
+        }
 
     }
     // TODO: add specific tests with other restrictions

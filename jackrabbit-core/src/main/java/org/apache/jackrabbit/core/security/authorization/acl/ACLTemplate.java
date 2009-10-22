@@ -140,51 +140,6 @@ class ACLTemplate extends AbstractACLTemplate {
         }
     }
 
-    /**
-     * Separately collect the entries defined for the principals with the
-     * specified names and return a map consisting of principal name key
-     * and a list of ACEs as value.
-     *
-     * @param aclNode acl node
-     * @param princToEntries Map of key = principalName and value = ArrayList
-     * to be filled with ACEs matching the principal names.
-     * @throws RepositoryException if an error occurs
-     */
-    static void collectEntries(NodeImpl aclNode, Map<String, List<AccessControlEntry>> princToEntries)
-            throws RepositoryException {
-        SessionImpl sImpl = (SessionImpl) aclNode.getSession();
-        PrincipalManager principalMgr = sImpl.getPrincipalManager();
-        AccessControlManager acMgr = sImpl.getAccessControlManager();
-
-        NodeIterator itr = aclNode.getNodes();
-        while (itr.hasNext()) {
-            NodeImpl aceNode = (NodeImpl) itr.nextNode();
-            String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
-            // only process aceNode if 'principalName' is contained in the given set
-            if (princToEntries.containsKey(principalName)) {
-                Principal princ = principalMgr.getPrincipal(principalName);
-                if (princ == null) {
-                    log.warn("Principal with name " + principalName + " unknown to PrincipalManager.");
-                    princ = new PrincipalImpl(principalName);
-                }
-
-                Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
-                Privilege[] privs = new Privilege[privValues.length];
-                for (int i = 0; i < privValues.length; i++) {
-                    privs[i] = acMgr.privilegeFromName(privValues[i].getString());
-                }
-                // create a new ACEImpl (omitting validation check)
-                Entry ace = new Entry(
-                        princ,
-                        privs,
-                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE),
-                        sImpl.getValueFactory());
-                // add it to the proper list (e.g. separated by principals)
-                princToEntries.get(principalName).add(ace);
-            }
-        }
-    }
-
     private List<? extends AccessControlEntry> internalGetEntries() {
         List<Entry> l = new ArrayList<Entry>();
         for (List<Entry> o : entries.values()) {
@@ -298,7 +253,7 @@ class ACLTemplate extends AbstractACLTemplate {
         if (!(ace instanceof Entry)) {
             throw new AccessControlException("Invalid AccessControlEntry implementation " + ace.getClass().getName() + ".");
         }
-        List l = internalGetEntries(ace.getPrincipal());
+        List<Entry> l = internalGetEntries(ace.getPrincipal());
         if (l.remove(ace)) {
             if (l.isEmpty()) {
                 entries.remove(ace.getPrincipal().getName());

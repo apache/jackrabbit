@@ -20,6 +20,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
     private static Logger log = LoggerFactory.getLogger(AbstractEvaluationTest.class);
 
+    private String uid;
     protected User testUser;
     protected Credentials creds;
     
@@ -63,10 +65,13 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         try {
             UserManager uMgr = getUserManager(superuser);
             // create the testUser
-            String uid = "testUser" + UUID.randomUUID();
+            uid = "testUser" + UUID.randomUUID();
             creds = new SimpleCredentials(uid, uid.toCharArray());
 
             testUser = uMgr.createUser(uid, uid);
+            if (!uMgr.isAutoSave()) {
+                superuser.save();
+            }
         } catch (Exception e) {
             superuser.logout();
             throw e;
@@ -90,8 +95,14 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         if (testSession != null && testSession.isLive()) {
             testSession.logout();
         }
-        if (testUser != null) {
-            testUser.remove();
+        if (uid != null) {
+            Authorizable a = getUserManager(superuser).getAuthorizable(uid);
+            if (a != null) {
+                a.remove();
+                if (!getUserManager(superuser).isAutoSave()) {
+                    superuser.save();
+                }
+            }
         }
         super.tearDown();
     }

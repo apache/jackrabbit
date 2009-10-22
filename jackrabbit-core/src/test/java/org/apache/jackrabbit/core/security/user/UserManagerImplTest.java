@@ -21,7 +21,6 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -32,10 +31,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
-import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.Node;
 import java.security.Principal;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>UserManagerImplTest</code>...
@@ -63,55 +64,24 @@ public class UserManagerImplTest extends AbstractUserTest {
         return userId;
     }
 
-    public void testCreateNodesDirectly() throws NotExecutableException, RepositoryException {
-        User u = getTestUser(superuser);
-        if (u instanceof UserImpl) {
-            throw new NotExecutableException();
-        }
-
-        NodeImpl n = ((UserImpl)u).getNode();
-        try {
-            n.addNode("anyname", "rep:AuthorizableFolder");
-            fail("security nodes must be protected.");
-        } catch (ConstraintViolationException e) {
-            // success
-        } finally {
-            n.refresh(false);
-        }
-        try {
-            n.addNode("anyname", "rep:User");
-            fail("security nodes must be protected.");
-        } catch (ConstraintViolationException e) {
-            // success
-        } finally {
-            n.refresh(false);
-        }
-        try {
-            n.setProperty("rep:userId", "someotherUID");
-            fail("security nodes must be protected.");
-        } catch (ConstraintViolationException e) {
-            // success
-        } finally {
-            n.refresh(false);
-        }
-    }
-
-    public void testPrincipalNameEqualsUserID() throws RepositoryException {
+    public void testPrincipalNameEqualsUserID() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
         User u = null;
         try {
             u = userMgr.createUser(p.getName(), buildPassword(p));
+            save(superuser);
 
             String msg = "Implementation specific: User.getID() must return the userID pass to createUser.";
             assertEquals(msg, u.getID(), p.getName());
         } finally {
             if (u != null) {
                 u.remove();
+                save(superuser);
             }
         }
     }
 
-    public void testUserIDFromSession() throws RepositoryException {
+    public void testUserIDFromSession() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
         User u = null;
         Session uSession = null;
@@ -119,6 +89,7 @@ public class UserManagerImplTest extends AbstractUserTest {
             String uid = p.getName();
             String pw = buildPassword(p);
             u = userMgr.createUser(uid, pw);
+            save(superuser);
 
             uSession = superuser.getRepository().login(new SimpleCredentials(uid, pw.toCharArray()));
             assertEquals(u.getID(), uSession.getUserID());
@@ -128,11 +99,12 @@ public class UserManagerImplTest extends AbstractUserTest {
             }
             if (u != null) {
                 u.remove();
+                save(superuser);
             }
         }
     }
 
-    public void testCreateUserIdDifferentFromPrincipalName() throws RepositoryException {
+    public void testCreateUserIdDifferentFromPrincipalName() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
         String uid = getTestUserId(p);
         String pw = buildPassword(uid, true);
@@ -141,6 +113,7 @@ public class UserManagerImplTest extends AbstractUserTest {
         Session uSession = null;
         try {
             u = userMgr.createUser(uid, pw, p, null);
+            save(superuser);
 
             String msg = "Creating a User with principal-name distinct from Principal-name must succeed as long as both are unique.";
             assertEquals(msg, u.getID(), uid);
@@ -157,11 +130,12 @@ public class UserManagerImplTest extends AbstractUserTest {
             }
             if (u != null) {
                 u.remove();
+                save(superuser);
             }
         }
     }
 
-    public void testCreatingGroupWithNameMatchingExistingUserId() throws RepositoryException {
+    public void testCreatingGroupWithNameMatchingExistingUserId() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
         String uid = getTestUserId(p);
 
@@ -169,7 +143,9 @@ public class UserManagerImplTest extends AbstractUserTest {
         Group gr = null;
         try {
             u = userMgr.createUser(uid, buildPassword(uid, true), p, null);
+            save(superuser);
             gr = userMgr.createGroup(new TestPrincipal(uid));
+            save(superuser);
 
             String msg = "Creating a Group with a principal-name that exists as UserID -> must create new GroupID but keep PrincipalName.";
             assertFalse(msg, gr.getID().equals(gr.getPrincipal().getName()));
@@ -179,24 +155,25 @@ public class UserManagerImplTest extends AbstractUserTest {
         } finally {
             if (u != null) {
                 u.remove();
+                save(superuser);
             }
             if (gr != null) {
                 gr.remove();
+                save(superuser);
             }
         }
     }
 
     public void testFindAuthorizable() throws RepositoryException, NotExecutableException {
         Authorizable auth;
-        Set principals = getPrincipalSetFromSession(superuser);
-        for (Iterator it = principals.iterator(); it.hasNext();) {
-            Principal p = (Principal) it.next();
+        Set<Principal> principals = getPrincipalSetFromSession(superuser);
+        for (Principal p : principals) {
             auth = userMgr.getAuthorizable(p);
 
             if (auth != null) {
-                if (!auth.isGroup() && auth.hasProperty("rep:userId")) {
-                    String val = auth.getProperty("rep:userId")[0].getString();
-                    Iterator users = userMgr.findAuthorizables("rep:userId", val);
+                if (!auth.isGroup() && auth.hasProperty(pPrincipalName)) {
+                    String val = auth.getProperty(pPrincipalName)[0].getString();
+                    Iterator<Authorizable> users = userMgr.findAuthorizables(pPrincipalName, val);
 
                     // the result must contain 1 authorizable
                     assertTrue(users.hasNext());
@@ -211,18 +188,19 @@ public class UserManagerImplTest extends AbstractUserTest {
         }
     }
 
-    public void testFindAuthorizableByAddedProperty() throws RepositoryException {
+    public void testFindAuthorizableByAddedProperty() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
         Authorizable auth = null;
 
         try {
             auth= userMgr.createGroup(p);
             auth.setProperty("E-Mail", new Value[] { superuser.getValueFactory().createValue("anyVal")});
+            save(superuser);
 
             boolean found = false;
-            Iterator result = userMgr.findAuthorizables("E-Mail", "anyVal");
+            Iterator<Authorizable> result = userMgr.findAuthorizables("E-Mail", "anyVal");
             while (result.hasNext()) {
-                Authorizable a = (Authorizable) result.next();
+                Authorizable a = result.next();
                 if (a.getID().equals(auth.getID())) {
                     found = true;
                 }
@@ -233,19 +211,21 @@ public class UserManagerImplTest extends AbstractUserTest {
             // remove the create group again.
             if (auth != null) {
                 auth.remove();
+                save(superuser);
             }
         }
     }
 
-    public void testFindUser() throws RepositoryException {
+    public void testFindUser() throws RepositoryException, NotExecutableException {
         User u = null;
         try {
             Principal p = getTestPrincipal();
             String uid = "UID" + p.getName();
             u = userMgr.createUser(uid, buildPassword(uid, false), p, null);
+            save(superuser);
 
             boolean found = false;
-            Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
+            Iterator<Authorizable> it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
             while (it.hasNext() && !found) {
                 User nu = (User) it.next();
                 found = nu.getID().equals(uid);
@@ -273,18 +253,20 @@ public class UserManagerImplTest extends AbstractUserTest {
         } finally {
             if (u != null) {
                 u.remove();
+                save(superuser);
             }
         }
     }
 
-    public void testFindGroup() throws RepositoryException {
+    public void testFindGroup() throws RepositoryException, NotExecutableException {
         Group gr = null;
         try {
             Principal p = getTestPrincipal();
             gr = userMgr.createGroup(p);
+            save(superuser);
 
             boolean found = false;
-            Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
+            Iterator<Authorizable> it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
             while (it.hasNext() && !found) {
                 Group ng = (Group) it.next();
                 found = ng.getPrincipal().getName().equals(p.getName());
@@ -310,25 +292,26 @@ public class UserManagerImplTest extends AbstractUserTest {
         } finally {
             if (gr != null) {
                 gr.remove();
+                save(superuser);
             }
         }
     }
 
     public void testFindAllUsers() throws RepositoryException {
-        Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
+        Iterator<Authorizable> it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
         while (it.hasNext()) {
-            assertFalse(((Authorizable) it.next()).isGroup());
+            assertFalse(it.next().isGroup());
         }
     }
 
     public void testFindAllGroups() throws RepositoryException {
-        Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
+        Iterator<Authorizable> it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
         while (it.hasNext()) {
-            assertTrue(((Authorizable) it.next()).isGroup());
+            assertTrue(it.next().isGroup());
         }
     }
 
-    public void testNewUserCanLogin() throws RepositoryException {
+    public void testNewUserCanLogin() throws RepositoryException, NotExecutableException {
         String uid = getTestPrincipal().getName();
         String pw = buildPassword(uid, false);
 
@@ -336,11 +319,14 @@ public class UserManagerImplTest extends AbstractUserTest {
         Session s = null;
         try {
             u = userMgr.createUser(uid, pw);
+            save(superuser);
+
             Credentials creds = new SimpleCredentials(uid, pw.toCharArray());
             s = superuser.getRepository().login(creds);
         } finally {
             if (u != null) {
                 u.remove();
+                save(superuser);
             }
             if (s != null) {
                 s.logout();
@@ -386,8 +372,8 @@ public class UserManagerImplTest extends AbstractUserTest {
     public void testCleanupForAllWorkspaces() throws RepositoryException, NotExecutableException {
         String[] workspaceNames = superuser.getWorkspace().getAccessibleWorkspaceNames();
 
-        for (int i = 0; i < workspaceNames.length; i++) {
-            Session s = getHelper().getSuperuserSession(workspaceNames[i]);
+        for (String workspaceName1 : workspaceNames) {
+            Session s = getHelper().getSuperuserSession(workspaceName1);
             try {
                 UserManager umgr = getUserManager(s);
                 s.logout();
@@ -405,6 +391,108 @@ public class UserManagerImplTest extends AbstractUserTest {
                 if (s.isLive()) {
                     s.logout();
                 }
+            }
+        }
+    }
+
+    /**
+     * Implementation specific test: user(/groups) cannot be nested.
+     * @throws RepositoryException
+     */
+    public void testEnforceAuthorizableFolderHierarchy() throws RepositoryException {
+        AuthorizableImpl authImpl = (AuthorizableImpl) userMgr.getAuthorizable(superuser.getUserID());
+        Node userNode = authImpl.getNode();
+        SessionImpl sImpl = (SessionImpl) userNode.getSession();
+
+        Node folder = userNode.addNode("folder", sImpl.getJCRName(UserConstants.NT_REP_AUTHORIZABLE_FOLDER));
+        String path = folder.getPath();
+        try {
+            // authNode - authFolder -> create User
+            Authorizable a = null;
+            try {
+                Principal p = getTestPrincipal();
+                a = userMgr.createUser(p.getName(), p.getName(), p, path);
+                fail("Users may not be nested.");
+            } catch (RepositoryException e) {
+                // success
+            } finally {
+                if (a != null) {
+                    a.remove();
+                }
+            }
+        } finally {
+            if (sImpl.nodeExists(path)) {
+                folder.remove();
+                sImpl.save();
+            }
+        }
+
+        Node someContent = userNode.addNode("mystuff", "nt:unstructured");
+        path = someContent.getPath();
+        try {
+            // authNode - anyNode -> create User
+            Authorizable a = null;
+            try {
+                Principal p = getTestPrincipal();
+                a = userMgr.createUser(p.getName(), p.getName(), p, someContent.getPath());
+                fail("Users may not be nested.");
+            } catch (RepositoryException e) {
+                // success
+            } finally {
+                if (a != null) {
+                    a.remove();
+                    a = null;
+                }
+            }
+
+            // authNode - anyNode - authFolder -> create User
+            if (!sImpl.nodeExists(path)) {
+                someContent = userNode.addNode("mystuff", "nt:unstructured");               
+            }
+            folder = someContent.addNode("folder", sImpl.getJCRName(UserConstants.NT_REP_AUTHORIZABLE_FOLDER));
+            sImpl.save(); // this time save node structure
+            try {
+                Principal p = getTestPrincipal();
+                a = userMgr.createUser(p.getName(), p.getName(), p, folder.getPath());
+                fail("Users may not be nested.");
+            } catch (RepositoryException e) {
+                // success
+            } finally {
+                if (a != null) {
+                    a.remove();
+                }
+            }
+        } finally {
+            if (sImpl.nodeExists(path)) {
+                someContent.remove();
+                sImpl.save();
+            }
+        }
+    }
+
+
+    public void testCreateWithRelativePath() throws Exception {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+
+        String usersPath = ((UserManagerImpl) userMgr).getUsersPath();
+
+        List<String> invalid = new ArrayList();
+        invalid.add("../../path");
+        invalid.add(usersPath + "/../test");
+
+        for (String path : invalid) {
+            try {
+                User user = userMgr.createUser(uid, buildPassword(uid, true), p, path);
+                save(superuser);
+
+                fail("intermediate path may not point outside of the user tree.");
+                user.remove();
+                save(superuser);
+                
+            } catch (Exception e) {
+                // success
+                assertNull(userMgr.getAuthorizable(uid));
             }
         }
     }

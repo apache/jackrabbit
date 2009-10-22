@@ -18,10 +18,13 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.config.ImportConfig;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.xml.sax.SAXException;
@@ -40,9 +43,11 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Collections;
 
 /**
- * <code>SystemViewTest</code>...
+ * <code>AccessControlImporterTest</code>: Testing import of resource based
+ * ACLs.
  */
 public class AccessControlImporterTest extends AbstractJCRTest {
 
@@ -176,7 +181,6 @@ public class AccessControlImporterTest extends AbstractJCRTest {
     private static final String XML_POLICY_ONLY   = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sv:node sv:name=\"test\" xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" xmlns:rep=\"internal\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"><sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\"><sv:value>nt:unstructured</sv:value></sv:property><sv:property sv:name=\"jcr:mixinTypes\" sv:type=\"Name\"><sv:value>rep:AccessControllable</sv:value><sv:value>mix:versionable</sv:value></sv:property><sv:property sv:name=\"jcr:uuid\" sv:type=\"String\"><sv:value>0a0ca2e9-ab98-4433-a12b-d57283765207</sv:value></sv:property><sv:property sv:name=\"jcr:baseVersion\" sv:type=\"Reference\"><sv:value>35d0d137-a3a4-4af3-8cdd-ce565ea6bdc9</sv:value></sv:property><sv:property sv:name=\"jcr:isCheckedOut\" sv:type=\"Boolean\"><sv:value>true</sv:value></sv:property><sv:property sv:name=\"jcr:predecessors\" sv:type=\"Reference\"><sv:value>35d0d137-a3a4-4af3-8cdd-ce565ea6bdc9</sv:value></sv:property><sv:property sv:name=\"jcr:versionHistory\" sv:type=\"Reference\"><sv:value>428c9ef2-78e5-4f1c-95d3-16b4ce72d815</sv:value></sv:property><sv:node sv:name=\"rep:policy\"><sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\"><sv:value>rep:ACL</sv:value></sv:property></sv:node></sv:node>";
 
 
-    private ProtectedNodeImporter piImporter;
     private SessionImpl sImpl;
 
     @Override
@@ -187,7 +191,16 @@ public class AccessControlImporterTest extends AbstractJCRTest {
             throw new NotExecutableException("SessionImpl expected");
         }
         sImpl = (SessionImpl) superuser;
-        piImporter = new AccessControlImporter(sImpl, sImpl, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+
+        // make sure the repository provides resource based policies.
+        AccessControlPolicyIterator it = sImpl.getAccessControlManager().getApplicablePolicies("/");
+        if (!it.hasNext()) {
+            AccessControlPolicy[] pcs = sImpl.getAccessControlManager().getPolicies("/");
+            if (pcs == null || pcs.length == 0) {
+                throw new NotExecutableException();
+            }
+
+        } // ok resource based acl
     }
 
     private NodeImpl createPolicyNode(NodeImpl target) throws Exception {
@@ -214,9 +227,14 @@ public class AccessControlImporterTest extends AbstractJCRTest {
         }
     }
 
+    private static ProtectedNodeImporter createImporter() {
+        return new AccessControlImporter();
+    }
+
     public void testWorkspaceImport() throws Exception {
         boolean isWorkspaceImport = true;
-        ProtectedNodeImporter protectedImporter = new AccessControlImporter(sImpl, sImpl, isWorkspaceImport, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        ProtectedNodeImporter protectedImporter = new AccessControlImporter();
+        protectedImporter.init(sImpl, sImpl, isWorkspaceImport, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, null);
 
         NodeImpl n = createPolicyNode((NodeImpl) testRootNode);
         assertFalse(protectedImporter.start(n));
@@ -224,6 +242,8 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
     public void testNonProtectedNode() throws Exception {
         if (!testRootNode.getDefinition().isProtected()) {
+            ProtectedNodeImporter piImporter = createImporter();
+            piImporter.init(sImpl, sImpl, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, null);
             assertFalse(piImporter.start((NodeImpl) testRootNode));
         } else {
             throw new NotExecutableException();
@@ -234,6 +254,8 @@ public class AccessControlImporterTest extends AbstractJCRTest {
         Node n = testRootNode.addNode(nodeName1);
         n.addMixin(mixVersionable);
 
+        ProtectedNodeImporter piImporter = createImporter();
+        piImporter.init(sImpl, sImpl, false, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, null);
         assertFalse(piImporter.start((NodeImpl) n));
     }
 
@@ -248,7 +270,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE.getBytes("UTF-8"));
             SessionImporter importer = new SessionImporter(target, sImpl,
-                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, new PseudoConfig());
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -290,7 +312,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE_3.getBytes("UTF-8"));
             SessionImporter importer = new SessionImporter(target, sImpl,
-                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, new PseudoConfig());
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -335,13 +357,13 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE_3.getBytes("UTF-8"));
             SessionImporter importer = new SessionImporter(target, sImpl,
-                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, new PseudoConfig());
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
             in = new ByteArrayInputStream(XML_POLICY_TREE_5.getBytes("UTF-8"));
             importer = new SessionImporter(target, sImpl,
-                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, new PseudoConfig());
             ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -381,7 +403,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE_4.getBytes("UTF-8"));
             SessionImporter importer = new SessionImporter(target, sImpl,
-                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, new PseudoConfig());
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -442,7 +464,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
         try {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE_2.getBytes("UTF-8"));
-            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, piImporter, null);
+            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, new PseudoConfig());
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -492,7 +514,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_ONLY.getBytes("UTF-8"));
 
-            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, piImporter, null);
+            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, new PseudoConfig());
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -516,6 +538,14 @@ public class AccessControlImporterTest extends AbstractJCRTest {
      * @throws Exception
      */
     public void testImportPrincipalBasedACL() throws Exception {
+        JackrabbitAccessControlManager acMgr = (JackrabbitAccessControlManager) sImpl.getAccessControlManager();
+        if (acMgr.getApplicablePolicies(EveryonePrincipal.getInstance()).length > 0 ||
+                acMgr.getPolicies(EveryonePrincipal.getInstance()).length > 0) {
+            // test expects that only resource-based acl is supported
+            throw new NotExecutableException();
+        }
+
+
         NodeImpl target;
         NodeImpl root = (NodeImpl) sImpl.getRootNode();
         if (!root.hasNode(AccessControlConstants.N_ACCESSCONTROL)) {
@@ -530,7 +560,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_AC_TREE.getBytes("UTF-8"));
 
-            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, piImporter, null);
+            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, new PseudoConfig());
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -559,7 +589,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             InputStream in = new ByteArrayInputStream(XML_POLICY_TREE.getBytes("UTF-8"));
 
-            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, null, null);
+            SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, null);
             ImportHandler ih = new ImportHandler(importer, sImpl);
             new ParsingContentHandler(ih).parse(in);
 
@@ -577,6 +607,20 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
         } finally {
             superuser.refresh(false);
+        }
+    }
+
+    private final class PseudoConfig extends ImportConfig {
+
+        private final ProtectedNodeImporter aci;
+
+        private PseudoConfig() {
+            this.aci = createImporter();
+        }
+
+        @Override
+        public List<ProtectedNodeImporter> getProtectedNodeImporters() {
+            return Collections.singletonList(aci);
         }
     }
 }

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import java.security.Principal;
 
 /**
  * <code>NestedGroupTest</code>...
@@ -32,12 +33,37 @@ public class NestedGroupTest extends AbstractUserTest {
 
     private static Logger log = LoggerFactory.getLogger(NestedGroupTest.class);
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
+    }
+
+    private Group createGroup(Principal p) throws RepositoryException, NotExecutableException {
+        Group gr = userMgr.createGroup(p);
+        save(superuser);
+        return gr;
+    }
+
+    private void removeGroup(Group gr) throws RepositoryException, NotExecutableException {
+        gr.remove();
+        save(superuser);
+    }
+
+    private boolean addMember(Group gr, Authorizable member) throws RepositoryException, NotExecutableException {
+        boolean added = gr.addMember(member);
+        save(superuser);
+        return added;
+    }
+
+    private boolean removeMember(Group gr, Authorizable member) throws RepositoryException, NotExecutableException {
+        boolean removed = gr.removeMember(member);
+        save(superuser);
+        return removed;
     }
 
     public void testAddGroupAsMember() throws NotExecutableException, RepositoryException {
@@ -45,21 +71,21 @@ public class NestedGroupTest extends AbstractUserTest {
         Group gr2 = null;
 
         try {
-            gr1 = userMgr.createGroup(getTestPrincipal());
-            gr2 = userMgr.createGroup(getTestPrincipal());
+            gr1 = createGroup(getTestPrincipal());
+            gr2 = createGroup(getTestPrincipal());
 
             assertFalse(gr1.isMember(gr2));
 
-            assertTrue(gr1.addMember(gr2));
+            assertTrue(addMember(gr1, gr2));
             assertTrue(gr1.isMember(gr2));
 
         } finally {
             if (gr1 != null) {
-                gr1.removeMember(gr2);
-                gr1.remove();
+                removeMember(gr1, gr2);
+                removeGroup(gr1);
             }
             if (gr2 != null) {
-                gr2.remove();
+                removeGroup(gr2);
             }
         }
     }
@@ -69,50 +95,50 @@ public class NestedGroupTest extends AbstractUserTest {
         Group gr2 = null;
 
         try {
-            gr1 = userMgr.createGroup(getTestPrincipal());
-            gr2 = userMgr.createGroup(getTestPrincipal());
+            gr1 = createGroup(getTestPrincipal());
+            gr2 = createGroup(getTestPrincipal());
 
-            assertTrue(gr1.addMember(gr2));
-            assertFalse(gr2.addMember(gr1));
+            assertTrue(addMember(gr1, gr2));
+            assertFalse(addMember(gr2, gr1));
 
         } finally {
             if (gr1 != null && gr1.isMember(gr2)) {
-                gr1.removeMember(gr2);
+                removeMember(gr1, gr2);
             }
             if (gr2 != null && gr2.isMember(gr1)) {
-                gr2.removeMember(gr1);
+                removeMember(gr2, gr1);
             }
-            if (gr1 != null) gr1.remove();
-            if (gr2 != null) gr2.remove();
+            if (gr1 != null) removeGroup(gr1);
+            if (gr2 != null) removeGroup(gr2);
         }
     }
 
-    public void testCyclicMembers2() throws RepositoryException {
+    public void testCyclicMembers2() throws RepositoryException, NotExecutableException {
         Group gr1 = null;
         Group gr2 = null;
         Group gr3 = null;
         try {
-            gr1 = userMgr.createGroup(getTestPrincipal());
-            gr2 = userMgr.createGroup(getTestPrincipal());
-            gr3 = userMgr.createGroup(getTestPrincipal());
+            gr1 = createGroup(getTestPrincipal());
+            gr2 = createGroup(getTestPrincipal());
+            gr3 = createGroup(getTestPrincipal());
 
-            assertTrue(gr1.addMember(gr2));
-            assertTrue(gr2.addMember(gr3));
-            assertFalse(gr3.addMember(gr1));
+            assertTrue(addMember(gr1, gr2));
+            assertTrue(addMember(gr2, gr3));
+            assertFalse(addMember(gr3, gr1));
 
         } finally {
             if (gr1 != null) {
-                gr1.removeMember(gr2);
+                removeMember(gr1, gr2);
             }
             if (gr2 != null) {
-                gr2.removeMember(gr3);
-                gr2.remove();
+                removeMember(gr2, gr3);
+                removeGroup(gr2);
             }
             if (gr3 != null) {
-                gr3.removeMember(gr1);
-                gr3.remove();
+                removeMember(gr3, gr1);
+                removeGroup(gr3);
             }
-            if (gr1 != null) gr1.remove();
+            if (gr1 != null) removeGroup(gr1);
 
         }
     }
@@ -127,12 +153,12 @@ public class NestedGroupTest extends AbstractUserTest {
         }
 
         try {
-            gr1 = userMgr.createGroup(getTestPrincipal());
-            gr2 = userMgr.createGroup(getTestPrincipal());
-            gr3 = userMgr.createGroup(getTestPrincipal());
+            gr1 = createGroup(getTestPrincipal());
+            gr2 = createGroup(getTestPrincipal());
+            gr3 = createGroup(getTestPrincipal());
 
-            assertTrue(gr1.addMember(gr2));
-            assertTrue(gr2.addMember(gr3));
+            assertTrue(addMember(gr1, gr2));
+            assertTrue(addMember(gr2, gr3));
 
             // NOTE: don't test with Group.isMember for not required to detect
             // inherited membership -> rather with PrincipalManager.
@@ -146,14 +172,14 @@ public class NestedGroupTest extends AbstractUserTest {
 
         } finally {
             if (gr1 != null && gr1.isMember(gr2)) {
-                gr1.removeMember(gr2);
+                removeMember(gr1, gr2);
             }
             if (gr2 != null && gr2.isMember(gr3)) {
-                gr2.removeMember(gr3);
+                removeMember(gr2, gr3);
             }
-            if (gr1 != null) gr1.remove();
-            if (gr2 != null) gr2.remove();
-            if (gr3 != null) gr3.remove();
+            if (gr1 != null) removeGroup(gr1);
+            if (gr2 != null) removeGroup(gr2);
+            if (gr3 != null) removeGroup(gr3);
         }
     }
 }

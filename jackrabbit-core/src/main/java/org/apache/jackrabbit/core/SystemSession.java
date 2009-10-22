@@ -81,7 +81,7 @@ class SystemSession extends SessionImpl {
      *
      * @return the name of <code>SystemPrincipal</code>.
      */
-    protected String retrieveUserId(Subject subject) throws RepositoryException {
+    protected String retrieveUserId(Subject subject, String workspaceName) throws RepositoryException {
         return new SystemPrincipal().getName();
     }
 

@@ -17,12 +17,16 @@
 package org.apache.jackrabbit.core.config;
 
 import org.apache.jackrabbit.core.DefaultSecurityManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager;
 import org.apache.jackrabbit.core.security.authentication.DefaultLoginModule;
 import org.apache.jackrabbit.core.security.simple.SimpleAccessManager;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -34,12 +38,14 @@ import org.xml.sax.SAXParseException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /** <code>SecurityConfigTest</code>... */
 public class SecurityConfigTest extends AbstractJCRTest {
@@ -111,9 +117,10 @@ public class SecurityConfigTest extends AbstractJCRTest {
 
         SecurityManagerConfig smc = config.getSecurityManagerConfig();
 
-        assertNotNull(smc.getUserManagerConfig());
-        BeanConfig umc = smc.getUserManagerConfig();
+        assertEquals(ItemBasedPrincipal.class, smc.getUserIdClass());
 
+        UserManagerConfig umc = smc.getUserManagerConfig();
+        assertNotNull(umc);
         Properties params = umc.getParameters();
         assertNotNull(params);
 
@@ -123,15 +130,87 @@ public class SecurityConfigTest extends AbstractJCRTest {
         assertEquals(2000, Long.parseLong(params.getProperty(UserManagerImpl.PARAM_AUTO_EXPAND_SIZE)));
     }
 
+    public void testUserManagerConfig() throws RepositoryException, UnsupportedRepositoryOperationException {
+        Element xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_INVALID)), true);
+        UserManagerConfig umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        try {
+            umc.getUserManager(UserManagerImpl.class, new Class[] {String.class}, "invalid");
+            fail("Nonexisting umgr implementation -> instanciation must fail.");
+        } catch (ConfigurationException e) {
+            // success
+        }
+
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_IMPL)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+
+        // assignable from same class as configured
+        UserManager um = umc.getUserManager(UserManagerImpl.class, new Class[] {
+            SessionImpl.class, String.class}, (SessionImpl) superuser, "admin");
+        assertNotNull(um);
+        assertTrue(um instanceof UserManagerImpl);
+        assertTrue(um.isAutoSave());
+        try {
+            um.autoSave(false);
+            fail("must not be allowed");
+        } catch (RepositoryException e) {
+            // success
+        }
+
+        // derived class expected -> must fail
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_IMPL)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        try {
+            um = umc.getUserManager(UserPerWorkspaceUserManager.class, new Class[] {
+                    SessionImpl.class, String.class}, (SessionImpl) superuser, "admin");
+            fail("UserManagerImpl is not assignable from derived class");
+        } catch (ConfigurationException e) {
+            // success
+        }
+
+        // passing invalid parameter types
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_IMPL)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        try {
+            um = umc.getUserManager(UserManagerImpl.class, new Class[] {
+                    Session.class}, (SessionImpl) superuser, "admin");
+            fail("Invalid parameter types -> must fail.");
+        } catch (ConfigurationException e) {
+            // success
+        }
+
+        // passing wrong arguments        
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_IMPL)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        try {
+            um = umc.getUserManager(UserManagerImpl.class, new Class[] {
+                    SessionImpl.class, String.class}, superuser, 21);
+            fail("Invalid init args -> must fail.");
+        } catch (ConfigurationException e) {
+            // success
+        }
+
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_DERIVED)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        // assignable from defines base class
+        um = umc.getUserManager(UserManagerImpl.class, new Class[] {
+            SessionImpl.class, String.class}, (SessionImpl) superuser, "admin");
+        assertNotNull(um);
+        assertTrue(um instanceof UserPerWorkspaceUserManager);
+        // but: configured class creates a umgr that requires session.save
+        assertTrue(um.isAutoSave());
+        // changing autosave behavior must succeed.
+        um.autoSave(false);
+    }
+
     public void testInvalidConfig() {
-        List invalid = new ArrayList();
+        List<InputSource> invalid = new ArrayList();
         invalid.add(new InputSource(new StringReader(INVALID_CONFIG_1)));
         invalid.add(new InputSource(new StringReader(INVALID_CONFIG_2)));
         invalid.add(new InputSource(new StringReader(INVALID_CONFIG_3)));
 
-        for (Iterator it = invalid.iterator(); it.hasNext();) {
+        for (Object anInvalid : invalid) {
             try {
-                Element xml = parseXML((InputSource) it.next(), false);
+                Element xml = parseXML((InputSource) anInvalid, false);
                 parser.parseSecurityConfig(xml);
                 fail("Invalid config -> should fail.");
             } catch (ConfigurationException e) {
@@ -189,6 +268,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
             "           <param name=\"autoExpandTree\" value=\"true\"/>" +
             "           <param name=\"autoExpandSize\" value=\"2000\"/>" +
             "           </UserManager>" +
+            "           <UserIdClass class=\"org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal\"/>" +
             "        </SecurityManager>" +
             "        <AccessManager class=\"org.apache.jackrabbit.core.security.DefaultAccessManager\">" +
             "        </AccessManager>" +
@@ -213,4 +293,25 @@ public class SecurityConfigTest extends AbstractJCRTest {
             "    <Security appName=\"Jackrabbit\">" +
             "        <AccessManager class=\"org.apache.jackrabbit.core.security.simple.SimpleAccessManager\"></AccessManager>" +
             "    </Security>";
+
+    private static final String USER_MANAGER_CONFIG_INVALID =
+                    "    <Security appName=\"Jackrabbit\">" +
+                    "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+                    "           <UserManager class=\"org.apache.jackrabbit.core.security.user.NonExisting\" />" +
+                    "        </SecurityManager>" +
+                    "    </Security>";
+
+    private static final String USER_MANAGER_CONFIG_IMPL =
+                    "    <Security appName=\"Jackrabbit\">" +
+                    "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+                    "           <UserManager class=\"org.apache.jackrabbit.core.security.user.UserManagerImpl\" />" +
+                    "        </SecurityManager>" +
+                    "    </Security>";
+
+    private static final String USER_MANAGER_CONFIG_DERIVED =
+                    "    <Security appName=\"Jackrabbit\">" +
+                    "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+                    "           <UserManager class=\"org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager\" />" +
+                    "        </SecurityManager>" +
+                    "    </Security>";
 }
