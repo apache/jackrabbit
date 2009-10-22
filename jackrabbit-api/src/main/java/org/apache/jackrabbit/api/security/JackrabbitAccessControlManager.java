@@ -57,12 +57,15 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
      * been set. This method reflects the binding state, including transient
      * policy modifications.
      *
-     * @param principal
-     * @return
-     * @throws AccessDeniedException
-     * @throws AccessControlException
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
+     * @param principal A valid principal.
+     * @return The policies defined for the given principal or an empty array.
+     * @throws AccessDeniedException if the session lacks
+     * <code>READ_ACCESS_CONTROL</code> privilege.
+     * @throws AccessControlException  if the specified principal does not exist
+     * or if another access control related exception occurs.
+     * @throws UnsupportedRepositoryOperationException if editing access control
+     * policies by principal is not supported.
+     * @throws RepositoryException If another error occurs.
      */
     JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
 
