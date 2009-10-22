@@ -186,8 +186,8 @@ public class AccessManagerTest extends AbstractJCRTest {
         Session s = getHelper().getReadOnlySession();
         try {
             String[] wspNames = s.getWorkspace().getAccessibleWorkspaceNames();
-            for (int i = 0; i < wspNames.length; i++) {
-                assertTrue(getAccessManager(s).canAccess(wspNames[i]));
+            for (String wspName : wspNames) {
+                assertTrue(getAccessManager(s).canAccess(wspName));
             }
         } finally {
             s.logout();
@@ -214,7 +214,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     public void testCanAccessNotExistingWorkspace() throws RepositoryException, NotExecutableException {
         Session s = getHelper().getReadOnlySession();
         try {
-            List all = Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames());
+            List<String> all = Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames());
             String testName = "anyWorkspace";
             int i = 0;
             while (all.contains(testName)) {
