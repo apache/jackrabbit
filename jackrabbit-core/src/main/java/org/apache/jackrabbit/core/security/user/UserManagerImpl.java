@@ -144,14 +144,14 @@ public class UserManagerImpl extends ProtectedItemModifier
         implements UserManager, UserConstants, SessionListener {
 
     /**
-     * Configuration option to change the {@link #USERS_PATH default path} for
-     * creating users.
+     * Configuration option to change the
+     * {@link UserConstants#USERS_PATH default path} for creating users.
      */
     public static final String PARAM_USERS_PATH = "usersPath";
 
     /**
-     * Configuration option to change the {@link #GROUPS_PATH default path} for
-     * creating groups.
+     * Configuration option to change the
+     * {@link UserConstants#GROUPS_PATH default path} for creating groups.
      */
     public static final String PARAM_GROUPS_PATH = "groupsPath";
 
@@ -211,13 +211,13 @@ public class UserManagerImpl extends ProtectedItemModifier
 
     /**
      * Configuration value defining the node where User nodes will be created.
-     * Default value is {@link #USERS_PATH}.
+     * Default value is {@link UserConstants#USERS_PATH}.
      */
     private final String usersPath;
 
     /**
      * Configuration value defining the node where Group nodes will be created.
-     * Default value is {@link #GROUPS_PATH}.
+     * Default value is {@link UserConstants#GROUPS_PATH}.
      */
     private final String groupsPath;
 
@@ -247,8 +247,8 @@ public class UserManagerImpl extends ProtectedItemModifier
      * Currently the following configuration options are respected:
      *
      * <ul>
-     * <li>{@link #PARAM_USERS_PATH}. If missing set to {@link #USERS_PATH}.</li>
-     * <li>{@link #PARAM_GROUPS_PATH}. If missing set to {@link #GROUPS_PATH}.</li>
+     * <li>{@link #PARAM_USERS_PATH}. If missing set to {@link UserConstants#USERS_PATH}.</li>
+     * <li>{@link #PARAM_GROUPS_PATH}. If missing set to {@link UserConstants#GROUPS_PATH}.</li>
      * <li>{@link #PARAM_DEFAULT_DEPTH}. The default number of levels is 2.</li>
      * <li>{@link #PARAM_AUTO_EXPAND_TREE}. By default this option is disabled.</li>
      * <li>{@link #PARAM_AUTO_EXPAND_SIZE}. The default value is 1000.</li>
