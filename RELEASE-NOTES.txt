@@ -1,17 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha12
+Release Notes -- Apache Jackrabbit -- Version 2.0-beta1
 
 Introduction
 ------------
 
-This is an alpha release of Apache Jackrabbit 2.0. This release implements
-a pre-release version of the JCR 2.0 API, specified by the Java Specification
-Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
-
-The purpose of this alpha release is to allow people to test and review
-the new Jackrabbit and JCR 2.0 features before they are finalized. Feedback
-to both the Jackrabbit project and the JSR 283 expert group is highly
-appreciated. Note that an alpha release is not expected to be feature-complete
-or otherwise suitable for production use.
+This is a beta release of Apache Jackrabbit 2.0. This release is a fully
+compliant implementation of the JCR 2.0 API that was specified by the
+Java Specification Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
+However, the beta status of this release means that some parts of the
+implementation are not yet ready for normal production use.
 
 Changes in this release
 -----------------------
@@ -50,7 +46,7 @@ Jackrabbit releases, please see the Jackrabbit issue tracker at
 Release Contents
 ----------------
 
-This release consists of a single source archive packaged as a jar file.
+This release consists of a single source archive packaged as a zip file.
 The archive can be unpacked with the jar tool from your JDK installation.
 See the README.txt file for instructions on how to build this release.
 
