@@ -68,13 +68,13 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
      */
     private static final Logger log = LoggerFactory.getLogger(UserPerWorkspaceSecurityManager.class);
 
-    private final Map<String, PrincipalProviderRegistry> ppRegistries = new HashMap();
+    private final Map<String, PrincipalProviderRegistry> ppRegistries = new HashMap<String, PrincipalProviderRegistry>();
 
     /**
      * List of workspace names for which {@link #createSystemUsers} has already
      * been called.
      */
-    private final List<String> systemUsersInitialized = new ArrayList();
+    private final List<String> systemUsersInitialized = new ArrayList<String>();
 
     private PrincipalProviderRegistry getPrincipalProviderRegistry(SessionImpl s) throws RepositoryException {
         String wspName = s.getWorkspace().getName();
@@ -285,7 +285,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
         }
 
         public PrincipalProvider registerProvider(Properties configuration) throws RepositoryException {
-            throw new UnsupportedOperationException();
+            return getPrincipalProviderRegistry().registerProvider(configuration);
         }
 
         public PrincipalProvider getDefault() {
@@ -301,7 +301,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
         }
 
         public PrincipalProvider[] getProviders() {
-            List<PrincipalProvider> l = new ArrayList();
+            List<PrincipalProvider> l = new ArrayList<PrincipalProvider>();
             l.addAll(Arrays.asList(getPrincipalProviderRegistry().getProviders()));
             l.add(defaultPrincipalProvider);
             return l.toArray(new PrincipalProvider[l.size()]);
