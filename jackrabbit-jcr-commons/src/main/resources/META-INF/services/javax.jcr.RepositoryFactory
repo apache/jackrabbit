@@ -13,8 +13,4 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-#
-# This file lists the repository factory implementation for jackrabbit
-#
-
-org.apache.jackrabbit.core.RepositoryFactoryImpl
+org.apache.jackrabbit.commons.GenericRepositoryFactory

@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.commons;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -53,11 +50,28 @@ public class JcrUtils {
     }
 
     /**
+     * Returns the default repository of the current environment.
+     * Implemented by calling {@link #getRepository(Map)} with a
+     * <code>null</code> parameter map.
+     *
+     * @see RepositoryFactory#getRepository(Map)
+     * @return default repository
+     * @throws RepositoryException if a default repository is not available
+     *                             or can not be accessed
+     */
+    public static Repository getRepository() throws RepositoryException {
+        return getRepository((Map<String, String>) null);
+    }
+
+    /**
      * Looks up the available {@link RepositoryFactory repository factories}
      * and returns the {@link Repository repository} that one of the factories
      * returns for the given settings.
+     * <p>
+     * Note that unlike {@link RepositoryFactory#getRepository(Map)} this
+     * method will throw an exception instead of returning <code>null</code>
+     * if the given parameters can not be interpreted.
      *
-     * @see RepositoryFactory#getRepository(Map)
      * @param parameters repository settings
      * @return repository reference
      * @throws RepositoryException if the repository can not be accessed,
@@ -83,9 +97,8 @@ public class JcrUtils {
     }
 
     /**
-     * Returns the repository identified by the given URI.
-     * <p>
-     * The currently supported URI types are:
+     * Returns the repository identified by the given URI. The following
+     * URI types are currently supported:
      * <dl>
      *   <dt>http(s)://...</dt>
      *   <dd>
@@ -97,11 +110,10 @@ public class JcrUtils {
      *   </dd>
      *   <dt>jndi:...</dt>
      *   <dd>
-     *     JNDI lookup for a repository stored under the given name in the
-     *     default JNDI context.
-     *   </dd>
+     *     JNDI lookup for the named repository. See the JNDI support
+     *     described above.
+     *  </dd>
      * </dl>
-     * <p>
      *
      * @param uri repository URI
      * @return repository instance
@@ -110,79 +122,9 @@ public class JcrUtils {
      */
     public static Repository getRepository(String uri)
             throws RepositoryException {
-        try {
-            URI parsed = new URI(uri.trim());
-            String scheme = parsed.getScheme();
-            if ("jndi".equalsIgnoreCase(scheme)) {
-                Map<String, String> parameters = new HashMap<String, String>();
-                parameters.put(
-                        "org.apache.jackrabbit.repository.jndi.name",
-                        parsed.getSchemeSpecificPart());
-                return getRepository(parameters);
-            } else if ("file".equalsIgnoreCase(scheme)) {
-                return getRepository(new File(parsed));
-            } else if ("http".equalsIgnoreCase(scheme)
-                    || "https".equalsIgnoreCase(scheme)){
-                return getRepository(parsed);
-            } else {
-                throw new RepositoryException(
-                        "Unsupported repository URI: " + uri);
-            }
-        } catch (URISyntaxException e) {
-            throw new RepositoryException("Invalid repository URI: " + uri, e);
-        }
-    }
-
-    /**
-     * Returns an SPI2DAVex client that accesses a repository at the given URI.
-     *
-     * @param uri repository URI
-     * @return SPI2DAVex repository client
-     * @throws RepositoryException if the repository can not be accessed,
-     *                             or if the required SPI2DAVex libraries
-     *                             are not available
-     */
-    private static Repository getRepository(URI uri)
-            throws RepositoryException {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put(
-                "org.apache.jackrabbit.spi.RepositoryServiceFactory",
-                "org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory");
-        parameters.put(
-                "org.apache.jackrabbit.spi2davex.uri", uri.toASCIIString());
-        return getRepository(parameters);
-    }
-
-    /**
-     * Returns an embedded Jackrabbit repository located at the given
-     * file system path. The path can point either to the repository
-     * directory (in which case a "repository.xml" configuration file
-     * is expected to be found inside the directory) or to the repository
-     * configuration file (in which case the repository directory is assumed
-     * to be the directory that contains the configuration file).
-     *
-     * @param file repository path
-     * @return Jackrabbit repository
-     * @throws RepositoryException if the repository can not be accessed,
-     *                             or if the required Jackrabbit libraries
-     *                             are not available
-     */
-    private static Repository getRepository(File file)
-            throws RepositoryException {
-        Map<String, String> parameters = new HashMap<String, String>();
-
-        String home, conf;
-        if (file.isFile()) {
-            home = file.getParentFile().getPath();
-            conf = file.getPath();
-        } else {
-            home = file.getPath();
-            conf = new File(file, "repository.xml").getPath();
-        }
-        parameters.put("org.apache.jackrabbit.repository.home", home);
-        parameters.put("org.apache.jackrabbit.repository.conf", conf);
-
-        return getRepository(parameters);
+        parameters.put(GenericRepositoryFactory.URI, uri);
+        return new GenericRepositoryFactory().getRepository(parameters);
     }
 
     /**

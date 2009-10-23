@@ -20,16 +20,16 @@ import java.io.File;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Repository;
 import javax.naming.InitialContext;
 import javax.naming.Context;
-import javax.imageio.spi.ServiceRegistry;
 
 import javax.jcr.RepositoryFactory;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.GenericRepositoryFactory;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.RepositoryFactoryImpl;
 import org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory;
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
@@ -66,7 +66,7 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
      */
     public void testDefaultRepository() throws RepositoryException {
         setProperties();
-        repo = RepositoryManager.getRepository(null);
+        repo = JcrUtils.getRepository();
         checkRepository(repo);
     }
 
@@ -77,7 +77,7 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
      */
     public void testWithParameters() throws RepositoryException {
         resetProperties();
-        repo = RepositoryManager.getRepository(getParamters());
+        repo = JcrUtils.getRepository(getParamters());
         checkRepository(repo);
     }
 
@@ -89,9 +89,9 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
      */
     public void testMultipleConnect() throws RepositoryException {
         setProperties();
-        repo = RepositoryManager.getRepository(null);
+        repo = JcrUtils.getRepository();
         checkRepository(repo);
-        assertSame(repo, RepositoryManager.getRepository(null));
+        assertSame(repo, JcrUtils.getRepository());
     }
 
     /**
@@ -102,9 +102,9 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
      */
     public void testMultipleConnectWithParameters() throws RepositoryException {
         resetProperties();
-        repo = RepositoryManager.getRepository(getParamters());
+        repo = JcrUtils.getRepository(getParamters());
         checkRepository(repo);
-        assertSame(repo, RepositoryManager.getRepository(getParamters()));
+        assertSame(repo, JcrUtils.getRepository(getParamters()));
     }
 
     /**
@@ -117,7 +117,7 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
     public void testShutdown() throws RepositoryException {
         setProperties();
         for (int i = 0; i < 2; i++) {
-            repo = RepositoryManager.getRepository(null);
+            repo = JcrUtils.getRepository();
             checkRepository(repo);
             ((JackrabbitRepository) repo).shutdown();
         }
@@ -131,15 +131,15 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
      */
     public void testJNDI() throws Exception {
         String name = "jackrabbit-repository";
-        Map parameters = new HashMap();
+        Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(Context.INITIAL_CONTEXT_FACTORY, DummyInitialContextFactory.class.getName());
         parameters.put(Context.PROVIDER_URL, "localhost");
-        InitialContext context = new InitialContext(new Hashtable(parameters));
+        InitialContext context = new InitialContext(new Hashtable<String, String>(parameters));
         RegistryHelper.registerRepository(context, name,
                 REPO_CONF.getAbsolutePath(), REPO_HOME.getAbsolutePath(), false);
         try {
-            parameters.put(org.apache.jackrabbit.core.jndi.RepositoryFactoryImpl.REPOSITORY_JNDI_NAME, name);
-            repo = RepositoryManager.getRepository(parameters);
+            parameters.put(GenericRepositoryFactory.JNDI_NAME, name);
+            repo = JcrUtils.getRepository(parameters);
             checkRepository(repo);
         } finally {
             RegistryHelper.unregisterRepository(context, name);
@@ -162,27 +162,11 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
         System.setProperty(RepositoryFactoryImpl.REPOSITORY_CONF, "");
     }
 
-    private static Map getParamters() {
-        Map params = new HashMap();
+    private static Map<String, String> getParamters() {
+        Map<String, String> params = new HashMap<String, String>();
         params.put(RepositoryFactoryImpl.REPOSITORY_HOME, REPO_HOME.getAbsolutePath());
         params.put(RepositoryFactoryImpl.REPOSITORY_CONF, REPO_CONF.getAbsolutePath());
         return params;
     }
 
-    private static final class RepositoryManager {
-
-        private static Repository getRepository(Map parameters)
-                throws RepositoryException {
-            Repository repo = null;
-            Iterator factories = ServiceRegistry.lookupProviders(RepositoryFactory.class);
-            while (factories.hasNext()) {
-                RepositoryFactory factory = (RepositoryFactory) factories.next();
-                repo = factory.getRepository(parameters);
-                if (repo != null) {
-                    break;
-                }
-            }
-            return repo;
-        }
-    }
 }
