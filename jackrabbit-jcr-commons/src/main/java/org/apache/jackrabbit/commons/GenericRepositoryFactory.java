@@ -53,7 +53,7 @@ import javax.naming.NamingException;
  *     also passed on to these recursive calls.
  *   </dd>
  * </dl>
- * Clients should not normally only use this class through the Java Service
+ * Clients should normally only use this class through the Java Service
  * Provider mechanism. See the getRepository utility methods in
  * {@link JcrUtils} for an easy way to do that.
  *
