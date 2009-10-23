@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.integration;
 
-import org.apache.jackrabbit.core.query.AbstractQueryTest;
-import org.apache.jackrabbit.commons.query.GQL;
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 
-import java.util.Calendar;
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
+import org.apache.jackrabbit.commons.query.GQL;
+import org.apache.jackrabbit.core.query.AbstractQueryTest;
 
 import junit.framework.AssertionFailedError;
 
@@ -64,6 +64,31 @@ public class GQLTest extends AbstractQueryTest {
         checkResultSequence(rows, new Node[]{n1, n2, n3});
         // explicit descending
         stmt = createStatement("order:-p");
+        rows = GQL.execute(stmt, superuser);
+        checkResultSequence(rows, new Node[]{n3, n2, n1});
+    }
+
+    public void testOrderDeep() throws RepositoryException {
+        Node n1 = testRootNode.addNode("node1");
+        n1.setProperty("prop", "value");
+        n1.addNode("sub").setProperty("p", 1);
+        Node n2 = testRootNode.addNode("node2");
+        n2.setProperty("prop", "value");
+        n2.addNode("sub").setProperty("p", 2);
+        Node n3 = testRootNode.addNode("node3");
+        n3.setProperty("prop", "value");
+        n3.addNode("sub").setProperty("p", 3);
+        superuser.save();
+        // default: ascending
+        String stmt = createStatement("prop:value order:sub/p");
+        RowIterator rows = GQL.execute(stmt, superuser);
+        checkResultSequence(rows, new Node[]{n1, n2, n3});
+        // explicit ascending
+        stmt = createStatement("prop:value order:+sub/p");
+        rows = GQL.execute(stmt, superuser);
+        checkResultSequence(rows, new Node[]{n1, n2, n3});
+        // explicit descending
+        stmt = createStatement("prop:value order:-sub/p");
         rows = GQL.execute(stmt, superuser);
         checkResultSequence(rows, new Node[]{n3, n2, n1});
     }
