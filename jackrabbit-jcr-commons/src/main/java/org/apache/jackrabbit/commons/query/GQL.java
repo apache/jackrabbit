@@ -16,34 +16,34 @@
  */
 package org.apache.jackrabbit.commons.query;
 
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.RowIterator;
-import javax.jcr.query.Row;
-import javax.jcr.query.Query;
-import javax.jcr.Node;
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.RangeIterator;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.NodeType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-import java.util.Collection;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
+
+import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
+import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * <code>GQL</code> is a simple fulltext query language, which supports field
@@ -120,6 +120,12 @@ import java.util.Collection;
  * {@link Row#getValue(String) Row.getValue("rep:excerpt()");}. Please note
  * that this is feature is Jackrabbit specific and will not work with other
  * implementations!
+ * <p/>
+ * <b>Parser callbacks</b>
+ * <p/>
+ * You can get callbacks for each field and query term pair using the method
+ * {@link #parse(String, Session, ParserCallback)}. This may be useful when you
+ * want to do some transformation on the GQL before it is actually executed.
  */
 public final class GQL {
 
@@ -197,7 +203,7 @@ public final class GQL {
     /**
      * List that contains all {@link PropertyExpression}s.
      */
-    private final List conditions = new ArrayList();
+    private final List<Expression> conditions = new ArrayList<Expression>();
 
     /**
      * An optional common path prefix for the GQL query.
@@ -212,17 +218,17 @@ public final class GQL {
     /**
      * Maps local names of node types to prefixed names.
      */
-    private Map ntNames;
+    private Map<String, String[]> ntNames;
 
     /**
      * Maps local names of child node definitions to prefixed child node names.
      */
-    private Map childNodeNames;
+    private Map<String, String> childNodeNames;
 
     /**
      * Maps local names of property definitions to prefixed property names.
      */
-    private Map propertyNames;
+    private Map<String, String> propertyNames;
 
     /**
      * The path constraint. Defaults to: <code>//*</code>
@@ -309,6 +315,23 @@ public final class GQL {
     }
 
     /**
+     * Parses the given <code>statement</code> and generates callbacks for each
+     * GQL term parsed.
+     *
+     * @param statement the GQL statement.
+     * @param session   the current session to resolve namespace prefixes.
+     * @param callback  the callback handler.
+     * @throws RepositoryException if an error occurs while parsing.
+     */
+    public static void parse(String statement,
+                             Session session,
+                             ParserCallback callback)
+            throws RepositoryException {
+        GQL query = new GQL(statement, session, null, null);
+        query.parse(callback);
+    }
+
+    /**
      * Defines a filter for query result rows.
      */
     public interface Filter {
@@ -324,6 +347,26 @@ public final class GQL {
          *                             repository.
          */
         public boolean include(Row row) throws RepositoryException;
+    }
+
+    /**
+     * Defines a callback interface that may be implemented by client code to
+     * get a callback for each GQL term that is parsed.
+     */
+    public interface ParserCallback {
+
+        /**
+         * A GQL term was parsed.
+         *
+         * @param property the name of the property or an empty string if the
+         *                 term is not prefixed.
+         * @param value    the value of the term.
+         * @param optional whether this term is prefixed with an OR operator.
+         * @throws RepositoryException if an error occurs while processing the
+         *                             term.
+         */
+        public void term(String property, String value, boolean optional)
+                throws RepositoryException;
     }
 
     //-----------------------------< internal >---------------------------------
@@ -351,11 +394,11 @@ public final class GQL {
             if (numResults == Integer.MAX_VALUE) {
                 return new RowIterAdapter(nodes, nodes.getSize());
             }
-            List resultRows = new ArrayList();
+            List<Row> resultRows = new ArrayList<Row>();
             while (numResults-- > 0 && nodes.hasNext()) {
                 resultRows.add(nodes.nextRow());
             }
-            return new RowIterAdapter(resultRows, nodes.getSize());
+            return new RowIterAdapter(resultRows, resultRows.size());
         } catch (RepositoryException e) {
             // in case of error return empty result
             return RowIteratorAdapter.EMPTY;
@@ -369,7 +412,12 @@ public final class GQL {
      * @throws RepositoryException if an error occurs while translating the query.
      */
     private String translateStatement() throws RepositoryException {
-        parse();
+        parse(new ParserCallback() {
+            public void term(String property, String value, boolean optional)
+                    throws RepositoryException {
+                pushExpression(property, value, optional);
+            }
+        });
         StringBuffer stmt = new StringBuffer();
         // path constraint
         stmt.append(pathConstraint);
@@ -378,8 +426,8 @@ public final class GQL {
         if (typeConstraints != null) {
             predicate.addOperand(typeConstraints);
         }
-        for (Iterator it = conditions.iterator(); it.hasNext(); ) {
-            predicate.addOperand((Expression) it.next());
+        for (Expression condition : conditions) {
+            predicate.addOperand(condition);
         }
         if (predicate.getSize() > 0) {
             stmt.append("[");
@@ -408,17 +456,16 @@ public final class GQL {
         String[] resolvedNames = resolveNodeTypeName(ntName);
 
         // now resolve node type hierarchy
-        for (int i = 0; i < resolvedNames.length; i++) {
+        for (String resolvedName : resolvedNames) {
             try {
-                NodeType base = ntMgr.getNodeType(resolvedNames[i]);
+                NodeType base = ntMgr.getNodeType(resolvedName);
                 if (base.isMixin()) {
                     // search for nodes where jcr:mixinTypes is set to this mixin
-                    addTypeConstraint(new MixinComparision(resolvedNames[i]));
+                    addTypeConstraint(new MixinComparision(resolvedName));
                 } else {
                     // search for nodes where jcr:primaryType is set to this type
-                    addTypeConstraint(new PrimaryTypeComparision(resolvedNames[i]));
+                    addTypeConstraint(new PrimaryTypeComparision(resolvedName));
                 }
-
 
                 // now search for all node types that are derived from base
                 NodeTypeIterator allTypes = ntMgr.getAllNodeTypes();
@@ -435,7 +482,7 @@ public final class GQL {
                 }
             } catch (NoSuchNodeTypeException e) {
                 // add anyway -> will not match anything
-                addTypeConstraint(new PrimaryTypeComparision(resolvedNames[i]));
+                addTypeConstraint(new PrimaryTypeComparision(resolvedName));
             }
         }
     }
@@ -469,7 +516,7 @@ public final class GQL {
         } else {
             if (ntNames == null) {
                 NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
-                ntNames = new HashMap();
+                ntNames = new HashMap<String, String[]>();
                 NodeTypeIterator it = ntMgr.getAllNodeTypes();
                 while (it.hasNext()) {
                     String name = it.nextNodeType().getName();
@@ -478,7 +525,7 @@ public final class GQL {
                     if (idx != -1) {
                         localName = name.substring(idx + 1);
                     }
-                    String[] nts = (String[]) ntNames.get(localName);
+                    String[] nts = ntNames.get(localName);
                     if (nts == null) {
                         nts = new String[]{name};
                     } else {
@@ -490,7 +537,7 @@ public final class GQL {
                     ntNames.put(localName, nts);
                 }
             }
-            names = (String[]) ntNames.get(ntName);
+            names = ntNames.get(ntName);
             if (names == null) {
                 names = new String[]{ntName};
             }
@@ -516,14 +563,14 @@ public final class GQL {
             return name;
         }
         if (propertyNames == null) {
-            propertyNames = new HashMap();
+            propertyNames = new HashMap<String, String>();
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
             NodeTypeIterator it = ntMgr.getAllNodeTypes();
             while (it.hasNext()) {
                 NodeType nt = it.nextNodeType();
                 PropertyDefinition[] defs = nt.getDeclaredPropertyDefinitions();
-                for (int i = 0; i < defs.length; i++) {
-                    String pn = defs[i].getName();
+                for (PropertyDefinition def : defs) {
+                    String pn = def.getName();
                     if (!pn.equals("*")) {
                         String localName = pn;
                         int idx = pn.indexOf(':');
@@ -535,7 +582,7 @@ public final class GQL {
                 }
             }
         }
-        String pn = (String) propertyNames.get(name);
+        String pn = propertyNames.get(name);
         if (pn != null) {
             return pn;
         } else {
@@ -561,14 +608,14 @@ public final class GQL {
             return name;
         }
         if (childNodeNames == null) {
-            childNodeNames = new HashMap();
+            childNodeNames = new HashMap<String, String>();
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
             NodeTypeIterator it = ntMgr.getAllNodeTypes();
             while (it.hasNext()) {
                 NodeType nt = it.nextNodeType();
                 NodeDefinition[] defs = nt.getDeclaredChildNodeDefinitions();
-                for (int i = 0; i < defs.length; i++) {
-                    String cnn = defs[i].getName();
+                for (NodeDefinition def : defs) {
+                    String cnn = def.getName();
                     if (!cnn.equals("*")) {
                         String localName = cnn;
                         int idx = cnn.indexOf(':');
@@ -580,7 +627,7 @@ public final class GQL {
                 }
             }
         }
-        String cnn = (String) childNodeNames.get(name);
+        String cnn = childNodeNames.get(name);
         if (cnn != null) {
             return cnn;
         } else {
@@ -600,10 +647,11 @@ public final class GQL {
     /**
      * Parses the GQL query statement.
      *
+     * @param callback the parser callback.
      * @throws RepositoryException if an error occurs while reading from the
      *                             repository.
      */
-    private void parse() throws RepositoryException {
+    private void parse(ParserCallback callback) throws RepositoryException {
         char[] stmt = new char[statement.length() + 1];
         statement.getChars(0, statement.length(), stmt, 0);
         stmt[statement.length()] = ' ';
@@ -611,8 +659,7 @@ public final class GQL {
         StringBuffer value = new StringBuffer();
         boolean quoted = false;
         boolean optional = false;
-        for (int i = 0; i < stmt.length; i++) {
-            char c = stmt[i];
+        for (char c : stmt) {
             switch (c) {
                 case ' ':
                     if (quoted) {
@@ -624,7 +671,7 @@ public final class GQL {
                             if (v.equals(OR) && p.length() == 0) {
                                 optional = true;
                             } else {
-                                pushExpression(p, v, optional);
+                                callback.term(p, v, optional);
                                 optional = false;
                             }
                             property.setLength(0);
@@ -649,7 +696,7 @@ public final class GQL {
                 case '"':
                     quoted = !quoted;
                     break;
-                // noise
+                    // noise
                 case '*':
                 case '?':
                 case '\'':
@@ -691,8 +738,8 @@ public final class GQL {
         } else if (property.equals(TYPE)) {
             String[] nts = Text.explode(value, ',');
             if (nts.length > 0) {
-                for (int i = 0; i < nts.length; i++) {
-                    collectNodeTypes(nts[i]);
+                for (String nt : nts) {
+                    collectNodeTypes(nt);
                 }
             }
         } else if (property.equals(ORDER)) {
@@ -730,7 +777,7 @@ public final class GQL {
         } else {
             ContainsExpression expr = new ContainsExpression(property, value);
             if (optional) {
-                Expression last = (Expression) conditions.get(conditions.size() - 1);
+                Expression last = conditions.get(conditions.size() - 1);
                 if (last instanceof OptionalExpression) {
                     ((OptionalExpression) last).addOperand(expr);
                 } else {
@@ -854,16 +901,19 @@ public final class GQL {
                 }
                 String slash = "";
                 for (int i = 0; i < parts.length; i++) {
-                    buffer.append(slash);
-                    String name;
                     if (i == parts.length - 1) {
-                        // last part
-                        buffer.append("@");
-                        name = resolvePropertyName(parts[i]);
+                        if (!parts[i].equals(".")) {
+                            // last part
+                            buffer.append(slash);
+                            buffer.append("@");
+                            buffer.append(ISO9075.encode(
+                                    resolvePropertyName(parts[i])));
+                        }
                     } else {
-                        name = resolveChildNodeName(parts[i]);
+                        buffer.append(slash);
+                        buffer.append(ISO9075.encode(
+                                resolveChildNodeName(parts[i])));
                     }
-                    buffer.append(ISO9075.encode(name));
                     slash = "/";
                 }
             }
@@ -886,7 +936,7 @@ public final class GQL {
      */
     private abstract class NAryExpression implements Expression {
 
-        private final List operands = new ArrayList();
+        private final List<Expression> operands = new ArrayList<Expression>();
 
         public void toString(StringBuffer buffer)
                 throws RepositoryException {
@@ -894,9 +944,8 @@ public final class GQL {
                 buffer.append("(");
             }
             String op = "";
-            for (Iterator it = operands.iterator(); it.hasNext(); ) {
+            for (Expression expr : operands) {
                 buffer.append(op);
-                Expression expr = (Expression) it.next();
                 expr.toString(buffer);
                 op = getOperation();
             }
@@ -954,11 +1003,10 @@ public final class GQL {
         public void toString(StringBuffer buffer)
                 throws RepositoryException {
             buffer.append("order by ");
-            List names = new ArrayList(Arrays.asList(Text.explode(value, ',')));
+            List<String> names = new ArrayList<String>(Arrays.asList(Text.explode(value, ',')));
             int length = buffer.length();
             String comma = "";
-            for (Iterator it = names.iterator(); it.hasNext(); ) {
-                String name = (String) it.next();
+            for (String name : names) {
                 boolean asc;
                 if (name.startsWith("-")) {
                     name = name.substring(1);
@@ -972,8 +1020,8 @@ public final class GQL {
                 }
                 if (name.length() > 0) {
                     buffer.append(comma);
-                    name = resolvePropertyName(name);
-                    buffer.append("@").append(ISO9075.encode(name));
+                    name = createPropertyName(resolvePropertyName(name));
+                    buffer.append(name);
                     if (!asc) {
                         buffer.append(" ").append(DESCENDING);
                     }
@@ -983,6 +1031,25 @@ public final class GQL {
             if (buffer.length() == length) {
                 // no order by
                 defaultOrderBy(buffer);
+            }
+        }
+
+        private String createPropertyName(String name) {
+            if (name.contains("/")) {
+                String[] labels = name.split("/");
+
+                name = "";
+                for (int i = 0; i < labels.length; i++) {
+                    String label = ISO9075.encode(labels[i]);
+                    if (i < (labels.length - 1)) {
+                        name += label + "/";
+                    } else {
+                        name += "@" + label;
+                    }
+                }
+                return name;
+            } else {
+                return "@" + ISO9075.encode(name);
             }
         }
 
