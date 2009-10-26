@@ -63,7 +63,7 @@
           <aggregate>true</aggregate>
           <links>
             <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
-            <link>http://www.day.com/maven/jsr170/javadocs/jcr-1.0/</link>
+            <link>http://www.day.com/maven/javax.jcr/javadocs/jcr-2.0/</link>
           </links>
         </configuration>
       </plugin>
