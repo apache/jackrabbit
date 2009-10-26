@@ -176,7 +176,8 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
 
         SecurityManagerConfig smc = config.getSecurityManagerConfig();
         if (smc != null && smc.getWorkspaceAccessConfig() != null) {
-            workspaceAccessManager = (WorkspaceAccessManager) smc.getWorkspaceAccessConfig().newInstance();
+            workspaceAccessManager =
+                smc.getWorkspaceAccessConfig().newInstance(WorkspaceAccessManager.class);
         } else {
             // fallback -> the default simple implementation
             log.debug("No WorkspaceAccessManager configured; using default.");
@@ -216,7 +217,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
             if (amc == null) {
                 accessMgr = new SimpleAccessManager();
             } else {
-                accessMgr = (AccessManager) amc.newInstance();
+                accessMgr = amc.newInstance(AccessManager.class);
             }
             accessMgr.init(amContext, acP, workspaceAccessManager);
             return accessMgr;

@@ -49,15 +49,11 @@ public class ImportConfig {
     }
 
     public List<ProtectedNodeImporter> getProtectedNodeImporters() {
-        List<ProtectedNodeImporter> pnis = new ArrayList();
+        List<ProtectedNodeImporter> pnis =
+            new ArrayList<ProtectedNodeImporter>();
         for (BeanConfig bc : protectedNodeImporters) {
             try {
-                Object o = bc.newInstance();
-                if (o instanceof ProtectedNodeImporter) {
-                    pnis.add((ProtectedNodeImporter) o);
-                } else {
-                    log.warn("Invalid configuration entry: " + bc.getClassName() +" does not implement ProtectedNodeImporter.");                    
-                }
+                pnis.add(bc.newInstance(ProtectedNodeImporter.class));
             } catch (ConfigurationException e) {
                 log.warn(e.getMessage());
             }
@@ -66,15 +62,11 @@ public class ImportConfig {
     }
 
     public List<ProtectedPropertyImporter> getProtectedPropertyImporters() {
-        List<ProtectedPropertyImporter> ppis = new ArrayList();
+        List<ProtectedPropertyImporter> ppis =
+            new ArrayList<ProtectedPropertyImporter>();
         for (BeanConfig bc : protectedPropertyImporters) {
             try {
-                Object o = bc.newInstance();
-                if (o instanceof ProtectedPropertyImporter) {
-                    ppis.add((ProtectedPropertyImporter) o);
-                } else {
-                    log.warn("Invalid configuration entry: " + bc.getClassName() +" does not implement ProtectedPropertyImporter.");
-                }
+                ppis.add(bc.newInstance(ProtectedPropertyImporter.class));
             } catch (ConfigurationException e) {
                 log.warn(e.getMessage());
             }
