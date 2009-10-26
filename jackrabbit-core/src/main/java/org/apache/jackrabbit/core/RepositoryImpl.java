@@ -446,7 +446,7 @@ public class RepositoryImpl extends AbstractRepository
                 log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
                 securityMgr = new SimpleSecurityManager();
             } else {
-                securityMgr = (JackrabbitSecurityManager) smc.newInstance();
+                securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
             }
 
             securityMgr.init(this, securitySession);
@@ -1392,7 +1392,7 @@ public class RepositoryImpl extends AbstractRepository
                                                                DataStore dataStore)
             throws RepositoryException {
         try {
-            PersistenceManager pm = (PersistenceManager) pmConfig.newInstance();
+            PersistenceManager pm = pmConfig.newInstance(PersistenceManager.class);
             pm.init(new PMContext(homeDir, fs, rootNodeId, nsReg, ntReg, dataStore));
             return pm;
         } catch (Exception e) {

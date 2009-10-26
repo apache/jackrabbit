@@ -18,7 +18,9 @@ package org.apache.jackrabbit.core.config;
 
 import org.apache.jackrabbit.core.DefaultSecurityManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
+import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager;
 import org.apache.jackrabbit.core.security.authentication.DefaultLoginModule;
@@ -72,12 +74,12 @@ public class SecurityConfigTest extends AbstractJCRTest {
 
         SecurityManagerConfig smc = config.getSecurityManagerConfig();
         assertNotNull(smc);
-        assertTrue(smc.newInstance() instanceof SimpleSecurityManager);
+        assertTrue(smc.newInstance(JackrabbitSecurityManager.class) instanceof SimpleSecurityManager);
         assertNull(smc.getWorkspaceAccessConfig());
         assertNull(smc.getWorkspaceName());
 
         assertNotNull(config.getAccessManagerConfig());
-        assertTrue(config.getAccessManagerConfig().newInstance() instanceof SimpleAccessManager);
+        assertTrue(config.getAccessManagerConfig().newInstance(AccessManager.class) instanceof SimpleAccessManager);
 
         assertNull(config.getLoginModuleConfig());
     }
@@ -91,7 +93,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
 
         SecurityManagerConfig smc = config.getSecurityManagerConfig();
         assertNotNull(smc);
-        assertTrue(smc.newInstance() instanceof DefaultSecurityManager);
+        assertTrue(smc.newInstance(JackrabbitSecurityManager.class) instanceof DefaultSecurityManager);
         assertNull(smc.getWorkspaceAccessConfig());
         assertEquals("security", smc.getWorkspaceName());
 
@@ -99,7 +101,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
 
         AccessManagerConfig amc = config.getAccessManagerConfig();
         assertNotNull(amc);
-        assertTrue(amc.newInstance() instanceof DefaultAccessManager);
+        assertTrue(amc.newInstance(AccessManager.class) instanceof DefaultAccessManager);
 
         LoginModuleConfig lmc = config.getLoginModuleConfig();
         assertNotNull(lmc);

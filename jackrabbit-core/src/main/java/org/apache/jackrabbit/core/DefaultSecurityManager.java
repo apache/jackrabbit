@@ -210,7 +210,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         // create the workspace access manager
         SecurityManagerConfig smc = config.getSecurityManagerConfig();
         if (smc != null && smc.getWorkspaceAccessConfig() != null) {
-            workspaceAccessManager = (WorkspaceAccessManager) smc.getWorkspaceAccessConfig().newInstance();
+            workspaceAccessManager =
+                smc.getWorkspaceAccessConfig().newInstance(WorkspaceAccessManager.class);
         } else {
             // fallback -> the default implementation
             log.debug("No WorkspaceAccessManager configured; using default.");
@@ -271,7 +272,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                 log.debug("No configuration entry for AccessManager. Using org.apache.jackrabbit.core.security.DefaultAccessManager");
                 accessMgr = new DefaultAccessManager();
             } else {
-                accessMgr = (AccessManager) amConfig.newInstance();
+                accessMgr = amConfig.newInstance(AccessManager.class);
             }
 
             accessMgr.init(amContext, pp, workspaceAccessManager);

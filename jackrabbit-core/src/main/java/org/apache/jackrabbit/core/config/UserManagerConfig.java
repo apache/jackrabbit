@@ -39,7 +39,7 @@ public class UserManagerConfig extends BeanConfig {
 
     private Constructor<?> constr;
 
-    public UserManagerConfig(BeanConfig<?> config) {
+    public UserManagerConfig(BeanConfig config) {
         super(config);
         setValidate(false); // omit validation of the config properties
     }
