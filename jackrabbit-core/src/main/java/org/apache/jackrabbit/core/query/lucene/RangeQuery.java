@@ -16,41 +16,31 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.ConstantScoreRangeQuery;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermDocs;
+
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.HashMap;
 import java.util.Set;
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Weight;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * Implements a variant of the lucene class {@link org.apache.lucene.search.RangeQuery}.
- * This class does not rewrite to basic {@link org.apache.lucene.search.TermQuery}
- * but will calculate the matching documents itself. That way a
- * <code>TooManyClauses</code> can be avoided.
+ * Implements a lucene range query.
  */
 public class RangeQuery extends Query implements Transformable {
-
-    /**
-     * Logger instance for this class.
-     */
-    private static final Logger log = LoggerFactory.getLogger(RangeQuery.class);
 
     /**
      * The lower term. May be <code>null</code> if <code>upperTerm</code> is not
@@ -74,12 +64,6 @@ public class RangeQuery extends Query implements Transformable {
      * term.
      */
     private int transform = TRANSFORM_NONE;
-
-    /**
-     * The rewritten range query or <code>null</code> if the range spans more
-     * than {@link org.apache.lucene.search.BooleanQuery#maxClauseCount} terms.
-     */
-    private Query stdRangeQuery;
 
     /**
      * Creates a new RangeQuery. The lower or the upper term may be
@@ -130,9 +114,8 @@ public class RangeQuery extends Query implements Transformable {
     }
 
     /**
-     * Tries to rewrite this query into a standard lucene RangeQuery.
-     * This rewrite might fail with a TooManyClauses exception. If that
-     * happens, we use our own implementation.
+     * Rewrites this query into a {@link ConstantScoreRangeQuery} if
+     * {@link #transform} is {@link #TRANSFORM_NONE}.
      *
      * @param reader the index reader.
      * @return the rewritten query or this query if rewriting is not possible.
@@ -140,16 +123,9 @@ public class RangeQuery extends Query implements Transformable {
      */
     public Query rewrite(IndexReader reader) throws IOException {
         if (transform == TRANSFORM_NONE) {
-            Query stdRangeQueryImpl
-                    = new org.apache.lucene.search.RangeQuery(lowerTerm, upperTerm, inclusive);
-            try {
-                stdRangeQuery = stdRangeQueryImpl.rewrite(reader);
-                return stdRangeQuery;
-            } catch (BooleanQuery.TooManyClauses e) {
-                log.debug("Too many terms to enumerate, using custom RangeQuery");
-                // failed, use own implementation
-                return this;
-            }
+            return new ConstantScoreRangeQuery(lowerTerm.field(),
+                    lowerTerm.text(), upperTerm.text(), inclusive,
+                    inclusive).rewrite(reader);
         } else {
             // always use our implementation when we need to transform the
             // term enum
@@ -194,9 +170,7 @@ public class RangeQuery extends Query implements Transformable {
      * {@inheritDoc}
      */
     public void extractTerms(Set terms) {
-        if (stdRangeQuery != null) {
-            stdRangeQuery.extractTerms(terms);
-        }
+        // cannot extract terms
     }
 
     /**
