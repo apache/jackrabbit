@@ -207,6 +207,7 @@ public class BeanConfig {
             String name = method.getName();
             if (name.startsWith("set") && name.length() > 3
                     && Modifier.isPublic(method.getModifiers())
+                    && !Modifier.isStatic(method.getModifiers())
                     && Void.TYPE.equals(method.getReturnType())
                     && method.getParameterTypes().length == 1) {
                 methods.put(
