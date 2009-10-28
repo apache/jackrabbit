@@ -19,6 +19,7 @@ package org.apache.jackrabbit.server.io;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.tika.detect.Detector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +54,9 @@ public class ExportContextImpl extends AbstractExportContext {
     private File outFile;
     private OutputStream outStream;
 
-    public ExportContextImpl(Item exportRoot, OutputContext outputCtx) throws IOException {
-        this(exportRoot, outputCtx, null);
-    }
-
-    public ExportContextImpl(Item exportRoot, OutputContext outputCtx,
-                             MimeResolver mimeResolver) throws IOException {
-        super(exportRoot, (outputCtx != null) ? outputCtx.hasStream() : false, null, mimeResolver);
+    public ExportContextImpl(Item exportRoot, OutputContext outputCtx)
+            throws IOException {
+        super(exportRoot, outputCtx != null && outputCtx.hasStream(), null);
         this.outputCtx = outputCtx;
         if (hasStream()) {
             // we need a tmp file, since the export could fail

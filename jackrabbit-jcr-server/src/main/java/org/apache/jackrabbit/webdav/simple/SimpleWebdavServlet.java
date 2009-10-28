@@ -28,13 +28,19 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.server.AbstractWebdavServlet;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypesFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Repository;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * WebdavServlet provides webdav support (level 1 and 2 complient) for
@@ -74,6 +80,13 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * for filtering the resources displayed.
      */
     public static final String INIT_PARAM_RESOURCE_CONFIG = "resource-config";
+
+    /**
+     * Name of the parameter that specifies the servlet resource path of
+     * a custom &lt;mime-info/&gt; configuration file. The default setting
+     * is to use the MIME media type database included in Apache Tika.
+     */
+    public static final String INIT_PARAM_MIME_INFO = "mime-info";
 
     /**
      * Servlet context attribute used to store the path prefix instead of
@@ -150,14 +163,48 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
         }
         log.info("WWW-Authenticate header = '" + authenticate_header + "'");
 
+        config = new ResourceConfig(getDetector());
         String configParam = getInitParameter(INIT_PARAM_RESOURCE_CONFIG);
         if (configParam != null) {
             try {
-                config = new ResourceConfig();
                 config.parse(getServletContext().getResource(configParam));
             } catch (MalformedURLException e) {
                 log.debug("Unable to build resource filter provider.");
             }
+        }
+    }
+
+    /**
+     * Reads and returns the configured &lt;mime-info/&gt; database.
+     *
+     * @see #INIT_PARAM_MIME_INFO
+     * @return MIME media type database
+     * @throws ServletException if the database is invalid or can not be read
+     */
+    private Detector getDetector() throws ServletException {
+        URL url;
+
+        String mimeInfo = getInitParameter(INIT_PARAM_MIME_INFO);
+        if (mimeInfo != null) {
+            try {
+                url = getServletContext().getResource(mimeInfo);
+            } catch (MalformedURLException e) {
+                throw new ServletException(
+                        "Invalid " + INIT_PARAM_MIME_INFO
+                        + " configuration setting: " + mimeInfo, e);
+            }
+        } else {
+            url = MimeTypesFactory.class.getResource("tika-mimetypes.xml");
+        }
+
+        try {
+            return MimeTypesFactory.create(url);
+        } catch (MimeTypeException e) {
+            throw new ServletException(
+                    "Invalid MIME media type database: " + url, e);
+        } catch (IOException e) {
+            throw new ServletException(
+                    "Unable to read MIME media type database: " + url, e);
         }
     }
 
@@ -345,10 +392,6 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @return the resource configuration.
      */
     public ResourceConfig getResourceConfig() {
-        // fallback if no config present
-        if (config == null) {
-            config = new ResourceConfig();
-        }
         return config;
     }
 

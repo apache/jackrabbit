@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.server.io;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.tika.detect.Detector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.webdav.DavResource;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * <code>IOManagerImpl</code> represents the most simple <code>IOManager</code>
@@ -32,6 +33,11 @@ import java.util.ArrayList;
 public class IOManagerImpl implements IOManager {
 
     private static Logger log = LoggerFactory.getLogger(IOManagerImpl.class);
+
+    /**
+     * Content type detector.
+     */
+    private Detector detector;
 
     private final List ioHandlers = new ArrayList();
 
@@ -61,6 +67,24 @@ public class IOManagerImpl implements IOManager {
      */
     public IOHandler[] getIOHandlers() {
         return (IOHandler[]) ioHandlers.toArray(new IOHandler[ioHandlers.size()]);
+    }
+
+    /**
+     * Return the configured type detector.
+     *
+     * @return content type detector
+     */
+    public Detector getDetector() {
+        return detector;
+    }
+
+    /**
+     * Sets the configured type detector.
+     *
+     * @param detector content type detector
+     */
+    public void setDetector(Detector detector) {
+        this.detector = detector;
     }
 
     /**

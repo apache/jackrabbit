@@ -24,6 +24,10 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,21 +74,26 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
 
     private static Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
-    private String collectionNodetype = JcrConstants.NT_FOLDER;
-    private String defaultNodetype = JcrConstants.NT_FILE;
-    /* IMPORTANT NOTE: for webDAV compliance the default nodetype of the content
-       node has been changed from nt:resource to nt:unstructured. */
-    private String contentNodetype = JcrConstants.NT_UNSTRUCTURED;
+    private String collectionNodetype;
+
+    private String defaultNodetype;
+
+    private String contentNodetype;
 
     private IOManager ioManager;
 
     /**
-     * Creates a new <code>DefaultHandler</code> with default nodetype definitions
-     * and without setting the IOManager.
+     * Creates a new <code>DefaultHandler</code> with default nodetype definitions:<br>
+     * <ul>
+     * <li>Nodetype for Collection: {@link JcrConstants#NT_FOLDER nt:folder}</li>
+     * <li>Nodetype for Non-Collection: {@link JcrConstants#NT_FILE nt:file}</li>
+     * <li>Nodetype for Non-Collection content: {@link JcrConstants#NT_UNSTRUCTURED nt:unstructured}</li>
+     * </ul>
      *
-     * @see IOHandler#setIOManager(IOManager)
+     * @param ioManager the I/O manager
      */
     public DefaultHandler() {
+        this(null);
     }
 
     /**
@@ -92,13 +101,19 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * <ul>
      * <li>Nodetype for Collection: {@link JcrConstants#NT_FOLDER nt:folder}</li>
      * <li>Nodetype for Non-Collection: {@link JcrConstants#NT_FILE nt:file}</li>
-     * <li>Nodetype for Non-Collection content: {@link JcrConstants#NT_RESOURCE nt:resource}</li>
+     * <li>Nodetype for Non-Collection content: {@link JcrConstants#NT_UNSTRUCTURED nt:unstructured}</li>
      * </ul>
      *
      * @param ioManager the I/O manager
      */
     public DefaultHandler(IOManager ioManager) {
-        this.ioManager = ioManager;
+        this(ioManager,
+                JcrConstants.NT_FOLDER,
+                JcrConstants.NT_FILE,
+                // IMPORTANT NOTE: for webDAV compliance the default type
+                // of the content node has been changed from nt:resource to
+                // nt:unstructured
+                JcrConstants.NT_UNSTRUCTURED);
     }
 
     /**
@@ -638,6 +653,24 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             setLastModified(cn, IOUtil.UNDEFINED_LENGTH);
         }
         return failures;
+    }
+
+    /**
+     * Detects the media type of a document based on the given name.
+     *
+     * @param name document name
+     * @return detected content type (or application/octet-stream)
+     */
+    protected String detect(String name) {
+        try {
+            Metadata metadata = new Metadata();
+            metadata.set(Metadata.RESOURCE_NAME_KEY, name);
+            return ioManager.getDetector().detect(null, metadata).toString();
+        } catch (IOException e) {
+            // Can not happen since the InputStream above is null
+            throw new IllegalStateException(
+                    "Unexpected IOException", e);
+        }
     }
 
     //------------------------------------------------------------< private >---

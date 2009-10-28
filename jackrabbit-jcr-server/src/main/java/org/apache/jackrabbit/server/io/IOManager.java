@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.server.io;
 
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.tika.detect.Detector;
 
 import java.io.IOException;
 
@@ -39,6 +40,20 @@ public interface IOManager {
      * @return Array of all handlers
      */
     public IOHandler[] getIOHandlers();
+
+    /**
+     * Return the configured type detector.
+     *
+     * @return content type detector
+     */
+    Detector getDetector();
+
+    /**
+     * Sets the configured type detector.
+     *
+     * @param detector content type detector.
+     */
+    void setDetector(Detector detector);
 
     /**
      * Passes the specified context and boolean value to the IOHandlers present
