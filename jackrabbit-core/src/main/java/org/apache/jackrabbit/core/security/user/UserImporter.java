@@ -460,22 +460,6 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
         this.importBehavior = ImportBehavior.valueFromName(importBehaviorStr);
     }
 
-    /**
-     *
-     * @param importBehavior
-     */
-    public void setImportBehavior(int importBehavior) {
-        switch (importBehavior) {
-            case ImportBehavior.IGNORE:
-            case ImportBehavior.ABORT:
-            case ImportBehavior.BESTEFFORT:
-                this.importBehavior = importBehavior;
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid import behavior: " + importBehavior);
-        }
-    }
-
     //--------------------------------------------------------------------------
     /**
      * Inner class used to postpone import of group membership to the very end

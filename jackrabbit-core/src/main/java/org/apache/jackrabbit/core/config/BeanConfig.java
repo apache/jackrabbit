@@ -16,17 +16,14 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -173,21 +170,19 @@ public class BeanConfig {
             Object instance = objectClass.newInstance();
 
             // Set all configured bean properties
-            List<?> names = Collections.list(properties.propertyNames());
-            BeanInfo info = Introspector.getBeanInfo(objectClass, Object.class);
-            for (PropertyDescriptor property : info.getPropertyDescriptors()) {
-                String value = properties.getProperty(property.getName());
-                if (value != null) {
-                    setProperty(instance, property, value);
-                    names.remove(property.getName());
+            Map<String, Method> setters = getSetters(objectClass);
+            Enumeration<?> enumeration = properties.propertyNames();
+            while (enumeration.hasMoreElements()) {
+                String name = enumeration.nextElement().toString();
+                Method setter = setters.get(name);
+                if (setter != null) {
+                    String value = properties.getProperty(name);
+                    setProperty(instance, name, setter, value);
+                } else if (validate) {
+                    throw new ConfigurationException(
+                            "Configured class " + getClassName()
+                            + " does not contain a property named " + name);
                 }
-            }
-
-            // Check that no invalid property names were configured
-            if (validate && !names.isEmpty()) {
-                throw new ConfigurationException(
-                        "Configured class " + getClassName()
-                        + " does not contain the properties " + names);
             }
 
             return (T) instance;
@@ -203,71 +198,69 @@ public class BeanConfig {
             throw new ConfigurationException(
                     "Configured bean implementation class " + getClassName()
                     + " is protected.", e);
-        } catch (IntrospectionException e) {
-            throw new ConfigurationException(
-                    "Configured bean implementation class " + getClassName()
-                    + " can not be introspected", e);
         }
     }
 
+    private Map<String, Method> getSetters(Class<?> klass) {
+        Map<String, Method> methods = new HashMap<String, Method>();
+        for (Method method : klass.getMethods()) {
+            String name = method.getName();
+            if (name.startsWith("set") && name.length() > 3
+                    && Modifier.isPublic(method.getModifiers())
+                    && Void.TYPE.equals(method.getReturnType())
+                    && method.getParameterTypes().length == 1) {
+                methods.put(
+                        name.substring(3, 4).toLowerCase() + name.substring(4),
+                        method);
+            }
+        }
+        return methods;
+    }
+
     private void setProperty(
-            Object instance, PropertyDescriptor property, String value)
+            Object instance, String name, Method setter, String value)
             throws ConfigurationException {
-        Method method = property.getWriteMethod();
-        if (method == null) {
-            throw new ConfigurationException(
-                    "Property " + property.getName() + " of class "
-                    + getClassName() + " can not be written"); 
-        }
-
-        Class<?>[] types = method.getParameterTypes();
-        if (types.length != 1) {
-            throw new ConfigurationException(
-                    "Property " + property.getName() + " of class "
-                    + getClassName() + " has an invalid setter");
-        }
-
-        Class<?> type = types[0];
+        Class<?> type = setter.getParameterTypes()[0];
         try {
-            if (types[0].isAssignableFrom(String.class)
-                || types[0].isAssignableFrom(Object.class)) {
-                method.invoke(instance, value);
-            } else if (types[0].isAssignableFrom(Boolean.TYPE)
-                    || types[0].isAssignableFrom(Boolean.class)) {
-                method.invoke(instance, Boolean.valueOf(value));
-            } else if (types[0].isAssignableFrom(Integer.TYPE)
-                    || types[0].isAssignableFrom(Integer.class)) {
-                method.invoke(instance, Integer.valueOf(value));
-            } else if (types[0].isAssignableFrom(Long.TYPE)
-                    || types[0].isAssignableFrom(Long.class)) {
-                method.invoke(instance, Long.valueOf(value));
-            } else if (types[0].isAssignableFrom(Double.TYPE)
-                    || types[0].isAssignableFrom(Double.class)) {
-                method.invoke(instance, Double.valueOf(value));
+            if (type.isAssignableFrom(String.class)
+                || type.isAssignableFrom(Object.class)) {
+                setter.invoke(instance, value);
+            } else if (type.isAssignableFrom(Boolean.TYPE)
+                    || type.isAssignableFrom(Boolean.class)) {
+                setter.invoke(instance, Boolean.valueOf(value));
+            } else if (type.isAssignableFrom(Integer.TYPE)
+                    || type.isAssignableFrom(Integer.class)) {
+                setter.invoke(instance, Integer.valueOf(value));
+            } else if (type.isAssignableFrom(Long.TYPE)
+                    || type.isAssignableFrom(Long.class)) {
+                setter.invoke(instance, Long.valueOf(value));
+            } else if (type.isAssignableFrom(Double.TYPE)
+                    || type.isAssignableFrom(Double.class)) {
+                setter.invoke(instance, Double.valueOf(value));
             } else {
                 throw new ConfigurationException(
                         "The type (" + type.getName()
-                        + ") of property " + property.getName() + " of class "
+                        + ") of property " + name + " of class "
                         + getClassName() + " is not supported");
             }
         } catch (NumberFormatException e) {
             throw new ConfigurationException(
                     "Invalid number format (" + value + ") for property "
-                    + property.getName() + " of class " + getClassName(), e);
+                    + name + " of class " + getClassName(), e);
         } catch (InvocationTargetException e) {
             throw new ConfigurationException(
-                    "Property " + property.getName() + " of class "
+                    "Property " + name + " of class "
                     + getClassName() + " can not be set to \"" + value + "\"",
                     e);
         } catch (IllegalAccessException e) {
             throw new ConfigurationException(
-                    "The setter of property " + property.getName()
+                    "The setter of property " + name
                     + " of class " + getClassName() + " can not be accessed",
                     e);
         } catch (IllegalArgumentException e) {
             throw new ConfigurationException(
                     "Unable to call the setter of property "
-                    + property.getName() + " of class " + getClassName(), e);
+                    + name + " of class " + getClassName(), e);
         }
     }
 
