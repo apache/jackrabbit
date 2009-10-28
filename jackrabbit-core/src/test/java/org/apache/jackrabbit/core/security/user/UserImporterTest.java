@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.config.ImportConfig;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.xml.ProtectedPropertyImporter;
 import org.apache.jackrabbit.core.xml.SessionImporter;
@@ -1041,7 +1042,8 @@ public class UserImporterTest extends AbstractJCRTest {
 
         private PseudoConfig(int importBehavior) {
             this.ppi = createImporter();
-            ((UserImporter) ppi).setImportBehavior(importBehavior);
+            ((UserImporter) ppi).setImportBehavior(
+                    ImportBehavior.nameFromValue(importBehavior));
         }
 
         @Override
