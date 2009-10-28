@@ -899,7 +899,7 @@ public class RepositoryImpl extends AbstractRepository
      * @throws NoSuchWorkspaceException if such a workspace does not exist
      * @throws RepositoryException      if some other error occurs
      */
-    LockManager getLockManager(String workspaceName) throws
+    LockManagerImpl getLockManager(String workspaceName) throws
             NoSuchWorkspaceException, RepositoryException {
         // check sanity of this instance
         sanityCheck();
@@ -1806,7 +1806,7 @@ public class RepositoryImpl extends AbstractRepository
          * @return the lock manager for this workspace
          * @throws RepositoryException if the lock manager could not be created
          */
-        protected LockManager getLockManager() throws RepositoryException {
+        protected LockManagerImpl getLockManager() throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
                         + "' not initialized");

@@ -428,6 +428,30 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     }
 
     /**
+     * Helper method that copies all the active open-scoped locks from the
+     * given source to this lock manager. This method is used when backing
+     * up repositories, and only works correctly when the source lock manager
+     * belongs to the original copy of the workspace being backed up.
+     *
+     * @see org.apache.jackrabbit.core.RepositoryCopier
+     * @param source source lock manager
+     */
+    public void copyOpenScopedLocksFrom(LockManagerImpl source) {
+        source.lockMap.traverse(new PathMap.ElementVisitor() {
+            public void elementVisited(PathMap.Element element) {
+                LockInfo info = (LockInfo) element.get();
+                if (info.isLive() && !info.isSessionScoped()) {
+                    try {
+                        lockMap.put(element.getPath(), info);
+                    } catch (MalformedPathException e) {
+                        log.warn("Ignoring invalid lock path: " + info, e);
+                    }
+                }
+            }
+        }, false);
+    }
+
+    /**
      * Return the most appropriate lock information for a node. This is either
      * the lock info for the node itself, if it is locked, or a lock info for one
      * of its parents, if that is deep locked.

@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -265,12 +266,18 @@ public class RepositoryCopier {
                 target.createWorkspace(names[i]);
             }
 
+            // Copy all the workspace content
             PersistenceCopier copier = new PersistenceCopier(
                     source.getWorkspaceInfo(names[i]).getPersistenceManager(),
                     target.getWorkspaceInfo(names[i]).getPersistenceManager(),
                     target.getDataStore());
             copier.excludeNode(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
             copier.copy(RepositoryImpl.ROOT_NODE_ID);
+
+            // Copy all the active open-scoped locks
+            LockManagerImpl sourceLockManager = source.getLockManager(names[i]);
+            LockManagerImpl targetLockManager = target.getLockManager(names[i]);
+            targetLockManager.copyOpenScopedLocksFrom(sourceLockManager);
         }
     }
 
