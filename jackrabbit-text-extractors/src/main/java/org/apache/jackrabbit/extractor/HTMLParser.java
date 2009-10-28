@@ -70,7 +70,7 @@ public class HTMLParser extends AbstractSAXParser {
                     continue;
                 }
             } else {
-                if (!Character.isLetter(c)) {
+                if (!Character.isLetterOrDigit(c)) {
                     if (!space) {
                         space = true;
                         buffer.append(' ');
