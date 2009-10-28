@@ -16,32 +16,32 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import org.apache.jackrabbit.server.io.IOManager;
-import org.apache.jackrabbit.server.io.DefaultIOManager;
-import org.apache.jackrabbit.server.io.IOHandler;
-import org.apache.jackrabbit.server.io.PropertyManager;
-import org.apache.jackrabbit.server.io.PropertyHandler;
-import org.apache.jackrabbit.server.io.PropertyManagerImpl;
-import org.apache.jackrabbit.server.io.MimeResolver;
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
-import java.net.URL;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Properties;
-import java.io.IOException;
-import java.io.InputStream;
+
+import org.apache.jackrabbit.server.io.DefaultIOManager;
+import org.apache.jackrabbit.server.io.IOHandler;
+import org.apache.jackrabbit.server.io.IOManager;
+import org.apache.jackrabbit.server.io.PropertyHandler;
+import org.apache.jackrabbit.server.io.PropertyManager;
+import org.apache.jackrabbit.server.io.PropertyManagerImpl;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.tika.detect.Detector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 /**
  * <code>ResourceConfig</code>...
@@ -50,12 +50,20 @@ public class ResourceConfig {
 
     private static Logger log = LoggerFactory.getLogger(ResourceConfig.class);
 
+    /**
+     * Content type detector.
+     */
+    private final Detector detector;
+
     private ItemFilter itemFilter;
     private IOManager ioManager;
     private PropertyManager propManager;
     private String[] nodetypeNames = new String[0];
     private boolean collectionNames = false;
-    private MimeResolver mimeResolver;
+
+    public ResourceConfig(Detector detector) {
+        this.detector = detector;
+    }
 
     /**
      * Tries to parse the given xml configuration file.
@@ -86,6 +94,11 @@ public class ResourceConfig {
      *    &gt;
      * &lt;!ELEMENT defaultmimetype (CDATA) &gt;
      * </pre>
+     * <p>
+     * The &lt;mimetypeproperties/&gt; settings have been deprecated and will
+     * be ignored with a warning. Instead you can use the
+     * {@link SimpleWebdavServlet#INIT_PARAM_MIME_INFO mime-info}
+     * servlet initialization parameter to customize the media type settings.
      *
      * @param configURL
      */
@@ -107,6 +120,7 @@ public class ResourceConfig {
                 Object inst = buildClassFromConfig(el);
                 if (inst != null && inst instanceof IOManager) {
                     ioManager = (IOManager)inst;
+                    ioManager.setDetector(detector);
                     // get optional 'iohandler' child elements and populate the
                     // ioManager with the instances
                     ElementIterator iohElements = DomUtil.getChildren(el, "iohandler", null);
@@ -177,21 +191,11 @@ public class ResourceConfig {
                 log.debug("Resource configuration: no 'filter' element specified.");
             }
 
-            // optional mimetype properties
-            Properties properties = new Properties();
-            String defaultMimetype = null;
             el = DomUtil.getChildElement(config, "mimetypeproperties", null);
             if (el != null) {
-                defaultMimetype = DomUtil.getChildText(el, "defaultmimetype", null);
-                ElementIterator it = DomUtil.getChildren(el, "mimemapping", null);
-                while (it.hasNext()) {
-                    Element mimeMapping = it.nextElement();
-                    String extension = DomUtil.getAttribute(mimeMapping, "extension", null);
-                    String mimetype = DomUtil.getAttribute(mimeMapping, "mimetype", null);
-                    properties.put(extension, mimetype);
-                }
+                log.warn("Ignoring deprecated mimetypeproperties settings: {}",
+                        configURL);
             }
-            mimeResolver = new MimeResolver(properties, defaultMimetype);
         } catch (IOException e) {
             log.debug("Invalid resource configuration: " + e.getMessage());
         } catch (ParserConfigurationException e) {
@@ -270,6 +274,7 @@ public class ResourceConfig {
         if (ioManager == null) {
             log.debug("ResourceConfig: missing io-manager > building DefaultIOManager ");
             ioManager = new DefaultIOManager();
+            ioManager.setDetector(detector);
         }
         return ioManager;
     }
@@ -331,10 +336,12 @@ public class ResourceConfig {
     }
 
     /**
+     * Returns the configured content type detector.
      *
-     * @return
+     * @return content type detector
      */
-    public MimeResolver getMimeResolver() {
-        return mimeResolver;
+    public Detector getDetector() {
+        return detector;
     }
+
 }

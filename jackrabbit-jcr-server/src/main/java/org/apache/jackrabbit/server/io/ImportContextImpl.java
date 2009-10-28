@@ -17,10 +17,15 @@
 package org.apache.jackrabbit.server.io;
 
 import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
+
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,45 +43,13 @@ public class ImportContextImpl implements ImportContext {
     private final Item importRoot;
     private final String systemId;
     private final File inputFile;
-    private final MimeResolver mimeResolver;
 
     private InputContext inputCtx;
     private boolean completed;
 
-    /**
-     * Creates a new item import context with the given root item and the
-     * specified <code>InputContext</code>. If the input context provides an
-     * input stream, the stream is written to a temporary file in order to avoid
-     * problems with multiple IOHandlers that try to run the import but fail.
-     * The temporary file is deleted as soon as this context is informed that
-     * the import has been completed and it will not be used any more.
-     *
-     * @param importRoot the import root node
-     * @param systemId
-     * @param inputCtx wrapped by this <code>ImportContext</code>
-     */
-    public ImportContextImpl(Item importRoot, String systemId, InputContext inputCtx) throws IOException {
-        this(importRoot, systemId, inputCtx, null);
-    }
+    private final Detector detector;
 
-    /**
-     * Creates a new item import context with the given root item and the
-     * specified <code>InputContext</code>. If the input context provides an
-     * input stream, the stream is written to a temporary file in order to avoid
-     * problems with multiple IOHandlers that try to run the import but fail.
-     * The temporary file is deleted as soon as this context is informed that
-     * the import has been completed and it will not be used any more.
-     *
-     * @param importRoot the import root node
-     * @param systemId
-     * @param inputCtx wrapped by this <code>ImportContext</code>
-     * @param mimeResolver
-     */
-    public ImportContextImpl(Item importRoot, String systemId, InputContext inputCtx,
-                             MimeResolver mimeResolver) throws IOException {
-        this(importRoot, systemId, (inputCtx != null) ? inputCtx.getInputStream() : null, null, mimeResolver);
-        this.inputCtx = inputCtx;
-    }
+    private final MediaType type;
 
     /**
      * Creates a new item import context. The specified InputStream is written
@@ -87,39 +60,35 @@ public class ImportContextImpl implements ImportContext {
      *
      * @param importRoot
      * @param systemId
-     * @param in
+     * @param inputCtx input context, or <code>null</code>
+     * @param stream document input stream, or <code>null</code>
      * @param ioListener
+     * @param detector content type detector
      * @throws IOException
      * @see ImportContext#informCompleted(boolean)
      */
-    public ImportContextImpl(Item importRoot, String systemId, InputStream in,
-                             IOListener ioListener) throws IOException {
-        this(importRoot, systemId, in, ioListener, null);
-    }
-
-    /**
-     * Creates a new item import context. The specified InputStream is written
-     * to a temporary file in order to avoid problems with multiple IOHandlers
-     * that try to run the import but fail. The temporary file is deleted as soon
-     * as this context is informed that the import has been completed and it
-     * will not be used any more.
-     *
-     * @param importRoot
-     * @param systemId
-     * @param in
-     * @param ioListener
-     * @param mimeResolver
-     * @throws IOException
-     * @see ImportContext#informCompleted(boolean)
-     */
-    public ImportContextImpl(Item importRoot, String systemId, InputStream in,
-                             IOListener ioListener, MimeResolver mimeResolver)
+    public ImportContextImpl(
+            Item importRoot, String systemId, InputContext inputCtx,
+            InputStream stream, IOListener ioListener, Detector detector)
             throws IOException {
         this.importRoot = importRoot;
         this.systemId = systemId;
-        this.inputFile = IOUtil.getTempFile(in);
+        this.inputCtx = inputCtx;
         this.ioListener = (ioListener != null) ? ioListener : new DefaultIOListener(log);
-        this.mimeResolver = (mimeResolver == null) ? IOUtil.MIME_RESOLVER : mimeResolver;
+
+        Metadata metadata = new Metadata();
+        if (inputCtx != null && inputCtx.getContentType() != null) {
+            metadata.set(Metadata.CONTENT_TYPE, inputCtx.getContentType());
+        }
+        if (systemId != null) {
+            metadata.set(Metadata.RESOURCE_NAME_KEY, systemId);
+        }
+        if (stream != null && !stream.markSupported()) {
+            stream = new BufferedInputStream(stream);
+        }
+        this.detector = detector;
+        this.type = detector.detect(stream, metadata);
+        this.inputFile = IOUtil.getTempFile(stream);
     }
 
     /**
@@ -137,10 +106,10 @@ public class ImportContextImpl implements ImportContext {
     }
 
     /**
-     * @see ImportContext#getImportRoot()
+     * @see ImportContext#getDetector()
      */
-    public MimeResolver getMimeResolver() {
-        return mimeResolver;
+    public Detector getDetector() {
+        return detector;
     }
 
     /**
@@ -210,34 +179,17 @@ public class ImportContextImpl implements ImportContext {
     }
 
     /**
-     * @return the content type present on the <code>InputContext</code> or
-     * <code>null</code>
-     * @see InputContext#getContentType()
-     */
-    private String getContentType() {
-        return (inputCtx != null) ? inputCtx.getContentType() : null;
-    }
-
-    /**
      * @see ImportContext#getMimeType()
      */
     public String getMimeType() {
-        String contentType = getContentType();
-        String mimeType = null;
-        if (contentType != null) {
-            mimeType = IOUtil.getMimeType(contentType);
-        } else if (getSystemId() != null) {
-            mimeType = mimeResolver.getMimeType(getSystemId());
-        }
-        return mimeType;
+        return IOUtil.getMimeType(type.toString());
     }
 
     /**
      * @see ImportContext#getEncoding()
      */
     public String getEncoding() {
-        String contentType = getContentType();
-        return (contentType != null) ? IOUtil.getEncoding(contentType) : null;
+        return IOUtil.getEncoding(type.toString());
     }
 
     /**

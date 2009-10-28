@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.server.io;
 
 import javax.jcr.Item;
+
 import java.io.OutputStream;
 
 /**
@@ -37,13 +38,6 @@ public interface ExportContext extends IOContext {
      * @return output stream or <code>null</code>
      */
     public OutputStream getOutputStream();
-
-    /**
-     * Return the <code>MimeResolver</code> defined for this export context.
-     *
-     * @return mimetype resolver defined for this export context.
-     */
-    public MimeResolver getMimeResolver();
 
     /**
      * Set the content type for the resource content

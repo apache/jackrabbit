@@ -49,12 +49,6 @@ public class IOUtil {
     public static final long UNDEFINED_LENGTH = -1;
 
     /**
-     * MimeType resolver used to retrieve the mimetype if no content type is
-     * available during import.
-     */
-    public static final MimeResolver MIME_RESOLVER = new MimeResolver();
-
-    /**
      * Return the last modification time as formatted string.
      *
      * @return last modification time as string.

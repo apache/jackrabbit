@@ -897,7 +897,10 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * @throws IOException
      */
     protected ImportContext getImportContext(InputContext inputCtx, String systemId) throws IOException {
-        return new ImportContextImpl(node, systemId, inputCtx, config.getMimeResolver());
+        return new ImportContextImpl(
+                node, systemId, inputCtx,
+                (inputCtx != null) ? inputCtx.getInputStream() : null,
+                new DefaultIOListener(log), config.getDetector());
     }
 
     /**
@@ -908,7 +911,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * @throws IOException
      */
     protected ExportContext getExportContext(OutputContext outputCtx) throws IOException {
-        return new ExportContextImpl(node, outputCtx, config.getMimeResolver());
+        return new ExportContextImpl(node, outputCtx);
     }
 
     /**

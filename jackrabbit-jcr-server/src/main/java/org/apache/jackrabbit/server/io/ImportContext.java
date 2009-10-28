@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.server.io;
 
 import javax.jcr.Item;
+
+import org.apache.tika.detect.Detector;
+
 import java.io.InputStream;
 
 /**
@@ -31,13 +34,6 @@ public interface ImportContext extends IOContext {
      * @return the import root of the resource to import.
      */
     public Item getImportRoot();
-
-    /**
-     * Return the <code>MimeResolver</code> defined for this import context.
-     *
-     * @return mimetype resolver defined for this import context.
-     */
-    public MimeResolver getMimeResolver();
 
     /**
      * Returns the system id of the resource to be imported. This id depends on

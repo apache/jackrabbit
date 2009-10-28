@@ -149,7 +149,7 @@ public class XmlHandler extends DefaultHandler {
                 if (contentNode.hasProperty(JcrConstants.JCR_MIMETYPE)) {
                     mimeType = contentNode.getProperty(JcrConstants.JCR_MIMETYPE).getString();
                 } else {
-                    mimeType = context.getMimeResolver().getMimeType(context.getExportRoot().getName());
+                    mimeType = detect(context.getExportRoot().getName());
                 }
             } catch (RepositoryException e) {
                 // ignore and return false

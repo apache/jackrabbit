@@ -50,17 +50,6 @@ public class ResourceFactoryImpl implements DavResourceFactory {
 
     /**
      * Create a new <code>ResourceFactory</code> that uses the given lock
-     * manager and the default {@link ResourceConfig resource config}.
-     *
-     * @param lockMgr
-     */
-    public ResourceFactoryImpl(LockManager lockMgr) {
-        this.lockMgr = lockMgr;
-        this.resourceConfig = new ResourceConfig();
-    }
-
-    /**
-     * Create a new <code>ResourceFactory</code> that uses the given lock
      * manager and resource filter.
      *
      * @param lockMgr
@@ -68,7 +57,7 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      */
     public ResourceFactoryImpl(LockManager lockMgr, ResourceConfig resourceConfig) {
         this.lockMgr = lockMgr;
-        this.resourceConfig = (resourceConfig != null) ? resourceConfig : new ResourceConfig();
+        this.resourceConfig = resourceConfig;
     }
 
     /**
