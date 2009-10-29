@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +29,6 @@ import javax.jcr.Session;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
