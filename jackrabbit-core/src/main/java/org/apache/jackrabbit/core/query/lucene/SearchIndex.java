@@ -1103,7 +1103,7 @@ public class SearchIndex extends AbstractQueryHandler {
         indexer.setIndexingConfiguration(indexingConfig);
         indexer.setIndexFormatVersion(indexFormatVersion);
         Document doc = indexer.createDoc();
-        mergeAggregatedNodeIndexes(node, doc);
+        mergeAggregatedNodeIndexes(node, doc, indexFormatVersion);
         return doc;
     }
 
@@ -1321,8 +1321,11 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @param state the node state on which <code>doc</code> was created.
      * @param doc the lucene document with index fields from <code>state</code>.
+     * @param ifv the current index format version.
      */
-    protected void mergeAggregatedNodeIndexes(NodeState state, Document doc) {
+    protected void mergeAggregatedNodeIndexes(NodeState state,
+                                              Document doc,
+                                              IndexFormatVersion ifv) {
         if (indexingConfig != null) {
             AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
@@ -1337,7 +1340,7 @@ public class SearchIndex extends AbstractQueryHandler {
                     if (aggregates != null) {
                         ruleMatched = true;
                         for (NodeState aggregate : aggregates) {
-                            Document aDoc = createDocument(aggregate, getNamespaceMappings(), index.getIndexFormatVersion());
+                            Document aDoc = createDocument(aggregate, getNamespaceMappings(), ifv);
                             // transfer fields to doc if there are any
                             Fieldable[] fulltextFields = aDoc.getFieldables(FieldNames.FULLTEXT);
                             if (fulltextFields != null) {
@@ -1355,7 +1358,7 @@ public class SearchIndex extends AbstractQueryHandler {
                         for (PropertyState propState : propStates) {
                             String namePrefix = FieldNames.createNamedValue(getNamespaceMappings().translateName(propState.getName()), "");
                             NodeState parent = (NodeState) ism.getItemState(propState.getParentId());
-                            Document aDoc = createDocument(parent, getNamespaceMappings(), getIndex().getIndexFormatVersion());
+                            Document aDoc = createDocument(parent, getNamespaceMappings(), ifv);
                             try {
                                 // find the right fields to transfer
                                 Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
