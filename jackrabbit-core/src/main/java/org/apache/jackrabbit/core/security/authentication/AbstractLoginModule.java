@@ -247,7 +247,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * If the option is missing, the system default prinvipal provider will
      * be used.<p/>
      *
-     * <b>3) Verfication</b><br>
+     * <b>3) Verification</b><br>
      * There are four cases, how the User-ID can be verfied:
      * The login is anonymous, preauthenticated or the login is the result of
      * an impersonation request (see {@link javax.jcr.Session#impersonate(Credentials)}
