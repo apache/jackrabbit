@@ -77,6 +77,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -1659,6 +1660,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException(
                     this + " has no child node with name " + name);
         }
+
         if (dstName != null && !hasNode(dstName.getName(), dstName.getIndex())) {
             String name;
             try {
@@ -1678,6 +1680,23 @@ public class NodeImpl extends ItemImpl implements Node {
                 | ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
+        /*
+        make sure the session is allowed to reorder child nodes.
+        since there is no specific privilege for reordering child nodes,
+        test if the the node to be reordered can be removed and added,
+        i.e. treating reorder similar to a move.
+        TODO: properly deal with sns in which case the index would change upon reorder.
+        */
+        AccessManager acMgr = session.getAccessManager();
+        PathBuilder pb = new PathBuilder(getPrimaryPath());
+        pb.addLast(srcName.getName(), srcName.getIndex());
+        Path childPath = pb.getPath();
+        if (!acMgr.isGranted(childPath, Permission.ADD_NODE | Permission.REMOVE_NODE)) {
+            String msg = "Not allowed to reorder child node " + session.getJCRPath(childPath) + ".";
+            log.debug(msg);
+            throw new AccessDeniedException(msg);
+        }
+        
         ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(data.getNodeState().getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
