@@ -154,8 +154,13 @@ public class AuthorizableImplTest extends AbstractUserTest {
         GroupImpl gr = (GroupImpl) getTestGroup(superuser);
         NodeImpl n = gr.getNode();
 
-        if (n.hasProperty(UserConstants.P_MEMBERS)) {
-            assertEquals(PropertyType.WEAKREFERENCE, n.getProperty(UserConstants.P_MEMBERS).getType());
+        if (!n.hasProperty(UserConstants.P_MEMBERS)) {
+            gr.addMember(getTestUser(superuser));
+        }
+
+        Property p = n.getProperty(UserConstants.P_MEMBERS);
+        for (Value v : p.getValues()) {
+            assertEquals(PropertyType.WEAKREFERENCE, v.getType());
         }
     }
 
