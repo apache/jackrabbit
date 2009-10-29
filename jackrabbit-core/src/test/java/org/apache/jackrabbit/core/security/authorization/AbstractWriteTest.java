@@ -992,6 +992,51 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         assertTrue(acMgr.hasPrivileges(path, remainingprivs.toArray(new Privilege[remainingprivs.size()])));
     }
 
+    public void testReorder() throws RepositoryException, NotExecutableException {
+        Session testSession = getTestSession();
+        Node n = testSession.getNode(path);
+        try {
+            if (!n.getPrimaryNodeType().hasOrderableChildNodes()) {
+                throw new NotExecutableException("Reordering child nodes is not supported..");
+            }
+
+            n.orderBefore(Text.getName(childNPath), Text.getName(childNPath2));
+            testSession.save();
+            fail("test session must not be allowed to reorder nodes.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // give 'add_child_nodes' and 'nt-management' privilege
+        // -> not sufficient privileges for a reorder
+        givePrivileges(path, privilegesFromNames(new String[] {Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_NODE_TYPE_MANAGEMENT}), getRestrictions(superuser, path));
+        try {
+            n.orderBefore(Text.getName(childNPath), Text.getName(childNPath2));
+            testSession.save();
+            fail("test session must not be allowed to reorder nodes.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // add 'remove_child_nodes' at 'path
+        // -> not sufficient for a reorder since 'remove_node' privilege is missing
+        //    on the target
+        givePrivileges(path, privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES), getRestrictions(superuser, path));
+        try {
+            n.orderBefore(Text.getName(childNPath), Text.getName(childNPath2));
+            testSession.save();
+            fail("test session must not be allowed to reorder nodes.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // allow 'remove_node' at childNPath
+        // -> now reorder must succeed
+        givePrivileges(childNPath, privilegesFromName(Privilege.JCR_REMOVE_NODE), getRestrictions(superuser, childNPath));
+        n.orderBefore(Text.getName(childNPath), Text.getName(childNPath2));
+        testSession.save();
+    }
+
     private static Node findPolicyNode(Node start) throws RepositoryException {
         Node policyNode = null;
         if (start.isNodeType("rep:Policy")) {

@@ -390,6 +390,8 @@ public abstract class ItemImpl implements Item {
                      child-item addition or removal or changes of protected
                      properties such as mixin-types which are covered separately
                    note: removed items are checked later on.
+                   note: reordering of child nodes has been covered upfront as
+                         this information isn't available here.
                 */
                 Path path = stateMgr.getHierarchyMgr().getPath(itemState.getId());
                 boolean isGranted = true;
