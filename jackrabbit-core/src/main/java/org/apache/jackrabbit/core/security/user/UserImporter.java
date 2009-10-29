@@ -185,7 +185,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
            {@link UserManager#createGroup} respectively. */
         Authorizable a = userManager.getAuthorizable(parent);
         if (a == null) {
-            log.warn("Cannot handle protected PropInfo " + protectedPropInfo + ". Node " + parent + " doesn't represent a valid Authorizable.");
+            log.debug("Cannot handle protected PropInfo " + protectedPropInfo + ". Node " + parent + " doesn't represent a valid Authorizable.");
             return false;
         }
 
@@ -335,8 +335,9 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                                 toAdd.add(authorz);
                             } // else: no need to remove from rep:members
                         } else {
-                            handleFailure("Ignoring new member of " + gr + ". No such authorizable (NodeID = " + id + ")");
+                            handleFailure("New member of " + gr + ": No such authorizable (NodeID = " + id + ")");
                             if (importBehavior == ImportBehavior.BESTEFFORT) {
+                                log.info("ImportBehavior.BESTEFFORT: Remember non-existing member for processing.");
                                 nonExisting.add(session.getValueFactory().createValue(id.toString(), PropertyType.WEAKREFERENCE));
                             }
                         }
@@ -356,7 +357,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
 
                     // handling non-existing members in case of best-effort
                     if (!nonExisting.isEmpty()) {
-                        log.warn("Found " + nonExisting.size() + " entries of rep:members pointing to non-existing authorizables. Best-effort approach configured -> add to rep:members.");
+                        log.info("ImportBehavior.BESTEFFORT: Found " + nonExisting.size() + " entries of rep:members pointing to non-existing authorizables. Adding to rep:members.");
 
                         NodeImpl groupNode = ((AuthorizableImpl) gr).getNode();
                         // build list of valid members set before ....
@@ -370,7 +371,10 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                         // and use implementation specific method to set the
                         // value of rep:members properties which was not possible
                         // through the API
-                        userManager.setProtectedProperty(groupNode, UserConstants.P_MEMBERS, memberValues.toArray(new Value[memberValues.size()]));
+                        userManager.setProtectedProperty(groupNode,
+                                UserConstants.P_MEMBERS,
+                                memberValues.toArray(new Value[memberValues.size()]),
+                                PropertyType.WEAKREFERENCE);
                     }
 
                     processed.add(reference);

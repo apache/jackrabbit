@@ -520,7 +520,16 @@ public class UserManagerImpl extends ProtectedItemModifier
         if (!isValidPrincipal(principal)) {
             throw new IllegalArgumentException("Cannot create Authorizable: Principal may not be null and must have a valid name.");
         }
-        if (getAuthorizable(principal) != null) {
+        /*
+         Check if there is *another* authorizable with the same principal.
+         The additial validation (nodes not be same) is required in order to
+         circumvent problems with re-importing existing authorizables in which
+         case the original user/group node is being recreated but the search
+         used to look for an colliding authorizable still finds the persisted
+         node.
+        */
+        Authorizable existing = getAuthorizable(principal);
+        if (existing != null && !((AuthorizableImpl) existing).getNode().isSame(node)) {
             throw new AuthorizableExistsException("Authorizable for '" + principal.getName() + "' already exists: ");
         }
         if (!node.isNew() || node.hasProperty(P_PRINCIPAL_NAME)) {
