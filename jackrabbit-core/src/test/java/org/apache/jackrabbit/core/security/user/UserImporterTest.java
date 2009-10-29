@@ -61,6 +61,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.Value;
+import javax.jcr.PropertyType;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -760,6 +761,7 @@ public class UserImporterTest extends AbstractJCRTest {
                     boolean found = false;
                     NodeImpl grNode = ((AuthorizableImpl) a).getNode();
                     for (Value memberValue : grNode.getProperty(UserConstants.P_MEMBERS).getValues()) {
+                        assertEquals(PropertyType.WEAKREFERENCE, memberValue.getType());
                         if (id.equals(memberValue.getString())) {
                             found = true;
                             break;
@@ -814,6 +816,7 @@ public class UserImporterTest extends AbstractJCRTest {
                 boolean found = false;
                 NodeImpl grNode = ((AuthorizableImpl) g1).getNode();
                 for (Value memberValue : grNode.getProperty(UserConstants.P_MEMBERS).getValues()) {
+                    assertEquals(PropertyType.WEAKREFERENCE, memberValue.getType());
                     if (nonExistingId.equals(memberValue.getString())) {
                         found = true;
                         break;
@@ -873,15 +876,6 @@ public class UserImporterTest extends AbstractJCRTest {
             }
         } finally {
             sImpl.refresh(false);
-        }
-    }
-
-    private static void assertNotDeclaredMember(Group gr, String potentialID) throws RepositoryException {
-        // declared members must not list the invalid entry.
-        Iterator<Authorizable> it = gr.getDeclaredMembers();
-        while (it.hasNext()) {
-            AuthorizableImpl member = (AuthorizableImpl) it.next();
-            assertFalse(potentialID.equals(member.getNode().getIdentifier()));
         }
     }
 
@@ -1015,6 +1009,101 @@ public class UserImporterTest extends AbstractJCRTest {
         }
     }
 
+    public void testImportUuidCollisionRemoveExisting() throws RepositoryException, IOException, SAXException {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<sv:node sv:name=\"t\" xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" xmlns:rep=\"internal\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\">" +
+                "   <sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\"><sv:value>rep:User</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"jcr:uuid\" sv:type=\"String\"><sv:value>e358efa4-89f5-3062-b10d-d7316b65649e</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:password\" sv:type=\"String\"><sv:value>{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:principalName\" sv:type=\"String\"><sv:value>t</sv:value></sv:property>" +
+                "</sv:node>";
+
+        NodeImpl target = (NodeImpl) sImpl.getNode(umgr.getUsersPath());
+        try {
+            doImport(target, xml);
+
+            // re-import should succeed if UUID-behavior is set accordingly
+            doImport(target, xml, ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING, UserImporter.ImportBehavior.BESTEFFORT);
+
+            // saving changes of the import -> must succeed. add mandatory
+            // props should have been created.
+            sImpl.save();
+
+        } finally {
+            sImpl.refresh(false);
+            if (target.hasNode("t")) {
+                target.getNode("t").remove();
+                sImpl.save();
+            }
+        }
+    }
+
+    /**
+     * Same as {@link #testImportUuidCollisionRemoveExisting} with the single
+     * difference that the inital import is saved before being overwritten.
+     *
+     * @throws RepositoryException
+     * @throws IOException
+     * @throws SAXException
+     */
+    public void testImportUuidCollisionRemoveExisting2() throws RepositoryException, IOException, SAXException {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<sv:node sv:name=\"t\" xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" xmlns:rep=\"internal\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\">" +
+                "   <sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\"><sv:value>rep:User</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"jcr:uuid\" sv:type=\"String\"><sv:value>e358efa4-89f5-3062-b10d-d7316b65649e</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:password\" sv:type=\"String\"><sv:value>{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:principalName\" sv:type=\"String\"><sv:value>t</sv:value></sv:property>" +
+                "</sv:node>";
+
+        NodeImpl target = (NodeImpl) sImpl.getNode(umgr.getUsersPath());
+        try {
+            doImport(target, xml);
+            sImpl.save();
+
+            // re-import should succeed if UUID-behavior is set accordingly
+            doImport(target, xml, ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING, UserImporter.ImportBehavior.BESTEFFORT);
+
+            // saving changes of the import -> must succeed. add mandatory
+            // props should have been created.
+            sImpl.save();
+
+        } finally {
+            sImpl.refresh(false);
+            if (target.hasNode("t")) {
+                target.getNode("t").remove();
+                sImpl.save();
+            }
+        }
+    }
+
+    public void testImportUuidCollisionThrow() throws RepositoryException, IOException, SAXException {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<sv:node sv:name=\"t\" xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" xmlns:rep=\"internal\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\">" +
+                "   <sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\"><sv:value>rep:User</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"jcr:uuid\" sv:type=\"String\"><sv:value>e358efa4-89f5-3062-b10d-d7316b65649e</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:password\" sv:type=\"String\"><sv:value>{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:principalName\" sv:type=\"String\"><sv:value>t</sv:value></sv:property>" +
+                "</sv:node>";
+
+        NodeImpl target = (NodeImpl) sImpl.getNode(umgr.getUsersPath());
+        try {
+            doImport(target, xml);
+
+            doImport(target, xml, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, UserImporter.ImportBehavior.BESTEFFORT);
+            fail("UUID collision must be handled according to the uuid behavior.");
+
+        } catch (SAXException e) {
+            assertTrue(e.getException() instanceof ItemExistsException);
+            // success.
+        } finally {
+            sImpl.refresh(false);
+            if (target.hasNode("t")) {
+                target.getNode("t").remove();
+                sImpl.save();
+            }
+        }
+    }
+
     private void doImport(NodeImpl target, String xml) throws IOException, SAXException, RepositoryException {
         InputStream in = new ByteArrayInputStream(xml.getBytes("UTF-8"));
         SessionImporter importer = new SessionImporter(target, sImpl,
@@ -1024,11 +1113,24 @@ public class UserImporterTest extends AbstractJCRTest {
     }
 
     private void doImport(NodeImpl target, String xml, int importBehavior) throws IOException, SAXException, RepositoryException {
+        doImport(target, xml, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, importBehavior);
+    }
+
+    private void doImport(NodeImpl target, String xml, int uuidBehavior, int importBehavior) throws IOException, SAXException, RepositoryException {
         InputStream in = new ByteArrayInputStream(xml.getBytes("UTF-8"));
         SessionImporter importer = new SessionImporter(target, sImpl,
-                ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, new PseudoConfig(importBehavior));
+                uuidBehavior, new PseudoConfig(importBehavior));
         ImportHandler ih = new ImportHandler(importer, sImpl);
         new ParsingContentHandler(ih).parse(in);
+    }
+
+    private static void assertNotDeclaredMember(Group gr, String potentialID) throws RepositoryException {
+        // declared members must not list the invalid entry.
+        Iterator<Authorizable> it = gr.getDeclaredMembers();
+        while (it.hasNext()) {
+            AuthorizableImpl member = (AuthorizableImpl) it.next();
+            assertFalse(potentialID.equals(member.getNode().getIdentifier()));
+        }
     }
 
     //--------------------------------------------------------------------------
