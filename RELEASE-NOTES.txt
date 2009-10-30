@@ -16,8 +16,8 @@ Jackrabbit 2.0 is a major upgrade from the earlier 1.x releases. The most
 notable changes in this release are:
 
   * Upgrade to JCR 2.0. This Jackrabbit release implements and is based
-    on a pre-release version of the JCR 2.0 API. All of the features
-    required by the JSR 283 specification have been implemented.
+    on the official JCR 2.0 API. All of the features required by the
+    JSR 283 specification have been implemented.
 
   * Upgrade to Java 5. All of Jackrabbit (except the jcr-tests component)
     now requires Java 5 as the base platform. Java 1.4 environments are no
