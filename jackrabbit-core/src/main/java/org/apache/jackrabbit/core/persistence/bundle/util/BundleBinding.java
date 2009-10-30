@@ -393,8 +393,10 @@ public class BundleBinding extends ItemStateBinding {
                     val = InternalValue.create(readQName(in));
                     break;
                 case PropertyType.WEAKREFERENCE:
+                    val = InternalValue.create(readID(in), true);
+                    break;
                 case PropertyType.REFERENCE:
-                    val = InternalValue.create(readID(in));
+                    val = InternalValue.create(readID(in), false);
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,
