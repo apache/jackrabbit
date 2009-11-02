@@ -30,6 +30,11 @@ public class NodeId implements ItemId, Comparable<NodeId> {
     private static final long serialVersionUID = 5773949574212570258L;
 
     /**
+     * Chars in a UUID String.
+     */
+    public static final int UUID_FORMATTED_LENGTH = 36;
+
+    /**
      * Number of bytes in a UUID (16).
      */
     public static final int UUID_BYTE_LENGTH = 16;
@@ -113,12 +118,12 @@ public class NodeId implements ItemId, Comparable<NodeId> {
     /**
      * Creates a node identifier from the given UUID string.
      *
-     * @see UUID#fromString(String)
+     * @see #fromString(String)
      * @param uuid UUID string
      * @throws IllegalArgumentException if the UUID string is invalid
      */
     public NodeId(String uuid) throws IllegalArgumentException {
-        this(UUID.fromString(uuid));
+        this(fromString(uuid));
     }
 
     /**
@@ -241,4 +246,47 @@ public class NodeId implements ItemId, Comparable<NodeId> {
         return (int) ((msb >>> 32) ^ msb ^ (lsb >>> 32) ^ lsb);
     }
 
+    //------------------------------------------------------------< internal >
+
+    /**
+     * Constructs a UUID from a UUID formatted String.
+     *
+     * @param uuidString the String representing a UUID to construct this UUID
+     * @return the UUID created from the given string.
+     * @throws IllegalArgumentException String must be a properly formatted UUID
+     *                                  string
+     */
+    private static UUID fromString(String uuidString)
+            throws IllegalArgumentException {
+        // e.g. f81d4fae-7dec-11d0-a765-00a0c91e6bf6
+        //      012345678901234567890123456789012345
+        int len = uuidString.length();
+        if (len != UUID_FORMATTED_LENGTH) {
+            throw new IllegalArgumentException();
+        }
+        long[] words = new long[2];
+        int b = 0;
+        for (int i = 0; i < UUID_FORMATTED_LENGTH; i++) {
+            int c = uuidString.charAt(i) | 0x20; // to lowercase (will lose some error checking)
+            if (i == 8 || i == 13 || i == 23) {
+                if (c != '-') {
+                    throw new IllegalArgumentException(String.valueOf(i));
+                }
+            } else if (i == 18) {
+                if (c != '-') {
+                    throw new IllegalArgumentException(String.valueOf(i));
+                }
+                b = 1;
+            } else {
+                byte h = (byte) (c & 0x0f);
+                if (c >= 'a' && c <= 'f') {
+                    h += 9;
+                } else if (c < '0' || c > '9') {
+                    throw new IllegalArgumentException();
+                }
+                words[b] = words[b] << 4 | h;
+            }
+        }
+        return new UUID(words[0], words[1]);
+    }
 }
