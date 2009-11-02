@@ -87,19 +87,22 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      *                belongs to.
      * @param itemMgr {@link org.apache.jackrabbit.core.ItemManager} of the passed
      *                <code>Session</code>.
-     * @throws NullPointerException if <code>session</code> or <code>itemMgr</code>
-     *                              is <code>null</code>.
+     * @throws NullPointerException if <code>dispatcher</code>, <code>session</code>
+     *                              or <code>itemMgr</code> is <code>null</code>.
      */
     public ObservationManagerImpl(
             ObservationDispatcher dispatcher, SessionImpl session,
             ItemManager itemMgr, ClusterNode clusterNode) {
+        if (dispatcher == null) {
+            throw new NullPointerException("dispatcher");
+        }
         if (session == null) {
             throw new NullPointerException("session");
         }
         if (itemMgr == null) {
             throw new NullPointerException("itemMgr");
         }
-
+        
         this.dispatcher = dispatcher;
         this.session = session;
         this.itemMgr = itemMgr;
