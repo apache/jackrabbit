@@ -16,16 +16,17 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.query.lucene.constraint.EvaluationContext;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.query.lucene.constraint.EvaluationContext;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.spi.Name;
-
-import java.io.IOException;
 
 /**
  * <code>JackrabbitIndexSearcher</code> implements an index searcher with
@@ -110,6 +111,19 @@ public class JackrabbitIndexSearcher
             }
         }
         return hits;
+    }
+
+    //---------------------------< IndexSearcher >------------------------------
+
+    @Override
+    public int docFreq(Term term) throws IOException {
+        // provide a fixed document frequency for fields that are not fulltext
+        // indexed. correct frequency is only useful for fulltext queries.
+        if (FieldNames.isFulltextField(term.field())) {
+            return super.docFreq(term);
+        } else {
+            return 1;
+        }
     }
 
     //------------------------< EvaluationContext >-----------------------------

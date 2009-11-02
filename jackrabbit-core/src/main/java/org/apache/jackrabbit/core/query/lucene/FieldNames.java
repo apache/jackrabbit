@@ -152,4 +152,18 @@ public class FieldNames {
     public static int getNameLength(String namedValue) {
         return namedValue.indexOf('[') + 1;
     }
+
+    /**
+     * Returns <code>true</code> if the given <code>fieldName</code> denotes a
+     * fulltext field like {@link #FULLTEXT} or a field with a
+     * {@link #FULLTEXT_PREFIX}.
+     *
+     * @param fieldName a field name.
+     * @return <code>true</code> if <code>fieldName</code> is a fulltext field;
+     *         <code>false</code> otherwise.
+     */
+    public static boolean isFulltextField(String fieldName) {
+        return fieldName.equals(FULLTEXT)
+                || fieldName.indexOf(FULLTEXT_PREFIX) != -1;
+    }
 }
