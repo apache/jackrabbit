@@ -452,6 +452,17 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     and.add(new NameQuery(nameTest, indexFormatVersion, nsMappings), Occur.MUST);
                     context = and;
                 }
+                // apply predicates
+                Object[] predicates = steps[0].acceptOperands(this, context);
+                BooleanQuery andQuery = new BooleanQuery();
+                for (Object predicate : predicates) {
+                    andQuery.add((Query) predicate, Occur.MUST);
+                }
+                if (andQuery.clauses().size() > 0) {
+                    andQuery.add(context, Occur.MUST);
+                    context = andQuery;
+                }
+
                 LocationStepQueryNode[] tmp = new LocationStepQueryNode[steps.length - 1];
                 System.arraycopy(steps, 1, tmp, 0, steps.length - 1);
                 steps = tmp;
