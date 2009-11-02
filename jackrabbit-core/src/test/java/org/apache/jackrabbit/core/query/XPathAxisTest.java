@@ -198,4 +198,12 @@ public class XPathAxisTest extends AbstractQueryTest {
         executeXPathQuery(xpath, new Node[0]);
     }
 
+    public void testRootQuery() throws RepositoryException {
+        // JCR-1987
+        executeXPathQuery("/jcr:root[@foo = 'does-not-exist']", new Node[0]);
+        Node rootNode = superuser.getRootNode();
+        executeXPathQuery("/jcr:root", new Node[]{rootNode});
+        executeXPathQuery("/jcr:root[@" + jcrPrimaryType + "='" +
+                rootNode.getPrimaryNodeType().getName() + "']", new Node[]{rootNode});
+    }
 }
