@@ -381,8 +381,15 @@ public class RepositoryImpl extends AbstractRepository
             throw e;
         } finally {
             if (!succeeded) {
-                // repository startup failed, clean up...
-                shutdown();
+                try {
+                    // repository startup failed, clean up...
+                    shutdown();
+                } catch (Throwable t) {
+                    // ensure this exception does not overlay the original
+                    // startup exception and only log it
+                    log.error("In addition to startup fail, another unexpected problem " +
+                    		"occurred while shutting down the repository again.", t);
+                }
             }
         }
     }
