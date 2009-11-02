@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TopFieldDocCollector;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
 import java.io.IOException;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.TopFieldDocCollector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Wraps a lucene query result and adds a close method that allows to release
@@ -156,7 +156,8 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
         this.size = collector.getTotalHits();
         ScoreDoc[] docs = collector.topDocs().scoreDocs;
         for (int i = scoreNodes.size(); i < docs.length; i++) {
-            String uuid = reader.document(docs[i].doc).get(FieldNames.UUID);
+            String uuid = reader.document(docs[i].doc,
+                    FieldSelectors.UUID).get(FieldNames.UUID);
             NodeId id = new NodeId(uuid);
             scoreNodes.add(new ScoreNode(id, docs[i].score, docs[i].doc));
         }
