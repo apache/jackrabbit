@@ -16,21 +16,23 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.LinkedHashMap;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-import org.apache.lucene.store.Directory;
 import org.apache.jackrabbit.core.query.lucene.directory.IndexInputStream;
 import org.apache.jackrabbit.core.query.lucene.directory.IndexOutputStream;
+import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,8 +149,8 @@ class IndexInfos implements Cloneable {
         String newName = getFileName();
         boolean success = false;
         try {
-            OutputStream out = new IndexOutputStream(
-                    directory.createOutput(newName));
+            OutputStream out = new BufferedOutputStream(new IndexOutputStream(
+                    directory.createOutput(newName)));
             try {
                 log.debug("Writing IndexInfos {}", newName);
                 DataOutputStream dataOut = new DataOutputStream(out);
@@ -288,7 +290,8 @@ class IndexInfos implements Cloneable {
      */
     private void read() throws IOException {
         String fileName = getFileName(generation);
-        InputStream in = new IndexInputStream(directory.openInput(fileName));
+        InputStream in = new BufferedInputStream(new IndexInputStream(
+                directory.openInput(fileName)));
         try {
             LinkedHashMap<String, IndexInfo> indexes = new LinkedHashMap<String, IndexInfo>();
             DataInputStream di = new DataInputStream(in);
