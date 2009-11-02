@@ -16,18 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene.directory;
 
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.NativeFSLockFactory;
-import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.store.IndexInput;
-import org.apache.lucene.store.Lock;
-import org.apache.lucene.store.LockFactory;
-import org.apache.jackrabbit.core.query.lucene.SearchIndex;
-
-import java.io.IOException;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+
+import org.apache.jackrabbit.core.query.lucene.IOCounters;
+import org.apache.jackrabbit.core.query.lucene.SearchIndex;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.store.Lock;
+import org.apache.lucene.store.LockFactory;
+import org.apache.lucene.store.NativeFSLockFactory;
 
 /**
  * <code>FSDirectoryManager</code> implements a directory manager for
@@ -185,7 +186,8 @@ public class FSDirectoryManager implements DirectoryManager {
         }
 
         public IndexInput openInput(String name) throws IOException {
-            return directory.openInput(name);
+            IndexInput in = directory.openInput(name);
+            return new IndexInputLogWrapper(in);
         }
 
         public void close() throws IOException {
@@ -194,7 +196,8 @@ public class FSDirectoryManager implements DirectoryManager {
 
         public IndexInput openInput(String name, int bufferSize)
                 throws IOException {
-            return directory.openInput(name, bufferSize);
+            IndexInput in = directory.openInput(name, bufferSize);
+            return new IndexInputLogWrapper(in);
         }
 
         public Lock makeLock(String name) {
@@ -219,6 +222,51 @@ public class FSDirectoryManager implements DirectoryManager {
 
         public String toString() {
             return this.getClass().getName() + "@" + directory;
+        }
+    }
+
+    /**
+     * Implements an index input wrapper that logs the number of time bytes
+     * are read from storage.
+     */
+    private static final class IndexInputLogWrapper extends IndexInput {
+
+        private IndexInput in;
+
+        IndexInputLogWrapper(IndexInput in) {
+            this.in = in;
+        }
+
+        public byte readByte() throws IOException {
+            return in.readByte();
+        }
+
+        public void readBytes(byte[] b, int offset, int len) throws IOException {
+            IOCounters.incrRead();
+            in.readBytes(b, offset, len);
+        }
+
+        public void close() throws IOException {
+            in.close();
+        }
+
+        public long getFilePointer() {
+            return in.getFilePointer();
+        }
+
+        public void seek(long pos) throws IOException {
+            in.seek(pos);
+        }
+
+        public long length() {
+            return in.length();
+        }
+
+        @Override
+        public Object clone() {
+            IndexInputLogWrapper clone = (IndexInputLogWrapper) super.clone();
+            clone.in = (IndexInput) in.clone();
+            return clone;
         }
     }
 }

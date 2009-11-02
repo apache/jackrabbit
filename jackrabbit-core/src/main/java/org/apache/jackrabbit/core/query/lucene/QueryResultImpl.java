@@ -290,9 +290,11 @@ public abstract class QueryResultImpl implements QueryResult {
         MultiColumnQueryHits result = null;
         try {
             long time = System.currentTimeMillis();
+            long r1 = IOCounters.getReads();
             result = executeQuery(maxResultSize);
-            log.debug("query executed in {} ms",
-                    System.currentTimeMillis() - time);
+            long r2 = IOCounters.getReads();
+            log.debug("query executed in {} ms ({})",
+                    System.currentTimeMillis() - time, r2 - r1);
             // set selector names
             selectorNames = result.getSelectorNames();
 
@@ -306,8 +308,9 @@ public abstract class QueryResultImpl implements QueryResult {
 
             time = System.currentTimeMillis();
             collectScoreNodes(result, resultNodes, maxResultSize);
-            log.debug("retrieved ScoreNodes in {} ms",
-                    System.currentTimeMillis() - time);
+            long r3 = IOCounters.getReads();
+            log.debug("retrieved ScoreNodes in {} ms ({})",
+                    System.currentTimeMillis() - time, r3 - r2);
 
             // update numResults
             numResults = result.getSize();
