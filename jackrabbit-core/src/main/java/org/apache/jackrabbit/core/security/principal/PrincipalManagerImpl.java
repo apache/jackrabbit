@@ -133,7 +133,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
         }
         // additional entry for the 'everyone' group
         if (!(principal instanceof EveryonePrincipal)) {
-            Iterator it = Collections.singletonList(getEveryone()).iterator();
+            Iterator<Principal> it = Collections.singletonList(getEveryone()).iterator();
             entries.add(new CheckedIteratorEntry(it, null));
         }
         return new CheckedPrincipalIterator(entries);
@@ -230,7 +230,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
         }
 
         public Enumeration<? extends Principal> members() {
-            Iterator it = Collections.list(delegatee.members()).iterator();
+            Iterator<? extends Principal> it = Collections.list(delegatee.members()).iterator();
             final PrincipalIterator members = new CheckedPrincipalIterator(it, provider);
             return new Enumeration<Principal>() {
                 public boolean hasMoreElements() {
@@ -247,10 +247,12 @@ public class PrincipalManagerImpl implements PrincipalManager {
         }
 
         //---------------------------------------------------------< Object >---
+        @Override
         public int hashCode() {
             return delegatee.hashCode();
         }
 
+        @Override
         public boolean equals(Object obj) {
             return delegatee.equals(obj);
         }
@@ -284,7 +286,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
 
         private final List<CheckedIteratorEntry> entries;
 
-        private CheckedPrincipalIterator(Iterator it, PrincipalProvider provider) {
+        private CheckedPrincipalIterator(Iterator<? extends Principal> it, PrincipalProvider provider) {
             entries = new ArrayList<CheckedIteratorEntry>(1);
             entries.add(new CheckedIteratorEntry(it, provider));
             next = seekNext();
@@ -298,13 +300,14 @@ public class PrincipalManagerImpl implements PrincipalManager {
         /**
          * @see org.apache.jackrabbit.core.security.principal.AbstractPrincipalIterator#seekNext()
          */
+        @Override
         protected final Principal seekNext() {
             while (!entries.isEmpty()) {
                 // first test if current iterator has more elements
                 CheckedIteratorEntry current = entries.get(0);
-                Iterator iterator = current.iterator;
+                Iterator<? extends Principal> iterator = current.iterator;
                 while (iterator.hasNext()) {
-                    Principal chk = (Principal) iterator.next();
+                    Principal chk = iterator.next();
                     if (current.provider == null ||
                         current.provider.canReadPrincipal(session, chk)) {
                         return disguise(chk, current.provider);
@@ -324,9 +327,9 @@ public class PrincipalManagerImpl implements PrincipalManager {
     private static class CheckedIteratorEntry {
 
         private final PrincipalProvider provider;
-        private final Iterator iterator;
+        private final Iterator<? extends Principal> iterator;
 
-        private CheckedIteratorEntry(Iterator iterator, PrincipalProvider provider) {
+        private CheckedIteratorEntry(Iterator<? extends Principal> iterator, PrincipalProvider provider) {
             this.iterator = iterator;
             this.provider = provider;
         }

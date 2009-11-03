@@ -120,6 +120,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * This implementation uses the user and node resolver to find the
      * appropriate nodes.
      */
+    @Override
     protected Principal providePrincipal(String principalName) {
         // check for 'everyone'
         if (everyonePrincipal.getName().equals(principalName)) {
@@ -206,6 +207,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     /**
      * @see PrincipalProvider#close()
      */
+    @Override
     public synchronized void close() {
         super.close();
         membershipCache.clear();
@@ -354,6 +356,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         /**
          * @see org.apache.jackrabbit.core.security.principal.AbstractPrincipalIterator#seekNext()
          */
+        @Override
         protected Principal seekNext() {
             while (authorizableItr.hasNext()) {
                 try {

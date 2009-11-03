@@ -42,7 +42,7 @@ public class PrincipalIteratorAdapter extends RangeIteratorDecorator
      *
      * @param iterator iterator of {@link Principal}s
      */
-    public PrincipalIteratorAdapter(Iterator iterator) {
+    public PrincipalIteratorAdapter(Iterator<? extends Principal> iterator) {
         super(new RangeIteratorAdapter(iterator));
     }
 
@@ -51,7 +51,7 @@ public class PrincipalIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link Principal} objects.
      */
-    public PrincipalIteratorAdapter(Collection collection) {
+    public PrincipalIteratorAdapter(Collection<? extends Principal> collection) {
         super(new RangeIteratorAdapter(collection));
     }
 

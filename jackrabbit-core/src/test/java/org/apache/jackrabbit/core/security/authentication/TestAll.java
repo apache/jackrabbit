@@ -16,22 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import junit.framework.TestCase;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** <code>TestAll</code>... */
 public class TestAll extends TestCase {
-
-    private static Logger log = LoggerFactory.getLogger(TestAll.class);
 
     public static Test suite() {
         TestSuite suite = new TestSuite("core.security.authentication tests");
 
         suite.addTestSuite(GuestLoginTest.class);
         suite.addTestSuite(NullLoginTest.class);
+        suite.addTestSuite(CryptedSimpleCredentialsTest.class);
 
         return suite;
     }

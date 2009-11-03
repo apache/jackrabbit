@@ -403,8 +403,9 @@ public class UserImporterTest extends AbstractJCRTest {
         /*
          importing a group with a multi-valued rep:principalName property
          - nonProtected node rep:Group must be created.
-         - protected property rep:principalName must be ignored
-         - saving changes must fail with ConstraintViolationEx.
+         - property rep:principalName must be created regularly without being protected
+         - saving changes must fail with ConstraintViolationEx. as the protected
+           mandatory property rep:principalName is missing
          */
         NodeImpl target = (NodeImpl) sImpl.getNode(umgr.getGroupsPath());
         try {
@@ -432,6 +433,52 @@ public class UserImporterTest extends AbstractJCRTest {
             sImpl.refresh(false);
             if (target.hasNode("g")) {
                 target.getNode("g").remove();
+                sImpl.save();
+            }
+        }
+    }
+
+    public void testMultiValuedPassword() throws RepositoryException, IOException, SAXException, NotExecutableException {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<sv:node sv:name=\"t\" xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" xmlns:rep=\"internal\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\">" +
+                "   <sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\"><sv:value>rep:User</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"jcr:uuid\" sv:type=\"String\"><sv:value>e358efa4-89f5-3062-b10d-d7316b65649e</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:password\" sv:type=\"String\"><sv:value>{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375</sv:value><sv:value>{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:principalName\" sv:type=\"String\"><sv:value>t</sv:value></sv:property>" +
+                "</sv:node>";
+        /*
+         importing a user with a multi-valued rep:password property
+         - nonProtected node rep:User must be created.
+         - property rep:password must be created regularly without being protected
+         - saving changes must fail with ConstraintViolationEx. as the protected
+           mandatory property rep:password is missing
+         */
+        NodeImpl target = (NodeImpl) sImpl.getNode(umgr.getUsersPath());
+        try {
+            doImport(target, xml);
+
+            assertTrue(target.isModified());
+            assertTrue(sImpl.hasPendingChanges());
+
+            Authorizable newUser = umgr.getAuthorizable("t");
+            assertNotNull(newUser);
+
+            assertTrue(target.hasNode("t"));
+            assertTrue(target.hasProperty("t/rep:password"));
+            assertFalse(target.getProperty("t/rep:password").getDefinition().isProtected());
+
+            // saving changes of the import -> must fail as mandatory prop is missing
+            try {
+                sImpl.save();
+                fail("Import must be incomplete. Saving changes must fail.");
+            } catch (ConstraintViolationException e) {
+                // success
+            }
+
+        } finally {
+            sImpl.refresh(false);
+            if (target.hasNode("t")) {
+                target.getNode("t").remove();
                 sImpl.save();
             }
         }

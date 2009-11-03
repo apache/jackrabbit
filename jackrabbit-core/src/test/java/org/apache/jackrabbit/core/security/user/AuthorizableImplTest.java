@@ -134,7 +134,9 @@ public class AuthorizableImplTest extends AbstractUserTest {
         NodeImpl n = user.getNode();
 
         checkProtected(n.getProperty(UserConstants.P_PASSWORD));
-        checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
+        if (n.hasProperty(UserConstants.P_PRINCIPAL_NAME)) {
+            checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
+        }
         if (n.hasProperty(UserConstants.P_IMPERSONATORS)) {
            checkProtected(n.getProperty(UserConstants.P_IMPERSONATORS));
         }
@@ -144,7 +146,9 @@ public class AuthorizableImplTest extends AbstractUserTest {
         GroupImpl gr = (GroupImpl) getTestGroup(superuser);
         NodeImpl n = gr.getNode();
 
-        checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
+        if (n.hasProperty(UserConstants.P_PRINCIPAL_NAME)) {
+            checkProtected(n.getProperty(UserConstants.P_PRINCIPAL_NAME));
+        }
         if (n.hasProperty(UserConstants.P_MEMBERS)) {
             checkProtected(n.getProperty(UserConstants.P_MEMBERS));
         }
@@ -187,12 +191,41 @@ public class AuthorizableImplTest extends AbstractUserTest {
         }
     }
 
-    public void testRemoveSpecialPropertiesDirectly() throws RepositoryException, NotExecutableException {
+    public void testRemoveSpecialUserPropertiesDirectly() throws RepositoryException, NotExecutableException {
+        AuthorizableImpl g = (AuthorizableImpl) getTestUser(superuser);
+        NodeImpl n = g.getNode();
+        try {
+            n.getProperty(UserConstants.P_PASSWORD).remove();
+            fail("Attempt to remove protected property rep:password should fail.");
+        } catch (ConstraintViolationException e) {
+            // ok.
+        }
+        try {
+            if (n.hasProperty(UserConstants.P_PRINCIPAL_NAME)) {
+                n.getProperty(UserConstants.P_PRINCIPAL_NAME).remove();
+                fail("Attempt to remove protected property rep:principalName should fail.");
+            }
+        } catch (ConstraintViolationException e) {
+            // ok.
+        }
+    }
+
+    public void testRemoveSpecialGroupPropertiesDirectly() throws RepositoryException, NotExecutableException {
         AuthorizableImpl g = (AuthorizableImpl) getTestGroup(superuser);
         NodeImpl n = g.getNode();
         try {
-            n.getProperty(UserConstants.P_PRINCIPAL_NAME).remove();
-            fail("Attempt to remove protected property rep:principalName should fail.");
+            if (n.hasProperty(UserConstants.P_PRINCIPAL_NAME)) {
+                n.getProperty(UserConstants.P_PRINCIPAL_NAME).remove();
+                fail("Attempt to remove protected property rep:principalName should fail.");
+            }
+        } catch (ConstraintViolationException e) {
+            // ok.
+        }
+        try {
+            if (n.hasProperty(UserConstants.P_MEMBERS)) {
+                n.getProperty(UserConstants.P_MEMBERS).remove();
+                fail("Attempt to remove protected property rep:members should fail.");
+            }
         } catch (ConstraintViolationException e) {
             // ok.
         }

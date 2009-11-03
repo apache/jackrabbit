@@ -27,8 +27,8 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -386,16 +386,6 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * Creates a new Node on the repository with the specified
-     * <code>userName</code>.<br>
-     * The User will be created relative to path of the User who represents the
-     * Session this UserManager has been created for.<br>
-     * If the {@link javax.jcr.Credentials Credentials} are of type
-     * {@link javax.jcr.SimpleCredentials SimpleCredentials} they will be
-     * crypted.
-     *
-     * @param userID
-     * @param password
      * @see UserManager#createUser(String,String)
      */
     public User createUser(String userID, String password) throws RepositoryException {
@@ -403,14 +393,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     *
-     * @param userID
-     * @param password
-     * @param principal
-     * @param intermediatePath Is always ignored.
-     * @return
-     * @throws AuthorizableExistsException
-     * @throws RepositoryException
+     * @see UserManager#createUser(String, String, java.security.Principal, String)
      */
     public User createUser(String userID, String password,
                            Principal principal, String intermediatePath)
@@ -464,7 +447,8 @@ public class UserManagerImpl extends ProtectedItemModifier
      * principal name != ID) the principal name is expanded by a suffix;
      * otherwise the resulting group ID equals the principal name.
      *
-     * @param principal
+     * @param principal A principal that doesn't yet represent an existing user
+     * or group.
      * @param intermediatePath Is always ignored.
      * @return A new group.
      * @throws AuthorizableExistsException
@@ -516,6 +500,14 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     //--------------------------------------------------------------------------
+    /**
+     *
+     * @param node The new user/group node.
+     * @param principal A valid non-null principal.
+     * @throws AuthorizableExistsException If there is already another user/group
+     * with the same principal name.
+     * @throws RepositoryException If another error occurs.
+     */
     void setPrincipal(NodeImpl node, Principal principal) throws AuthorizableExistsException, RepositoryException {
         if (!isValidPrincipal(principal)) {
             throw new IllegalArgumentException("Cannot create Authorizable: Principal may not be null and must have a valid name.");
@@ -575,9 +567,9 @@ public class UserManagerImpl extends ProtectedItemModifier
      * - isn't placed underneith the configured user/group tree.
      * </pre>
      *
-     * @param n
+     * @param n A user/group node.
      * @return An authorizable or <code>null</code>.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     Authorizable getAuthorizable(NodeImpl n) throws RepositoryException {
         Authorizable authorz = null;
@@ -603,7 +595,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      *
      * @param principalName to be used as hint for the groupid.
      * @return a group id.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     private String getGroupId(String principalName) throws RepositoryException {
         String groupID = principalName;
@@ -650,7 +642,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * @param userID
+     * @param userID A userID.
      * @return true if the given userID belongs to the administrator user.
      */
     boolean isAdminId(String userID) {
@@ -660,9 +652,10 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * Build the User object from the given user node.
      *
-     * @param userNode
-     * @return
-     * @throws RepositoryException
+     * @param userNode The new user node.
+     * @return An instance of <code>User</code>.
+     * @throws RepositoryException If the node isn't a child of the configured
+     * usersPath-node or if another error occurs.
      */
     User createUser(NodeImpl userNode) throws RepositoryException {
         if (userNode == null || !userNode.isNodeType(NT_REP_USER)) {
@@ -690,9 +683,10 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * Build the Group object from the given group node.
      *
-     * @param groupNode
-     * @return
-     * @throws RepositoryException
+     * @param groupNode The new group node.
+     * @return An instance of <code>Group</code>.
+     * @throws RepositoryException If the node isn't a child of the configured
+     * groupsPath-node or if another error occurs.
      */
     Group createGroup(NodeImpl groupNode) throws RepositoryException {
         if (groupNode == null || !groupNode.isNodeType(NT_REP_GROUP)) {

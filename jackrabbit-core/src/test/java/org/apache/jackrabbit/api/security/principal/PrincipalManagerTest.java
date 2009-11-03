@@ -27,7 +27,6 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -145,9 +144,9 @@ public class PrincipalManagerTest extends AbstractJCRTest {
         while (it.hasNext()) {
             Principal p = it.nextPrincipal();
             if (isGroup(p) && !p.equals(principalMgr.getEveryone())) {
-                Enumeration en = ((java.security.acl.Group) p).members();
+                Enumeration<? extends Principal> en = ((java.security.acl.Group) p).members();
                 while (en.hasMoreElements()) {
-                    Principal memb = (Principal) en.nextElement();
+                    Principal memb = en.nextElement();
                     assertTrue(principalMgr.hasPrincipal(memb.getName()));
                 }
             }
@@ -198,9 +197,9 @@ public class PrincipalManagerTest extends AbstractJCRTest {
 
             assertTrue(isGroup(p));
 
-            Enumeration members = ((java.security.acl.Group) p).members();
+            Enumeration<? extends Principal> members = ((java.security.acl.Group) p).members();
             while (members.hasMoreElements()) {
-                Principal memb = (Principal) members.nextElement();
+                Principal memb = members.nextElement();
 
                 Principal group = null;
                 PrincipalIterator mship = principalMgr.getGroupMembership(memb);
@@ -221,7 +220,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
             if (pcpl.equals(everyone)) {
                 continue;
             }
-            Iterator it = principalMgr.findPrincipals(pcpl.getName());
+            PrincipalIterator it = principalMgr.findPrincipals(pcpl.getName());
             // search must find at least a single principal
             assertTrue("findPrincipals does not find principal with filter " + pcpl.getName(), it.hasNext());
         }
@@ -236,12 +235,12 @@ public class PrincipalManagerTest extends AbstractJCRTest {
             }
 
             if (isGroup(pcpl)) {
-                Iterator it = principalMgr.findPrincipals(pcpl.getName(),
+                PrincipalIterator it = principalMgr.findPrincipals(pcpl.getName(),
                         PrincipalManager.SEARCH_TYPE_GROUP);
                 // search must find at least a single matching group principal
                 assertTrue("findPrincipals does not find principal with filter " + pcpl.getName(), it.hasNext());
             } else {
-                Iterator it = principalMgr.findPrincipals(pcpl.getName(),
+                PrincipalIterator it = principalMgr.findPrincipals(pcpl.getName(),
                         PrincipalManager.SEARCH_TYPE_NOT_GROUP);
                 // search must find at least a single matching non-group principal
                 assertTrue("findPrincipals does not find principal with filter " + pcpl.getName(), it.hasNext());
