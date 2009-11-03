@@ -97,6 +97,7 @@
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
                 org.apache.jackrabbit.core.ConcurrentImportTest
+                org.apache.jackrabbit.core.integration.ConcurrentQueryTest#testConcurrentQueryWithDeletes
               </value>
             </property>
           </systemProperties>
