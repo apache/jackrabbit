@@ -113,9 +113,8 @@ public class CryptedSimpleCredentials implements Credentials {
     }
 
     /**
-     * Compair this instance with an instance of SimpleCredentials.
-     * If one the other Credentials' Password is plain-text treies to encode
-     * it with the current Digest.
+     * Compares this instance with the given <code>SimpleCredentials</code> and
+     * returns <code>true</code> if both match.
      *
      * @param credentials
      * @return true if {@link SimpleCredentials#getUserID() UserID} and
@@ -126,7 +125,7 @@ public class CryptedSimpleCredentials implements Credentials {
     public boolean matches(SimpleCredentials credentials)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
-        if (getUserID().matches(credentials.getUserID())) {
+        if (getUserID().equalsIgnoreCase(credentials.getUserID())) {
             String toMatch = new String(credentials.getPassword());
             String algr = getAlgorithm(toMatch);
 
@@ -148,7 +147,7 @@ public class CryptedSimpleCredentials implements Credentials {
     private static String crypt(String pwd, String algorithm)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
-        StringBuffer password = new StringBuffer();
+        StringBuilder password = new StringBuilder();
         password.append("{").append(algorithm).append("}");
         password.append(Text.digest(algorithm, pwd.getBytes("UTF-8")));
         return password.toString();
