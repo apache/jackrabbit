@@ -601,8 +601,10 @@ public class BundleBinding extends ItemStateBinding {
             switch (state.getType()) {
                 case PropertyType.BINARY:
                     BLOBFileValue blobVal = val.getBLOBFileValue();
+                    long size = blobVal.getLength();
                     if (InternalValue.USE_DATA_STORE && dataStore != null) {
-                        if (blobVal.isSmall()) {
+                        int maxMemorySize = dataStore.getMinRecordLength() - 1;
+                        if (size < maxMemorySize) {
                             writeSmallBinary(out, blobVal, state, i);
                         } else {
                             out.writeInt(BINARY_IN_DATA_STORE);
@@ -620,7 +622,6 @@ public class BundleBinding extends ItemStateBinding {
                     }
                     // special handling required for binary value:
                     // spool binary value to file in blob store
-                    long size = blobVal.getLength();
                     if (size < 0) {
                         log.warn("Blob has negative size. Potential loss of data. "
                                 + "id={} idx={}", state.getId(), String.valueOf(i));
