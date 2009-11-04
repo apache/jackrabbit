@@ -41,6 +41,14 @@ public class DefaultTraversingQOMTreeVisitor extends DefaultQOMTreeVisitor {
     }
 
     /**
+     * Calls accept on the static operand in the fulltext search constraint.
+     */
+    public Object visit(FullTextSearchImpl node, Object data) throws Exception {
+        ((StaticOperandImpl) node.getFullTextSearchExpression()).accept(this, data);
+        return data;
+    }
+
+    /**
      * Calls accept on the two sources and the join condition in the join node.
      */
     public Object visit(JoinImpl node, Object data) throws Exception {
