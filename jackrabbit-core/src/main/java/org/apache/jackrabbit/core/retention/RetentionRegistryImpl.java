@@ -82,13 +82,14 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
 
         // start listening to added/changed or removed holds and retention policies.
         Workspace wsp = session.getWorkspace();
-        // register eventlistener to be informed about new/removed holds and retention plcs.
+        // register event listener to be informed about new/removed holds and
+        // retention policies.
         int types = Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED | Event.PROPERTY_CHANGED;
         String[] ntFilter = new String[] {session.getJCRName(RetentionManagerImpl.REP_RETENTION_MANAGEABLE)};
         wsp.getObservationManager().addEventListener(this, types, "/", true, null, ntFilter, false);
 
         // populate the retentionMap and the holdMap with the effective
-        // holds and retention plcs present within the content.
+        // holds and retention policies present within the content.
         try {
             readRetentionFile();
         } catch (FileSystemException e) {
@@ -253,7 +254,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
                 return true;
             } else if (checkParent && !nodePath.denotesRoot() &&
                     element.hasPath(nodePath.getAncestor(1))) {
-                // hold present on the parent node whithout checking for being
+                // hold present on the parent node without checking for being
                 // a deep hold.
                 // this required for removal of a node that can be inhibited
                 // by a hold on the node itself, by a hold on the parent or
