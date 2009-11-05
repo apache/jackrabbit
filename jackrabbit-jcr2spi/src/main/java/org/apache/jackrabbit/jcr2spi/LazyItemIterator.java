@@ -90,7 +90,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
             size = UNDEFINED_SIZE;
         }
         pos = 0;
-        // prefetch first item
+        // fetch first item
         next = prefetchNext();
     }
 
@@ -119,7 +119,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         iter = entries.iterator();
         size = entries.size();
         pos = 0;
-        // prefetch first item
+        // fetch first item
         next = prefetchNext();
     }
 
@@ -223,7 +223,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
                 entry = iter.next();
             }
         }
-        // prefetch final item (the one to be returned on next())
+        // fetch final item (the one to be returned on next())
         pos++;
         next = prefetchNext();
     }

@@ -97,7 +97,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         if (wsp instanceof WorkspaceImpl) {
             ((WorkspaceImpl) wsp).getItemStateFactory().removeCreationListener(this);
         }
-        // aftwards clear the cache.
+        // ... and clear the cache.
         itemCache.clear();
     }
 
