@@ -162,7 +162,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         acMgr.setPolicy(tmpl.getPath(), tmpl);
         superuser.save();
 
-        // remember for clean up during teardown
+        // remember for clean up during tearDown
         toClear.add(tmpl.getPath());
         return tmpl;
     }
