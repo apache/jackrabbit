@@ -281,7 +281,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         }
 
         // unless the child-info are omitted by the SPI impl -> make sure
-        // the childentries the nodeentry are initialized or updated.
+        // the child entries the node entry are initialized or updated.
         Iterator<ChildInfo> childInfos = info.getChildInfos();
         if (childInfos != null) {
             entry.setNodeEntries(childInfos);

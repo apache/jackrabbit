@@ -550,7 +550,7 @@ public class ItemStateValidator {
         NodeEntry parentEntry = (NodeEntry) parentState.getHierarchyEntry();
          // NOTE: check for name collisions with existing child node has been
          // removed as with JSR 283 having same-named node and property can be
-         // allowed. thus delegate the correspoding validation to the underlying
+         // allowed. thus delegate the corresponding validation to the underlying
          // SPI implementation.
 
         // check for name collisions with an existing property
@@ -578,7 +578,7 @@ public class ItemStateValidator {
     private void checkCollision(NodeState parentState, Name nodeName, Name nodeTypeName) throws RepositoryException, ConstraintViolationException, NoSuchNodeTypeException {
          // NOTE: check for name collisions with existing child property has been
          // removed as with JSR 283 having same-named node and property may be
-         // allowed. thus delegate the correspoding validation to the underlying
+         // allowed. thus delegate the corresponding validation to the underlying
          // SPI implementation.
 
          // check for conflict with existing same-name sibling node.
