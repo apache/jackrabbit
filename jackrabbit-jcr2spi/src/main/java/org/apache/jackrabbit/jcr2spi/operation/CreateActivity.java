@@ -62,7 +62,7 @@ public class CreateActivity extends AbstractOperation {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
         
-        // TODO: check if invaliation of the activity store is required.
+        // TODO: check if invalidation of the activity store is required.
     }
 
     //----------------------------------------< Access Operation Parameters >---
