@@ -130,7 +130,7 @@ public class VersionImpl extends NodeImpl implements Version {
         checkStatus();
         if (otherItem instanceof VersionImpl) {
             // since all versions are referenceable, protected and live
-            // in the same workspace, a simple comparision of the UUIDs is sufficient
+            // in the same workspace, a simple comparison of the UUIDs is sufficient
             VersionImpl other = ((VersionImpl) otherItem);
             try {
                 return getUUID().equals(other.getUUID());
