@@ -180,7 +180,7 @@ public class UserManagerImplTest extends AbstractUserTest {
                     Authorizable first = (Authorizable) users.next();
                     assertEquals(first.getID(), val);
 
-                    // since id is unique -> there should be no more auths in
+                    // since id is unique -> there should be no more users in
                     // the iterator left
                     assertFalse(users.hasNext());
                 }

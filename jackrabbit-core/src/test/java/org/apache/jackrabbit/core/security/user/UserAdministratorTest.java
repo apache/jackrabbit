@@ -272,7 +272,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         Group gr = getGroupAdminGroup(umgr);
         try {
             assertFalse(gr.addMember(userHimSelf));
-            // conditial save call omitted.
+            // conditional save call omitted.
         } catch (RepositoryException e) {
             // success as well.
         } finally {
@@ -395,7 +395,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         Authorizable auth = umgr.getAuthorizable(uID);
         try {
             assertFalse(gr.addMember(auth));
-            // omit cond-save call.
+            // omit conditional save call.
         } catch (AccessDeniedException e) {
             // success as well.
         }
@@ -403,7 +403,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         auth = umgr.getAuthorizable(otherUID);
         try {
             assertFalse(gr.addMember(auth));
-            // omit cond-save call.
+            // omit conditional save call.
         } catch (AccessDeniedException e) {
             // success as well.
         }

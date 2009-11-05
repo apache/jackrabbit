@@ -93,7 +93,7 @@ public class AdministratorTest extends AbstractUserTest {
         // after removing the node the admin user doesn't exist any more
         assertNull(userMgr.getAuthorizable(adminId));
 
-        // login must succeed as system user mgr recreateds the admin user
+        // login must succeed as system user mgr recreates the admin user
         Session s2 = getHelper().getSuperuserSession();
         try {
             admin = userMgr.getAuthorizable(adminId);
