@@ -77,7 +77,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         save(superuser);
         grID = groupAdmin.getID();
 
-        // create a session for the grou-admin user.
+        // create a session for the group-admin user.
         uSession = getHelper().getRepository().login(creds);
 
         groupsPath = (userMgr instanceof UserManagerImpl) ? ((UserManagerImpl) userMgr).getGroupsPath() : UserConstants.GROUPS_PATH;
