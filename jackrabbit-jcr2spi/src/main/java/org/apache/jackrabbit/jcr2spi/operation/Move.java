@@ -100,7 +100,7 @@ public class Move extends AbstractOperation {
                 srcState.getNodeEntry().move(destName, destParentState.getNodeEntry(), false);
                 // TODO: TOBEFIXED. moved state ev. got a new definition.
             } catch (RepositoryException e) {
-                // should not occure
+                // should not occur
                 log.error("Internal error", e);
                 srcParentState.getHierarchyEntry().invalidate(false);
                 destParentState.getHierarchyEntry().invalidate(false);
@@ -183,7 +183,7 @@ public class Move extends AbstractOperation {
         if (sessionMove) {
             NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
 
-            // force childnodeentries list to be present before the move is executed
+            // force child node entries list to be present before the move is executed
             // on the hierarchy entry.
             assertChildNodeEntries(srcParentState);
             assertChildNodeEntries(destParentState);
