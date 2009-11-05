@@ -219,7 +219,7 @@ public class ImportHandler extends DefaultHandler {
                              Attributes atts) throws SAXException {
         // check if new context needs to be started
         if (!nsContextStarted) {
-            // there hasn't been a preceeding startPrefixMapping event
+            // there hasn't been a proceeding startPrefixMapping event
             // so enter new namespace context
             nsContext.pushContext();
         } else {
