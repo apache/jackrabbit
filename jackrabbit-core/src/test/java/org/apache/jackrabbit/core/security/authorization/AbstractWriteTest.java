@@ -86,7 +86,6 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
     }
 
     protected void tearDown() throws Exception {
-        // make sure all ac info is removed
         try {
             if (testGroup != null && testUser != null) {
                 testGroup.removeMember(testUser);
