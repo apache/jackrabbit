@@ -204,7 +204,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             assertTrue("First node locked: ", lockedNode.isLocked());
             assertTrue("Second node locked: ", lockedNode2.isLocked());
         } catch (RepositoryException e) {
-            // mk sure all locks are release again
+            // make sure all locks are release again
             lockedNode.unlock();
             lockedNode2.unlock();
             throw new RepositoryException(e);
@@ -219,7 +219,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             assertTrue("Second node locked: ", lockedNode2.isLocked());
 
         } finally {
-            // mk sure all locks are release again
+            // make sure all locks are release again
             lockedNode2.unlock();
         }
     }
