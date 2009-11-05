@@ -148,7 +148,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
             // system has always all permissions
             return true;
         } else if (anonymous) {
-            // anonymous is always denied WRITE & REMOVE premissions
+            // anonymous is always denied WRITE & REMOVE permissions
             if ((permissions & WRITE) == WRITE
                     || (permissions & REMOVE) == REMOVE) {
                 return false;
@@ -180,7 +180,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
             // system has always all permissions
             return true;
         } else if (anonymous) {
-            // anonymous is only granted READ premissions
+            // anonymous is only granted READ permissions
             return permissions == Permission.READ;
         }
 
@@ -216,7 +216,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
                 return true;
             } else if (anonymous) {
                 if (privileges.length != 1 || !privileges[0].equals(privilegeRegistry.getPrivilege(Privilege.JCR_READ))) {
-                    // anonymous is only granted READ premissions
+                    // anonymous is only granted READ permissions
                     return false;
                 }
             }
