@@ -307,14 +307,14 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 parent.internalRemoveChildEntry(this);
                 break;
             case Status.STALE_DESTROYED:
-                // overlayed does not exist any more -> reverting of pending
+                // state does not exist any more -> reverting of pending
                 // transient changes (that lead to the stale status) can be
                 // omitted and the entry is complete removed instead.
                 remove();
                 break;
             default:
                 // Cannot revert EXISTING, REMOVED, INVALIDATED, MODIFIED states.
-                // State was implicitely reverted or external modifications
+                // State was implicitly reverted or external modifications
                 // reverted the modification.
                 log.debug("State with status " + oldStatus + " cannot be reverted.");
         }

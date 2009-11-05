@@ -59,7 +59,7 @@ public class HierarchyEventListener implements InternalEventListener {
                 Path root = wspManager.getPathFactory().getRootPath();
                 filter = wspManager.createEventFilter(Event.ALL_TYPES, root, true, null, null, true);
             } catch (RepositoryException e) {
-                // spi does not support observation, or another error occurred.
+                // SPI does not support observation, or another error occurred.
                 log.debug("Creating event filter for cache behavoir observation failed", e);
             }
             if (filter == null) {

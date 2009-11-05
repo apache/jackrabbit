@@ -425,10 +425,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                /*
                 * Unknown entry (not-existing or not yet loaded):
                 * Skip all intermediate entries and directly try to load the ItemState
-                * (including building the itermediate entries. If that fails
+                * (including building the intermediate entries. If that fails
                 * ItemNotFoundException is thrown.
                 *
-                * Since 'path' might be ambigous (Node or Property):
+                * Since 'path' might be ambiguous (Node or Property):
                 * 1) first try Node
                 * 2) if the NameElement does not have SNS-index => try Property
                 * 3) else throw
@@ -508,7 +508,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             * Unknown parent entry (not-existing or not yet loaded) or a parent
             * entry that has been invalidated:
             * Skip all intermediate entries and directly try to load the
-            * PropertyState (including building the itermediate entries. If that
+            * PropertyState (including building the intermediate entries. If that
             * fails ItemNotFoundException is thrown.
             */
             PathBuilder pb = new PathBuilder(getPathFactory());
@@ -883,7 +883,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                } else {
                    // entry is either rename OR moved back to it's original
                    // parent. for the latter case make sure, there is no attic
-                   // entry remaing refering to the entry that is being added.
+                   // entry remaining referring to the entry that is being added.
                    revertInfo.oldParent.childNodeAttic.remove(this);
                }
            }
@@ -1577,7 +1577,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         if (he != this) {
             throw new IllegalArgumentException();
         }
-        // NOTE: if reorder occured in combination with a 'move' the clean-up
+        // NOTE: if reorder occurred in combination with a 'move' the clean-up
         // of the revertInfo is postponed until {@link #complete(Move)}.
         switch (operation.getStatus()) {
             case Operation.STATUS_PERSISTED:
