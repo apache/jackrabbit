@@ -566,8 +566,8 @@ public class WorkspaceManager
             /*
             Execute operation and delegate invalidation of affected item
             states to the operation.
-            NOTE, that the invalidation is independant of the cache behaviour
-            due to the fact, that local eventbundles are not processed by
+            NOTE, that the invalidation is independent of the cache behaviour
+            due to the fact, that local event bundles are not processed by
             the HierarchyEventListener.
             */
             new OperationVisitorImpl(sessionInfo).execute(operation);

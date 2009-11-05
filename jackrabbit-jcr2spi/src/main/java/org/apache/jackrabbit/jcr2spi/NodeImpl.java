@@ -393,7 +393,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#setProperty(String, Node)
      */
     public Property setProperty(String name, Node value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
-        // duplicate check to make sure, writability is asserted before value
+        // duplicate check to make sure, property can be written before value
         // validation below.
         checkIsWritable();
         Value v;
@@ -1082,7 +1082,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public void restore(Version version, String relPath, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         checkSessionHasPendingChanges();
 
-        // additional checks are performed with subsequest calls.
+        // additional checks are performed with subsequent calls.
         if (hasNode(relPath)) {
             // node at 'relPath' exists -> call restore on the target Node
             getNode(relPath).restore(version, removeExisting);
@@ -1626,7 +1626,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // get list of existing nodetypes
         Name[] existingNts = getNodeState().getNodeTypeNames();
-        // build effective node type representing primary type including existing mixin's
+        // build effective node type representing primary type including existing mixins
         EffectiveNodeType entExisting = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(existingNts);
 
         // check if the base type supports adding this mixin
@@ -1771,7 +1771,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (rp.getLength() == 1 && rp.getNameElement().denotesName()) {
                 // a single path element must always denote a name. '.' and '..'
                 // will never point to a property. If the NodeEntry does not
-                // contain such a pe, the targetEntry is 'null;
+                // contain such a property entry, the targetEntry is 'null;
                 Name propName = rp.getNameElement().getName();
                 // check if property entry exists
                 targetEntry = getNodeEntry().getPropertyEntry(propName, true);

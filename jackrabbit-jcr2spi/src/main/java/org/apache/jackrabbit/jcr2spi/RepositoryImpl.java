@@ -161,8 +161,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         }
     }
 
-    //---------------------------------------------------------< Rereferencable >---
-
+    //------------------------------------------------------< Referenceable >---
     /**
      * @see Referenceable#getReference()
      */

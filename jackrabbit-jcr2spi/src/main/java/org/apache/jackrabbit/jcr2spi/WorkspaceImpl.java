@@ -141,7 +141,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
         session.checkIsAlive();
 
-        // do intra-workspace copy
+        // do within workspace copy
         Path srcPath = session.getQPath(srcAbsPath);
         Path destPath = session.getQPath(destAbsPath);
 
@@ -158,7 +158,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
         // check workspace name
         if (getName().equals(srcWorkspace)) {
-            // same as current workspace, delegate to intra-workspace copy method
+            // same as current workspace, delegate to within workspace copy method
             copy(srcAbsPath, destAbsPath);
             return;
         }
