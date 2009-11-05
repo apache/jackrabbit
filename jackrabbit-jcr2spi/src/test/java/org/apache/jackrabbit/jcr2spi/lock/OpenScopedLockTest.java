@@ -36,7 +36,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
     }
 
     public void testLogoutHasNoEffect() throws Exception {
-        // create a second session session. since loggin-out the 'superuser'
+        // create a second session session. since logout of the 'superuser'
         // will cause all inherited tear-down to fail
         Node testRoot2 = (Node) otherSession.getItem(testRootNode.getPath());
 
@@ -47,7 +47,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
         Lock lock2 = lockedNode2.lock(false, isSessionScoped());
 
         // force reloading of the testroot in order to be aware of the
-        // locked noded added by another session
+        // locked node added by another session
         testRootNode.refresh(false);
         Node n2 = (Node) superuser.getItem(lockedNode2.getPath());
         try {
