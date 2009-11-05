@@ -144,7 +144,7 @@ public class MoveToNewTest extends AbstractJCRTest {
         assertTrue(destParentNode.isNew());
         assertFalse(destParentNode.hasNode(nodeName2));
 
-        // remove the tmp dest parent node.
+        // remove the tmp destination parent node.
         destParentNode.remove();
 
         assertTrue(newParent.isNew());

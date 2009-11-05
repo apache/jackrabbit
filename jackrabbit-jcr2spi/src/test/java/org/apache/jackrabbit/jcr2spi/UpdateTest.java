@@ -164,7 +164,7 @@ public class UpdateTest extends AbstractJCRTest {
             // call the update method on test node in default workspace
             testRootNode.update(srcWorkspace);
 
-            // ok first check if node has no longer propertis
+            // ok first check if node has no longer properties
             assertFalse("Node updated with Node.update() should have property removed", testRootNode.hasProperty(propertyName2));
         } catch (PathNotFoundException e) {
             throw new NotExecutableException();

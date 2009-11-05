@@ -69,7 +69,7 @@ public class IsSameTest extends AbstractJCRTest {
     }
 
     public void testIsSameProperty3() throws RepositoryException {
-        // create a node (nt:resource) that implicitely is referenceable
+        // create a node (nt:resource) that implicitly is referenceable
         Node n = testRootNode.addNode("aFile", "nt:file");
         n = n.addNode("jcr:content", "nt:resource");
         n.setProperty("jcr:lastModified", Calendar.getInstance());
@@ -88,7 +88,7 @@ public class IsSameTest extends AbstractJCRTest {
     }
 
     public void testIsSameProperty4() throws RepositoryException {
-        // create a node (nt:resource) that implicitely is referenceable
+        // create a node (nt:resource) that implicitly is referenceable
         Node n = testRootNode.addNode("aFile", "nt:file");
         n = n.addNode("jcr:content", "nt:resource");
         n.setProperty("jcr:lastModified", Calendar.getInstance());
@@ -107,7 +107,7 @@ public class IsSameTest extends AbstractJCRTest {
     }
 
     public void testIsSameNode() throws RepositoryException {
-        // create a node (nt:resource) that implicitely is referenceable
+        // create a node (nt:resource) that implicitly is referenceable
         Node n = testRootNode.addNode("aFile", "nt:file");
         n = n.addNode("jcr:content", "nt:resource");
         n.setProperty("jcr:lastModified", Calendar.getInstance());
@@ -126,7 +126,7 @@ public class IsSameTest extends AbstractJCRTest {
     }
 
     public void testIsSameNode2() throws RepositoryException {
-        // create a node (nt:resource) that implicitely is referenceable
+        // create a node (nt:resource) that implicitly is referenceable
         Node n = testRootNode.addNode("aFile", "nt:file");
         n = n.addNode("jcr:content", "nt:resource");
         n.setProperty("jcr:lastModified", Calendar.getInstance());
