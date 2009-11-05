@@ -198,7 +198,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
         testSession.getItem(destPath);
 
         assertItemStatus(refNode2, Status.STALE_DESTROYED);
-        // the uuid must be transfered to the 'moved' node
+        // the uuid must be transferred to the 'moved' node
         Node n = testSession.getNodeByUUID(uuid);
         // TODO: for generic jsr 170 test assertSame must be replace by 'Item.isSame'
         assertSame(n, testSession.getItem(destPath));
@@ -221,7 +221,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
         }
 
         assertItemStatus(refNode2, Status.REMOVED);
-        // the uuid must be transfered to the 'moved' node
+        // the uuid must be transferred to the 'moved' node
         Node n = testSession.getNodeByUUID(uuid);
         // TODO: for generic jsr 170 test assertSame must be replace by 'Item.isSame'
         assertSame(n, testSession.getItem(destPath));

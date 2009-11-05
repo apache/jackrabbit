@@ -143,7 +143,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
         assertFalse(srcParent.hasNode(snsName+"[4]"));
         assertFalse(srcParent.hasNode(snsName+"[5]"));
 
-        // check if move have been successfull
+        // check if move have been successful
         assertEquals(children[2].getPath(), destPath);
         assertTrue(children[2].getIndex() == Path.INDEX_DEFAULT);
         assertEquals(children[1].getPath(), destPath+"[2]");
