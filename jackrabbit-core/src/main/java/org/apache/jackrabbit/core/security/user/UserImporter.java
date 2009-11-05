@@ -177,7 +177,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
         }
 
         /* importer can only handle protected properties below user/group
-           nodes that are properly stored underneith the configured users/groups
+           nodes that are properly stored underneath the configured users/groups
            hierarchies (see {@link UserManagerImpl#getAuthorizable(NodeImpl)}.
            this prevents from importing user/group nodes somewhere in the
            content hierarchy which isn't possible when creating user/groups
@@ -366,7 +366,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                             Value[] vls = groupNode.getProperty(UserConstants.P_MEMBERS).getValues();
                             memberValues.addAll(Arrays.asList(vls));
                         }
-                        // ... and the non-Existing onces.
+                        // ... and the non-Existing ones.
                         memberValues.addAll(nonExisting);
                         // and use implementation specific method to set the
                         // value of rep:members properties which was not possible

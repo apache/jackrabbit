@@ -468,7 +468,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                     String evPath = ev.getPath();
                     String repMembers = session.getJCRName(UserConstants.P_MEMBERS);
                     if (repMembers.equals(Text.getName(evPath))) {
-                        // recalculate the is...Admin flages
+                        // recalculate the is...Admin flags
                         Node userNode = session.getNode(userNodePath);
                         String nodePath = Text.getRelativeParent(evPath, 1);
                         if (userAdminGroupPath.equals(nodePath)) {

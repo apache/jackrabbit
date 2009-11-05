@@ -109,7 +109,7 @@ public class SimpleJBossAccessManager implements AccessManager {
 
     public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
         // system has always all permissions
-        // anonymous has only READ premissions
+        // anonymous has only READ permissions
         return system || (anonymous && ((permissions & (WRITE | REMOVE)) == 0));
     }
 
@@ -131,7 +131,7 @@ public class SimpleJBossAccessManager implements AccessManager {
 
     private boolean internalIsGranted(int permissions) {
         /* system has always all permissions,
-           anonymous has only READ premissions */
+           anonymous has only READ permissions */
         return system || (anonymous && Permission.READ == permissions);
     }
 }

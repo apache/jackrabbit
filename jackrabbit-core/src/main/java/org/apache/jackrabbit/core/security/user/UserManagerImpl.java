@@ -337,7 +337,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         } else {
             // another Principal implementation.
             // a) try short-cut that works in case of ID.equals(principalName) only.
-            // b) execute query in case of pName mismatch or exc. however, query
+            // b) execute query in case of pName mismatch or exception. however, query
             //    requires persisted user nodes (see known issue of UserImporter).
             String name = principal.getName();           
             try {
@@ -421,7 +421,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             log.debug("User created: " + userID + "; " + userNode.getPath());
             return user;
         } catch (RepositoryException e) {
-            // something went wrong -> revert changes and rethrow
+            // something went wrong -> revert changes and re-throw
             session.refresh(false);
             log.debug("Failed to create new User, reverting changes.");
             throw e;
@@ -514,8 +514,8 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
         /*
          Check if there is *another* authorizable with the same principal.
-         The additial validation (nodes not be same) is required in order to
-         circumvent problems with re-importing existing authorizables in which
+         The additional validation (nodes not be same) is required in order to
+         circumvent problems with re-importing existing authorizable in which
          case the original user/group node is being recreated but the search
          used to look for an colliding authorizable still finds the persisted
          node.
@@ -620,7 +620,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         } catch (ItemNotFoundException e) {
             if (compatibleJR16) {
                 // backwards-compatibility with JR < 2.0 user/group structure that doesn't
-                // allow to determine existance of an authorizable from the id directly.
+                // allow to determine existence of an authorizable from the id directly.
                 // search for it the node belonging to that id
                 n = (NodeImpl) authResolver.findNode(P_USERID, id, NT_REP_USER);
                 if (n == null) {
@@ -743,7 +743,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @see SessionListener#loggedOut(org.apache.jackrabbit.core.SessionImpl)
      */
     public void loggedOut(SessionImpl session) {
-        // and logout the session unless it is the loggedout session itself.
+        // and logout the session unless it is the logged-out session itself.
         if (session != this.session) {
             this.session.logout();
         }
@@ -1124,8 +1124,8 @@ public class UserManagerImpl extends ProtectedItemModifier
 
             // additional folders needs be created if
             // - the maximal size of child nodes is reached
-            // - if the auth-node to be created potentially collides with any
-            //   of the intermediate nodes.
+            // - if the authorizable node to be created potentially collides with
+            //   any of the intermediate nodes.
             int segmLength = defaultDepth +1;
             
             while (intermediateFolderNeeded(escapedId, folder)) {
@@ -1194,7 +1194,7 @@ public class UserManagerImpl extends ProtectedItemModifier
                 // existing folder structure: a/ab
                 // authID to be created     : abt
                 // OR
-                // existing collition that would result from
+                // existing collision that would result from
                 // existing folder structure: a/ab/abt
                 // authID to be create      : abt
                 return true;
