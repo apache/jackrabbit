@@ -100,7 +100,8 @@ public class AccessManagerTest extends AbstractJCRTest {
         AccessManager acMgr = getAccessManager(superuser);
 
         NodeId id = (NodeId) getItemId(superuser.getItem(testRootNode.getPath()));
-        // NOTE: backwards compat. for depr. method: invalid perm-flags will be ignored
+        // NOTE: backwards compatibility.
+        // for deprecated method: invalid perm-flags will be ignored
         acMgr.checkPermission(id, AccessManager.READ - 1);
     }
 
@@ -108,7 +109,8 @@ public class AccessManagerTest extends AbstractJCRTest {
         AccessManager acMgr = getAccessManager(superuser);
 
         NodeId id = (NodeId) getItemId(superuser.getItem(testRootNode.getPath()));
-        // NOTE: backwards compat. for depr. method: invalid perm-flags will be ignored
+        // NOTE: backwards compatibility.
+        // for deprecated method: invalid perm-flags will be ignored
         acMgr.checkPermission(id, AccessManager.READ | AccessManager.WRITE | AccessManager.REMOVE  + 1);
     }
 
