@@ -175,7 +175,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         checkStatus();
         Name qLabel = getQLabel(label);
         NodeState vState = getVersionState(versionName);
-        // delegate to version manager that operates on workspace directely
+        // delegate to version manager that operates on workspace directly
         session.getVersionStateManager().addVersionLabel((NodeState) getItemState(), vState, qLabel, moveLabel);
     }
 
@@ -187,7 +187,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         Name qLabel = getQLabel(label);
         Version version = getVersionByLabel(qLabel);
         NodeState vState = getVersionState(version.getName());
-        // delegate to version manager that operates on workspace directely
+        // delegate to version manager that operates on workspace directly
         session.getVersionStateManager().removeVersionLabel((NodeState) getItemState(), vState, qLabel);
     }
 
