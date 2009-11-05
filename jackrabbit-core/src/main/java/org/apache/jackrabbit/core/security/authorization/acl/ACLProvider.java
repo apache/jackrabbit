@@ -581,6 +581,10 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             PrincipalManager principalMgr = sImpl.getPrincipalManager();
             AccessControlManager acMgr = sImpl.getAccessControlManager();
 
+            // first collect aces present on the given aclNode.
+            List<AccessControlEntry> gaces = new ArrayList<AccessControlEntry>();
+            List<AccessControlEntry> uaces = new ArrayList<AccessControlEntry>();
+
             NodeIterator itr = aclNode.getNodes();
             while (itr.hasNext()) {
                 NodeImpl aceNode = (NodeImpl) itr.nextNode();
@@ -605,12 +609,25 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                             aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE),
                             sImpl.getValueFactory());
                     // add it to the proper list (e.g. separated by principals)
+                    /**
+                     * NOTE: access control entries must be collected in reverse
+                     * order in order to assert proper evaluation.
+                     */
                     if (princ instanceof Group) {
-                        groupAces.add(ace);
+                        gaces.add(0, ace);
                     } else {
-                        userAces.add(ace);
+                        uaces.add(0, ace);
                     }
                 }
+            }
+
+            // add the lists of aces to the overall lists that contain the entries
+            // throughout the hierarchy.
+            if (!gaces.isEmpty()) {
+                groupAces.addAll(gaces);
+            }
+            if (!uaces.isEmpty()) {
+                userAces.addAll(uaces);
             }
         }
 
