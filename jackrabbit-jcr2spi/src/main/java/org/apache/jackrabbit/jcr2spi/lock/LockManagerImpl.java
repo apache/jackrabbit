@@ -102,8 +102,6 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerHint) throws RepositoryException {
         // retrieve node first
         Node lhNode;
-        // NOTE: Node must be retrieved from the given NodeState and not from
-        // the overlayed workspace nodestate.
         Item item = itemManager.getItem(nodeState.getHierarchyEntry());
         if (item.isNode()) {
             lhNode = (Node) item;
@@ -309,7 +307,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
             return entry.getNodeState();
         } catch (RepositoryException e) {
             // may occur if the nodeState is not accessible or some generic
-            // error occured.
+            // error occurred.
             // for this case, assume that no lock exists and delegate final
             // validation to the spi-implementation.
             log.warn("Error while accessing lock holding NodeState", e.getMessage());
@@ -381,7 +379,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
                 // assume no lock is present (might not be correct due to incomplete hierarchy)
                 return null;
             } else {
-                // check lockMap again with the lockholding state
+                // check lockMap again with the lock-holding state
                 l = getLockFromMap(nState);
                 if (l != null) {
                     return l;
@@ -668,7 +666,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
             this.node = lockHoldingNode;
 
             // if observation is supported OR if this is a session-scoped lock
-            // holded by this session -> store lock in the map
+            // hold by this session -> store lock in the map
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 lockMap.put(lockState.lockHoldingState, this);
                 lockState.startListening();
@@ -676,7 +674,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
                 lockMap.put(lockState.lockHoldingState, this);
                 lockState.startListening();
                 // open-scoped locks: the map entry and the lock information
-                // stored therein may become outdated if the token is transfered
+                // stored therein may become outdated if the token is transferred
                 // to another session -> info must be reloaded.
                 if (!isSessionScoped()) {
                     reloadInfo = true;
@@ -795,7 +793,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
          */
         public void lockTokenAdded(String lockToken) throws RepositoryException {
             if (!isSessionScoped() && !isLockOwningSession()) {
-                // unless this lock is session-scoped (token is never transfered)
+                // unless this lock is session-scoped (token is never transferred)
                 // and the session isn't the owner yet (token already present),
                 // it could be that this affects this lock and session became
                 // lock holder -> reload info to assert.

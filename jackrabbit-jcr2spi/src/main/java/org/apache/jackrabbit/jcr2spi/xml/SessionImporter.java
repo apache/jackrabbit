@@ -256,7 +256,7 @@ public class SessionImporter implements Importer, SessionListener {
 
         try {
             checkSession();
-            // adjust references refering to remapped uuids
+            // adjust references referring to remapped uuids
             stateMgr.adjustReferences(refTracker);
         } finally {
             // close this importer since we are done.
@@ -493,7 +493,7 @@ public class SessionImporter implements Importer, SessionListener {
                     throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
                 }
             } catch (ItemNotFoundException e) {
-                // property apperently doesn't exist any more
+                // property doesn't exist any more
                 // -> ignore
             }
         }
@@ -593,7 +593,7 @@ public class SessionImporter implements Importer, SessionListener {
                         iv = session.getQValueFactory().create(baos.toByteArray());
                     } else {
                         // >= 65kb: deserialize BINARY type
-                        // using Reader and temporay file
+                        // using Reader and temporary file
                         TransientFileFactory fileFactory = TransientFileFactory.getInstance();
                         File tmpFile = fileFactory.createTransientFile("bin", null, null);
                         FileOutputStream out = new FileOutputStream(tmpFile);
