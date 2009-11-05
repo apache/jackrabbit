@@ -207,7 +207,7 @@ public class PropertyState extends ItemState {
             /*
             Don't pass 'all-nodetypes from parent':
             for NEW-states the definition is always set upon creation.
-            for all other states the definion must be retrieved only taking
+            for all other states the definition must be retrieved only taking
             the effective nodetypes present on the parent into account
             any kind of transiently added mixins must not have an effect
             on the definition retrieved for an state that has been persisted
@@ -355,7 +355,7 @@ public class PropertyState extends ItemState {
         }
 
         private void setValues(int type, QValue[] values) throws ConstraintViolationException, RepositoryException {
-            // make sure the arguements are consistent and do not violate the
+            // make sure the arguments are consistent and do not violate the
             // given property definition.
             validate(values, type, getDefinition());
             // free old values if existing

@@ -450,7 +450,7 @@ public class NodeState extends ItemState {
             /*
              Don't use getAllNodeTypeNames() to retrieve the definition:
              for NEW-states the definition is always set upon creation.
-             for all other states the definion must be retrieved only taking
+             for all other states the definition must be retrieved only taking
              the effective nodetypes present on the parent into account
              any kind of transiently added mixins must not have an effect
              on the definition retrieved for an state that has been persisted

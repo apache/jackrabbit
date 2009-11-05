@@ -115,7 +115,7 @@ public abstract class ItemState {
      */
     private static int getInitialStatus(NodeEntry parent) {
         int status = Status.EXISTING;
-        // walk up hiearchy and check if any of the parents is transiently
+        // walk up hierarchy and check if any of the parents is transiently
         // removed, in which case the status must be set to EXISTING_REMOVED.
         while (parent != null) {
             if (parent.getStatus() == Status.EXISTING_REMOVED) {
