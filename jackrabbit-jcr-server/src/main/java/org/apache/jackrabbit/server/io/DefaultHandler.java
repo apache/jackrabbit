@@ -24,9 +24,6 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.detect.Detector;
-import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -665,7 +662,11 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         try {
             Metadata metadata = new Metadata();
             metadata.set(Metadata.RESOURCE_NAME_KEY, name);
-            return ioManager.getDetector().detect(null, metadata).toString();
+            if (ioManager != null && ioManager.getDetector() != null) {
+                return ioManager.getDetector().detect(null, metadata).toString();
+            } else {
+                return "application/octet-stream";
+            }
         } catch (IOException e) {
             // Can not happen since the InputStream above is null
             throw new IllegalStateException(
