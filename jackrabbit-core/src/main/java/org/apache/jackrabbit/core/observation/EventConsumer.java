@@ -16,26 +16,27 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>EventConsumer</code> class combines the {@link
@@ -241,7 +242,13 @@ class EventConsumer {
         EventIterator it = new FilteredEventIterator(events.iterator(),
                 events.getTimestamp(), events.getUserData(), filter, denied);
         if (it.hasNext()) {
+            long time = System.currentTimeMillis();
             listener.onEvent(it);
+            time = System.currentTimeMillis() - time;
+            if (log.isDebugEnabled()) {
+                log.debug("listener {} processed events in {} ms.",
+                        listener.getClass().getName(), time);
+            }
         } else {
             // otherwise skip this listener
         }
