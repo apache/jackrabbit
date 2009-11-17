@@ -57,7 +57,7 @@ import java.util.Set;
  * a distinct pp-registry for each workspace.
  * </p>
  * NOTE: While this security manager asserts that a minimal set of system
- * users (admin, administrators group and anonymous) is present in each workspace
+ * users (admin and anonymous) is present in each workspace
  * it doesn't make any attempt to set or define the access permissions on the
  * tree containing user related information. 
  */
@@ -224,16 +224,12 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
         
         // in contrast to the DefaultSecurityManager users are not retrieved
         // from a dedicated workspace: the system session of each workspace must
-        // get a system user manager that asserts the existance of the admin user.
-        if (session instanceof SystemSession) {
-            return new SystemUserManager((SystemSession) session, params);
+        // get a system user manager that asserts the existence of the admin user.
+        if (umc != null) {
+            Class<?>[] paramTypes = new Class[] { SessionImpl.class, String.class, Properties.class };
+            return (UserPerWorkspaceUserManager) umc.getUserManager(UserPerWorkspaceUserManager.class, paramTypes, (SessionImpl) session, adminId, params);
         } else {
-            if (umc != null) {
-                Class<?>[] paramTypes = new Class[] { SessionImpl.class, String.class, Properties.class };
-                return (UserPerWorkspaceUserManager) umc.getUserManager(UserPerWorkspaceUserManager.class, paramTypes, (SessionImpl) session, adminId, params);
-            } else {
-                return new UserPerWorkspaceUserManager(session, adminId, params);
-            }
+            return new UserPerWorkspaceUserManager(session, adminId, params);
         }
     }
 

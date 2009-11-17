@@ -37,7 +37,6 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.SecurityConfig;
@@ -58,7 +57,6 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFa
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
@@ -360,7 +358,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         }
 
         /*
-         Fallback szenario to retrieve userID from the subject:
+         Fallback scenario to retrieve userID from the subject:
          Since the subject may contain multiple principals and the principal
          name may not be equals to the UserID, the id is retrieved by
          searching for the corresponding authorizable and if this doesn't
@@ -453,21 +451,17 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         // only the system session assigned with that workspace will get the
         // system user manager (special implementation that asserts the existance
         // of the admin user).
-        if (session == systemSession) {
-            return new SystemUserManager(systemSession, params);
+        UserManagerImpl um;
+        if (umc != null) {
+            Class<?>[] paramTypes = new Class[] { SessionImpl.class, String.class, Properties.class };
+            um = (UserManagerImpl) umc.getUserManager(UserManagerImpl.class, paramTypes, (SessionImpl) session, adminId, params);
+            // TODO: should we make sure the implementation doesn't allow
+            // TODO: to change the autosave behavior? since the user manager
+            // TODO: writes to a separate workspace this would cause troubles.
         } else {
-            UserManagerImpl um;
-            if (umc != null) {
-                Class<?>[] paramTypes = new Class[] { SessionImpl.class, String.class, Properties.class };
-                um = (UserManagerImpl) umc.getUserManager(UserManagerImpl.class, paramTypes, (SessionImpl) session, adminId, params);
-                // TODO: should we make sure the implementation doesn't allow
-                // TODO: to change the autosave behavior? since the user manager
-                // TODO: writes to a separate workspace this would cause troubles.
-            } else {
-                um = new UserManagerImpl(session, adminId, params);
-            }
-            return um;
+            um = new UserManagerImpl(session, adminId, params);
         }
+        return um;
     }
 
     /**
@@ -569,8 +563,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     }
 
     /**
-     * Make sure the 'administrators' group exists and the user with the
-     * configured (or default) adminID is member of this user-group.
+     * Make sure the sytem users (admin and anonymous) exist.
      *
      * @param userManager Manager to create users/groups.
      * @param session
@@ -595,38 +588,20 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             }
         }
 
-        // assume administrators groupID and principalName are the same.
-        // and avoid retrieving group by principal.
-        Group admins = (Group) userManager.getAuthorizable(SecurityConstants.ADMINISTRATORS_NAME);
-        if (admins == null) {
-            admins = userManager.createGroup(new PrincipalImpl(SecurityConstants.ADMINISTRATORS_NAME));
-            if (!userManager.isAutoSave()) {
-                session.save();
-            }
-            log.info("... created administrators group with name '"+SecurityConstants.ADMINISTRATORS_NAME+"'");
-        }
-
-        try {
-            if (admins != null && admins.addMember(admin)) {
-                if (!userManager.isAutoSave()) {
-                    session.save();
-                }
-                log.info("... added admin '" + adminId + "' as member of the administrators group.");
-            }
-        } catch (RepositoryException e) {
-            // administrator has full permissions anyway. just log a
-            // warning and ignore the error.
-            log.warn("Unexpected error while adding admin to the administrators group", e);
-        }
-
         if (anonymousId != null) {
             Authorizable anonymous = userManager.getAuthorizable(anonymousId);
             if (anonymous == null) {
-                userManager.createUser(anonymousId, "");
-                if (!userManager.isAutoSave()) {
-                    session.save();
+                try {
+                    userManager.createUser(anonymousId, "");
+                    if (!userManager.isAutoSave()) {
+                        session.save();
+                    }
+                    log.info("... created anonymous user with id \'" + anonymousId + "\' ...");
+                } catch (RepositoryException e) {
+                    // exception while creating the anonymous user.
+                    // log an error but don't abort the repository start-up
+                    log.error("Failed to create anonymous user.", e);
                 }
-                log.info("... created anonymous-user with id \'" + anonymousId + "\' ...");
             }
         }
     }
@@ -660,41 +635,6 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         public boolean grants(Set<Principal> principals, String workspaceName) throws RepositoryException {
             AccessControlProvider prov = getAccessControlProvider(workspaceName);
             return prov.canAccessRoot(principals);
-        }
-    }
-
-    /**
-     * System user manager that (re) creates the admin user in case it doesn't
-     * exist yet (upon initial startup) or has been deleted.
-     */
-    protected final class  SystemUserManager extends UserManagerImpl {
-
-        private final SystemSession session;
-        private String adminPw;
-
-        protected SystemUserManager(SystemSession session, Properties config) throws RepositoryException {
-            super(session, adminId, config);
-            this.session = session;
-            adminPw = adminId; // The default value as defined upon #createSystemUsers
-        }
-
-        @Override
-        public Authorizable getAuthorizable(String id) throws RepositoryException {
-            Authorizable a = super.getAuthorizable(id);
-            if (a == null && adminId.equals(id)) {
-                log.info("Admin user does not exist.");
-                a = createAdmin(adminId, adminPw);
-            }
-            return a;
-        }
-
-        private User createAdmin(String adminId, String pw) throws RepositoryException {
-            User admin = createUser(adminId, pw);
-            if (!isAutoSave()) {
-                session.save();
-            }
-            log.info("... created admin user with id \'" + adminId + "\' and default pw.");
-            return admin;
         }
     }
 }

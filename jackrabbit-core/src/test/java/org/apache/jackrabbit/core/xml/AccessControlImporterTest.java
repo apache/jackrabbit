@@ -19,12 +19,16 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.config.ImportConfig;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.xml.sax.SAXException;
@@ -543,6 +547,18 @@ public class AccessControlImporterTest extends AbstractJCRTest {
                 acMgr.getPolicies(EveryonePrincipal.getInstance()).length > 0) {
             // test expects that only resource-based acl is supported
             throw new NotExecutableException();
+        }
+
+        PrincipalManager pmgr = sImpl.getPrincipalManager();
+        if (!pmgr.hasPrincipal(SecurityConstants.ADMINISTRATORS_NAME)) {
+            UserManager umgr = sImpl.getUserManager();
+            umgr.createGroup(new PrincipalImpl(SecurityConstants.ADMINISTRATORS_NAME));
+            if (!umgr.isAutoSave()) {
+                sImpl.save();
+            }
+            if (pmgr.hasPrincipal(SecurityConstants.ADMINISTRATORS_NAME)) {
+                throw new NotExecutableException();
+            }
         }
 
 
