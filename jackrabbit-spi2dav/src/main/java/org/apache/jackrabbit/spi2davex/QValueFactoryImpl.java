@@ -940,7 +940,7 @@ class QValueFactoryImpl implements QValueFactory {
                 // for both the value has not been loaded yet
                 if (!initialized) {
                     if (other.uri != null) {
-                        return uri.equals(uri);
+                        return other.uri.equals(uri);
                     } else {
                         // need to load the binary value in order to be able
                         // to compare the 2 values.
