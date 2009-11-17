@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+
+import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.IndexDeletionPolicy;
+import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.search.Similarity;
-import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
-
-import java.io.IOException;
 
 /**
  * Implements a lucene index which is based on a
@@ -79,7 +79,7 @@ class PersistentIndex extends AbstractIndex {
         this.indexDelPolicy = new IndexDeletionPolicyImpl(this,
                 generationMaxAge * 1000);
         if (isExisting()) {
-            IndexMigration.migrate(this, directoryManager);
+            IndexMigration.migrate(this, directoryManager, '\uFFFF');
         }
     }
 

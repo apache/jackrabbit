@@ -16,23 +16,32 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.FilterIndexReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.TermPositions;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.store.Directory;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.document.Field;
-import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
-import org.slf4j.LoggerFactory;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.FilterIndexReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermPositions;
+import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
-
-import java.io.IOException;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>IndexMigration</code> implements a utility that migrates a Jackrabbit
@@ -55,10 +64,12 @@ public class IndexMigration {
      *
      * @param index the index to check and migration if needed.
      * @param directoryManager the directory manager.
+     * @param oldSeparatorChar the old separator char that needs to be replaced.
      * @throws IOException if an error occurs while migrating the index.
      */
     public static void migrate(PersistentIndex index,
-                               DirectoryManager directoryManager)
+                               DirectoryManager directoryManager,
+                               char oldSeparatorChar)
             throws IOException {
         Directory indexDir = index.getDirectory();
         log.debug("Checking {} ...", indexDir);
@@ -76,7 +87,7 @@ public class IndexMigration {
             TermEnum terms = reader.terms(new Term(FieldNames.PROPERTIES, ""));
             try {
                 Term t = terms.term();
-                if (t.text().indexOf('\uFFFF') == -1) {
+                if (t.text().indexOf(oldSeparatorChar) == -1) {
                     log.debug("Index already migrated");
                     return;
                 }
@@ -102,7 +113,8 @@ public class IndexMigration {
                     IndexWriter.MaxFieldLength.UNLIMITED);
             try {
                 IndexReader r = new MigrationIndexReader(
-                        IndexReader.open(index.getDirectory()));
+                        IndexReader.open(index.getDirectory()),
+                        oldSeparatorChar);
                 try {
                     writer.addIndexes(new IndexReader[]{r});
                     writer.close();
@@ -131,8 +143,11 @@ public class IndexMigration {
      */
     private static class MigrationIndexReader extends FilterIndexReader {
 
-        public MigrationIndexReader(IndexReader in) {
+        private final char oldSepChar;
+
+        public MigrationIndexReader(IndexReader in, char oldSepChar) {
             super(in);
+            this.oldSepChar = oldSepChar;
         }
 
         public Document document(int n, FieldSelector fieldSelector)
@@ -143,7 +158,7 @@ public class IndexMigration {
                 doc.removeFields(FieldNames.PROPERTIES);
                 for (Fieldable field : fields) {
                     String value = field.stringValue();
-                    value = value.replace('\uFFFF', '[');
+                    value = value.replace(oldSepChar, '[');
                     doc.add(new Field(FieldNames.PROPERTIES, value, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
                 }
             }
@@ -151,17 +166,60 @@ public class IndexMigration {
         }
 
         public TermEnum terms() throws IOException {
-            return new MigrationTermEnum(in.terms());
+            List<TermEnum> enums = new ArrayList<TermEnum>();
+            List<String> fieldNames = new ArrayList<String>();
+            for (Object obj : in.getFieldNames(FieldOption.ALL)) {
+                fieldNames.add((String) obj);
+            }
+            Collections.sort(fieldNames);
+            for (String fieldName : fieldNames) {
+                if (fieldName.equals(FieldNames.PROPERTIES)) {
+                    addPropertyTerms(enums);
+                } else {
+                    enums.add(new RangeScan(in, new Term(fieldName, ""), new Term(fieldName, "\uFFFF")));
+                }
+            }
+            return new MigrationTermEnum(new ChainedTermEnum(enums), oldSepChar);
         }
 
         public TermPositions termPositions() throws IOException {
-            return new MigrationTermPositions(in.termPositions());
+            return new MigrationTermPositions(in.termPositions(), oldSepChar);
+        }
+
+        private void addPropertyTerms(List<TermEnum> enums) throws IOException {
+            SortedMap<String, TermEnum> termEnums = new TreeMap<String, TermEnum>(
+                    new Comparator<String>() {
+                        public int compare(String s1, String s2) {
+                            s1 = s1.replace(oldSepChar, '[');
+                            s2 = s2.replace(oldSepChar, '[');
+                            return s1.compareTo(s2);
+                        }
+            });
+            // scan through terms and find embedded field names
+            TermEnum terms = new RangeScan(in,
+                    new Term(FieldNames.PROPERTIES, ""),
+                    new Term(FieldNames.PROPERTIES, "\uFFFF"));
+            String previous = null;
+            while (terms.next()) {
+                Term t = terms.term();
+                String name = t.text().substring(0, t.text().indexOf(oldSepChar) + 1);
+                if (!name.equals(previous)) {
+                    termEnums.put(name, new RangeScan(in,
+                            new Term(FieldNames.PROPERTIES, name),
+                            new Term(FieldNames.PROPERTIES, name + "\uFFFF")));
+                }
+                previous = name;
+            }
+            enums.addAll(termEnums.values());
         }
 
         private static class MigrationTermEnum extends FilterTermEnum {
 
-            public MigrationTermEnum(TermEnum in) {
+            private final char oldSepChar;
+
+            public MigrationTermEnum(TermEnum in, char oldSepChar) {
                 super(in);
+                this.oldSepChar = oldSepChar;
             }
 
             public Term term() {
@@ -171,7 +229,7 @@ public class IndexMigration {
                 }
                 if (t.field().equals(FieldNames.PROPERTIES)) {
                     String text = t.text();
-                    return t.createTerm(text.replace('\uFFFF', '['));
+                    return t.createTerm(text.replace(oldSepChar, '['));
                 } else {
                     return t;
                 }
@@ -184,14 +242,17 @@ public class IndexMigration {
 
         private static class MigrationTermPositions extends FilterTermPositions {
 
-            public MigrationTermPositions(TermPositions in) {
+            private final char oldSepChar;
+
+            public MigrationTermPositions(TermPositions in, char oldSepChar) {
                 super(in);
+                this.oldSepChar = oldSepChar;
             }
 
             public void seek(Term term) throws IOException {
                 if (term.field().equals(FieldNames.PROPERTIES)) {
                     char[] text = term.text().toCharArray();
-                    text[term.text().indexOf('[')] = '\uFFFF';
+                    text[term.text().indexOf('[')] = oldSepChar;
                     super.seek(term.createTerm(new String(text)));
                 } else {
                     super.seek(term);
@@ -204,6 +265,56 @@ public class IndexMigration {
                 } else {
                     super.seek(termEnum);
                 }
+            }
+        }
+    }
+
+    private static final class ChainedTermEnum extends TermEnum {
+
+        private Queue<TermEnum> queue = new LinkedList<TermEnum>();
+
+        public ChainedTermEnum(Collection<TermEnum> enums) {
+            super();
+            queue.addAll(enums);
+        }
+
+        public boolean next() throws IOException {
+            for (;;) {
+                TermEnum terms = queue.peek();
+                if (terms == null) {
+                    // no more enums
+                    break;
+                }
+                if (terms.next()) {
+                    return true;
+                } else {
+                    queue.remove();
+                    terms.close();
+                }
+            }
+            return false;
+        }
+
+        public Term term() {
+            TermEnum terms = queue.peek();
+            if (terms != null) {
+                return terms.term();
+            }
+            return null;
+        }
+
+        public int docFreq() {
+            TermEnum terms = queue.peek();
+            if (terms != null) {
+                return terms.docFreq();
+            }
+            return 0;
+        }
+
+        public void close() throws IOException {
+            // close remaining
+            while (!queue.isEmpty()) {
+                queue.remove().close();
             }
         }
     }
