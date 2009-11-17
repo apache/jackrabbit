@@ -118,7 +118,10 @@ class IndexNodeResolver extends NodeResolver {
                              boolean exact, long maxSize)
             throws RepositoryException {
         StringBuilder stmt = new StringBuilder("/jcr:root");
-        stmt.append(getSearchRoot(ntName));
+        String searchRoot = getSearchRoot(ntName);
+        if (!"/".equals(searchRoot)) {
+            stmt.append(searchRoot);
+        }
         stmt.append("//element(*,");
         stmt.append(getNamePathResolver().getJCRName(ntName));
 
