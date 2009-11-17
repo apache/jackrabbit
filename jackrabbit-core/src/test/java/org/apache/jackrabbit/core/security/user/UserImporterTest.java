@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.config.ImportConfig;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.xml.ProtectedPropertyImporter;
 import org.apache.jackrabbit.core.xml.SessionImporter;
@@ -89,6 +90,8 @@ public class UserImporterTest extends AbstractJCRTest {
     private SessionImpl sImpl;
     private UserManagerImpl umgr;
 
+    private String groupIdToRemove;
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -121,6 +124,14 @@ public class UserImporterTest extends AbstractJCRTest {
             sImpl.getNode(path).remove();
         }
         sImpl.save();
+
+        Authorizable administrators = umgr.getAuthorizable(SecurityConstants.ADMINISTRATORS_NAME);
+        if (administrators == null) {
+            groupIdToRemove = umgr.createGroup(new PrincipalImpl(SecurityConstants.ADMINISTRATORS_NAME)).getID();
+            sImpl.save();
+        } else if (!administrators.isGroup()) {
+            throw new NotExecutableException("Expected " + administrators.getID() + " to be a group.");
+        }
     }
 
     @Override
@@ -135,6 +146,12 @@ public class UserImporterTest extends AbstractJCRTest {
             path = umgr.getGroupsPath() + "/g";
             if (sImpl.nodeExists(path)) {
                 sImpl.getNode(path).remove();
+            }
+            if (groupIdToRemove != null) {
+                Authorizable a = umgr.getAuthorizable(groupIdToRemove);
+                if (a != null) {
+                    a.remove();
+                }
             }
             sImpl.save();
         }
@@ -770,7 +787,7 @@ public class UserImporterTest extends AbstractJCRTest {
             NodeImpl target = (NodeImpl) sImpl.getNode(umgr.getGroupsPath());
             try {
                 doImport(target, xml, UserImporter.ImportBehavior.ABORT);
-                // importbehavior ABORT -> should throw.
+                // import behavior ABORT -> should throw.
                 fail("importing invalid members -> must throw.");
             } catch (SAXException e) {
                 // success as well

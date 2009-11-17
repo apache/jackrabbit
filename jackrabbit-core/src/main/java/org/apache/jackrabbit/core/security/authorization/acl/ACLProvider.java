@@ -56,7 +56,6 @@ import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.Text;
@@ -288,27 +287,25 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 PrincipalManager pMgr = session.getPrincipalManager();
                 AccessControlManager acMgr = session.getAccessControlManager();
 
-                log.debug("... Privilege.ALL for administrators.");
-                Principal administrators;
                 String pName = SecurityConstants.ADMINISTRATORS_NAME;
                 if (pMgr.hasPrincipal(pName)) {
-                    administrators = pMgr.getPrincipal(pName);
+                    Principal administrators = pMgr.getPrincipal(pName);
+                    log.debug("... Privilege.ALL for administrators.");
+                    Privilege[] privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_ALL)};
+                    acl.addAccessControlEntry(administrators, privs);
                 } else {
-                    log.warn("Administrators principal group is missing.");
-                    administrators = new PrincipalImpl(pName);
+                    log.info("Administrators principal group is missing -> omitting initialization of default permissions.");
                 }
-                Privilege[] privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_ALL)};
-                acl.addAccessControlEntry(administrators, privs);
 
                 Principal everyone = pMgr.getEveryone();
                 log.debug("... Privilege.READ for everyone.");
-                privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_READ)};
+                Privilege[] privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_READ)};
                 acl.addAccessControlEntry(everyone, privs);
 
                 editor.setPolicy(rootPath, acl);
                 session.save();
             } else {
-                log.warn("No applicable ACL available for the root node -> skip initialization of the root node's ACL.");
+                log.info("No applicable ACL available for the root node -> skip initialization of the root node's ACL.");
             }
         } catch (RepositoryException e) {
             log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());

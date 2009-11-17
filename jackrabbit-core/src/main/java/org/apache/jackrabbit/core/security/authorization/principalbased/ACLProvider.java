@@ -128,15 +128,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 AccessControlManager acMgr = session.getAccessControlManager();
 
                 // initial default permissions for the administrators group                
-                Principal administrators;
                 String pName = SecurityConstants.ADMINISTRATORS_NAME;
                 if (pMgr.hasPrincipal(pName)) {
-                    administrators = pMgr.getPrincipal(pName);
+                    Principal administrators = pMgr.getPrincipal(pName);
                     installDefaultPermissions(administrators,
                         new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)},
                         restrictions, editor);
                 } else {
-                    log.warn("Administrators principal group is missing -> Not adding default permissions.");
+                    log.info("Administrators principal group is missing -> Not adding default permissions.");
                 }
 
                 // initialize default permissions for the everyone group

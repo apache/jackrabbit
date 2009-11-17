@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.Text;
@@ -232,6 +233,11 @@ public class UserManagerImpl extends ProtectedItemModifier
     private final boolean compatibleJR16;
 
     /**
+     * boolean flag indicating whether the editing session is a system session.
+     */
+    private final boolean isSystemUserManager;
+
+    /**
      * Create a new <code>UserManager</code> with the default configuration.
      *
      * @param session The editing/reading session.
@@ -285,6 +291,17 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
         authResolver = nr;
         authResolver.setSearchRoots(usersPath, groupsPath);
+
+        /**
+         * evaluate if the editing session is a system session. since the
+         * SystemSession class is package protected the session object cannot
+         * be checked for the property instance.
+         * 
+         * workaround: compare the class name and check if the subject contains
+         * the system principal.
+         */
+        isSystemUserManager = "org.apache.jackrabbit.core.SystemSession".equals(session.getClass().getName()) && 
+                !session.getSubject().getPrincipals(SystemPrincipal.class).isEmpty();
     }
     
     /**
@@ -317,7 +334,21 @@ public class UserManagerImpl extends ProtectedItemModifier
         if (id == null || id.length() == 0) {
             throw new IllegalArgumentException("Invalid authorizable name '" + id + "'");
         }
-        return internalGetAuthorizable(id);
+        Authorizable a = internalGetAuthorizable(id);
+        /**
+         * Extra check for the existance of the administrator user that must
+         * always exist.
+         * In case it got removed if must be recreated using a system session.
+         * Since a regular session may lack read permission on the admin-user's
+         * node an explicit test for the current editing session being
+         * a system session is performed.
+         */
+        if (a == null && adminId.equals(id) && isSystemUserManager) {
+            log.info("Admin user does not exist.");
+            a = createAdmin();
+        }
+
+        return a;
     }
 
     /**
@@ -711,6 +742,53 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
+     * Create the administrator user. If the node to be created collides
+     * with an existing node (ItemExistsException) the existing node gets removed
+     * and the admin user node is (re)created.
+     * <p/>
+     * Collision with an existing node may occur under the following circumstances:
+     *
+     * <ul>
+     * <li>The <code>usersPath</code> has been modified in the user manager
+     * configuration after a successful repository start that already created
+     * the administrator user.</li>
+     * <li>The NodeId created by {@link #buildNodeId(String)} by conincidence
+     * collides with another NodeId created during the regular node creation
+     * process.</li>
+     * </ul>
+     *
+     * @param adminId
+     * @param pw
+     * @return
+     * @throws RepositoryException
+     */
+    private User createAdmin() throws RepositoryException {
+        User admin;
+        try {
+            admin = createUser(adminId, adminId);
+            if (!isAutoSave()) {
+                session.save();
+            }
+            log.info("... created admin user with id \'" + adminId + "\' and default pw.");
+        } catch (ItemExistsException e) {
+            NodeImpl conflictingNode = session.getNodeById(buildNodeId(adminId));
+            String conflictPath = conflictingNode.getPath();
+            log.error("Detected conflicting node " + conflictPath + " of node type " + conflictingNode.getPrimaryNodeType().getName() + ".");
+
+            // TODO move conflicting node of type rep:User instead of removing and recreating.
+            conflictingNode.remove();
+            log.info("Removed conflicting node at " + conflictPath);
+
+            admin = createUser(adminId, adminId);
+            if (!isAutoSave()) {
+                session.save();
+            }
+            log.info("Resolved conflict and (re)created admin user with id \'" + adminId + "\' and default pw.");          
+        }
+        return admin;
+    }
+
+    /**
      * Creates a UUID from the given <code>id</code> String that is converted
      * to lower case before.
      *
@@ -1022,7 +1100,6 @@ public class UserManagerImpl extends ProtectedItemModifier
                 folder = createIntermediateFolderNodes(id, escapedId, folder);
             }
 
-            // finally create the authorizable node
             Name nodeName = session.getQName(escapedId);
             Name ntName = (isGroup) ? NT_REP_GROUP : NT_REP_USER;
             NodeId nid = buildNodeId(id);
@@ -1038,11 +1115,20 @@ public class UserManagerImpl extends ProtectedItemModifier
                     // asserts that only rep:authorizable folders exist.
                     // similarly collisions with existing authorizable have been
                     // checked.
-                    String msg = "Failed to create authorizable node: Detected conflicting node of unexpected nodetype '" + colliding.getPrimaryNodeType().getName() + "'.";
+                    String msg = "Failed to create authorizable with id '" + id + "' : Detected conflicting node of unexpected nodetype '" + colliding.getPrimaryNodeType().getName() + "'.";
                     log.error(msg);
                     throw new ConstraintViolationException(msg);
                 }
             }
+
+            // check for collision with existing node outside of the user/group tree
+            if (session.getItemManager().itemExists(nid)) {
+                String msg = "Failed to create authorizable with id '" + id + "' : Detected conflict with existing node (NodeID: " + nid + ")";
+                log.error(msg);
+                throw new ItemExistsException(msg);
+            }
+
+            // finally create the authorizable node
             return addNode((NodeImpl) folder, nodeName, ntName, nid);
         }
 

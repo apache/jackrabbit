@@ -22,7 +22,6 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
-import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
@@ -89,14 +88,13 @@ public class UserPerWorkspaceSecurityManagerTest extends AbstractJCRTest {
         // must therefore succeed.
         Session s = getHelper().getSuperuserSession(altWsp);
         try {
-            // admin/anonymous/administrators must be present
+            // admin/anonymous must be present
             String adminId = ((UserPerWorkspaceSecurityManager) secMgr).adminId;
             assertEquals(adminId, s.getUserID());
 
             UserManager umgr = ((JackrabbitSession) s).getUserManager();
             assertNotNull(umgr.getAuthorizable(adminId));
             assertNotNull(umgr.getAuthorizable(((UserPerWorkspaceSecurityManager) secMgr).anonymousId));
-            assertNotNull(umgr.getAuthorizable(SecurityConstants.ADMINISTRATORS_NAME));
 
         } finally {
             s.logout();

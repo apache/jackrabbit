@@ -470,7 +470,6 @@ public class UserManagerImplTest extends AbstractUserTest {
         }
     }
 
-
     public void testCreateWithRelativePath() throws Exception {
         Principal p = getTestPrincipal();
         String uid = p.getName();

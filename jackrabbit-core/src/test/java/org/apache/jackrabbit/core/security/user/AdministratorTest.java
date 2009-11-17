@@ -18,15 +18,21 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.util.Properties;
 
 /**
  * <code>AdministratorTest</code>...
@@ -55,13 +61,6 @@ public class AdministratorTest extends AbstractUserTest {
         assertTrue(admin.getPrincipal() instanceof AdminPrincipal);
     }
 
-    public void testMemberOfAdministrators() throws RepositoryException {
-        Authorizable admins = userMgr.getAuthorizable(SecurityConstants.ADMINISTRATORS_NAME);
-        if (admins != null && admins.isGroup()) {
-            assertTrue(((Group) admins).isMember(userMgr.getAuthorizable(adminId)));
-        }
-    }
-
     public void testRemoveSelf() throws RepositoryException, NotExecutableException {
         Authorizable admin = userMgr.getAuthorizable(adminId);
         if (admin == null) {
@@ -75,6 +74,13 @@ public class AdministratorTest extends AbstractUserTest {
         }
     }
 
+    /**
+     * Test if the administrator is recreated upon login if the corresponding
+     * node gets removed.
+     *
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     */
     public void testRemoveAdminNode() throws RepositoryException, NotExecutableException {
         Authorizable admin = userMgr.getAuthorizable(adminId);
 
@@ -106,11 +112,11 @@ public class AdministratorTest extends AbstractUserTest {
 
     /**
      * Test for collisions that would prevent from recreate the admin user.
-     * 
+     *
      * @throws RepositoryException
      * @throws NotExecutableException
      */
-    public void testCollidingAdminNode() throws RepositoryException, NotExecutableException {
+    public void testAdminNodeCollidingWithAuthorizableFolder() throws RepositoryException, NotExecutableException {
         Authorizable admin = userMgr.getAuthorizable(adminId);
 
         if (admin == null || !(admin instanceof AuthorizableImpl)) {
@@ -131,7 +137,7 @@ public class AdministratorTest extends AbstractUserTest {
 
         Session s2 = null;
         try {
-            // no create a colliding node:
+            // now create a colliding node:
             parentNode.addNode(adminNodeName, "rep:AuthorizableFolder");
             s.save();
 
@@ -153,6 +159,112 @@ public class AdministratorTest extends AbstractUserTest {
             }
             if (s2 != null) {
                 s2.logout();
+            }
+        }
+    }
+
+    /**
+     * Test if creation of the administrator user forces the removal of some
+     * other node in the repository that by change happens to have the same
+     * jcr:uuid and thus inhibits the creation of the admininstrator user.
+     */
+    public void testAdminNodeCollidingWithRandomNode() throws RepositoryException, NotExecutableException {
+        Authorizable admin = userMgr.getAuthorizable(adminId);
+
+        if (admin == null || !(admin instanceof AuthorizableImpl)) {
+            throw new NotExecutableException();
+        }
+
+        // access the node corresponding to the admin user and remove it
+        NodeImpl adminNode = ((AuthorizableImpl) admin).getNode();
+        NodeId nid = adminNode.getNodeId();
+        String adminPath = adminNode.getPath();
+
+        Session s = adminNode.getSession();
+        adminNode.remove();
+        // use session obtained from the node as usermgr may point to a dedicated
+        // system workspace different from the superusers workspace.
+        s.save();
+
+        Session s2 = null;
+        String collidingPath = null;
+        try {
+            // create a colliding node outside of the user tree
+            NameResolver nr = (SessionImpl) s;
+            NodeImpl tr = (NodeImpl) s.getRootNode();
+            Node n = tr.addNode(nr.getQName(nodeName1), nr.getQName(testNodeType), nid);
+            collidingPath = n.getPath();
+            s.save();
+
+            // force recreation of admin user.
+            s2 = getHelper().getSuperuserSession();
+
+            admin = userMgr.getAuthorizable(adminId);
+            assertNotNull(admin);
+            // the colliding node must have been removed.
+            assertFalse(s2.nodeExists(collidingPath));
+
+        } finally {
+            if (s2 != null) {
+                s2.logout();
+            }
+            if (collidingPath != null && s.nodeExists(collidingPath)) {
+                s.getNode(collidingPath).remove();
+                s.save();
+            }
+        }
+    }
+
+    /**
+     * Reconfiguration of the user-root-path will result in node collision
+     * upon initialization of the built-in repository users. Test if the
+     * UserManagerImpl in this case removes the colliding admin-user node.
+     */
+    public void testChangeUserRootPath() throws RepositoryException, NotExecutableException {
+        Authorizable admin = userMgr.getAuthorizable(adminId);
+
+        if (admin == null || !(admin instanceof AuthorizableImpl)) {
+            throw new NotExecutableException();
+        }
+
+        // access the node corresponding to the admin user and remove it
+        NodeImpl adminNode = ((AuthorizableImpl) admin).getNode();
+        NodeId nid = adminNode.getNodeId();
+        Name nName = adminNode.getQName();
+        Name ntName = ((NodeTypeImpl) adminNode.getPrimaryNodeType()).getQName();
+
+        Session s = adminNode.getSession();
+        adminNode.remove();
+        // use session obtained from the node as usermgr may point to a dedicated
+        // system workspace different from the superusers workspace.
+        s.save();
+
+        Session s2 = null;
+        String collidingPath = null;
+        try {
+            // create a colliding user node outside of the user tree
+            Properties props = new Properties();
+            props.setProperty("usersPath", "/testPath");
+            UserManager um = new UserManagerImpl((SessionImpl) s, adminId, props);
+            User collidingUser = um.createUser(adminId, adminId);
+            collidingPath = ((AuthorizableImpl) collidingUser).getNode().getPath();
+            s.save();
+
+            // force recreation of admin user.
+            s2 = getHelper().getSuperuserSession();
+
+            admin = userMgr.getAuthorizable(adminId);
+            assertNotNull(admin);
+            // the colliding node must have been removed.
+            assertFalse(s2.nodeExists(collidingPath));
+
+        } finally {
+            if (s2 != null) {
+                s2.logout();
+            }
+            if (collidingPath != null && s.nodeExists(collidingPath)) {
+                s.getNode(collidingPath).remove();
+                s.save();
             }
         }
     }
