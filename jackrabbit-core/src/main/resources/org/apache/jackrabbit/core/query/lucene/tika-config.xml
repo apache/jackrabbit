@@ -112,18 +112,6 @@
       <mime>application/x-vnd.oasis.opendocument.formula-template</mime>
     </parser>
 
-    <parser name="parse-image" class="org.apache.tika.parser.image.ImageParser">
-      <mime>image/bmp</mime>
-      <mime>image/gif</mime>
-      <mime>image/jpeg</mime>
-      <mime>image/png</mime>
-      <mime>image/tiff</mime>
-      <mime>image/vnd.wap.wbmp</mime>
-      <mime>image/x-icon</mime>
-      <mime>image/x-psd</mime>
-      <mime>image/x-xcf</mime>
-    </parser>
-
     <parser name="parse-class" class="org.apache.tika.parser.asm.ClassParser">
       <mime>application/x-tika-java-class</mime>
     </parser>
