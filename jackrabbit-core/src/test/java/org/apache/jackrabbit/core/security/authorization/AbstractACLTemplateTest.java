@@ -66,6 +66,8 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
 
     protected abstract JackrabbitAccessControlList createEmptyTemplate(String path) throws RepositoryException;
 
+    protected abstract Principal getSecondPrincipal() throws Exception;
+
     public void testEmptyTemplate() throws RepositoryException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
 
@@ -256,6 +258,65 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
                 }
             });
             fail("Attemt to remove a non-existing, custom ACE must throw AccessControlException.");
+        } catch (AccessControlException e) {
+            // success
+        }
+    }
+
+    public void testReorder() throws Exception {
+        Privilege[] read = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] write = privilegesFromName(Privilege.JCR_WRITE);
+
+        Principal p2 = getSecondPrincipal();
+
+        AbstractACLTemplate acl = (AbstractACLTemplate) createEmptyTemplate(getTestPath());
+        acl.addAccessControlEntry(testPrincipal, read);
+        acl.addEntry(testPrincipal, write, false);
+        acl.addAccessControlEntry(p2, write);
+
+        AccessControlEntry[] entries = acl.getAccessControlEntries();
+
+        assertEquals(3, entries.length);
+        AccessControlEntry aReadTP = entries[0];
+        AccessControlEntry dWriteTP = entries[1];
+        AccessControlEntry aWriteP2 = entries[2];
+
+        // reorder aWriteP2 to the first position
+        acl.orderBefore(aWriteP2, aReadTP);
+        assertEquals(0, acl.getEntries().indexOf(aWriteP2));
+        assertEquals(1, acl.getEntries().indexOf(aReadTP));
+        assertEquals(2, acl.getEntries().indexOf(dWriteTP));
+
+        // reorder aReadTP to the end of the list
+        acl.orderBefore(aReadTP, null);
+        assertEquals(0, acl.getEntries().indexOf(aWriteP2));
+        assertEquals(1, acl.getEntries().indexOf(dWriteTP));
+        assertEquals(2, acl.getEntries().indexOf(aReadTP));
+    }
+
+    public void testReorderInvalidElements() throws Exception {
+        Privilege[] read = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] write = privilegesFromName(Privilege.JCR_WRITE);
+
+        Principal p2 = getSecondPrincipal();
+
+        AbstractACLTemplate acl = (AbstractACLTemplate) createEmptyTemplate(getTestPath());
+        acl.addAccessControlEntry(testPrincipal, read);
+        acl.addAccessControlEntry(p2, write);
+
+        AbstractACLTemplate acl2 = (AbstractACLTemplate) createEmptyTemplate(getTestPath());
+        acl2.addEntry(testPrincipal, write, false);
+
+        AccessControlEntry invalid = acl2.getEntries().get(0);
+        try {
+            acl.orderBefore(invalid, acl.getEntries().get(0));
+            fail("src entry not contained in list -> reorder should fail.");
+        } catch (AccessControlException e) {
+            // success
+        }
+        try {
+            acl.orderBefore(acl.getEntries().get(0), invalid);
+            fail("dest entry not contained in list -> reorder should fail.");
         } catch (AccessControlException e) {
             // success
         }

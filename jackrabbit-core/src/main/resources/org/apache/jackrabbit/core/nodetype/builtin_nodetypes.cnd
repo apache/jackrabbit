@@ -558,6 +558,7 @@
   abstract
 
 [rep:ACL] > rep:Policy
+  orderable
   + * (rep:ACE) = rep:GrantACE protected IGNORE
 
 [rep:ACE]

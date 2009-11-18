@@ -167,7 +167,14 @@ class ACLTemplate extends AbstractACLTemplate {
             throw new AccessControlException("Missing mandatory restriction: " + jcrNodePathName);
         }
     }
-    
+
+    /**
+     * @see org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate#getEntries() 
+     */
+    protected List<? extends AccessControlEntry> getEntries() {
+        return entries;
+    }
+
     //----------------------------------------< JackrabbitAccessControlList >---
     /**
      * @see JackrabbitAccessControlList#getRestrictionNames()

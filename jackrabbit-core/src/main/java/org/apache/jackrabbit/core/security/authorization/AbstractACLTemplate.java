@@ -19,20 +19,27 @@ package org.apache.jackrabbit.core.security.authorization;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
+import java.util.List;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
+import javax.jcr.security.AccessControlEntry;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AbstractACLTemplate</code>...
  */
 public abstract class AbstractACLTemplate implements JackrabbitAccessControlList,
         AccessControlConstants {
+
+    private static Logger log = LoggerFactory.getLogger(AbstractACLTemplate.class);
 
     /**
      * Path of the node this ACL template has been created for.
@@ -65,6 +72,17 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
                                             boolean isAllow,
                                             Map<String, Value> restrictions) throws AccessControlException;
 
+    /**
+     * Return the list of entries, if they are held in a orderable list.
+     *
+     * @return the list of entries.
+     * @throws UnsupportedRepositoryOperationException If the implementation
+     * does not held the entries in a list.
+     * @throws RepositoryException
+     * @see #orderBefore(AccessControlEntry, AccessControlEntry)
+     */
+    protected abstract List<? extends AccessControlEntry> getEntries() throws UnsupportedRepositoryOperationException, RepositoryException;
+
     //--------------------------------------< JackrabbitAccessControlPolicy >---
     /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy#getPath()
@@ -82,6 +100,34 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
         return addEntry(principal, privileges, isAllow, Collections.<String, Value>emptyMap());
     }
 
+    /**
+     *
+     * @param srcEntry The access control entry to be moved within the list.
+     * @param destEntry The entry before which the <code>srcEntry</code> will be moved.
+     * @throws AccessControlException
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     */
+    public void orderBefore(AccessControlEntry srcEntry, AccessControlEntry destEntry) throws AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        if (srcEntry.equals(destEntry)) {
+            log.debug("srcEntry equals destEntry -> no reordering required.");
+            return;
+        }
+
+        List entries = getEntries();
+        int index = (destEntry == null) ? entries.size()-1 : entries.indexOf(destEntry);
+        if (index < 0) {
+            throw new AccessControlException("destEntry not contained in this AccessControlList");
+        } else {
+            if (entries.remove(srcEntry)) {
+                // re-insert the srcEntry at the new position.
+                entries.add(index, srcEntry);
+            } else {
+                // src entry not contained in this list.
+                throw new AccessControlException("srcEntry not contained in this AccessControlList");
+            }
+        }
+    }
 
     //--------------------------------------------------< AccessControlList >---
     /**

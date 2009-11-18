@@ -18,10 +18,12 @@ package org.apache.jackrabbit.api.security;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
+import javax.jcr.security.AccessControlEntry;
 import java.security.Principal;
 import java.util.Map;
 
@@ -112,4 +114,22 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
     boolean addEntry(Principal principal, Privilege[] privileges,
                      boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException;
+
+    /**
+     * If the <code>AccessControlList</code> implementation supports
+     * reordering of entries the specified <code>srcEntry</code> is inserted
+     * at the position of the specified <code>destEntry</code>.<p/>
+     * If <code>destEntry</code> is <code>null</code> the entry is moved to the
+     * end of the list.<p/>
+     * If srcChildRelPath and destChildRelPath are the same no changes are made.
+     * 
+     * @param srcEntry The access control entry to be moved within the list.
+     * @param destEntry The entry before which the <code>srcEntry</code> will be moved.
+     * @throws AccessControlException If any of the given entries is invalid or
+     * cannot be handled by the implementation.
+     * @throws UnsupportedRepositoryOperationException If ordering is not supported.
+     * @throws RepositoryException If another error occurs.
+     */
+    void orderBefore(AccessControlEntry srcEntry, AccessControlEntry destEntry)
+            throws AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
 }
