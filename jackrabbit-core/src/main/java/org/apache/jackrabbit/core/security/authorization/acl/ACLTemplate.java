@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.authorization.acl;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,9 +47,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of the {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList} interface that
- * is detached from the effective access control content. Consequently, any
- * modifications applied to this ACL only take effect, if the policy gets
+ * Implementation of the
+ * {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList}
+ * interface that is detached from the effective access control content.
+ * Consequently, any modifications applied to this ACL only take effect, if
+ * the policy gets
  * {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy) reapplied}
  * to the <code>AccessControlManager</code> and the changes are saved.
  */
@@ -59,11 +60,10 @@ class ACLTemplate extends AbstractACLTemplate {
     private static final Logger log = LoggerFactory.getLogger(ACLTemplate.class);
 
     /**
-     * Map containing the entries of this ACL Template using the principal
-     * name as key. The value represents a List containing maximal one grant
-     * and one deny ACE per principal.
+     * List containing the entries of this ACL Template with maximal one
+     * grant and one deny ACE per principal.
      */
-    private final Map<String, List<Entry>> entries = new LinkedHashMap<String, List<Entry>>();
+    private final List<Entry> entries = new ArrayList<Entry>();
 
     /**
      * The principal manager used for validation checks
@@ -140,57 +140,54 @@ class ACLTemplate extends AbstractACLTemplate {
         }
     }
 
-    private List<? extends AccessControlEntry> internalGetEntries() {
-        List<Entry> l = new ArrayList<Entry>();
-        for (List<Entry> o : entries.values()) {
-            l.addAll(o);
-        }
-        return l;
-    }
-
     private List<Entry> internalGetEntries(Principal principal) {
         String principalName = principal.getName();
-        if (entries.containsKey(principalName)) {
-            return entries.get(principalName);
-        } else {
-            return new ArrayList<Entry>(2);
+        List entriesPerPrincipal = new ArrayList(2);
+        for (Entry entry : entries) {
+            if (principalName.equals(entry.getPrincipal().getName())) {
+                entriesPerPrincipal.add(entry);
+            }
         }
+        return entriesPerPrincipal;
     }
 
     private synchronized boolean internalAdd(Entry entry) throws AccessControlException {
         Principal principal = entry.getPrincipal();
-        List<Entry> l = internalGetEntries(principal);
-        if (l.isEmpty()) {
-            // simple case: just add the new entry
-            l.add(entry);
-            entries.put(principal.getName(), l);
+        List<Entry> entriesPerPrincipal = internalGetEntries(principal);
+        if (entriesPerPrincipal.isEmpty()) {
+            // simple case: just add the new entry at the end of the list.
+            entries.add(entry);
             return true;
         } else {
-            if (l.contains(entry)) {
+            if (entriesPerPrincipal.contains(entry)) {
                 // the same entry is already contained -> no modification
                 return false;
             }
             // check if need to adjust existing entries
+            int updateIndex = -1;
             Entry complementEntry = null;
-            Entry[] entries = l.toArray(new Entry[l.size()]);
-            for (int i = 0; i < entries.length; i++) {
-                if (entry.isAllow() == entries[i].isAllow()) {
-                    int existingPrivs = entries[i].getPrivilegeBits();
+
+            for (Entry e : entriesPerPrincipal) {
+                if (entry.isAllow() == e.isAllow()) {
+                    int existingPrivs = e.getPrivilegeBits();
                     if ((existingPrivs | ~entry.getPrivilegeBits()) == -1) {
                         // all privileges to be granted/denied are already present
                         // in the existing entry -> not modified
                         return false;
                     }
 
+                    // remember the index of the existing entry to be updated later on.
+                    updateIndex = entries.indexOf(e);
+
                     // remove the existing entry and create a new that includes
                     // both the new privileges and the existing ones.
-                    l.remove(i);
-                    int mergedBits = entries[i].getPrivilegeBits() | entry.getPrivilegeBits();
+                    entries.remove(e);
+                    int mergedBits = e.getPrivilegeBits() | entry.getPrivilegeBits();
                     Privilege[] mergedPrivs = privilegeRegistry.getPrivileges(mergedBits);
                     // omit validation check.
                     entry = new Entry(entry.getPrincipal(), mergedPrivs, entry.isAllow(), valueFactory);
                 } else {
-                    complementEntry = entries[i];
+                    complementEntry = e;
                 }
             }
 
@@ -198,22 +195,34 @@ class ACLTemplate extends AbstractACLTemplate {
             // grant/deny the same privileges -> remove privileges that are now
             // denied/granted.
             if (complementEntry != null) {
+
                 int complPrivs = complementEntry.getPrivilegeBits();
                 int resultPrivs = Permission.diff(complPrivs, entry.getPrivilegeBits());
+
                 if (resultPrivs == PrivilegeRegistry.NO_PRIVILEGE) {
-                    l.remove(complementEntry);
+                    // remove the complement entry as the new entry covers
+                    // all privileges granted by the existing entry.
+                    entries.remove(complementEntry);
+                    updateIndex--;
+                    
                 } else if (resultPrivs != complPrivs) {
-                    l.remove(complementEntry);
-                    // omit validation check
+                    // replace the existing entry having the privileges adjusted
+                    int index = entries.indexOf(complementEntry);
+                    entries.remove(complementEntry);
                     Entry tmpl = new Entry(entry.getPrincipal(),
                             privilegeRegistry.getPrivileges(resultPrivs),
                             !entry.isAllow(), valueFactory);
-                    l.add(tmpl);
+                    entries.add(index, tmpl);
                 } /* else: does not need to be modified.*/
             }
 
-            // finally add the new entry at the end.
-            l.add(entry);
+            // finally update the existing entry or add the new entry passed
+            // to this method at the end.
+            if (updateIndex < 0) {
+                entries.add(entry);
+            } else {
+                entries.add(updateIndex, entry);
+            }
             return true;
         }
     }
@@ -236,12 +245,19 @@ class ACLTemplate extends AbstractACLTemplate {
         }
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate#getEntries()
+     */
+    protected List<? extends AccessControlEntry> getEntries() {
+        return entries;
+    }
+
     //--------------------------------------------------< AccessControlList >---
     /**
      * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
      */
     public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {
-        List<? extends AccessControlEntry> l = internalGetEntries();
+        List<? extends AccessControlEntry> l = getEntries();
         return l.toArray(new AccessControlEntry[l.size()]);
     }
 
@@ -253,11 +269,8 @@ class ACLTemplate extends AbstractACLTemplate {
         if (!(ace instanceof Entry)) {
             throw new AccessControlException("Invalid AccessControlEntry implementation " + ace.getClass().getName() + ".");
         }
-        List<Entry> l = internalGetEntries(ace.getPrincipal());
-        if (l.remove(ace)) {
-            if (l.isEmpty()) {
-                entries.remove(ace.getPrincipal().getName());
-            }
+        if (entries.contains(ace)) {
+            entries.remove(ace);
         } else {
             throw new AccessControlException("AccessControlEntry " + ace + " cannot be removed from ACL defined at " + getPath());
         }
@@ -294,7 +307,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
      */
     public int size() {
-        return internalGetEntries().size();
+        return getEntries().size();
     }
 
     /**

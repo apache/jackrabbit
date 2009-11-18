@@ -130,12 +130,16 @@ public class UnmodifiableAccessControlList implements JackrabbitAccessControlLis
         return accessControlEntries.length;
     }
 
-    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow) throws AccessControlException, RepositoryException {
-        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getApplicablePolicies in order to obtain an modifiable ACL.");
+    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow) throws AccessControlException {
+        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getPolicy or #getApplicablePolicies in order to obtain an modifiable ACL.");
     }
 
-    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws AccessControlException, RepositoryException {
-        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getApplicablePolicies in order to obtain an modifiable ACL.");
+    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws AccessControlException {
+        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getPolicy or #getApplicablePolicies in order to obtain an modifiable ACL.");
+    }
+
+    public void orderBefore(AccessControlEntry srcEntry, AccessControlEntry destEntry) throws AccessControlException {
+        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getPolicy or #getApplicablePolicy in order to obtain a modifiable ACL.");
     }
 
     public String getPath() {

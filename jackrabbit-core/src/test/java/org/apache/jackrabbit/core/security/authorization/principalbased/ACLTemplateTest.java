@@ -25,6 +25,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.util.Arrays;
 import java.util.List;
+import java.security.Principal;
 
 /**
  * <code>ACLTemplateTest</code>...
@@ -40,6 +41,10 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     protected JackrabbitAccessControlList createEmptyTemplate(String testPath)
             throws RepositoryException {
         return new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser, superuser.getValueFactory());
+    }
+
+    protected Principal getSecondPrincipal() throws Exception {
+        return testPrincipal;
     }
 
     public void testGetRestrictionNames() throws RepositoryException {

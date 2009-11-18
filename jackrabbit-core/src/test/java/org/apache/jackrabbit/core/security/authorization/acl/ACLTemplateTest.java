@@ -18,11 +18,13 @@ package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
@@ -32,11 +34,14 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * <code>ACLTemplateTest</code>...
  */
 public class ACLTemplateTest extends AbstractACLTemplateTest {
+
+    private Map<String, Value> restrictions = Collections.<String, Value>emptyMap();
 
     protected String getTestPath() {
         return "/ab/c/d";
@@ -49,10 +54,14 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         return new ACLTemplate(path, princicipalMgr, privilegeRegistry, sImpl.getValueFactory());
     }
 
+    protected Principal getSecondPrincipal() throws Exception {
+        return pMgr.getEveryone();
+    }
+
     public void testMultipleEntryEffect() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
-        pt.addEntry(testPrincipal, privileges, true, Collections.<String, Value>emptyMap());
+        pt.addEntry(testPrincipal, privileges, true, restrictions);
 
         // new entry extends privileges.
         privileges = privilegesFromNames(new String[] {
@@ -60,7 +69,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
                 Privilege.JCR_ADD_CHILD_NODES});
         assertTrue(pt.addEntry(testPrincipal,
                 privileges,
-                true, Collections.<String, Value>emptyMap()));
+                true, restrictions));
 
         // net-effect: only a single allow-entry with both privileges
         assertTrue(pt.size() == 1);
@@ -68,14 +77,14 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
 
         // adding just ADD_CHILD_NODES -> must not remove READ privilege
         Privilege[] achPrivs = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
-        assertFalse(pt.addEntry(testPrincipal, achPrivs, true, Collections.<String, Value>emptyMap()));
+        assertFalse(pt.addEntry(testPrincipal, achPrivs, true, restrictions));
         // net-effect: only a single allow-entry with add_child_nodes + read privilege
         assertTrue(pt.size() == 1);
         assertSamePrivileges(privileges, pt.getAccessControlEntries()[0].getPrivileges());
 
         // revoke the 'READ' privilege
         privileges = privilegesFromName(Privilege.JCR_READ);
-        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.<String, Value>emptyMap()));
+        assertTrue(pt.addEntry(testPrincipal, privileges, false, restrictions));
         // net-effect: 2 entries one allowing ADD_CHILD_NODES, the other denying READ
         assertTrue(pt.size() == 2);
         assertSamePrivileges(privilegesFromName(Privilege.JCR_ADD_CHILD_NODES),
@@ -160,13 +169,113 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
 
-        pt.addEntry(testPrincipal, privileges, true, Collections.<String, Value>emptyMap());
+        pt.addEntry(testPrincipal, privileges, true, restrictions);
 
         // same entry but with revers 'isAllow' flag
-        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.<String, Value>emptyMap()));
+        assertTrue(pt.addEntry(testPrincipal, privileges, false, restrictions));
 
         // net-effect: only a single deny-read entry
-        assertTrue(pt.size() == 1);
+        assertEquals(1, pt.size());
         assertSamePrivileges(privileges, pt.getAccessControlEntries()[0].getPrivileges());
+    }
+
+    public void testUpdateEntry() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+
+        Privilege[] readPriv = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
+
+        Principal principal2 = pMgr.getEveryone();
+
+        pt.addEntry(testPrincipal, readPriv, true, restrictions);
+        pt.addEntry(principal2, readPriv, true, restrictions);
+        pt.addEntry(testPrincipal, writePriv, false, restrictions);
+
+        // adding an entry that should update the existing allow-entry for everyone.
+        pt.addEntry(principal2, writePriv, true, restrictions);
+
+        AccessControlEntry[] entries = pt.getAccessControlEntries();
+        assertEquals(3, entries.length);
+        JackrabbitAccessControlEntry princ2AllowEntry = (JackrabbitAccessControlEntry) entries[1];
+        assertEquals(principal2, princ2AllowEntry.getPrincipal());
+        assertTrue(princ2AllowEntry.isAllow());
+        assertSamePrivileges(new Privilege[] {readPriv[0], writePriv[0]}, princ2AllowEntry.getPrivileges());
+    }
+
+    public void testUpdateComplementaryEntry() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+
+        Privilege[] readPriv = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
+        Principal principal2 = pMgr.getEveryone();
+
+        pt.addEntry(testPrincipal, readPriv, true, restrictions);
+        pt.addEntry(principal2, readPriv, true, restrictions);
+        pt.addEntry(testPrincipal, writePriv, false, restrictions);
+        pt.addEntry(principal2, writePriv, true, restrictions);
+        // entry complementary to the first entry
+        // -> must remove the allow-READ entry and update the deny-WRITE entry.
+        pt.addEntry(testPrincipal, readPriv, false, restrictions);
+
+        AccessControlEntry[] entries = pt.getAccessControlEntries();
+
+        assertEquals(2, entries.length);
+
+        JackrabbitAccessControlEntry first = (JackrabbitAccessControlEntry) entries[0];
+        assertEquals(principal2, first.getPrincipal());
+
+        JackrabbitAccessControlEntry second = (JackrabbitAccessControlEntry) entries[1];
+        assertEquals(testPrincipal, second.getPrincipal());
+        assertFalse(second.isAllow());
+        assertSamePrivileges(new Privilege[] {readPriv[0], writePriv[0]}, second.getPrivileges());
+    }
+
+    public void testTwoEntriesPerPrincipal() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+
+        Privilege[] readPriv = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
+        Privilege[] acReadPriv = privilegesFromName(Privilege.JCR_READ_ACCESS_CONTROL);
+
+        pt.addEntry(testPrincipal, readPriv, true, restrictions);
+        pt.addEntry(testPrincipal, writePriv, true, restrictions);
+        pt.addEntry(testPrincipal, acReadPriv, true, restrictions);
+
+        pt.addEntry(testPrincipal, readPriv, false, restrictions);
+        pt.addEntry(new PrincipalImpl(testPrincipal.getName()), readPriv, false, restrictions);
+        pt.addEntry(new Principal() {
+            public String getName() {
+                return testPrincipal.getName();
+            }
+        }, readPriv, false, restrictions);
+
+        AccessControlEntry[] entries = pt.getAccessControlEntries();
+        assertEquals(2, entries.length);
+    }
+
+    /**
+     * Test if new entries get appended at the end of the list.
+     *
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     */
+    public void testNewEntriesAppendedAtEnd() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+
+        Privilege[] readPriv = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
+
+        pt.addEntry(testPrincipal, readPriv, true, restrictions);
+        pt.addEntry(pMgr.getEveryone(), readPriv, true, restrictions);
+        pt.addEntry(testPrincipal, writePriv, false, restrictions);
+
+        AccessControlEntry[] entries = pt.getAccessControlEntries();
+
+        assertEquals(3, entries.length);
+
+        JackrabbitAccessControlEntry last = (JackrabbitAccessControlEntry) entries[2];
+        assertEquals(testPrincipal, last.getPrincipal());
+        assertEquals(false, last.isAllow());
+        assertEquals(writePriv[0], last.getPrivileges()[0]);
     }
 }
