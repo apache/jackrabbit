@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-beta2
+Release Notes -- Apache Jackrabbit -- Version 2.0-beta3
 
 Introduction
 ------------
