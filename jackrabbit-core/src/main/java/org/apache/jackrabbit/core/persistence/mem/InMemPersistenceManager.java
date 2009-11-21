@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
+import org.apache.jackrabbit.core.fs.mem.MemoryFileSystem;
 import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
@@ -290,14 +291,14 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
 
         wspFS = context.getFileSystem();
 
-        /**
-         * store BLOB data in local file system in a sub directory
-         * of the workspace home directory
-         */
-        LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setRoot(new File(context.getHomeDir(), "blobs"));
+        // Choose a FileSystem for the BlobStore based on whether data is persistent or not 
+        if (persistent) {
+            blobFS = new LocalFileSystem();
+            ((LocalFileSystem) blobFS).setRoot(new File(context.getHomeDir(), "blobs"));
+        } else {
+            blobFS = new MemoryFileSystem();
+        }
         blobFS.init();
-        this.blobFS = blobFS;
         blobStore = new FileSystemBLOBStore(blobFS);
 
         if (persistent) {
