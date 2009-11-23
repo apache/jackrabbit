@@ -113,7 +113,7 @@
     </parser>
 
     <parser name="parse-class" class="org.apache.tika.parser.asm.ClassParser">
-      <mime>application/x-tika-java-class</mime>
+      <mime>application/java-vm</mime>
     </parser>
 
     <parser name="parse-mp3" class="org.apache.tika.parser.mp3.Mp3Parser">
@@ -129,6 +129,14 @@
       <mime>audio/basic</mime>
       <mime>audio/x-wav</mime>
       <mime>audio/x-aiff</mime>
+    </parser>
+
+    <parser name="parse-mbox" class="org.apache.tika.parser.mbox.MboxParser">
+      <mime>application/mbox</mime>
+    </parser>
+
+    <parser name="parse-epub" class="org.apache.tika.parser.epub.EpubParser">
+      <mime>application/epub+zip</mime>
     </parser>
 
   </parsers>

@@ -42,7 +42,7 @@
   <properties>
     <slf4j.version>1.5.3</slf4j.version>
     <jetty.version>6.1.14</jetty.version>
-    <tika.version>0.4</tika.version>
+    <tika.version>0.5</tika.version>
   </properties>
 
   <build>

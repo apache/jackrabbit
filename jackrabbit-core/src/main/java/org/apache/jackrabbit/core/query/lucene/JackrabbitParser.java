@@ -26,11 +26,12 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.html.HtmlParser;
 import org.apache.tika.parser.image.ImageParser;
 import org.apache.tika.parser.microsoft.OfficeParser;
-import org.apache.tika.parser.opendocument.OpenOfficeParser;
+import org.apache.tika.parser.odf.OpenDocumentParser;
 import org.apache.tika.parser.pdf.PDFParser;
 import org.apache.tika.parser.rtf.RTFParser;
 import org.apache.tika.parser.txt.TXTParser;
@@ -136,7 +137,7 @@ class JackrabbitParser implements Parser {
                 parsers.put("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", parser);
             } else if (name.equals(
                     "org.apache.jackrabbit.extractor.OpenOfficeTextExtractor")) {
-                Parser parser = new OpenOfficeParser();
+                Parser parser = new OpenDocumentParser();
                 parsers.put("application/vnd.oasis.opendocument.database", parser);
                 parsers.put("application/vnd.oasis.opendocument.formula", parser);
                 parsers.put("application/vnd.oasis.opendocument.graphics", parser);
@@ -181,10 +182,17 @@ class JackrabbitParser implements Parser {
      * Delegates the call to the configured {@link AutoDetectParser}.
      */
     public void parse(
-            InputStream stream, ContentHandler handler, Metadata metadata)
+            InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context)
             throws IOException, SAXException, TikaException {
         waitIfBlocked();
-        parser.parse(stream, handler, metadata);
+        parser.parse(stream, handler, metadata, context);
+    }
+
+    public void parse(
+            InputStream stream, ContentHandler handler, Metadata metadata)
+            throws IOException, SAXException, TikaException {
+        parser.parse(stream, handler, metadata, new ParseContext());
     }
 
     /**
