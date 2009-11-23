@@ -604,7 +604,7 @@
 [rep:Group] > rep:Authorizable
   - rep:members (WEAKREFERENCE) protected multiple < 'rep:Authorizable'
 
-[rep:AuthorizableFolder] > mix:referenceable, nt:hierarchyNode
+[rep:AuthorizableFolder] > nt:hierarchyNode
   + * (rep:Authorizable) = rep:User VERSION
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder VERSION
   
