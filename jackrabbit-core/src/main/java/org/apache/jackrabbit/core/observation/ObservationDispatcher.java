@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Dispatcher for dispatching events to listeners within a single workspace.
@@ -44,6 +45,16 @@ public final class ObservationDispatcher extends EventDispatcher
      * Dummy DispatchAction indicating the notification thread to end
      */
     private static final DispatchAction DISPOSE_MARKER = new DispatchAction(null, null);
+
+    /**
+     * The maximum number of queued asynchronous events. To avoid of of memory
+     * problems, the default value is 200'000. To change the default, set the
+     * system property jackrabbit.maxQueuedEvents to the required value. If more
+     * events are in the queue, the current thread waits, unless the current thread is
+     * the observation dispatcher itself (in which case only a warning is logged
+     * - usually observation listeners shouldn't cause new events).
+     */
+    private static final int MAX_QUEUED_EVENTS = Integer.parseInt(System.getProperty("jackrabbit.maxQueuedEvents", "200000"));
 
     /**
      * Currently active <code>EventConsumer</code>s for notification.
@@ -76,10 +87,14 @@ public final class ObservationDispatcher extends EventDispatcher
     private Buffer eventQueue
             = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
 
+    private AtomicInteger eventQueueSize = new AtomicInteger();
+
     /**
      * The background notification thread
      */
     private Thread notificationThread;
+
+    private long lastError;
 
     /**
      * Creates a new <code>ObservationDispatcher</code> instance
@@ -137,6 +152,7 @@ public final class ObservationDispatcher extends EventDispatcher
         DispatchAction action;
         while ((action = (DispatchAction) eventQueue.remove()) != DISPOSE_MARKER) {
 
+            eventQueueSize.getAndAdd(-action.getEventStates().size());
             log.debug("got EventStateCollection");
             log.debug("event delivery to " + action.getEventConsumers().size() + " consumers started...");
             for (Iterator<EventConsumer> it = action.getEventConsumers().iterator(); it.hasNext();) {
@@ -202,6 +218,33 @@ public final class ObservationDispatcher extends EventDispatcher
             }
         }
         eventQueue.add(new DispatchAction(events, getAsynchronousConsumers()));
+        int size = eventQueueSize.addAndGet(events.size());
+        if (size > MAX_QUEUED_EVENTS) {
+            boolean logWarning = false;
+            long now = System.currentTimeMillis();
+            // log a warning at most every 5 seconds (to avoid filling the log file)
+            if (lastError == 0 || now > lastError + 5000) {
+                logWarning = true;
+                log.warn("More than " + MAX_QUEUED_EVENTS + " events in the queue", new Exception("Stack Trace"));
+                lastError = now;
+            }
+            if (Thread.currentThread() == notificationThread) {
+                if (logWarning) {
+                    log.warn("Recursive notification?");
+                }
+            } else {
+                if (logWarning) {
+                    log.warn("Waiting");
+                }
+                while (eventQueueSize.get() > MAX_QUEUED_EVENTS) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
+                }
+            }
+        }
     }
 
     /**
