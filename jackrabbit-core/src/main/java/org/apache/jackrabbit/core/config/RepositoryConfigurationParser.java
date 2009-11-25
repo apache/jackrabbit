@@ -186,7 +186,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * Element specifying the class of principals used to retrieve the userID
      * in the 'class' attribute.
      */
-    private static final String USERID_CLASS = "UserIdClass";
+    private static final String USERID_CLASS_ELEMENT = "UserIdClass";
 
     /**
      * Name of the optional XmlImport config entry inside the workspace configuration.
@@ -370,7 +370,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             }
 
             BeanConfig uidcc = null;
-            element = getElement(smElement, USERID_CLASS, false);
+            element = getElement(smElement, USERID_CLASS_ELEMENT, false);
             if (element != null) {
                 uidcc = parseBeanConfig(element);
             }
@@ -593,8 +593,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
 
     /**
-     * Read the WorkspaceSecurity Element of Workspace's configuration. It uses
-     * the following format:
+     * Read the optional WorkspaceSecurity Element of Workspace's configuration.
+     * It uses the following format:
      * <pre>
      *   &lt;WorkspaceSecurity&gt;
      *     &lt;AccessControlProvider class="..." (optional)&gt;
@@ -602,7 +602,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * </pre>
      *
      * @param parent Workspace-Root-Element
-     * @return a new <code>WorkspaceSecurityConfig</code>
+     * @return a new <code>WorkspaceSecurityConfig</code> or <code>null</code>
+     *         if none is configured.
      * @throws ConfigurationException
      */
     public WorkspaceSecurityConfig parseWorkspaceSecurityConfig(Element parent)
@@ -616,29 +617,31 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                 acProviderConfig = parseBeanConfig(element, AC_PROVIDER_ELEMENT);
                 acProviderConfig.setValidate(false); // JCR-1920
             }
+            return new WorkspaceSecurityConfig(acProviderConfig);
         }
-        return new WorkspaceSecurityConfig(acProviderConfig);
+        return null;
     }
 
     /**
-     * Read the optional XmlImport Element of Workspace's configuration. It uses
+     * Read the optional Import Element of Workspace's configuration. It uses
      * the following format:
      * <pre>
-     *   &lt;XmlImport&gt;
+     *   &lt;Import&gt;
      *     &lt;ProtectedNodeImporter class="..." (optional)&gt;
      *     &lt;ProtectedNodeImporter class="..." (optional)&gt;
      *     ...
      *     &lt;ProtectedPropertyImporter class="..." (optional)&gt;
-     *   &lt;/XmlImport&gt;
+     *   &lt;/Import&gt;
      * </pre>
      *
      * @param parent Workspace-Root-Element
-     * @return a new <code>XmlImportConfig</code>
+     * @return a new <code>ImportConfig</code> or <code>null</code> if none is
+     *         configured.
      * @throws ConfigurationException
      */
     public ImportConfig parseImportConfig(Element parent) throws ConfigurationException {
-        List<BeanConfig> protectedNodeImporters = new ArrayList();
-        List<BeanConfig> protectedPropertyImporters = new ArrayList();
+        List<BeanConfig> protectedNodeImporters = new ArrayList<BeanConfig>();
+        List<BeanConfig> protectedPropertyImporters = new ArrayList<BeanConfig>();
 
         Element element = getElement(parent, IMPORT_ELEMENT, false);
         if (element != null) {
@@ -659,8 +662,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     } // else: some other entry -> ignore.
                 }
             }
+            return new ImportConfig(protectedNodeImporters, protectedPropertyImporters);
         }
-        return new ImportConfig(protectedNodeImporters, protectedPropertyImporters);
+        return null;
     }
 
     /**
