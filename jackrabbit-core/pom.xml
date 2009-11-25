@@ -98,7 +98,6 @@
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
                 org.apache.jackrabbit.core.ConcurrentImportTest
                 org.apache.jackrabbit.core.integration.ConcurrentQueryTest#testConcurrentQueryWithDeletes
-                org.apache.jackrabbit.core.security.user.AdministratorTest#testAdminNodeCollidingWithRandomNode
               </value>
             </property>
           </systemProperties>

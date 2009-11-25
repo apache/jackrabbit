@@ -22,12 +22,10 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -112,9 +110,7 @@ public class AdministratorTest extends AbstractUserTest {
 
     /**
      * Test for collisions that would prevent from recreate the admin user.
-     *
-     * @throws RepositoryException
-     * @throws NotExecutableException
+     * - an intermediate rep:AuthorizableFolder node with the same name
      */
     public void testAdminNodeCollidingWithAuthorizableFolder() throws RepositoryException, NotExecutableException {
         Authorizable admin = userMgr.getAuthorizable(adminId);
@@ -136,9 +132,11 @@ public class AdministratorTest extends AbstractUserTest {
         s.save();
 
         Session s2 = null;
+        String collidingPath = null;
         try {
             // now create a colliding node:
-            parentNode.addNode(adminNodeName, "rep:AuthorizableFolder");
+            Node n = parentNode.addNode(adminNodeName, "rep:AuthorizableFolder");
+            collidingPath = n.getPath();
             s.save();
 
             // force recreation of admin user.
@@ -150,20 +148,21 @@ public class AdministratorTest extends AbstractUserTest {
             assertFalse(adminPath.equals(((AuthorizableImpl) admin).getNode().getPath()));
 
         } finally {
-            if (s2 == null) {
-                // something went wrong -> remove the folder again.
-                parentNode.remove();
-                s.save();
-                // force recreation of admin user.
-                s2 = getHelper().getSuperuserSession();
-            }
             if (s2 != null) {
                 s2.logout();
+            }
+            // remove the extra folder and the admin user (created underneath) again.
+            if (collidingPath != null) {
+                s.getNode(collidingPath).remove();
+                s.save();
             }
         }
     }
 
     /**
+     * Test for collisions that would prevent from recreate the admin user.
+     * - a colliding node somewhere else with the same jcr:uuid.
+     *
      * Test if creation of the administrator user forces the removal of some
      * other node in the repository that by change happens to have the same
      * jcr:uuid and thus inhibits the creation of the admininstrator user.
@@ -178,7 +177,6 @@ public class AdministratorTest extends AbstractUserTest {
         // access the node corresponding to the admin user and remove it
         NodeImpl adminNode = ((AuthorizableImpl) admin).getNode();
         NodeId nid = adminNode.getNodeId();
-        String adminPath = adminNode.getPath();
 
         Session s = adminNode.getSession();
         adminNode.remove();
@@ -191,8 +189,10 @@ public class AdministratorTest extends AbstractUserTest {
         try {
             // create a colliding node outside of the user tree
             NameResolver nr = (SessionImpl) s;
+            // NOTE: testRootNode will not be present if users are stored in a distinct wsp.
+            //       therefore use root node as start...
             NodeImpl tr = (NodeImpl) s.getRootNode();
-            Node n = tr.addNode(nr.getQName(nodeName1), nr.getQName(testNodeType), nid);
+            Node n = tr.addNode(nr.getQName("tmpNode"), nr.getQName(testNodeType), nid);
             collidingPath = n.getPath();
             s.save();
 
@@ -229,9 +229,6 @@ public class AdministratorTest extends AbstractUserTest {
 
         // access the node corresponding to the admin user and remove it
         NodeImpl adminNode = ((AuthorizableImpl) admin).getNode();
-        NodeId nid = adminNode.getNodeId();
-        Name nName = adminNode.getQName();
-        Name ntName = ((NodeTypeImpl) adminNode.getPrimaryNodeType()).getQName();
 
         Session s = adminNode.getSession();
         adminNode.remove();
