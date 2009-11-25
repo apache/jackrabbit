@@ -500,6 +500,15 @@ public final class EventStateCollection {
     }
 
     /**
+     * Get the number of events.
+     *
+     * @return the size
+     */
+    public int size() {
+        return events.size();
+    }
+
+    /**
      * Return the session who is the origin of this events.
      * @return event source
      */
