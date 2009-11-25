@@ -130,7 +130,7 @@ public class CryptedSimpleCredentials implements Credentials {
             String algr = getAlgorithm(toMatch);
 
             if (algr == null && algorithm != null) {
-                // uncrypted pw to match -> crypt with algorithm present here.
+                // pw to match not crypted -> crypt with algorithm present here.
                 return crypt(toMatch, algorithm).equals(cryptedPassword);
             } else if (algr != null && algorithm == null) {
                 // crypted pw to match but unknown algorithm here -> crypt this pw
