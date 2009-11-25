@@ -94,7 +94,8 @@ public class SessionImporter implements Importer {
      *
      * @param importTargetNode the target node
      * @param session session
-     * @param uuidBehavior the uuid behaviro
+     * @param uuidBehavior the desired uuid behavior as defined
+     * by {@link javax.jcr.ImportUUIDBehavior}.
      * @param config
      */
     public SessionImporter(NodeImpl importTargetNode, SessionImpl session,
