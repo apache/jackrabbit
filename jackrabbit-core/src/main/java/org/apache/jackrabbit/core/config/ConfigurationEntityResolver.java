@@ -16,20 +16,21 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * Entity resolver for Jackrabbit configuration files.
  * This simple resolver contains mappings for the following
  * public identifiers used for the Jackrabbit configuration files:
  * <ul>
+ * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 2.0//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.4//EN</code></li>
@@ -39,6 +40,7 @@ import java.util.Map;
  * <p>
  * Also the following system identifiers are mapped to local resources:
  * <ul>
+ * <li><code>http://jackrabbit.apache.org/dtd/repository-2.0.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.6.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.5.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.4.dtd</code></li>
@@ -71,6 +73,14 @@ class ConfigurationEntityResolver implements EntityResolver {
      * Creates the singleton instance of this class.
      */
     private ConfigurationEntityResolver() {
+        // Apache Jackrabbit 2.0 DTD
+        publicIds.put(
+                "-//The Apache Software Foundation//DTD Jackrabbit 2.0//EN",
+                "repository-2.0.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/repository-2.0.dtd",
+                "repository-2.0.dtd");
+
         // Apache Jackrabbit 1.6 DTD
         publicIds.put(
                 "-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN",
@@ -78,7 +88,7 @@ class ConfigurationEntityResolver implements EntityResolver {
         systemIds.put(
                 "http://jackrabbit.apache.org/dtd/repository-1.6.dtd",
                 "repository-1.6.dtd");
-        
+
         // Apache Jackrabbit 1.5 DTD
         publicIds.put(
                 "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN",
