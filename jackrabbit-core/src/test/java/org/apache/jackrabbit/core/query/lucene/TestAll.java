@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(DecimalConvertTest.class);
         suite.addTestSuite(IndexingAggregateTest.class);
         suite.addTestSuite(IndexMigrationTest.class);
+        suite.addTestSuite(ChainedTermEnumTest.class);
 
         return suite;
     }

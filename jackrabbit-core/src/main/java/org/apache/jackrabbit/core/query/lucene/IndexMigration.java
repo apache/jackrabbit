@@ -269,7 +269,7 @@ public class IndexMigration {
         }
     }
 
-    private static final class ChainedTermEnum extends TermEnum {
+    static final class ChainedTermEnum extends TermEnum {
 
         private Queue<TermEnum> queue = new LinkedList<TermEnum>();
 
@@ -279,17 +279,24 @@ public class IndexMigration {
         }
 
         public boolean next() throws IOException {
+            boolean newEnum = false;
             for (;;) {
                 TermEnum terms = queue.peek();
                 if (terms == null) {
                     // no more enums
                     break;
                 }
+                if (newEnum && terms.term() != null) {
+                    // need to check if enum is already positioned
+                    // at first term
+                    return true;
+                }
                 if (terms.next()) {
                     return true;
                 } else {
                     queue.remove();
                     terms.close();
+                    newEnum = true;
                 }
             }
             return false;
