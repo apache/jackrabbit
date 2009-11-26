@@ -200,36 +200,4 @@ public class NodeImplTest extends AbstractJCRTest {
         assertEquals(PropertyType.nameFromValue(PropertyType.LONG),
                 PropertyType.nameFromValue(p.getType()));
     }
-
-    /**
-     * Test case for JCR-2130 and JCR-2408.
-     *
-     * @throws RepositoryException
-     */
-    public void testAddRemoveMixin() throws RepositoryException {
-        Node n = testRootNode.addNode(nodeName1, "nt:folder");
-        n.addMixin("mix:title");
-        n.setProperty("jcr:title", "blah blah");
-        testRootNode.getSession().save();
-
-        n.removeMixin("mix:title");
-        testRootNode.getSession().save();
-        assertFalse(n.hasProperty("jcr:title"));
-
-        Node n1 = testRootNode.addNode(nodeName2, ntUnstructured);
-        n1.addMixin("mix:title");
-        n1.setProperty("jcr:title", "blah blah");
-        assertEquals(
-                n1.getProperty("jcr:title").getDefinition().getDeclaringNodeType().getName(),
-                "mix:title");
-        testRootNode.getSession().save();
-
-        n1.removeMixin("mix:title");
-        testRootNode.getSession().save();
-        assertTrue(n1.hasProperty("jcr:title"));
-
-        assertEquals(
-                n1.getProperty("jcr:title").getDefinition().getDeclaringNodeType().getName(),
-                ntUnstructured);
-    }
 }
