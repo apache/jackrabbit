@@ -1074,7 +1074,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 PropertyImpl prop = (PropertyImpl) itemMgr.getItem(id);
                 PropertyDefinition oldDef = affectedProps.get(id);
 
-                if (prop.getDefinition().isProtected()) {
+                if (oldDef.isProtected()) {
                     // remove 'orphaned' protected properties immediately
                     removeChildProperty(id.getName());
                     continue;
