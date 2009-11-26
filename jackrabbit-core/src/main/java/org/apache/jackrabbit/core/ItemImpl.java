@@ -606,10 +606,18 @@ public abstract class ItemImpl implements Item {
         // walk through list of removed transient items and check REMOVE permission
         for (ItemState itemState : removed) {
             QItemDefinition def;
-            if (itemState.isNode()) {
-                def = itemMgr.getDefinition((NodeState) itemState).unwrap();
-            } else {
-                def = itemMgr.getDefinition((PropertyState) itemState).unwrap();
+            try {
+                if (itemState.isNode()) {
+                    def = itemMgr.getDefinition((NodeState) itemState).unwrap();
+                } else {
+                    def = itemMgr.getDefinition((PropertyState) itemState).unwrap();
+                }
+            } catch (ConstraintViolationException e) {
+                // since identifier of assigned definition is not stored anymore
+                // with item state (see JCR-2170), correct definition cannot be
+                // determined for items which have been removed due to removal
+                // of a mixin (see also JCR-2130 & JCR-2408)
+                continue;
             }
             if (!def.isProtected()) {
                 Path path = stateMgr.getAtticAwareHierarchyMgr().getPath(itemState.getId());
