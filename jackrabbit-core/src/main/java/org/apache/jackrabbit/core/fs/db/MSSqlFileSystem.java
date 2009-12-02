@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
-import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 
 /**
  * <code>MSSqlFileSystem</code> is a JDBC-based <code>FileSystem</code>
@@ -86,8 +86,12 @@ public class MSSqlFileSystem extends DbFileSystem {
         driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     }
 
-   protected String createSchemaSql(String sql) {
-       return Text.replace(
-               super.createSchemaSql(sql), TABLE_SPACE_VARIABLE, tableSpace);
-  }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected CheckSchemaOperation createCheckSchemaOperation() {
+        return super.createCheckSchemaOperation().addVariableReplacement(
+            CheckSchemaOperation.TABLE_SPACE_VARIABLE, tableSpace);
+    }
 }

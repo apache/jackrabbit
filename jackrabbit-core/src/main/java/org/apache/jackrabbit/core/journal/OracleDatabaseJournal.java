@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import javax.sql.DataSource;
 
-import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper;
+import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
 
 /**
  * It has the following property in addition to those of the DatabaseJournal:
@@ -35,7 +35,26 @@ public class OracleDatabaseJournal extends DatabaseJournal {
         "${tableSpace}";
 
     /** the Oracle table space to use */
-    protected String tableSpace;
+    protected String tableSpace = "";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ConnectionHelper createConnectionHelper(DataSource dataSrc) throws Exception {
+        OracleConnectionHelper helper = new OracleConnectionHelper(dataSrc, false);
+        helper.init();
+        return helper;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected CheckSchemaOperation createCheckSchemaOperation() {
+        return super.createCheckSchemaOperation().addVariableReplacement(
+            CheckSchemaOperation.TABLE_SPACE_VARIABLE, tableSpace);
+    }
 
     /**
      * Returns the configured Oracle table space.
@@ -50,46 +69,10 @@ public class OracleDatabaseJournal extends DatabaseJournal {
      * @param tableSpace the Oracle table space.
      */
     public void setTableSpace(String tableSpace) {
-        if (tableSpace != null) {
-            this.tableSpace = tableSpace.trim();
+        if (tableSpace != null && tableSpace.trim().length() > 0) {
+            this.tableSpace = "tablespace " + tableSpace.trim();
         } else {
-            this.tableSpace = null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected String createSchemaSQL(String sql) {
-        // replace the schemaObjectPrefix
-        sql = super.createSchemaSQL(sql);
-        // set the tablespace if it is defined
-        String tspace;
-        if (tableSpace == null || "".equals(tableSpace)) {
-            tspace = "";
-        } else {
-            tspace = "tablespace " + tableSpace;
-        }
-        return Text.replace(sql, TABLE_SPACE_VARIABLE, tspace).trim();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected boolean tableExists(DatabaseMetaData metaData, String tableName) throws SQLException {
-        if (metaData.storesLowerCaseIdentifiers()) {
-            tableName = tableName.toLowerCase();
-        } else if (metaData.storesUpperCaseIdentifiers()) {
-            tableName = tableName.toUpperCase();
-        }
-
-        String userName = metaData.getUserName();
-        ResultSet rs = metaData.getTables(null, userName, tableName, null);
-
-        try {
-            return rs.next();
-        } finally {
-            rs.close();
+            this.tableSpace = "";
         }
     }
 }

@@ -15,27 +15,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-<Workspace name="workspace-init-test">
-  <!--
-      virtual file system of the workspace:
-      class: FQN of class implementing FileSystem interface
-  -->
-  <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-    <param name="path" value="${wsp.home}" />
+<Workspace name="index-format-v2">
+
+  <FileSystem class="@config.db.fsclass@">
+    <param name="dataSourceName" value="ds1"/>
+    <param name="schemaObjectPrefix" value="@repo.id@_${wsp.name}_" />
   </FileSystem>
 
-  <!--
-      persistence of the workspace:
-      class: FQN of class implementing PersistenceManager interface
-  -->
-  <PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager"/>
-  
-  <!--
-      Search index and the file system it uses.
-  -->
-  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SlowQueryHandler">
+  <PersistenceManager class="@config.db.pmclass@">
+    <param name="dataSourceName" value="ds1"/>
+    <param name="schemaObjectPrefix" value="@repo.id@_${wsp.name}_" />
+  </PersistenceManager>
+
+  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
     <param name="path" value="${wsp.home}/index" />
-    <param name="directoryManagerClass" value="org.apache.jackrabbit.core.query.lucene.directory.RAMDirectoryManager"/>
   </SearchIndex>
 </Workspace>
 

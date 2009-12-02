@@ -20,9 +20,13 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
-import org.apache.jackrabbit.core.persistence.bundle.util.TrackingInputStream;
-import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager.StreamWrapper;
+import org.apache.jackrabbit.core.persistence.pool.util.TrackingInputStream;
+import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper;
+import org.apache.jackrabbit.core.util.db.DatabaseAware;
+import org.apache.jackrabbit.core.util.db.DbUtility;
+import org.apache.jackrabbit.core.util.db.StreamWrapper;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +40,6 @@ import java.lang.ref.WeakReference;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,6 +51,7 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 
 import javax.jcr.RepositoryException;
+import javax.sql.DataSource;
 
 /**
  * A data store implementation that stores the records in a database using JDBC.
@@ -93,18 +96,13 @@ import javax.jcr.RepositoryException;
  * The tablePrefix can be used to specify a schema and / or catalog name:
  * &lt;param name="tablePrefix" value="ds.">
  */
-public class DbDataStore implements DataStore {
+public class DbDataStore implements DataStore, DatabaseAware {
 
     /**
      * The default value for the minimum object size.
      */
     public static final int DEFAULT_MIN_RECORD_LENGTH = 100;
 
-    /**
-     * The default value for the maximum connections.
-     */
-    public static final int DEFAULT_MAX_CONNECTIONS = 3;
-    
     /**
      * Write to a temporary file to get the length (slow, but always works).
      * This is the default setting.
@@ -173,16 +171,6 @@ public class DbDataStore implements DataStore {
     protected int minRecordLength = DEFAULT_MIN_RECORD_LENGTH;
 
     /**
-     * The maximum number of open connections.
-     */
-    protected int maxConnections = DEFAULT_MAX_CONNECTIONS;
-
-    /**
-     * A list of connections
-     */
-    protected Pool connectionPool;
-
-    /**
      * The prefix for the datastore table, empty by default.
      */
     protected String tablePrefix = "";
@@ -196,6 +184,11 @@ public class DbDataStore implements DataStore {
      * Whether the schema check must be done during initialization.
      */
     private boolean schemaCheckEnabled = true;
+
+    /**
+     * The logical name of the DataSource to use.
+     */
+    protected String dataSourceName;
 
     /**
      * This is the property 'table'
@@ -297,34 +290,49 @@ public class DbDataStore implements DataStore {
     protected List<String> temporaryInUse = Collections.synchronizedList(new ArrayList<String>());
 
     /**
+     * The {@link ConnectionHelper} set in the {@link #init(String)} method.
+     * */
+    protected ConnectionHelper conHelper;
+
+    /**
+     * The repositories {@link ConnectionFactory}.
+     */
+    private ConnectionFactory connectionFactory;
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setConnectionFactory(ConnectionFactory connnectionFactory) {
+        this.connectionFactory = connnectionFactory;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public DataRecord addRecord(InputStream stream) throws DataStoreException {
         ResultSet rs = null;
         TempFileInputStream fileInput = null;
-        ConnectionRecoveryManager conn = getConnection();
         String id = null, tempId = null;
         try {
             long now;
-            for (int i = 0; i < ConnectionRecoveryManager.TRIALS; i++) {
+            while(true) {
                 try {
                     now = System.currentTimeMillis();
                     id = UUID.randomUUID().toString();
                     tempId = TEMP_PREFIX + id;
                     // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
-                    PreparedStatement prep = conn.executeStmt(selectMetaSQL, new Object[]{tempId});
-                    rs = prep.getResultSet();
+                    rs = conHelper.exec(selectMetaSQL, new Object[]{tempId}, false, 0);
                     if (rs.next()) {
                         // re-try in the very, very unlikely event that the row already exists
                         continue;
                     }
                     // INSERT INTO DATASTORE VALUES(?, 0, ?, NULL)
-                    conn.executeStmt(insertTempSQL, new Object[]{tempId, new Long(now)});
+                    conHelper.exec(insertTempSQL, new Object[]{tempId, new Long(now)});
                     break;
                 } catch (Exception e) {
                     throw convert("Can not insert new record", e);
                 } finally {
-                    DatabaseHelper.closeSilently(rs);
+                    DbUtility.close(rs);
                 }
             }
             if (id == null) {
@@ -350,7 +358,7 @@ public class DbDataStore implements DataStore {
                 throw new DataStoreException("Unsupported stream store algorithm: " + storeStream);
             }
             // UPDATE DATASTORE SET DATA=? WHERE ID=?
-            conn.executeStmt(updateDataSQL, new Object[]{wrapper, tempId});
+            conHelper.exec(updateDataSQL, new Object[]{wrapper, tempId});
             now = System.currentTimeMillis();
             long length = in.getPosition();
             DataIdentifier identifier = new DataIdentifier(digest.digest());
@@ -359,17 +367,16 @@ public class DbDataStore implements DataStore {
             // UPDATE DATASTORE SET ID=?, LENGTH=?, LAST_MODIFIED=?
             // WHERE ID=?
             // AND NOT EXISTS(SELECT ID FROM DATASTORE WHERE ID=?)
-            PreparedStatement prep = conn.executeStmt(updateSQL, new Object[]{
+            int count = conHelper.update(updateSQL, new Object[]{
                     id, new Long(length), new Long(now),
                     tempId, id});
-            int count = prep.getUpdateCount();
+            rs = null; // prevent that rs.close() is called in finally block if count != 0 (rs is closed above)
             if (count == 0) {
                 // update count is 0, meaning such a row already exists
                 // DELETE FROM DATASTORE WHERE ID=?
-                conn.executeStmt(deleteSQL, new Object[]{tempId});
+                conHelper.exec(deleteSQL, new Object[]{tempId});
                 // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
-                prep = conn.executeStmt(selectMetaSQL, new Object[]{id});
-                rs = prep.getResultSet();
+                rs = conHelper.exec(selectMetaSQL, new Object[]{id}, false, 0);
                 if (rs.next()) {
                     long oldLength = rs.getLong(1);
                     long lastModified = rs.getLong(2);
@@ -393,8 +400,7 @@ public class DbDataStore implements DataStore {
             if (tempId != null) {
                 temporaryInUse.remove(tempId);
             }
-            DatabaseHelper.closeSilently(rs);
-            putBack(conn);
+            DbUtility.close(rs);
             if (fileInput != null) {
                 try {
                     fileInput.close();
@@ -423,7 +429,6 @@ public class DbDataStore implements DataStore {
      * {@inheritDoc}
      */
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
-        ConnectionRecoveryManager conn = getConnection();
         try {
             ArrayList<String> touch = new ArrayList<String>();
             ArrayList<DataIdentifier> ids = new ArrayList<DataIdentifier>(inUse.keySet());
@@ -437,12 +442,9 @@ public class DbDataStore implements DataStore {
                 updateLastModifiedDate(key, 0);
             }
             // DELETE FROM DATASTORE WHERE LAST_MODIFIED<?
-            PreparedStatement prep = conn.executeStmt(deleteOlderSQL, new Long[]{new Long(min)});
-            return prep.getUpdateCount();
+            return conHelper.update(deleteOlderSQL, new Long[]{new Long(min)});
         } catch (Exception e) {
             throw convert("Can not delete records", e);
-        } finally {
-            putBack(conn);
         }
     }
 
@@ -450,13 +452,11 @@ public class DbDataStore implements DataStore {
      * {@inheritDoc}
      */
     public Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException {
-        ConnectionRecoveryManager conn = getConnection();
         ArrayList<DataIdentifier> list = new ArrayList<DataIdentifier>();
         ResultSet rs = null;
         try {
             // SELECT ID FROM DATASTORE
-            PreparedStatement prep = conn.executeStmt(selectAllSQL, new Object[0]);
-            rs = prep.getResultSet();
+            rs = conHelper.exec(selectAllSQL, new Object[0], false, 0);
             while (rs.next()) {
                 String id = rs.getString(1);
                 if (!id.startsWith(TEMP_PREFIX)) {
@@ -468,8 +468,7 @@ public class DbDataStore implements DataStore {
         } catch (Exception e) {
             throw convert("Can not read records", e);
         } finally {
-            DatabaseHelper.closeSilently(rs);
-            putBack(conn);
+            DbUtility.close(rs);
         }
     }
 
@@ -494,14 +493,12 @@ public class DbDataStore implements DataStore {
      * {@inheritDoc}
      */
     public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
-        ConnectionRecoveryManager conn = getConnection();
         usesIdentifier(identifier);
         ResultSet rs = null;
         try {
             String id = identifier.toString();
             // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID = ?
-            PreparedStatement prep = conn.executeStmt(selectMetaSQL, new Object[]{id});
-            rs = prep.getResultSet();
+            rs = conHelper.exec(selectMetaSQL, new Object[]{id}, false, 0);
             if (!rs.next()) {
                 throw new DataStoreException("Record not found: " + identifier);
             }
@@ -512,8 +509,7 @@ public class DbDataStore implements DataStore {
         } catch (Exception e) {
             throw convert("Can not read identifier " + identifier, e);
         } finally {
-            DatabaseHelper.closeSilently(rs);
-            putBack(conn);
+            DbUtility.close(rs);
         }
     }
     
@@ -538,36 +534,29 @@ public class DbDataStore implements DataStore {
      *          or if the given identifier is invalid
      */    
     InputStream openStream(DbInputStream inputStream, DataIdentifier identifier) throws DataStoreException {
-        ConnectionRecoveryManager conn = null;
         ResultSet rs = null;
         try {
-            conn = getConnection();
             // SELECT ID, DATA FROM DATASTORE WHERE ID = ?
-            PreparedStatement prep = conn.executeStmt(selectDataSQL, new Object[]{identifier.toString()});
-            rs = prep.getResultSet();
+            rs = conHelper.exec(selectDataSQL, new Object[]{identifier.toString()}, false, 0);
             if (!rs.next()) {
                 throw new DataStoreException("Record not found: " + identifier);
             }
             InputStream stream = rs.getBinaryStream(2);
             if (stream == null) {
                 stream = new ByteArrayInputStream(new byte[0]);
-                DatabaseHelper.closeSilently(rs);
-                putBack(conn);
+                DbUtility.close(rs);
             } else if (copyWhenReading) {
                 // If we copy while reading, create a temp file and close the stream
                 File temp = moveToTempFile(stream);
                 stream = new TempFileInputStream(temp);
-                DatabaseHelper.closeSilently(rs);
-                putBack(conn);
+                DbUtility.close(rs);
             } else {
                 stream = new BufferedInputStream(stream);
-                inputStream.setConnection(conn);
                 inputStream.setResultSet(rs);
             }
             return stream;
         } catch (Exception e) {
-            DatabaseHelper.closeSilently(rs);
-            putBack(conn);
+            DbUtility.close(rs);
             throw convert("Retrieving database resource ", e);
         }
     }
@@ -578,36 +567,67 @@ public class DbDataStore implements DataStore {
     public synchronized void init(String homeDir) throws DataStoreException {
         try {
             initDatabaseType();
-            connectionPool = new Pool(this, maxConnections);
-            ConnectionRecoveryManager conn = getConnection();
-            DatabaseMetaData meta = conn.getConnection().getMetaData();
-            log.info("Using JDBC driver " + meta.getDriverName() + " " + meta.getDriverVersion());
-            meta.getDriverVersion();
-            ResultSet rs = meta.getTables(null, null, schemaObjectPrefix + tableSQL, null);
-            boolean exists = rs.next();
-            rs.close();
-            if (!exists && isSchemaCheckEnabled()) {
-                // CREATE TABLE DATASTORE(ID VARCHAR(255) PRIMARY KEY, 
-                // LENGTH BIGINT, LAST_MODIFIED BIGINT, DATA BLOB)
-                conn.executeStmt(createTableSQL, null);
+
+            conHelper = createConnectionHelper(getDataSource());
+
+            if (isSchemaCheckEnabled()) {
+                createCheckSchemaOperation().run();
             }
-            putBack(conn);
         } catch (Exception e) {
             throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user + 
                     " schemaObjectPrefix=" + schemaObjectPrefix + " tableSQL=" + tableSQL + " createTableSQL=" + createTableSQL, e);
         }
     }
 
+    private DataSource getDataSource() throws Exception {
+        if (getDataSourceName() == null || "".equals(getDataSourceName())) {
+            return connectionFactory.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+        } else {
+            return connectionFactory.getDataSource(dataSourceName);
+        }
+    }
+
+    /**
+     * This method is called from the {@link #init(String)} method of this class and returns a
+     * {@link ConnectionHelper} instance which is assigned to the {@code conHelper} field. Subclasses may
+     * override it to return a specialized connection helper.
+     * 
+     * @param dataSrc the {@link DataSource} of this persistence manager
+     * @return a {@link ConnectionHelper}
+     * @throws Exception on error
+     */
+    protected ConnectionHelper createConnectionHelper(DataSource dataSrc) throws Exception {
+        return new ConnectionHelper(dataSrc, false);
+    }
+
+    /**
+     * This method is called from {@link #init(String)} after the
+     * {@link #createConnectionHelper(DataSource)} method, and returns a default {@link CheckSchemaOperation}.
+     * 
+     * @return a new {@link CheckSchemaOperation} instance
+     */
+    protected final CheckSchemaOperation createCheckSchemaOperation() {
+        String tableName = tablePrefix + schemaObjectPrefix + tableSQL;
+        return new CheckSchemaOperation(conHelper, new ByteArrayInputStream(createTableSQL.getBytes()), tableName);
+    }
+
     protected void initDatabaseType() throws DataStoreException {
-        boolean failIfNotFound;
+        boolean failIfNotFound = false;
         if (databaseType == null) {
-            if (!url.startsWith("jdbc:")) {
-                return;
+            if (dataSourceName != null) {
+                try {
+                    databaseType = connectionFactory.getDataBaseType(dataSourceName);
+                } catch (RepositoryException e) {
+                    throw new DataStoreException(e);
+                }
+            } else {
+                if (!url.startsWith("jdbc:")) {
+                    return;
+                }
+                int start = "jdbc:".length();
+                int end = url.indexOf(':', start);
+                databaseType = url.substring(start, end);
             }
-            failIfNotFound = false;
-            int start = "jdbc:".length();
-            int end = url.indexOf(':', start);
-            databaseType = url.substring(start, end);
         } else {
             failIfNotFound = true;
         }
@@ -722,17 +742,14 @@ public class DbDataStore implements DataStore {
         if (lastModified < minModifiedDate) {
             long now = System.currentTimeMillis();
             Long n = new Long(now);
-            ConnectionRecoveryManager conn = getConnection();
             try {
                 // UPDATE DATASTORE SET LAST_MODIFIED = ? WHERE ID = ? AND LAST_MODIFIED < ?
-                conn.executeStmt(updateLastModifiedSQL, new Object[]{
+                conHelper.exec(updateLastModifiedSQL, new Object[]{
                         n, key, n
                 });
                 return now;
             } catch (Exception e) {
                 throw convert("Can not update lastModified", e);
-            } finally {
-                putBack(conn);
             }
         }
         return lastModified;
@@ -849,11 +866,6 @@ public class DbDataStore implements DataStore {
      * {@inheritDoc}
      */
     public synchronized void close() throws DataStoreException {
-        ArrayList<ConnectionRecoveryManager> list = connectionPool.getAll();
-        for (ConnectionRecoveryManager conn : list) {
-            conn.close();
-        }
-        list.clear();
     }
 
     protected void usesIdentifier(DataIdentifier identifier) {
@@ -875,53 +887,24 @@ public class DbDataStore implements DataStore {
         }
     }
 
-    protected ConnectionRecoveryManager getConnection() throws DataStoreException {
-        try {
-            ConnectionRecoveryManager conn = (ConnectionRecoveryManager) connectionPool.get();
-            conn.setAutoReconnect(true);
-            return conn;
-        } catch (InterruptedException e) {
-            throw new DataStoreException("Interrupted", e);
-        } catch (RepositoryException e) {
-            throw new DataStoreException("Can not open a new connection", e);
-        }
-    }
-
-    protected void putBack(ConnectionRecoveryManager conn) throws DataStoreException {
-        try {
-            connectionPool.add(conn);
-        } catch (InterruptedException e) {
-            throw new DataStoreException("Interrupted", e);
-        }
-    }
-
     /**
      * Get the maximum number of concurrent connections.
      *
+     * @deprecated
      * @return the maximum number of connections.
      */
     public int getMaxConnections() {
-        return maxConnections;
+        return -1;
     }
 
     /**
      * Set the maximum number of concurrent connections in the pool.
      * At least 3 connections are required if the garbage collection process is used.
      *
+     *@deprecated
      * @param maxConnections the new value
      */
     public void setMaxConnections(int maxConnections) {
-        this.maxConnections = maxConnections;
-    }
-
-    /**
-     * Create a new connection.
-     *
-     * @return the new connection
-     */
-    public ConnectionRecoveryManager createNewConnection() throws RepositoryException {
-        ConnectionRecoveryManager conn = new ConnectionRecoveryManager(false, driver, url, user, password);
-        return conn;
     }
 
     /**
@@ -983,4 +966,11 @@ public class DbDataStore implements DataStore {
         this.schemaObjectPrefix = schemaObjectPrefix;
     }    
 
+    public String getDataSourceName() {
+        return dataSourceName;
+    }
+
+    public void setDataSourceName(String dataSourceName) {
+        this.dataSourceName = dataSourceName;
+    }
 }

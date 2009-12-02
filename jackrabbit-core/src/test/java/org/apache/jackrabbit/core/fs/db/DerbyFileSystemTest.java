@@ -17,20 +17,24 @@
 package org.apache.jackrabbit.core.fs.db;
 
 import java.io.File;
-import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.fs.AbstractFileSystemTest;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 
 /**
  * Tests the Apache Derby file system.
  */
 public class DerbyFileSystemTest extends AbstractFileSystemTest {
 
+    private ConnectionFactory conFac;
+
     private File file;
 
     protected FileSystem getFileSystem() {
         DerbyFileSystem filesystem = new DerbyFileSystem();
+        filesystem.setConnectionFactory(conFac);
         filesystem.setUrl("jdbc:derby:" + file.getPath() + ";create=true");
         return filesystem;
     }
@@ -38,20 +42,13 @@ public class DerbyFileSystemTest extends AbstractFileSystemTest {
     protected void setUp() throws Exception {
         file = File.createTempFile("jackrabbit", "derbyfs");
         file.delete();
+        conFac = new ConnectionFactory();
         super.setUp();
     }
 
     protected void tearDown() throws Exception {
         super.tearDown();
-        delete(file);
+        FileUtils.deleteDirectory(file);
+        conFac.close();
     }
-
-    private void delete(File file) throws IOException {
-        File[] files = file.listFiles();
-        for (int i = 0; files != null && i < files.length; i++) {
-            delete(files[i]);
-        }
-        file.delete();
-    }
-
 }

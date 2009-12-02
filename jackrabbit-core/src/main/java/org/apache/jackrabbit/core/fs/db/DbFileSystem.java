@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
-import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionFactory;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
+import org.apache.jackrabbit.core.util.db.DatabaseAware;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import javax.jcr.RepositoryException;
+import javax.sql.DataSource;
 
 /**
  * <code>DbFileSystem</code> is a generic JDBC-based <code>FileSystem</code>
@@ -108,7 +106,7 @@ import javax.jcr.RepositoryException;
  * </pre>
  * See also {@link DerbyFileSystem}, {@link DB2FileSystem}, {@link OracleFileSystem}.
  */
-public class DbFileSystem extends DatabaseFileSystem {
+public class DbFileSystem extends DatabaseFileSystem implements DatabaseAware {
 
     /**
      * the full qualified JDBC driver name
@@ -129,6 +127,20 @@ public class DbFileSystem extends DatabaseFileSystem {
      * the JDBC connection password
      */
     protected String password;
+
+    protected String dataSourceName;
+
+    /**
+     * The repositories {@link ConnectionFactory}.
+     */
+    private ConnectionFactory connectionFactory;
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setConnectionFactory(ConnectionFactory connnectionFactory) {
+        this.connectionFactory = connnectionFactory;
+    }
 
     //----------------------------------------------------< setters & getters >
     public String getUrl() {
@@ -163,6 +175,13 @@ public class DbFileSystem extends DatabaseFileSystem {
         this.driver = driver;
     }
 
+    public String getDataSourceName() {
+        return dataSourceName;
+    }
+
+    public void setDataSourceName(String dataSourceName) {
+        this.dataSourceName = dataSourceName;
+    }
 
     //-------------------------------------------< java.lang.Object overrides >
     /**
@@ -199,12 +218,18 @@ public class DbFileSystem extends DatabaseFileSystem {
     //--------------------------------------------------< DatabaseFileSystem >
 
     /**
-     * Initialize the JDBC connection.
-     *
-     * @throws SQLException if an error occurs
+     * {@inheritDoc}
      */
-    protected Connection getConnection() throws RepositoryException, SQLException {
-        return ConnectionFactory.getConnection(driver, url, user, password);
+    @Override
+    protected final DataSource getDataSource() throws Exception {
+        if (getDataSourceName() == null || "".equals(getDataSourceName())) {
+            return connectionFactory.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+        } else {
+            String dbType = connectionFactory.getDataBaseType(dataSourceName);
+            if (DatabaseFileSystem.class.getResourceAsStream(dbType + ".ddl") != null) {
+                setSchema(dbType);
+            }
+            return connectionFactory.getDataSource(dataSourceName);
+        }
     }
-
 }
