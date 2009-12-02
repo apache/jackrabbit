@@ -18,35 +18,29 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.LoginException;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Node;
 import javax.jcr.Value;
 import java.security.Principal;
+import java.util.Arrays;
 
 /**
  * <code>SecurityManagerTest</code>...
  */
 public class UserPerWorkspaceSecurityManagerTest extends AbstractJCRTest {
-
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(UserPerWorkspaceSecurityManagerTest.class);
 
     private JackrabbitSecurityManager secMgr;
 
@@ -145,6 +139,37 @@ public class UserPerWorkspaceSecurityManagerTest extends AbstractJCRTest {
                 superuser.save();
             }
         }
+    }
+
+    public void testAccessibleWorkspaceNames() throws Exception {
+        String altWsp = getAlternativeWorkspaceName();
+        if (altWsp == null) {
+            throw new NotExecutableException();
+        }
+
+        Session s = getHelper().getSuperuserSession(altWsp);
+        User u = null;
+        Session us = null;
+        try {
+            // other users created in the default workspace...
+            u = ((JackrabbitSession) superuser).getUserManager().createUser("testUser", "testUser");
+            superuser.save();
+
+            us = getHelper().getRepository().login(new SimpleCredentials("testUser", "testUser".toCharArray()));
+            String[] wspNames = us.getWorkspace().getAccessibleWorkspaceNames();
+            assertFalse(Arrays.asList(wspNames).contains(altWsp));
+            
+        } finally {
+            s.logout();
+            if (us != null) {
+                us.logout();
+            }
+            if (u != null) {
+                u.remove();
+                superuser.save();
+            }
+        }
+
     }
 
     public void testCloneUser() throws Exception {
