@@ -192,7 +192,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /**
      * The repositories {@link ConnectionFactory}. 
      */
-    private final ConnectionFactory connectionFactory;
+    protected final ConnectionFactory connectionFactory;
 
     /**
      * Element specifying the class of principals used to retrieve the userID
