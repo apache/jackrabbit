@@ -28,8 +28,6 @@ import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.simple.SimpleWorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
@@ -37,6 +35,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
 import java.security.Principal;
+import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,11 +61,6 @@ import java.util.Set;
  * tree containing user related information. 
  */
 public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
-
-    /**
-     * the default logger
-     */
-    private static final Logger log = LoggerFactory.getLogger(UserPerWorkspaceSecurityManager.class);
 
     private final Map<String, PrincipalProviderRegistry> ppRegistries = new HashMap<String, PrincipalProviderRegistry>();
 
@@ -304,14 +298,47 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
         }
     }
 
-    private final class WorkspaceAccessManagerImpl extends SimpleWorkspaceAccessManager {
-        @Override
+    private final class WorkspaceAccessManagerImpl implements WorkspaceAccessManager {
+        /**
+         * Does nothing.
+         * @see WorkspaceAccessManager#init(javax.jcr.Session)
+         */
+        public void init(Session systemSession) throws RepositoryException {
+            // nothing to do.
+        }
+
+        /**
+         * Does nothing.
+         * @see org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager#close()
+         */
+        public void close() throws RepositoryException {
+            // nothing to do.
+        }
+
+        /**
+         * Returns <code>true</code> if a workspace with the given
+         * <code>workspaceName</code> exists and if that workspace defines a
+         * user that matches any of the given <code>principals</code>;
+         * <code>false</code> otherwise.
+         *
+         * @see WorkspaceAccessManager#grants(java.util.Set, String)
+         */
         public boolean grants(Set<Principal> principals, String workspaceName) throws RepositoryException {
             if (!(Arrays.asList(((RepositoryImpl) getRepository()).getWorkspaceNames())).contains(workspaceName)) {
                 return false;
             } else {
-                return super.grants(principals, workspaceName);
+                UserManager umgr = UserPerWorkspaceSecurityManager.this.getSystemUserManager(workspaceName);
+                for (Principal principal : principals) {
+                    if (!(principal instanceof Group)) {
+                        // check if the workspace identified by the given workspace
+                        // name contains a user with this principal
+                        if (umgr.getAuthorizable(principal) != null) {
+                            return true;
+                        }
+                    }
+                }
             }
+            return false;
         }
     }
 }
