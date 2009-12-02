@@ -58,7 +58,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        parser = new RepositoryConfigurationParser(new Properties(), null);
+        parser = new RepositoryConfigurationParser(new Properties());
     }
 
     protected void tearDown() throws Exception {

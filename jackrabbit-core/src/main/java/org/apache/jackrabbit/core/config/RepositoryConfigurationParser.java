@@ -213,13 +213,25 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     private static final String CLUSTER_NODE_ID_FILE = "cluster_node.id";
 
     /**
+     * Creates a new configuration parser with the given parser variables
+     * and connection factory.
+     *
+     * @param variables parser variables
+     * @param connectionFactory connection factory
+     */
+    protected RepositoryConfigurationParser(
+            Properties variables, ConnectionFactory connectionFactory) {
+        super(variables);
+        this.connectionFactory = connectionFactory;
+    }
+
+    /**
      * Creates a new configuration parser with the given parser variables.
      *
      * @param variables parser variables
      */
-    public RepositoryConfigurationParser(Properties variables, ConnectionFactory connectionFactory) {
-        super(variables);
-        this.connectionFactory = connectionFactory;
+    public RepositoryConfigurationParser(Properties variables) {
+        this(variables, new ConnectionFactory());
     }
 
     /**
