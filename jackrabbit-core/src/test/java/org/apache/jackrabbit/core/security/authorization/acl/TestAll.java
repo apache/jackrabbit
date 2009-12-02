@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ACLTemplateTest.class);
         suite.addTestSuite(EntryTest.class);
 
+        suite.addTestSuite(ReadTest.class);
         suite.addTestSuite(WriteTest.class);
         suite.addTestSuite(LockTest.class);
         suite.addTestSuite(VersionTest.class);

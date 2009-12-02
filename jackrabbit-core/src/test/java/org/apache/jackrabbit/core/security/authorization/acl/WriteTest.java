@@ -338,4 +338,27 @@ public class WriteTest extends AbstractWriteTest {
             group2.remove();
         }
     }
+
+    public void testWriteIfReadingParentIsDenied() throws Exception {
+        Privilege[] privileges = privilegesFromNames(new String[] {Privilege.JCR_READ, Privilege.JCR_WRITE});
+
+        /* deny READ/WRITE privilege for testUser at 'path' */
+        withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /*
+        allow READ/WRITE privilege for testUser at 'childNPath'
+        */
+        givePrivileges(childNPath, testUser.getPrincipal(), privileges, getRestrictions(superuser, childNPath));
+
+
+        Session testSession = getTestSession();
+
+        assertFalse(testSession.nodeExists(path));
+
+        // reading the node and it's definition must succeed.
+        assertTrue(testSession.nodeExists(childNPath));
+        Node n = testSession.getNode(childNPath);
+
+        n.addNode("someChild");
+        n.save();
+    }
 }
