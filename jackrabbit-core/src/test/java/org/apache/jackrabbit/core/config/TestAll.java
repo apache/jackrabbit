@@ -39,6 +39,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(RepositoryConfigTest.class);
         suite.addTestSuite(WorkspaceConfigTest.class);
+        suite.addTestSuite(DataSourceConfigTest.class);
 
         return suite;
     }

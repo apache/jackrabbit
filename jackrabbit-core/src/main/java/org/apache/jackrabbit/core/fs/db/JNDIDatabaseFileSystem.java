@@ -17,10 +17,7 @@
 package org.apache.jackrabbit.core.fs.db;
 
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
 
 /**
  * @deprecated
@@ -68,17 +65,11 @@ public class JNDIDatabaseFileSystem extends DatabaseFileSystem {
     //--------------------------------------------------< DatabaseFileSystem >
 
     /**
-     * Returns a JDBC connection from a {@link DataSource} acquired from JNDI
-     * with the configured data source location.
-     *
-     * @return new database connection
-     * @throws NamingException if the given data source location does not exist
-     * @throws SQLException if a database access error occurs
+     * {@inheritDoc}
      */
-    protected Connection getConnection() throws NamingException, SQLException {
+    @Override
+    protected DataSource getDataSource() throws Exception {
         InitialContext ic = new InitialContext();
-        DataSource dataSource = (DataSource) ic.lookup(dataSourceLocation);
-        return dataSource.getConnection();
+        return (DataSource) ic.lookup(dataSourceLocation);
     }
-
 }

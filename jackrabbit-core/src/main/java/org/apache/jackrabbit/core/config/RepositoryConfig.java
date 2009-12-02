@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryHandlerFactory;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanismFactory;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -257,7 +258,7 @@ public class RepositoryConfig
         variables.setProperty(
                 RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE, home);
         RepositoryConfigurationParser parser =
-            new RepositoryConfigurationParser(variables);
+            new RepositoryConfigurationParser(variables, new ConnectionFactory());
 
         RepositoryConfig config = parser.parseRepositoryConfig(xml);
         config.init();
@@ -349,6 +350,16 @@ public class RepositoryConfig
     private final RepositoryLockMechanismFactory rlf;
 
     /**
+     * The configuration for the used DataSources.
+     */
+    private final DataSourceConfig dsc;
+
+    /**
+     * The {@link ConnectionFactory}
+     */
+    private final ConnectionFactory cf;
+
+    /**
      * Creates a repository configuration object.
      *
      * @param home repository home directory
@@ -363,6 +374,9 @@ public class RepositoryConfig
      * @param qhf query handler factory for the system search manager
      * @param cc optional cluster configuration
      * @param dsf data store factory
+     * @param rlf the RepositoryLockMechanismFactory
+     * @param dsc the DataSource configuration
+     * @param cf the ConnectionFactory for all DatabasAware beans
      * @param parser configuration parser
      */
     public RepositoryConfig(
@@ -372,6 +386,8 @@ public class RepositoryConfig
             Element template, VersioningConfig vc, QueryHandlerFactory qhf,
             ClusterConfig cc, DataStoreFactory dsf,
             RepositoryLockMechanismFactory rlf,
+            DataSourceConfig dsc,
+            ConnectionFactory cf,
             RepositoryConfigurationParser parser) {
         workspaces = new HashMap<String, WorkspaceConfig>();
         this.home = home;
@@ -387,6 +403,8 @@ public class RepositoryConfig
         this.cc = cc;
         this.dsf = dsf;
         this.rlf = rlf;
+        this.dsc = dsc;
+        this.cf = cf;
         this.parser = parser;
     }
 
@@ -399,6 +417,15 @@ public class RepositoryConfig
      *                               been initialized
      */
     public void init() throws ConfigurationException, IllegalStateException {
+        
+        // This needs to be done here and not by clients (e.g., RepositoryImpl ctor) because
+        // fsf is used below and this might be a DatabaseAware FileSystem
+        try {
+            cf.registerDataSources(dsc);
+        } catch (RepositoryException e) {
+            throw new ConfigurationException("failed to register data sources", e);
+        }
+
         if (!workspaces.isEmpty()) {
             throw new IllegalStateException(
                     "Repository configuration has already been initialized.");
@@ -912,6 +939,14 @@ public class RepositoryConfig
      */
     public ClusterConfig getClusterConfig() {
         return cc;
+    }
+
+    /**
+     * Returns the {@link ConnectionFactory} for this repository.
+     * Please note that it must be closed explicitly.
+     */
+    public ConnectionFactory getConnectionFactory() {
+        return cf;
     }
 
     /**

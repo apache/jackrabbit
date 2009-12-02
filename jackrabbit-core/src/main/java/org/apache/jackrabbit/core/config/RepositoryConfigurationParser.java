@@ -36,6 +36,7 @@ import org.apache.jackrabbit.core.state.ISMLockingFactory;
 import org.apache.jackrabbit.core.util.RepositoryLock;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanismFactory;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -118,6 +119,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the cluster configuration element. */
     public static final String CLUSTER_ELEMENT = "Cluster";
 
+    /** Name of the data source configuration element. */
+    public static final String DATASOURCES_ELEMENT = "DataSources";
+
+    /** Name of the data source configuration element. */
+    public static final String DATASOURCE_ELEMENT = "DataSource";
+
     /** Name of the journal configuration element. */
     public static final String JOURNAL_ELEMENT = "Journal";
 
@@ -183,6 +190,11 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     private static final String AC_PROVIDER_ELEMENT = "AccessControlProvider";
 
     /**
+     * The repositories {@link ConnectionFactory}. 
+     */
+    private final ConnectionFactory connectionFactory;
+
+    /**
      * Element specifying the class of principals used to retrieve the userID
      * in the 'class' attribute.
      */
@@ -205,8 +217,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *
      * @param variables parser variables
      */
-    public RepositoryConfigurationParser(Properties variables) {
+    public RepositoryConfigurationParser(Properties variables, ConnectionFactory connectionFactory) {
         super(variables);
+        this.connectionFactory = connectionFactory;
     }
 
     /**
@@ -304,9 +317,33 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         RepositoryLockMechanismFactory rlf = getRepositoryLockMechanismFactory(root);
 
+        // Optional data source configuration
+        DataSourceConfig dsc = parseDataSourceConfig(root);
+
         return new RepositoryConfig(home, securityConfig, fsf,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                maxIdleTime, template, vc, qhf, cc, dsf, rlf, this);
+                maxIdleTime, template, vc, qhf, cc, dsf, rlf, dsc, connectionFactory, this);
+    }
+
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BeanConfig parseBeanConfig(Element parent, String name) throws ConfigurationException {
+        BeanConfig cfg = super.parseBeanConfig(parent, name);
+        cfg.setConnectionFactory(connectionFactory);
+        return cfg;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BeanConfig parseBeanConfig(Element element) throws ConfigurationException {
+        BeanConfig cfg = super.parseBeanConfig(element);
+        cfg.setConnectionFactory(connectionFactory);
+        return cfg;
     }
 
     /**
@@ -845,6 +882,38 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     }
 
     /**
+     * TODO
+     * 
+     * @param parent
+     * @return
+     * @throws ConfigurationException
+     */
+    protected DataSourceConfig parseDataSourceConfig(Element parent)
+            throws ConfigurationException {
+        DataSourceConfig dsc = new DataSourceConfig();
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && DATASOURCES_ELEMENT.equals(child.getNodeName())) {
+                Element element = (Element) child;
+                NodeList children2 = element.getChildNodes();
+                // Process the DataSource entries:
+                for (int j = 0; j < children2.getLength(); j++) {
+                    Node child2 = children2.item(j);
+                    if (child2.getNodeType() == Node.ELEMENT_NODE
+                            && DATASOURCE_ELEMENT.equals(child2.getNodeName())) {
+                        Element dsdef = (Element) child2;
+                        Properties props = parseParameters(dsdef);
+                        dsc.addDataSourceDefinition(props);
+                    }
+                }
+            }
+        }
+        return dsc;
+    }
+
+    /**
      * Parses data store configuration. Data store configuration uses the following format:
      * <pre>
      *   &lt;DataStore class="..."&gt;
@@ -933,7 +1002,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
     /**
      * Creates a new instance of a configuration parser but with overlayed
-     * variables.
+     * variables and the same connection factory as this parser.
      *
      * @param variables the variables overlay
      * @return a new configuration parser instance
@@ -942,7 +1011,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // overlay the properties
         Properties props = new Properties(getVariables());
         props.putAll(variables);
-        return new RepositoryConfigurationParser(props);
+        return new RepositoryConfigurationParser(props, connectionFactory);
     }
 
     /**

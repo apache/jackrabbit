@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
+import org.apache.jackrabbit.core.util.db.DatabaseAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +83,11 @@ public class BeanConfig {
     private final Properties properties;
 
     /**
+     * The repositories {@link ConnectionFactory}.
+     */
+    private ConnectionFactory connectionFactory = null;
+
+    /**
      * Flag to validate the configured bean property names against
      * the configured bean class. By default this is <code>true</code>
      * to prevent incorrect property names. However, in some cases this
@@ -118,6 +125,7 @@ public class BeanConfig {
      */
     public BeanConfig(BeanConfig config) {
         this(config.getClassName(), config.getParameters());
+        setConnectionFactory(config.connectionFactory);
     }
 
     /**
@@ -128,6 +136,14 @@ public class BeanConfig {
      */
     protected void setValidate(boolean validate) {
         this.validate = validate;
+    }
+
+    /**
+     * @param connectionFactory the {@link ConnectionFactory} to inject (if possible) in the
+     *            {@link #newInstance()} method
+     */
+    public void setConnectionFactory(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
     }
 
     /**
@@ -183,6 +199,10 @@ public class BeanConfig {
                             "Configured class " + getClassName()
                             + " does not contain a property named " + name);
                 }
+            }
+
+            if (instance instanceof DatabaseAware) {
+                ((DatabaseAware) instance).setConnectionFactory(connectionFactory);
             }
 
             return (T) instance;

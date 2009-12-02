@@ -282,7 +282,7 @@ public class RepositoryImpl extends AbstractRepository
         boolean succeeded = false;
         try {
             this.repConfig = repConfig;
-
+            
             // setup file systems
             repStore = repConfig.getFileSystem();
             String fsRootPath = "/meta";
@@ -1197,6 +1197,8 @@ public class RepositoryImpl extends AbstractRepository
         } catch (InterruptedException e) {
             log.warn("Interrupted while waiting for background threads", e);
         }
+
+        repConfig.getConnectionFactory().close();
 
         // finally release repository lock
         if (repLock != null) {

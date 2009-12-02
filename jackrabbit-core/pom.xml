@@ -97,6 +97,8 @@
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
                 org.apache.jackrabbit.core.ConcurrentImportTest
+                org.apache.jackrabbit.core.data.GarbageCollectorTest#testGC
+                org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunningGc
                 org.apache.jackrabbit.core.integration.ConcurrentQueryTest#testConcurrentQueryWithDeletes
               </value>
             </property>
@@ -162,6 +164,11 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-dbcp</groupId>
+      <artifactId>commons-dbcp</artifactId>
+      <version>1.2.2</version>
     </dependency>
     <dependency>
       <groupId>javax.jcr</groupId>
@@ -249,4 +256,233 @@
     </dependency>
   </dependencies>
 
+  <!--
+    These profiles can be used to run the (integration) tests against different DB backends.
+    For instance, if you want to run the integration tests against MySQL backend, do:
+    
+      mvn clean integration-test -Pmysql,use-descriptor-overlay
+    
+    Note: the ${config.db.name} database is dropped and re-created in the clean phase. 
+  -->
+  <profiles>
+    <profile>
+      <id>mysql</id>
+      <properties>
+        <config.db.name>jackrabbit</config.db.name>
+        <config.db.fsclass>org.apache.jackrabbit.core.fs.db.DbFileSystem</config.db.fsclass>
+        <config.db.dsclass>org.apache.jackrabbit.core.data.db.DbDataStore</config.db.dsclass>
+        <config.db.pmclass>org.apache.jackrabbit.core.persistence.pool.MySqlPersistenceManager</config.db.pmclass>
+        <config.db.journalclass>org.apache.jackrabbit.core.journal.DatabaseJournal</config.db.journalclass>
+        <config.db.schema>mysql</config.db.schema>
+        <config.db.validation.query>select 1</config.db.validation.query>
+        <config.db.user>user</config.db.user>
+        <config.db.pwd>pwd</config.db.pwd>
+        <config.db.driver>com.mysql.jdbc.Driver</config.db.driver>
+        <config.db.url>jdbc:mysql://localhost:3306/${config.db.name}?autoReconnect=true</config.db.url>
+        <config.db.metaurl>jdbc:mysql://localhost:3306/mysql?autoReconnect=true</config.db.metaurl>
+        <config.db.dropcommand>drop database ${config.db.name}</config.db.dropcommand>
+        <config.db.createcommand>create database ${config.db.name}</config.db.createcommand>
+      </properties>
+    </profile>
+    <profile>
+      <id>mssql</id>
+      <properties>
+        <config.db.name>jackrabbit</config.db.name>
+        <config.db.fsclass>org.apache.jackrabbit.core.fs.db.MSSqlFileSystem</config.db.fsclass>
+        <config.db.dsclass>org.apache.jackrabbit.core.data.db.DbDataStore</config.db.dsclass>
+        <config.db.pmclass>org.apache.jackrabbit.core.persistence.pool.MSSqlPersistenceManager</config.db.pmclass>
+        <config.db.journalclass>org.apache.jackrabbit.core.journal.MSSqlDatabaseJournal</config.db.journalclass>
+        <config.db.schema>mssql</config.db.schema>
+        <config.db.validation.query>select 1</config.db.validation.query>
+        <config.db.user>user</config.db.user>
+        <config.db.pwd>pwd</config.db.pwd>
+        <config.db.driver>net.sourceforge.jtds.jdbc.Driver</config.db.driver>
+        <config.db.url>jdbc:jtds:sqlserver://localhost:2433/${config.db.name}</config.db.url>
+        <config.db.metaurl>jdbc:jtds:sqlserver://localhost:2433/master</config.db.metaurl>
+        <config.db.dropcommand>drop database ${config.db.name}</config.db.dropcommand>
+        <config.db.createcommand>create database ${config.db.name}</config.db.createcommand>
+      </properties>
+    </profile>
+    <profile>
+      <id>oracle</id>
+      <properties>
+        <config.db.name>unused</config.db.name>
+        <config.db.fsclass>org.apache.jackrabbit.core.fs.db.OracleFileSystem</config.db.fsclass>
+        <config.db.dsclass>org.apache.jackrabbit.core.data.db.DbDataStore</config.db.dsclass>
+        <config.db.pmclass>org.apache.jackrabbit.core.persistence.pool.OraclePersistenceManager</config.db.pmclass>
+        <config.db.journalclass>org.apache.jackrabbit.core.journal.OracleDatabaseJournal</config.db.journalclass>
+        <config.db.schema>oracle</config.db.schema>
+        <config.db.validation.query>select 'validationQuery' from dual</config.db.validation.query>
+        <config.db.user>user</config.db.user>
+        <config.db.pwd>password</config.db.pwd>
+        <config.db.driver>oracle.jdbc.driver.OracleDriver</config.db.driver>
+        <config.db.url>jdbc:oracle:thin:@localhost:1521:xe</config.db.url>
+        <config.db.metaurl>unused</config.db.metaurl>
+        <config.db.dropcommand>unused</config.db.dropcommand>
+        <config.db.createcommand>unused</config.db.createcommand>
+      </properties>
+    </profile>
+    <profile>
+      <id>h2</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <version>1.2.121</version>
+        </dependency>
+      </dependencies>
+      <properties>
+        <config.db.name>jackrabbit</config.db.name>
+        <config.db.fsclass>org.apache.jackrabbit.core.fs.db.DbFileSystem</config.db.fsclass>
+        <config.db.dsclass>org.apache.jackrabbit.core.data.db.DbDataStore</config.db.dsclass>
+        <config.db.pmclass>org.apache.jackrabbit.core.persistence.pool.H2PersistenceManager</config.db.pmclass>
+        <config.db.journalclass>org.apache.jackrabbit.core.journal.DatabaseJournal</config.db.journalclass>
+        <config.db.schema>h2</config.db.schema>
+        <config.db.validation.query>call 1</config.db.validation.query>
+        <config.db.user>sa</config.db.user>
+        <config.db.pwd>sa</config.db.pwd>
+        <config.db.driver>org.h2.Driver</config.db.driver>
+        <!-- <config.db.url>jdbc:h2:~/jackrabbit2;MAX_LENGTH_INPLACE_LOB=10240;DB_CLOSE_ON_EXIT=FALSE;TRACE_LEVEL_FILE=2</config.db.url> -->
+        <config.db.url>jdbc:h2:~/jackrabbit2;MAX_LENGTH_INPLACE_LOB=10240;DB_CLOSE_ON_EXIT=FALSE</config.db.url>
+        <config.db.metaurl>unused</config.db.metaurl>
+        <config.db.dropcommand>drop all objects delete files</config.db.dropcommand>
+        <config.db.createcommand>unused</config.db.createcommand>
+      </properties>
+    </profile>
+    <profile>
+      <id>use-descriptor-overlay</id>
+      <build>
+      <plugins>
+        <!-- Drop/create the test database on clean -->        
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>sql-maven-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>mysql</groupId>
+              <artifactId>mysql-connector-java</artifactId>
+              <version>5.1.6</version>
+              <type>jar</type>
+              <scope>provided</scope>
+            </dependency>
+            <dependency>
+              <groupId>net.sourceforge.jtds</groupId>
+              <artifactId>jtds</artifactId>
+              <version>1.2.2</version>
+              <scope>provided</scope>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <driver>${config.db.driver}</driver>
+            <url>${config.db.metaurl}</url>
+            <username>${config.db.user}</username>
+            <password>${config.db.pwd}</password>
+            <settingsKey>sensibleKey</settingsKey>
+          </configuration>
+          <executions>
+            <execution>
+              <id>drop-db</id>
+              <phase>clean</phase>
+              <goals>
+                <goal>execute</goal>
+              </goals>
+              <configuration>
+                <autocommit>true</autocommit>
+                <sqlCommand>${config.db.dropcommand}</sqlCommand>
+                <onError>continue</onError>
+              </configuration>
+            </execution>
+            <execution>
+              <id>create-db</id>
+              <phase>clean</phase>
+              <goals>
+                <goal>execute</goal>
+              </goals>
+              <configuration>
+                <autocommit>true</autocommit>
+                <sqlCommand>${config.db.createcommand}</sqlCommand>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>overlay-repository-descriptors</id>
+              <phase>process-test-resources</phase>
+              <configuration>
+                <tasks>
+                  <copy todir="${project.build.directory}/repository" overwrite="true">
+                    <fileset dir="${basedir}/src/test/repository-descriptor-overlay" />
+                    <filterset>
+                      <filter token="repo.id" value="A" />
+                      <filter token="config.db.schema" value="${config.db.schema}" />
+                      <filter token="config.db.validation.query" value="${config.db.validation.query}" />
+                      <filter token="config.db.driver" value="${config.db.driver}" />
+                      <filter token="config.db.url" value="${config.db.url}" />
+                      <filter token="config.db.user" value="${config.db.user}" />
+                      <filter token="config.db.pwd" value="${config.db.pwd}" />
+                      <filter token="config.db.fsclass" value="${config.db.fsclass}" />
+                      <filter token="config.db.dsclass" value="${config.db.dsclass}" />
+                      <filter token="config.db.pmclass" value="${config.db.pmclass}" />
+                      <filter token="config.db.journalclass" value="${config.db.journalclass}" />
+                    </filterset>
+                  </copy>
+                  <copy todir="${project.build.directory}/repository-2" overwrite="true">
+                    <fileset dir="${basedir}/src/test/repository-descriptor-overlay" />
+                    <filterset>
+                      <filter token="repo.id" value="B" />
+                      <filter token="config.db.schema" value="${config.db.schema}" />
+                      <filter token="config.db.validation.query" value="${config.db.validation.query}" />
+                      <filter token="config.db.driver" value="${config.db.driver}" />
+                      <filter token="config.db.url" value="${config.db.url}" />
+                      <filter token="config.db.user" value="${config.db.user}" />
+                      <filter token="config.db.pwd" value="${config.db.pwd}" />
+                      <filter token="config.db.fsclass" value="${config.db.fsclass}" />
+                      <filter token="config.db.dsclass" value="${config.db.dsclass}" />
+                      <filter token="config.db.pmclass" value="${config.db.pmclass}" />
+                      <filter token="config.db.journalclass" value="${config.db.journalclass}" />
+                    </filterset>
+                  </copy>
+                </tasks>
+              </configuration>
+              <goals>
+                <goal>run</goal>
+              </goals>
+            </execution>
+          </executions>
+          <dependencies>
+            <dependency>
+              <groupId>ant</groupId>
+              <artifactId>ant-optional</artifactId>
+              <version>1.5.3-1</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+      </build>
+      <dependencies>
+        <dependency>
+          <groupId>mysql</groupId>
+          <artifactId>mysql-connector-java</artifactId>
+          <version>5.1.6</version>
+          <type>jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>net.sourceforge.jtds</groupId>
+          <artifactId>jtds</artifactId>
+          <version>1.2.2</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>com.oracle</groupId>
+          <artifactId>ojdbc14</artifactId>
+          <version>10.2.0.3.0</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>

@@ -229,7 +229,7 @@ public class RepositoryConfigTest extends TestCase {
         VersioningConfig vc = config.getVersioningConfig();
         assertEquals(new File(DIR, "version"), vc.getHomeDir());
         assertEquals(
-                "org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager",
+                "org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager",
                 vc.getPersistenceManagerConfig().getClassName());
     }
 

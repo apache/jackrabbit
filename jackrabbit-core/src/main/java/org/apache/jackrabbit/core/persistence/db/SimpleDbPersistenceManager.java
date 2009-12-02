@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.persistence.db;
 
-import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionFactory;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
+import org.apache.jackrabbit.core.util.db.DatabaseAware;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -129,12 +130,24 @@ import javax.jcr.RepositoryException;
  * </pre>
  * See also {@link DerbyPersistenceManager}, {@link OraclePersistenceManager}.
  */
-public class SimpleDbPersistenceManager extends DatabasePersistenceManager {
+public class SimpleDbPersistenceManager extends DatabasePersistenceManager implements DatabaseAware {
 
     protected String driver;
     protected String url;
     protected String user;
     protected String password;
+
+    /**
+     * The repositories {@link ConnectionFactory}.
+     */
+    private ConnectionFactory connectionFactory;
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setConnectionFactory(ConnectionFactory connnectionFactory) {
+        this.connectionFactory = connnectionFactory;
+    }
 
     //----------------------------------------------------< setters & getters >
     public String getUrl() {
@@ -169,8 +182,6 @@ public class SimpleDbPersistenceManager extends DatabasePersistenceManager {
         this.driver = driver;
     }
 
-    //------------------------------------------< DatabasePersistenceManager >
-
     /**
      * Returns a JDBC connection acquired using the JDBC {@link DriverManager}.
      * @throws SQLException
@@ -180,7 +191,7 @@ public class SimpleDbPersistenceManager extends DatabasePersistenceManager {
      * @see DatabasePersistenceManager#getConnection()
      */
     protected Connection getConnection() throws RepositoryException, SQLException {
-        return ConnectionFactory.getConnection(driver, url, user, password);
+        return connectionFactory.getDataSource(driver, url, user, password).getConnection();
     }
 
 }

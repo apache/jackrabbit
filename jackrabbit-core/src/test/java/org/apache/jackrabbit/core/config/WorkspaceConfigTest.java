@@ -47,7 +47,7 @@ public class WorkspaceConfigTest extends TestCase {
     protected void setUp() {
         Properties variables = new Properties();
         variables.setProperty("wsp.home", "target");
-        parser = new RepositoryConfigurationParser(variables);
+        parser = new RepositoryConfigurationParser(variables, null);
     }
 
     /**

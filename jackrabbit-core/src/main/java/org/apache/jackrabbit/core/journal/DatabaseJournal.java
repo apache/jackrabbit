@@ -16,26 +16,28 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionFactory;
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper;
+import org.apache.jackrabbit.core.util.db.DatabaseAware;
+import org.apache.jackrabbit.core.util.db.DbUtility;
+import org.apache.jackrabbit.core.util.db.StreamWrapper;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Calendar;
 
 import javax.jcr.RepositoryException;
+import javax.sql.DataSource;
 
 /**
  * Database-based journal implementation. Stores records inside a database table named
@@ -76,18 +78,7 @@ import javax.jcr.RepositoryException;
  * </pre> *
  * </ul>
  */
-public class DatabaseJournal extends AbstractJournal {
-
-    /**
-     * Schema object prefix.
-     */
-    private static final String SCHEMA_OBJECT_PREFIX_VARIABLE =
-            "${schemaObjectPrefix}";
-
-    /**
-     * Default DDL script name.
-     */
-    private static final String DEFAULT_DDL_NAME = "default.ddl";
+public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * Default journal table name, used to check schema completeness.
@@ -98,11 +89,6 @@ public class DatabaseJournal extends AbstractJournal {
      * Local revisions table name, used to check schema completeness.
      */
     private static final String LOCAL_REVISIONS_TABLE = "LOCAL_REVISIONS";
-
-    /**
-     * Default reconnect delay in milliseconds.
-     */
-    private static final long DEFAULT_RECONNECT_DELAY_MS = 10000;
 
     /**
      * Logger.
@@ -135,59 +121,14 @@ public class DatabaseJournal extends AbstractJournal {
     private String password;
 
     /**
-     * Reconnect delay in milliseconds, bean property.
+     * DataSource logical name, bean property.
      */
-    private long reconnectDelayMs;
+    private String dataSourceName;
 
     /**
-     * JDBC Connection used.
+     * The connection helper
      */
-    private Connection connection;
-
-    /**
-     * Statement returning all revisions within a range.
-     */
-    private PreparedStatement selectRevisionsStmt;
-
-    /**
-     * Statement updating the global revision.
-     */
-    private PreparedStatement updateGlobalStmt;
-
-    /**
-     * Statement returning the global revision.
-     */
-    private PreparedStatement selectGlobalStmt;
-
-    /**
-     * Statement appending a new record.
-     */
-    private PreparedStatement insertRevisionStmt;
-
-    /**
-     * Statement returning the minimum of the local revisions.
-     */
-    private PreparedStatement selectMinLocalRevisionStmt;
-
-    /**
-     * Statement removing a set of revisions with from the journal table.
-     */
-    private PreparedStatement cleanRevisionStmt;
-
-    /**
-     * Statement returning the local revision of this cluster node.
-     */
-    private PreparedStatement getLocalRevisionStmt;
-
-    /**
-     * Statement for inserting the local revision of this cluster node.
-     */
-    private PreparedStatement insertLocalRevisionStmt;
-
-    /**
-     * Statement for updating the local revision of this cluster node.
-     */
-    private PreparedStatement updateLocalRevisionStmt;
+    private ConnectionHelper conHelper;
 
     /**
      * Auto commit level.
@@ -200,14 +141,9 @@ public class DatabaseJournal extends AbstractJournal {
     private long lockedRevision;
 
     /**
-     * Next time in milliseconds to reattempt connecting to the database.
-     */
-    private long reconnectTimeMs;
-
-    /**
      * Whether the revision table janitor thread is enabled.
      */
-    private boolean janitorEnabled;
+    private boolean janitorEnabled = false;
 
     /**
      * The sleep time of the revision table janitor in seconds, 1 day default.
@@ -240,6 +176,7 @@ public class DatabaseJournal extends AbstractJournal {
      * The instance that manages the local revision.
      */
     private DatabaseRevision databaseRevision;
+
     /**
      * SQL statement returning all revisions within a range.
      */
@@ -269,19 +206,19 @@ public class DatabaseJournal extends AbstractJournal {
      * SQL statement removing a set of revisions with from the journal table.
      */
     protected String cleanRevisionStmtSQL;
-
+    
     /**
      * SQL statement returning the local revision of this cluster node.
      */
     protected String getLocalRevisionStmtSQL;
-
+    
     /**
-     * SQL statement for inserting the local revision of this cluster node.
+     * SQL statement for inserting the local revision of this cluster node. 
      */
     protected String insertLocalRevisionStmtSQL;
 
     /**
-     * SQL statement for updating the local revision of this cluster node.
+     * SQL statement for updating the local revision of this cluster node. 
      */
     protected String updateLocalRevisionStmtSQL;
 
@@ -291,6 +228,23 @@ public class DatabaseJournal extends AbstractJournal {
     protected String schemaObjectPrefix;
 
     /**
+     * The repositories {@link ConnectionFactory}.
+     */
+    private ConnectionFactory connectionFactory;
+
+    public DatabaseJournal() {
+        databaseType = "default";
+        schemaObjectPrefix = "";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setConnectionFactory(ConnectionFactory connnectionFactory) {
+        this.connectionFactory = connnectionFactory;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void init(String id, NamespaceResolver resolver)
@@ -298,35 +252,65 @@ public class DatabaseJournal extends AbstractJournal {
 
         super.init(id, resolver);
 
-        // Provide valid defaults for arguments
-        if (schemaObjectPrefix == null) {
-            schemaObjectPrefix = "";
-        }
-        if (reconnectDelayMs == 0) {
-            reconnectDelayMs = DEFAULT_RECONNECT_DELAY_MS;
-        }
-
         init();
 
         try {
-            connection = getConnection();
-            setAutoCommit(connection, true);
+            conHelper = createConnectionHelper(getDataSource());
+
+            // make sure schemaObjectPrefix consists of legal name characters only
+            schemaObjectPrefix = conHelper.prepareDbIdentifier(schemaObjectPrefix);
+
+            // check if schema objects exist and create them if necessary
             if (isSchemaCheckEnabled()) {
-                checkSchema();
+                createCheckSchemaOperation().run();
             }
+
             // Make sure that the LOCAL_REVISIONS table exists (see JCR-1087)
             if (isSchemaCheckEnabled()) {
                 checkLocalRevisionSchema();
             }
 
             buildSQLStatements();
-            prepareStatements();
             initInstanceRevisionAndJanitor();
         } catch (Exception e) {
             String msg = "Unable to create connection.";
             throw new JournalException(msg, e);
         }
         log.info("DatabaseJournal initialized.");
+    }
+
+    private DataSource getDataSource() throws Exception {
+        if (getDataSourceName() == null || "".equals(getDataSourceName())) {
+            return connectionFactory.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+        } else {
+            return connectionFactory.getDataSource(dataSourceName);
+        }
+    }
+
+    /**
+     * This method is called from the {@link #init(String, NamespaceResolver)} method of this class and
+     * returns a {@link ConnectionHelper} instance which is assigned to the {@code conHelper} field.
+     * Subclasses may override it to return a specialized connection helper.
+     * 
+     * @param dataSrc the {@link DataSource} of this persistence manager
+     * @return a {@link ConnectionHelper}
+     * @throws Exception on error
+     */
+    protected ConnectionHelper createConnectionHelper(DataSource dataSrc) throws Exception {
+        return new ConnectionHelper(dataSrc, false);
+    }
+
+    /**
+     * This method is called from {@link #init(String, NamespaceResolver)} after the
+     * {@link #createConnectionHelper(DataSource)} method, and returns a default {@link CheckSchemaOperation}.
+     * Subclasses can overrride this implementation to get a customized implementation.
+     * 
+     * @return a new {@link CheckSchemaOperation} instance
+     */
+    protected CheckSchemaOperation createCheckSchemaOperation() {
+        InputStream in = DatabaseJournal.class.getResourceAsStream(databaseType + ".ddl");
+        return new CheckSchemaOperation(conHelper, in, schemaObjectPrefix + DEFAULT_JOURNAL_TABLE).addVariableReplacement(
+            CheckSchemaOperation.SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
     }
 
     /**
@@ -340,15 +324,24 @@ public class DatabaseJournal extends AbstractJournal {
      * @throws JournalException if initialization fails
      */
     protected void init() throws JournalException {
-        if (driver == null) {
+        if (driver == null && dataSourceName == null) {
             String msg = "Driver not specified.";
             throw new JournalException(msg);
         }
-        if (url == null) {
+        if (url == null && dataSourceName == null) {
             String msg = "Connection URL not specified.";
             throw new JournalException(msg);
         }
-
+        if (dataSourceName != null) {
+            try {
+                String configuredDatabaseType = connectionFactory.getDataBaseType(dataSourceName);
+                if (DatabaseJournal.class.getResourceAsStream(configuredDatabaseType + ".ddl") != null) {
+                    setDatabaseType(configuredDatabaseType);
+                }
+            } catch (RepositoryException e) {
+                throw new JournalException("failed to get database type", e);
+            }
+        }
         if (databaseType == null) {
             try {
                 databaseType = getDatabaseTypeFromURL(url);
@@ -356,13 +349,6 @@ public class DatabaseJournal extends AbstractJournal {
                 String msg = "Unable to derive database type from URL: " + e.getMessage();
                 throw new JournalException(msg);
             }
-        }
-
-        try {
-            Class.forName(driver);
-        } catch (ClassNotFoundException e) {
-            String msg = "Unable to load driver class.";
-            throw new JournalException(msg, e);
         }
     }
 
@@ -406,27 +392,6 @@ public class DatabaseJournal extends AbstractJournal {
     }
 
     /**
-     * Creates a new database connection. This method is called inside
-     * {@link #init(String, org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver)} or
-     * when a connection has been dropped and must be reacquired. Base
-     * implementation uses <code>java.sql.DriverManager</code> to get the
-     * connection. May be overridden by subclasses.
-     *
-     * @see #init()
-     * @return new connection
-     * @throws JournalException if the driver could not be loaded
-     * @throws SQLException if the connection could not be established
-     */
-    protected Connection getConnection() throws SQLException, JournalException {
-        try {
-            return ConnectionFactory.getConnection(driver, url, user, password);
-        } catch (RepositoryException e) {
-            String msg = "Unable to load driver class.";
-            throw new JournalException(msg, e);
-        }
-    }
-
-    /**
      * Derive a database type from a JDBC connection URL. This simply treats the given URL
      * as delimeted by colons and takes the 2nd field.
      *
@@ -448,24 +413,12 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    public RecordIterator getRecords(long startRevision)
-            throws JournalException {
-
+    public RecordIterator getRecords(long startRevision) throws JournalException {
         try {
-            checkConnection();
-
-            selectRevisionsStmt.clearParameters();
-            selectRevisionsStmt.clearWarnings();
-            selectRevisionsStmt.setLong(1, startRevision);
-            selectRevisionsStmt.execute();
-
-            return new DatabaseRecordIterator(
-                    selectRevisionsStmt.getResultSet(), getResolver(), getNamePathResolver());
+            return new DatabaseRecordIterator(conHelper.exec(selectRevisionsStmtSQL, new Object[]{new Long(
+                    startRevision)}, false, 0), getResolver(), getNamePathResolver());
         } catch (SQLException e) {
-            close(true);
-
-            String msg = "Unable to return record iterator.";
-            throw new JournalException(msg, e);
+            throw new JournalException("Unable to return record iterator.", e);
         }
     }
 
@@ -474,20 +427,10 @@ public class DatabaseJournal extends AbstractJournal {
      */
     public RecordIterator getRecords() throws JournalException {
         try {
-            checkConnection();
-
-            selectRevisionsStmt.clearParameters();
-            selectRevisionsStmt.clearWarnings();
-            selectRevisionsStmt.setLong(1, Long.MIN_VALUE);
-            selectRevisionsStmt.execute();
-
-            return new DatabaseRecordIterator(
-                    selectRevisionsStmt.getResultSet(), getResolver(), getNamePathResolver());
+            return new DatabaseRecordIterator(conHelper.exec(selectRevisionsStmtSQL, new Object[]{new Long(
+                    Long.MIN_VALUE)}, false, 0), getResolver(), getNamePathResolver());
         } catch (SQLException e) {
-            close(true);
-
-            String msg = "Unable to return record iterator.";
-            throw new JournalException(msg, e);
+            throw new JournalException("Unable to return record iterator.", e);
         }
     }
 
@@ -504,27 +447,16 @@ public class DatabaseJournal extends AbstractJournal {
         boolean succeeded = false;
 
         try {
-            checkConnection();
             if (lockLevel++ == 0) {
-                setAutoCommit(connection, false);
+                conHelper.startBatch();
             }
         } catch (SQLException e) {
-            close(true);
-
-            String msg = "Unable to set autocommit to false.";
-            throw new JournalException(msg, e);
+            throw new JournalException("Unable to set autocommit to false.", e);
         }
 
         try {
-            updateGlobalStmt.clearParameters();
-            updateGlobalStmt.clearWarnings();
-            updateGlobalStmt.execute();
-
-            selectGlobalStmt.clearParameters();
-            selectGlobalStmt.clearWarnings();
-            selectGlobalStmt.execute();
-
-            rs = selectGlobalStmt.getResultSet();
+            conHelper.exec(updateGlobalStmtSQL);
+            rs = conHelper.exec(selectGlobalStmtSQL, null, false, 0);
             if (!rs.next()) {
                  throw new JournalException("No revision available.");
             }
@@ -532,12 +464,9 @@ public class DatabaseJournal extends AbstractJournal {
             succeeded = true;
 
         } catch (SQLException e) {
-            close(true);
-
-            String msg = "Unable to lock global revision table.";
-            throw new JournalException(msg, e);
+            throw new JournalException("Unable to lock global revision table.", e);
         } finally {
-            close(rs);
+            DbUtility.close(rs);
             if (!succeeded) {
                 doUnlock(false);
             }
@@ -549,12 +478,11 @@ public class DatabaseJournal extends AbstractJournal {
      */
     protected void doUnlock(boolean successful) {
         if (--lockLevel == 0) {
-            if (successful) {
-                commit(connection);
-            } else {
-                rollback(connection);
+            try {
+                conHelper.endBatch(successful);;
+            } catch (SQLException e) {
+                log.error("failed to end batch", e);
             }
-            setAutoCommit(connection, true);
         }
     }
 
@@ -576,19 +504,10 @@ public class DatabaseJournal extends AbstractJournal {
             throws JournalException {
 
         try {
-            checkConnection();
-
-            insertRevisionStmt.clearParameters();
-            insertRevisionStmt.clearWarnings();
-            insertRevisionStmt.setLong(1, record.getRevision());
-            insertRevisionStmt.setString(2, getId());
-            insertRevisionStmt.setString(3, record.getProducerId());
-            insertRevisionStmt.setBinaryStream(4, in, length);
-            insertRevisionStmt.execute();
+            conHelper.exec(insertRevisionStmtSQL, record.getRevision(), getId(), record.getProducerId(),
+                new StreamWrapper(in, length));
 
         } catch (SQLException e) {
-            close(true);
-
             String msg = "Unable to append revision " + lockedRevision + ".";
             throw new JournalException(msg, e);
         }
@@ -598,228 +517,8 @@ public class DatabaseJournal extends AbstractJournal {
      * {@inheritDoc}
      */
     public void close() {
-        close(false);
         if (janitorThread != null) {
             janitorThread.interrupt();
-        }
-    }
-
-    /**
-     * Close database connections and statements. If closing was due to an
-     * error that occurred, calculates the next time a reconnect should
-     * be attempted.
-     *
-     * @param failure whether closing is due to a failure
-     */
-    private void close(boolean failure) {
-        if (failure) {
-            reconnectTimeMs = System.currentTimeMillis() + reconnectDelayMs;
-        }
-
-        close(selectRevisionsStmt);
-        selectRevisionsStmt = null;
-        close(updateGlobalStmt);
-        updateGlobalStmt = null;
-        close(selectGlobalStmt);
-        selectGlobalStmt = null;
-        close(insertRevisionStmt);
-        insertRevisionStmt = null;
-        close(selectMinLocalRevisionStmt);
-        selectMinLocalRevisionStmt = null;
-        close(cleanRevisionStmt);
-        cleanRevisionStmt = null;
-        close(getLocalRevisionStmt);
-        getLocalRevisionStmt = null;
-        close(insertLocalRevisionStmt);
-        insertLocalRevisionStmt = null;
-        close(updateLocalRevisionStmt);
-        updateLocalRevisionStmt = null;
-
-        close(connection);
-        connection = null;
-    }
-
-    /**
-     * Set the autocommit flag of a connection. Does nothing if the connection
-     * passed is <code>null</code> and logs any exception as warning.
-     *
-     * @param connection database connection
-     * @param autoCommit where to enable or disable autocommit
-     */
-    private static void setAutoCommit(Connection connection, boolean autoCommit) {
-        if (connection != null) {
-            try {
-                // JCR-1013: Setter may fail on a managed connection
-                if (connection.getAutoCommit() != autoCommit) {
-                    connection.setAutoCommit(autoCommit);
-                }
-            } catch (SQLException e) {
-                String msg = "Unable to set autocommit flag to " + autoCommit;
-                log.warn(msg, e);
-            }
-        }
-    }
-
-    /**
-     * Commit a connection. Does nothing if the connection passed is
-     * <code>null</code> and logs any exception as warning.
-     *
-     * @param connection connection.
-     */
-    private static void commit(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.commit();
-            } catch (SQLException e) {
-                String msg = "Error while committing connection: " + e.getMessage();
-                log.warn(msg);
-            }
-        }
-    }
-
-    /**
-     * Rollback a connection. Does nothing if the connection passed is
-     * <code>null</code> and logs any exception as warning.
-     *
-     * @param connection connection.
-     */
-    private static void rollback(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.rollback();
-            } catch (SQLException e) {
-                String msg = "Error while rolling back connection: " + e.getMessage();
-                log.warn(msg);
-            }
-        }
-    }
-
-    /**
-     * Closes the given database connection. Does nothing if the connection
-     * passed is <code>null</code> and logs any exception as warning.
-     *
-     * @param connection database connection
-     */
-    private static void close(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                String msg = "Error while closing connection: " + e.getMessage();
-                log.warn(msg);
-            }
-        }
-    }
-
-    /**
-     * Close some input stream.  Does nothing if the input stream
-     * passed is <code>null</code> and logs any exception as warning.
-     *
-     * @param in input stream, may be <code>null</code>.
-     */
-    private static void close(InputStream in) {
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException e) {
-                String msg = "Error while closing input stream: " + e.getMessage();
-                log.warn(msg);
-            }
-        }
-    }
-
-    /**
-     * Close some statement.  Does nothing if the statement
-     * passed is <code>null</code> and logs any exception as warning.
-     *
-     * @param stmt statement, may be <code>null</code>.
-     */
-    private static void close(Statement stmt) {
-        if (stmt != null) {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                String msg = "Error while closing statement: " + e.getMessage();
-                log.warn(msg);
-            }
-        }
-    }
-
-    /**
-     * Close some resultset.  Does nothing if the result set
-     * passed is <code>null</code> and logs any exception as warning.
-     *
-     * @param rs resultset, may be <code>null</code>.
-     */
-    private static void close(ResultSet rs) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                String msg = "Error while closing result set: " + e.getMessage();
-                log.warn(msg);
-            }
-        }
-    }
-
-    /**
-     * Checks the currently established connection. If the connection no longer
-     * exists, waits until at least <code>reconnectTimeMs</code> have passed
-     * since the error occurred and recreates the connection.
-     */
-    private void checkConnection() throws SQLException, JournalException {
-        if (connection == null) {
-            long delayMs = reconnectTimeMs - System.currentTimeMillis();
-            if (delayMs > 0) {
-                try {
-                    Thread.sleep(delayMs);
-                } catch (InterruptedException e) {
-                    /* ignore */
-                }
-            }
-            connection = getConnection();
-            prepareStatements();
-        }
-    }
-
-    /**
-     * Checks if the required schema objects exist and creates them if they
-     * don't exist yet.
-     *
-     * @throws Exception if an error occurs
-     */
-    private void checkSchema() throws Exception {
-        if (!tableExists(connection.getMetaData(), schemaObjectPrefix + DEFAULT_JOURNAL_TABLE)) {            // read ddl from resources
-            InputStream in = DatabaseJournal.class.getResourceAsStream(databaseType + ".ddl");
-            if (in == null) {
-                String msg = "No database-specific DDL found: '" + databaseType + ".ddl"
-                    + "', falling back to '" + DEFAULT_DDL_NAME + "'.";
-                log.info(msg);
-                in = DatabaseJournal.class.getResourceAsStream(DEFAULT_DDL_NAME);
-                if (in == null) {
-                    msg = "Unable to load '" + DEFAULT_DDL_NAME + "'.";
-                    throw new JournalException(msg);
-                }
-            }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            Statement stmt = connection.createStatement();
-            try {
-                String sql = reader.readLine();
-                while (sql != null) {
-                    // Skip comments and empty lines
-                    if (!sql.startsWith("#") && sql.length() > 0) {
-                        // replace prefix variable
-                        sql = createSchemaSQL(sql);
-                        // execute sql stmt
-                        stmt.executeUpdate(sql);
-                    }
-                    // read next sql stmt
-                    sql = reader.readLine();
-                }
-            } finally {
-                close(in);
-                close(stmt);
-            }
         }
     }
 
@@ -830,78 +529,28 @@ public class DatabaseJournal extends AbstractJournal {
      * @throws Exception if an error occurs
      */
     private void checkLocalRevisionSchema() throws Exception {
-        if (!tableExists(connection.getMetaData(), schemaObjectPrefix + LOCAL_REVISIONS_TABLE)) {
-            log.info("Creating " + schemaObjectPrefix + LOCAL_REVISIONS_TABLE + " table");
-            // read ddl from resources
-            InputStream in = DatabaseJournal.class.getResourceAsStream(databaseType + ".ddl");
-            if (in == null) {
-                String msg = "No database-specific DDL found: '" + databaseType + ".ddl" +
-                        "', falling back to '" + DEFAULT_DDL_NAME + "'.";
-                log.info(msg);
-                in = DatabaseJournal.class.getResourceAsStream(DEFAULT_DDL_NAME);
-                if (in == null) {
-                    msg = "Unable to load '" + DEFAULT_DDL_NAME + "'.";
-                    throw new JournalException(msg);
-                }
-            }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            Statement stmt = connection.createStatement();
-            try {
-                String sql = reader.readLine();
-                while (sql != null) {
-                    // Skip comments and empty lines, and select only the statement
-                    // to create the LOCAL_REVISIONS table.
-                    if (!sql.startsWith("#") && sql.length() > 0
-                            && sql.indexOf(LOCAL_REVISIONS_TABLE) != -1) {
-                        // replace prefix variable
-                        sql = createSchemaSQL(sql);
-                        // execute sql stmt
-                        stmt.executeUpdate(sql);
-                    }
-                    // read next sql stmt
-                    sql = reader.readLine();
-                }
-            } finally {
-                close(in);
-                close(stmt);
-            }
-        }
-    }
-
-    /**
-     * Checks whether the required table(s) exist in the schema. May be
-     * overridden by subclasses to allow different table names.
-     *
-     * @param metaData database meta data
-     * @return <code>true</code> if the schema exists
-     * @throws SQLException if an SQL error occurs
-     */
-    protected boolean tableExists(DatabaseMetaData metaData, String tableName)
-        throws SQLException {
-
-        if (metaData.storesLowerCaseIdentifiers()) {
-            tableName = tableName.toLowerCase();
-        } else if (metaData.storesUpperCaseIdentifiers()) {
-            tableName = tableName.toUpperCase();
-        }
-
-        ResultSet rs = metaData.getTables(null, null, tableName, null);
-
+        InputStream localRevisionDDLStream = null;
+        InputStream in = DatabaseJournal.class.getResourceAsStream(databaseType + ".ddl");
         try {
-            return rs.next();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            String sql = reader.readLine();
+            while (sql != null) {
+                // Skip comments and empty lines, and select only the statement to create the LOCAL_REVISIONS
+                // table.
+                if (!sql.startsWith("#") && sql.length() > 0 && sql.indexOf(LOCAL_REVISIONS_TABLE) != -1) {
+                    localRevisionDDLStream = new ByteArrayInputStream(sql.getBytes());
+                    break;
+                }
+                // read next sql stmt
+                sql = reader.readLine();
+            }
         } finally {
-            rs.close();
+            IOUtils.closeQuietly(in);
         }
-    }
-
-    /**
-     * Creates an SQL statement for schema creation by variable substitution.
-     *
-     * @param sql a SQL string which may contain variables to substitute
-     * @return a valid SQL string
-     */
-    protected String createSchemaSQL(String sql) {
-        return Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+        // Run the schema check for the single table
+        new CheckSchemaOperation(conHelper, localRevisionDDLStream, schemaObjectPrefix
+                + LOCAL_REVISIONS_TABLE).addVariableReplacement(
+            CheckSchemaOperation.SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix).run();
     }
 
     /**
@@ -938,23 +587,6 @@ public class DatabaseJournal extends AbstractJournal {
     }
 
     /**
-     * Prepares the SQL statements.
-     *
-     * @throws SQLException if an error occurs
-     */
-    private void prepareStatements() throws SQLException {
-        selectRevisionsStmt = connection.prepareStatement(selectRevisionsStmtSQL);
-        updateGlobalStmt = connection.prepareStatement(updateGlobalStmtSQL);
-        selectGlobalStmt = connection.prepareStatement(selectGlobalStmtSQL);
-        insertRevisionStmt = connection.prepareStatement(insertRevisionStmtSQL);
-        selectMinLocalRevisionStmt = connection.prepareStatement(selectMinLocalRevisionStmtSQL);
-        cleanRevisionStmt = connection.prepareStatement(cleanRevisionStmtSQL);
-        getLocalRevisionStmt = connection.prepareStatement(getLocalRevisionStmtSQL);
-        insertLocalRevisionStmt = connection.prepareStatement(insertLocalRevisionStmtSQL);
-        updateLocalRevisionStmt = connection.prepareStatement(updateLocalRevisionStmtSQL);
-    }
-
-    /**
      * Bean getters
      */
     public String getDriver() {
@@ -967,7 +599,7 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * Get the database type.
-     *
+     * 
      * @return the database type
      */
     public String getDatabaseType() {
@@ -978,7 +610,7 @@ public class DatabaseJournal extends AbstractJournal {
      * Get the database type.
      * @deprecated
      * This method is deprecated; {@link #getDatabaseType} should be used instead.
-     *
+     * 
      * @return the database type
      */
     public String getSchema() {
@@ -995,10 +627,6 @@ public class DatabaseJournal extends AbstractJournal {
 
     public String getPassword() {
         return password;
-    }
-
-    public long getReconnectDelayMs() {
-        return reconnectDelayMs;
     }
 
     public boolean getJanitorEnabled() {
@@ -1026,7 +654,7 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * Set the database type.
-     *
+     * 
      * @param databaseType the database type
      */
     public void setDatabaseType(String databaseType) {
@@ -1036,8 +664,8 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * Set the database type.
     * @deprecated
-    * This method is deprecated; {@link #setDatabaseType} should be used instead.
-     *
+    * This method is deprecated; {@link #getDatabaseType} should be used instead.
+     * 
      * @param databaseType the database type
      */
     public void setSchema(String databaseType) {
@@ -1054,10 +682,6 @@ public class DatabaseJournal extends AbstractJournal {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public void setReconnectDelayMs(long reconnectDelayMs) {
-        this.reconnectDelayMs = reconnectDelayMs;
     }
 
     public void setJanitorEnabled(boolean enabled) {
@@ -1077,6 +701,14 @@ public class DatabaseJournal extends AbstractJournal {
         janitorNextRun.set(Calendar.MINUTE, 0);
         janitorNextRun.set(Calendar.SECOND, 0);
         janitorNextRun.set(Calendar.MILLISECOND, 0);
+    }
+
+    public String getDataSourceName() {
+        return dataSourceName;
+    }
+
+    public void setDataSourceName(String dataSourceName) {
+        this.dataSourceName = dataSourceName;
     }
 
     /**
@@ -1106,9 +738,9 @@ public class DatabaseJournal extends AbstractJournal {
         private long localRevision;
 
         /**
-         * Indicates whether the init method has been called.
+         * Indicates whether the init method has been called. 
          */
-        private boolean initialized;
+        private boolean initialized = false;
 
         /**
          * Checks whether there's a local revision value in the database for this
@@ -1119,29 +751,18 @@ public class DatabaseJournal extends AbstractJournal {
          * @throws JournalException on error
          */
         protected synchronized long init(long revision) throws JournalException {
+            ResultSet rs = null;
             try {
-                // Check whether the connection is available
-                checkConnection();
-
                 // Check whether there is an entry in the database.
-                getLocalRevisionStmt.clearParameters();
-                getLocalRevisionStmt.clearWarnings();
-                getLocalRevisionStmt.setString(1, getId());
-                getLocalRevisionStmt.execute();
-                ResultSet rs = getLocalRevisionStmt.getResultSet();
+                rs = conHelper.exec(getLocalRevisionStmtSQL, new Object[]{getId()}, false, 0);
                 boolean exists = rs.next();
                 if (exists) {
                     revision = rs.getLong(1);
                 }
-                rs.close();
 
                 // Insert the given revision in the database
                 if (!exists) {
-                    insertLocalRevisionStmt.clearParameters();
-                    insertLocalRevisionStmt.clearWarnings();
-                    insertLocalRevisionStmt.setLong(1, revision);
-                    insertLocalRevisionStmt.setString(2, getId());
-                    insertLocalRevisionStmt.execute();
+                    conHelper.exec(insertLocalRevisionStmtSQL, revision, getId());
                 }
 
                 // Set the cached local revision and return
@@ -1151,8 +772,9 @@ public class DatabaseJournal extends AbstractJournal {
 
             } catch (SQLException e) {
                 log.warn("Failed to initialize local revision.", e);
-                DatabaseJournal.this.close(true);
                 throw new JournalException("Failed to initialize local revision", e);
+            } finally {
+                DbUtility.close(rs);
             }
         }
 
@@ -1177,25 +799,18 @@ public class DatabaseJournal extends AbstractJournal {
 
             // Update the cached value and the table with local revisions.
             try {
-                // Check whether the connection is available
-                checkConnection();
-                updateLocalRevisionStmt.clearParameters();
-                updateLocalRevisionStmt.clearWarnings();
-                updateLocalRevisionStmt.setLong(1, localRevision);
-                updateLocalRevisionStmt.setString(2, getId());
-                updateLocalRevisionStmt.execute();
+                conHelper.exec(updateLocalRevisionStmtSQL, localRevision, getId());
                 this.localRevision = localRevision;
             } catch (SQLException e) {
                 log.warn("Failed to update local revision.", e);
-                DatabaseJournal.this.close(true);
+                throw new JournalException("Failed to update local revision.", e);
             }
         }
-
+        
         /**
          * {@inheritDoc}
          */
-        public synchronized void close() {
-            // Do nothing: The statements are closed in DatabaseJournal.close()
+        public void close() {
         }
     }
 
@@ -1225,40 +840,30 @@ public class DatabaseJournal extends AbstractJournal {
             }
             log.info("Interrupted: stopping clean-up task.");
         }
-
+        
         /**
          * Cleans old revisions from the clustering table.
          */
         protected void cleanUpOldRevisions() {
+            ResultSet rs = null;
             try {
                 long minRevision = 0;
-
-                // Check whether the connection is available
-                checkConnection();
-
-                // Find the minimal local revision
-                selectMinLocalRevisionStmt.clearParameters();
-                selectMinLocalRevisionStmt.clearWarnings();
-                selectMinLocalRevisionStmt.execute();
-                ResultSet rs = selectMinLocalRevisionStmt.getResultSet();
+                rs = conHelper.exec(selectMinLocalRevisionStmtSQL, null, false, 0);
                 boolean cleanUp = rs.next();
                 if (cleanUp) {
                     minRevision = rs.getLong(1);
                 }
-                rs.close();
 
                 // Clean up if necessary:
                 if (cleanUp) {
-                    cleanRevisionStmt.clearParameters();
-                    cleanRevisionStmt.clearWarnings();
-                    cleanRevisionStmt.setLong(1, minRevision);
-                    cleanRevisionStmt.execute();
+                    conHelper.exec(cleanRevisionStmtSQL, minRevision);
                     log.info("Cleaned old revisions up to revision " + minRevision + ".");
                 }
 
             } catch (Exception e) {
                 log.warn("Failed to clean up old revisions.", e);
-                close(true);
+            } finally {
+                DbUtility.close(rs);
             }
         }
     }

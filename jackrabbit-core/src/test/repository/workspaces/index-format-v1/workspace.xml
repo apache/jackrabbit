@@ -21,7 +21,7 @@
     <param name="path" value="${wsp.home}" />
   </FileSystem>
 
-  <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.BundleFsPersistenceManager"/>
+  <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.BundleFsPersistenceManager"/>
 
   <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
     <param name="path" value="${wsp.home}/index" />

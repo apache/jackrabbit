@@ -16,12 +16,15 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper;
+import org.apache.jackrabbit.core.util.db.DerbyConnectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Connection;
+
+import javax.sql.DataSource;
 
 /**
  * <code>DerbyFileSystem</code> is a JDBC-based <code>FileSystem</code>
@@ -56,11 +59,6 @@ import java.sql.Connection;
 public class DerbyFileSystem extends DbFileSystem {
 
     /**
-     * Logger instance
-     */
-    private static Logger log = LoggerFactory.getLogger(DerbyFileSystem.class);
-
-    /**
      * Flag indicating whether this derby database should be shutdown on close.
      */
     protected boolean shutdownOnClose;
@@ -89,46 +87,24 @@ public class DerbyFileSystem extends DbFileSystem {
     //-----------------------------------------------< DbFileSystem overrides >
 
     /**
-     * Closes the given connection and shuts down the embedded Derby
-     * database if <code>shutdownOnClose</code> is set to true.
-     *
-     * @param connection database connection
-     * @throws SQLException if an error occurs
-     * @see DatabaseFileSystem#closeConnection(Connection)
+     * {@inheritDoc}
      */
-    protected void closeConnection(Connection connection) throws SQLException {
-        // prepare connection url for issuing shutdown command
-        String url;
-        try {
-            url = connection.getMetaData().getURL();
-        } catch (SQLException e) {
-            // JCR-1557: embedded derby db probably already shut down;
-            // this happens when configuring multiple FS/PM instances
-            // to use the same embedded derby db instance.
-            log.debug("failed to retrieve connection url: embedded db probably already shut down", e);
-            return;
-        }
-        int pos = url.lastIndexOf(';');
-        if (pos != -1) {
-            // strip any attributes from connection url
-            url = url.substring(0, pos);
-        }
-        url += ";shutdown=true";
+    @Override
+    protected ConnectionHelper createConnectionHelper(DataSource dataSrc) throws Exception {
+        return new DerbyConnectionHelper(dataSrc, false);
+    }
 
-        // we have to reset the connection to 'autoCommit=true' before closing it;
-        // otherwise Derby would mysteriously complain about some pending uncommitted
-        // changes which can't possibly be true.
-        // @todo further investigate
-        connection.setAutoCommit(true);
-        connection.close();
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws FileSystemException {
+        super.close();
         if (shutdownOnClose) {
-            // now it's safe to shutdown the embedded Derby database
             try {
-                DriverManager.getConnection(url);
+                ((DerbyConnectionHelper) conHelper).shutDown(driver);
             } catch (SQLException e) {
-                // a shutdown command always raises a SQLException
-                log.info(e.getMessage());
+                throw new FileSystemException("failed to shutdown Derby", e);
             }
         }
     }

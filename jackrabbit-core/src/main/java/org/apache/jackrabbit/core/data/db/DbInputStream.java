@@ -23,7 +23,7 @@ import java.sql.ResultSet;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
+import org.apache.jackrabbit.core.util.db.DbUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +39,7 @@ public class DbInputStream extends AutoCloseInputStream {
     protected DbDataStore store;
     protected DataIdentifier identifier;
     protected boolean endOfStream;
-    
-    protected ConnectionRecoveryManager conn;
+
     protected ResultSet rs;
     
 
@@ -130,15 +129,8 @@ public class DbInputStream extends AutoCloseInputStream {
             // some additional database objects 
             // may need to be closed
             if (rs != null) {
-                DatabaseHelper.closeSilently(rs);
+                DbUtility.close(rs);
                 rs = null;
-            }
-            if (conn != null) {
-                try {
-                    store.putBack(conn);
-                } catch (DataStoreException e) {
-                    log.info("Error closing DbResource", e);
-                }
             }
         }
     }
@@ -208,16 +200,6 @@ public class DbInputStream extends AutoCloseInputStream {
     }
 
     /**
-     * Set the database connection of this input stream. This object must be
-     * closed once the stream is closed.
-     * 
-     * @param conn the connection
-     */
-    void setConnection(ConnectionRecoveryManager conn) {
-        this.conn = conn;
-    }
-
-    /**
      * Set the result set of this input stream. This object must be closed once
      * the stream is closed.
      * 
@@ -226,5 +208,4 @@ public class DbInputStream extends AutoCloseInputStream {
     void setResultSet(ResultSet rs) {
         this.rs = rs;
     }
-
 }

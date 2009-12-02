@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 
 /**
  * It has the following property in addition to those of the DatabaseJournal:
@@ -39,6 +39,15 @@ public class MSSqlDatabaseJournal extends DatabaseJournal {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected CheckSchemaOperation createCheckSchemaOperation() {
+        return super.createCheckSchemaOperation().addVariableReplacement(
+            CheckSchemaOperation.TABLE_SPACE_VARIABLE, tableSpace);
+    }
+
+    /**
      * Returns the configured MS SQL table space.
      * @return the configured MS SQL table space.
      */
@@ -57,13 +66,4 @@ public class MSSqlDatabaseJournal extends DatabaseJournal {
             this.tableSpace = "";
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected String createSchemaSQL(String sql) {
-        return Text.replace(
-                super.createSchemaSQL(sql), "${tableSpace}", tableSpace);
-    }
-
 }
