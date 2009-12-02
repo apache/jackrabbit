@@ -181,8 +181,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
         }
         NodeState parentState = null;
         try {
-            NodeImpl parent = (NodeImpl) getItem(parentId);
-            parentState = parent.getNodeState();
+            // access the parent state circumventing permission check, since
+            // read permission on the parent isn't required in order to retrieve
+            // a node's definition. see also JCR-2418
+            ItemData parentData = getItemData(parentId, null, false);
+            parentState = (NodeState) parentData.getState();
             if (state.getParentId() == null) {
                 // indicates state has been removed, must use
                 // overlayed state of parent, otherwise child node entry
@@ -237,7 +240,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
     PropertyDefinitionImpl getDefinition(PropertyState state)
             throws RepositoryException {
         try {
-            NodeImpl parent = (NodeImpl) getItem(state.getParentId());
+            // retrieve parent in 2 steps in order to avoid the check for
+            // read permissions on the parent which isn't required in order
+            // to read the property's definition. see also JCR-2418.
+            ItemData parentData = getItemData(state.getParentId(), null, false);
+            NodeImpl parent = (NodeImpl) createItemInstance(parentData);
             return parent.getApplicablePropertyDefinition(
                     state.getName(), state.getType(), state.isMultiValued(), true);
         } catch (ItemNotFoundException e) {
