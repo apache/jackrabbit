@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-beta3
+Release Notes -- Apache Jackrabbit -- Version 2.0-beta4
 
 Introduction
 ------------
@@ -31,6 +31,8 @@ notable changes in this release are:
     components like JCR-RMI and OCM are now developed and released
     separately from the Jackrabbit content repository. See the individual
     components for their most recent releases.
+
+  * Database connection pooling is now available for all database backends.
 
   * Data store feature enabled in the default repository configuration.
 
