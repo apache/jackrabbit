@@ -48,17 +48,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skip>false</skip>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
-                    <workingDirectory>target</workingDirectory> 
-                    <forkMode>once</forkMode>
-                    <argLine>-Xmx128m -enableassertions</argLine>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
-            
-          <plugin>
+            <plugin>
               <groupId>org.apache.rat</groupId>
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
@@ -71,6 +64,29 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>integration-test</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <workingDirectory>target</workingDirectory> 
+                            <forkMode>once</forkMode>
+                            <argLine>-Xmx128m -enableassertions</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
