@@ -914,7 +914,13 @@ public class SessionImpl extends AbstractSession
         // check sanity of this session
         sanityCheck();
 
-        getItemManager().getRootNode().save();
+        // /JCR-2425: check whether session is allowed to read root node
+        if (hasPermission("/", ACTION_READ)) {
+            getItemManager().getRootNode().save();
+        } else {
+            NodeId id = getItemStateManager().getIdOfRootTransientNodeState();
+            getItemManager().getItem(id).save();
+        }
     }
 
     /**
@@ -936,11 +942,12 @@ public class SessionImpl extends AbstractSession
         }
 
         if (!keepChanges) {
-            // optimization
             itemStateMgr.disposeAllTransientItemStates();
-            return;
+        } else {
+            /** todo FIXME should reset Item#status field to STATUS_NORMAL
+             * of all non-transient instances; maybe also
+             * have to reset stale ItemState instances */
         }
-        getItemManager().getRootNode().refresh(keepChanges);
     }
 
     /**

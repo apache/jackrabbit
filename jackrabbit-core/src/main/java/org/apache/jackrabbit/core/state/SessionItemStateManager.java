@@ -22,12 +22,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.LinkedList;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
@@ -38,10 +38,12 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -391,7 +393,7 @@ public class SessionItemStateManager
      * Returns an iterator over those transient item state instances that are
      * direct or indirect descendants of the item state with the given
      * <code>parentId</code>. The transient item state instance with the given
-     * <code>parentId</code> itself (if there is such)                                                                            not be included.
+     * <code>parentId</code> itself (if there is such) will not be included.
      * <p/>
      * The instances are returned in depth-first tree traversal order.
      *
@@ -417,9 +419,7 @@ public class SessionItemStateManager
         List[] la = new List[10];
         try {
             HierarchyManager atticAware = getAtticAwareHierarchyMgr();
-            Iterator iter = transientStore.values().iterator();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
+            for (ItemState state : transientStore.values()) {
                 // determine relative depth: > 0 means it's a descendant
                 int depth;
                 try {
@@ -559,6 +559,104 @@ public class SessionItemStateManager
             return empty.iterator();
         }
         return resultIter;
+    }
+
+    /**
+     * Returns the id of the root of the minimal subtree including all
+     * transient states.
+     *
+     * @return id of nearest common ancestor of all transient states or null
+     *         if there's no transient state.
+     * @throws RepositoryException if an error occurs
+     */
+    public NodeId getIdOfRootTransientNodeState() throws RepositoryException {
+        if (transientStore.isEmpty()) {
+            return null;
+        }
+
+        // short cut
+        if (transientStore.contains(hierMgr.getRootNodeId())) {
+            return hierMgr.getRootNodeId();
+        }
+
+        // the nearest common ancestor of all transient states
+        // must be either
+        // a) a node state with STATUS_EXISTING_MODIFIED, or
+        // b) the parent node of a property state with STATUS_EXISTING_MODIFIED 
+
+        // collect all candidates based on above criteria
+        Collection<NodeId> candidateIds = new LinkedList<NodeId>();
+        try {
+            HierarchyManager hierMgr = getHierarchyMgr();
+            for (ItemState state : transientStore.values()) {
+                if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
+                    NodeId nodeId;
+                    if (state.isNode()) {
+                        nodeId = (NodeId) state.getId();
+                    } else {
+                        nodeId = state.getParentId();
+                    }
+                    // remove any descendant candidates
+                    boolean skip = false;
+                    for (NodeId id : candidateIds) {
+                        if (nodeId.equals(id) || hierMgr.isAncestor(id, nodeId)) {
+                            // already a candidate or a descendant thereof
+                            // => skip
+                            skip = true;
+                            break;
+                        }
+                        if (hierMgr.isAncestor(nodeId, id)) {
+                            // candidate is a descendant => remove
+                            candidateIds.remove(id);
+                        }
+                    }
+                    if (!skip) {
+                        // add to candidates
+                        candidateIds.add(nodeId);
+                    }
+                }
+            }
+
+            if (candidateIds.size() == 1) {
+                return candidateIds.iterator().next();
+            }
+
+            // pick (any) candidate with shortest path to start with
+            NodeId candidateId = null;
+            for (NodeId id : candidateIds) {
+                if (candidateId == null) {
+                    candidateId = id;
+                } else {
+                    if (hierMgr.getDepth(id) < hierMgr.getDepth(candidateId)) {
+                        candidateId = id;
+                    }
+                }
+            }
+
+            // starting with this candidate closest to root, find first parent
+            // which is an ancestor of all candidates
+            NodeState state = (NodeState) getItemState(candidateId);
+            NodeId parentId = state.getParentId();
+            boolean continueWithParent = false;
+            while (parentId != null) {
+                for (NodeId id : candidateIds) {
+                    if (hierMgr.getRelativeDepth(parentId, id) == -1) {
+                        continueWithParent = true;
+                        break;
+                    }
+                }
+                if (continueWithParent) {
+                    state = (NodeState) getItemState(candidateId);
+                    parentId = state.getParentId();
+                    continueWithParent = false;
+                } else {
+                    break;
+                }
+            }
+            return parentId;
+        } catch (ItemStateException e) {
+            throw new RepositoryException("failed to determine common root of transient changes", e);
+        }
     }
 
     /**
