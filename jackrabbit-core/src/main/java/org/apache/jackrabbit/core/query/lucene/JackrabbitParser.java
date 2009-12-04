@@ -60,7 +60,7 @@ class JackrabbitParser implements Parser {
     /**
      * Flag for blocking all text extraction. Used by the Jackrabbit test suite.
      */
-    private static boolean blocked = false;
+    private static volatile boolean blocked = false;
 
     /**
      * The configured Tika parser.
@@ -192,7 +192,7 @@ class JackrabbitParser implements Parser {
     public void parse(
             InputStream stream, ContentHandler handler, Metadata metadata)
             throws IOException, SAXException, TikaException {
-        parser.parse(stream, handler, metadata, new ParseContext());
+        parse(stream, handler, metadata, new ParseContext());
     }
 
     /**
