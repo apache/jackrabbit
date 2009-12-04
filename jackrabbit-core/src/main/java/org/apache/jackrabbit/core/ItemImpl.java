@@ -979,7 +979,7 @@ public abstract class ItemImpl implements Item {
              */
             Collection<ItemState> removed = getRemovedStates();
 
-            // All affected item states. They keys are used to look up whether
+            // All affected item states. The keys are used to look up whether
             // an item is affected, and the values are iterated through below
             Map<ItemId, ItemState> affected =
                 new HashMap<ItemId, ItemState>(dirty.size() + removed.size());
