@@ -52,8 +52,8 @@
           <configuration>
             <instructions>
               <Export-Package>
-                org.apache.jackrabbit.spi.commons;version=${pom.version},
-                org.apache.jackrabbit.spi.commons.*;version=${pom.version}
+                org.apache.jackrabbit.spi.commons;version=${project.version},
+                org.apache.jackrabbit.spi.commons.*;version=${project.version}
               </Export-Package>
             </instructions>
           </configuration>

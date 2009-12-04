@@ -52,7 +52,7 @@
           <configuration>
             <instructions>
               <Export-Package>
-                org.apache.jackrabbit.spi;version=${pom.version}
+                org.apache.jackrabbit.spi;version=${project.version}
               </Export-Package>
             </instructions>
           </configuration>
