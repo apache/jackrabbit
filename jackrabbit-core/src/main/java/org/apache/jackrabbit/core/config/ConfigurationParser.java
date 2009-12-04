@@ -21,6 +21,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -222,13 +224,50 @@ public class ConfigurationParser {
     }
 
     /**
+     * Returns the error handler to be used when parsing configuration
+     * documents. Subclasses can override this method to provide custom
+     * error handling.
+     *
+     * @since Apache Jackrabbit 2.0
+     * @return error handler
+     */
+    protected ErrorHandler getErrorHandler() {
+        return new ConfigurationErrorHandler();
+    }
+
+    /**
+     * Returns the entity resolver to be used when parsing configuration
+     * documents. Subclasses can override this method to provide custom
+     * entity resolution rules.
+     *
+     * @since Apache Jackrabbit 2.0
+     * @return error handler
+     */
+    protected EntityResolver getEntityResolver() {
+        return ConfigurationEntityResolver.INSTANCE;
+    }
+
+    /**
+     * A post-processing hook for the parsed repository or workspace
+     * configuration documents. This hook makes it possible to make custom
+     * DOM modifications for backwards-compatibility or other reasons.
+     *
+     * @since Apache Jackrabbit 2.0
+     * @param document the parsed configuration document
+     * @return the configuration document after any modifications
+     */
+    protected Document postParseModificationHook(Document document) {
+        return document;
+    }
+
+    /**
      * Parses the given XML document and returns the DOM root element.
      * A custom entity resolver is used to make the included configuration
      * file DTD available using the specified public identifiers.
      *
      * @see ConfigurationEntityResolver
      * @param xml xml document
-     * @param validate wheter the XML should be validated
+     * @param validate whether the XML should be validated
      * @return root element
      * @throws ConfigurationException if the configuration document could
      *                                not be read or parsed
@@ -240,11 +279,11 @@ public class ConfigurationParser {
             factory.setValidating(validate);
             DocumentBuilder builder = factory.newDocumentBuilder();
             if (validate) {
-                builder.setErrorHandler(new ConfigurationErrorHandler());
+                builder.setErrorHandler(getErrorHandler());
             }
-            builder.setEntityResolver(ConfigurationEntityResolver.INSTANCE);
+            builder.setEntityResolver(getEntityResolver());
             Document document = builder.parse(xml);
-            return document.getDocumentElement();
+            return postParseModificationHook(document).getDocumentElement();
         } catch (ParserConfigurationException e) {
             throw new ConfigurationException(
                     "Unable to create configuration XML parser", e);
