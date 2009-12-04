@@ -53,7 +53,7 @@
         <configuration>
           <instructions>
             <Export-Package>
-              org.apache.jackrabbit.api.*;version=${pom.version}
+              org.apache.jackrabbit.api.*;version=${project.version}
             </Export-Package>
           </instructions>
         </configuration>

@@ -52,8 +52,8 @@
         <configuration>
           <instructions>
             <Export-Package>
-              org.apache.jackrabbit.jcr2spi;version=${pom.version};include:=Jcr2spiRepositoryFactory,
-              org.apache.jackrabbit.jcr2spi.config;version=${pom.version}
+              org.apache.jackrabbit.jcr2spi;version=${project.version};include:=Jcr2spiRepositoryFactory,
+              org.apache.jackrabbit.jcr2spi.config;version=${project.version}
             </Export-Package>
           </instructions>
         </configuration>
