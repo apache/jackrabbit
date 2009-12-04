@@ -51,7 +51,7 @@ import org.xml.sax.SAXException;
  * The public identifiers are mapped to document type definition
  * files included in the Jackrabbit jar archive.
  */
-class ConfigurationEntityResolver implements EntityResolver {
+public class ConfigurationEntityResolver implements EntityResolver {
 
     /**
      * The singleton instance of this class.
@@ -80,6 +80,12 @@ class ConfigurationEntityResolver implements EntityResolver {
         systemIds.put(
                 "http://jackrabbit.apache.org/dtd/repository-2.0.dtd",
                 "repository-2.0.dtd");
+        publicIds.put(
+                "-//The Apache Software Foundation//DTD Jackrabbit 2.0 Elements//EN",
+                "repository-2.0-elements.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/repository-2.0-elements.dtd",
+                "repository-2.0-elements.dtd");
 
         // Apache Jackrabbit 1.6 DTD
         publicIds.put(
