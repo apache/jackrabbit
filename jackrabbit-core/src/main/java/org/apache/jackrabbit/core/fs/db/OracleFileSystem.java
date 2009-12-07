@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.fs.db;
 
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
-import org.apache.jackrabbit.core.util.db.Oracle10R1ConnectionHelper;
+import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
 
 import javax.sql.DataSource;
 
@@ -96,7 +96,7 @@ public class OracleFileSystem extends DbFileSystem {
      */
     @Override
     protected ConnectionHelper createConnectionHelper(DataSource dataSrc) throws Exception {
-        Oracle10R1ConnectionHelper helper = new Oracle10R1ConnectionHelper(dataSrc, false);
+        OracleConnectionHelper helper = new OracleConnectionHelper(dataSrc, false);
         helper.init();
         return helper;
     }
