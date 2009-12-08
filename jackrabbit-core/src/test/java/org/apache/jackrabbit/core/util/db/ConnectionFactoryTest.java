@@ -168,13 +168,12 @@ public class ConnectionFactoryTest extends TestCase {
         final String name = "some random name to not interfere with integration tests...";
         DataSourceConfig dsc = new DataSourceConfig();
         Properties props = new Properties();
-        props.put(DataSourceConfig.LOGICAL_NAME, name);
         props.put(DataSourceConfig.DRIVER, DRIVER);
         props.put(DataSourceConfig.URL, url);
         props.put(DataSourceConfig.DB_TYPE, "dbType");
         props.put(DataSourceConfig.MAX_POOL_SIZE, Integer.toString(maxCons));
         props.put(DataSourceConfig.VALIDATION_QUERY, validationQuery);
-        dsc.addDataSourceDefinition(props);
+        dsc.addDataSourceDefinition(name, props);
         connectionFactory.registerDataSources(dsc);
         return name;
     }
