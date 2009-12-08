@@ -40,6 +40,13 @@ notable changes in this release are:
     index the full text content of many new types of documents, including
     the Office Open XML files produced by Microsoft Office 2007 and higher.
 
+  * Apache Commons Collections, Apache Derby, Jetty, SLF4J and Apache Xerces
+    have been upgraded to a more recent version.
+
+  * OracleFileSystem class does not use special blob handling anymore and is
+    required for 10R1 and earlier anymore. If you need that use the new
+    Oracle9FileSystem.
+
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
 
