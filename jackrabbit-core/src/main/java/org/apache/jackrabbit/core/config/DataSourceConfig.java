@@ -29,8 +29,6 @@ import javax.naming.Context;
  */
 public class DataSourceConfig {
 
-    public static final String LOGICAL_NAME = "logicalName";
-
     public static final String DRIVER = "driver";
 
     public static final String URL = "url";
@@ -53,8 +51,8 @@ public class DataSourceConfig {
      * @param props the properties (key and values must be strings)
      * @throws ConfigurationException on error
      */
-    public void addDataSourceDefinition(Properties props) throws ConfigurationException {
-        DataSourceDefinition def = new DataSourceDefinition(props);
+    public void addDataSourceDefinition(String name, Properties props) throws ConfigurationException {
+        DataSourceDefinition def = new DataSourceDefinition(name, props);
         for (DataSourceDefinition existing : defs) {
             if (existing.getLogicalName().equals(def.getLogicalName())) {
                 throw new ConfigurationException("Duplicate logicalName for a DataSource: "
@@ -77,11 +75,10 @@ public class DataSourceConfig {
     public static final class DataSourceDefinition {
 
         private static final List<String> allPropNames =
-            Arrays
-                .asList(LOGICAL_NAME, DRIVER, URL, USER, PASSWORD, DB_TYPE, VALIDATION_QUERY, MAX_POOL_SIZE);
+            Arrays.asList(DRIVER, URL, USER, PASSWORD, DB_TYPE, VALIDATION_QUERY, MAX_POOL_SIZE);
 
         private static final List<String> allJndiPropNames =
-            Arrays.asList(LOGICAL_NAME, DRIVER, URL, USER, PASSWORD, DB_TYPE);
+            Arrays.asList(DRIVER, URL, USER, PASSWORD, DB_TYPE);
 
         private final String logicalName;
 
@@ -104,11 +101,12 @@ public class DataSourceConfig {
          * throws a {@link ConfigurationException} when the set of properties does not
          * satisfy some validity constraints.
          * 
+         * @param name the logical name of the data source
          * @param props the properties (string keys and values)
          * @throws ConfigurationException on error
          */
-        public DataSourceDefinition(Properties props) throws ConfigurationException {
-            this.logicalName = (String) props.getProperty(LOGICAL_NAME);
+        public DataSourceDefinition(String name, Properties props) throws ConfigurationException {
+            this.logicalName = name;
             this.driver = (String) props.getProperty(DRIVER);
             this.url = (String) props.getProperty(URL);
             this.user = (String) props.getProperty(USER);
@@ -126,7 +124,7 @@ public class DataSourceConfig {
 
         private void verify(Properties props) throws ConfigurationException {
             // Check required properties
-            if (logicalName == null || "".equals(logicalName)) {
+            if (logicalName == null || "".equals(logicalName.trim())) {
                 throw new ConfigurationException("DataSource logical name must not be null or empty");
             }
             if (driver == null || "".equals(driver)) {

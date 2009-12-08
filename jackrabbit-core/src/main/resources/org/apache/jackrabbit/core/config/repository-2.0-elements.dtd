@@ -16,7 +16,14 @@
 -->
 
 <!ENTITY % jackrabbit-repository-elements
-         "Cluster|FileSystem|DataStore|Security|Workspaces|Workspace|Versioning|SearchIndex|RepositoryLockMechanism">
+         "DataSources|Cluster|FileSystem|DataStore|Security|Workspaces|Workspace|Versioning|SearchIndex|RepositoryLockMechanism">
+
+<!--
+    The DataSources element configures the data sources of the repository.
+-->
+<!ELEMENT DataSources (DataSource*)>
+<!ELEMENT DataSource (param*)>
+<!ATTLIST DataSource name CDATA #REQUIRED>
 
 <!--
     a virtual file system

@@ -894,11 +894,23 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     }
 
     /**
-     * TODO
-     * 
-     * @param parent
-     * @return
-     * @throws ConfigurationException
+     * Parses the DataSources configuration under the given parent. It has the following format:
+     * <pre>
+     *   &lt;DataSources&gt;
+     *     &lt;DataSource name="..."&gt;
+     *       &lt;param name="..." value="..."&gt;
+     *       ...
+     *     &lt;/DataSource&gt;
+     *     &lt;DataSource name="..."&gt;
+     *       &lt;param name="..." value="..."&gt;
+     *       ...
+     *     &lt;/DataSource&gt;
+     *   &lt;/DataSources&gt;
+     * </pre>
+     * <p/>
+     * @param parent the parent of the DataSources element
+     * @return a {@link DataSourceConfig} for the repository
+     * @throws ConfigurationException on error
      */
     protected DataSourceConfig parseDataSourceConfig(Element parent)
             throws ConfigurationException {
@@ -916,8 +928,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     if (child2.getNodeType() == Node.ELEMENT_NODE
                             && DATASOURCE_ELEMENT.equals(child2.getNodeName())) {
                         Element dsdef = (Element) child2;
+                        String logicalName = getAttribute(dsdef, "name");
                         Properties props = parseParameters(dsdef);
-                        dsc.addDataSourceDefinition(props);
+                        dsc.addDataSourceDefinition(logicalName, props);
                     }
                 }
             }

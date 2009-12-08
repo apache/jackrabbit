@@ -15,14 +15,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.6.dtd">
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 2.0//EN"
+                            "http://jackrabbit.apache.org/dtd/repository-2.0.dtd">
 <!-- Example Repository Configuration File -->
 <Repository>
 
     <DataSources>
-        <DataSource>
-            <param name="logicalName" value="ds1"/>
+        <DataSource name="ds1">
             <param name="driver" value="@config.db.driver@"/>
             <param name="url" value="@config.db.url@"/>
             <param name="user" value="@config.db.user@"/>
