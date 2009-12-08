@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.id.NodeId;
-
 import java.io.IOException;
 import java.util.BitSet;
+
+import org.apache.jackrabbit.core.id.NodeId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements a document id which can be based on a Node uuid or a lucene
@@ -207,6 +209,11 @@ abstract class DocId {
     private static final class UUIDDocId extends DocId {
 
         /**
+         * The logger instance for this class.
+         */
+        private static final Logger log = LoggerFactory.getLogger(UUIDDocId.class);
+
+        /**
          * The node identifier.
          */
         private final NodeId id;
@@ -241,6 +248,9 @@ abstract class DocId {
                 if (segDocId != null) {
                     realDoc = reader.getDocumentNumber(segDocId);
                     doc = segDocId;
+                } else {
+                    log.warn("Unknown parent node with id {}", id);
+                    return EMPTY;
                 }
             }
 
