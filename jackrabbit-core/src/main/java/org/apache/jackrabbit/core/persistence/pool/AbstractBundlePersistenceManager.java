@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
@@ -131,7 +132,7 @@ public abstract class AbstractBundlePersistenceManager implements
     public void setBundleCacheSize(String bundleCacheSize) {
         this.bundleCacheSize = Long.parseLong(bundleCacheSize) * 1024 * 1024;
     }
-    
+
     /**
      * Creates the folder path for the given node id that is suitable for
      * storing states in a filesystem.
@@ -388,10 +389,10 @@ public abstract class AbstractBundlePersistenceManager implements
         bundles = new BundleCache(bundleCacheSize);
         missing = new LRUNodeIdCache();
     }
-    
+
     /**
      * {@inheritDoc}
-     *  
+     *
      *  Closes the persistence manager, release acquired resourecs.
      */
     public void close() throws Exception {
@@ -509,7 +510,7 @@ public abstract class AbstractBundlePersistenceManager implements
 
     /**
      * Stores the given changelog and updates the bundle cache.
-     * 
+     *
      * @param changeLog the changelog to store
      * @throws ItemStateException on failure
      */
@@ -539,7 +540,7 @@ public abstract class AbstractBundlePersistenceManager implements
         for (ItemState state : changeLog.modifiedStates()) {
             if (state.isNode()) {
                 NodeId nodeId = (NodeId) state.getId();
-                NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                NodePropBundle bundle = modified.get(nodeId);
                 if (bundle == null) {
                     bundle = getBundle(nodeId);
                     if (bundle == null) {
@@ -557,7 +558,7 @@ public abstract class AbstractBundlePersistenceManager implements
                     continue;
                 }
                 NodeId nodeId = id.getParentId();
-                NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                NodePropBundle bundle = modified.get(nodeId);
                 if (bundle == null) {
                     bundle = getBundle(nodeId);
                     if (bundle == null) {
@@ -580,7 +581,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 PropertyId id = (PropertyId) state.getId();
                 NodeId nodeId = id.getParentId();
                 if (!deleted.contains(nodeId)) {
-                    NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                    NodePropBundle bundle = modified.get(nodeId);
                     if (bundle == null) {
                         // should actually not happen
                         log.warn("deleted property state's parent not modified!");
@@ -605,7 +606,7 @@ public abstract class AbstractBundlePersistenceManager implements
                     continue;
                 }
                 NodeId nodeId = id.getParentId();
-                NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                NodePropBundle bundle = modified.get(nodeId);
                 if (bundle == null) {
                     // should actually not happen
                     log.warn("added property state's parent not modified!");
