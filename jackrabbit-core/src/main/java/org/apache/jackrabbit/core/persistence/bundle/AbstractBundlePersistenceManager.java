@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
