@@ -31,11 +31,11 @@ import java.util.UUID;
 import javax.jcr.RepositoryException;
 
 /**
- * The file lock is used to ensure a resource is only open once at any time. 
- * It uses a cooperative locking protocol. 
+ * The file lock is used to ensure a resource is only open once at any time.
+ * It uses a cooperative locking protocol.
  */
 public class CooperativeFileLock implements RepositoryLockMechanism {
-    
+
     /**
      * Logger instance.
      */
@@ -55,9 +55,11 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
     private boolean locked;
     private volatile boolean stop;
 
+    private Thread watchdog;
+
     /**
      * Create a new file locking object using the given file name.
-     * 
+     *
      * @param path basic path to append {@link #FILE_NAME} to.
      */
     public void init(String path) {
@@ -68,7 +70,7 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
      * Lock the directory if possible.
      * This method will also start a background watchdog thread.
      * A file may only be locked once.
-     * 
+     *
      * @throws RepositoryException if locking was not successful
      */
     public synchronized void acquire() throws RepositoryException {
@@ -97,17 +99,16 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
             }
         } catch (Exception e) {
             LOG.warn("Error unlocking " + fileName, e);
+        } finally {
+            stop = true;
+            locked = false;
         }
-        stop = true;
-        locked = false;
-    }
-
-    /**
-     * This finalizer unlocks the file if necessary.
-     */
-    protected void finalize() {
-        if (locked) {
-            release();
+        try {
+            if (watchdog != null) {
+                watchdog.interrupt();
+            }
+        } catch (Exception e) {
+            LOG.debug("Error stopping watchdog " + fileName, e);
         }
     }
 
@@ -133,7 +134,7 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
 
     /**
      * Load the properties file.
-     * 
+     *
      * @return the properties object
      */
     private Properties load() throws RepositoryException {
@@ -163,7 +164,14 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
             long last = f.lastModified();
             long dist = System.currentTimeMillis() - last;
             if (dist < -TIME_GRANULARITY) {
-                throw error("Lock file modified in the future: dist=" + dist);
+                // lock file modified in the future -
+                // wait for a bit longer than usual
+                try {
+                    Thread.sleep(2 * LOCK_SLEEP);
+                } catch (Exception e) {
+                    LOG.debug("Sleep", e);
+                }
+                return;
             } else if (dist > TIME_GRANULARITY) {
                 return;
             }
@@ -186,9 +194,12 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
         if (!createNewFile(fileName)) {
             waitUntilOld();
             save();
-            sleep(2 * LOCK_SLEEP);
-            if (!load().equals(properties)) {
-                throw error("Locked by another process");
+            // wait twice the watchdog sleep time
+            for (int i = 0; i < 8; i++) {
+                sleep(LOCK_SLEEP / 4);
+                if (!load().equals(properties)) {
+                    throw error("Locked by another process");
+                }
             }
             delete(fileName);
             if (!createNewFile(fileName)) {
@@ -201,7 +212,7 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
             stop = true;
             throw error("Concurrent update");
         }
-        Thread watchdog = new Thread(new Runnable() {
+        watchdog = new Thread(new Runnable() {
             public void run() {
                 try {
                     while (!stop) {
@@ -212,6 +223,12 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
                                 save();
                             }
                             Thread.sleep(LOCK_SLEEP);
+                        } catch (OutOfMemoryError e) {
+                            // ignore
+                        } catch (InterruptedException e) {
+                            // ignore
+                        } catch (NullPointerException e) {
+                            // ignore
                         } catch (Exception e) {
                             LOG.debug("Watchdog", e);
                         }
@@ -243,11 +260,11 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
             throw getException(e);
         }
     }
-    
+
     /**
      * Create a new file, and retry if this doesn't work.
      * If it still doesn't work after some time, this method returns false.
-     * 
+     *
      * @param fileName the name of the file to create
      * @return if the file was created
      */
@@ -263,11 +280,11 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
         }
         return false;
     }
-    
+
     /**
      * Delete a file, and retry if this doesn't work.
      * If it still doesn't work after some time, an exception is thrown.
-     * 
+     *
      * @param fileName the name of the file to delete
      * @throws RepositoryException if the file could not be deleted
      */
@@ -286,8 +303,8 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
             }
             throw new RepositoryException("Could not delete file " + fileName);
         }
-    }    
-    
+    }
+
     private static void wait(int i) {
         if (i > 8) {
             System.gc();

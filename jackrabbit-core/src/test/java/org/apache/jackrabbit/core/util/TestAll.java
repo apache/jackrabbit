@@ -33,6 +33,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Utility tests");
         suite.addTestSuite(RepositoryLockTest.class);
+        suite.addTestSuite(CooperativeFileLockTest.class);
         return suite;
     }
 }
