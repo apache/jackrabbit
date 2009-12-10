@@ -136,8 +136,10 @@ public class Installer {
         File home = new File(repHome);
         File config = new File(repXml);
         if ("new".equals(mode)) {
-            if (home.exists()) {
-                log.error("Trying to install new repository home '{}' but already exists", repHome);
+            // Test internal folder repository existence and not home because home is already created
+            // by org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet
+            if (new File(home, "repository").exists()) {
+                log.error("Trying to install new repository home '{}' but it already contain a repository", repHome);
                 return C_HOME_EXISTS;
             }
             if (config.exists()) {
