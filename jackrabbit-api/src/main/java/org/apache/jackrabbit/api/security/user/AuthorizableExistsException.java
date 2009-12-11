@@ -23,7 +23,13 @@ import javax.jcr.RepositoryException;
  */
 public class AuthorizableExistsException extends RepositoryException {
 
-	public AuthorizableExistsException(String msg) {
-		super(msg);
-	}
+    /**
+     * Serial version UID.
+     */
+    private static final long serialVersionUID = 7875416346848889564L;
+
+    public AuthorizableExistsException(String msg) {
+        super(msg);
+    }
+
 }
