@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.Node;
@@ -25,8 +24,6 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
-
-import org.apache.commons.io.IOUtils;
 
 /**
  * Performs tests with the <code>CONTAINS</code> function.
@@ -264,6 +261,10 @@ public class FulltextQueryTest extends AbstractQueryTest {
         String content = "Max&Moritz";
 
         executeContainsQuery("max&moritz", content, true);
+    }
+
+    public void testColonInContains() throws RepositoryException {
+        executeContainsQuery("foo:bar", "foo:bar", true);
     }
 
     /**
