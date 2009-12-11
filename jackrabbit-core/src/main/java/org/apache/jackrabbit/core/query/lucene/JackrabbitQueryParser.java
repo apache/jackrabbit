@@ -83,6 +83,9 @@ public class JackrabbitQueryParser extends QueryParser {
                     rewritten.append("\\");
                 }
                 rewritten.append('~');
+            } else if (textsearch.charAt(i) == ':') {
+                // fields as known in lucene are not supported
+                rewritten.append("\\:");
             } else {
                 if (escaped) {
                     rewritten.append('\\');
