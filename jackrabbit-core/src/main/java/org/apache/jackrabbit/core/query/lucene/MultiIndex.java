@@ -204,6 +204,14 @@ public class MultiIndex {
     private IndexingQueue indexingQueue;
 
     /**
+     * Only used for testing purpose. Set to <code>true</code> after finished
+     * extraction jobs have been removed from the queue and set to
+     * <code>false</code> again after the affected nodes have been updated in
+     * the index.
+     */
+    private boolean indexingQueueCommitPending;
+
+    /**
      * Identifiers of nodes that should not be indexed.
      */
     private final Set<NodeId> excludedIDs;
@@ -1008,6 +1016,33 @@ public class MultiIndex {
         }
     }
 
+    //-------------------------< testing only >---------------------------------
+
+    void waitUntilIndexingQueueIsEmpty() {
+        IndexingQueue iq = getIndexingQueue();
+        synchronized (iq) {
+            while (iq.getNumPendingDocuments() > 0 || indexingQueueCommitPending) {
+                try {
+                    log.info("waiting for indexing queue to become empty");
+                    iq.wait();
+                    log.info("notified");
+                } catch (InterruptedException e) {
+                    // interrupted, check again if queue is empty
+                }
+            }
+        }
+    }
+
+    void notifyIfIndexingQueueIsEmpty() {
+        IndexingQueue iq = getIndexingQueue();
+        synchronized (iq) {
+            indexingQueueCommitPending = false;
+            if (iq.getNumPendingDocuments() == 0) {
+                iq.notifyAll();
+            }
+        }
+    }
+
     //-------------------------< internal >-------------------------------------
 
     /**
@@ -1286,27 +1321,38 @@ public class MultiIndex {
             log.debug("updating index with {} nodes from indexing queue.",
                     finished.size());
 
-            // remove documents from the queue
-            for (NodeId id : finished.keySet()) {
-                indexingQueue.removeDocument(id.toString());
+            // Only useful for testing
+            synchronized (getIndexingQueue()) {
+                indexingQueueCommitPending = true;
             }
 
             try {
-                if (transactionPresent) {
-                    synchronized (this) {
-                        for (NodeId id : finished.keySet()) {
-                            executeAndLog(new DeleteNode(getTransactionId(), id));
-                        }
-                        for (Document document : finished.values()) {
-                            executeAndLog(new AddNode(getTransactionId(), document));
-                        }
-                    }
-                } else {
-                    update(finished.keySet(), finished.values());
+                // remove documents from the queue
+                for (NodeId id : finished.keySet()) {
+                    indexingQueue.removeDocument(id.toString());
                 }
-            } catch (IOException e) {
-                // update failed
-                log.warn("Failed to update index with deferred text extraction", e);
+
+                try {
+                    if (transactionPresent) {
+                        synchronized (this) {
+                            for (NodeId id : finished.keySet()) {
+                                executeAndLog(new DeleteNode(getTransactionId(), id));
+                            }
+                            for (Document document : finished.values()) {
+                                executeAndLog(new AddNode(getTransactionId(), document));
+                            }
+                        }
+                    } else {
+                        update(finished.keySet(), finished.values());
+                    }
+                } catch (IOException e) {
+                    // update failed
+                    log.warn("Failed to update index with deferred text extraction", e);
+                }
+            } finally {
+                // the following method also resets
+                // indexingQueueCommitPending back to false
+                notifyIfIndexingQueueIsEmpty();
             }
         }
     }
@@ -1930,6 +1976,7 @@ public class MultiIndex {
             Document doc = index.indexingQueue.removeDocument(uuidString);
             if (doc != null) {
                 Util.disposeDocument(doc);
+                index.notifyIfIndexingQueueIsEmpty();
             }
             Term idTerm = new Term(FieldNames.UUID, uuidString);
             // if the document cannot be deleted from the volatile index
