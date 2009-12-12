@@ -17,11 +17,13 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.document.Document;
@@ -29,8 +31,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
 
 /**
  * <code>IndexingQueue</code> implements a queue which contains all the
@@ -150,7 +150,6 @@ class IndexingQueue {
             queueStore.removeUUID(uuid);
             log.debug("removed node {}. New size of indexing queue: {}",
                     uuid, pendingDocuments.size());
-            notifyIfEmpty();
         }
         return doc;
     }
@@ -190,7 +189,6 @@ class IndexingQueue {
             it.remove();
         }
         queueStore.close();
-        notifyIfEmpty();
     }
 
     /**
@@ -200,29 +198,6 @@ class IndexingQueue {
     private void checkInitialized() {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
-        }
-    }
-
-    /**
-     * Notifies all threads waiting for this queue to become empty.
-     * The notification is only sent if this queue actually is empty.
-     */
-    private synchronized void notifyIfEmpty() {
-        if (pendingDocuments.isEmpty()) {
-            notifyAll();
-        }
-    }
-
-    /**
-     * Waits until this queue is empty.
-     */
-    synchronized void waitUntilEmpty() {
-        while (!pendingDocuments.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                // Interrupted, check again if we're empty
-            }
         }
     }
 
