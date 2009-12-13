@@ -92,6 +92,7 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
             return;
         }
         try {
+            stop = true;
             if (fileName != null) {
                 if (load().equals(properties)) {
                     delete(fileName);
@@ -100,7 +101,6 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
         } catch (Exception e) {
             LOG.warn("Error unlocking " + fileName, e);
         } finally {
-            stop = true;
             locked = false;
         }
         try {

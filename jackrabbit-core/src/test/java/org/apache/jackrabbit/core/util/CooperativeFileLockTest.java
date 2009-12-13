@@ -37,7 +37,7 @@ public class CooperativeFileLockTest extends TestCase {
     }
 
     public void setUp() throws IOException {
-        FileUtils.deleteDirectory(new File(TEST_DIRECTORY));
+        FileUtils.deleteQuietly(new File(TEST_DIRECTORY));
     }
 
     public void testFileLock() throws RepositoryException {
