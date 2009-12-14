@@ -193,6 +193,7 @@ public final class EventStateCollection {
                     NodeId newParentId = n.getParentId();
                     if (newParentId != null && !oldParentId.equals(newParentId) &&
                             !n.isShareable()) {
+                        Path oldPath = getZombiePath(n.getNodeId(), hmgr);
 
                         // node moved
                         // generate node removed & node added event
@@ -204,20 +205,29 @@ public final class EventStateCollection {
                             // shared item state manager
                             oldParent = (NodeState) stateMgr.getItemState(oldParentId);
                         }
-
-                        NodeTypeImpl oldParentNodeType = getNodeType(oldParent, session);
-                        Set<Name> mixins = oldParent.getMixinTypeNames();
-                        Path newPath = getPath(n.getNodeId(), hmgr);
-                        Path oldPath = getZombiePath(n.getNodeId(), hmgr);
-                        events.add(EventState.childNodeRemoved(oldParentId,
-                                getParent(oldPath), n.getNodeId(),
-                                oldPath.getNameElement(),
-                                oldParentNodeType.getQName(),
-                                mixins, session));
+                        if (oldParent != null) {
+                            NodeTypeImpl oldParentNodeType = getNodeType(oldParent, session);
+                            events.add(EventState.childNodeRemoved(oldParentId,
+                                    getParent(oldPath), n.getNodeId(),
+                                    oldPath.getNameElement(),
+                                    oldParentNodeType.getQName(),
+                                    oldParent.getMixinTypeNames(), session));
+                        } else {
+                            // JCR-2298: In some cases the old parent node
+                            // state is no longer available anywhere. Log an
+                            // error since in this case we can't generate the
+                            // correct REMOVE event.
+                            log.error(
+                                    "The old parent (node id " + oldParentId
+                                    + ") of a moved node (old path "
+                                    + oldPath + ") is no longer available."
+                                    + " No REMOVE event generated!");
+                        }
 
                         NodeState newParent = (NodeState) changes.get(newParentId);
                         NodeTypeImpl newParentNodeType = getNodeType(newParent, session);
-                        mixins = newParent.getMixinTypeNames();
+                        Set<Name> mixins = newParent.getMixinTypeNames();
+                        Path newPath = getPath(n.getNodeId(), hmgr);
                         events.add(EventState.childNodeAdded(newParentId,
                                 getParent(newPath), n.getNodeId(),
                                 newPath.getNameElement(),
