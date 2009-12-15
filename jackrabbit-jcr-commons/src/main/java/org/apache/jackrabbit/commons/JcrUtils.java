@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.commons;
 
+import java.io.InputStream;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -23,7 +25,6 @@ import java.util.Map;
 import javax.imageio.spi.ServiceRegistry;
 import javax.jcr.Binary;
 import javax.jcr.Item;
-import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -33,6 +34,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
 import javax.jcr.Value;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
@@ -357,7 +359,7 @@ public class JcrUtils {
      * @see Node#addNode(String)
      * @param parent parent node
      * @param name name of the child node
-     * @return child node
+     * @return the child node
      * @throws RepositoryException if the child node can not be
      *                             accessed or created
      */
@@ -375,40 +377,156 @@ public class JcrUtils {
      * it does not already exist. If the child node gets added, then it
      * is created with the given node type. The caller is expected to take
      * care of saving or discarding any transient changes.
-     * <p>
-     * This method ensures not only that the named child node exists but
-     * also that it matches the given node type.  If the child node already
-     * exists but does not match the given node type, then an
-     * {@link ItemExistsException} is thrown to indicate that a node of the
-     * given type can only be added if the previous node is first removed.
      *
      * @see Node#getNode(String)
      * @see Node#addNode(String, String)
      * @see Node#isNodeType(String)
      * @param parent parent node
      * @param name name of the child node
-     * @param type type of the child node
-     * @return child node
-     * @throws ItemExistsException if the child node already exists but
-     *                             has a different type than specified
-     * @throws RepositoryException if the child node can not be
-     *                             accessed or created
+     * @param type type of the child node, ignored if the child already exists
+     * @return the child node
+     * @throws RepositoryException if the child node can not be accessed
+     *                             or created
      */
     public static Node getOrAddNode(Node parent, String name, String type)
             throws RepositoryException {
         if (parent.hasNode(name)) {
-            Node node = parent.getNode(name);
-            if (node.isNodeType(type)) {
-                return node;
-            } else {
-                throw new ItemExistsException(
-                        "Unable to add a node of type " + type
-                        + " at path " + node.getPath()
-                        + " since it already exists with the different type "
-                        + node.getPrimaryNodeType().getName());
-            }
+            return parent.getNode(name);
         } else {
             return parent.addNode(name, type);
+        }
+    }
+
+    /**
+     * Returns the named child of the given node, creating it as an
+     * nt:folder node if it does not already exist. The caller is expected
+     * to take care of saving or discarding any transient changes.
+     * <p>
+     * Note that the type of the returned node is <em>not</em> guaranteed
+     * to match nt:folder in case the node already existed. The caller can
+     * use an explicit {@link Node#isNodeType(String)} check if needed, or
+     * simply use a data-first approach and not worry about the node type
+     * until a constraint violation is encountered.
+     *
+     * @param parent parent node
+     * @param name name of the child node
+     * @return the child node
+     * @throws RepositoryException if the child node can not be accessed
+     *                             or created
+     */
+    public static Node getOrAddFolder(Node parent, String name)
+            throws RepositoryException {
+        return getOrAddNode(parent, name, NodeType.NT_FOLDER);
+    }
+
+    /**
+     * Creates or updates the named child of the given node. If the child
+     * does not already exist, then it is created using the nt:file node type.
+     * This file child node is returned from this method.
+     * <p>
+     * If the file node does not already contain a jcr:content child, then
+     * one is created using the nt:resource node type. The following
+     * properties are set on the jcr:content node:
+     * <dl>
+     *   <dt>jcr:mimeType</dt>
+     *   <dd>media type</dd>
+     *   <dt>jcr:encoding (optional)</dt>
+     *   <dd>charset parameter of the media type, if any</dd>
+     *   <dt>jcr:lastModified</dt>
+     *   <dd>current time</dd>
+     *   <dt>jcr:data</dt>
+     *   <dd>binary content</dd>
+     * </dl>
+     * <p>
+     * Note that the types of the returned node or the jcr:content child are
+     * <em>not</em> guaranteed to match nt:file and nt:resource in case the
+     * nodes already existed. The caller can use an explicit
+     * {@link Node#isNodeType(String)} check if needed, or simply use a
+     * data-first approach and not worry about the node type until a constraint
+     * violation is encountered.
+     * <p>
+     * The given binary content stream is closed by this method.
+     *
+     * @param parent parent node
+     * @param name name of the file
+     * @param mime media type of the file
+     * @param data binary content of the file
+     * @return the child node
+     * @throws RepositoryException if the child node can not be created
+     *                             or updated
+     */
+    public static Node putFile(
+            Node parent, String name, String mime, InputStream data)
+            throws RepositoryException {
+        return putFile(parent, name, mime, Calendar.getInstance(), data);
+    }
+
+    /**
+     * Creates or updates the named child of the given node. If the child
+     * does not already exist, then it is created using the nt:file node type.
+     * This file child node is returned from this method.
+     * <p>
+     * If the file node does not already contain a jcr:content child, then
+     * one is created using the nt:resource node type. The following
+     * properties are set on the jcr:content node:
+     * <dl>
+     *   <dt>jcr:mimeType</dt>
+     *   <dd>media type</dd>
+     *   <dt>jcr:encoding (optional)</dt>
+     *   <dd>charset parameter of the media type, if any</dd>
+     *   <dt>jcr:lastModified</dt>
+     *   <dd>date of last modification</dd>
+     *   <dt>jcr:data</dt>
+     *   <dd>binary content</dd>
+     * </dl>
+     * <p>
+     * Note that the types of the returned node or the jcr:content child are
+     * <em>not</em> guaranteed to match nt:file and nt:resource in case the
+     * nodes already existed. The caller can use an explicit
+     * {@link Node#isNodeType(String)} check if needed, or simply use a
+     * data-first approach and not worry about the node type until a constraint
+     * violation is encountered.
+     * <p>
+     * The given binary content stream is closed by this method.
+     *
+     * @param parent parent node
+     * @param name name of the file
+     * @param mime media type of the file
+     * @param date date of last modification
+     * @param data binary content of the file
+     * @return the child node
+     * @throws RepositoryException if the child node can not be created
+     *                             or updated
+     */
+    public static Node putFile(
+            Node parent, String name, String mime, Calendar date,
+            InputStream data) throws RepositoryException {
+        Binary binary =
+            parent.getSession().getValueFactory().createBinary(data);
+        try {
+            Node file = getOrAddNode(parent, name, NodeType.NT_FILE);
+            Node content =
+                getOrAddNode(file, Node.JCR_CONTENT, NodeType.NT_RESOURCE);
+
+            content.setProperty(Property.JCR_MIMETYPE, mime);
+            String[] parameters = mime.split(";");
+            for (int i = 1; i < parameters.length; i++) {
+                int equals = parameters[i].indexOf('=');
+                if (equals != -1) {
+                    String parameter = parameters[i].substring(0, equals);
+                    if ("charset".equalsIgnoreCase(parameter.trim())) {
+                        content.setProperty(
+                                Property.JCR_ENCODING,
+                                parameters[i].substring(equals + 1).trim());
+                    }
+                }
+            }
+
+            content.setProperty(Property.JCR_LAST_MODIFIED, date);
+            content.setProperty(Property.JCR_DATA, binary);
+            return file;
+        } finally {
+            binary.dispose();
         }
     }
 
