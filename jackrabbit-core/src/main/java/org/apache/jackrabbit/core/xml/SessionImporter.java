@@ -312,7 +312,7 @@ public class SessionImporter implements Importer {
             // able to deal with it, notify it about the child node.
             for (ProtectedNodeImporter pni : pnImporters) {
                 if (pni.start(parent)) {
-                    log.debug("Protected node -> delegated to ProtectedPropertyImporter");
+                    log.debug("Protected node -> delegated to ProtectedNodeImporter");
                     pnImporter = pni;
                     pnImporter.startChildInfo(nodeInfo, propInfos);
                     break;
@@ -452,7 +452,7 @@ public class SessionImporter implements Importer {
          * newly generated uuid's on import
          */
         // 1. let protected property/node importers handle protected ref-properties
-        //    and (protected) properties underneith a protected parent node.
+        //    and (protected) properties underneath a protected parent node.
         for (ProtectedPropertyImporter ppi : ppImporters) {
             ppi.processReferences();
         }
