@@ -346,6 +346,55 @@ public class JcrUtils {
     }
 
     /**
+     * Returns the named child of the given node, creating the child if
+     * it does not already exist. If the child node gets added, then its
+     * type will be determined by the child node definitions associated
+     * with the parent node. The caller is expected to take care of saving
+     * or discarding any transient changes.
+     *
+     * @see Node#getNode(String)
+     * @see Node#addNode(String)
+     * @param parent parent node
+     * @param name name of the child node
+     * @return child node
+     * @throws RepositoryException if the child node can not be
+     *                             accessed or created
+     */
+    public static Node getOrAddNode(Node parent, String name)
+            throws RepositoryException {
+        if (parent.hasNode(name)) {
+            return parent.getNode(name);
+        } else {
+            return parent.addNode(name);
+        }
+    }
+
+    /**
+     * Returns the named child of the given node, creating the child if
+     * it does not already exist. If the child node gets added, then it
+     * is created with the given node type. The caller is expected to take
+     * care of saving or discarding any transient changes.
+     *
+     * @see Node#getNode(String)
+     * @see Node#addNode(String)
+     * @param parent parent node
+     * @param name name of the child node
+     * @param type the node type to use for the child node in case
+     *             it needs to be created, ignored otherwise
+     * @return child node
+     * @throws RepositoryException if the child node can not be
+     *                             accessed or created
+     */
+    public static Node getOrAddNode(Node parent, String name, String type)
+            throws RepositoryException {
+        if (parent.hasNode(name)) {
+            return parent.getNode(name);
+        } else {
+            return parent.addNode(name, type);
+        }
+    }
+
+    /**
      * Returns a string representation of the given item. The returned string
      * is designed to be easily readable while providing maximum amount of
      * information for logging and debugging purposes.
