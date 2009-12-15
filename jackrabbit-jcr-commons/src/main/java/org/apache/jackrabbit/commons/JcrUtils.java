@@ -21,13 +21,17 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.imageio.spi.ServiceRegistry;
+import javax.jcr.Binary;
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
+import javax.jcr.Value;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
@@ -339,6 +343,88 @@ public class JcrUtils {
     public static Iterable<Row> getRows(QueryResult result)
             throws RepositoryException {
         return new RowIterable(result.getRows());
+    }
+
+    /**
+     * Returns a string representation of the given item. The returned string
+     * is designed to be easily readable while providing maximum amount of
+     * information for logging and debugging purposes.
+     * <p>
+     * The returned string is not meant to be parsed and the exact contents
+     * can change in future releases. The current string representation of
+     * a node is "name [type]" and the representation of a property is
+     * "@name = value(s)". Binary values are expressed like "&lt;123 bytes&gt;"
+     * and other values as their standard binary representation. Multi-valued
+     * properties have their values listed in like "[ v1, v2, v3, ... ]". No
+     * more than the three first values are included. Long string values are
+     * truncated.
+     *
+     * @param item given node or property
+     * @return string representation of the given item
+     */
+    public static String toString(Item item) {
+        StringBuilder builder = new StringBuilder();
+        try {
+            if (item.isNode()) {
+                builder.append(item.getName());
+                builder.append(" [");
+                builder.append(((Node) item).getPrimaryNodeType().getName());
+                builder.append("]");
+            } else {
+                builder.append("@");
+                builder.append(item.getName());
+                builder.append(" = ");
+                Property property = (Property) item;
+                if (property.isMultiple()) {
+                    builder.append("[ ");
+                    Value[] values = property.getValues();
+                    for (int i = 0; i < values.length && i < 3; i++) {
+                        if (i > 0) {
+                            builder.append(", ");
+                        }
+                        append(builder, values[i]);
+                    }
+                    if (values.length >= 3) {
+                        builder.append(", ...");
+                    }
+                    builder.append(" ]");
+                } else {
+                    append(builder, property.getValue());
+                }
+            }
+        } catch (RepositoryException e) {
+            builder.append("!!! ");
+            builder.append(e.getMessage());
+            builder.append(" !!!");
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Private helper method that adds the string representation of the given
+     * value to the given {@link StringBuilder}. Used by the
+     * {{@link #toString(Item)} method.
+     */
+    private static void append(StringBuilder builder, Value value)
+            throws RepositoryException {
+        if (value.getType() == PropertyType.BINARY) {
+            Binary binary = value.getBinary();
+            try {
+                builder.append("<");
+                builder.append(binary.getSize());
+                builder.append(" bytes>");
+            } finally {
+                binary.dispose();
+            }
+        } else {
+            String string = value.getString();
+            if (string.length() > 20) {
+                builder.append(string.substring(0, 17));
+                builder.append("...");
+            } else {
+                builder.append(string);
+            }
+        }
     }
 
 }
