@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.imageio.spi.ServiceRegistry;
 import javax.jcr.Binary;
 import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -374,21 +375,38 @@ public class JcrUtils {
      * it does not already exist. If the child node gets added, then it
      * is created with the given node type. The caller is expected to take
      * care of saving or discarding any transient changes.
+     * <p>
+     * This method ensures not only that the named child node exists but
+     * also that it matches the given node type.  If the child node already
+     * exists but does not match the given node type, then an
+     * {@link ItemExistsException} is thrown to indicate that a node of the
+     * given type can only be added if the previous node is first removed.
      *
      * @see Node#getNode(String)
-     * @see Node#addNode(String)
+     * @see Node#addNode(String, String)
+     * @see Node#isNodeType(String)
      * @param parent parent node
      * @param name name of the child node
-     * @param type the node type to use for the child node in case
-     *             it needs to be created, ignored otherwise
+     * @param type type of the child node
      * @return child node
+     * @throws ItemExistsException if the child node already exists but
+     *                             has a different type than specified
      * @throws RepositoryException if the child node can not be
      *                             accessed or created
      */
     public static Node getOrAddNode(Node parent, String name, String type)
             throws RepositoryException {
         if (parent.hasNode(name)) {
-            return parent.getNode(name);
+            Node node = parent.getNode(name);
+            if (node.isNodeType(type)) {
+                return node;
+            } else {
+                throw new ItemExistsException(
+                        "Unable to add a node of type " + type
+                        + " at path " + node.getPath()
+                        + " since it already exists with the different type "
+                        + node.getPrimaryNodeType().getName());
+            }
         } else {
             return parent.addNode(name, type);
         }
