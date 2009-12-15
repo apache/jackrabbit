@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
@@ -231,7 +232,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
                 UserManager umgr = sImpl.getUserManager();
                 return umgr.getAuthorizable(principal) != null;
             } catch (RepositoryException e) {
-                // ignore and return false
+                log.error("Failed to determine accessibility of Principal {}", principal, e);
             }
         }
         return false;
