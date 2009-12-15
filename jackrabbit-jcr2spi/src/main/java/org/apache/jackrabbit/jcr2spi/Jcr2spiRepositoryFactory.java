@@ -186,8 +186,15 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
             String serviceFactoryName = (String)serviceFactoryParam;
             log.debug("Found RepositoryServiceFactory class name {}", serviceFactoryName);
             try {
-                Class<?> serviceFactoryClass = Class.forName(serviceFactoryName, true,
-                            Thread.currentThread().getContextClassLoader());
+                Class<?> serviceFactoryClass;
+                try {
+                    serviceFactoryClass = Class.forName(serviceFactoryName, true,
+                                Thread.currentThread().getContextClassLoader());
+                }
+                catch (ClassNotFoundException e) {
+                    // Backup for OSGi
+                    serviceFactoryClass = Class.forName(serviceFactoryName);
+                }
 
                 Object serviceFactory = serviceFactoryClass.newInstance();
 
