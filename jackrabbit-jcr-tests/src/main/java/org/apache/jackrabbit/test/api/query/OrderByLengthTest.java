@@ -17,9 +17,6 @@
 package org.apache.jackrabbit.test.api.query;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.DynamicOperand;
 
 /**
