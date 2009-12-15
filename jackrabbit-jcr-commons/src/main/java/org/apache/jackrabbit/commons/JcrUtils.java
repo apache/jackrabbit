@@ -537,7 +537,7 @@ public class JcrUtils {
      * <p>
      * The returned string is not meant to be parsed and the exact contents
      * can change in future releases. The current string representation of
-     * a node is "name [type]" and the representation of a property is
+     * a node is "path [type]" and the representation of a property is
      * "@name = value(s)". Binary values are expressed like "&lt;123 bytes&gt;"
      * and other values as their standard binary representation. Multi-valued
      * properties have their values listed in like "[ v1, v2, v3, ... ]". No
@@ -551,7 +551,7 @@ public class JcrUtils {
         StringBuilder builder = new StringBuilder();
         try {
             if (item.isNode()) {
-                builder.append(item.getName());
+                builder.append(item.getPath());
                 builder.append(" [");
                 builder.append(((Node) item).getPrimaryNodeType().getName());
                 builder.append("]");
