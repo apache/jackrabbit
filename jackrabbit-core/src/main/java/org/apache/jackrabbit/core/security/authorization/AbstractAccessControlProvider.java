@@ -174,7 +174,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         }
         session = (SessionImpl) systemSession;
         observationMgr = systemSession.getWorkspace().getObservationManager();
-        resolver = (SessionImpl) systemSession;
+        resolver = (NamePathResolver) systemSession;
 
         privAll = PrivilegeRegistry.getBits(new Privilege[] {session.getAccessControlManager().privilegeFromName(Privilege.JCR_ALL)});
         privRead = PrivilegeRegistry.getBits(new Privilege[] {session.getAccessControlManager().privilegeFromName(Privilege.JCR_READ)});

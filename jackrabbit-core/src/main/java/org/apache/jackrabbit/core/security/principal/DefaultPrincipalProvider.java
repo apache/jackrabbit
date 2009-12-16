@@ -93,7 +93,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         // listen to modifications of group-membership
         String[] ntNames = new String[1];
         if (securitySession instanceof SessionImpl) {
-            NameResolver resolver = (SessionImpl) securitySession;
+            NameResolver resolver = (NameResolver) securitySession;
             ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_GROUP);
             pMembers = resolver.getJCRName(UserManagerImpl.P_MEMBERS);
             pPrincipalName = resolver.getJCRName(UserManagerImpl.P_PRINCIPAL_NAME);

@@ -251,7 +251,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 if (nsFile.exists()) {
                     nsIndex = new HashMapIndex(nsFile);
                 } else {
-                    nsIndex = (NamespaceRegistryImpl) context.getNamespaceRegistry();
+                    nsIndex = (StringIndex) context.getNamespaceRegistry();
                 }
             }
             return nsIndex;

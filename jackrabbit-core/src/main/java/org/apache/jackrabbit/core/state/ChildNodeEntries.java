@@ -68,20 +68,22 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return (ChildNodeEntry) entries.get(id);
     }
 
+    @SuppressWarnings("unchecked")
     List<ChildNodeEntry> get(Name nodeName) {
         Object obj = nameMap.get(nodeName);
         if (obj == null) {
             return Collections.emptyList();
         }
-        if (obj instanceof ArrayList<?>) {
+        if (obj instanceof List<?>) {
             // map entry is a list of siblings
-            return Collections.unmodifiableList((ArrayList<ChildNodeEntry>) obj);
+            return Collections.unmodifiableList((List<ChildNodeEntry>) obj);
         } else {
             // map entry is a single child node entry
             return Collections.singletonList((ChildNodeEntry) obj);
         }
     }
 
+    @SuppressWarnings("unchecked")
     ChildNodeEntry get(Name nodeName, int index) {
         if (index < 1) {
             throw new IllegalArgumentException("index is 1-based");
@@ -91,9 +93,9 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         if (obj == null) {
             return null;
         }
-        if (obj instanceof ArrayList<?>) {
+        if (obj instanceof List<?>) {
             // map entry is a list of siblings
-            ArrayList<ChildNodeEntry> siblings = (ArrayList<ChildNodeEntry>) obj;
+            List<ChildNodeEntry> siblings = (List<ChildNodeEntry>) obj;
             if (index <= siblings.size()) {
                 return siblings.get(index - 1);
             }
@@ -106,25 +108,26 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     ChildNodeEntry add(Name nodeName, NodeId id) {
         ensureModifiable();
-        List<Object> siblings = null;
+        List<ChildNodeEntry> siblings = null;
         int index = 0;
         Object obj = nameMap.get(nodeName);
         if (obj != null) {
-            if (obj instanceof ArrayList<?>) {
+            if (obj instanceof List<?>) {
                 // map entry is a list of siblings
-                siblings = (ArrayList<Object>) obj;
+                siblings = (List<ChildNodeEntry>) obj;
                 if (siblings.size() > 0) {
                     // reuse immutable Name instance from 1st same name sibling
                     // in order to help gc conserving memory
-                    nodeName = ((ChildNodeEntry) siblings.get(0)).getName();
+                    nodeName = siblings.get(0).getName();
                 }
             } else {
                 // map entry is a single child node entry,
                 // convert to siblings list
-                siblings = new ArrayList<Object>();
-                siblings.add(obj);
+                siblings = new ArrayList<ChildNodeEntry>();
+                siblings.add((ChildNodeEntry) obj);
                 nameMap.put(nodeName, siblings);
             }
             index = siblings.size();
@@ -150,6 +153,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public ChildNodeEntry remove(Name nodeName, int index) {
         if (index < 1) {
             throw new IllegalArgumentException("index is 1-based");
@@ -173,7 +177,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         }
 
         // map entry is a list of siblings
-        List<ChildNodeEntry> siblings = (ArrayList<ChildNodeEntry>) obj;
+        List<ChildNodeEntry> siblings = (List<ChildNodeEntry>) obj;
         if (index > siblings.size()) {
             return null;
         }
@@ -315,10 +319,9 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         }
     }
 
-    public boolean containsAll(Collection c) {
-        Iterator iter = c.iterator();
-        while (iter.hasNext()) {
-            if (!contains(iter.next())) {
+    public boolean containsAll(Collection<?> c) {
+        for (Object entry : c) {
+            if (!contains(entry)) {
                 return false;
             }
         }
@@ -379,6 +382,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         return toArray(array);
     }
 
+    @SuppressWarnings("unchecked")
     public Object[] toArray(Object[] a) {
         if (!a.getClass().getComponentType().isAssignableFrom(ChildNodeEntry.class)) {
             throw new ArrayStoreException();
@@ -407,11 +411,11 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         throw new UnsupportedOperationException();
     }
 
-    public boolean addAll(Collection c) {
+    public boolean addAll(Collection<? extends ChildNodeEntry> c) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean addAll(int index, Collection c) {
+    public boolean addAll(int index, Collection<? extends ChildNodeEntry> c) {
         throw new UnsupportedOperationException();
     }
 
@@ -427,11 +431,11 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         throw new UnsupportedOperationException();
     }
 
-    public boolean removeAll(Collection c) {
+    public boolean removeAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean retainAll(Collection c) {
+    public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
@@ -492,7 +496,7 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
      * Initializes the name and entries map with unmodifiable empty instances.
      */
     private void init() {
-        nameMap = Collections.EMPTY_MAP;
+        nameMap = Collections.emptyMap();
         entries = EmptyLinkedMap.INSTANCE;
         shared = false;
     }
@@ -501,18 +505,19 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
      * Ensures that the {@link #nameMap} and {@link #entries} map are
      * modifiable.
      */
+    @SuppressWarnings("unchecked")
     private void ensureModifiable() {
         if (nameMap == Collections.EMPTY_MAP) {
             nameMap = new HashMap<Name, Object>();
             entries = new LinkedMap();
         } else if (shared) {
             entries = (LinkedMap) entries.clone();
-            nameMap = (Map<Name, Object>) ((HashMap<Name, Object>) nameMap).clone();
-            for (Iterator it = nameMap.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) it.next();
+            nameMap = new HashMap<Name, Object>(nameMap);
+            for (Map.Entry<Name, Object> entry : nameMap.entrySet()) {
                 Object value = entry.getValue();
-                if (value instanceof ArrayList) {
-                    entry.setValue(((ArrayList) value).clone());
+                if (value instanceof List<?>) {
+                    entry.setValue(new ArrayList<ChildNodeEntry>(
+                            (List<ChildNodeEntry>) value));
                 }
             }
             shared = false;
