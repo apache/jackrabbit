@@ -603,8 +603,8 @@ public class JcrUtils {
             }
         } else {
             String string = value.getString();
-            if (string.length() > 20) {
-                builder.append(string.substring(0, 17));
+            if (string.length() > 40) {
+                builder.append(string.substring(0, 37));
                 builder.append("...");
             } else {
                 builder.append(string);
