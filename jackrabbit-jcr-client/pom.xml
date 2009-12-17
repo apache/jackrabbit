@@ -32,16 +32,6 @@
     <artifactId>jackrabbit-jcr-client</artifactId>
     <name>Jackrabbit JCR Client</name>
 
-    <scm>
-        <connection>
-            scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/2.0-beta5
-        </connection>
-        <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/2.0-beta5
-        </developerConnection>
-        <url>http://svn.apache.org/viewvc/jackrabbit/tags/2.0-beta5</url>
-    </scm>
-
     <build>
         <plugins>
             <plugin>

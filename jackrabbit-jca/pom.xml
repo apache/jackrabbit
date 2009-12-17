@@ -38,16 +38,6 @@
    -->
   <description>A resource adapter for Jackrabbit as specified by JCA 1.0 and 1.5.</description>
 
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/2.0-beta5
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/2.0-beta5
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/tags/2.0-beta5</url>
-  </scm>
-
   <build>
     <plugins>
       <!-- JCR-683: Explicitly enable building of the jar. -->
