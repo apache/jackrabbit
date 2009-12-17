@@ -3,17 +3,12 @@ Welcome to Apache Jackrabbit  <http://jackrabbit.apache.org/>
 =============================================================
 
 Apache Jackrabbit is a fully conforming implementation of the
-Content Repository for Java Technology API (JCR). A content repository
-is a hierarchical content store with support for structured and
-unstructured content, full text search, versioning, transactions,
-observation, and more. Typical applications that use content
-repositories include content management, document management,
-and records management systems.
+Content Repository for Java Technology API (JCR, specified in
+JSR 170 and 283).
 
-Jackrabbit is currently based on a pre-release version of the JCR 2.0 API
-defined by the Java Specification Request 283 (JSR 283,
-http://jcp.org/en/jsr/detail?id=283). Version 1.0 of the JCR API was
-specified by JSR 170.
+A content repository is a hierarchical content store with support
+for structured and unstructured content, full text search,
+versioning, transactions, observation, and more.
 
 Apache Jackrabbit is a project of the Apache Software Foundation.
 
@@ -49,12 +44,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-
-Getting Started
-===============
-
 Mailing Lists
--------------
+=============
 
 To get involved with the Apache Jackrabbit project, start by having a
 look at our website and joining our mailing lists. For more details about
@@ -62,10 +53,10 @@ Jackrabbit mailing lists as well as links to list archives, please see:
 
    http://jackrabbit.apache.org/mailing-lists.html
 
-Downloading
------------
+Latest development
+==================
 
-The Jackrabbit source code is available via Subversion at
+The latest Jackrabbit source code is available via Subversion at
 
    https://svn.apache.org/repos/asf/jackrabbit/trunk/
 
@@ -76,6 +67,10 @@ or with ViewVC at
 To checkout the main Jackrabbit source tree, run
 
    svn checkout https://svn.apache.org/repos/asf/jackrabbit/trunk jackrabbit
+
+If you use Git, you can clone Jackrabbit with
+
+   git clone git://git.apache.org/jackrabbit.git
 
 Credits
 =======
