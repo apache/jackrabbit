@@ -65,8 +65,10 @@ public abstract class AbstractSession implements Session {
      * <code>super.logout()</code> when overriding this method to avoid
      * namespace mappings to be carried over to a new session.
      */
-    public synchronized void logout() {
-        namespaces.clear();
+    public void logout() {
+        synchronized (namespaces) {
+            namespaces.clear();
+        }
     }
 
     //------------------------------------------------< Namespace handling >--
@@ -84,25 +86,27 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the namespace is not found
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized String getNamespacePrefix(String uri)
+    public String getNamespacePrefix(String uri)
             throws NamespaceException, RepositoryException {
-        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
-            if (entry.getValue().equals(uri)) {
-                return entry.getKey();
+        synchronized (namespaces) {
+            for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+                if (entry.getValue().equals(uri)) {
+                    return entry.getKey();
+                }
             }
+
+            // The following throws an exception if the URI is not found, that's OK
+            String prefix = getWorkspace().getNamespaceRegistry().getPrefix(uri);
+
+            // Generate a new prefix if the global mapping is already taken
+            String base = prefix;
+            for (int i = 2; namespaces.containsKey(prefix); i++) {
+                prefix = base + i;
+            }
+
+            namespaces.put(prefix, uri);
+            return prefix;
         }
-
-        // The following throws an exception if the URI is not found, that's OK
-        String prefix = getWorkspace().getNamespaceRegistry().getPrefix(uri);
-
-        // Generate a new prefix if the global mapping is already taken
-        String base = prefix;
-        for (int i = 2; namespaces.containsKey(prefix); i++) {
-            prefix = base + i;
-        }
-
-        namespaces.put(prefix, uri);
-        return prefix;
     }
 
     /**
@@ -118,24 +122,26 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the namespace is not found
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized String getNamespaceURI(String prefix)
+    public String getNamespaceURI(String prefix)
             throws NamespaceException, RepositoryException {
-        String uri = namespaces.get(prefix);
+        synchronized (namespaces) {
+            String uri = namespaces.get(prefix);
 
-        if (uri == null) {
-            // Not in local mappings, try the global ones
-            uri = getWorkspace().getNamespaceRegistry().getURI(prefix);
-            if (namespaces.containsValue(uri)) {
-                // The global URI is locally mapped to some other prefix,
-                // so there are no mappings for this prefix
-                throw new NamespaceException("Namespace not found: " + prefix);
+            if (uri == null) {
+                // Not in local mappings, try the global ones
+                uri = getWorkspace().getNamespaceRegistry().getURI(prefix);
+                if (namespaces.containsValue(uri)) {
+                    // The global URI is locally mapped to some other prefix,
+                    // so there are no mappings for this prefix
+                    throw new NamespaceException("Namespace not found: " + prefix);
+                }
+                // Add the mapping to the local set, we already know that
+                // the prefix is not taken
+                namespaces.put(prefix, uri);
             }
-            // Add the mapping to the local set, we already know that
-            // the prefix is not taken
-            namespaces.put(prefix, uri);
-        }
 
-        return uri;
+            return uri;
+        }
     }
 
     /**
@@ -149,13 +155,15 @@ public abstract class AbstractSession implements Session {
      * @return namespace prefixes
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized String[] getNamespacePrefixes()
+    public String[] getNamespacePrefixes()
             throws RepositoryException {
         for (String uri : getWorkspace().getNamespaceRegistry().getURIs()) {
             getNamespacePrefix(uri);
         }
 
-        return namespaces.keySet().toArray(new String[namespaces.size()]);
+        synchronized (namespaces) {
+            return namespaces.keySet().toArray(new String[namespaces.size()]);
+        }
     }
 
     /**
@@ -170,7 +178,7 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the mapping is illegal
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized void setNamespacePrefix(String prefix, String uri)
+    public void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException {
         if (prefix == null) {
             throw new IllegalArgumentException("Prefix must not be null");
@@ -190,20 +198,22 @@ public abstract class AbstractSession implements Session {
                     "Prefix is not a valid XML NCName: " + prefix);
         }
 
-        // Remove existing mapping for the given prefix
-        namespaces.remove(prefix);
+        synchronized (namespaces) {
+            // Remove existing mapping for the given prefix
+            namespaces.remove(prefix);
 
-        // Remove existing mapping(s) for the given URI
-        Set<String> prefixes = new HashSet<String>();
-        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
-            if (entry.getValue().equals(uri)) {
-                prefixes.add(entry.getKey());
+            // Remove existing mapping(s) for the given URI
+            Set<String> prefixes = new HashSet<String>();
+            for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+                if (entry.getValue().equals(uri)) {
+                    prefixes.add(entry.getKey());
+                }
             }
-        }
-        namespaces.keySet().removeAll(prefixes);
+            namespaces.keySet().removeAll(prefixes);
 
-        // Add the new mapping
-        namespaces.put(prefix, uri);
+            // Add the new mapping
+            namespaces.put(prefix, uri);
+        }
     }
 
     //---------------------------------------------< XML export and import >--
