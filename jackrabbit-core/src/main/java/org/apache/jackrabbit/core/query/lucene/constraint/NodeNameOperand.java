@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyType;
 
-import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 
 /**
  * <code>NodeNameOperand</code> implements a node name operand.
@@ -40,7 +41,12 @@ public class NodeNameOperand extends DynamicOperand {
     public Value[] getValues(ScoreNode sn, EvaluationContext context)
             throws RepositoryException {
         SessionImpl session = context.getSession();
-        String name = session.getNodeById(sn.getNodeId()).getName();
-        return new Value[]{session.getValueFactory().createValue(name, PropertyType.NAME)};
+        try {
+            String name = session.getNodeById(sn.getNodeId()).getName();
+            return new Value[]{session.getValueFactory().createValue(name, PropertyType.NAME)};
+        } catch (ItemNotFoundException e) {
+            // access denied to score node
+            return new Value[0];
+        }
     }
 }

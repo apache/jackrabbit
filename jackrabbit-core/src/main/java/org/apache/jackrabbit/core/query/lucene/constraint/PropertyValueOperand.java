@@ -16,20 +16,21 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
-import javax.jcr.Value;
-import javax.jcr.Property;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
-import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
-import org.apache.jackrabbit.core.query.lucene.ScoreNode;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.query.lucene.ScoreNode;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
 
 /**
  * <code>PropertyValueOperand</code> implements a property value operand.
@@ -90,7 +91,11 @@ public class PropertyValueOperand extends DynamicOperand {
         try {
             Node n = session.getNodeById(sn.getNodeId());
             return n.getProperty(operand.getPropertyName());
+        } catch (ItemNotFoundException e) {
+            // access denied to score node
+            return null;
         } catch (PathNotFoundException e) {
+            // property not found
             return null;
         }
     }
