@@ -99,7 +99,9 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
             }
 
             @Override
-            protected QNodeDefinition createRootNodeDefinition() throws RepositoryException {
+            protected QNodeDefinition createRootNodeDefinition(SessionInfo sessionInfo)
+                    throws RepositoryException {
+
                 return AbstractJCR2SPITest.this.createRootNodeDefinition();
             }
 
