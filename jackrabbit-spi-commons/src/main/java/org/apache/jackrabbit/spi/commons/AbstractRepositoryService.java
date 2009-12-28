@@ -223,11 +223,12 @@ public abstract class AbstractRepositoryService implements RepositoryService {
 
     /**
      * Create the root node definition.
-     *
+     * @param sessionInfo  the session info.
      * @return the root node definition for a workspace.
      * @throws RepositoryException if an error occurs.
      */
-    protected abstract QNodeDefinition createRootNodeDefinition() throws RepositoryException;
+    protected abstract QNodeDefinition createRootNodeDefinition(SessionInfo sessionInfo)
+            throws RepositoryException;
 
     //---------------------< may be overwritten by subclasses>------------------
 
@@ -425,7 +426,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         if (nodeId.getUniqueID() == null && nodeId.getPath().denotesRoot()) {
             synchronized (this) {
                 if (rootNodeDefinition == null) {
-                    rootNodeDefinition = createRootNodeDefinition();
+                    rootNodeDefinition = createRootNodeDefinition(sessionInfo);
                 }
                 return rootNodeDefinition;
             }
