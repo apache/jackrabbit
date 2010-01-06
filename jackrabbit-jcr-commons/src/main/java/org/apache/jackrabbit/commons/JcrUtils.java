@@ -458,7 +458,7 @@ public class JcrUtils {
     public static Node putFile(
             Node parent, String name, String mime, InputStream data)
             throws RepositoryException {
-        return putFile(parent, name, mime, Calendar.getInstance(), data);
+        return putFile(parent, name, mime, data, Calendar.getInstance());
     }
 
     /**
@@ -492,15 +492,15 @@ public class JcrUtils {
      * @param parent parent node
      * @param name name of the file
      * @param mime media type of the file
-     * @param date date of last modification
      * @param data binary content of the file
+     * @param date date of last modification
      * @return the child node
      * @throws RepositoryException if the child node can not be created
      *                             or updated
      */
     public static Node putFile(
-            Node parent, String name, String mime, Calendar date,
-            InputStream data) throws RepositoryException {
+            Node parent, String name, String mime,
+            InputStream data, Calendar date) throws RepositoryException {
         Binary binary =
             parent.getSession().getValueFactory().createBinary(data);
         try {
