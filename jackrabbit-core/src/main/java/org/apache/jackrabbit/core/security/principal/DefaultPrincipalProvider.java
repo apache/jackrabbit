@@ -280,7 +280,13 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             try {
                 final Authorizable auth = userManager.getAuthorizable(princ);
                 if (auth != null) {
-                    addToCache(princ);
+                    /*
+                    make sure the principal is contained in the cache.
+                    however, avoid putting the given 'princ' but assert that
+                    the cached principal is obtained with the system session
+                    used to deliver principals with this provider implementation.
+                    */
+                    addToCache(auth.getPrincipal());
                     Iterator<Group> itr = auth.memberOf();
                     while (itr.hasNext()) {
                         Group group = itr.next();

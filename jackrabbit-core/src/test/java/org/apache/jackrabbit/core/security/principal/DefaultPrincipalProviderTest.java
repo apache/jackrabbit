@@ -21,11 +21,13 @@ import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * <code>DefaultPrincipalProviderTest</code>...
@@ -100,6 +102,22 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
             if (gr2 != null) gr2.remove();
             if (u != null) u.remove();
             save(superuser);
+        }
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    public void testCacheDoesntContainTestPrincipalImpl() throws Exception {
+        Set<Principal> principals = getPrincipalSetFromSession(superuser);
+        for (Principal p : principals) {
+            Principal testPrinc = new TestPrincipal(p.getName());
+            principalProvider.getGroupMembership(testPrinc);
+            Principal fromProvider = ((DefaultPrincipalProvider) principalProvider).providePrincipal(p.getName());
+
+            assertNotSame(testPrinc, fromProvider);
+            assertFalse(fromProvider instanceof TestPrincipal);
         }
     }
 }
