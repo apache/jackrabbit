@@ -227,6 +227,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
         private final int itemCacheSize;
         private final int pollTimeOut;
         private final Map<?, ?> parameters;
+        private RepositoryService repositoryService;
 
         public RepositoryConfigImpl(RepositoryServiceFactory serviceFactory, Map<?, ?> parameters)
                 throws RepositoryException {
@@ -252,7 +253,10 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
         }
 
         public RepositoryService getRepositoryService() throws RepositoryException {
-            return serviceFactory.createRepositoryService(parameters);
+            if (repositoryService == null) {
+                repositoryService = serviceFactory.createRepositoryService(parameters);
+            }
+            return repositoryService;
         }
 
         // -----------------------------------------------------< private >---
