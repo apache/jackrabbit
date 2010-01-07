@@ -16,26 +16,27 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.Calendar;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
-import java.security.Principal;
-import java.security.acl.Group;
-import java.util.Calendar;
+
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>NodeImplTest</code>... */
 public class NodeImplTest extends AbstractJCRTest {
@@ -199,5 +200,56 @@ public class NodeImplTest extends AbstractJCRTest {
         Property p = n.setProperty("LongMultiple", new String[]{"123", "456"});
         assertEquals(PropertyType.nameFromValue(PropertyType.LONG),
                 PropertyType.nameFromValue(p.getType()));
+    }
+
+    /**
+     * Test case for JCR-2130 and JCR-2408.
+     *
+     * @throws RepositoryException
+     */
+    public void testAddRemoveMixin() throws RepositoryException {
+        // add mix:title to a nt:folder node and set jcr:title property
+        Node n = testRootNode.addNode(nodeName1, "nt:folder");
+        n.addMixin("mix:title");
+        n.setProperty("jcr:title", "blah blah");
+        testRootNode.getSession().save();
+
+        // remove mix:title, jcr:title should be gone as there's no matching
+        // definition in nt:folder
+        n.removeMixin("mix:title");
+        testRootNode.getSession().save();
+        assertFalse(n.hasProperty("jcr:title"));
+
+        // add mix:title to a nt:unstructured node and set jcr:title property
+        Node n1 = testRootNode.addNode(nodeName2, ntUnstructured);
+        n1.addMixin("mix:title");
+        n1.setProperty("jcr:title", "blah blah");
+        assertEquals(
+                n1.getProperty("jcr:title").getDefinition().getDeclaringNodeType().getName(),
+                "mix:title");
+
+        // remove mix:title, jcr:title should stay since it adopts the residual
+        // property definition declared in nt:unstructured
+        testRootNode.getSession().save();
+
+        n1.removeMixin("mix:title");
+        testRootNode.getSession().save();
+        assertTrue(n1.hasProperty("jcr:title"));
+
+        assertEquals(
+                n1.getProperty("jcr:title").getDefinition().getDeclaringNodeType().getName(),
+                ntUnstructured);
+
+        // add mix:referenceable to a nt:unstructured node, jcr:uuid is
+        // automatically added
+        Node n2 = testRootNode.addNode(nodeName3, ntUnstructured);
+        n2.addMixin(mixReferenceable);
+        testRootNode.getSession().save();
+
+        // remove mix:referenceable, jcr:uuid should always get removed
+        // since it is a protcted property
+        n2.removeMixin(mixReferenceable);
+        testRootNode.getSession().save();
+        assertFalse(n2.hasProperty("jcr:uuid"));
     }
 }
