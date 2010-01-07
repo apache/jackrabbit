@@ -80,6 +80,14 @@
           <groupId>xerces</groupId>
           <artifactId>xercesImpl</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.tika</groupId>
+          <artifactId>tika-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-fileupload</groupId>
+          <artifactId>commons-fileupload</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -93,10 +101,6 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
