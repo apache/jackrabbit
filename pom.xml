@@ -75,6 +75,11 @@
   <profiles>
     <profile>
       <id>apache-release</id>
+      <properties>
+        <username>${user.name}</username>
+        <keyfile>${user.home}/.ssh/id_rsa</keyfile>
+        <passphrase></passphrase>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -92,6 +97,99 @@
                 </configuration>
               </execution>
             </executions>
+          </plugin>
+          <!-- JCR-2455: Automatic staging of non-Maven release artifacts -->
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>deploy</phase>
+                <configuration>
+                  <tasks>
+                    <mkdir dir="${basedir}/target/${project.version}"/>
+                    <copy todir="${basedir}/target/${project.version}"
+                          flatten="true">
+                      <fileset dir="${basedir}">
+                        <include name="RELEASE-NOTES.txt"/>
+                        <include name="target/*-src.zip*"/>
+                        <include name="jackrabbit-standalone/target/*-${project.version}.jar*"/>
+                        <include name="jackrabbit-webapp/target/*-${project.version}.war*"/>
+                        <include name="jackrabbit-jca/target/*-${project.version}.rar*"/>
+                      </fileset>
+                    </copy>
+                    <checksum algorithm="MD5" fileext=".md5">
+                      <fileset dir="${basedir}/target/${project.version}">
+                        <include name="*.zip"/>
+                        <include name="*.?ar"/>
+                      </fileset>
+                    </checksum>
+                    <checksum algorithm="SHA1" fileext=".sha">
+                      <fileset dir="${basedir}/target/${project.version}">
+                        <include name="*.zip"/>
+                        <include name="*.?ar"/>
+                      </fileset>
+                    </checksum>
+                    <scp todir="${username}@people.apache.org:public_html/jackrabbit"
+                         keyfile="${keyfile}" passphrase="${passphrase}"
+                         sftp="true" verbose="true">
+                      <fileset dir="${basedir}/target">
+                        <include name="${project.version}/*"/>
+                      </fileset>
+                    </scp>
+                    <checksum file="${basedir}/target/${project.version}/jackrabbit-${project.version}-src.zip"
+                              algorithm="SHA1" property="checksum"/>
+                    <echo file="${basedir}/target/vote.txt">
+From: ${username}@apache.org
+To: dev@jackrabbit.apache.org
+Subject: [VOTE] Release Apache Jackrabbit ${project.version}
+
+A candidate for the Jackrabbit ${project.version} release is available at:
+
+    http://people.apache.org/~${username}/jackrabbit/${project.version}/
+
+The release candidate is a zip archive of the sources in:
+
+    http://svn.apache.org/repos/asf/jackrabbit/tags/${project.version}/
+
+The SHA1 checksum of the archive is ${checksum}.
+
+Please vote on releasing this package as Apache Jackrabbit ${project.version}.
+The vote is open for the next 72 hours and passes if a majority of at
+least three +1 Jackrabbit PMC votes are cast.
+
+    [ ] +1 Release this package as Apache Jackrabbit ${project.version}
+    [ ] -1 Do not release this package because...${line.separator}
+                    </echo>
+                    <echo/>
+                    <echo>
+The release candidate has been deployed to:
+
+    http://people.apache.org/~${username}/jackrabbit/${project.version}/
+
+A release vote template has been generated for you:
+
+    file://${basedir}/target/vote.txt
+                    </echo>
+                    <echo/>
+                  </tasks>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                 <groupId>org.apache.ant</groupId>
+                 <artifactId>ant-jsch</artifactId>
+                 <version>1.7.1</version>
+               </dependency>
+              <dependency>
+                 <groupId>com.jcraft</groupId>
+                 <artifactId>jsch</artifactId>
+                 <version>0.1.42</version>
+               </dependency>
+            </dependencies>
           </plugin>
         </plugins>
       </build>
