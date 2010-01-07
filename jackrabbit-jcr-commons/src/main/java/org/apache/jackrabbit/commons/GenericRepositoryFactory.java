@@ -124,20 +124,11 @@ public class GenericRepositoryFactory implements RepositoryFactory {
                 }
                 parameters.put("org.apache.jackrabbit.repository.home", home);
                 parameters.put("org.apache.jackrabbit.repository.conf", conf);
-            } else if ("http".equalsIgnoreCase(scheme)
-                    || "https".equalsIgnoreCase(scheme)){
-                parameters.put(
-                        "org.apache.jackrabbit.spi.RepositoryServiceFactory",
-                        "org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory");
-                parameters.put(
-                        "org.apache.jackrabbit.spi2davex.uri", parameter);
             } else {
-                throw new RepositoryException(
-                        "Unsupported repository URI: " + parameter);
+                return null;
             }
         } catch (URISyntaxException e) {
-            throw new RepositoryException(
-                    "Invalid repository URI: " + parameter, e);
+            return null;
         }
 
         return JcrUtils.getRepository(parameters);
