@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+  
+        http://www.apache.org/licenses/LICENSE-2.0
+  
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+--> 
+
+<!--
+        "Digester" component of the Jakarta Commons Subproject
+        DTD for the definition of Digester rules in XML.
+        $Id: digester-rules.dtd 155412 2005-02-26 12:58:36Z dirkv $
+
+        Applications wishing to reference this DTD in their own documents
+        should use the following DOCTYPE declaration:
+
+        <!DOCTYPE digester-rules PUBLIC
+         "-//Jakarta Apache //DTD digester-rules XML V1.0//EN"
+         "digester-rules.dtd">
+
+-->
+
+<!-- This document type defines an XML format for defining Digester rules.
+     Digester is a framework for pattern-matching-based parsing of XML into
+     Java objects. See http://jakarta.apache.org/commons/digester.html.  -->
+
+<!ENTITY % rule-elements "bean-property-setter-rule | call-method-rule |
+                   call-param-rule | object-param-rule |
+                   factory-create-rule | object-create-rule |
+                   set-properties-rule | set-nested-properties-rule |
+                   set-property-rule | set-top-rule |
+                   set-next-rule | set-root-rule" >
+
+<!-- digester-rules is the root element. -->
+<!ELEMENT digester-rules (pattern | include | %rule-elements; )*>
+
+
+<!-- <pattern> defines a matching pattern, or part of a matching pattern. Any
+     rule nested in a pattern element prepends its parent's to its pattern.
+     Patterns may be recursively nested.
+     Example:
+       <pattern value="foo">
+          <pattern value="bar">
+            <object-create-rule pattern="baz" classname="Fubar" />
+          </pattern>
+       </pattern>
+
+     The above sample fragment defines an ObjectCreateRule associated
+     with the pattern "foo/bar/baz".
+
+  Note that the use of pattern elements is optional; an alternative is for
+  each rule element to contain a 'pattern' attribute.   -->
+<!ELEMENT pattern (pattern | include | %rule-elements; )*>
+<!ATTLIST pattern
+    value CDATA #REQUIRED>
+
+
+<!--
+  <include> allows one set of digester rules to be included inside
+  another. The 'path' attribute contains the URI of the document to
+  include. Inclusion behaves as if the included rules document is
+  'macro-expanded' within the outer document.
+  Programmatically initialized rules can be included as well, via the
+  'class' attribute. The 'class' attribute should contain the name
+  of a class that implements
+  org.apache.commons.digester.xmlrules.DigesterRulesSource.
+-->
+<!ELEMENT include EMPTY>
+<!ATTLIST include
+    path  CDATA #IMPLIED
+    class CDATA #IMPLIED>
+
+
+<!-- Each 'rule' element below corresponds to a concrete subclass
+     of org.apache.framework.digester.Rule.
+     Each 'rule' element has an optional 'pattern' attribute, which
+     defines the pattern for that rule instance. If the rule element
+     is nested inside one or more <pattern> elements, those patterns
+     will be prepended to the pattern specified in the rule's 'pattern'
+     attribute. -->
+
+<!-- Bean Property Setter Rule -->
+<!ELEMENT bean-property-setter-rule EMPTY>
+<!ATTLIST bean-property-setter-rule
+    pattern      CDATA #IMPLIED
+    propertyname CDATA #IMPLIED>
+
+<!-- CallMethodRule
+  -
+  - Note that paramtypes is ignored unless paramcount is defined.
+  -->
+<!ELEMENT call-method-rule EMPTY>
+<!ATTLIST call-method-rule
+    pattern      CDATA #IMPLIED
+    targetoffset CDATA #IMPLIED
+    methodname   CDATA #REQUIRED
+    paramcount   CDATA #IMPLIED
+    paramtypes   CDATA #IMPLIED>
+
+<!-- 
+    CallParamRule 
+    attrname - set param from attribute value (cannot be combined with from-stack)
+    from-stack - set param from stack (cannot be combined with attrname)
+    -->
+<!ELEMENT call-param-rule EMPTY>
+<!ATTLIST call-param-rule
+    pattern  CDATA #IMPLIED
+    paramnumber CDATA #REQUIRED
+    attrname CDATA #IMPLIED
+    from-stack CDATA #IMPLIED
+    stack-index CDATA #IMPLIED>
+    
+<!--
+    ObjectParamRule
+    attrname  
+           - an arbitrary Object defined programatically, assigned if the 
+             element pattern AND specified attribute name are matched
+    param 
+           - an arbitrary Object defined programatically, assigned when the 
+             element pattern associated with the Rule is matched
+    type 
+           - class name for object
+    value 
+           - initial value for the object
+    -->
+<!ELEMENT object-param-rule EMPTY>
+<!ATTLIST object-param-rule
+    pattern  CDATA #IMPLIED
+    paramnumber CDATA #REQUIRED
+    param CDATA #REQUIRED
+    attrname CDATA #IMPLIED
+    type CDATA #REQUIRED
+    value CDATA #IMPLIED>
+
+<!-- 
+    FactoryCreateRule 
+    
+    ignore-exceptions - if this attribute is (ignore case) 'true' then any exceptions
+                        thrown by the object create rule will be ignore.
+                        This will allow processing to continue.
+    -->
+<!ELEMENT factory-create-rule EMPTY>
+<!ATTLIST factory-create-rule
+    pattern   CDATA #IMPLIED
+    classname CDATA #REQUIRED
+    attrname  CDATA #IMPLIED
+    ignore-exceptions  CDATA #IMPLIED> 
+
+<!-- ObjectCreateRule -->
+<!ELEMENT object-create-rule EMPTY>
+<!ATTLIST object-create-rule
+    pattern   CDATA #IMPLIED
+    classname CDATA #REQUIRED
+    attrname  CDATA #IMPLIED>
+
+<!-- SetPropertiesRule -->
+<!ELEMENT set-properties-rule (alias)*>
+<!ATTLIST set-properties-rule
+    pattern   CDATA #IMPLIED>
+
+<!-- SetNestedPropertiesRule -->
+<!ELEMENT set-nested-properties-rule (alias)*>
+<!ATTLIST set-nested-properties-rule
+    pattern                       CDATA #IMPLIED
+    allow-unknown-child-elements  CDATA #IMPLIED>
+
+<!-- An alias is a custom attribute->property name mapping -->
+<!ELEMENT alias EMPTY>
+<!ATTLIST alias
+ attr-name CDATA #REQUIRED
+ prop-name CDATA #IMPLIED>
+
+<!-- SetPropertyRule -->
+<!ELEMENT set-property-rule EMPTY>
+<!ATTLIST set-property-rule
+    pattern   CDATA #IMPLIED
+    name      CDATA #IMPLIED
+    value     CDATA #IMPLIED>
+
+<!-- SetTopRule -->
+<!ELEMENT set-top-rule EMPTY>
+<!ATTLIST set-top-rule
+    pattern    CDATA #IMPLIED
+    methodname CDATA #REQUIRED
+    paramtype  CDATA #IMPLIED>
+
+<!-- SetNextRule -->
+<!ELEMENT set-next-rule EMPTY>
+<!ATTLIST set-next-rule
+    pattern    CDATA #IMPLIED
+    methodname CDATA #REQUIRED
+    paramtype  CDATA #IMPLIED>
+
+<!-- SetRootRule -->
+<!ELEMENT set-root-rule EMPTY>
+<!ATTLIST set-root-rule
+    pattern    CDATA #IMPLIED
+    methodname CDATA #REQUIRED
+    paramtype  CDATA #IMPLIED>
+

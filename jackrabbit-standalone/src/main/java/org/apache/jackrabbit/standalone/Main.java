@@ -21,12 +21,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import javax.jcr.Repository;
+
+import org.apache.commons.chain.Context;
+import org.apache.commons.chain.impl.ContextBase;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.command.CommandHelper;
+import org.apache.jackrabbit.command.cli.JcrClient;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.RepositoryCopier;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
@@ -73,6 +80,8 @@ public class Main {
         options.addOption("l", "license", false, "print license information");
         options.addOption(
                 "b", "backup", false, "create a backup of the repository");
+        options.addOption(
+                "i", "cli", true, "command line access to a remote repository");
 
         options.addOption("q", "quiet", false, "disable console output");
         options.addOption("d", "debug", false, "enable debug logging");
@@ -111,6 +120,12 @@ public class Main {
             copyToOutput("/META-INF/NOTICE.txt");
         } else if (command.hasOption("license")) {
             copyToOutput("/META-INF/LICENSE.txt");
+        } else if (command.hasOption("cli")) {
+            Context context = new ContextBase();
+            String uri = command.getOptionValue("cli");
+            Repository repository = JcrUtils.getRepository(uri);
+            CommandHelper.setRepository(context, repository, uri);
+            new JcrClient(context).runInteractive();
         } else {
             message("Welcome to Apache Jackrabbit!");
             message("-------------------------------");
