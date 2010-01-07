@@ -131,7 +131,7 @@ public class JcrUtils {
             throws RepositoryException {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(GenericRepositoryFactory.URI, uri);
-        return new GenericRepositoryFactory().getRepository(parameters);
+        return getRepository(parameters);
     }
 
     /**
