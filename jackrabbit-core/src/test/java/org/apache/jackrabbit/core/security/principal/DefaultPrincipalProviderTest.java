@@ -114,7 +114,7 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
         for (Principal p : principals) {
             Principal testPrinc = new TestPrincipal(p.getName());
             principalProvider.getGroupMembership(testPrinc);
-            Principal fromProvider = ((DefaultPrincipalProvider) principalProvider).providePrincipal(p.getName());
+            Principal fromProvider = principalProvider.getPrincipal(p.getName());
 
             assertNotSame(testPrinc, fromProvider);
             assertFalse(fromProvider instanceof TestPrincipal);
