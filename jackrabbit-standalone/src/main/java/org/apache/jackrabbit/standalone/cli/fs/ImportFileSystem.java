@@ -19,8 +19,8 @@ package org.apache.jackrabbit.standalone.cli.fs;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
-import java.util.Properties;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -29,8 +29,10 @@ import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.standalone.cli.CommandException;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
+import org.apache.tika.Tika;
 
 /**
  * Import data from the file system. <br>
@@ -43,18 +45,8 @@ public class ImportFileSystem implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(ImportFileSystem.class);
 
-    /** extension to mime type mapping */
-    private static Properties mimeTypes;
-
-    static {
-        try {
-            mimeTypes = new Properties();
-            mimeTypes.load(ImportFileSystem.class
-                .getResourceAsStream("mimetypes.properties"));
-        } catch (Exception e) {
-            log.error("unable to load mime types", e);
-        }
-    }
+    /** Use Apache Tika to detect the media types of imported files */
+    private static Tika tika = new Tika();
 
     // ---------------------------- < keys >
 
@@ -110,23 +102,16 @@ public class ImportFileSystem implements Command {
 
     private void importFile(Node parentnode, File file)
             throws RepositoryException, IOException {
-        String mimeType = null;
-        String extension = getExtension(file.getName());
-        if (extension != null) {
-            mimeType = mimeTypes.getProperty(extension);
+        InputStream stream = new FileInputStream(file);
+        try {
+            Calendar date = Calendar.getInstance();
+            date.setTimeInMillis(file.lastModified());
+            JcrUtils.putFile(
+                    parentnode, file.getName(),
+                    tika.detect(file), stream, date);
+        } finally {
+            stream.close();
         }
-        if (mimeType == null) {
-            mimeType = "application/octet-stream";
-        }
-
-        Node fileNode = parentnode.addNode(file.getName(), "nt:file");
-        Node resNode = fileNode.addNode("jcr:content", "nt:resource");
-        resNode.setProperty("jcr:mimeType", mimeType);
-        resNode.setProperty("jcr:encoding", "");
-        resNode.setProperty("jcr:data", new FileInputStream(file));
-        Calendar lastModified = Calendar.getInstance();
-        lastModified.setTimeInMillis(file.lastModified());
-        resNode.setProperty("jcr:lastModified", lastModified);
     }
 
     /**
@@ -146,8 +131,8 @@ public class ImportFileSystem implements Command {
         for (int i = 0; i < direntries.length; i++) {
             File direntry = direntries[i];
             if (direntry.isDirectory()) {
-                Node childnode = parentnode.addNode(direntry.getName(),
-                    "nt:folder");
+                Node childnode =
+                    JcrUtils.getOrAddFolder(parentnode, direntry.getName());
                 importFolder(childnode, direntry);
             } else {
                 importFile(parentnode, direntry);
