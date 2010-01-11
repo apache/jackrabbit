@@ -26,6 +26,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
 
 import org.apache.jackrabbit.commons.GenericRepositoryFactory;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
 import org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory;
 import org.apache.jackrabbit.spi.RepositoryServiceFactory;
@@ -64,9 +65,6 @@ public class Jcr2davRepositoryFactory implements RepositoryFactory {
     private static final String DAVEX_URI =
         Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI;
 
-    private static final String GENERIC_URI =
-        GenericRepositoryFactory.URI;
-
     public Repository getRepository(Map parameters) throws RepositoryException {
         if (parameters == null) {
             return null;
@@ -76,9 +74,9 @@ public class Jcr2davRepositoryFactory implements RepositoryFactory {
         } else if (parameters.containsKey(DAVEX_URI)) {
             return getRepository(
                     new Spi2davexRepositoryServiceFactory(), parameters);
-        } else if (parameters.containsKey(GENERIC_URI)) {
+        } else if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
             Map copy = new HashMap(parameters);
-            Object parameter = copy.remove(GENERIC_URI);
+            Object parameter = copy.remove(JcrUtils.REPOSITORY_URI);
             try {
                 URI uri = new URI(parameter.toString().trim());
                 String scheme = uri.getScheme();

@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.JackrabbitRepositoryFactory;
 import org.apache.jackrabbit.api.management.RepositoryManager;
-import org.apache.jackrabbit.commons.GenericRepositoryFactory;
+import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
  * <code>RepositoryFactoryImpl</code> implements a repository factory that
@@ -71,8 +71,8 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
                 String conf = parameters.get(REPOSITORY_CONF).toString();
                 String home = parameters.get(REPOSITORY_HOME).toString();
                 return getOrCreateRepository(conf, home);
-            } else if (parameters.containsKey(GenericRepositoryFactory.URI)) {
-                Object parameter = parameters.get(GenericRepositoryFactory.URI);
+            } else if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
+                Object parameter = parameters.get(JcrUtils.REPOSITORY_URI);
                 try {
                     URI uri = new URI(parameter.toString().trim());
                     if ("file".equalsIgnoreCase(uri.getScheme())) {

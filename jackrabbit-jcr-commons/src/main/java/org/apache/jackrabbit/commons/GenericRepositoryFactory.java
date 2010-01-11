@@ -57,8 +57,8 @@ public class GenericRepositoryFactory implements RepositoryFactory {
     /**
      * The repository URI parameter name.
      */
-    public static final String URI =
-        "org.apache.jackrabbit.repository.uri";
+    @Deprecated
+    public static final String URI = JcrUtils.REPOSITORY_URI;
 
     /**
      * The JNDI name parameter name.
@@ -81,8 +81,8 @@ public class GenericRepositoryFactory implements RepositoryFactory {
             if (environment.containsKey(JNDI_NAME)) {
                 String name = environment.remove(JNDI_NAME).toString();
                 return getRepository(name, environment);
-            } else if (environment.containsKey(URI)) {
-                Object parameter = environment.remove(URI);
+            } else if (environment.containsKey(JcrUtils.REPOSITORY_URI)) {
+                Object parameter = environment.remove(JcrUtils.REPOSITORY_URI);
                 try {
                     URI uri = new URI(parameter.toString().trim());
                     if ("jndi".equalsIgnoreCase(uri.getScheme())) {
