@@ -16,10 +16,8 @@
  */
 package org.apache.jackrabbit.commons;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -42,15 +40,9 @@ import javax.naming.NamingException;
  *   </dd>
  *   <dt>{@link #URI org.apache.jackrabbit.repository.uri}</dt>
  *   <dd>
- *     Connects to the given repository URI.
- *     See {@link JcrUtils#getRepository(String)} for the supported URI types.
- *     Note that this class does not directly implement all these connection
- *     mechanisms. Instead it maps the given repository URI to known
- *     {@link RepositoryFactory} parameters and uses the Java Service
- *     Provider mechanism to recursively ask all the available repository
- *     factories to handle the resulting connection parameters. All the other
- *     parameters except the repository URI from the original invocation are
- *     also passed on to these recursive calls.
+ *     Connects to the repository at the given jndi: URI.
+ *     All the other parameters except the repository URI from the original
+ *     invocation are also passed on to these recursive calls.
  *   </dd>
  * </dl>
  * Clients should normally only use this class through the Java Service
@@ -83,71 +75,33 @@ public class GenericRepositoryFactory implements RepositoryFactory {
     public Repository getRepository(Map parameters)
             throws RepositoryException {
         if (parameters == null) {
-            return null;
-        } else if (parameters.containsKey(URI)) {
-            return getUriRepository(parameters);
-        } else if (parameters.containsKey(JNDI_NAME)) {
-            return getJndiRepository(parameters);
+            return null; // no default JNDI repository
         } else {
-            return null;
-        }
-    }
-
-    /**
-     * Implements the repository URI connection as documented in the
-     * description of this class.
-     *
-     * @param original original repository parameters, including {@link #URI}
-     * @return repository instance
-     * @throws RepositoryException if the repository can not be accessed,
-     *                             or if the URI is invalid or unknown
-     */
-    private Repository getUriRepository(Map original)
-            throws RepositoryException {
-        Map parameters = new HashMap(original);
-        String parameter = parameters.remove(URI).toString().trim();
-
-        try {
-            URI uri = new URI(parameter);
-            String scheme = uri.getScheme();
-            if ("jndi".equalsIgnoreCase(scheme)) {
-                parameters.put(JNDI_NAME, uri.getSchemeSpecificPart());
-            } else if ("file".equalsIgnoreCase(scheme)) {
-                File file = new File(uri);
-                String home, conf;
-                if (file.isFile()) {
-                    home = file.getParentFile().getPath();
-                    conf = file.getPath();
-                } else {
-                    home = file.getPath();
-                    conf = new File(file, "repository.xml").getPath();
+            Hashtable environment = new Hashtable(parameters);
+            if (environment.containsKey(JNDI_NAME)) {
+                String name = environment.remove(JNDI_NAME).toString();
+                return getRepository(name, environment);
+            } else if (environment.containsKey(URI)) {
+                Object parameter = environment.remove(URI);
+                try {
+                    URI uri = new URI(parameter.toString().trim());
+                    if ("jndi".equalsIgnoreCase(uri.getScheme())) {
+                        String name = uri.getSchemeSpecificPart();
+                        return getRepository(name, environment);
+                    } else {
+                        return null; // not a jndi: URI
+                    }
+                } catch (URISyntaxException e) {
+                    return null; // not a valid URI
                 }
-                parameters.put("org.apache.jackrabbit.repository.home", home);
-                parameters.put("org.apache.jackrabbit.repository.conf", conf);
             } else {
-                return null;
+                return null; // unknown parameters
             }
-        } catch (URISyntaxException e) {
-            return null;
         }
-
-        return JcrUtils.getRepository(parameters);
     }
 
-    /**
-     * Implements the JNDI lookup as documented in the description of
-     * this class.
-     *
-     * @param parameters repository parameters, including {@link #JNDI_NAME}
-     * @return the repository instance from JNDI
-     * @throws RepositoryException if the name is not found in JNDI
-     *                             or does not point to a repository instance
-     */
-    private Repository getJndiRepository(Map parameters)
+    private Repository getRepository(String name, Hashtable environment)
             throws RepositoryException {
-        Hashtable environment = new Hashtable(parameters);
-        String name = environment.remove(JNDI_NAME).toString();
-
         try {
             Object value = new InitialContext(environment).lookup(name);
             if (value instanceof Repository) {
