@@ -25,10 +25,9 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
 
-import org.apache.jackrabbit.commons.GenericRepositoryFactory;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
 import org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory;
+import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
 import org.apache.jackrabbit.spi.RepositoryServiceFactory;
 import org.apache.jackrabbit.spi2dav.Spi2davRepositoryServiceFactory;
 import org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory;
@@ -101,9 +100,16 @@ public class Jcr2davRepositoryFactory implements RepositoryFactory {
     private Repository getRepository(
             RepositoryServiceFactory factory, Map parameters)
             throws RepositoryException {
-        return RepositoryImpl.create(
-                new Jcr2spiRepositoryFactory.RepositoryConfigImpl(
-                        factory, parameters));
+        try {
+            return RepositoryImpl.create(
+                    new Jcr2spiRepositoryFactory.RepositoryConfigImpl(
+                            factory, parameters));
+        } catch (RepositoryException e) {
+            // Unable to connect to the specified repository.
+            // Most likely the server is either not running or
+            // the given URI does not point to a valid davex server.
+            return null;
+        }
     }
 
 }
