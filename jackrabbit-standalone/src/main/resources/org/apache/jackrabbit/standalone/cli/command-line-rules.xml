@@ -21,7 +21,7 @@
 <digester-rules>
 
   <pattern value="commands/command">
-    <object-create-rule classname="org.apache.jackrabbit.command.cli.CommandLine"/>
+    <object-create-rule classname="org.apache.jackrabbit.standalone.cli.CommandLine"/>
     <set-properties-rule/>
 	<call-method-rule pattern="alias" methodname="addAlias" paramcount="1" />
 	<call-param-rule pattern="alias" paramnumber="0" attrname="name"/>
@@ -29,7 +29,7 @@
   </pattern>
 
   <pattern value="commands/command/argument">
-	<object-create-rule classname="org.apache.jackrabbit.command.cli.Argument" />
+	<object-create-rule classname="org.apache.jackrabbit.standalone.cli.Argument" />
 	<set-next-rule methodname="addArgument" />
     <set-properties-rule>
 		<alias attr-name="arg-name" prop-name="argName"/>
@@ -39,7 +39,7 @@
   </pattern>  
   
   <pattern value="commands/command/option">
-	<object-create-rule classname="org.apache.jackrabbit.command.cli.Option" />
+	<object-create-rule classname="org.apache.jackrabbit.standalone.cli.Option" />
     <set-properties-rule>
 		<alias attr-name="arg-name" prop-name="argName"/>
 		<alias attr-name="context-key" prop-name="contextKey"/>
@@ -49,7 +49,7 @@
   </pattern>  
 
   <pattern value="commands/command/flag">
-	<object-create-rule classname="org.apache.jackrabbit.command.cli.Flag" />
+	<object-create-rule classname="org.apache.jackrabbit.standalone.cli.Flag" />
     <set-properties-rule>
 		<alias attr-name="context-key" prop-name="contextKey"/>
     </set-properties-rule>
