@@ -1642,7 +1642,7 @@ public class XATest extends AbstractJCRTest {
      * (see JCR-769)
      */
     public void testTwoSessionsInOneTransaction() throws Exception {
-        Session otherSuperuser = getHelper().getSuperuserSession();
+        Session otherSuperuser = helper.getSuperuserSession();
         
         // get user transaction object
         UserTransactionImpl utx = new UserTransactionImpl(superuser, true);
