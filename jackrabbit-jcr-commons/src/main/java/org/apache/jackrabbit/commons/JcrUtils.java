@@ -55,6 +55,12 @@ public class JcrUtils {
      * {@link #getRepository(String)} method. All {@link RepositoryFactory}
      * implementations that want to support this repository access convention
      * should implement processing of this parameter.
+     * <p>
+     * Client applications are recommended to use the
+     * {@link #getRepository(String)} method instead of directly referencing
+     * this constant unless they explicitly want to pass also other
+     * {@link RepositoryFactory} parameters through the
+     * {@link #getRepository(Map)} method.
      */
     public static final String REPOSITORY_URI =
         "org.apache.jackrabbit.repository.uri";
@@ -144,21 +150,26 @@ public class JcrUtils {
     }
 
     /**
-     * Returns the repository identified by the given URI. The following
-     * URI types are currently supported:
+     * Returns the repository identified by the given URI. See the
+     * documentation of the repository implementation you want to use for
+     * whether it supports this repository URI convention and for what
+     * the repository URI should look like. For example, Jackrabbit 2.0
+     * supports the following types of repository URIs:
      * <dl>
      *   <dt>http(s)://...</dt>
      *   <dd>
      *     A remote repository connection using SPI2DAVex with the given URL.
+     *     See the jackrabbit-jcr2dav component for more details.
      *   </dd>
      *   <dt>file://...</dt>
      *   <dd>
      *     An embedded Jackrabbit repository located in the given directory.
+     *     See the jackrabbit-core component for more details.
      *   </dd>
      *   <dt>jndi:...</dt>
      *   <dd>
-     *     JNDI lookup for the named repository. See the JNDI support
-     *     described above.
+     *     JNDI lookup for the named repository. See the
+     *     {@link JndiRepositoryFactory} class for more details.
      *  </dd>
      * </dl>
      *
