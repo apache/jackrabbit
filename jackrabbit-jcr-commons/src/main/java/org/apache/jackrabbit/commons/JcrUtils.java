@@ -51,6 +51,15 @@ import org.apache.jackrabbit.commons.iterator.RowIterable;
 public class JcrUtils {
 
     /**
+     * The repository URI parameter name used by the
+     * {@link #getRepository(String)} method. All {@link RepositoryFactory}
+     * implementations that want to support this repository access convention
+     * should implement processing of this parameter.
+     */
+    public static final String REPOSITORY_URI =
+        "org.apache.jackrabbit.repository.uri";
+
+    /**
      * Private constructor to prevent instantiation of this class.
      */
     private JcrUtils() {
@@ -130,7 +139,7 @@ public class JcrUtils {
     public static Repository getRepository(String uri)
             throws RepositoryException {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put(GenericRepositoryFactory.URI, uri);
+        parameters.put(JcrUtils.REPOSITORY_URI, uri);
         return getRepository(parameters);
     }
 
