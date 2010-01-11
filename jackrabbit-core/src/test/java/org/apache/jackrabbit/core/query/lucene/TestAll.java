@@ -41,6 +41,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(IndexingAggregateTest.class);
         suite.addTestSuite(IndexMigrationTest.class);
         suite.addTestSuite(ChainedTermEnumTest.class);
+        suite.addTestSuite(IndexingConfigurationImplTest.class);
 
         return suite;
     }

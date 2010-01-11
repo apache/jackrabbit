@@ -16,51 +16,52 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+
+import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.HierarchyManagerImpl;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.xml.AdditionalNamespaceResolver;
+import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.HierarchyManagerImpl;
-import org.apache.jackrabbit.core.nodetype.xml.AdditionalNamespaceResolver;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.query.QueryHandlerContext;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.Pattern;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.spi.commons.name.Pattern;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Collections;
-import java.util.NoSuchElementException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Properties;
 
 /**
  * <code>IndexingConfigurationImpl</code> implements a concrete indexing
@@ -565,8 +566,15 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             String localPattern = pattern;
             int idx = pattern.indexOf(':');
             if (idx != -1) {
-                // use a dummy local name to get namespace uri
-                uri = resolver.getQName(pattern.substring(0, idx) + ":a").getNamespaceURI();
+                String prefix = pattern.substring(0, idx);
+                if (prefix.equals(".*")) {
+                    // match all namespaces
+                    uri = prefix;
+                } else {
+                    // match only single namespace
+                    // use a dummy local name to get namespace uri
+                    uri = resolver.getQName(prefix + ":a").getNamespaceURI();
+                }
                 localPattern = pattern.substring(idx + 1);
             }
             this.pattern = Pattern.name(uri, localPattern);
