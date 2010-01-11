@@ -828,6 +828,79 @@ public class XATest extends AbstractJCRTest {
             other.logout();
         }
     }
+    
+    /**
+     * Test locking and unlocking behavior in transaction
+     * (see JCR-2356)
+     * @throws Exception
+     */
+    public void testCreateLockUnlockInDifferentTransactions() throws Exception {
+        // create new node and lock it
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        // add node that is both lockable and referenceable, save
+        Node rootNode = superuser.getRootNode(); 
+        Node n = rootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        rootNode.save();
+        
+        String uuid = n.getUUID();
+        
+        // commit
+        utx.commit();
+        
+        // start new Transaction and try to add lock token
+        utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        
+        n = superuser.getNodeByUUID(uuid);
+        // lock this new node
+        Lock lock = n.lock(true, false);
+        
+        // verify node is locked
+        assertTrue("Node not locked", n.isLocked());
+        
+        String lockToken = lock.getLockToken();
+        // assert: session must get a non-null lock token
+        assertNotNull("session must get a non-null lock token", lockToken);
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));
+
+        n.save();
+
+        superuser.removeLockToken(lockToken);
+        assertNull("session must get a null lock token", lock.getLockToken());
+        assertFalse("session must not hold lock token", containsLockToken(superuser, lockToken));
+        
+        // commit
+        utx.commit();
+
+        assertFalse("session must not hold lock token", containsLockToken(superuser, lockToken));
+        assertNull("session must get a null lock token", lock.getLockToken());
+
+        // start new Transaction and try to unlock
+        utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        n = superuser.getNodeByUUID(uuid);
+
+        // verify node is locked
+        assertTrue("Node not locked", n.isLocked());
+        // assert: session must not hold lock token
+        assertFalse("session must not hold lock token", containsLockToken(superuser, lockToken));
+        
+        superuser.addLockToken(lockToken);
+        
+        // assert: session must not hold lock token
+        assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));
+
+        n.unlock();
+        
+        // commit
+        utx.commit();
+    }
 
     /**
      * Test locking a node in one session. Verify that node is not locked
