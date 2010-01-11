@@ -221,7 +221,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
         }
     }
 
-    private static class RepositoryConfigImpl implements RepositoryConfig {
+    public static class RepositoryConfigImpl implements RepositoryConfig {
         private final RepositoryServiceFactory serviceFactory;
         private final CacheBehaviour cacheBehaviour;
         private final int itemCacheSize;
