@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import java.util.Arrays;
+
 import javax.transaction.xa.Xid;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.TransactionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
@@ -30,6 +34,11 @@ import EDU.oswego.cs.dl.util.concurrent.Sync;
  * while a write lock is held, no read lock can be acquired.
  */
 public class DefaultISMLocking implements ISMLocking {
+
+    /**
+     * Logger instance
+     */
+    private static final Logger log = LoggerFactory.getLogger(DefaultISMLocking.class);
 
     /**
      * The internal read-write lock.
@@ -60,7 +69,6 @@ public class DefaultISMLocking implements ISMLocking {
              * {@inheritDoc}
              */
             public void release() {
-                rwLock.setActiveXid(null);
                 rwLock.writeLock().release();
             }
 
@@ -109,8 +117,36 @@ public class DefaultISMLocking implements ISMLocking {
          * @param xid
          */
         synchronized void setActiveXid(Xid xid) {
+            if (activeXid != null && xid != null) {
+                boolean sameGTI = Arrays.equals(activeXid.getGlobalTransactionId(), xid.getGlobalTransactionId());
+                if (!sameGTI) {
+                    log.warn("Unable to set the ActiveXid while a other one is associated with a different GloalTransactionId with this RWLock.");
+                    return;
+                }
+            }
             activeXid = xid;
         }
-        
+
+        /**
+         * {@inheritDoc}
+         * 
+         * If there are no more writeHolds the activeXid will be set to null
+         */
+        protected synchronized Signaller endWrite() {
+            --writeHolds_;
+            if (writeHolds_ > 0) {  // still being held
+                return null;
+            } else {
+                activeXid = null;
+                activeWriter_ = null;
+                if (waitingReaders_ > 0 && allowReader()) {
+                    return readerLock_;
+                } else if (waitingWriters_ > 0) {
+                    return writerLock_;
+                } else {
+                    return null;
+                }
+            }
+        }
     }
 }

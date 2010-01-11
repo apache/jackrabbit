@@ -1636,6 +1636,99 @@ public class XATest extends AbstractJCRTest {
             fail("Committed node not visible in this session");
         }
     }
+    
+    /**
+     * Tests two different Sessions in one Transaction
+     * (see JCR-769)
+     */
+    public void testTwoSessionsInOneTransaction() throws Exception {
+        Session otherSuperuser = getHelper().getSuperuserSession();
+        
+        // get user transaction object
+        UserTransactionImpl utx = new UserTransactionImpl(superuser, true);
+        utx.enlistXAResource(otherSuperuser);
+        
+        // start transaction
+        utx.begin();
+
+        Node rootNode = superuser.getRootNode();
+        // add node and save
+        Node n = rootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixReferenceable);
+        rootNode.save();
+
+        // assertion: node exists in this session
+        try {
+            superuser.getNodeByUUID(n.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("New node not visible after save()");
+        }
+
+        // assertion: node does exist in other session
+        try {
+            otherSuperuser.getNodeByUUID(n.getUUID());
+            fail("Uncommitted node visible for other session");
+        } catch (ItemNotFoundException e) {
+            /* expected */
+        }
+
+        // add node with other session and save
+        rootNode = otherSuperuser.getRootNode();
+        Node n1 = rootNode.addNode(nodeName2, testNodeType);
+        n1.addMixin(mixReferenceable);
+        rootNode.save();
+
+        // assertion: node exists in this session
+        try {
+            otherSuperuser.getNodeByUUID(n1.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("New node not visible after save()");
+        }
+
+        // assertion: node does exist in other session
+        try {
+            superuser.getNodeByUUID(n1.getUUID());
+            fail("Uncommitted node visible for other session");
+        } catch (ItemNotFoundException e) {
+            /* expected */
+        }
+
+        
+        // commit
+        utx.commit();
+
+        // assertion: node exists in this session
+        try {
+            superuser.getNodeByUUID(n.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("Committed node not visible in this session");
+        }
+
+        // assertion: node also exists in other session
+        try {
+            otherSuperuser.getNodeByUUID(n.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("Committed node not visible in the other session");
+        }
+
+        // assertion: node1 exists in this session
+        try {
+            superuser.getNodeByUUID(n1.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("Committed node not visible in this session");
+        }
+
+        // assertion: node1 also exists in other session
+        try {
+            otherSuperuser.getNodeByUUID(n1.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("Committed node not visible in this session");
+        }
+
+        // logout
+        superuser.logout();
+        otherSuperuser.logout();
+    }
 
     /**
      * Test setting the same property multiple times. Exposes an issue where
