@@ -51,6 +51,21 @@ import org.apache.jackrabbit.commons.iterator.RowIterable;
 public class JcrUtils {
 
     /**
+     * The repository URI parameter name used by the
+     * {@link #getRepository(String)} method. All {@link RepositoryFactory}
+     * implementations that want to support this repository access convention
+     * should implement processing of this parameter.
+     * <p>
+     * Client applications are recommended to use the
+     * {@link #getRepository(String)} method instead of directly referencing
+     * this constant unless they explicitly want to pass also other
+     * {@link RepositoryFactory} parameters through the
+     * {@link #getRepository(Map)} method.
+     */
+    public static final String REPOSITORY_URI =
+        "org.apache.jackrabbit.repository.uri";
+
+    /**
      * Private constructor to prevent instantiation of this class.
      */
     private JcrUtils() {
@@ -87,38 +102,74 @@ public class JcrUtils {
      */
     public static Repository getRepository(Map<String, String> parameters)
             throws RepositoryException {
+        String newline = System.getProperty("line.separator");
+
+        // Prepare the potential error message (JCR-2459)
+        StringBuilder log = new StringBuilder("Unable to access a repository");
+        if (parameters != null) {
+            log.append(" with the following settings:");
+            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                log.append(newline);
+                log.append("    ");
+                log.append(entry.getKey());
+                log.append(": ");
+                log.append(entry.getValue());
+            }
+        } else {
+            log.append(" with the default settings.");
+        }
+
+        // Iterate through the available RepositoryFactories, with logging
+        log.append(newline);
+        log.append("The following RepositoryFactory classes were consulted:");
         Iterator<RepositoryFactory> iterator =
             ServiceRegistry.lookupProviders(RepositoryFactory.class);
-
         while (iterator.hasNext()) {
             RepositoryFactory factory = iterator.next();
-            Repository repository = factory.getRepository(parameters);
-            if (repository != null) {
-                return repository;
+            log.append(newline);
+            log.append("    ");
+            log.append(factory.getClass().getName());
+            try {
+                Repository repository = factory.getRepository(parameters);
+                if (repository != null) {
+                    // We found the requested repository! Return it
+                    // and just ignore the error message being built.
+                    return repository;
+                } else {
+                    log.append(": declined");
+                }
+            } catch (Exception e) {
+                log.append(": ");
+                log.append(e.getMessage());
             }
         }
 
-        throw new RepositoryException(
-                "No repository factory can handle the given configuration: "
-                + parameters);
+        // No matching repository found. Throw an exception with the
+        // detailed information we gathered during the above process.
+        throw new RepositoryException(log.toString());
     }
 
     /**
-     * Returns the repository identified by the given URI. The following
-     * URI types are currently supported:
+     * Returns the repository identified by the given URI. See the
+     * documentation of the repository implementation you want to use for
+     * whether it supports this repository URI convention and for what
+     * the repository URI should look like. For example, Jackrabbit 2.0
+     * supports the following types of repository URIs:
      * <dl>
      *   <dt>http(s)://...</dt>
      *   <dd>
      *     A remote repository connection using SPI2DAVex with the given URL.
+     *     See the jackrabbit-jcr2dav component for more details.
      *   </dd>
      *   <dt>file://...</dt>
      *   <dd>
      *     An embedded Jackrabbit repository located in the given directory.
+     *     See the jackrabbit-core component for more details.
      *   </dd>
      *   <dt>jndi:...</dt>
      *   <dd>
-     *     JNDI lookup for the named repository. See the JNDI support
-     *     described above.
+     *     JNDI lookup for the named repository. See the
+     *     {@link JndiRepositoryFactory} class for more details.
      *  </dd>
      * </dl>
      *
@@ -130,8 +181,8 @@ public class JcrUtils {
     public static Repository getRepository(String uri)
             throws RepositoryException {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put(GenericRepositoryFactory.URI, uri);
-        return new GenericRepositoryFactory().getRepository(parameters);
+        parameters.put(JcrUtils.REPOSITORY_URI, uri);
+        return getRepository(parameters);
     }
 
     /**

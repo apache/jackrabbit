@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
@@ -27,6 +30,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.JackrabbitRepositoryFactory;
 import org.apache.jackrabbit.api.management.RepositoryManager;
+import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
  * <code>RepositoryFactoryImpl</code> implements a repository factory that
@@ -57,22 +61,41 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
      */
     private final Set<TransientRepository> ownRepositories = new HashSet<TransientRepository>();
 
+    @SuppressWarnings("unchecked")
     public Repository getRepository(Map parameters) throws RepositoryException {
-        JackrabbitRepository repo;
         synchronized (REPOSITORY_INSTANCES) {
             if (parameters == null) {
-                repo = getOrCreateRepository(null, null);
+                return getOrCreateRepository(null, null);
             } else if (parameters.containsKey(REPOSITORY_CONF)
                     && parameters.containsKey(REPOSITORY_HOME)) {
-                String conf = (String) parameters.get(REPOSITORY_CONF);
-                String home = (String) parameters.get(REPOSITORY_HOME);
-                repo = getOrCreateRepository(conf, home);
+                String conf = parameters.get(REPOSITORY_CONF).toString();
+                String home = parameters.get(REPOSITORY_HOME).toString();
+                return getOrCreateRepository(conf, home);
+            } else if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
+                Object parameter = parameters.get(JcrUtils.REPOSITORY_URI);
+                try {
+                    URI uri = new URI(parameter.toString().trim());
+                    if ("file".equalsIgnoreCase(uri.getScheme())) {
+                        File file = new File(uri);
+                        String home, conf;
+                        if (file.isFile()) {
+                            home = file.getParentFile().getPath();
+                            conf = file.getPath();
+                        } else {
+                            home = file.getPath();
+                            conf = new File(file, "repository.xml").getPath();
+                        }
+                        return getOrCreateRepository(conf, home);
+                    } else {
+                        return null; // not a file: URI
+                    }
+                } catch (URISyntaxException e) {
+                    return null; // not a valid URI
+                }
             } else {
-                // unknown or insufficient parameters
-                repo = null;
+                return null; // unknown or insufficient parameters
             }
         }
-        return repo;
     }
 
     /**
