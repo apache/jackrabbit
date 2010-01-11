@@ -1729,7 +1729,72 @@ public class XATest extends AbstractJCRTest {
         superuser.logout();
         otherSuperuser.logout();
     }
+    
+    /**
+     * Test add lock token and remove node in in a transaction
+     * (see JCR-2332) 
+     * @throws Exception
+     */
+    public void testAddLockTokenRemoveNode() throws Exception {
+        // create new node and lock it
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
 
+        // add node that is both lockable and referenceable, save
+        Node rootNode = superuser.getRootNode(); 
+        Node n = rootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        rootNode.save();
+
+        String uuid = n.getUUID();
+        
+        // lock this new node
+        Lock lock = n.lock(true, false);
+        String lockToken = lock.getLockToken();
+        
+        // assert: session must get a non-null lock token
+        assertNotNull("session must get a non-null lock token", lockToken);
+
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));
+
+        superuser.removeLockToken(lockToken);
+        assertNull("session must get a null lock token", lock.getLockToken());
+        
+        // commit
+        utx.commit();
+        
+        // refresh Lock Info
+        lock = n.getLock();
+
+        assertNull("session must get a null lock token", lock.getLockToken());
+
+        Session other = helper.getSuperuserSession();
+        // start new Transaction and try to add lock token unlock the node and then remove it
+        utx = new UserTransactionImpl(other);
+        utx.begin();
+        
+        Node otherNode = other.getNodeByUUID(uuid); 
+        assertTrue("Node not locked", otherNode.isLocked());
+        // add lock token
+        other.addLockToken(lockToken);
+      
+        // refresh Lock Info
+        lock = otherNode.getLock();
+
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token", containsLockToken(other, lock.getLockToken()));        
+        
+        otherNode.unlock();
+        
+        assertFalse("Node is locked", otherNode.isLocked());
+        
+        otherNode.remove();
+        other.save();
+        utx.commit();
+    }
+    
     /**
      * Test setting the same property multiple times. Exposes an issue where
      * the same property instance got reused in subsequent transactions

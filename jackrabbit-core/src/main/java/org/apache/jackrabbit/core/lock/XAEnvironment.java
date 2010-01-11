@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.XAWorkspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -487,7 +488,11 @@ class XAEnvironment {
          */
         public void update() throws LockException, RepositoryException {
             if (isUnlock) {
-                lockMgr.internalUnlock(node);
+                // Only if we have a valid ItemState try to unlock
+                // JCR-2332
+                if (((XAWorkspace)((SessionImpl)node.getSession()).getWorkspace()).getItemStateManager().hasItemState(node.getId())) {
+                    lockMgr.internalUnlock(node);
+                }
             } else {
                 AbstractLockInfo internalLock = lockMgr.internalLock(node, deep, sessionScoped, getSecondsRemaining(), lockOwner);
                 AbstractLockInfo xaEnvLock = getLockInfo(node);
