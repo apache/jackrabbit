@@ -16,107 +16,17 @@
  */
 package org.apache.jackrabbit.commons;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Hashtable;
-import java.util.Map;
-
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.RepositoryFactory;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 /**
- * Generic JCR repository factory. This factory knows how to handle
- * parameter maps containing the following keys:
- * <dl>
- *   <dt>{@link #JNDI_NAME org.apache.jackrabbit.repository.jndi.name}</dt>
- *   <dd>
- *     The repository instance is looked up from JNDI.
- *     An {@link InitialContext initial JNDI context} is constructed using
- *     all the other parameters, and a repository at the given name is
- *     looked up from the instantiated context.
- *   </dd>
- *   <dt>{@link #URI org.apache.jackrabbit.repository.uri}</dt>
- *   <dd>
- *     Connects to the repository at the given jndi: URI.
- *     All the other parameters except the repository URI from the original
- *     invocation are also passed on to these recursive calls.
- *   </dd>
- * </dl>
- * Clients should normally only use this class through the Java Service
- * Provider mechanism. See the getRepository utility methods in
- * {@link JcrUtils} for an easy way to do that.
- *
- * @since Apache Jackrabbit 2.0
+ * Renamed to {@link JndiRepositoryFactory}. This class will be removed
+ * in Jackrabbit 2.0. Please use the {@link JcrUtils#REPOSITORY_URI} constant
+ * instead of the {@link #URI} constant in this class.
  */
-@SuppressWarnings("unchecked")
-public class GenericRepositoryFactory implements RepositoryFactory {
+@Deprecated
+public class GenericRepositoryFactory extends JndiRepositoryFactory {
 
     /**
-     * The repository URI parameter name.
+     * Please use {@link JcrUtils#REPOSITORY_URI} instead.
      */
-    @Deprecated
     public static final String URI = JcrUtils.REPOSITORY_URI;
-
-    /**
-     * The JNDI name parameter name.
-     */
-    public static final String JNDI_NAME =
-        "org.apache.jackrabbit.repository.jndi.name";
-
-    /**
-     * Handles the generic repository parameters mentioned in the
-     * description of this class. Returns <code>null</code> if none of
-     * the described parameters are given or if the given parameter map is
-     * <code>null</code>.
-     */
-    public Repository getRepository(Map parameters)
-            throws RepositoryException {
-        if (parameters == null) {
-            return null; // no default JNDI repository
-        } else {
-            Hashtable environment = new Hashtable(parameters);
-            if (environment.containsKey(JNDI_NAME)) {
-                String name = environment.remove(JNDI_NAME).toString();
-                return getRepository(name, environment);
-            } else if (environment.containsKey(JcrUtils.REPOSITORY_URI)) {
-                Object parameter = environment.remove(JcrUtils.REPOSITORY_URI);
-                try {
-                    URI uri = new URI(parameter.toString().trim());
-                    if ("jndi".equalsIgnoreCase(uri.getScheme())) {
-                        String name = uri.getSchemeSpecificPart();
-                        return getRepository(name, environment);
-                    } else {
-                        return null; // not a jndi: URI
-                    }
-                } catch (URISyntaxException e) {
-                    return null; // not a valid URI
-                }
-            } else {
-                return null; // unknown parameters
-            }
-        }
-    }
-
-    private Repository getRepository(String name, Hashtable environment)
-            throws RepositoryException {
-        try {
-            Object value = new InitialContext(environment).lookup(name);
-            if (value instanceof Repository) {
-                return (Repository) value;
-            } else {
-                throw new RepositoryException(
-                        "Invalid repository object " + value
-                        + " found at " + name + " in JNDI environment "
-                        + environment);
-            }
-        } catch (NamingException e) {
-            throw new RepositoryException(
-                    "Failed to look up " + name
-                    + " from JNDI environment " + environment, e);
-        }
-    }
 
 }
