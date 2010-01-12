@@ -104,7 +104,7 @@ public class FileDataStore implements DataStore {
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse = 
+    protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse =
         Collections.synchronizedMap(new WeakHashMap<DataIdentifier, WeakReference<DataIdentifier>>());
 
     /**
@@ -128,7 +128,7 @@ public class FileDataStore implements DataStore {
         directory = new File(path);
         directory.mkdirs();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -147,7 +147,7 @@ public class FileDataStore implements DataStore {
             return new FileDataRecord(identifier, file);
         }
     }
-    
+
     /**
      * Returns the record with the given identifier. Note that this method
      * performs no sanity checks on the given identifier. It is up to the
@@ -312,7 +312,7 @@ public class FileDataStore implements DataStore {
             for (File f: file.listFiles()) {
                 count += deleteOlderRecursive(f, min);
             }
-            
+
             // JCR-1396: FileDataStore Garbage Collector and empty directories
             // Automatic removal of empty directories (but not the root!)
             synchronized (this) {

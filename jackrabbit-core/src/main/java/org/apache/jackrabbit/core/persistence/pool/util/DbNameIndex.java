@@ -142,7 +142,7 @@ public class DbNameIndex implements StringIndex {
             ise.initCause(e);
             throw ise;
         } finally {
-        	DbUtility.close(rs);
+            DbUtility.close(rs);
         }
         if (result != -1) {
             return result;
@@ -172,7 +172,7 @@ public class DbNameIndex implements StringIndex {
             ise.initCause(e);
             throw ise;
         } finally {
-        	DbUtility.close(rs);
+            DbUtility.close(rs);
         }
     }
 
@@ -187,7 +187,7 @@ public class DbNameIndex implements StringIndex {
         String result = null;
         ResultSet rs = null;
         try {
-           rs = conHelper.exec(nameSelectSQL, new Object[] { Integer.valueOf(index) }, false, 0);
+            rs = conHelper.exec(nameSelectSQL, new Object[] { Integer.valueOf(index) }, false, 0);
             if (rs.next()) {
                 result = rs.getString(1);
             }
@@ -197,7 +197,7 @@ public class DbNameIndex implements StringIndex {
             ise.initCause(e);
             throw ise;
         } finally {
-        	DbUtility.close(rs);
+            DbUtility.close(rs);
         }
         if (result == null) {
             throw new IllegalArgumentException("Index not found: " + index);
