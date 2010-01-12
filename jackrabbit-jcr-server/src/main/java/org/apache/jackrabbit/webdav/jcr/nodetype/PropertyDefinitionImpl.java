@@ -163,6 +163,7 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
             DomUtil.setText(opElem, qops[i]);
             qopElem.appendChild(opElem);
         }
+        elem.appendChild(qopElem);
 
         return elem;
     }
