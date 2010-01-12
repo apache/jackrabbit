@@ -192,7 +192,7 @@ public abstract class AbstractJournal implements Journal {
     /**
      * Synchronize contents from journal. May be overridden by subclasses.
      *
-     * @param startRevision start point (exlusive)
+     * @param startRevision start point (exclusive)
      * @throws JournalException if an error occurs
      */
     protected void doSync(long startRevision) throws JournalException {

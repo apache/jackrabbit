@@ -29,41 +29,42 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  */
 public class RestoreAndCheckoutTest extends AbstractJCRTest {
 
-	private static final int NODES_COUNT = 10;
+    private static final int NODES_COUNT = 10;
 
-	public void testRestoreAndCheckout() throws RepositoryException {
-		Session session = getHelper().getSuperuserSession();
-		
-		Node rootNode = session.getRootNode();
-		Node myRoot = rootNode.addNode("myRoot");
-		myRoot.addMixin("mix:versionable");
-		rootNode.save();
-		myRoot.checkin();
+    public void testRestoreAndCheckout() throws RepositoryException {
+        Session session = getHelper().getSuperuserSession();
 
-		// create n child and grandchild versionable nodes
-		for (int i = 0; i < NODES_COUNT; i++) {
-			myRoot.checkout();
-			Node childNode = myRoot.addNode("child" + i);
-			childNode.addMixin("mix:versionable");
-			Node grandChildNode = childNode.addNode("grandChild");
-			grandChildNode.addMixin("mix:versionable");
-			myRoot.save();
-			grandChildNode.checkin();
-			childNode.checkin();
-			myRoot.checkin();
-		}
+        Node rootNode = session.getRootNode();
+        Node myRoot = rootNode.addNode("myRoot");
+        myRoot.addMixin("mix:versionable");
+        rootNode.save();
+        myRoot.checkin();
 
-		// restore child, then restore/checkout grandchild nodes
-		for (int i = 0; i < NODES_COUNT; i++) {
-			Node childNode = myRoot.getNode("child" + i);
-			childNode.restore("1.0", false);
-			Node grandChildNode = childNode.getNode("grandChild");
-			grandChildNode.restore("1.0", false);
-			// critical location regarding item state manager caching (see JCR-1197)
-			grandChildNode.checkout();
-			grandChildNode.checkin();
-		}
+        // create n child and grandchild versionable nodes
+        for (int i = 0; i < NODES_COUNT; i++) {
+            myRoot.checkout();
+            Node childNode = myRoot.addNode("child" + i);
+            childNode.addMixin("mix:versionable");
+            Node grandChildNode = childNode.addNode("grandChild");
+            grandChildNode.addMixin("mix:versionable");
+            myRoot.save();
+            grandChildNode.checkin();
+            childNode.checkin();
+            myRoot.checkin();
+        }
 
-		session.logout();
-	}
+        // restore child, then restore/checkout grandchild nodes
+        for (int i = 0; i < NODES_COUNT; i++) {
+            Node childNode = myRoot.getNode("child" + i);
+            childNode.restore("1.0", false);
+            Node grandChildNode = childNode.getNode("grandChild");
+            grandChildNode.restore("1.0", false);
+            // critical location regarding item state manager caching (see
+            // JCR-1197)
+            grandChildNode.checkout();
+            grandChildNode.checkin();
+        }
+
+        session.logout();
+    }
 }
