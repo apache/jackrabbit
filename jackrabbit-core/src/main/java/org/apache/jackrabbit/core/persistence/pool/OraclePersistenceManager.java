@@ -21,8 +21,6 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.pool.util.DbNameIndex;
-import org.apache.jackrabbit.core.persistence.pool.util.NGKDbNameIndex;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;

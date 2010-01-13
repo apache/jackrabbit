@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.persistence.bundle.util;
-
-import java.util.HashMap;
+package org.apache.jackrabbit.core.persistence.pool;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.HashMap;
 
 import org.apache.jackrabbit.core.util.StringIndex;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper;
+import org.apache.jackrabbit.core.util.db.DbUtility;
 
 /**
  * Implements a {@link StringIndex} that stores and retrieves the names from a
@@ -37,10 +37,7 @@ import org.apache.jackrabbit.core.util.StringIndex;
  */
 public class DbNameIndex implements StringIndex {
 
-    /**
-     * The class that manages statement execution and recovery from connection loss.
-     */
-    protected ConnectionRecoveryManager connectionManager;
+    protected final ConnectionHelper conHelper;
 
     // name index statements
     protected String nameSelectSQL;
@@ -53,13 +50,13 @@ public class DbNameIndex implements StringIndex {
 
     /**
      * Creates a new index that is stored in a db.
-     * @param con the jdbc connection
+     * @param conHelper the {@link ConnectionHelper}
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */
-    public DbNameIndex(ConnectionRecoveryManager conMgr, String schemaObjectPrefix)
+    public DbNameIndex(ConnectionHelper conHlpr, String schemaObjectPrefix)
             throws SQLException {
-        connectionManager = conMgr;
+        conHelper = conHlpr;
         init(schemaObjectPrefix);
     }
 
@@ -133,22 +130,19 @@ public class DbNameIndex implements StringIndex {
     protected int insertString(String string) {
         // assert index does not exist
         int result = -1;
+        ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(
-                    nameInsertSQL, new Object[] { string }, true, 0);
-            ResultSet rs = stmt.getGeneratedKeys();
-            try {
-                if (rs.next()) {
-                    result = rs.getInt(1);
-                }
-            } finally {
-                rs.close();
+            rs = conHelper.exec(nameInsertSQL, new Object[] { string }, true, 0);
+            if (rs.next()) {
+                result = rs.getInt(1);
             }
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException(
                     "Unable to insert index for string: " + string);
             ise.initCause(e);
             throw ise;
+        } finally {
+            DbUtility.close(rs);
         }
         if (result != -1) {
             return result;
@@ -164,24 +158,21 @@ public class DbNameIndex implements StringIndex {
      * @return the index or -1 if not found.
      */
     protected int getIndex(String string) {
+        ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(
-                    indexSelectSQL, new Object[] { string });
-            ResultSet rs = stmt.getResultSet();
-            try {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                } else {
-                    return -1;
-                }
-            } finally {
-                rs.close();
+            rs = conHelper.exec(indexSelectSQL, new Object[] { string }, false, 0);
+            if (rs.next()) {
+                return rs.getInt(1);
+            } else {
+                return -1;
             }
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException(
                     "Unable to read index for string: " + string);
             ise.initCause(e);
             throw ise;
+        } finally {
+            DbUtility.close(rs);
         }
     }
 
@@ -194,22 +185,19 @@ public class DbNameIndex implements StringIndex {
     protected String getString(int index)
             throws IllegalArgumentException, IllegalStateException {
         String result = null;
+        ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(
-                    nameSelectSQL, new Object[] { Integer.valueOf(index) });
-            ResultSet rs = stmt.getResultSet();
-            try {
-                if (rs.next()) {
-                    result = rs.getString(1);
-                }
-            } finally {
-                rs.close();
+            rs = conHelper.exec(nameSelectSQL, new Object[] { Integer.valueOf(index) }, false, 0);
+            if (rs.next()) {
+                result = rs.getString(1);
             }
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException(
                     "Unable to read name for index: " + index);
             ise.initCause(e);
             throw ise;
+        } finally {
+            DbUtility.close(rs);
         }
         if (result == null) {
             throw new IllegalArgumentException("Index not found: " + index);
