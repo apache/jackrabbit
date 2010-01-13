@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0-beta6</version>
     <relativePath>jackrabbit-parent/pom.xml</relativePath>
   </parent>
 
@@ -56,9 +56,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/2.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/2.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/branches/2.0</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/2.0-beta6</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/2.0-beta6</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/tags/2.0-beta6</url>
   </scm>
 
   <build>
@@ -78,7 +78,7 @@
       <properties>
         <username>${user.name}</username>
         <keyfile>${user.home}/.ssh/id_rsa</keyfile>
-        <passphrase></passphrase>
+        <passphrase />
       </properties>
       <build>
         <plugins>
@@ -109,38 +109,34 @@
                 <phase>deploy</phase>
                 <configuration>
                   <tasks>
-                    <mkdir dir="${basedir}/target/${project.version}"/>
-                    <copy todir="${basedir}/target/${project.version}"
-                          flatten="true">
+                    <mkdir dir="${basedir}/target/${project.version}" />
+                    <copy todir="${basedir}/target/${project.version}" flatten="true">
                       <fileset dir="${basedir}">
-                        <include name="RELEASE-NOTES.txt"/>
-                        <include name="target/*-src.zip*"/>
-                        <include name="jackrabbit-standalone/target/*-${project.version}.jar*"/>
-                        <include name="jackrabbit-webapp/target/*-${project.version}.war*"/>
-                        <include name="jackrabbit-jca/target/*-${project.version}.rar*"/>
+                        <include name="RELEASE-NOTES.txt" />
+                        <include name="target/*-src.zip*" />
+                        <include name="jackrabbit-standalone/target/*-${project.version}.jar*" />
+                        <include name="jackrabbit-webapp/target/*-${project.version}.war*" />
+                        <include name="jackrabbit-jca/target/*-${project.version}.rar*" />
                       </fileset>
                     </copy>
                     <checksum algorithm="MD5" fileext=".md5">
                       <fileset dir="${basedir}/target/${project.version}">
-                        <include name="*.zip"/>
-                        <include name="*.?ar"/>
+                        <include name="*.zip" />
+                        <include name="*.?ar" />
                       </fileset>
                     </checksum>
                     <checksum algorithm="SHA1" fileext=".sha">
                       <fileset dir="${basedir}/target/${project.version}">
-                        <include name="*.zip"/>
-                        <include name="*.?ar"/>
+                        <include name="*.zip" />
+                        <include name="*.?ar" />
                       </fileset>
                     </checksum>
-                    <scp todir="${username}@people.apache.org:public_html/jackrabbit"
-                         keyfile="${keyfile}" passphrase="${passphrase}"
-                         sftp="true" verbose="true">
+                    <scp todir="${username}@people.apache.org:public_html/jackrabbit" keyfile="${keyfile}" passphrase="${passphrase}" sftp="true" verbose="true">
                       <fileset dir="${basedir}/target">
-                        <include name="${project.version}/*"/>
+                        <include name="${project.version}/*" />
                       </fileset>
                     </scp>
-                    <checksum file="${basedir}/target/${project.version}/jackrabbit-${project.version}-src.zip"
-                              algorithm="SHA1" property="checksum"/>
+                    <checksum file="${basedir}/target/${project.version}/jackrabbit-${project.version}-src.zip" algorithm="SHA1" property="checksum" />
                     <echo file="${basedir}/target/vote.txt">
 From: ${username}@apache.org
 To: dev@jackrabbit.apache.org
@@ -163,7 +159,7 @@ least three +1 Jackrabbit PMC votes are cast.
     [ ] +1 Release this package as Apache Jackrabbit ${project.version}
     [ ] -1 Do not release this package because...${line.separator}
                     </echo>
-                    <echo/>
+                    <echo />
                     <echo>
 The release candidate has been deployed to:
 
@@ -173,7 +169,7 @@ A release vote template has been generated for you:
 
     file://${basedir}/target/vote.txt
                     </echo>
-                    <echo/>
+                    <echo />
                   </tasks>
                 </configuration>
               </execution>
