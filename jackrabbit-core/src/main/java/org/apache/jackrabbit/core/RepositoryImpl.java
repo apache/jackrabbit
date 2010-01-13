@@ -34,21 +34,23 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PropertyType;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.Repository;
-import javax.jcr.PropertyType;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 import javax.security.auth.Subject;
@@ -104,10 +106,10 @@ import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.RegistryNamespaceResolver;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -267,8 +269,30 @@ public class RepositoryImpl extends AbstractRepository
      *                             or another error occurs.
      */
     protected RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
+        // we should use the jackrabbit classloader for all background threads
+        // from the pool
+        final ClassLoader poolClassLoader = this.getClass().getClassLoader();
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
                 Runtime.getRuntime().availableProcessors() * 2,
+                new ThreadFactory() {
+
+                    final AtomicInteger threadNumber = new AtomicInteger(1);
+
+                    /**
+                     * @see java.util.concurrent.ThreadFactory#newThread(java.lang.Runnable)
+                     */
+                    public Thread newThread(Runnable r) {
+                        final Thread t = new Thread(null, r,
+                                              "jackrabbit-pool-" + threadNumber.getAndIncrement(),
+                                              0);
+                        if (t.isDaemon())
+                            t.setDaemon(false);
+                        if (t.getPriority() != Thread.NORM_PRIORITY)
+                            t.setPriority(Thread.NORM_PRIORITY);
+                        t.setContextClassLoader(poolClassLoader);
+                        return t;
+                    }
+                },
                 new ThreadPoolExecutor.CallerRunsPolicy());
         this.executor = executor;
 
@@ -282,7 +306,7 @@ public class RepositoryImpl extends AbstractRepository
         boolean succeeded = false;
         try {
             this.repConfig = repConfig;
-            
+
             // setup file systems
             repStore = repConfig.getFileSystem();
             String fsRootPath = "/meta";
