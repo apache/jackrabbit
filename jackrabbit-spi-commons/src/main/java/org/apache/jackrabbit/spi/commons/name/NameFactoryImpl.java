@@ -84,6 +84,9 @@ public class NameFactoryImpl implements NameFactory {
      */
     private static class NameImpl implements Name {
 
+        /** The empty namespace uri */
+        private static final String EMPTY = "".intern();
+
         /** The memorized hash code of this name. */
         private transient int hash;
 
@@ -98,7 +101,12 @@ public class NameFactoryImpl implements NameFactory {
 
         private NameImpl(String namespaceURI, String localName) {
             // internalize namespaceURI to improve performance of comparisons.
-            this.namespaceURI = namespaceURI.intern();
+            if (namespaceURI.length() == 0) {
+                // see JCR-2464
+                this.namespaceURI = EMPTY;
+            } else {
+                this.namespaceURI = namespaceURI.intern();
+            }
             // localName is not internalized in order not to risk huge perm
             // space for large repositories
             this.localName = localName;
