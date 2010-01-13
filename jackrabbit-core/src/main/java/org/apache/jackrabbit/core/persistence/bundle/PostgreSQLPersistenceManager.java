@@ -18,11 +18,9 @@ package org.apache.jackrabbit.core.persistence.bundle;
 
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
-import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
-import org.apache.jackrabbit.core.persistence.bundle.util.PostgreSQLNameIndex;
-import org.apache.jackrabbit.core.persistence.bundle.util.TrackingInputStream;
+import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.util.TrackingInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

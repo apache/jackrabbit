@@ -14,13 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.persistence.pool.util;
+package org.apache.jackrabbit.core.persistence.bundle;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.apache.jackrabbit.core.util.db.ConnectionHelper;
-import org.apache.jackrabbit.core.util.db.DbUtility;
 
 /**
  * Same as {@link DbNameIndex} but does not make use of the
@@ -31,9 +28,9 @@ public class PostgreSQLNameIndex extends DbNameIndex {
 
     protected String generatedKeySelectSQL;
 
-    public PostgreSQLNameIndex(ConnectionHelper connectionHelper, String schemaObjectPrefix)
+    public PostgreSQLNameIndex(ConnectionRecoveryManager conMgr, String schemaObjectPrefix)
             throws SQLException {
-        super(connectionHelper, schemaObjectPrefix);
+        super(conMgr, schemaObjectPrefix);
     }
 
     /**
@@ -63,7 +60,7 @@ public class PostgreSQLNameIndex extends DbNameIndex {
     protected int insertString(String string) {
         // assert index does not exist
         try {
-            conHelper.exec(nameInsertSQL, new Object[]{string});
+            connectionManager.executeStmt(nameInsertSQL, new Object[]{string});
             return getGeneratedKey();
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException("Unable to insert index for string: " + string);
@@ -77,20 +74,21 @@ public class PostgreSQLNameIndex extends DbNameIndex {
      * @return the index.
      */
     protected int getGeneratedKey() {
-        ResultSet rs = null;
         try {
-           rs = conHelper.exec(generatedKeySelectSQL, null, false, 0);
-            if (!rs.next()) {
-                return -1;
-            } else {
-                return rs.getInt(1);
+            ResultSet rs = connectionManager.executeQuery(generatedKeySelectSQL);
+            try {
+                if (!rs.next()) {
+                    return -1;
+                } else {
+                    return rs.getInt(1);
+                }
+            } finally {
+                rs.close();
             }
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException("Unable to read generated index");
             ise.initCause(e);
             throw ise;
-        } finally {
-            DbUtility.close(rs);
         }
     }
 
