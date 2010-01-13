@@ -63,7 +63,7 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
         String[] names = new String[coll.size()];
         Iterator<WorkspaceConfig> wspIt = coll.iterator();
         for (int i = 0; wspIt.hasNext(); i++) {
-            WorkspaceConfig wsc = (WorkspaceConfig) wspIt.next();
+            WorkspaceConfig wsc = wspIt.next();
             names[i] = wsc.getName();
         }
 

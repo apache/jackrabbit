@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
@@ -28,6 +24,10 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
+
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>PropertyEntryImpl</code> implements a reference to a property state.
@@ -122,12 +122,15 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
         }
         switch (operation.getStatus()) {
             case Operation.STATUS_PERSISTED:
-                /*
-                NOTE: Property can only be the changelog target, if it was
-                      existing and has been modified. removal, add and implicit modification
-                      of protected properties must be persisted by save on parent.
-                */
-                op.getPropertyState().setStatus(Status.EXISTING);
+                // Property can only be the change log target if it was existing and has
+                // been modified. This includes the case where a property was changed and
+                // then removed by removing its parent. See JCR-2462. 
+                // Removal, add and implicit modification of protected
+                // properties must be persisted by save on parent.
+                PropertyState state = op.getPropertyState();
+                if (state.getStatus() != Status.REMOVED) {
+                    state.setStatus(Status.EXISTING);
+                }
                 break;
             case Operation.STATUS_UNDO:
                 revert();

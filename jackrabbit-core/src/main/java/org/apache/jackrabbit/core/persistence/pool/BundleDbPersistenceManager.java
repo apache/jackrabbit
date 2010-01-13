@@ -761,9 +761,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         
         if (uuids == null) {
             // get all node bundles in the database with a single sql statement,
-            // which is (probably) faster than loading each bundle and traversing the tree        	
+            // which is (probably) faster than loading each bundle and traversing the tree              
             ResultSet rs = null;
-            try {            	
+            try {               
                 String sql = "select count(*) from " + schemaObjectPrefix + "BUNDLE";
                 rs = conHelper.exec(sql, new Object[0], false, 0);
                 try {
@@ -828,7 +828,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 }
             } catch (Exception e) {
                 log.error("Error loading bundle", e);
-            } finally {            	
+            } finally {                 
                 DbUtility.close(rs);
                 total = count;
             }
@@ -1435,13 +1435,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 throws Exception {
             ResultSet rs = null;
             boolean exists;
-        	try {
-	            rs = conHelper.exec(blobSelectExistSQL, new Object[]{blobId}, false, 0);
-	            // a BLOB exists if the result has at least one entry
-	            exists = rs.next();
-        	} finally {
-	            DbUtility.close(rs);
-        	}
+                try {
+                    rs = conHelper.exec(blobSelectExistSQL, new Object[]{blobId}, false, 0);
+                    // a BLOB exists if the result has at least one entry
+                    exists = rs.next();
+                } finally {
+                    DbUtility.close(rs);
+                }
             String sql = (exists) ? blobUpdateSQL : blobInsertSQL;
             Object[] params = new Object[]{new StreamWrapper(in, size), blobId};
             conHelper.exec(sql, params);

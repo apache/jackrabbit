@@ -16,10 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -29,8 +27,11 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.util.Arrays;
-import java.util.List;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>UpdateTest</code>...
@@ -206,6 +207,18 @@ public class UpdateTest extends AbstractJCRTest {
         } finally {
             session2.logout();
         }
+    }
+
+    /**
+     * See JCR-2462
+     */
+    public void testSetSamePropertyTwice() throws RepositoryException {
+        Node node = this.testRootNode.addNode( "test" );
+        Session session = node.getSession();
+        node.setProperty( "prop", "value1");
+        node.setProperty( "prop", "value2");
+        node.remove();
+        session.save();
     }
 
     private String getAnotherWorkspace() throws NotExecutableException, RepositoryException {
