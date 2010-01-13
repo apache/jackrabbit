@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-beta5
+Release Notes -- Apache Jackrabbit -- Version 2.0-beta6
 
 Introduction
 ------------
@@ -33,6 +33,11 @@ notable changes in this release are:
     components for their most recent releases.
 
   * Database connection pooling is now available for all database backends.
+    Non-pooled versions of the bundle persistence managers are still
+    available in the org.apache.jackrabbit.core.persistence.bundle package.
+    To enable connection pooling in an existing Jackrabbit repository,
+    replace the package name with org.apache.jackrabbit.core.persistence.pool
+    in your repository and workspace configuration files.
 
   * Data store feature enabled in the default repository configuration.
 
@@ -41,11 +46,11 @@ notable changes in this release are:
     the Office Open XML files produced by Microsoft Office 2007 and higher.
 
   * Apache Commons Collections, Apache Derby, Jetty, SLF4J and Apache Xerces
-    have been upgraded to a more recent version.
+    dependencies have been upgraded to more recent versions.
 
-  * OracleFileSystem class does not use special blob handling anymore and is
-    required for 10R1 and earlier anymore. If you need that use the new
-    Oracle9FileSystem.
+  * OracleFileSystem class does not use special blob handling anymore as it
+    is not required for Oracle versions since 10R1. Use the Oracle9FileSystem
+    class if you need support for Oracle 9 or earlier.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
@@ -68,10 +73,11 @@ About Apache Jackrabbit
 -----------------------
 
 Apache Jackrabbit is a fully conforming implementation of the Content
-Repository for Java Technology API (JCR). A content repository is a
-hierarchical content store with support for structured and unstructured
-content, full text search, versioning, transactions, observation, and
-more.
+Repository for Java Technology API (JCR, specified in JSR 170 and 283).
+
+A content repository is a hierarchical content store with support for
+structured and unstructured content, full text search, versioning,
+transactions, observation, and more.
 
 For more information, visit http://jackrabbit.apache.org/
 
@@ -86,3 +92,4 @@ the Foundation's intellectual property framework limits the legal exposure
 of its 2,500+ contributors.
 
 For more information, visit http://www.apache.org/
+
