@@ -72,7 +72,7 @@ String context =
           <li>Apache Jackrabbit
             <ul>
               <li><a href="http://jackrabbit.apache.org/">Apache Jackrabbit</a></li>
-              <li><a href="http://jackrabbit.apache.org/api/1.5/">Jackrabbit API</a></li>
+              <li><a href="http://jackrabbit.apache.org/api/2.0/">Jackrabbit API</a></li>
               <li><a href="http://wiki.apache.org/jackrabbit/FrontPage">Jackrabbit Wiki</a></li>
             </ul>
           </li>
@@ -80,7 +80,7 @@ String context =
             <ul>
               <li><a href="http://jcp.org/en/jsr/detail?id=170">JSR 170</a></li>
               <li><a href="http://jcp.org/en/jsr/detail?id=283">JSR 283</a></li>
-              <li><a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/">JCR API</a></li>
+              <li><a href="http://www.day.com/maven/javax.jcr/javadocs/jcr-2.0/">JCR 2.0 API</a></li>
             </ul>
           </li>
         </ul>
