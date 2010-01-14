@@ -171,7 +171,7 @@ public class CompactNodeTypeDefWriter {
      * @param out output writer
      * @throws IOException if an I/O error occurs
      */
-    public static void write(Collection<QNodeTypeDefinition> defs,
+    public static void write(Collection<? extends QNodeTypeDefinition> defs,
                              NamespaceResolver r,
                              NamePathResolver npResolver,
                              Writer out)
@@ -204,7 +204,7 @@ public class CompactNodeTypeDefWriter {
      * @param defs node type definitions
      * @throws IOException if an I/O error occurs
      */
-    public void write(Collection<QNodeTypeDefinition> defs) throws IOException {
+    public void write(Collection<? extends QNodeTypeDefinition> defs) throws IOException {
         for (QNodeTypeDefinition def : defs) {
             write(def);
         }
