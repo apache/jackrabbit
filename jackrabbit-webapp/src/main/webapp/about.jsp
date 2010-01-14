@@ -59,8 +59,8 @@
 <p>
   Version 1.0 of the JCR API was specified by the
   <a href="http://jcp.org/en/jsr/detail?id=170">Java Specification Request 170</a>
-  (JSR 170) and work on the JCR version 2.0 has begun in
-  <a href="http://jcp.org/en/jsr/detail?id=170">JSR 283</a>.
+  (JSR 170) and version 2.0 by the 
+  <a href="http://jcp.org/en/jsr/detail?id=170">Java Specification Request 283</a>.
 </p>
 <p>
   Apache Jackrabbit is a project of the
