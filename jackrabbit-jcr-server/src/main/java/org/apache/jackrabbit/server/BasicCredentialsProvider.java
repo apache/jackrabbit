@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.DavConstants;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.GuestCredentials;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +33,9 @@ import java.io.IOException;
  * from the 'WWW-Authenticate' header and only supports 'Basic' authentication.
  */
 public class BasicCredentialsProvider implements CredentialsProvider {
+
+    public static final String EMPTY_DEFAULT_HEADER_VALUE = "";
+    public static final String GUEST_DEFAULT_HEADER_VALUE = "guestcredentials";
 
     private final String defaultHeaderValue;
 
@@ -92,8 +96,10 @@ public class BasicCredentialsProvider implements CredentialsProvider {
                 // check special handling
                 if (defaultHeaderValue == null) {
                     throw new LoginException();
-                } else if (defaultHeaderValue.equals("")) {
+                } else if (EMPTY_DEFAULT_HEADER_VALUE.equals(defaultHeaderValue)) {
                     return null;
+                } else if (GUEST_DEFAULT_HEADER_VALUE.equals(defaultHeaderValue)) {
+                    return new GuestCredentials();
                 } else {
                     int pos = defaultHeaderValue.indexOf(':');
                     if (pos < 0) {
