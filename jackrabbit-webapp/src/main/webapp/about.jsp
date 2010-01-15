@@ -67,7 +67,7 @@
   <a href="http://www.apache.org/">Apache Software Foundation</a>. 
 </p>
 <h2>Copyright Notice</h2>
-<pre><% output("/META-INF/NOTICE.txt", out); %></pre>
+<pre><% output("/META-INF/NOTICE", out); %></pre>
 <h2>License Information</h2>
-<pre><% output("/META-INF/LICENSE.txt", out); %></pre>
+<pre><% output("/META-INF/LICENSE", out); %></pre>
 <jsp:include page="footer.jsp"/>
