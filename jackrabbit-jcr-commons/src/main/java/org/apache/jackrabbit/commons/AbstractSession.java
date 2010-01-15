@@ -64,8 +64,10 @@ public abstract class AbstractSession implements Session {
      * <code>super.logout()</code> when overriding this method to avoid
      * namespace mappings to be carried over to a new session.
      */
-    public synchronized void logout() {
-        namespaces.clear();
+    public void logout() {
+        synchronized (namespaces) {
+            namespaces.clear();
+        }
     }
 
     //------------------------------------------------< Namespace handling >--
@@ -83,27 +85,29 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the namespace is not found
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized String getNamespacePrefix(String uri)
+    public String getNamespacePrefix(String uri)
             throws NamespaceException, RepositoryException {
-        Iterator iterator = namespaces.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            if (entry.getValue().equals(uri)) {
-                return (String) entry.getKey();
+        synchronized (namespaces) {
+            Iterator iterator = namespaces.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry entry = (Map.Entry) iterator.next();
+                if (entry.getValue().equals(uri)) {
+                    return (String) entry.getKey();
+                }
             }
+
+            // The following throws an exception if the URI is not found, that's OK
+            String prefix = getWorkspace().getNamespaceRegistry().getPrefix(uri);
+
+            // Generate a new prefix if the global mapping is already taken
+            String base = prefix;
+            for (int i = 2; namespaces.containsKey(prefix); i++) {
+                prefix = base + i;
+            }
+
+            namespaces.put(prefix, uri);
+            return prefix;
         }
-
-        // The following throws an exception if the URI is not found, that's OK
-        String prefix = getWorkspace().getNamespaceRegistry().getPrefix(uri);
-
-        // Generate a new prefix if the global mapping is already taken
-        String base = prefix;
-        for (int i = 2; namespaces.containsKey(prefix); i++) {
-            prefix = base + i;
-        }
-
-        namespaces.put(prefix, uri);
-        return prefix;
     }
 
     /**
@@ -119,24 +123,26 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the namespace is not found
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized String getNamespaceURI(String prefix)
+    public String getNamespaceURI(String prefix)
             throws NamespaceException, RepositoryException {
-        String uri = (String) namespaces.get(prefix);
+        synchronized (namespaces) {
+            String uri = (String) namespaces.get(prefix);
 
-        if (uri == null) {
-            // Not in local mappings, try the global ones
-            uri = getWorkspace().getNamespaceRegistry().getURI(prefix);
-            if (namespaces.containsValue(uri)) {
-                // The global URI is locally mapped to some other prefix,
-                // so there are no mappings for this prefix
-                throw new NamespaceException("Namespace not found: " + prefix);
+            if (uri == null) {
+                // Not in local mappings, try the global ones
+                uri = getWorkspace().getNamespaceRegistry().getURI(prefix);
+                if (namespaces.containsValue(uri)) {
+                    // The global URI is locally mapped to some other prefix,
+                    // so there are no mappings for this prefix
+                    throw new NamespaceException("Namespace not found: " + prefix);
+                }
+                // Add the mapping to the local set, we already know that
+                // the prefix is not taken
+                namespaces.put(prefix, uri);
             }
-            // Add the mapping to the local set, we already know that
-            // the prefix is not taken
-            namespaces.put(prefix, uri);
-        }
 
-        return uri;
+            return uri;
+        }
     }
 
     /**
@@ -150,7 +156,7 @@ public abstract class AbstractSession implements Session {
      * @return namespace prefixes
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized String[] getNamespacePrefixes()
+    public String[] getNamespacePrefixes()
             throws RepositoryException {
         NamespaceRegistry registry = getWorkspace().getNamespaceRegistry();
         String[] uris = registry.getURIs();
@@ -158,8 +164,10 @@ public abstract class AbstractSession implements Session {
             getNamespacePrefix(uris[i]);
         }
 
-        return (String[])
-            namespaces.keySet().toArray(new String[namespaces.size()]);
+        synchronized (namespaces) {
+            return (String[])
+                namespaces.keySet().toArray(new String[namespaces.size()]);
+        }
     }
 
     /**
@@ -174,7 +182,7 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the mapping is illegal
      * @throws RepositoryException if a repository error occurs
      */
-    public synchronized void setNamespacePrefix(String prefix, String uri)
+    public void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException {
         if (prefix == null) {
             throw new IllegalArgumentException("Prefix must not be null");
@@ -194,25 +202,28 @@ public abstract class AbstractSession implements Session {
                     "Prefix is not a valid XML NCName: " + prefix);
         }
 
-        // FIXME Figure out how this should be handled
-        // Currently JSR 283 does not specify this exception, but for
-        // compatibility with JCR 1.0 TCK it probably should.
-        // Note that the solution here also affects the remove() code below
-        String previous = (String) namespaces.get(prefix);
-        if (previous != null && !previous.equals(uri)) {
-            throw new NamespaceException("Namespace already mapped");
-        }
-
-        namespaces.remove(prefix);
-        Iterator iterator = namespaces.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            if (entry.getValue().equals(uri)) {
-                iterator.remove();
+        synchronized (namespaces) {
+            // FIXME Figure out how this should be handled
+            // Currently JSR 283 does not specify this exception, but for
+            // compatibility with JCR 1.0 TCK it probably should.
+            // Note that the solution here also affects the remove() code below
+            String previous = (String) namespaces.get(prefix);
+            if (previous != null && !previous.equals(uri)) {
+                throw new NamespaceException("Namespace already mapped");
             }
-        }
 
-        namespaces.put(prefix, uri);
+            namespaces.remove(prefix);
+            Iterator iterator = namespaces.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry entry = (Map.Entry) iterator.next();
+                if (entry.getValue().equals(uri)) {
+                    iterator.remove();
+                }
+            }
+
+            // Add the new mapping
+            namespaces.put(prefix, uri);
+        }
     }
 
     //---------------------------------------------< XML export and import >--
