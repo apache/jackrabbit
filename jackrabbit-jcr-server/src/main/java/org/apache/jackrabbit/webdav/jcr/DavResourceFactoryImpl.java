@@ -33,6 +33,7 @@ import org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.version.DeltaVServletRequest;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
+import org.apache.jackrabbit.JcrConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,13 +99,15 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
             try {
                 resource = createResourceForItem(locator, session);
 
+                Item item = getItem(session, locator);
+                boolean versionable = item.isNode() && ((Node) item).isNodeType(JcrConstants.MIX_VERSIONABLE);
+
                 /* if the created resource is version-controlled and the request
                 contains a Label header, the corresponding Version must be used
                 instead.*/
-                if (request instanceof DeltaVServletRequest && isVersionControlled(resource)) {
+                if (request instanceof DeltaVServletRequest && versionable && isVersionControlled(resource)) {
                     String labelHeader = ((DeltaVServletRequest)request).getLabel();
                     if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request)) {
-                        Item item = getItem(session, locator);
                         Version v = ((Node)item).getVersionHistory().getVersionByLabel(labelHeader);
                         DavResourceLocator vloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), v.getPath(), false);
                         resource =  new VersionItemCollection(vloc, session, this, v);
