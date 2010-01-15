@@ -71,7 +71,8 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
-        checkout(nodeState, null);
+        Operation co = Checkout.create(nodeState, this);
+        workspaceManager.execute(co);
     }
 
     public void checkout(NodeState nodeState, NodeId activityId) throws RepositoryException {
