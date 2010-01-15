@@ -528,12 +528,12 @@ public class RepositoryImpl extends AbstractRepository
                    rootNodeUUID = new UUID(bytes).toString();            // uuid is stored in binary format (16 bytes)
 */
                     // uuid is stored in text format (36 characters) for better readability
-                    char[] chars = new char[36];
-                    InputStreamReader reader = new InputStreamReader(in);
+
+                    char[] chars;
                     try {
-                        reader.read(chars);
+                        chars = IOUtils.toCharArray(in);
                     } finally {
-                        IOUtils.closeQuietly(reader);
+                        IOUtils.closeQuietly(in);
                     }
                     return NodeId.valueOf(new String(chars));
                 } catch (Exception e) {
