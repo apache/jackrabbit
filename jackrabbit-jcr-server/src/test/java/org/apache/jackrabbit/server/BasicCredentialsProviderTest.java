@@ -27,6 +27,7 @@ import javax.servlet.ServletException;
 import javax.jcr.LoginException;
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.GuestCredentials;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Locale;
@@ -50,6 +51,20 @@ public class BasicCredentialsProviderTest extends TestCase {
         } catch (LoginException e) {
             // ok
         }
+    }
+
+    public void testGuestCredentialsDefaultHeader() throws ServletException, LoginException {
+        CredentialsProvider cb = new BasicCredentialsProvider(BasicCredentialsProvider.GUEST_DEFAULT_HEADER_VALUE);
+        Credentials creds = cb.getCredentials(new RequestImpl(null));
+
+        assertTrue(creds instanceof GuestCredentials);
+    }
+
+    public void testEmptyDefaultHeader() throws ServletException, LoginException {
+        CredentialsProvider cb = new BasicCredentialsProvider(BasicCredentialsProvider.EMPTY_DEFAULT_HEADER_VALUE);
+        Credentials creds = cb.getCredentials(new RequestImpl(null));
+
+        assertNull(creds);
     }
 
     public void testDefaultPassword() throws ServletException, LoginException {
