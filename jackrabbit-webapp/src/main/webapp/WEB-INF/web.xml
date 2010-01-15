@@ -225,7 +225,9 @@
                  2) If this init-param is present with an empty value,
                     null-credentials are returned, thus forcing an null login
                     on the repository.
-                 3) If this init-param has a 'user:password' value, the respective
+                 3) If this init-param is present with the value 'guestcredentials'
+                    java.jcr.GuestCredentials are used to login to the repository.
+                 4) If this init-param has a 'user:password' value, the respective
                     simple credentials are generated.
              </description>
          </init-param>
