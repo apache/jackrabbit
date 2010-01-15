@@ -1,45 +1,31 @@
-Release Notes -- Apache Jackrabbit -- Version 1.6.0
+Release Notes -- Apache Jackrabbit -- Version 1.6.1
 
 Introduction
 ------------
 
-Apache Jackrabbit 1.6 is an incremental feature release. While
-remaining compatible with previous releases, Jackrabbit 1.6 introduces
-a number of new features, improvements and fixes to known issues.
+Apache Jackrabbit 1.6.1 is a bug fix release that fixes issues reported
+against previous releases. This release is fully compatible with the
+earlier 1.6.0 release.
 
-The most notable changes in this release are:
+Changes in this release
+-----------------------
 
-    * The RepositoryCopier tool makes it easy to backup and migrate
-      repositories (JCR-442). There is also improved support for selectively
-      copying content and version histories between repositories (JCR-1972).
+This release fixes the following issues:
 
-    * A new WebDAV-based JCR remoting layer has been added to complement
-      the existing JCR-RMI layer (JCR-1877, JCR-1958).
+  JCR-769  Unable to login with two different Credentials to same ...
+  JCR-2250 Base64 bug - last buffer not flushed
+  JCR-2297 Registering multiple node types with the same name in a single ...
+  JCR-2299 Bad check for sv:name attribute presence in system view import
+  JCR-2323 InputStream.read return value is ignored.
+  JCR-2332 Unable to delete a non session-scoped locked node in XA Environment
+  JCR-2356 Session holds LockToken after removeLockToken in XA Environment
+  JCR-2364 NullPointerException when accessing the about.jsp page ...
+  JCR-2367 RepositoryCopier does not copy open-scoped Locks
+  JCR-2369 Problem importing node with binary property in a repository ...
+  JCR-2421 Unable to create repository using jackrabbit-webapp because ...
+  JCR-2443 AbstractSession should not synchronize on the session instance
 
-    * Query performance has been further optimized (JCR-1820, JCR-1855
-      and JCR-2025).
-
-    * Added support for Ingres and MaxDB/SapDB databases (JCR-1960, JCR-1527).
-
-    * Session.refresh() can now be used to synchronize a cluster node
-      with changes from the other nodes in the cluster (JCR-1753).
-
-    * Unreferenced version histories are now automatically removed once
-      all the contained versions have been removed (JCR-134).
-
-    * Standalone components like the JCR-RMI layer and the OCM framework
-      have been moved to a separate JCR Commons subproject of Jackrabbit,
-      and are not included in this release. Updates to those components
-      will be distributed as separate releases.
-
-    * Development preview: There are even more JSR 283 features in
-      Jackrabbit 1.6 than were included in the 1.5 version. These new
-      features are accessible through special "jsr283" interfaces in
-      the Jackrabbit API. Note that none of these features are ready
-      for production use, and will be replaced with final JCR 2.0 versions
-      in Jackrabbit 2.0. 
-
-See the Jackrabbit issue tracker for all the 120 changes in this release:
+See the Jackrabbit issue tracker for more details about these changes:
 
     https://issues.apache.org/jira/browse/JCR
 
@@ -48,38 +34,14 @@ The issue tracker also documents all the known issues in this release.
 Release Contents
 ----------------
 
-This release consists of a single source archive (jackrabbit-1.6.0-src.jar)
-that contains all the Apache Jackrabbit components. Use the following
-commands (or the equivalent in your system) to build the release with
-Maven 2 and Java 1.4 or higher:
-
-    jar xf jackrabbit-1.6.0-src.jar
-    cd jackrabbit-1.6.0-src
-    mvn install
+This release consists of a single source archive packaged as a zip file.
+The archive can be unpacked with the jar tool from your JDK installation.
+See the README.txt file for instructions on how to build this release.
 
 The source archive is accompanied by SHA1 and MD5 checksums and a PGP
 signature that you can use to verify the authenticity of your download.
 The public key used for the PGP signature can be found at
 https://svn.apache.org/repos/asf/jackrabbit/dist/KEYS.
-
-Upgrading to Jackrabbit 1.6
----------------------------
-
-Apache Jackrabbit 1.6 is fully compatible with the previous 1.x releases.
-A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
-the relevant jar files with the new versions and adding some new dependencies.
-No changes to repository contents are needed.
-
-The Lucene dependency was upgraded to 2.4.1. Note that Jackrabbit 1.6 only
-works with this version of Lucene, not with earlier versions and possibly
-not even with later versions due to the tight integration with Lucene
-internals (JCR-1855).
-
-The POI dependency was upgraded to 3.2-FINAL.
-
-Repository configuration has been extended with options for the repository
-lock mechanism. No changes to existing configuration files are needed unless
-you need to use this new feature (JCR-1605).
 
 Contributors
 ------------
@@ -87,23 +49,10 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Alessandro Cosenza      Dominique Pfister        Murray Armfield
-    Alexander Klimetschek   Eric Wout van der Steen  Nicolas Toper
-    Angela Schreiber        Fabrizio Giustina        Oleg Alexeyev
-    Ard Schrijvers          Felix Meschberger        Paco Avila
-    Arthur Meyer            Greg Klebus              Roman Puchkovskiy
-    Attila Király           Jacco van Weert          Ryan Vanderwerf
-    Bart van der Schans     James Abley              Sandrine Raffalli
-    Boni Gopalan            Jason Gritman            Savvas Triantafyllou
-    Brian Whipple           Jukka Zitting            Sébastien Launay
-    Cédric Damioli          Julian Reschke           Stefan Guggisberg
-    Charles Brooking        Julian Sedding           Stephane Landelle
-    Christian               Ken Yue                  Thomas Fromm
-    Christophe Lombart      Marcel Reutegger         Thomas Mueller
-    Claus Köll              Marius Ropotica          Tobias Bocanegra
-    Dan Diephouse           Martijn Hendriks         Torsten Weck
-    Dave Brosius            Micah Whitacre           Tyson Norris
-    Dirk Feufel             Michael Dürig            Yoav Landman
+    Bart van der Schans     Dominique Pfister        Sascha Theves
+    Claus Köll              Jukka Zitting            Sébastien Launay
+    Dave Brosius            Luca Tagliani            Stefan Guggisberg
+    Dave Marion             Marcel Reutegger         Thomas Mueller
 
 Thank you to everyone involved!
 
@@ -111,11 +60,11 @@ About Apache Jackrabbit
 -----------------------
 
 Apache Jackrabbit is a fully conforming implementation of the Content
-Repository for Java Technology API (JCR). A content repository is a
-hierarchical content store with support for structured and unstructured
-content, full text search, versioning, transactions, observation, and
-more. Typical applications that use content repositories include content
-management, document management, and records management systems.
+Repository for Java Technology API (JCR, specified in JSR 170 and 283).
+
+A content repository is a hierarchical content store with support for
+structured and unstructured content, full text search, versioning,
+transactions, observation, and more.
 
 For more information, visit http://jackrabbit.apache.org/
 
@@ -130,4 +79,3 @@ the Foundation's intellectual property framework limits the legal exposure
 of its 2,500+ contributors.
 
 For more information, visit http://www.apache.org/
-

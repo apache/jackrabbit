@@ -16,6 +16,17 @@ on the JCR version 2.0 has begun in JSR 283.
 
 Apache Jackrabbit is a project of the Apache Software Foundation.
 
+Building Jackrabbit
+===================
+
+You can build Jackrabbit like this:
+
+    mvn clean install
+
+You need Maven 2 with Java 1.4 (or higher) for the build.
+For more instructions, please see the documentation at:
+
+   http://jackrabbit.apache.org/building-jackrabbit.html
 
 License (see also LICENSE.txt)
 ==============================
@@ -37,12 +48,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-
-Getting Started
-===============
-
 Mailing Lists
--------------
+=============
 
 To get involved with the Apache Jackrabbit project, start by having a
 look at our website and joining our mailing lists. For more details about
@@ -50,10 +57,10 @@ Jackrabbit mailing lists as well as links to list archives, please see:
 
    http://jackrabbit.apache.org/mailing-lists.html
 
-Downloading
------------
+Latest development
+==================
 
-The Jackrabbit source code is available via Subversion at
+The latest Jackrabbit source code is available via Subversion at
 
    https://svn.apache.org/repos/asf/jackrabbit/trunk/
 
@@ -65,19 +72,9 @@ To checkout the main Jackrabbit source tree, run
 
    svn checkout https://svn.apache.org/repos/asf/jackrabbit/trunk jackrabbit
 
-Once you have a copy of the source code tree, you can use Apache Maven
+If you use Git, you can clone Jackrabbit with
 
-   http://maven.apache.org/
-
-to build the project. You should use Maven 2 to build Jackrabbit.
-The minimal command to build, test, and package all the main Jackrabbit
-components is:
-
-   mvn install
-
-For more instructions, please see the documentation at:
-
-   http://jackrabbit.apache.org/building-jackrabbit.html
+   git clone git://git.apache.org/jackrabbit.git
 
 Credits
 =======
