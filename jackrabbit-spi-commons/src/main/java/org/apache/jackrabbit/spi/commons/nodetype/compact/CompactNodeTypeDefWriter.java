@@ -140,8 +140,8 @@ public class CompactNodeTypeDefWriter {
     /**
      * Creates a new nodetype writer
      *
-     * @param out the underlaying writer
-     * @param r the naespace resolver
+     * @param out the underlying writer
+     * @param r the namespace resolver
      * @param npResolver name-path resolver
      * @param includeNS if <code>true</code> all used namespace decl. are also
      *                  written to the writer
