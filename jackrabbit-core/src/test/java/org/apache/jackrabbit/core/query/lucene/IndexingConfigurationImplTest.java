@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.Node;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -70,6 +72,30 @@ public class IndexingConfigurationImplTest extends AbstractQueryTest {
         assertFalse(config.isIndexed(nState, FOO));
     }
 
+    public void testAddNodeTypeToRegistry() throws Exception {
+        IndexingConfiguration config = createConfig("config4");
+        // add node type
+        NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
+        String baseName = "indexingTextNodeType";
+        int i = 0;
+        String nt;
+        do {
+            nt = baseName + "_" + i++;
+        } while (ntMgr.hasNodeType(nt));
+        // register node type
+        NodeTypeTemplate ntTemplate = ntMgr.createNodeTypeTemplate();
+        ntTemplate.setName(nt);
+        ntTemplate.setDeclaredSuperTypeNames(new String[]{ntUnstructured});
+        ntMgr.registerNodeType(ntTemplate, false);
+        // create node
+        Node n = testRootNode.addNode(nodeName2, nt);
+        superuser.save();
+        // get state
+        NodeState state = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
+                new NodeId(n.getIdentifier()));
+        assertTrue(config.isIndexed(state, FOO));
+        assertFalse(config.isIncludedInNodeScopeIndex(state, FOO));
+    }
 
     //----------------------------< internal >----------------------------------
 
