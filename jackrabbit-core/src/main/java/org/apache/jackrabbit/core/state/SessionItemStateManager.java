@@ -41,9 +41,6 @@ import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -582,7 +579,7 @@ public class SessionItemStateManager
         // the nearest common ancestor of all transient states
         // must be either
         // a) a node state with STATUS_EXISTING_MODIFIED, or
-        // b) the parent node of a property state with STATUS_EXISTING_MODIFIED 
+        // b) the parent node of a property state with STATUS_EXISTING_MODIFIED
 
         // collect all candidates based on above criteria
         Collection<NodeId> candidateIds = new LinkedList<NodeId>();
