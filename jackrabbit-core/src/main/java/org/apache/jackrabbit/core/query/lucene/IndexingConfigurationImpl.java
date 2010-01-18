@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
 import org.apache.jackrabbit.core.nodetype.xml.AdditionalNamespaceResolver;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -67,7 +68,8 @@ import org.w3c.dom.NodeList;
  * <code>IndexingConfigurationImpl</code> implements a concrete indexing
  * configuration.
  */
-public class IndexingConfigurationImpl implements IndexingConfiguration {
+public class IndexingConfigurationImpl
+        implements IndexingConfiguration, NodeTypeRegistryListener {
 
     /**
      * The logger instance for this class
@@ -78,6 +80,11 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * The path factory instance.
      */
     private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+
+    /**
+     * The indexing configuration.
+     */
+    private Element configuration;
 
     /**
      * A namespace resolver for parsing QNames in the configuration.
@@ -93,6 +100,11 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * A hierarchy resolver for the item state manager.
      */
     private HierarchyManager hmgr;
+
+    /**
+     * The node type registry.
+     */
+    private NodeTypeRegistry ntReg;
 
     /**
      * The {@link IndexingRule}s inside this configuration.
@@ -112,35 +124,23 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
     /**
      * {@inheritDoc}
      */
-    public void init(Element config, QueryHandlerContext context, NamespaceMappings nsMappings) throws Exception {
+    public void init(Element config,
+                     QueryHandlerContext context,
+                     NamespaceMappings nsMappings) throws Exception {
+        configuration = config;
         ism = context.getItemStateManager();
         hmgr = new HierarchyManagerImpl(context.getRootId(), ism);
-
         NamespaceResolver nsResolver = new AdditionalNamespaceResolver(getNamespaces(config));
         resolver = new ParsingNameResolver(NameFactoryImpl.getInstance(), nsResolver);
+        ntReg = context.getNodeTypeRegistry();
+        ntReg.addListener(this);
 
-        NodeTypeRegistry ntReg = context.getNodeTypeRegistry();
-        Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        refreshIndexRules();
         List<AggregateRule> idxAggregates = new ArrayList<AggregateRule>();
         NodeList indexingConfigs = config.getChildNodes();
         for (int i = 0; i < indexingConfigs.getLength(); i++) {
             Node configNode = indexingConfigs.item(i);
-            if (configNode.getNodeName().equals("index-rule")) {
-                IndexingRule element = new IndexingRule(configNode);
-                // register under node type and all its sub types
-                log.debug("Found rule '{}' for NodeType '{}'", element, element.getNodeTypeName());
-                for (Name ntName : ntNames) {
-                    if (ntReg.getEffectiveNodeType(ntName).includesNodeType(element.getNodeTypeName())) {
-                        List<IndexingRule> perNtConfig = configElements.get(ntName);
-                        if (perNtConfig == null) {
-                            perNtConfig = new ArrayList<IndexingRule>();
-                            configElements.put(ntName, perNtConfig);
-                        }
-                        log.debug("Registering it for name '{}'", ntName);
-                        perNtConfig.add(new IndexingRule(element, ntName));
-                    }
-                }
-            } else if (configNode.getNodeName().equals("aggregate")) {
+            if (configNode.getNodeName().equals("aggregate")) {
                 idxAggregates.add(new AggregateRuleImpl(
                         configNode, resolver, ism, hmgr));
             } else if (configNode.getNodeName().equals("analyzers")) {
@@ -307,7 +307,59 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         }
         return null;
     }
+
+    //--------------------------< NodeTypeRegistryListener >--------------------
+
+    public void nodeTypeRegistered(Name ntName) {
+        try {
+            refreshIndexRules();
+        } catch (Exception e) {
+            log.warn("Unable to refresh index rules", e);
+        }
+    }
+
+    public void nodeTypeReRegistered(Name ntName) {
+        // not interested
+    }
+
+    public void nodeTypeUnregistered(Name ntName) {
+        // not interested
+    }
+
     //---------------------------------< internal >-----------------------------
+
+    /**
+     * Refreshes the index rules in {@link #configElements} based on the current
+     * node types available in the node type registry.
+     *
+     * @throws Exception if an error occurs while refreshing the rules.
+     */
+    private void refreshIndexRules() throws Exception {
+        Map<Name, List<IndexingRule>> nt2rules = new HashMap<Name, List<IndexingRule>>();
+        Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        NodeList indexingConfigs = configuration.getChildNodes();
+        for (int i = 0; i < indexingConfigs.getLength(); i++) {
+            Node configNode = indexingConfigs.item(i);
+            if (configNode.getNodeName().equals("index-rule")) {
+                IndexingRule element = new IndexingRule(configNode);
+                // register under node type and all its sub types
+                log.debug("Found rule '{}' for NodeType '{}'", element, element.getNodeTypeName());
+                for (Name ntName : ntNames) {
+                    if (ntReg.getEffectiveNodeType(ntName).includesNodeType(element.getNodeTypeName())) {
+                        List<IndexingRule> perNtConfig = nt2rules.get(ntName);
+                        if (perNtConfig == null) {
+                            perNtConfig = new ArrayList<IndexingRule>();
+                            nt2rules.put(ntName, perNtConfig);
+                        }
+                        log.debug("Registering it for name '{}'", ntName);
+                        perNtConfig.add(new IndexingRule(element, ntName));
+                    }
+                }
+            }
+        }
+        configElements = nt2rules;
+    }
+
 
     /**
      * Returns the first indexing rule that applies to the given node
