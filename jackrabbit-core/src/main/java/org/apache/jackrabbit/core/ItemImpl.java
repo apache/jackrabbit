@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -481,7 +482,7 @@ public abstract class ItemImpl implements Item {
                     String msg = itemMgr.safeGetJCRPath(id)
                                 + ": mandatory child node " + cnd.getName()
                                 + " does not exist";
-                    if (!nodeState.hasChildNodeEntry(cnd.getName())) {                      
+                    if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                         log.debug(msg);
                         throw new ConstraintViolationException(msg);
                     } else {
@@ -975,7 +976,15 @@ public abstract class ItemImpl implements Item {
              * build list of transient (i.e. new & modified) states that
              * should be persisted
              */
-            Collection<ItemState> dirty = getTransientStates();
+            Collection<ItemState> dirty;
+            try {
+                dirty = getTransientStates();
+            } catch (ConcurrentModificationException e) {
+                String msg = "Concurrent modification; session is closed";
+                log.error(msg, e);
+                session.logout();
+                throw e;
+            }
             if (dirty.size() == 0) {
                 // no transient items, nothing to do here
                 return;
