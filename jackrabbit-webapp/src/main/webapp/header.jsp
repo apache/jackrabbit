@@ -72,7 +72,7 @@ String context =
           <li>Apache Jackrabbit
             <ul>
               <li><a href="http://jackrabbit.apache.org/">Apache Jackrabbit</a></li>
-              <li><a href="http://jackrabbit.apache.org/api/1.5/">Jackrabbit API</a></li>
+              <li><a href="http://jackrabbit.apache.org/api/1.6/">Jackrabbit API</a></li>
               <li><a href="http://wiki.apache.org/jackrabbit/FrontPage">Jackrabbit Wiki</a></li>
             </ul>
           </li>
