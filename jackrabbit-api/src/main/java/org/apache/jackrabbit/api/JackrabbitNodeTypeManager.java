@@ -32,6 +32,9 @@ import org.xml.sax.SAXException;
  * <p>
  * Currently Jackrabbit provides a mechanism to register new node types, but
  * it is not possible to modify or remove existing node types.
+ *
+ * @deprecated Use standard JCR 2.0 API methods defined by
+ * {@link NodeTypeManager} instead.
  */
 public interface JackrabbitNodeTypeManager extends NodeTypeManager {
 
