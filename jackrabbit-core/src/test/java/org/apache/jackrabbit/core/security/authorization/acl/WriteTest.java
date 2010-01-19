@@ -36,6 +36,7 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
+import javax.jcr.security.AccessControlEntry;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
@@ -267,7 +268,7 @@ public class WriteTest extends AbstractWriteTest {
         assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
     }
 
-        public void testMultipleGroupPermissionsOnNode() throws NotExecutableException, RepositoryException {
+    public void testMultipleGroupPermissionsOnNode() throws NotExecutableException, RepositoryException {
         Group testGroup = getTestGroup();
 
         /* create a second group the test user is member of */
@@ -326,7 +327,7 @@ public class WriteTest extends AbstractWriteTest {
             /*
              testuser must get the permissions/privileges inherited from
              the group it is member of.
-             the denial of group2 must succeed
+             granting permissions for group2 must be effective
             */
             String actions = javax.jcr.Session.ACTION_SET_PROPERTY + "," + javax.jcr.Session.ACTION_READ;
 
@@ -334,6 +335,64 @@ public class WriteTest extends AbstractWriteTest {
             assertTrue(getTestSession().hasPermission(path, actions));
             Privilege[] privs = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
             assertTrue(testAcMgr.hasPrivileges(path, privs));
+        } finally {
+            group2.remove();
+        }
+    }
+
+    public void testReorderGroupPermissions() throws NotExecutableException, RepositoryException {
+        Group testGroup = getTestGroup();
+
+        /* create a second group the test user is member of */
+        Principal principal = new TestPrincipal("testGroup" + UUID.randomUUID());
+        UserManager umgr = getUserManager(superuser);
+        Group group2 = umgr.createGroup(principal);
+
+        try {
+            group2.addMember(testUser);
+            if (!umgr.isAutoSave() && superuser.hasPendingChanges()) {
+                superuser.save();
+            }
+
+            /* add privileges for the Group the test-user is member of */
+            Privilege[] privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+            withdrawPrivileges(path, testGroup.getPrincipal(), privileges, getRestrictions(superuser, path));
+            givePrivileges(path, group2.getPrincipal(), privileges, getRestrictions(superuser, path));
+
+            /*
+             testuser must get the permissions/privileges inherited from
+             the group it is member of.
+             granting permissions for group2 must be effective
+            */
+            String actions = javax.jcr.Session.ACTION_SET_PROPERTY + "," + javax.jcr.Session.ACTION_READ;
+
+            AccessControlManager testAcMgr = getTestACManager();
+            assertTrue(getTestSession().hasPermission(path, actions));
+            Privilege[] privs = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+            assertTrue(testAcMgr.hasPrivileges(path, privs));
+
+            // reorder the ACEs
+            AccessControlEntry srcEntry = null;
+            AccessControlEntry destEntry = null;
+            JackrabbitAccessControlList acl = (JackrabbitAccessControlList) acMgr.getPolicies(path)[0];
+            for (AccessControlEntry entry : acl.getAccessControlEntries()) {
+                Principal princ = entry.getPrincipal();
+                if (testGroup.getPrincipal().equals(princ)) {
+                    destEntry = entry;
+                } else if (group2.getPrincipal().equals(princ)) {
+                    srcEntry = entry;
+                }
+
+            }
+
+            acl.orderBefore(srcEntry, destEntry);
+            acMgr.setPolicy(path, acl);
+            superuser.save();
+
+            /* after reordering the permissions must be denied */
+            assertFalse(getTestSession().hasPermission(path, actions));
+            assertFalse(testAcMgr.hasPrivileges(path, privs));
+            
         } finally {
             group2.remove();
         }
