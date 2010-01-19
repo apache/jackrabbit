@@ -23,11 +23,9 @@ import java.sql.SQLException;
 
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.pool.util.DbNameIndex;
-import org.apache.jackrabbit.core.persistence.pool.util.NodePropBundle;
-import org.apache.jackrabbit.core.persistence.pool.util.PostgreSQLNameIndex;
-import org.apache.jackrabbit.core.persistence.pool.util.TrackingInputStream;
+import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.util.TrackingInputStream;
 import org.apache.jackrabbit.core.util.db.DbUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
