@@ -16,12 +16,17 @@
  */
 package org.apache.jackrabbit.commons.repository;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.jcr.Credentials;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
 import org.apache.jackrabbit.commons.AbstractRepository;
+import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
  * Repository that proxies all method calls to another repository.
@@ -38,6 +43,13 @@ public class ProxyRepository extends AbstractRepository {
     private final RepositoryFactory factory;
 
     /**
+     * Repository access parameters. Used if an explicit repository
+     * factory has not been configured.
+     */
+    private final Map<String, String> parameters =
+        new HashMap<String, String>();
+
+    /**
      * Creates a proxy for the repository (or repositories) accessible
      * through the given factory.
      *
@@ -48,6 +60,43 @@ public class ProxyRepository extends AbstractRepository {
     }
 
     /**
+     * Creates a proxy for the repository (or repositories) accessible
+     * using the given repository parameters.
+     *
+     * @param parameters repository parameters
+     */
+    public ProxyRepository(Map<String, String> parameters) {
+        this.factory = null;
+        this.parameters.putAll(parameters);
+    }
+
+    /**
+     * Creates a proxy for the repository accessible using the given
+     * repository URI.
+     *
+     * @param uri repository URI
+     */
+    public ProxyRepository(String uri) {
+        this.factory = null;
+        this.parameters.put(JcrUtils.REPOSITORY_URI, uri);
+    }
+
+    /**
+     * Returns the proxied repository. Subclasses can override this
+     * method to implement custom repository access mechanisms.
+     *
+     * @return repository
+     * @throws RepositoryException if the repository can not be accessed
+     */
+    protected Repository getRepository() throws RepositoryException {
+        if (factory != null) {
+            return factory.getRepository();
+        } else {
+            return JcrUtils.getRepository(parameters);
+        }
+    }
+
+    /**
      * Returns the descriptor keys of the proxied repository, or an empty
      * array if the proxied repository can not be accessed.
      *
@@ -55,7 +104,7 @@ public class ProxyRepository extends AbstractRepository {
      */
     public String[] getDescriptorKeys() {
         try {
-            return factory.getRepository().getDescriptorKeys();
+            return getRepository().getDescriptorKeys();
         } catch (RepositoryException e) {
             return new String[0];
         }
@@ -72,7 +121,7 @@ public class ProxyRepository extends AbstractRepository {
      */
     public boolean isSingleValueDescriptor(String key) {
         try {
-            return factory.getRepository().isSingleValueDescriptor(key);
+            return getRepository().isSingleValueDescriptor(key);
         } catch (RepositoryException e) {
             return false;
         }
@@ -88,7 +137,7 @@ public class ProxyRepository extends AbstractRepository {
      */
     public String getDescriptor(String key) {
         try {
-            return factory.getRepository().getDescriptor(key);
+            return getRepository().getDescriptor(key);
         } catch (RepositoryException e) {
             return null;
         }
@@ -104,7 +153,7 @@ public class ProxyRepository extends AbstractRepository {
      */
     public Value getDescriptorValue(String key) {
         try {
-            return factory.getRepository().getDescriptorValue(key);
+            return getRepository().getDescriptorValue(key);
         } catch (RepositoryException e) {
             return null;
         }
@@ -120,7 +169,7 @@ public class ProxyRepository extends AbstractRepository {
      */
     public Value[] getDescriptorValues(String key) {
         try {
-            return factory.getRepository().getDescriptorValues(key);
+            return getRepository().getDescriptorValues(key);
         } catch (RepositoryException e) {
             return null;
         }
@@ -138,7 +187,7 @@ public class ProxyRepository extends AbstractRepository {
      */
     public Session login(Credentials credentials, String workspace)
             throws RepositoryException {
-        return factory.getRepository().login(credentials, workspace);
+        return getRepository().login(credentials, workspace);
     }
 
 }

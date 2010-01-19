@@ -143,6 +143,10 @@ public class JcrUtils {
                 log.append(e.getMessage());
             }
         }
+        log.append(newline);
+        log.append(
+                "Perhaps the repository you are trying"
+                + " to access is not available at the moment.");
 
         // No matching repository found. Throw an exception with the
         // detailed information we gathered during the above process.
