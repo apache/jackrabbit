@@ -139,8 +139,14 @@ public class JcrUtils {
                     log.append(": declined");
                 }
             } catch (Exception e) {
-                log.append(": ");
-                log.append(e.getMessage());
+                log.append(": failed");
+                for (Throwable c = e; c != null; c = c.getCause()) {
+                    log.append(newline);
+                    log.append("        because of ");
+                    log.append(c.getClass().getSimpleName());
+                    log.append(": ");
+                    log.append(c.getMessage());
+                }
             }
         }
         log.append(newline);
