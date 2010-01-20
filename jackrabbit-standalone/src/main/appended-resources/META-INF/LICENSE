@@ -61,9 +61,10 @@ XPath parser (jackrabbit-spi-commons)
     any associated documentation will at all times remain with
     copyright holders.
 
-PDFBox library (pdfbox-0.7.3.jar)
+PDFBox libraries (pdfbox, jempbox, fontbox)
 
-    Copyright (c) 2003-2005, www.pdfbox.org
+    Copyright (c) 2002-2007, www.pdfbox.org
+    Copyright (c) 2006-2007, www.jempbox.org
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
@@ -71,56 +72,200 @@ PDFBox library (pdfbox-0.7.3.jar)
 
     1. Redistributions of source code must retain the above copyright notice,
        this list of conditions and the following disclaimer.
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
-    3. Neither the name of pdfbox; nor the names of its
-       contributors may be used to endorse or promote products derived from this
-       software without specific prior written permission.
+
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+
+    3. Neither the name of pdfbox; nor the names of its contributors may be
+       used to endorse or promote products derived from this software without
+       specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
     AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
     IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
     ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
     FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+
+Adobe Font Metrics (AFM) for PDF Core 14 Fonts
+
+    This file and the 14 PostScript(R) AFM files it accompanies may be used,
+    copied, and distributed for any purpose and without charge, with or without
+    modification, provided that all copyright notices are retained; that the
+    AFM files are not distributed without this file; that all modifications
+    to this file or any of the AFM files are prominently noted in the modified
+    file(s); and that this paragraph is not modified. Adobe Systems has no
+    responsibility or obligation to support the use of the AFM files. 
+
+CMaps for PDF Fonts (http://www.adobe.com/devnet/font/#pcfi and
+ftp://ftp.oreilly.com/pub/examples/nutshell/cjkv/adobe/)
+
+    Copyright 1990-2001 Adobe Systems Incorporated.
+    All Rights Reserved.
+
+    Patents Pending
+
+    NOTICE: All information contained herein is the property
+    of Adobe Systems Incorporated.
+
+    Permission is granted for redistribution of this file
+    provided this copyright notice is maintained intact and
+    that the contents of this file are not altered in any
+    way from its original form.
+
+    PostScript and Display PostScript are trademarks of
+    Adobe Systems Incorporated which may be registered in
+    certain jurisdictions.
+
+Glyphlist (http://www.adobe.com/devnet/opentype/archives/glyph.html)
+
+    Copyright (c) 1997,1998,2002,2007 Adobe Systems Incorporated
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this documentation file to use, copy, publish, distribute,
+    sublicense, and/or sell copies of the documentation, and to permit
+    others to do the same, provided that:
+    - No modification, editing or other alteration of this document is
+    allowed; and
+    - The above copyright notice and this permission notice shall be
+    included in all copies of the documentation.
+ 
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this documentation file, to create their own derivative works
+    from the content of this document to use, copy, publish, distribute,
+    sublicense, and/or sell the derivative works, and to permit others to do
+    the same, provided that the derived work is not represented as being a
+    copy or version of this document.
+ 
+    Adobe shall not be liable to any party for any loss of revenue or profit
+    or for indirect, incidental, special, consequential, or other similar
+    damages, whether based on tort (including without limitation negligence
+    or strict liability), contract or other legal or equitable grounds even
+    if Adobe has been advised or had reason to know of the possibility of
+    such damages. The Adobe materials are provided on an "AS IS" basis.
+    Adobe specifically disclaims all express, statutory, or implied
+    warranties relating to the Adobe materials, including but not limited to
+    those concerning merchantability or fitness for a particular purpose or
+    non-infringement of any third party rights regarding the Adobe
+    materials.
+
+The International Components for Unicode (http://site.icu-project.org/)
+
+    Copyright (c) 1995-2009 International Business Machines Corporation
+    and others
+
+    All rights reserved.
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, and/or sell copies of the Software, and to permit persons
+    to whom the Software is furnished to do so, provided that the above
+    copyright notice(s) and this permission notice appear in all copies
+    of the Software and that both the above copyright notice(s) and this
+    permission notice appear in supporting documentation.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS.
+    IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE
+    BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,
+    OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+    WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+    ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+    SOFTWARE.
+
+    Except as contained in this notice, the name of a copyright holder shall
+    not be used in advertising or otherwise to promote the sale, use or other
+    dealings in this Software without prior written authorization of the
+    copyright holder.
+
+MIME type information from file-4.26.tar.gz (http://www.darwinsys.com/file/)
+
+    Copyright (c) Ian F. Darwin 1986, 1987, 1989, 1990, 1991, 1992, 1994, 1995.
+    Software written by Ian F. Darwin and others;
+    maintained 1994- Christos Zoulas.
+
+    This software is not subject to any export provision of the United States
+    Department of Commerce, and may be exported to any country or planet.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+       notice immediately at the beginning of the file, without modification,
+       this list of conditions, and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
     DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
     OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
     HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
     LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-    OF SUCH DAMAGE.
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
 
-FontBox and JempBox libraries (fontbox-0.1.0.jar, jempbox-0.2.0.jar)
+Metadata extractor library (metadata-extractor)
 
-    Copyright (c) 2003-2005, www.fontbox.org
+    This is public domain software - that is, you can do whatever you want
+    with it, and include it software that is licensed under the GNU or the
+    BSD license, or whatever other licence you choose, including proprietary
+    closed source licenses.  I do ask that you leave this header in tact.
+
+    If you make modifications to this code that you think would benefit the
+    wider community, please send me a copy and I'll post it on my site.
+
+    If you make use of this code, I'd appreciate hearing about it.
+      metadata_extractor [at] drewnoakes [dot] com
+    Latest version of this software kept at
+      http://drewnoakes.com/
+
+ASM bytecode manipulation library (asm)
+
+    Copyright (c) 2000-2005 INRIA, France Telecom
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+    modification, are permitted provided that the following conditions
+    are met:
 
-    1. Redistributions of source code must retain the above copyright notice,
-       this list of conditions and the following disclaimer.
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
-    3. Neither the name of fontbox; nor the names of its
-       contributors may be used to endorse or promote products derived from this
-       software without specific prior written permission.
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holders nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
     AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
     IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-    ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-    OF SUCH DAMAGE.
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+    THE POSSIBILITY OF SUCH DAMAGE.
 
-SLF4J libraries
-(slf4j-api-1.3.0.jar, slf4j-log4j12-1.3.0.jar, jcl1104-over-slf4j-1.3.0.jar)
+SLF4J libraries (slf4j-api, slf4j-log4j12, jcl1104-over-slf4j)
 
     Copyright (c) 2004-2008 QOS.ch
     All rights reserved.
@@ -144,7 +289,7 @@ SLF4J libraries
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-XML API library, org.w3c classes (xml-apis-1.0.03.jar)
+XML API library, org.w3c classes (xml-apis)
 
     DOM Java Language Binding:
     http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/java-binding.html
@@ -214,7 +359,7 @@ XML API library, org.w3c classes (xml-apis-1.0.03.jar)
     written prior permission. Title to copyright in this software and any
     associated documentation will at all times remain with copyright holders.
 
-XML API library, org.xml.sax classes (xml-apis-1.0.03.jar)
+XML API library, org.xml.sax classes (xml-apis)
 
     SAX2 is Free!
 
@@ -284,6 +429,284 @@ Concurrent library (concurrent-1.3.4.jar)
     use in the design, construction, operation or maintenance of any nuclear
     facility.
 
+Office Open XML schemas (ooxml-schemas-1.0.jar)
+
+    The Office Open XML schema definitions used by Apache POI are
+    a part of the Office Open XML ECMA Specification (ECMA-376, [1]).
+    As defined in section 9.4 of the ECMA bylaws [2], this specification
+    is available to all interested parties without restriction:
+
+        9.4 All documents when approved shall be made available to
+            all interested parties without restriction.
+
+    Furthermore, both Microsoft and Adobe have granted patent licenses
+    to this work [3,4,5].
+
+    [1] http://www.ecma-international.org/publications/standards/Ecma-376.htm
+    [2] http://www.ecma-international.org/memento/Ecmabylaws.htm
+    [3] http://www.microsoft.com/interop/osp/
+    [4] http://www.ecma-international.org/publications/files/ECMA-ST/Ecma%20PATENT/ECMA-376%20Edition%201%20Microsoft%20Patent%20Declaration.pdf
+    [5] http://www.ecma-international.org/publications/files/ECMA-ST/Ecma%20PATENT/ga-2006-191.pdf
+
+DOM4J library (dom4j-1.6.1.jar)
+
+    Copyright 2001-2005 (C) MetaStuff, Ltd. All Rights Reserved.
+
+    Redistribution and use of this software and associated documentation
+    ("Software"), with or without modification, are permitted provided
+    that the following conditions are met:
+
+    1. Redistributions of source code must retain copyright
+       statements and notices.  Redistributions must also contain a
+       copy of this document.
+
+    2. Redistributions in binary form must reproduce the
+       above copyright notice, this list of conditions and the
+       following disclaimer in the documentation and/or other
+       materials provided with the distribution.
+
+    3. The name "DOM4J" must not be used to endorse or promote
+       products derived from this Software without prior written
+       permission of MetaStuff, Ltd.  For written permission,
+       please contact dom4j-info@metastuff.com.
+
+    4. Products derived from this Software may not be called "DOM4J"
+       nor may "DOM4J" appear in their names without prior written
+       permission of MetaStuff, Ltd. DOM4J is a registered
+       trademark of MetaStuff, Ltd.
+
+    5. Due credit should be given to the DOM4J Project - 
+       http://www.dom4j.org
+ 
+    THIS SOFTWARE IS PROVIDED BY METASTUFF, LTD. AND CONTRIBUTORS
+    ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
+    NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+    METASTUFF, LTD. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+    INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+    STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+    OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Unicode conversion code in Lucene Java (lucene-core)
+
+    Copyright 2001-2004 Unicode, Inc.
+
+    Disclaimer
+
+    This source code is provided as is by Unicode, Inc. No claims are
+    made as to fitness for any particular purpose. No warranties of any
+    kind are expressed or implied. The recipient agrees to determine
+    applicability of information provided. If this file has been
+    purchased on magnetic or optical media from Unicode, Inc., the
+    sole remedy for any claim will be exchange of defective media
+    within 90 days of receipt.
+
+    Limitations on Rights to Redistribute This Code
+
+    Unicode, Inc. hereby grants the right to freely use the information
+    supplied in this file in the creation of products supporting the
+    Unicode Standard, and to make copies of this file in any form
+    for internal or external distribution as long as this notice
+    remains attached.
+
+Array utility code in Lucene Java (lucene-core)
+
+    PSF LICENSE AGREEMENT FOR PYTHON 2.4
+    ------------------------------------
+
+    1. This LICENSE AGREEMENT is between the Python Software Foundation
+    ("PSF"), and the Individual or Organization ("Licensee") accessing and
+    otherwise using Python 2.4 software in source or binary form and its
+    associated documentation.
+
+    2. Subject to the terms and conditions of this License Agreement, PSF
+    hereby grants Licensee a nonexclusive, royalty-free, world-wide
+    license to reproduce, analyze, test, perform and/or display publicly,
+    prepare derivative works, distribute, and otherwise use Python 2.4
+    alone or in any derivative version, provided, however, that PSF's
+    License Agreement and PSF's notice of copyright, i.e., "Copyright (c)
+    2001, 2002, 2003, 2004 Python Software Foundation; All Rights Reserved"
+    are retained in Python 2.4 alone or in any derivative version prepared
+    by Licensee.
+
+    3. In the event Licensee prepares a derivative work that is based on
+    or incorporates Python 2.4 or any part thereof, and wants to make
+    the derivative work available to others as provided herein, then
+    Licensee hereby agrees to include in any such work a brief summary of
+    the changes made to Python 2.4.
+
+    4. PSF is making Python 2.4 available to Licensee on an "AS IS"
+    basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+    IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
+    DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+    FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON 2.4 WILL NOT
+    INFRINGE ANY THIRD PARTY RIGHTS.
+
+    5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
+    2.4 FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
+    A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON 2.4,
+    OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+    6. This License Agreement will automatically terminate upon a material
+    breach of its terms and conditions.
+
+    7. Nothing in this License Agreement shall be deemed to create any
+    relationship of agency, partnership, or joint venture between PSF and
+    Licensee.  This License Agreement does not grant permission to use PSF
+    trademarks or trade name in a trademark sense to endorse or promote
+    products or services of Licensee, or any third party.
+
+    8. By copying, installing or otherwise using Python 2.4, Licensee
+    agrees to be bound by the terms and conditions of this License
+    Agreement.
+
+    BEOPEN.COM LICENSE AGREEMENT FOR PYTHON 2.0
+    -------------------------------------------
+
+    BEOPEN PYTHON OPEN SOURCE LICENSE AGREEMENT VERSION 1
+
+    1. This LICENSE AGREEMENT is between BeOpen.com ("BeOpen"), having an
+    office at 160 Saratoga Avenue, Santa Clara, CA 95051, and the
+    Individual or Organization ("Licensee") accessing and otherwise using
+    this software in source or binary form and its associated
+    documentation ("the Software").
+
+    2. Subject to the terms and conditions of this BeOpen Python License
+    Agreement, BeOpen hereby grants Licensee a non-exclusive,
+    royalty-free, world-wide license to reproduce, analyze, test, perform
+    and/or display publicly, prepare derivative works, distribute, and
+    otherwise use the Software alone or in any derivative version,
+    provided, however, that the BeOpen Python License is retained in the
+    Software, alone or in any derivative version prepared by Licensee.
+
+    3. BeOpen is making the Software available to Licensee on an "AS IS"
+    basis.  BEOPEN MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+    IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, BEOPEN MAKES NO AND
+    DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+    FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE SOFTWARE WILL NOT
+    INFRINGE ANY THIRD PARTY RIGHTS.
+
+    4. BEOPEN SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF THE
+    SOFTWARE FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS
+    AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THE SOFTWARE, OR ANY
+    DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+    5. This License Agreement will automatically terminate upon a material
+    breach of its terms and conditions.
+
+    6. This License Agreement shall be governed by and interpreted in all
+    respects by the law of the State of California, excluding conflict of
+    law provisions.  Nothing in this License Agreement shall be deemed to
+    create any relationship of agency, partnership, or joint venture
+    between BeOpen and Licensee.  This License Agreement does not grant
+    permission to use BeOpen trademarks or trade names in a trademark
+    sense to endorse or promote products or services of Licensee, or any
+    third party.  As an exception, the "BeOpen Python" logos available at
+    http://www.pythonlabs.com/logos.html may be used according to the
+    permissions granted on that web page.
+
+    7. By copying, installing or otherwise using the software, Licensee
+    agrees to be bound by the terms and conditions of this License
+    Agreement.
+
+    CNRI LICENSE AGREEMENT FOR PYTHON 1.6.1
+    ---------------------------------------
+
+    1. This LICENSE AGREEMENT is between the Corporation for National
+    Research Initiatives, having an office at 1895 Preston White Drive,
+    Reston, VA 20191 ("CNRI"), and the Individual or Organization
+    ("Licensee") accessing and otherwise using Python 1.6.1 software in
+    source or binary form and its associated documentation.
+
+    2. Subject to the terms and conditions of this License Agreement, CNRI
+    hereby grants Licensee a nonexclusive, royalty-free, world-wide
+    license to reproduce, analyze, test, perform and/or display publicly,
+    prepare derivative works, distribute, and otherwise use Python 1.6.1
+    alone or in any derivative version, provided, however, that CNRI's
+    License Agreement and CNRI's notice of copyright, i.e., "Copyright (c)
+    1995-2001 Corporation for National Research Initiatives; All Rights
+    Reserved" are retained in Python 1.6.1 alone or in any derivative
+    version prepared by Licensee.  Alternately, in lieu of CNRI's License
+    Agreement, Licensee may substitute the following text (omitting the
+    quotes): "Python 1.6.1 is made available subject to the terms and
+    conditions in CNRI's License Agreement.  This Agreement together with
+    Python 1.6.1 may be located on the Internet using the following
+    unique, persistent identifier (known as a handle): 1895.22/1013.  This
+    Agreement may also be obtained from a proxy server on the Internet
+    using the following URL: http://hdl.handle.net/1895.22/1013".
+
+    3. In the event Licensee prepares a derivative work that is based on
+    or incorporates Python 1.6.1 or any part thereof, and wants to make
+    the derivative work available to others as provided herein, then
+    Licensee hereby agrees to include in any such work a brief summary of
+    the changes made to Python 1.6.1.
+
+    4. CNRI is making Python 1.6.1 available to Licensee on an "AS IS"
+    basis.  CNRI MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+    IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, CNRI MAKES NO AND
+    DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+    FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON 1.6.1 WILL NOT
+    INFRINGE ANY THIRD PARTY RIGHTS.
+
+    5. CNRI SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
+    1.6.1 FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
+    A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON 1.6.1,
+    OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+    6. This License Agreement will automatically terminate upon a material
+    breach of its terms and conditions.
+
+    7. This License Agreement shall be governed by the federal
+    intellectual property law of the United States, including without
+    limitation the federal copyright law, and, to the extent such
+    U.S. federal law does not apply, by the law of the Commonwealth of
+    Virginia, excluding Virginia's conflict of law provisions.
+    Notwithstanding the foregoing, with regard to derivative works based
+    on Python 1.6.1 that incorporate non-separable material that was
+    previously distributed under the GNU General Public License (GPL), the
+    law of the Commonwealth of Virginia shall govern this License
+    Agreement only as to issues arising under or with respect to
+    Paragraphs 4, 5, and 7 of this License Agreement.  Nothing in this
+    License Agreement shall be deemed to create any relationship of
+    agency, partnership, or joint venture between CNRI and Licensee.  This
+    License Agreement does not grant permission to use CNRI trademarks or
+    trade name in a trademark sense to endorse or promote products or
+    services of Licensee, or any third party.
+
+    8. By clicking on the "ACCEPT" button where indicated, or by copying,
+    installing or otherwise using Python 1.6.1, Licensee agrees to be
+    bound by the terms and conditions of this License Agreement.
+
+            ACCEPT
+
+
+    CWI LICENSE AGREEMENT FOR PYTHON 0.9.0 THROUGH 1.2
+    --------------------------------------------------
+
+    Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam,
+    The Netherlands.  All rights reserved.
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
+    provided that the above copyright notice appear in all copies and that
+    both that copyright notice and this permission notice appear in
+    supporting documentation, and that the name of Stichting Mathematisch
+    Centrum or CWI not be used in advertising or publicity pertaining to
+    distribution of the software without specific, written prior
+    permission.
+
+    STICHTING MATHEMATISCH CENTRUM DISCLAIMS ALL WARRANTIES WITH REGARD TO
+    THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS, IN NO EVENT SHALL STICHTING MATHEMATISCH CENTRUM BE LIABLE
+    FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+    OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
 Commons Codec library (commons-codec-1.2.jar)
 
     ====================================================================
@@ -340,7 +763,7 @@ Commons Codec library (commons-codec-1.2.jar)
     information on the Apache Software Foundation, please see
     <http://www.apache.org/>.
 
-JCR 1.0 API (jcr-1.0.jar)
+JCR 2.0 API (jcr-2.0.jar)
 
     [Day Specification License]
 
