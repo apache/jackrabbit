@@ -20,8 +20,8 @@ import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
+import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -654,8 +654,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      */
     protected static class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
 
-    	private static final RemoteAdapterFactory FACTORY =
-    		new JackrabbitServerAdapterFactory();
+        private static final RemoteAdapterFactory FACTORY =
+            new ServerAdapterFactory();
 
         public Remote createRemoteRepository(Repository repository)
                 throws RemoteException {

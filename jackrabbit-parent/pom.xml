@@ -117,6 +117,34 @@
     </pluginManagement>
   </build>
 
+  <profiles>
+    <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
+    <profile>
+      <id>non-mac</id>
+      <activation>
+        <os>
+          <family>!mac</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <dependencies>
+              <dependency>
+                <groupId>sun</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.0</version>
+                <scope>system</scope>
+                <systemPath>${java.home}/../lib/tools.jar</systemPath>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <reporting>
     <plugins>
       <plugin>
@@ -163,16 +191,6 @@
         <artifactId>jcr</artifactId>
         <version>2.0</version>
         <scope>provided</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.jackrabbit</groupId>
-        <artifactId>jackrabbit-jcr-rmi</artifactId>
-        <version>1.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.jackrabbit</groupId>
-        <artifactId>jackrabbit-jcr-servlet</artifactId>
-        <version>1.5.2</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>

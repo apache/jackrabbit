@@ -17,7 +17,8 @@ notable changes in this release are:
 
   * Upgrade to JCR 2.0. This Jackrabbit release implements and is based
     on the official JCR 2.0 API. All of the features required by the
-    JSR 283 specification have been implemented.
+    JSR 283 specification have been implemented. Note that the remote
+    access layers (RMI and WebDAV) only support a subset of JCR 2.0.
 
   * Upgrade to Java 5. All of Jackrabbit (except the jcr-tests component)
     now requires Java 5 as the base platform. Java 1.4 environments are no
@@ -28,9 +29,9 @@ notable changes in this release are:
     that had been deprecated during the 1.x release cycle.
 
   * Separate JCR Commons components. Many of the general-purpose JCR
-    components like JCR-RMI and OCM are now developed and released
-    separately from the Jackrabbit content repository. See the individual
-    components for their most recent releases.
+    components like OCM are now developed and released separately from
+    the Jackrabbit content repository. See the individual components
+    for their most recent releases.
 
   * Database connection pooling is now available for all database backends.
     Non-pooled versions of the bundle persistence managers are still
@@ -51,6 +52,11 @@ notable changes in this release are:
   * OracleFileSystem class does not use special blob handling anymore as it
     is not required for Oracle versions since 10R1. Use the Oracle9FileSystem
     class if you need support for Oracle 9 or earlier.
+
+  * Modified support of XA transactions over RMI. Instead of implementing
+    the org.apache.jackrabbit.api.XASession interface, JCR-RMI now makes the
+    client session implement the javax.transaction.xa.XAResource interface
+    directly whenever the server session does so.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at

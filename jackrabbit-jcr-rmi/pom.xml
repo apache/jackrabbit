@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit-parent</artifactId>
+    <version>2.0-SNAPSHOT</version>
+    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
+  </parent>
+
+  <!-- =================================================================== -->
+  <!-- P R O J E C T  D E S C R I P T I O N                                -->
+  <!-- =================================================================== -->
+  <artifactId>jackrabbit-jcr-rmi</artifactId>
+  <packaging>bundle</packaging>
+
+  <name>Jackrabbit JCR-RMI</name>
+  <description>
+    JCR-RMI is a transparent Remote Method Invocation (RMI) layer for the
+    Content Repository for Java Technology API (JCR). The layer makes it
+    possible to remotely access JCR content repositories.
+  </description>
+
+  <!-- =================================================================== -->
+  <!-- B U I L D   S E T T I N G S                                         -->
+  <!-- =================================================================== -->
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>rmic</id>
+            <phase>process-classes</phase>
+            <configuration>
+              <tasks>
+                <rmic base="${project.build.outputDirectory}"
+                      verify="true"
+                      classpathref="maven.compile.classpath"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Category>jcr,jackrabbit</Bundle-Category>
+            <Bundle-DocURL>http://jackrabbit.apache.org/</Bundle-DocURL>
+            <Export-Package>
+              org.apache.jackrabbit.rmi.*;version=${project.version}
+            </Export-Package>
+            <!-- optional resolution XA -->
+            <Import-Package>
+              javax.transaction.xa;resolution:=optional,*
+            </Import-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>src/main/javadoc/**/*.uxf</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>integration</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>-Xmx256m</argLine>
+              <fork>true</fork>
+              <systemProperties>
+                <property>
+                  <name>jackrabbit.test.integration</name>
+                  <value>true</value>
+                </property>
+                <property>
+                  <name>known.issues</name>
+                  <value>
+                    foo#bar
+                  </value>
+                </property>
+                <property>
+                  <name>derby.system.durability</name>
+                  <value>test</value>
+                </property>
+                <property>
+                  <name>derby.storage.fileSyncTransactionLog</name>
+                  <value>true</value>
+                </property>
+                <property>
+                  <name>derby.stream.error.file</name>
+                  <value>target/derby.log</value>
+                </property>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <!-- =================================================================== -->
+  <!-- D E P E N D E N C I E S                                             -->
+  <!-- =================================================================== -->
+  <dependencies>
+    <!-- Hard dependencies -->
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>2.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-tests</artifactId>
+      <version>2.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>
