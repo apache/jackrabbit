@@ -773,11 +773,11 @@ JCR 2.0 API (jcr-2.0.jar)
     conditions of this Agreement carefully.
 
     Content Repository for JavaTM Technology API Specification ("Specification")
-    Version: 1.0
+    Version: 2.0
     Status: FCS
-    Release: 11 May 2005
+    Release: 10 August 2009
 
-    Copyright 2005 Day Management AG
+    Copyright 2009 Day Management AG
     Barfüsserplatz 6, 4001 Basel, Switzerland.
     All rights reserved.
 
@@ -898,8 +898,8 @@ JCR 2.0 API (jcr-2.0.jar)
     worldwide, non-exclusive, no-charge, royalty-free, irrevocable
     license to reproduce, publicly display, publicly perform,
     sublicense, and distribute unmodified copies of the Content
-    Repository for Java Technology API (JCR 1.0) Java Archive (JAR)
-    file ("jcr-1.0.jar") and to make, have made, use, offer to sell,
+    Repository for Java Technology API (JCR 2.0) Java Archive (JAR)
+    file ("jcr-2.0.jar") and to make, have made, use, offer to sell,
     sell, import, and otherwise transfer said file on its own or
     as part of a larger work that makes use of the JCR API.
 
