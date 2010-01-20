@@ -1,0 +1,76 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<body>
+Client implementation of the transparent JCR-RMI layer.
+<p>
+This package contains the default client implementation of the
+transparent JCR-RMI layer. The classes in this package can be used
+to make a remote JCR-RMI service seem like a local JCR repository.
+<p>
+The contents of this package is designed using two design patterns,
+Factory and Adapter. All the ClientObject subclasses implement the
+Adapter pattern to adapt a remote JCR-RMI reference to the corresponding
+local JCR interface. The Factory pattern is used to centralize the
+creation and configuration of all adapter instances.
+
+<h2>Looking up a JCR-RMI client</h2>
+<p>
+The ClientRepositoryFactory class provides a convenient mechanism for
+looking up a remote JCR-RMI repository. The factory can be used either
+directly or as a JNDI object factory.
+<p>
+The following example shows how to use the ClientRepositoryFactory
+directly:
+
+<pre>
+    String name = ...; // The RMI URL of the repository
+    
+    ClientRepositoryFactory factory = new ClientRepositoryFactory();
+    Repository repository = factory.getRepository(name);
+</pre>
+
+<p>
+The ClientRepositoryFactory can also be used via JNDI. The following
+example settings and code demonstrate how to configure and use the
+transparent JCR-RMI layer in a Tomcat 5.5 web application:
+
+<pre>
+context.xml:
+    &lt;Resource name="jcr/Repository" auth="Container"
+              type="javax.jcr.Repository"
+              factory="org.apache.jackrabbit.rmi.client.ClientRepositoryFactory"
+              url="..."/&gt;
+              
+web.xml:
+    &lt;resource-env-ref&gt;
+      &lt;description&gt;The external content repository&lt;/description&gt;
+      &lt;resource-env-ref-name&gt;jcr/Repository&lt;/resource-env-ref-name&gt;
+      &lt;resource-env-ref-type&gt;javac.jcr.Repository&lt;/resource-env-ref-type&gt;
+    &lt;/resource-env-ref&gt;
+
+...SomeServlet.java:
+    Context initial = new InitialContext();
+    Context context = (Context) initial.lookup("java:comp/env");
+    Repository repository = (Repository) context.lookup("jcr/Repository");
+</pre>
+
+<p>
+Note that in the example above only the context.xml configuration file
+contains a direct references to the JCR-RMI layer. All other parts of the
+web application can be implemented using the standard JCR interfaces.
+
+</body>
