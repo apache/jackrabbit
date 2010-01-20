@@ -16,10 +16,16 @@
  */
 package org.apache.jackrabbit.rmi.repository;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -27,6 +33,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
@@ -39,42 +46,97 @@ public class RmiRepositoryFactory implements RepositoryFactory {
     @SuppressWarnings("unchecked")
     public Repository getRepository(Map parameters) throws RepositoryException {
         if (parameters != null && parameters.containsKey(REPOSITORY_URI)) {
-            Object parameter = parameters.get(REPOSITORY_URI);
+            URI uri;
             try {
-                URI uri = new URI(parameter.toString().trim());
-                String scheme = uri.getScheme();
-                if ("rmi".equalsIgnoreCase(scheme)) {
-                    return getRepository((RemoteRepository) Naming.lookup(
-                            uri.getSchemeSpecificPart()));
-                } else if ("jndi".equalsIgnoreCase(scheme)) {
-                    Hashtable environment = new Hashtable(parameters);
-                    environment.remove(REPOSITORY_URI);
-                    Object value = new InitialContext(environment).lookup(
-                            uri.getSchemeSpecificPart());
-                    if (value instanceof RemoteRepository) {
-                        return getRepository((RemoteRepository) value);
-                    } else {
-                        return null;
-                    }
-                } else {
-                    InputStream stream = uri.toURL().openStream();
-                    try {
-                        Object remote =
-                            new ObjectInputStream(stream).readObject();
-                        if (remote instanceof RemoteRepository) {
-                            return getRepository((RemoteRepository) remote);
-                        } else {
-                            return null;
-                        }
-                    } finally {
-                        stream.close();
-                    }
-                }
-            } catch (Exception e) {
+                uri = new URI(parameters.get(REPOSITORY_URI).toString().trim());
+            } catch (URISyntaxException e) {
                 return null;
+            }
+
+            String scheme = uri.getScheme();
+            if ("rmi".equalsIgnoreCase(scheme)) {
+                return getRmiRepository(uri.getSchemeSpecificPart());
+            } else if ("jndi".equalsIgnoreCase(scheme)) {
+                Hashtable environment = new Hashtable(parameters);
+                environment.remove(REPOSITORY_URI);
+                return getJndiRepository(
+                        uri.getSchemeSpecificPart(), environment);
+            } else {
+                try {
+                    return getUrlRepository(uri.toURL());
+                } catch (MalformedURLException e) {
+                    return null;
+                }
             }
         } else {
             return null;
+        }
+    }
+
+    private Repository getUrlRepository(URL url) throws RepositoryException {
+        try {
+            InputStream stream = url.openStream();
+            try {
+                Object remote = new ObjectInputStream(stream).readObject();
+                if (remote instanceof RemoteRepository) {
+                    return getRepository((RemoteRepository) remote);
+                } else {
+                    throw new RepositoryException(
+                            "The resource at URL " + url
+                            + " is not a remote repository stub: "
+                            + remote);
+                }
+            } finally {
+                stream.close();
+            }
+        } catch (ClassNotFoundException e) {
+            throw new RepositoryException(
+                    "The resource at URL " + url
+                    + " requires a class that is not available", e);
+        } catch (IOException e) {
+            throw new RepositoryException(
+                    "Failed to read the resource at URL " + url, e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Repository getJndiRepository(String name, Hashtable environment)
+            throws RepositoryException {
+        try {
+            Object value = new InitialContext(environment).lookup(name);
+            if (value instanceof RemoteRepository) {
+                return getRepository((RemoteRepository) value);
+            } else {
+                throw new RepositoryException(
+                        "The JNDI resource " + name
+                        + " is not a remote repository stub: " + value);
+            }
+        } catch (NamingException e) {
+            throw new RepositoryException(
+                    "Failed to look up the JNDI resource " + name, e);
+        }
+    }
+
+    private Repository getRmiRepository(String name)
+            throws RepositoryException {
+        try {
+            Object value = Naming.lookup(name);
+            if (value instanceof RemoteRepository) {
+                return getRepository((RemoteRepository) value);
+            } else {
+                throw new RepositoryException(
+                        "The RMI resource " + name
+                        + " is not a remote repository stub: " + value);
+            }
+        } catch (NotBoundException e) {
+            throw new RepositoryException(
+                    "RMI resource " + name + " not found", e);
+        } catch (MalformedURLException e) {
+            throw new RepositoryException(
+                    "Invalid RMI name: " + name, e);
+        } catch (RemoteException e) {
+            throw new RepositoryException(
+                    "Failed to look up the RMI resource " + name, e);
         }
     }
 
