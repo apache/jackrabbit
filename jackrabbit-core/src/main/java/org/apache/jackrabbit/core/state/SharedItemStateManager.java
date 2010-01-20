@@ -881,10 +881,6 @@ public class SharedItemStateManager
             // process added REFERENCE properties
             for (ItemState state : local.addedStates()) {
                 if (!state.isNode()) {
-                    // remove refs from the target which have been added externally (JCR-2138)
-                    if (hasItemState(state.getId())) {
-                        removeReferences(getItemState(state.getId()));
-                    }
                     // add new references to the target
                     addReferences((PropertyState) state);
                 }
