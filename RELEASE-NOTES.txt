@@ -24,10 +24,6 @@ notable changes in this release are:
     now requires Java 5 as the base platform. Java 1.4 environments are no
     longer supported.
 
-  * Removal of deprecated classes and features. Jackrabbit 2.0 is not
-    backwards compatible with client code that used any classes or features
-    that had been deprecated during the 1.x release cycle.
-
   * Separate JCR Commons components. Many of the general-purpose JCR
     components like OCM are now developed and released separately from
     the Jackrabbit content repository. See the individual components
@@ -53,15 +49,39 @@ notable changes in this release are:
     is not required for Oracle versions since 10R1. Use the Oracle9FileSystem
     class if you need support for Oracle 9 or earlier.
 
-  * Modified support of XA transactions over RMI. Instead of implementing
-    the org.apache.jackrabbit.api.XASession interface, JCR-RMI now makes the
-    client session implement the javax.transaction.xa.XAResource interface
-    directly whenever the server session does so.
-
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
 
     https://issues.apache.org/jira/browse/JCR
+
+Backwards compatiblity
+----------------------
+
+Jackrabbit 2.0 is designed to be compatible with existing Jackrabbit
+1.x clients and repositories. The main exceptions to this goal are:
+
+  * Removal of deprecated classes and features. Jackrabbit 2.0 is not
+    backwards compatible with client code that used classes or features
+    that had been deprecated during the 1.x release cycle. Most notably
+    the temporary org.apache.jackrabbit.api.jsr283 interfaces have been
+    removed in favor of the official JCR 2.0 API in javax.jcr.
+
+  * Repositories that have used the new JSR 283 security features included
+    as a development preview in Jackrabbit 1.5 and 1.6 may face problems
+    when upgrading to Jackrabbit 2.0. See especially JCR-1944 and JCR-2313
+    for more details.
+
+  * The JCR-RMI layer no longer implements the Jackrabbit API extensions.
+    Code that uses JCR-RMI with distributed transactions or for administration
+    operations like creating workspaces or registering node types needs to
+    be updated accordingly.
+
+  * The JCR-RMI layer in Jackrabbit 2.0 only supports JCR 2.0 repositories.
+    To access a JCR 1.0 repository implementation like Jackrabbit 1.x over
+    RMI, you need to use the 1.x versions of JCR-RMI.
+
+Please contact the Jackrabbit user mailing list or issue tracker for more
+information on how to handle the upgrade if you face some of these issues.
 
 Release Contents
 ----------------
