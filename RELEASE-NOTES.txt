@@ -1,13 +1,11 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-beta6
+Release Notes -- Apache Jackrabbit -- Version 2.0.0
 
 Introduction
 ------------
 
-This is a beta release of Apache Jackrabbit 2.0. This release is a fully
-compliant implementation of the JCR 2.0 API that was specified by the
-Java Specification Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
-However, the beta status of this release means that some parts of the
-implementation are not yet ready for normal production use.
+This is Apache Jackrabbit 2.0.0, a fully compliant and production-ready
+implementation of the Content Repository for Java Technology API, version 2.0
+(JCR 2.0, http://jcp.org/en/jsr/summary?id=283).
 
 Changes in this release
 -----------------------
