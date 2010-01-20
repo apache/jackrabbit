@@ -82,6 +82,14 @@ public class ProxyRepository extends AbstractRepository {
     }
 
     /**
+     * Protected constructor for subclasses that want to override the
+     * {@link #getRepository()} method.
+     */
+    protected ProxyRepository() {
+        this.factory = null;
+    }
+
+    /**
      * Returns the proxied repository. Subclasses can override this
      * method to implement custom repository access mechanisms.
      *
