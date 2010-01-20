@@ -13,7 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-org.apache.jackrabbit.commons.JndiRepositoryFactory
-org.apache.jackrabbit.core.RepositoryFactoryImpl
 org.apache.jackrabbit.jcr2dav.Jcr2davRepositoryFactory
 org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory
+org.apache.jackrabbit.commons.JndiRepositoryFactory
+org.apache.jackrabbit.core.RepositoryFactoryImpl
+org.apache.jackrabbit.rmi.repository.RmiRepositoryFactory
+
