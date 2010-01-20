@@ -81,6 +81,32 @@ Jackrabbit 2.0 is designed to be compatible with existing Jackrabbit
 Please contact the Jackrabbit user mailing list or issue tracker for more
 information on how to handle the upgrade if you face some of these issues.
 
+Contributors
+------------
+
+The following people have contributed to this release by submitting bug
+reports or by participating in the issue resolution process.
+
+    Alexander Klimetschek   Dietmar Gräbner          Marcel Reutegger
+    Alexandre Capt          Dominique Pfister        Martijn Hendriks
+    Angela Schreiber        Esteban Franqueiro       Matej Knopp
+    Attila Király           Felix Meschberger        Matt Johnston
+    Bart van der Schans     Frederic Esnault         Michael Dürig
+    Bertrand Delacretaz     Jared Roberts            Michael Xue
+    Brian Topping           Jeremy Anderson          Philipp Bunge
+    Carsten Ziegeler        Jervis Liu               Philipp Koch
+    Charles Brooking        Johann Sorel             Rory Douglas
+    Christian               Jörg Hoh                 Sascha Theves
+    Christian Trutz         Jukka Zitting            Sébastien Launay
+    Claus Köll              Julian Reschke           Sridhar Raman
+    Dan Diephouse           Kadir Alaca              Stefan Guggisberg
+    Dave Brosius            Lars Michele             Sunil D'Monte
+    Dave Marion             Luca Tagliani            Thomas Müller
+    David Purpura           Lutz Horn                Tobias Bocanegra
+                            Manfred Bädke
+
+Thank you to everyone involved!
+
 Release Contents
 ----------------
 
