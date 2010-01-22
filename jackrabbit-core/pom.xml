@@ -146,17 +146,6 @@
     </resources>
   </build>
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <configuration>
-          <configLocation>checkstyle.xml</configLocation>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
-
   <dependencies>
     <dependency>
       <groupId>concurrent</groupId>
