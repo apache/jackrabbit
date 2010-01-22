@@ -113,6 +113,11 @@
           <artifactId>build-helper-maven-plugin</artifactId>
           <version>1.4</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>cobertura-maven-plugin</artifactId>
+          <version>2.3</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
