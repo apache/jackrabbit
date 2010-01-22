@@ -402,7 +402,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check access rights, lock status, node type constraints, etc.
 
         // JCR-2269: store target node state in changelog early as a
-        // precautionary measure in order to isolate it from concurrent 
+        // precautionary measure in order to isolate it from concurrent
         // underlying changes while checking preconditions
         stateMgr.store(destParentState);
         checkAddNode(destParentState, destName.getName(),
@@ -1608,6 +1608,16 @@ public class BatchedItemOperations extends ItemValidator {
             boolean shareable = ent.includesNodeType(NameConstants.MIX_SHAREABLE);
             switch (flag) {
                 case COPY:
+                    /* if this node is shareable and another node in the same shared set
+                     * has been already been copied and given a new uuid, use this one
+                     * (see section 14.5 of the specification)
+                     */
+                    if (shareable && refTracker.getMappedId(srcState.getNodeId()) != null) {
+                        NodeId newId = refTracker.getMappedId(srcState.getNodeId());
+                        NodeState sharedState = (NodeState) stateMgr.getItemState(newId);
+                        sharedState.addShare(destParentId);
+                        return sharedState;
+                    }
                     // always create new uuid
                     id = new NodeId();
                     if (referenceable) {
@@ -1623,7 +1633,13 @@ public class BatchedItemOperations extends ItemValidator {
                     }
                     // use same uuid as source node
                     id = srcState.getNodeId();
+
                     if (stateMgr.hasItemState(id)) {
+                        if (shareable) {
+                            NodeState sharedState = (NodeState) stateMgr.getItemState(id);
+                            sharedState.addShare(destParentId);
+                            return sharedState;
+                        }
                         // node with this uuid already exists
                         throw new ItemExistsException(safeGetJCRPath(id));
                     }
