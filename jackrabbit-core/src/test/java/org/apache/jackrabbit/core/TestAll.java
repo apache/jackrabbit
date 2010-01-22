@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(CachingHierarchyManagerTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
+        suite.addTestSuite(MultiWorkspaceShareableNodeTest.class);
         suite.addTestSuite(TransientRepositoryTest.class);
         suite.addTestSuite(XATest.class);
         suite.addTestSuite(RestoreAndCheckoutTest.class);
