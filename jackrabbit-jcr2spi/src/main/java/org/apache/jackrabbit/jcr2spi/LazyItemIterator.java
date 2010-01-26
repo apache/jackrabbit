@@ -16,28 +16,29 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.RangeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionIterator;
+
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-
-import javax.jcr.NodeIterator;
-import javax.jcr.PropertyIterator;
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RangeIterator;
-import javax.jcr.version.VersionIterator;
-import javax.jcr.version.Version;
-import java.util.NoSuchElementException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
@@ -136,7 +137,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
             try {
                 nextItem = itemMgr.getItem(entry);
             } catch (RepositoryException e) {
-                log.warn("Failed to fetch item " + entry + ", skipping.", e.getMessage());
+                log.warn("Failed to fetch item " + entry.getName() + ", skipping.", e.getMessage());
                 // reduce the size... and try the next one
                 size--;
             }
