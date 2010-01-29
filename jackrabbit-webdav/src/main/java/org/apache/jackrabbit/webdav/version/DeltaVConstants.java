@@ -340,7 +340,7 @@ public interface DeltaVConstants {
      * (such as PUT/PROPPATCH) applied to a checked-in version-controlled
      * resource will automatically be preceded by a checkout and followed by a
      * checkin operation.<br>
-     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version<a/>
+     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version</a>
      */
     public static final String XML_CHECKOUT_CHECKIN = "checkout-checkin";
     /**
@@ -349,21 +349,21 @@ public interface DeltaVConstants {
      * resource will automatically be preceded by a checkout operation.
      * If the resource is not write-locked, the request is automatically
      * followed by a checkin operation.<br>
-     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version<a/>
+     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version</a>
      */
     public static final String XML_CHECKOUT_UNLOCK_CHECKIN = "checkout-unlocked-checkin";
     /**
      * Value for the DAV:auto-version property indicating that any modification
      * (such as PUT/PROPPATCH) applied to a checked-in version-controlled
      * resource will automatically be preceded by a checkout operation.<br>
-     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version<a/>
+     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version</a>
      */
     public static final String XML_CHECKOUT = "checkout";
     /**
      * Value for the DAV:auto-version property indicating that any modification
      * (such as PUT/PROPPATCH) applied to a write-locked checked-in version-controlled
      * resource will automatically be preceded by a checkout operation.<br>
-     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version<a/>
+     * See also <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_auto-version">RFC 3253 DAV:auto-version</a>
      */
     public static final String XML_LOCKED_CHECKIN = "locked-checkout";
 
