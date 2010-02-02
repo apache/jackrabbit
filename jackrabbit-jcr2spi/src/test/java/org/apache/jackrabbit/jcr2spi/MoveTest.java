@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
+import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Item;
 import javax.jcr.Property;
-import javax.jcr.ItemExistsException;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MoveTest</code>...
@@ -36,6 +36,7 @@ public class MoveTest extends AbstractMoveTest {
 
     private static Logger log = LoggerFactory.getLogger(MoveTest.class);
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }
@@ -260,7 +261,7 @@ public class MoveTest extends AbstractMoveTest {
             }
         } else {
             // move the node: same name property and node must be supported
-            // see Issue 725 
+            // see Issue 725
             doMove(moveNode.getPath(), destProperty.getPath());
         }
     }

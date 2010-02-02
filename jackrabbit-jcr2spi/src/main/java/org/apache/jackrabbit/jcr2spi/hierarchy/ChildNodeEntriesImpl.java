@@ -591,6 +591,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * @return a wrapping {@link LinkedEntries.LinkNode}.
          * @see AbstractLinkedList#createNode(Object)
          */
+        @Override
         protected Node createNode(Object value) {
             return new LinkedEntries.LinkNode(value, Path.INDEX_DEFAULT);
         }
@@ -599,6 +600,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * @return a new <code>LinkNode</code>.
          * @see AbstractLinkedList#createHeaderNode()
          */
+        @Override
         protected Node createHeaderNode() {
             return new LinkedEntries.LinkNode();
         }
@@ -626,14 +628,16 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             protected LinkNode(Object value, int index) {
                 // add soft reference from linkNode to the NodeEntry (value)
                 // unless the entry is a SNSibling. TODO: review again.
-                super(index > Path.INDEX_DEFAULT ? value : new SoftReference(value));
+                super(index > Path.INDEX_DEFAULT ? value : new SoftReference<Object>(value));
                 qName = ((NodeEntry) value).getName();
             }
 
+            @Override
             protected void setValue(Object value) {
                 throw new UnsupportedOperationException("Not implemented");
             }
 
+            @Override
             protected Object getValue() {
                 Object val = super.getValue();
                 NodeEntry ne;
@@ -723,7 +727,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      */
     private static class NameMap {
 
-        private final Map<Name, List> snsMap = new HashMap<Name, List>();
+        private final Map<Name, List<LinkedEntries.LinkNode>> snsMap = new HashMap<Name, List<LinkedEntries.LinkNode>>();
         private final Map<Name, LinkedEntries.LinkNode> nameMap = new HashMap<Name, LinkedEntries.LinkNode>();
 
         /**
@@ -745,15 +749,15 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * NodeEntry objects.
          */
         private Object get(Name qName) {
-            Object val = nameMap.get(qName);
+            LinkedEntries.LinkNode val = nameMap.get(qName);
             if (val != null) {
-                return ((LinkedEntries.LinkNode) val).getNodeEntry();
+                return val.getNodeEntry();
             } else {
-                List l = snsMap.get(qName);
+                List<LinkedEntries.LinkNode> l = snsMap.get(qName);
                 if (l != null) {
                     List<NodeEntry> nodeEntries = new ArrayList<NodeEntry>(l.size());
-                    for (Iterator it = l.iterator(); it.hasNext();) {
-                        LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
+                    for (Iterator<LinkedEntries.LinkNode> it = l.iterator(); it.hasNext();) {
+                        LinkedEntries.LinkNode ln = it.next();
                         nodeEntries.add(ln.getNodeEntry());
                     }
                     return nodeEntries;
@@ -770,12 +774,13 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * @param name
          * @return list of entries or an empty list.
          */
+        @SuppressWarnings("unchecked")
         public List<NodeEntry> getList(Name name) {
             Object obj = get(name);
             if (obj == null) {
                 return Collections.emptyList();
             } else if (obj instanceof List) {
-                List<NodeEntry> l = new ArrayList<NodeEntry>((List)obj);
+                List<NodeEntry> l = new ArrayList<NodeEntry>((List<NodeEntry>) obj);
                 return Collections.unmodifiableList(l);
             } else {
                 // NodeEntry
@@ -783,6 +788,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
+        @SuppressWarnings("unchecked")
         public NodeEntry getNodeEntry(Name name, int index) {
             Object obj = get(name);
             if (obj == null) {
@@ -790,7 +796,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
             if (obj instanceof List) {
                 // map entry is a list of siblings
-                return findMatchingEntry((List) obj, index);
+                return findMatchingEntry((List<NodeEntry>) obj, index);
             } else {
                 // map entry is a single child node entry
                 if (index == Path.INDEX_DEFAULT) {
@@ -810,9 +816,9 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 return (index == Path.INDEX_DEFAULT) ? val : null;
             } else {
                 // look in snsMap
-                List l = snsMap.get(name);
+                List<LinkedEntries.LinkNode> l = snsMap.get(name);
                 int pos = index - 1; // Index of NodeEntry is 1-based
-                return (l != null && pos < l.size()) ? (LinkedEntries.LinkNode) l.get(pos) : null;
+                return (l != null && pos < l.size()) ? l.get(pos) : null;
             }
         }
 
@@ -828,10 +834,10 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                     }
                 } else {
                     // look in snsMap
-                    List l = snsMap.get(name);
+                    List<LinkedEntries.LinkNode> l = snsMap.get(name);
                     if (l != null) {
-                        for (Iterator it = l.iterator(); it.hasNext();) {
-                            LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
+                        for (Iterator<LinkedEntries.LinkNode> it = l.iterator(); it.hasNext();) {
+                            LinkedEntries.LinkNode ln = it.next();
                             if (uniqueID.equals(ln.getNodeEntry().getUniqueID())) {
                                 return ln;
                             }
@@ -874,7 +880,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         public LinkedEntries.LinkNode remove(Name name, LinkedEntries.LinkNode value) {
             LinkedEntries.LinkNode rm = nameMap.remove(name);
             if (rm == null) {
-                List l = snsMap.get(name);
+                List<LinkedEntries.LinkNode> l = snsMap.get(name);
                 if (l != null && l.remove(value)) {
                     rm = value;
                 }
@@ -883,7 +889,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
 
         public void reorder(Name name, LinkedEntries.LinkNode insertValue, int position) {
-            List sns = snsMap.get(name);
+            List<LinkedEntries.LinkNode> sns = snsMap.get(name);
             if (sns == null) {
                 // no same name siblings -> no special handling required
                 return;

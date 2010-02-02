@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.Node;
 import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>LazyItemIteratorTest</code> contains implementation specific test
@@ -31,6 +31,7 @@ import javax.jcr.RepositoryException;
  */
 public class LazyItemIteratorTest extends AbstractJCRTest {
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }

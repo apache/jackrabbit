@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 
 /**
  * <code>MoveReferenceableTest</code>...
@@ -30,6 +30,7 @@ public class MoveReferenceableTest extends AbstractMoveTest {
 
     private static Logger log = LoggerFactory.getLogger(MoveReferenceableTest.class);
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -41,6 +42,7 @@ public class MoveReferenceableTest extends AbstractMoveTest {
         moveNode.save();
     }
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }

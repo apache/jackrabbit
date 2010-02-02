@@ -698,30 +698,18 @@ public class WorkspaceManager
         return service.getRegisteredNamespaces(sessionInfo);
     }
 
-    /**
-     * @inheritDoc
-     */
     public String getPrefix(String uri) throws NamespaceException, RepositoryException {
         return service.getNamespacePrefix(sessionInfo, uri);
     }
 
-    /**
-     * @inheritDoc
-     */
     public String getURI(String prefix) throws NamespaceException, RepositoryException {
         return service.getNamespaceURI(sessionInfo, prefix);
     }
 
-    /**
-     * @inheritDoc
-     */
     public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         service.registerNamespace(sessionInfo, prefix, uri);
     }
 
-    /**
-     * @inheritDoc
-     */
     public void unregisterNamespace(String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         service.unregisterNamespace(sessionInfo, uri);
     }
@@ -854,7 +842,6 @@ public class WorkspaceManager
 
         //-----------------------------------------------< OperationVisitor >---
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(AddNode)
          */
         public void visit(AddNode operation) throws RepositoryException {
@@ -863,7 +850,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(AddProperty)
          */
         public void visit(AddProperty operation) throws RepositoryException {
@@ -878,7 +864,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Clone)
          */
         public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -888,7 +873,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Copy)
          */
         public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -898,7 +882,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Move)
          */
         public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -913,7 +896,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Update)
          */
         public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
@@ -922,7 +904,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Remove)
          */
         public void visit(Remove operation) throws RepositoryException {
@@ -930,7 +911,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(SetMixin)
          */
         public void visit(SetMixin operation) throws RepositoryException {
@@ -938,7 +918,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(SetPrimaryType)
          */
         public void visit(SetPrimaryType operation) throws RepositoryException {
@@ -946,7 +925,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(SetPropertyValue)
          */
         public void visit(SetPropertyValue operation) throws RepositoryException {
@@ -959,7 +937,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(ReorderNodes)
          */
         public void visit(ReorderNodes operation) throws RepositoryException {
@@ -970,7 +947,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Checkout)
          */
         public void visit(Checkout operation) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
@@ -982,7 +958,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Checkin)
          */
         public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -991,7 +966,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Checkpoint)
          */
         public void visit(Checkpoint operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -1000,7 +974,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Restore)
          */
         public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -1021,7 +994,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(Merge)
          */
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
@@ -1036,7 +1008,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(ResolveMergeConflict)
          */
         public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
@@ -1047,7 +1018,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(LockOperation)
          */
         public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
@@ -1056,7 +1026,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(LockRefresh)
          */
         public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
@@ -1064,7 +1033,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(LockRelease)
          */
         public void visit(LockRelease operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
@@ -1072,7 +1040,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(AddLabel)
          */
         public void visit(AddLabel operation) throws VersionException, RepositoryException {
@@ -1082,7 +1049,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(RemoveLabel)
          */
         public void visit(RemoveLabel operation) throws VersionException, RepositoryException {
@@ -1092,7 +1058,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(RemoveVersion)
          */
         public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException {
@@ -1102,7 +1067,6 @@ public class WorkspaceManager
         }
 
         /**
-         * @inheritDoc
          * @see OperationVisitor#visit(WorkspaceImport)
          */
         public void visit(WorkspaceImport operation) throws RepositoryException {

@@ -16,14 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.util.TransientFileFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import javax.jcr.RepositoryException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -32,6 +24,15 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.util.TransientFileFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * <code>TargetImportHandler</code> serves as the base class for the concrete
@@ -79,6 +80,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      * @throws SAXException if the importer can not be initialized
      * @see DefaultHandler#startDocument()
      */
+    @Override
     public void startDocument() throws SAXException {
         try {
             importer.start();
@@ -94,6 +96,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      * @throws SAXException if the importer can not be closed
      * @see DefaultHandler#endDocument()
      */
+    @Override
     public void endDocument() throws SAXException {
         try {
             importer.end();
@@ -304,6 +307,7 @@ abstract class TargetImportHandler extends DefaultHandler {
                     tmpFile = fileFactory.createTransientFile("txt", null, null);
                     final FileOutputStream fout = new FileOutputStream(tmpFile);
                     writer = new OutputStreamWriter(fout) {
+                        @Override
                         public void flush() throws IOException {
                             // flush this writer
                             super.flush();

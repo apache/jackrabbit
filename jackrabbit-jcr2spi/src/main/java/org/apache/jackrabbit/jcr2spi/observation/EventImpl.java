@@ -16,22 +16,22 @@
  */
 package org.apache.jackrabbit.jcr2spi.observation;
 
-import java.util.Map;
 import java.util.HashMap;
-
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
+
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the {@link javax.jcr.observation.Event} interface.
@@ -53,7 +53,7 @@ final class EventImpl implements Event {
      * The IdFactory
      */
     private final IdFactory idFactory;
-    
+
     /**
      * The underlying SPI event.
      */
@@ -151,6 +151,7 @@ final class EventImpl implements Event {
      *
      * @return a String representation of this <code>Event</code>.
      */
+    @Override
     public String toString() {
         if (stringValue == null) {
             StringBuffer sb = new StringBuffer();

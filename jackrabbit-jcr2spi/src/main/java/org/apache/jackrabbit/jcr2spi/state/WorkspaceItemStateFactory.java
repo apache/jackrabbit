@@ -17,12 +17,12 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Collections;
 import java.util.Set;
 
 import javax.jcr.ItemExistsException;
@@ -69,7 +69,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#createRootState(NodeEntry)
      */
     public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
@@ -83,7 +82,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * Creates the node with information retrieved from the
      * <code>RepositoryService</code>.
      *
-     * @inheritDoc
      * @see ItemStateFactory#createNodeState(NodeId,NodeEntry)
      */
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
@@ -103,7 +101,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#createDeepNodeState(NodeId,NodeEntry)
      */
     public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
@@ -119,7 +116,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * Creates the PropertyState with information retrieved from the
      * <code>RepositoryService</code>.
      *
-     * @inheritDoc
      * @see ItemStateFactory#createPropertyState(PropertyId,PropertyEntry)
      */
     public PropertyState createPropertyState(PropertyId propertyId,
@@ -135,7 +131,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#createDeepPropertyState(PropertyId,NodeEntry)
      */
     public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
@@ -150,7 +145,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#getChildNodeInfos(NodeId)
      * @param nodeId
      */
@@ -160,7 +154,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#getNodeReferences(NodeState,org.apache.jackrabbit.spi.Name,boolean)
      */
     public Iterator<PropertyId> getNodeReferences(NodeState nodeState, Name propertyName, boolean weak) {

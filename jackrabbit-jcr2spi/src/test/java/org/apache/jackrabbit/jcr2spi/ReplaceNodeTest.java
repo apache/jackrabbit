@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ReplaceNodeTest</code>
@@ -35,6 +35,7 @@ public class ReplaceNodeTest extends AbstractJCRTest {
     private Node removeNode;
     private String uuid;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -55,6 +56,7 @@ public class ReplaceNodeTest extends AbstractJCRTest {
         uuid = removeNode.getUUID();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         removeNode = null;
         super.tearDown();

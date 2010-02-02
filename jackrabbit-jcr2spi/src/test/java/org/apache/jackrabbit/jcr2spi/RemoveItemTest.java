@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
-import javax.jcr.RepositoryException;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.version.VersionException;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RemoveItemTest</code>...
@@ -41,6 +41,7 @@ public abstract class RemoveItemTest extends AbstractJCRTest {
     protected Item removeItem;
     protected String removePath;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -48,6 +49,7 @@ public abstract class RemoveItemTest extends AbstractJCRTest {
         removePath = removeItem.getPath();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         removeItem = null;
         super.tearDown();

@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-
+import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Item;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MoveSNSTest</code> (Implementation specific tests. JSR170 only
@@ -38,6 +38,7 @@ public class MoveSNSTest extends AbstractMoveTest {
     private Node sourceSibling;
     private Node destSibling;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         if (destParentNode.hasNode(nodeName2)) {
@@ -56,12 +57,14 @@ public class MoveSNSTest extends AbstractMoveTest {
         testRootNode.save();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         sourceSibling = null;
         destSibling = null;
         super.tearDown();
     }
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }

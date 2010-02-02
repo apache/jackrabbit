@@ -236,7 +236,6 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
 
     //---------------------------------------------------< OperationVisitor >---
     /**
-     * @inheritDoc
      * @see OperationVisitor#visit(AddNode)
      */
     public void visit(AddNode operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -253,7 +252,6 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
     }
 
     /**
-     * @inheritDoc
      * @see OperationVisitor#visit(AddProperty)
      */
     public void visit(AddProperty operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -277,7 +275,6 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
     }
 
     /**
-     * @inheritDoc
      * @see OperationVisitor#visit(Move)
      */
     public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -312,7 +309,6 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
     }
 
     /**
-     * @inheritDoc
      * @see OperationVisitor#visit(Remove)
      */
     public void visit(Remove operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -321,13 +317,12 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
             | ItemStateValidator.CHECK_VERSIONING
             | ItemStateValidator.CHECK_CONSTRAINTS;
         removeItemState(state, options);
-        
+
         transientStateMgr.addOperation(operation);
         operation.getParentState().markModified();
     }
 
     /**
-     * @inheritDoc
      * @see OperationVisitor#visit(SetMixin)
      */
     public void visit(SetMixin operation) throws ConstraintViolationException, AccessDeniedException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -400,7 +395,6 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
     }
 
     /**
-     * @inheritDoc
      * @see OperationVisitor#visit(SetPropertyValue)
      */
     public void visit(SetPropertyValue operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
@@ -413,7 +407,6 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
     }
 
     /**
-     * @inheritDoc
      * @see OperationVisitor#visit(ReorderNodes)
      */
     public void visit(ReorderNodes operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {

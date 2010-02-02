@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ItemExistsException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ReorderTest</code>...
@@ -44,6 +44,7 @@ public class ReorderTest extends AbstractJCRTest {
     protected Node child3;
     protected Node child4;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         if (!testRootNode.getPrimaryNodeType().hasOrderableChildNodes()) {
@@ -56,6 +57,7 @@ public class ReorderTest extends AbstractJCRTest {
         createOrderableChildren();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         child1 = null;
         child2 = null;

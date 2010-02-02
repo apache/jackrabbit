@@ -102,6 +102,7 @@ public class PropertyState extends ItemState {
      * @return always false
      * @see ItemState#isNode
      */
+    @Override
     public boolean isNode() {
         return false;
     }
@@ -110,6 +111,7 @@ public class PropertyState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getId()
      */
+    @Override
     public ItemId getId() throws RepositoryException {
         return ((PropertyEntry) getHierarchyEntry()).getId();
     }
@@ -118,6 +120,7 @@ public class PropertyState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getWorkspaceId()
      */
+    @Override
     public ItemId getWorkspaceId() throws RepositoryException {
         return ((PropertyEntry) getHierarchyEntry()).getWorkspaceId();
     }
@@ -130,6 +133,7 @@ public class PropertyState extends ItemState {
      *
      * @see ItemState#merge(ItemState, boolean)
      */
+    @Override
     public MergeResult merge(ItemState another, boolean keepChanges) {
         boolean modified = false;
         if (another != null && another != this) {
@@ -159,6 +163,7 @@ public class PropertyState extends ItemState {
      * @see ItemState#revert()
      * @return true if
      */
+    @Override
     public boolean revert() {
         if (getStatus() == Status.NEW) {
             throw new IllegalStateException("Cannot call revert on a NEW property state.");

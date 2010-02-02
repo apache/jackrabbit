@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.InvalidItemStateException;
 
 /**
  * <code>RemoveNodeTest</code>...
@@ -35,6 +35,7 @@ public class RemoveNewNodeTest extends AbstractJCRTest {
 
     protected Node removeNode;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -44,6 +45,7 @@ public class RemoveNewNodeTest extends AbstractJCRTest {
         removeNode = testRootNode.addNode(nodeName1, testNodeType);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         removeNode = null;
         super.tearDown();

@@ -54,9 +54,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         this.sessionInfo = sessionInfo;
     }
 
-    /**
-     * @inheritDoc
-     */
     public QNodeDefinition getRootNodeDefinition() throws RepositoryException {
         if (rootNodeDefinition == null) {
             IdFactory idFactory = service.getIdFactory();
@@ -68,9 +65,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         return rootNodeDefinition;
     }
 
-    /**
-     * @inheritDoc
-     */
     public QNodeDefinition getQNodeDefinition(Name[] parentNodeTypeNames,
                                               Name nodeName, Name ntName,
                                               NodeId nodeId) throws RepositoryException {
@@ -89,9 +83,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         return definition;
     }
 
-    /**
-     * @inheritDoc
-     */
    public QNodeDefinition getQNodeDefinition(Name[] parentNodeTypeNames, Name name, Name nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException {
        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
@@ -99,17 +90,11 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
        return getQNodeDefinition(ent, entTarget, name);
     }
 
-    /**
-     * @inheritDoc
-     */
     public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent, Name name, Name nodeTypeName) throws NoSuchNodeTypeException, ConstraintViolationException {
         EffectiveNodeType entTarget = getEffectiveNodeType(nodeTypeName);
         return getQNodeDefinition(ent, entTarget, name);
     }
 
-    /**
-     * @inheritDoc
-     */
     public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name propertyName,
                                                       int propertType,
@@ -126,9 +111,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         return definition;
     }
 
-    /**
-     * @inheritDoc
-     */
     public QPropertyDefinition getQPropertyDefinition(Name ntName, Name propName,
                                                       int type, boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException {
@@ -136,9 +118,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         return getQPropertyDefinition(ent, propName, type, multiValued, false);
     }
 
-    /**
-     * @inheritDoc
-     */
     public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name name, int type,
                                                       boolean multiValued)
@@ -147,9 +126,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         return getQPropertyDefinition(ent, name, type, multiValued, false);
     }
 
-    /**
-     * @inheritDoc
-     */
     public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name name, int type)
             throws ConstraintViolationException, NoSuchNodeTypeException {

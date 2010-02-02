@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
-import java.util.List;
-import java.util.Arrays;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AddMixinTest</code>...
@@ -37,12 +38,14 @@ public class AddMixinTest extends AbstractJCRTest {
 
     private NodeTypeManager ntMgr;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         ntMgr = testRootNode.getSession().getWorkspace().getNodeTypeManager();
     }
 
 
+    @Override
     protected void tearDown() throws Exception {
         testRootNode.refresh(false);
         ntMgr = null;
@@ -138,7 +141,7 @@ public class AddMixinTest extends AbstractJCRTest {
             throw new NotExecutableException();
         }
 
-        List mixins = Arrays.asList(node.getMixinNodeTypes());
+        List<NodeType> mixins = Arrays.asList(node.getMixinNodeTypes());
         assertTrue("Adding 2 mixins at once -> both must be present.", mixins.contains(ntMgr.getNodeType(mixReferenceable)) && mixins.contains(ntMgr.getNodeType(mixLockable)));
     }
 
@@ -162,7 +165,7 @@ public class AddMixinTest extends AbstractJCRTest {
         }
 
         assertTrue("Adding 2 mixins at once -> both must be present.", node.isNodeType(mixReferenceable) && node.isNodeType(mixLockable));
-        List mixins = Arrays.asList(node.getMixinNodeTypes());
+        List<NodeType> mixins = Arrays.asList(node.getMixinNodeTypes());
         assertTrue("Adding 2 mixins at once -> both must be present.", mixins.contains(ntMgr.getNodeType(mixReferenceable)) && mixins.contains(ntMgr.getNodeType(mixLockable)));
     }
 }

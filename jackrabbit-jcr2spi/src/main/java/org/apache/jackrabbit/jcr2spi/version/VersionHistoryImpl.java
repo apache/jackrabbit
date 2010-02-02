@@ -34,8 +34,8 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.FrozenNodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.VersionIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
@@ -133,7 +133,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             v = v.getLinearPredecessor();
         }
         versions.add(0, rootV);
-        
+
         return new VersionIteratorAdapter(versions);
     }
 
@@ -150,7 +150,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
         return new FrozenNodeIteratorAdapter(getAllLinearVersions());
     }
-    
+
     /**
      * @see VersionHistory#getVersion(String)
      */
@@ -276,7 +276,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         checkStatus();
         return getProperty(NameConstants.JCR_VERSIONABLEUUID).getString();
     }
-    
+
     //---------------------------------------------------------------< Item >---
     /**
      *
@@ -284,6 +284,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @return
      * @see Item#isSame(Item)
      */
+    @Override
     public boolean isSame(Item otherItem) throws RepositoryException {
         checkStatus();
         if (otherItem instanceof VersionHistoryImpl) {
@@ -302,6 +303,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
+    @Override
     protected void checkIsWritable() throws UnsupportedRepositoryOperationException, ConstraintViolationException, RepositoryException {
         super.checkIsWritable();
         throw new ConstraintViolationException("VersionHistory is protected");
@@ -313,6 +315,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException
      * @see NodeImpl#isWritable()
      */
+    @Override
     protected boolean isWritable() throws RepositoryException {
         super.isWritable();
         return false;

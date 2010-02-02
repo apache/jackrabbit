@@ -16,12 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NodeId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
@@ -31,8 +27,13 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AddNode</code>...
@@ -47,7 +48,7 @@ public class AddNode extends AbstractOperation {
     private final Name nodeTypeName;
     private final String uuid;
 
-    private List<ItemState> addedStates = new ArrayList<ItemState>();
+    private final List<ItemState> addedStates = new ArrayList<ItemState>();
 
     private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid)
             throws RepositoryException {
@@ -84,6 +85,7 @@ public class AddNode extends AbstractOperation {
     /**
      * @see Operation#undo()
      */
+    @Override
     public void undo() throws RepositoryException {
         assert status == STATUS_PENDING;
         status = STATUS_UNDO;
@@ -133,7 +135,7 @@ public class AddNode extends AbstractOperation {
         // make sure the parent hierarchy entry has its child entries loaded
         // in order to be able to detect conflicts.
         assertChildNodeEntries(parentState);
-        
+
         AddNode an = new AddNode(parentState, nodeName, nodeTypeName, uuid);
         return an;
     }

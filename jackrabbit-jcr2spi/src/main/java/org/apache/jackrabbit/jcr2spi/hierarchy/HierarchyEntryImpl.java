@@ -46,7 +46,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     /**
      * Cached soft reference to the target ItemState.
      */
-    private Reference target;
+    private Reference<ItemState> target;
 
     /**
      * The name of the target item state.
@@ -165,14 +165,13 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     ItemState internalGetItemState() {
         ItemState state = null;
         if (target != null) {
-            state = (ItemState) target.get();
+            state = target.get();
         }
         return state;
     }
 
     //-----------------------------------------------------< HierarchyEntry >---
     /**
-     * @inheritDoc
      * @see HierarchyEntry#getName()
      */
     public Name getName() {
@@ -180,7 +179,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     }
 
     /**
-     * @inheritDoc
      * @see HierarchyEntry#getPath()
      */
     public Path getPath() throws RepositoryException {
@@ -188,7 +186,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     }
 
     /**
-     * @inheritDoc
      * @see HierarchyEntry#getWorkspacePath()
      */
     public Path getWorkspacePath() throws RepositoryException {
@@ -196,7 +193,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     }
 
     /**
-     * @inheritDoc
      * @see HierarchyEntry#getParent()
      */
     public NodeEntry getParent() {
@@ -204,7 +200,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     }
 
     /**
-     * @inheritDoc
      * @see HierarchyEntry#getStatus()
      */
     public int getStatus() {
@@ -217,7 +212,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     }
 
     /**
-     * @inheritDoc
      * @see HierarchyEntry#isAvailable()
      */
     public boolean isAvailable() {
@@ -245,7 +239,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         if (currentState == null) {
             // not connected yet to an item state. either a new entry or
             // an unresolved hierarchy entry.
-            target = new SoftReference(state);
+            target = new SoftReference<ItemState>(state);
         } else {
             // was already resolved before -> merge the existing state
             // with the passed state.

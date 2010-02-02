@@ -16,19 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi.name;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.NamespaceException;
-import javax.jcr.Repository;
-import javax.jcr.Session;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>NamespaceRegistryTest</code>...
@@ -47,6 +48,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
     private String testPrefix;
     private String testURI;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         nsRegistry = superuser.getWorkspace().getNamespaceRegistry();
@@ -60,6 +62,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         nsRegistry = null;
         super.tearDown();

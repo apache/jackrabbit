@@ -38,11 +38,11 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.Repository;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -64,8 +64,8 @@ import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.operation.Update;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
+import org.apache.jackrabbit.jcr2spi.operation.Update;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -73,12 +73,12 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -110,6 +110,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see Item#getName()
      */
+    @Override
     public String getName() throws RepositoryException {
         checkStatus();
         return session.getNameResolver().getJCRName(getQName());
@@ -122,6 +123,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      * @see Item#accept(javax.jcr.ItemVisitor)
      */
+    @Override
     public void accept(ItemVisitor visitor) throws RepositoryException {
         checkStatus();
         visitor.visit(this);
@@ -133,6 +135,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return true
      * @see Item#isNode()
      */
+    @Override
     public boolean isNode() {
         return true;
     }
@@ -670,7 +673,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (nt.isMixin() || nt.isAbstract()) {
             throw new ConstraintViolationException("Cannot change the primary type: '" + nodeTypeName + "' is a mixin type or abstract.");
         }
-        
+
         // perform the operation
         Operation op = SetPrimaryType.create(getNodeState(), ntName);
         session.getSessionItemStateManager().execute(op);
@@ -898,7 +901,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeEntry newVersion = session.getVersionStateManager().checkpoint(getNodeState());
         return (Version) getItemManager().getItem(newVersion);
     }
-    
+
     /**
      * @see Node#doneMerge(Version)
      */
@@ -1593,7 +1596,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * 
+     *
      * @param name
      * @param weak
      * @return

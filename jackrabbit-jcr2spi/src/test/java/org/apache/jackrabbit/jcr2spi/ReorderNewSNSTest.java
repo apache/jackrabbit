@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.version.VersionException;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ReorderNewSNSTest</code>...
@@ -35,6 +35,7 @@ public class ReorderNewSNSTest extends ReorderTest {
 
     private static Logger log = LoggerFactory.getLogger(ReorderNewSNSTest.class);
 
+    @Override
     protected void createOrderableChildren() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException {
         child1 = testRootNode.addNode(nodeName2, testNodeType);
         child2 = testRootNode.addNode(nodeName2, testNodeType);
@@ -42,6 +43,7 @@ public class ReorderNewSNSTest extends ReorderTest {
         child4 = testRootNode.addNode(nodeName2, testNodeType);
     }
 
+    @Override
     public void testRevertReorder() throws RepositoryException {
         testRootNode.orderBefore(getRelPath(child4), getRelPath(child2));
         testOrder(testRootNode, new Node[] { child1, child4, child2, child3});
@@ -54,6 +56,7 @@ public class ReorderNewSNSTest extends ReorderTest {
         }
     }
 
+    @Override
     public void testRevertReorderToEnd() throws RepositoryException {
         testRootNode.orderBefore(getRelPath(child1), null);
         testOrder(testRootNode, new Node[] { child2, child3, child4, child1});

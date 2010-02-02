@@ -16,19 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
-import java.util.List;
-import java.util.ArrayList;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AbstractMoveTreeTest</code>...
@@ -46,8 +47,9 @@ abstract class AbstractMoveTreeTest extends AbstractJCRTest {
 
     protected String srcPath;
     protected String destinationPath;
-    protected List childPaths = new ArrayList();
+    protected List<String> childPaths = new ArrayList<String>();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -68,6 +70,7 @@ abstract class AbstractMoveTreeTest extends AbstractJCRTest {
         doMove(moveNode.getPath(), destinationPath);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         childNode = null;
         grandChildNode = null;

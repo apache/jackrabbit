@@ -57,6 +57,7 @@ public abstract class ItemState {
     /**
      * Listeners (weak references)
      */
+    @SuppressWarnings("unchecked")
     private final transient Collection<ItemStateLifeCycleListener> listeners = new WeakIdentityCollection(5);
 
     /**

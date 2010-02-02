@@ -67,6 +67,7 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
     /**
      * @return always {@link Query#JCR_JQOM}.
      */
+    @Override
     public String getLanguage() {
         return Query.JCR_JQOM;
     }

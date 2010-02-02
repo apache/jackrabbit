@@ -16,15 +16,19 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -33,10 +37,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.NamespaceSupport;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.RepositoryException;
 
 /**
  * An <code>ImportHandler</code> instance can be used to import serialized
@@ -96,6 +96,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void warning(SAXParseException e) throws SAXException {
         // log exception and carry on...
         log.warn("warning encountered at line: " + e.getLineNumber()
@@ -106,6 +107,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void error(SAXParseException e) throws SAXException {
         // log exception and carry on...
         log.error("error encountered at line: " + e.getLineNumber()
@@ -116,6 +118,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void fatalError(SAXParseException e) throws SAXException {
         // log and re-throw exception
         log.error("fatal error encountered at line: " + e.getLineNumber()
@@ -128,6 +131,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void startDocument() throws SAXException {
         systemViewXML = false;
         initialized = false;
@@ -155,6 +159,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endDocument() throws SAXException {
         // delegate to target handler
         targetHandler.endDocument();
@@ -165,6 +170,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void startPrefixMapping(String prefix, String uri)
             throws SAXException {
         // check if new context needs to be started
@@ -205,6 +211,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endPrefixMapping(String prefix) throws SAXException {
         /**
          * nothing to do here as namespace context has already been popped
@@ -215,6 +222,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void startElement(String namespaceURI, String localName, String qName,
                              Attributes atts) throws SAXException {
         // check if new context needs to be started
@@ -248,6 +256,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
         // delegate to target handler
         targetHandler.characters(ch, start, length);
@@ -256,6 +265,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
         // leaving element, pop namespace context

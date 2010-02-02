@@ -16,25 +16,26 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.util.ISO9075;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.util.ISO9075;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 
 /**
  * <code>DocViewImportHandler</code> processes Document View XML SAX events
@@ -163,6 +164,7 @@ class DocViewImportHandler extends TargetImportHandler {
      * See also {@link org.apache.jackrabbit.commons.xml.DocumentViewExporter#exportProperty(String, String, int, javax.jcr.Value[])}
      * regarding special handling of multi-valued properties on export.
      */
+    @Override
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
@@ -259,6 +261,7 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void characters(char[] ch, int start, int length)
             throws SAXException {
         /**
@@ -271,6 +274,7 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void ignorableWhitespace(char[] ch, int start, int length)
             throws SAXException {
         /**
@@ -283,6 +287,7 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
         // process buffered character data

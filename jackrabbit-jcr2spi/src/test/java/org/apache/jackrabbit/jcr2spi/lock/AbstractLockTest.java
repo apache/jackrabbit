@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi.lock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AbstractLockTest</code>...
@@ -43,6 +43,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
 
     abstract boolean isSessionScoped();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -56,6 +57,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         lock = lockedNode.lock(false, isSessionScoped());
     }
 
+    @Override
     protected void tearDown() throws Exception {
         // make sure all locks are removed
         try {

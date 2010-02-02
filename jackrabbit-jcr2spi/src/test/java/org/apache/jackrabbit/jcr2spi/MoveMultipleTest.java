@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MoveMultipleTest</code>...
@@ -35,11 +35,13 @@ public class MoveMultipleTest extends AbstractMoveTest {
 
     private String originalPath;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         originalPath = moveNode.getPath();
     }
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }

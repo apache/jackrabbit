@@ -162,6 +162,7 @@ public class QueryManagerImpl implements QueryManager {
             this.node = node;
         }
 
+        @Override
         protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
                 throws InvalidQueryException, RepositoryException {
             return new QueryObjectModelImpl(session, mgrProvider, itemMgr,

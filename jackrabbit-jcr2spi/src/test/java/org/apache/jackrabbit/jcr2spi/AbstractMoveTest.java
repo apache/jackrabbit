@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-
-import javax.jcr.Node;
-import javax.jcr.ItemExistsException;
-import javax.jcr.RepositoryException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.lock.LockException;
 
 /**
  * <code>AbstractMoveTest</code>...
@@ -40,6 +40,7 @@ abstract class AbstractMoveTest extends AbstractJCRTest {
 
     protected String destinationPath;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -55,6 +56,7 @@ abstract class AbstractMoveTest extends AbstractJCRTest {
         destinationPath = destParentNode.getPath() + "/" + nodeName2;
     }
 
+    @Override
     protected void tearDown() throws Exception {
         srcParentNode = null;
         destParentNode = null;

@@ -16,15 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Item;
 import javax.jcr.PathNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Iterator;
+import javax.jcr.RepositoryException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MoveTreeTest</code>...
@@ -33,10 +34,12 @@ public class MoveNewTreeTest extends AbstractMoveTreeTest {
 
     private static Logger log = LoggerFactory.getLogger(MoveNewTreeTest.class);
 
+    @Override
     protected boolean saveBeforeMove() {
         return false;
     }
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }
@@ -119,13 +122,13 @@ public class MoveNewTreeTest extends AbstractMoveTreeTest {
         assertFalse(msg, superuser.itemExists(srcPath + "/" + nodeName2 + "/" + nodeName3));
         int degree = destParentNode.getDepth();
 
-        List l = new ArrayList();
+        List<Item> l = new ArrayList<Item>();
         l.add(childNode);
         l.add(childProperty);
         l.add(grandChildNode);
 
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            Item item = (Item) it.next();
+        for (Iterator<Item> it = l.iterator(); it.hasNext();) {
+            Item item = it.next();
             assertTrue(msg, item.isNew());
             assertTrue(msg, childNode.getAncestor(degree).isSame(destParentNode));
         }

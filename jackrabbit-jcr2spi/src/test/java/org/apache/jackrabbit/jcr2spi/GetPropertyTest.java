@@ -42,6 +42,7 @@ public class GetPropertyTest extends AbstractJCRTest {
 
     private Session readOnly;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -59,6 +60,7 @@ public class GetPropertyTest extends AbstractJCRTest {
         readOnly = getHelper().getReadOnlySession();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (readOnly != null) {
             readOnly.logout();

@@ -165,13 +165,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * Returns true.
      *
-     * @inheritDoc
      * @see HierarchyEntry#denotesNode()
      */
     public boolean denotesNode() {
         return true;
     }
 
+    @Override
     public void invalidate(boolean recursive) {
         getInvalidationStrategy().invalidate(this, recursive);
     }
@@ -187,6 +187,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      *
      * @see HierarchyEntry#reload(boolean)
      */
+    @Override
     public void reload(boolean recursive) {
         // reload this entry
         super.reload(recursive);
@@ -208,9 +209,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * transiently moved, it is in addition moved back to its old parent.
      * Similarly reordering of child node entries is reverted.
      *
-     * @inheritDoc
      * @see HierarchyEntry#revert()
      */
+    @Override
     public void revert() throws RepositoryException {
         // move all properties from attic back to properties map
         if (!propertiesInAttic.isEmpty()) {
@@ -227,6 +228,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @see HierarchyEntry#transientRemove()
      */
+    @Override
     public void transientRemove() throws RepositoryException {
         for (Iterator<HierarchyEntry> it = getAllChildEntries(false); it.hasNext();) {
             HierarchyEntry ce = it.next();
@@ -246,6 +248,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @see HierarchyEntry#remove()
      */
+    @Override
     public void remove() {
         // handle this entry first
         super.internalRemove(false);
@@ -257,6 +260,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
     }
 
+    @Override
     void internalRemove(boolean staleParent) {
         // handle this entry first
         super.internalRemove(staleParent);
@@ -293,7 +297,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
     //----------------------------------------------------------< NodeEntry >---
     /**
-     * @inheritDoc
      * @see NodeEntry#getId()
      */
     public NodeId getId() throws InvalidItemStateException, RepositoryException {
@@ -343,7 +346,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
      * @see NodeEntry#getUniqueID()
      */
     public String getUniqueID() {
@@ -351,7 +353,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
      * @see NodeEntry#setUniqueID(String)
      */
     public void setUniqueID(String uniqueID) {
@@ -364,7 +365,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
      * @see NodeEntry#getIndex()
      */
     public int getIndex() throws InvalidItemStateException, RepositoryException {
@@ -372,7 +372,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
      * @see NodeEntry#getNodeState()
      */
     public NodeState getNodeState() throws ItemNotFoundException, RepositoryException {
@@ -380,7 +379,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
      * @see NodeEntry#getDeepNodeEntry(Path)
      */
     public NodeEntry getDeepNodeEntry(Path path) throws PathNotFoundException, RepositoryException {
@@ -736,7 +734,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
      * @see NodeEntry#getPropertyEntries()
      */
     public synchronized Iterator<PropertyEntry> getPropertyEntries() {
@@ -850,7 +847,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
      * @see NodeEntry#orderBefore(NodeEntry)
      */
     public void orderBefore(NodeEntry beforeEntry) throws RepositoryException {
@@ -1002,6 +998,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * <p/>
      * Returns a <code>NodeState</code>.
      */
+    @Override
     ItemState doResolve() throws ItemNotFoundException, RepositoryException {
         return getItemStateFactory().createNodeState(getWorkspaceId(), this);
     }
@@ -1009,6 +1006,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @see HierarchyEntryImpl#buildPath(boolean)
      */
+    @Override
     Path buildPath(boolean wspPath) throws RepositoryException {
         PathFactory pf = getPathFactory();
         // shortcut for root state

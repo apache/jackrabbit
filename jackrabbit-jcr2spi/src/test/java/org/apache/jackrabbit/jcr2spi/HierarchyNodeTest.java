@@ -34,8 +34,8 @@ import org.apache.jackrabbit.test.NotExecutableException;
  */
 public class HierarchyNodeTest extends AbstractJCRTest {
 
-    private Set<String> hierarchyNodeProps = new HashSet<String>();
-    private Set<String> resourceProps = new HashSet<String>();
+    private final Set<String> hierarchyNodeProps = new HashSet<String>();
+    private final Set<String> resourceProps = new HashSet<String>();
 
     private String ntFolder;
     private String ntFile;
@@ -43,6 +43,7 @@ public class HierarchyNodeTest extends AbstractJCRTest {
 
     private Node fileNode;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         Session s = testRootNode.getSession();
@@ -78,6 +79,7 @@ public class HierarchyNodeTest extends AbstractJCRTest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         fileNode = null;
         super.tearDown();

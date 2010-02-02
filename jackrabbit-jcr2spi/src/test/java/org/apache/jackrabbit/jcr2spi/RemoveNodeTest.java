@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RemoveNodeTest</code>...
@@ -34,6 +34,7 @@ public class RemoveNodeTest extends RemoveItemTest {
 
     private static Logger log = LoggerFactory.getLogger(RemoveNodeTest.class);
 
+    @Override
     protected Item createRemoveItem() throws NotExecutableException, RepositoryException {
         if (testRootNode.hasNode(nodeName1)) {
             throw new NotExecutableException("Parent node must not yet contain a child node '" + nodeName1 + "'.");

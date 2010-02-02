@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 
 /**
  * <code>Remove</code>...
@@ -34,7 +34,7 @@ public class Remove extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(Remove.class);
 
-    private ItemId removeId;
+    private final ItemId removeId;
     protected ItemState removeState;
     protected NodeState parent;
 
@@ -68,6 +68,7 @@ public class Remove extends AbstractOperation {
     /**
      * @see Operation#undo()
      */
+    @Override
     public void undo() throws RepositoryException {
         assert status == STATUS_PENDING;
         status = STATUS_UNDO;

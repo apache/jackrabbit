@@ -16,6 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
@@ -27,15 +37,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * <code>TransientItemStateManager</code> adds support for transient changes on
@@ -75,7 +76,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
     /**
      * Set of operations
      */
-    private Set<Operation> operations = new LinkedHashSet<Operation>();
+    private final Set<Operation> operations = new LinkedHashSet<Operation>();
 
     /**
      *

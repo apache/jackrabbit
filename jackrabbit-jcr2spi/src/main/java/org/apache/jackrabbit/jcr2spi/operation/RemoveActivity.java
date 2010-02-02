@@ -16,19 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import java.util.Iterator;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.RepositoryException;
-import javax.jcr.version.VersionException;
-import java.util.Iterator;
 
 /**
  * <code>RemoveVersion</code>...
@@ -51,6 +52,7 @@ public class RemoveActivity extends Remove {
     /**
      * @see org.apache.jackrabbit.jcr2spi.operation.Operation#accept(org.apache.jackrabbit.jcr2spi.operation.OperationVisitor)
      */
+    @Override
     public void accept(OperationVisitor visitor) throws AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         assert status == STATUS_PENDING;
         visitor.visit(this);
@@ -62,10 +64,11 @@ public class RemoveActivity extends Remove {
      *
      * @see org.apache.jackrabbit.jcr2spi.operation.Operation#persisted()
      */
+    @Override
     public void persisted() {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
-        
+
         // invalidate all references to the removed activity
         while (refs.hasNext()) {
             HierarchyEntry entry = hMgr.lookup(refs.next());
@@ -79,6 +82,7 @@ public class RemoveActivity extends Remove {
     }
 
     //----------------------------------------< Access Operation Parameters >---
+    @Override
     public ItemId getRemoveId() throws RepositoryException {
         return removeState.getWorkspaceId();
     }

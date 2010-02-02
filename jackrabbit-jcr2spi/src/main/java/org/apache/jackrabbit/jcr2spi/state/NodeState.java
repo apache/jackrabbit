@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -101,6 +101,7 @@ public class NodeState extends ItemState {
      * @return always true
      * @see ItemState#isNode
      */
+    @Override
     public final boolean isNode() {
         return true;
     }
@@ -109,6 +110,7 @@ public class NodeState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getId()
      */
+    @Override
     public ItemId getId() throws RepositoryException {
         return getNodeId();
     }
@@ -117,6 +119,7 @@ public class NodeState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getWorkspaceId()
      */
+    @Override
     public ItemId getWorkspaceId() throws RepositoryException {
         return getNodeEntry().getWorkspaceId();
     }
@@ -124,6 +127,7 @@ public class NodeState extends ItemState {
     /**
      * @see ItemState#merge(ItemState, boolean)
      */
+    @Override
     public MergeResult merge(ItemState another, boolean keepChanges) {
         boolean modified = false;
         if (another != null && another != this) {
@@ -160,6 +164,7 @@ public class NodeState extends ItemState {
      * @return Always returns false unless the definition has been modified
      * along with a move operation.
      */
+    @Override
     public boolean revert() {
         // TODO: ev. reset the 'markModified' flag
         if (StateUtility.isMovedState(this)) {

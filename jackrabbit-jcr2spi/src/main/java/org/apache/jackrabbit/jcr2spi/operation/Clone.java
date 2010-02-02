@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
 
 /**
  * <code>Clone</code>...
@@ -62,6 +62,7 @@ public class Clone extends AbstractCopy {
     /**
      * @see Operation#persisted()
      */
+    @Override
     public void persisted() {
         assert status == STATUS_PENDING;
         if (removeExisting) {

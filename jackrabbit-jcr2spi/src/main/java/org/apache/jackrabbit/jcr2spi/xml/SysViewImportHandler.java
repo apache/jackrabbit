@@ -16,21 +16,22 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.Name;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 
 /**
  * <code>SysViewImportHandler</code>  ...
@@ -66,7 +67,7 @@ class SysViewImportHandler extends TargetImportHandler {
     private Name currentPropName;
     private int currentPropType = PropertyType.UNDEFINED;
     // list of AppendableValue objects
-    private List<Importer.TextValue> currentPropValues = new ArrayList<Importer.TextValue>();
+    private final List<Importer.TextValue> currentPropValues = new ArrayList<Importer.TextValue>();
     private AppendableValue currentPropValue;
 
     /**
@@ -114,6 +115,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
@@ -193,6 +195,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void characters(char[] ch, int start, int length)
             throws SAXException {
         if (currentPropValue != null) {
@@ -209,6 +212,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void ignorableWhitespace(char[] ch, int start, int length)
             throws SAXException {
         if (currentPropValue != null) {
@@ -228,6 +232,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
         // check element name

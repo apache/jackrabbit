@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>NodeTypeImplTest</code>...
@@ -33,6 +33,7 @@ public class NodeTypeImplTest extends AbstractJCRTest {
     private NodeTypeImpl nodeType;
     private NameResolver resolver;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 

@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi.lock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>DeepLockTest</code>...
@@ -34,13 +34,14 @@ public class DeepLockTest extends AbstractJCRTest {
 
     private static Logger log = LoggerFactory.getLogger(DeepLockTest.class);
 
-    private boolean isSessionScoped = false;
-    private boolean isDeep = true;
+    private final boolean isSessionScoped = false;
+    private final boolean isDeep = true;
 
     private Node lockedNode;
     private Node childNode;
     private Lock lock;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -52,6 +53,7 @@ public class DeepLockTest extends AbstractJCRTest {
         lock = lockedNode.lock(isDeep, isSessionScoped);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             lockedNode.unlock();

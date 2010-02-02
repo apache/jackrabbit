@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-
-import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
 
 /**
  * <code>SetPrimaryNodeType</code>...
@@ -67,6 +67,7 @@ public class SetPrimaryType extends AbstractOperation {
     /**
      * @see Operation#undo()
      */
+    @Override
     public void undo() throws RepositoryException {
         assert status == STATUS_PENDING;
         status = STATUS_UNDO;

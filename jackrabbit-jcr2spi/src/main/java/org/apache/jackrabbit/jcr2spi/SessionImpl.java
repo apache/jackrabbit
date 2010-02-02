@@ -33,13 +33,13 @@ import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.Property;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.retention.RetentionManager;
@@ -61,8 +61,8 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
@@ -86,12 +86,12 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.XASessionInfo;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
@@ -114,7 +114,9 @@ public class SessionImpl extends AbstractSession
     /**
      * Listeners (weak references)
      */
-    private final Map listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    @SuppressWarnings("unchecked")
+    private final Map<SessionListener, SessionListener> listeners
+            = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     private final Repository repository;
     private final RepositoryConfig config;
@@ -205,6 +207,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see javax.jcr.Session#impersonate(Credentials)
      */
+    @Override
     public Session impersonate(Credentials credentials) throws LoginException, RepositoryException {
         checkIsAlive();
         SessionInfo info = config.getRepositoryService().impersonate(sessionInfo, credentials);
@@ -278,6 +281,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see javax.jcr.Session#getItem(String)
      */
+    @Override
     public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
         checkIsAlive();
         try {
@@ -296,6 +300,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see javax.jcr.Session#itemExists(String)
      */
+    @Override
     public boolean itemExists(String absPath) throws RepositoryException {
         checkIsAlive();
         Path qPath = getQPath(absPath).getNormalizedPath();
@@ -380,6 +385,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
      */
+    @Override
     public void importXML(String parentAbsPath, InputStream in, int uuidBehavior) throws IOException, PathNotFoundException, ItemExistsException, ConstraintViolationException, VersionException, InvalidSerializedDataException, LockException, RepositoryException {
         // NOTE: checks are performed by 'getImportContentHandler'
         ImportHandler handler = (ImportHandler) getImportContentHandler(parentAbsPath, uuidBehavior);
@@ -419,6 +425,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see javax.jcr.Session#logout()
      */
+    @Override
     public void logout() {
         if (!alive) {
             // ignore
@@ -466,7 +473,7 @@ public class SessionImpl extends AbstractSession
         try {
             return getLockStateManager().getLockTokens();
         } catch (RepositoryException e) {
-            log.warn("Unable to retrieve lock tokens for this session. (" + e.getMessage() + ")");            
+            log.warn("Unable to retrieve lock tokens for this session. (" + e.getMessage() + ")");
             return new String[0];
         }
     }
@@ -491,8 +498,9 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see Session#getNode(String) 
+     * @see Session#getNode(String)
      */
+    @Override
     public Node getNode(String absPath) throws RepositoryException {
         checkIsAlive();
         try {
@@ -514,6 +522,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see Session#getProperty(String)
      */
+    @Override
     public Property getProperty(String absPath) throws RepositoryException {
         checkIsAlive();
         try {
@@ -580,6 +589,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see Session#nodeExists(String)
      */
+    @Override
     public boolean nodeExists(String absPath) throws RepositoryException {
         checkIsAlive();
         Path qPath = getQPath(absPath).getNormalizedPath();
@@ -590,6 +600,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see Session#propertyExists(String)
      */
+    @Override
     public boolean propertyExists(String absPath) throws RepositoryException {
         checkIsAlive();
         Path qPath = getQPath(absPath).getNormalizedPath();
@@ -600,6 +611,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see Session#removeItem(String)
      */
+    @Override
     public void removeItem(String absPath) throws RepositoryException {
         Item item = getItem(absPath);
         item.remove();
@@ -620,7 +632,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see NamespaceResolver#getURI(String) 
+     * @see NamespaceResolver#getURI(String)
      */
     public String getURI(String prefix) throws NamespaceException {
         try {
@@ -658,7 +670,7 @@ public class SessionImpl extends AbstractSession
      */
     private void notifyLoggingOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        SessionListener[] la = (SessionListener[])listeners.values().toArray(new SessionListener[listeners.size()]);
+        SessionListener[] la = listeners.values().toArray(new SessionListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].loggingOut(this);
@@ -671,7 +683,7 @@ public class SessionImpl extends AbstractSession
      */
     private void notifyLoggedOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        SessionListener[] la = (SessionListener[])listeners.values().toArray(new SessionListener[listeners.size()]);
+        SessionListener[] la = listeners.values().toArray(new SessionListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].loggedOut(this);

@@ -67,6 +67,7 @@ public class WorkspaceContentHandler extends DefaultHandler {
         }
     }
 
+    @Override
     public void endDocument() throws SAXException {
         delegatee.endDocument();
         try {
@@ -80,42 +81,52 @@ public class WorkspaceContentHandler extends DefaultHandler {
         }
     }
 
+    @Override
     public void startDocument() throws SAXException {
         delegatee.startDocument();
     }
 
+    @Override
     public void characters(char ch[], int start, int length) throws SAXException {
         delegatee.characters(ch, start, length);
     }
 
+    @Override
     public void ignorableWhitespace(char ch[], int start, int length) throws SAXException {
         delegatee.ignorableWhitespace(ch, start, length);
     }
 
+    @Override
     public void endPrefixMapping(String prefix) throws SAXException {
         delegatee.endPrefixMapping(prefix);
     }
 
+    @Override
     public void skippedEntity(String name) throws SAXException {
         delegatee.skippedEntity(name);
     }
 
+    @Override
     public void setDocumentLocator(Locator locator) {
         delegatee.setDocumentLocator(locator);
     }
 
+    @Override
     public void processingInstruction(String target, String data) throws SAXException {
         delegatee.processingInstruction(target, data);
     }
 
+    @Override
     public void startPrefixMapping(String prefix, String uri) throws SAXException {
         delegatee.startPrefixMapping(prefix, uri);
     }
 
+    @Override
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
         delegatee.endElement(namespaceURI, localName, qName);
     }
 
+    @Override
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
         delegatee.startElement(namespaceURI, localName, qName, atts);
     }

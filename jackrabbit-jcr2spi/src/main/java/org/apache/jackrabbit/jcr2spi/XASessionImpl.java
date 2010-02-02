@@ -18,10 +18,10 @@ package org.apache.jackrabbit.jcr2spi;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import org.apache.jackrabbit.spi.XASessionInfo;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-
 import javax.transaction.xa.XAResource;
+
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import org.apache.jackrabbit.spi.XASessionInfo;
 
 /**
  * <code>XASessionImpl</code> extends the regular session implementation with
@@ -51,7 +51,6 @@ public class XASessionImpl extends SessionImpl implements XASession {
     //--------------------------------< XASession >-----------------------------
 
     /**
-     * @inheritDoc
      * @see org.apache.jackrabbit.jcr2spi.XASession#getXAResource()
      */
     public XAResource getXAResource() {

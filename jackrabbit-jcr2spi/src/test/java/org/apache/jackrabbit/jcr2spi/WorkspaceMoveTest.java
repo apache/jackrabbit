@@ -16,22 +16,24 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
 import javax.jcr.ItemExistsException;
+import javax.jcr.Property;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>WorkspaceMoveTest</code>...
  */
 public class WorkspaceMoveTest extends MoveTest {
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     protected boolean isSessionMove() {
         return false;
     }
@@ -46,6 +48,7 @@ public class WorkspaceMoveTest extends MoveTest {
      * the expected behaviour depends on the
      * {@link Repository#OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED} descriptor.
      */
+    @Override
     public void testMovePropertyExists() throws RepositoryException, NotExecutableException {
         // try to create a property with the name of the node to be moved
         // to the destination parent
@@ -82,7 +85,7 @@ public class WorkspaceMoveTest extends MoveTest {
             throw new NotExecutableException("Cannot create property with name '" +nodeName2+ "' and value 'anyString' at move destination.");
         }
 
-        // TODO: fix 2.0 behaviour according to the OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED descriptor        
+        // TODO: fix 2.0 behaviour according to the OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED descriptor
         // workspace-move the node (must succeed)
         doMove(moveNode.getPath(), destProperty.getPath());
          if ("1.0".equals(getHelper().getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {

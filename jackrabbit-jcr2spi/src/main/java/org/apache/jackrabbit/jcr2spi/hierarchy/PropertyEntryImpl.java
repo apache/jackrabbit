@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
@@ -24,10 +28,6 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
-
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
 
 /**
  * <code>PropertyEntryImpl</code> implements a reference to a property state.
@@ -60,11 +60,11 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
 
     //------------------------------------------------------< HierarchyEntryImpl >---
     /**
-     * @inheritDoc
      * @see HierarchyEntryImpl#doResolve()
      * <p/>
      * Returns a <code>PropertyState</code>.
      */
+    @Override
     ItemState doResolve() throws ItemNotFoundException, RepositoryException {
         return getItemStateFactory().createPropertyState(getWorkspaceId(), this);
     }
@@ -72,6 +72,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     /**
      * @see HierarchyEntryImpl#buildPath(boolean)
      */
+    @Override
     Path buildPath(boolean workspacePath) throws RepositoryException {
         Path parentPath = parent.buildPath(workspacePath);
         return getPathFactory().create(parentPath, getName(), true);
@@ -124,7 +125,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
             case Operation.STATUS_PERSISTED:
                 // Property can only be the change log target if it was existing and has
                 // been modified. This includes the case where a property was changed and
-                // then removed by removing its parent. See JCR-2462. 
+                // then removed by removing its parent. See JCR-2462.
                 // Removal, add and implicit modification of protected
                 // properties must be persisted by save on parent.
                 PropertyState state = op.getPropertyState();

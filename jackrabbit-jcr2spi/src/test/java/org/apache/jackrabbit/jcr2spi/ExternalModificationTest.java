@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
+import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>ExternalModificationTest</code>... */
 public class ExternalModificationTest extends AbstractJCRTest {
@@ -38,6 +38,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
     private Node refNode;
     private Session testSession;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -50,6 +51,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
         testSession = getHelper().getReadWriteSession();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (testSession != null) {
             testSession.logout();

@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 
 /**
  * <code>RevertMove</code>...
@@ -29,6 +29,7 @@ public class RevertMoveTest extends AbstractMoveTest {
 
     private static Logger log = LoggerFactory.getLogger(RevertMoveTest.class);
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }

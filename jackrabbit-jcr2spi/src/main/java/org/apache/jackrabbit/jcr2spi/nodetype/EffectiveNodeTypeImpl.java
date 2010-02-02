@@ -16,24 +16,25 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeSet;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Map;
-import java.util.HashMap;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An <code>EffectiveNodeType</code> represents one or more
@@ -114,7 +115,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 defs.add(qDef);
             }
         }
-        
+
         for (List<QItemDefinition> list : namedItemDefs.values()) {
             for (QItemDefinition qDef : list) {
                 if (qDef.definesNode()) {
@@ -324,22 +325,15 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         return defs.toArray(new QPropertyDefinition[defs.size()]);
     }
 
-    /**
-     * @inheritDoc
-     */
     public boolean includesNodeType(Name nodeTypeName) {
         return allNodeTypes.contains(nodeTypeName);
     }
 
-    /**
-     * @inheritDoc
-     */
     public boolean includesNodeTypes(Name[] nodeTypeNames) {
         return allNodeTypes.containsAll(Arrays.asList(nodeTypeNames));
     }
 
     /**
-     * @inheritDoc
      * @see EffectiveNodeType#supportsMixin(Name)
      */
     public boolean supportsMixin(Name mixin) {
@@ -352,7 +346,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
      * @see EffectiveNodeType#checkAddNodeConstraints(Name, ItemDefinitionProvider)
      */
     public void checkAddNodeConstraints(Name name, ItemDefinitionProvider definitionProvider)
@@ -367,7 +360,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
      * @see EffectiveNodeType#checkAddNodeConstraints(org.apache.jackrabbit.spi.Name,QNodeTypeDefinition, ItemDefinitionProvider)
      */
     public void checkAddNodeConstraints(Name name, QNodeTypeDefinition nodeTypeDefinition, ItemDefinitionProvider definitionProvider)
@@ -388,7 +380,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
      * @see EffectiveNodeType#checkRemoveItemConstraints(Name)
      */
     public void checkRemoveItemConstraints(Name name) throws ConstraintViolationException {
@@ -403,7 +394,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
      * @see EffectiveNodeType#hasRemoveNodeConstraint(Name)
      */
     public boolean hasRemoveNodeConstraint(Name nodeName) {
@@ -412,7 +402,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
      * @see EffectiveNodeType#hasRemovePropertyConstraint(Name)
      */
     public boolean hasRemovePropertyConstraint(Name propertyName) {
@@ -680,6 +669,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         }
     }
 
+    @Override
     protected Object clone() {
         EffectiveNodeTypeImpl clone = new EffectiveNodeTypeImpl(mergedNodeTypes,
                 inheritedNodeTypes, allNodeTypes, namedItemDefs, unnamedItemDefs,

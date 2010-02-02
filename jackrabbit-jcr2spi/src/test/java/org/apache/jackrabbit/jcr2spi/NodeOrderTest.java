@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>NodeOrderTest</code>...
@@ -35,6 +35,7 @@ public class NodeOrderTest extends AbstractJCRTest {
 
     private Node[] children;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         if (!testRootNode.getPrimaryNodeType().hasOrderableChildNodes()) {
@@ -48,6 +49,7 @@ public class NodeOrderTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         children = null;
         super.tearDown();

@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * <code>AbstractItemStateFactory</code>...
@@ -33,7 +33,6 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
 
     //---------------------------------------------------< ItemStateFactory >---
     /**
-     * @inheritDoc
      * @see ItemStateFactory#addCreationListener(ItemStateCreationListener)
      */
     public void addCreationListener(ItemStateCreationListener listener) {
@@ -43,7 +42,6 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#removeCreationListener(ItemStateCreationListener)
      */
     public void removeCreationListener(ItemStateCreationListener listener) {
