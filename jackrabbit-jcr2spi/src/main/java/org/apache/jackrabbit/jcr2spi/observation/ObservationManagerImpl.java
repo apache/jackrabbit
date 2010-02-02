@@ -31,11 +31,11 @@ import javax.jcr.observation.ObservationManager;
 import org.apache.jackrabbit.commons.iterator.EventListenerIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
@@ -92,9 +92,6 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         this.ntRegistry = ntRegistry;
     }
 
-    /**
-     * @inheritDoc
-     */
     public void addEventListener(EventListener listener,
                                  int eventTypes,
                                  String absPath,
@@ -116,9 +113,6 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public void removeEventListener(EventListener listener) throws RepositoryException {
         synchronized (subscriptions) {
             if (subscriptions.remove(listener) != null) {
@@ -132,9 +126,6 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public EventListenerIterator getRegisteredEventListeners() throws RepositoryException {
         Map<EventListener, EventFilter> activeListeners;
         synchronized (subscriptions) {
@@ -163,7 +154,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     }
 
     /**
-     * @see javax.jcr.observation.ObservationManager#setUserData(String) 
+     * @see javax.jcr.observation.ObservationManager#setUserData(String)
      */
     public void setUserData(String userData) throws RepositoryException {
         wspManager.setUserData(userData);

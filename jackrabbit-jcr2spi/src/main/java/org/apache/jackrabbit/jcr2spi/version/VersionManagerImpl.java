@@ -16,42 +16,41 @@
  */
 package org.apache.jackrabbit.jcr2spi.version;
 
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.Checkout;
-import org.apache.jackrabbit.jcr2spi.operation.Checkin;
-import org.apache.jackrabbit.jcr2spi.operation.Restore;
-import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
-import org.apache.jackrabbit.jcr2spi.operation.Merge;
-import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
-import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
-import org.apache.jackrabbit.jcr2spi.operation.CreateActivity;
-import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
-import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import java.util.Iterator;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.AccessDeniedException;
-import javax.jcr.MergeException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.MergeException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
+import org.apache.jackrabbit.jcr2spi.operation.Checkin;
+import org.apache.jackrabbit.jcr2spi.operation.Checkout;
+import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
+import org.apache.jackrabbit.jcr2spi.operation.CreateActivity;
+import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
+import org.apache.jackrabbit.jcr2spi.operation.Merge;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
+import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
+import org.apache.jackrabbit.jcr2spi.operation.Restore;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
-import java.util.Iterator;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -156,11 +155,11 @@ public class VersionManagerImpl implements VersionManager {
         workspaceManager.execute(op);
     }
 
-    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
+    public Iterator<NodeId> merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         return merge(nodeState, workspaceName, bestEffort, false);
     }
 
-    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    public Iterator<NodeId> merge(NodeState nodeState, String workspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         Merge op = Merge.create(nodeState, workspaceName, bestEffort, isShallow, this);
         workspaceManager.execute(op);
         return op.getFailedIds();
@@ -219,7 +218,7 @@ public class VersionManagerImpl implements VersionManager {
         workspaceManager.execute(op);
     }
 
-    public Iterator mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException {
+    public Iterator<NodeId> mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException {
         Merge op = Merge.create(activityState, null, false, false, this);
         workspaceManager.execute(op);
         return op.getFailedIds();

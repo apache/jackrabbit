@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.util.Text;
-
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.util.Text;
 
 /** <code>MoveToNewTest</code>... */
 public class MoveToNewTest extends AbstractJCRTest {
@@ -33,6 +33,7 @@ public class MoveToNewTest extends AbstractJCRTest {
     protected Node moveNode;
     protected String destinationPath;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -48,6 +49,7 @@ public class MoveToNewTest extends AbstractJCRTest {
         destinationPath = destParentNode.getPath() + "/" + nodeName2;
     }
 
+    @Override
     protected void tearDown() throws Exception {
         srcParentNode = null;
         destParentNode = null;

@@ -69,6 +69,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     /**
      * Listeners (weak references)
      */
+    @SuppressWarnings("unchecked")
     protected final Map<ItemLifeCycleListener, ItemLifeCycleListener> listeners =
         Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 

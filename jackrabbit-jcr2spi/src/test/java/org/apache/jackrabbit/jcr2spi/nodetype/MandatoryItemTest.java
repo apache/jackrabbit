@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>MandatoryItemTest</code>... */
 public class MandatoryItemTest extends AbstractJCRTest {
@@ -37,6 +37,7 @@ public class MandatoryItemTest extends AbstractJCRTest {
     private NodeDefinition childNodeDef;
     private PropertyDefinition childPropDef;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 

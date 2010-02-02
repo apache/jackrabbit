@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
-import javax.jcr.Value;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.lock.LockException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AddNewPropertyTest</code>...
@@ -38,11 +38,13 @@ public class AddNewPropertyTest extends AbstractJCRTest {
 
     private String propname;
 
+    @Override
     protected void tearDown() throws Exception {
         testRootNode.refresh(false);
         super.tearDown();
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         String propName = propertyName1;

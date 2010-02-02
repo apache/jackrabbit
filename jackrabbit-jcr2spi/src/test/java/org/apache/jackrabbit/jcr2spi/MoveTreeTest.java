@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
 import javax.jcr.Item;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MoveTreeTest</code>...
@@ -30,10 +30,12 @@ public class MoveTreeTest extends AbstractMoveTreeTest {
 
     private static Logger log = LoggerFactory.getLogger(MoveTreeTest.class);
 
+    @Override
     protected boolean saveBeforeMove() {
         return true;
     }
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }

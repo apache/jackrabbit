@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>MoveCombinedTest</code>... */
 public class MoveCombinedTest extends AbstractMoveTest {
@@ -31,11 +31,13 @@ public class MoveCombinedTest extends AbstractMoveTest {
 
     private Session testSession;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         testSession = getHelper().getReadOnlySession();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (testSession != null) {
             testSession.logout();
@@ -44,6 +46,7 @@ public class MoveCombinedTest extends AbstractMoveTest {
         super.tearDown();
     }
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }

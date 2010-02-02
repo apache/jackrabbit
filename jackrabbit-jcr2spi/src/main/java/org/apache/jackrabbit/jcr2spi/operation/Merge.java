@@ -16,23 +16,23 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
+import java.util.Iterator;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.util.Iterator;
 
 /**
  * <code>Merge</code>...
@@ -47,7 +47,7 @@ public class Merge extends AbstractOperation {
     private final boolean isShallow;
     private final VersionManager mgr;
 
-    private Iterator<? extends ItemId> failedIds = null;
+    private Iterator<NodeId> failedIds = null;
 
     private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, boolean isShallow, VersionManager mgr) {
         this.nodeState = nodeState;
@@ -118,7 +118,7 @@ public class Merge extends AbstractOperation {
         return srcWorkspaceName == null;
     }
 
-    public void setFailedIds(Iterator<? extends ItemId> failedIds) {
+    public void setFailedIds(Iterator<NodeId> failedIds) {
         if (failedIds == null) {
             throw new IllegalArgumentException("IdIterator must not be null.");
         }
@@ -128,7 +128,7 @@ public class Merge extends AbstractOperation {
         this.failedIds = failedIds;
     }
 
-    public Iterator<? extends ItemId> getFailedIds() {
+    public Iterator<NodeId> getFailedIds() {
         if (failedIds == null) {
             throw new IllegalStateException("Merge operation has not been executed yet.");
         }

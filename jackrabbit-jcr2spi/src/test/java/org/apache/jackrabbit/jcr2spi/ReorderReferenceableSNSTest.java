@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 
 /**
  * <code>ReorderSNSTest</code>...
@@ -30,6 +30,7 @@ public class ReorderReferenceableSNSTest extends ReorderTest {
 
     private static Logger log = LoggerFactory.getLogger(ReorderReferenceableSNSTest.class);
 
+    @Override
     protected void createOrderableChildren() throws RepositoryException, NotExecutableException {
         child1 = testRootNode.addNode(nodeName2, testNodeType);
         child2 = testRootNode.addNode(nodeName2, testNodeType);

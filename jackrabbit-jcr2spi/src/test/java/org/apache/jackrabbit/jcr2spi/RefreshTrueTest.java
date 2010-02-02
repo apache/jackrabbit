@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RefreshTrue</code>...
@@ -36,6 +36,7 @@ public class RefreshTrueTest extends AbstractJCRTest {
 
     private Value testValue;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -45,6 +46,7 @@ public class RefreshTrueTest extends AbstractJCRTest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         testValue = null;
         super.tearDown();

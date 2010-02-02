@@ -16,16 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Path;
-
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * <code>AbstractOperation</code>...
@@ -48,9 +49,6 @@ public abstract class AbstractOperation implements Operation {
         return getClass().getName();
     }
 
-    /**
-     * @inheritDoc
-     */
     public Collection<ItemState> getAffectedItemStates() {
     	if (affectedStates.isEmpty()) {
     		return Collections.emptySet();
@@ -60,9 +58,6 @@ public abstract class AbstractOperation implements Operation {
     	}
     }
 
-    /**
-     * @inheritDoc
-     */
     public void undo() throws RepositoryException {
         assert status == STATUS_PENDING;
         throw new UnsupportedOperationException("Undo not supported.");

@@ -16,20 +16,21 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.PropertyId;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
+import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.List;
-import java.util.ArrayList;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.QValue;
 
 /**
  * <code>SetPropertyValue</code>...
@@ -75,6 +76,7 @@ public class SetPropertyValue extends AbstractOperation {
     /**
      * @see Operation#undo()
      */
+    @Override
     public void undo() throws RepositoryException {
         assert status == STATUS_PENDING;
         status = STATUS_UNDO;

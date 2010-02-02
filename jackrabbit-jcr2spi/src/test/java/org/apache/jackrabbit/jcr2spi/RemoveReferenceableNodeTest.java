@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Item;
-import javax.jcr.Node;
 
 /**
  * <code>RemoveNodeTest</code>...
@@ -34,6 +34,7 @@ public class RemoveReferenceableNodeTest extends RemoveNodeTest {
 
     private String uuid;
 
+    @Override
     protected Item createRemoveItem() throws NotExecutableException, RepositoryException {
         Node removeItem = (Node) super.createRemoveItem();
         // assert removeNode is referenceable

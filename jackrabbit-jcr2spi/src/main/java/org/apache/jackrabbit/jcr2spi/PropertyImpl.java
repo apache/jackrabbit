@@ -38,9 +38,9 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -67,6 +67,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Item#getName()
      */
+    @Override
     public String getName() throws RepositoryException {
         checkStatus();
         Name name = getQName();
@@ -79,6 +80,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @param visitor
      * @see Item#accept(javax.jcr.ItemVisitor)
      */
+    @Override
     public void accept(ItemVisitor visitor) throws RepositoryException {
         checkStatus();
         visitor.visit(this);
@@ -90,6 +92,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @return false
      * @see javax.jcr.Item#isNode()
      */
+    @Override
     public boolean isNode() {
         return false;
     }
@@ -475,6 +478,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see PropertyState#getName()
      * @see ItemImpl#getName()
      */
+    @Override
     Name getQName() {
         return getPropertyState().getName();
     }

@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.jcr2spi.lock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>OpenScopedLockTest</code>...
@@ -31,6 +31,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
 
     private static Logger log = LoggerFactory.getLogger(OpenScopedLockTest.class);
 
+    @Override
     boolean isSessionScoped() {
         return false;
     }
@@ -83,7 +84,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
         // lock token not present within tokens returned by Session.getLockTokens.
         fail("Upon successful call to Node.lock, the lock token must automatically be added to the set of tokens held by the Session.");
     }
-    
+
     public void testTokenTransfer() throws Exception {
         String lockToken = lock.getLockToken();
         try {

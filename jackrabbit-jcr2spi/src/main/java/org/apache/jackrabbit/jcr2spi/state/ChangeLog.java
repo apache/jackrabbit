@@ -16,19 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
+
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Registers changes made to states and references and consolidates
@@ -74,7 +75,7 @@ public class ChangeLog {
     //-----------------------------------------------< Inform the ChangeLog >---
     /**
      * Call this method when this change log has been successfully persisted.
-     * This implementation will call {@link Operation#persisted() on the
+     * This implementation will call {@link Operation#persisted()} on the
      * individual operations followed by setting all remaining modified
      * states to EXISTING.
      */

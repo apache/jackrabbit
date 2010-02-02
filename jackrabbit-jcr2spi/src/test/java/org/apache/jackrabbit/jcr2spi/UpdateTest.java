@@ -42,6 +42,7 @@ public class UpdateTest extends AbstractJCRTest {
 
     private String currentWorkspace;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -51,7 +52,7 @@ public class UpdateTest extends AbstractJCRTest {
     public void testInvalidSrcWorkspace() throws RepositoryException {
         String nonExistingWorkspace = "nonExistingWorkspace";
         String[] accessibleWorkspaces = testRootNode.getSession().getWorkspace().getAccessibleWorkspaceNames();
-        List l = Arrays.asList(accessibleWorkspaces);
+        List<String> l = Arrays.asList(accessibleWorkspaces);
         while (l.contains(nonExistingWorkspace)) {
             nonExistingWorkspace = nonExistingWorkspace + "_";
         }

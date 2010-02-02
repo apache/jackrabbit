@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
-import javax.jcr.version.VersionException;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ReorderMixedTest</code>...
@@ -33,6 +33,7 @@ public class ReorderMixedTest extends ReorderTest {
 
     private static Logger log = LoggerFactory.getLogger(ReorderMixedTest.class);
 
+    @Override
     protected void createOrderableChildren() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException {
         child1 = testRootNode.addNode(nodeName2, testNodeType);
         child2 = testRootNode.addNode(nodeName4, testNodeType);

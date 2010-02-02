@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.RepositoryException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
 
 /**
  * <code>RenameTest</code>...
@@ -31,6 +31,7 @@ public class RenameTest extends AbstractMoveTest {
     private String renamedName;
     private String renamePath;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -38,6 +39,7 @@ public class RenameTest extends AbstractMoveTest {
         renamePath = srcParentNode.getPath() + "/" + renamedName;
     }
 
+    @Override
     protected boolean isSessionMove() {
         return true;
     }

@@ -16,25 +16,26 @@
  */
 package org.apache.jackrabbit.jcr2spi.version;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.NodeImpl;
-import org.apache.jackrabbit.jcr2spi.SessionImpl;
-import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import java.util.Calendar;
 
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.Node;
-import javax.jcr.Item;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Calendar;
+
+import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
+import org.apache.jackrabbit.jcr2spi.NodeImpl;
+import org.apache.jackrabbit.jcr2spi.SessionImpl;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>VersionImpl</code>...
@@ -86,7 +87,7 @@ public class VersionImpl extends NodeImpl implements Version {
         // no linear successor found
         return null;
     }
-    
+
     /**
      * @see Version#getPredecessors()
      */
@@ -126,6 +127,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @return
      * @see Item#isSame(Item)
      */
+    @Override
     public boolean isSame(Item otherItem) throws RepositoryException {
         checkStatus();
         if (otherItem instanceof VersionImpl) {
@@ -151,6 +153,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
+    @Override
     protected void checkIsWritable() throws UnsupportedRepositoryOperationException, ConstraintViolationException, RepositoryException {
         super.checkIsWritable();
         throw new ConstraintViolationException("Version is protected");
@@ -162,6 +165,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @throws RepositoryException
      * @see NodeImpl#isWritable()
      */
+    @Override
     protected boolean isWritable() throws RepositoryException {
         super.isWritable();
         return false;

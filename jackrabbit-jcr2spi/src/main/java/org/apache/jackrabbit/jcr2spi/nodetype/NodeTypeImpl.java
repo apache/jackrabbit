@@ -16,20 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
-import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -38,9 +25,23 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeTypeDefinition;
-import java.util.ArrayList;
+import javax.jcr.nodetype.PropertyDefinition;
+
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>NodeTypeImpl</code> ...
@@ -100,6 +101,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isNodeType(Name nodeTypeName) {
         return ent.includesNodeType(nodeTypeName);
     }
@@ -122,7 +124,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             throws ConstraintViolationException, RepositoryException {
         ValueConstraint.checkValueConstraints(def, values);
     }
-    
+
     //-------------------------------------------------< NodeTypeDefinition >---
 
     /**
@@ -309,7 +311,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeType#canAddChildNode(String, String) 
+     * @see javax.jcr.nodetype.NodeType#canAddChildNode(String, String)
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
@@ -326,7 +328,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeType#canRemoveItem(String) 
+     * @see javax.jcr.nodetype.NodeType#canRemoveItem(String)
      */
     public boolean canRemoveItem(String itemName) {
         try {

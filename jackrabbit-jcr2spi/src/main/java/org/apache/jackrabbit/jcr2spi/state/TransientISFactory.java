@@ -16,25 +16,25 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValue;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-
-import java.util.Iterator;
-import java.util.Collections;
-import java.util.Set;
+import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>TransientISFactory</code>...
@@ -57,7 +57,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
 
     //------------------------------------------< TransientItemStateFactory >---
     /**
-     * @inheritDoc
      * @see TransientItemStateFactory#createNewNodeState(NodeEntry , Name, QNodeDefinition)
      */
     public NodeState createNewNodeState(NodeEntry entry, Name nodetypeName,
@@ -72,7 +71,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     }
 
     /**
-     * @inheritDoc
      * @see TransientItemStateFactory#createNewPropertyState(PropertyEntry, QPropertyDefinition, QValue[], int)
      */
     public PropertyState createNewPropertyState(PropertyEntry entry, QPropertyDefinition definition, QValue[] values, int propertyType) throws RepositoryException {
@@ -84,7 +82,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
 
     //---------------------------------------------------< ItemStateFactory >---
     /**
-     * @inheritDoc
      * @see ItemStateFactory#createRootState(NodeEntry)
      */
     public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
@@ -93,7 +90,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#createNodeState(NodeId,NodeEntry)
      */
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
@@ -103,7 +99,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#createDeepNodeState(NodeId, NodeEntry)
      */
     public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent)
@@ -113,7 +108,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#createPropertyState(PropertyId, PropertyEntry)
      */
     public PropertyState createPropertyState(PropertyId propertyId,
@@ -133,7 +127,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#getChildNodeInfos(NodeId)
      */
     public Iterator<ChildInfo> getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException {
@@ -141,7 +134,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     }
 
     /**
-     * @inheritDoc
      * @see ItemStateFactory#getNodeReferences(NodeState,org.apache.jackrabbit.spi.Name,boolean)
      */
     public Iterator<PropertyId> getNodeReferences(NodeState nodeState, Name propertyName, boolean weak) {

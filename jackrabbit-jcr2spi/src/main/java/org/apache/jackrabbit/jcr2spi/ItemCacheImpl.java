@@ -16,16 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.util.Dumpable;
-import org.apache.commons.collections.map.LRUMap;
+import java.io.PrintStream;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
-import java.util.Map;
-import java.io.PrintStream;
+
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.util.Dumpable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ItemCacheImpl</code>...
@@ -36,6 +37,7 @@ public class ItemCacheImpl implements ItemCache, Dumpable {
 
     private final Map<ItemState, Item> cache;
 
+    @SuppressWarnings("unchecked")
     ItemCacheImpl(int maxSize) {
         cache = new LRUMap(maxSize);
     }

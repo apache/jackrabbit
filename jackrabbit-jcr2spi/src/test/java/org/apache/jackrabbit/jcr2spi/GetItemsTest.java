@@ -99,6 +99,7 @@ public class GetItemsTest extends AbstractJCR2SPITest {
         session = repository.login("default");
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();

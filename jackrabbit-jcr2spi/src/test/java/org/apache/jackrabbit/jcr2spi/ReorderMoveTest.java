@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 
 /**
  * <code>ReorderMoveTest</code> testing various combinations of move/rename
@@ -41,6 +41,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
     private Node srcParent;
     private String destPath;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         if (!testRootNode.getPrimaryNodeType().hasOrderableChildNodes()) {
@@ -55,6 +56,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         destParent = null;
         srcParent = null;

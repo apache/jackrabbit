@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.jcr2spi.version;
 
-import org.apache.jackrabbit.test.api.version.VersionLabelTest;
-
 import java.util.Arrays;
 import java.util.List;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
+
+import org.apache.jackrabbit.test.api.version.VersionLabelTest;
 
 public class LabelTest extends VersionLabelTest {
 
@@ -29,7 +30,7 @@ public class LabelTest extends VersionLabelTest {
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
         vHistory.removeVersionLabel(versionLabel);
 
-        List labels = Arrays.asList(vHistory.getVersionLabels());
+        List<String> labels = Arrays.asList(vHistory.getVersionLabels());
         assertFalse("VersionHistory.getVersionLabels() must not return a removed label.",labels.contains(versionLabel));
     }
 
@@ -37,7 +38,7 @@ public class LabelTest extends VersionLabelTest {
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
         vHistory.removeVersionLabel(versionLabel);
 
-        List labels = Arrays.asList(vHistory.getVersionLabels(rootVersion));
+        List<String> labels = Arrays.asList(vHistory.getVersionLabels(rootVersion));
         assertFalse("VersionHistory.getVersionLabels(Version) must not return a removed label.",labels.contains(versionLabel));
     }
 
@@ -48,7 +49,7 @@ public class LabelTest extends VersionLabelTest {
         Version v = versionableNode.checkin();
         vHistory.addVersionLabel(v.getName(), versionLabel, true);
 
-        List labels = Arrays.asList(vHistory.getVersionLabels(v));
+        List<String> labels = Arrays.asList(vHistory.getVersionLabels(v));
         assertTrue(labels.contains(versionLabel));
     }
 
@@ -59,7 +60,7 @@ public class LabelTest extends VersionLabelTest {
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
         vHistory.addVersionLabel(v.getName(), versionLabel, true);
 
-        List labels = Arrays.asList(vHistory.getVersionLabels(rootVersion));
+        List<String> labels = Arrays.asList(vHistory.getVersionLabels(rootVersion));
         assertFalse(labels.contains(versionLabel));
     }
 

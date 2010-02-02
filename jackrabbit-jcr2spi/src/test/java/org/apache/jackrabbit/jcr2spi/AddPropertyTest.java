@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-
-import javax.jcr.Item;
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
-import javax.jcr.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>AddPropertyTest</code>... */
 public class AddPropertyTest extends AbstractJCRTest {
@@ -34,6 +34,7 @@ public class AddPropertyTest extends AbstractJCRTest {
 
     private Node testNode;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         testNode = testRootNode.addNode(nodeName1);
@@ -41,6 +42,7 @@ public class AddPropertyTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         testNode = null;
         super.tearDown();

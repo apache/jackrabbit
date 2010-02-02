@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.Item;
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RemoveSNSTest</code> (Implementation specific tests. JSR170 only
@@ -37,11 +37,13 @@ public class RemoveSNSTest extends RemoveNodeTest {
     private Node firstSiblingNode;
     private String firstSiblingPath;
 
+    @Override
     protected void tearDown() throws Exception {
         firstSiblingNode = null;
         super.tearDown();
     }
 
+    @Override
     protected Item createRemoveItem() throws NotExecutableException, RepositoryException {
         if (testRootNode.hasNode(nodeName1)) {
             fail("Setup: Parent node must not yet contain a child node '" + nodeName1 + "'.");

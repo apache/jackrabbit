@@ -26,6 +26,7 @@ public class SessionScopedLockTest extends AbstractLockTest {
 
     private static Logger log = LoggerFactory.getLogger(SessionScopedLockTest.class);
 
+    @Override
     boolean isSessionScoped() {
         return true;
     }

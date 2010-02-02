@@ -16,16 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.nodetype.NodeTypeManager;
-import java.util.List;
-import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RemoveMixinTest</code>...
@@ -36,11 +38,13 @@ public class RemoveMixinTest extends AbstractJCRTest {
 
     private NodeTypeManager ntMgr;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         ntMgr = testRootNode.getSession().getWorkspace().getNodeTypeManager();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         ntMgr = null;
         super.tearDown();
@@ -65,7 +69,7 @@ public class RemoveMixinTest extends AbstractJCRTest {
 
         node.removeMixin(mixReferenceable);
         assertTrue("Removing Mixin must not take effect but after Node has been saved.", node.isNodeType(mixReferenceable));
-        List mixins = Arrays.asList(node.getMixinNodeTypes());
+        List<NodeType> mixins = Arrays.asList(node.getMixinNodeTypes());
         assertTrue("Removing Mixin must not take effect but after Node has been saved.", mixins.contains(ntMgr.getNodeType(mixReferenceable)));
     }
 
@@ -88,7 +92,7 @@ public class RemoveMixinTest extends AbstractJCRTest {
         testRootNode.save();
 
         assertFalse("Adding + Removing a mixin within the same batch must have not effect.", node.isNodeType(mixReferenceable));
-        List mixins = Arrays.asList(node.getMixinNodeTypes());
+        List<NodeType> mixins = Arrays.asList(node.getMixinNodeTypes());
         assertFalse("Adding + Removing a mixin within the same batch must have not effect.", mixins.contains(ntMgr.getNodeType(mixReferenceable)));
     }
 
@@ -112,7 +116,7 @@ public class RemoveMixinTest extends AbstractJCRTest {
         testRootNode.save();
 
         assertFalse("Adding + Removing a mixin within the same batch must have not effect.", node.isNodeType(mixReferenceable));
-        List mixins = Arrays.asList(node.getMixinNodeTypes());
+        List<NodeType> mixins = Arrays.asList(node.getMixinNodeTypes());
         assertFalse("Adding + Removing a mixin within the same batch must have not effect.", mixins.contains(ntMgr.getNodeType(mixReferenceable)));
     }
 }

@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ValueFormatException;
 import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
+import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
 
 /**
  * <code>AddProperty</code>...
@@ -79,11 +79,12 @@ public class AddProperty extends AbstractOperation {
     /**
      * @see Operation#undo()
      */
+    @Override
     public void undo() throws RepositoryException {
         status = STATUS_UNDO;
         parentState.getHierarchyEntry().complete(this);
     }
-    
+
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getParentId() {
         return parentId;
