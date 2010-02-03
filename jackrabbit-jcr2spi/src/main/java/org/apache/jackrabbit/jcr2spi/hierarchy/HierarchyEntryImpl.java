@@ -416,7 +416,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             }
         } else {
             // unresolved
-            if (!staleParent) {
+            if (!staleParent && parent != null) {
                 parent.internalRemoveChildEntry(this);
             }
         }
