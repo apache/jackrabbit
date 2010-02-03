@@ -268,7 +268,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     public abstract Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
-    public abstract PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId);
+    public abstract PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws ItemNotFoundException, RepositoryException;
 
     public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName,
             boolean weakReferences) throws RepositoryException {
