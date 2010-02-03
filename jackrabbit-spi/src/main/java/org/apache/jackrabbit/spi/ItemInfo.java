@@ -23,6 +23,13 @@ package org.apache.jackrabbit.spi;
 public interface ItemInfo {
 
     /**
+     * @return identifier for the item that is based on this info object. the id
+     * can either be an absolute path or a uniqueID (+ relative path).
+     * @see RepositoryService#getNodeInfo(SessionInfo, NodeId)
+     */
+    public ItemId getId();
+
+    /**
      * Returns true if this <code>ItemInfo</code> denotes a node, false otherwise.
      *
      * @return true if this <code>ItemInfo</code> denotes a node, false otherwise.
