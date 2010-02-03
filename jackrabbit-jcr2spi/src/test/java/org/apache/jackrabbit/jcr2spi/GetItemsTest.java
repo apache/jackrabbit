@@ -59,7 +59,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**
- * Test cases for {@link RepositoryService#getItemInfos(SessionInfo, NodeId)}. Sepcifically
+ * Test cases for {@link RepositoryService#getItemInfos(SessionInfo, NodeId)}. Specifically
  * for JCR-1797.
  */
 public class GetItemsTest extends AbstractJCR2SPITest {
