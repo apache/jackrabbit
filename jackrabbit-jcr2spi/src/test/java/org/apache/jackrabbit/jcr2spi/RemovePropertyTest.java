@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Property;
-import javax.jcr.Item;
-import javax.jcr.ItemExistsException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.lock.LockException;
 
 /**
  * <code>RemoveNodeTest</code>...
@@ -38,6 +38,7 @@ public class RemovePropertyTest extends RemoveItemTest {
 
     private static Logger log = LoggerFactory.getLogger(RemovePropertyTest.class);
 
+    @Override
     protected Item createRemoveItem() throws NotExecutableException, RepositoryException, LockException, ConstraintViolationException, ItemExistsException, NoSuchNodeTypeException, VersionException {
         Property removeProperty;
         if (testRootNode.hasProperty(propertyName1)) {

@@ -1320,6 +1320,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see ItemImpl#getName()
      */
+    @Override
     Name getQName() throws RepositoryException {
         if (getNodeState().isRoot()) {
             // shortcut. the given state represents the root or an orphaned node

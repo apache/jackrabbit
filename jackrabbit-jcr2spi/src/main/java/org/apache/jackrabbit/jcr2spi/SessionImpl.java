@@ -415,6 +415,7 @@ public class SessionImpl extends AbstractSession
     /**
      * @see javax.jcr.Session#setNamespacePrefix(String, String)
      */
+    @Override
     public void setNamespacePrefix(String prefix, String uri)
             throws RepositoryException {
         super.setNamespacePrefix(prefix, uri);
