@@ -65,6 +65,8 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.AbstractReadableRepositoryService;
+import org.apache.jackrabbit.spi.commons.ItemInfoBuilder;
+import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**
@@ -75,6 +77,7 @@ import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 public abstract class AbstractJCR2SPITest extends TestCase implements RepositoryService {
     private static final String DEFAULT_WSP = "default";
 
+    protected ItemInfoStore itemInfoStore;
     protected RepositoryService repositoryService;
     protected RepositoryConfig config;
     protected Repository repository;
@@ -82,10 +85,29 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     @Override
     public void setUp() throws Exception {
         super.setUp();
+
+        itemInfoStore = new ItemInfoStore();
+        ItemInfoBuilder.Listener listener = new ItemInfoBuilder.Listener() {
+            public void createPropertyInfo(PropertyInfo propertyInfo) {
+                itemInfoStore.addItemInfo(propertyInfo);
+            }
+
+            public void createNodeInfo(NodeInfo nodeInfo) {
+                itemInfoStore.addItemInfo(nodeInfo);
+            }
+
+            public void createChildInfos(NodeId id, Iterator<ChildInfo> childInfos) {
+                itemInfoStore.setChildInfos(id, childInfos);
+            }
+        };
+
+        initInfosStore(ItemInfoBuilder.nodeInfoBuilder(listener));
         repositoryService = getRepositoryService();
         config = getRepositoryConfig();
         repository = getRepository();
     }
+
+    protected abstract void initInfosStore(NodeInfoBuilder builder) throws RepositoryException;
 
     protected RepositoryService getRepositoryService() throws RepositoryException, ParseException {
         return new AbstractReadableRepositoryService(getDescriptors(), getNameSpaces(), getCndReader(),
