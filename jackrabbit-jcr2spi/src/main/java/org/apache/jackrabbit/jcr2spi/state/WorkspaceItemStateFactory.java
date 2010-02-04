@@ -240,7 +240,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws ItemNotFoundException, RepositoryException {
         // make sure the entry has the correct ItemId
-        // this make not be the case, if the hierarchy has not been completely
+        // this may not be the case, if the hierarchy has not been completely
         // resolved yet -> if uniqueID is present, set it on this entry or on
         // the appropriate parent entry
         String uniqueID = info.getId().getUniqueID();
