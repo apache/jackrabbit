@@ -47,9 +47,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
     private static Logger log = LoggerFactory.getLogger(ChildNodeEntriesImpl.class);
 
-    private static final int STATUS_OK = 0;
-    private static final int STATUS_INVALIDATED = 1;
-
     private boolean complete = false;
 
     /**

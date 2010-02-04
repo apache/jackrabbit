@@ -49,7 +49,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
@@ -118,10 +117,6 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-    }
-
-    private NamespaceResolver nsResolver() {
-        return mgrProvider.getNamespaceResolver();
     }
 
     private EffectiveNodeTypeProvider entProvider() {
