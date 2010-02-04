@@ -14,26 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi;
+package org.apache.jackrabbit.jcr2spi.observation;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * <code>Jcr2SpiTestSuite</code>...
+ * <code>TestAll</code>...
  */
-public class Jcr2SpiTestSuite extends TestSuite {
+public class TestAll extends TestCase {
 
-    public Jcr2SpiTestSuite() {
-        super("JCR2SPI tests");
+    public static Test suite() {
+        TestSuite suite = new TestSuite("jcr2spi observation tests");
 
-        // all jcr2spi tests
-        addTest(org.apache.jackrabbit.jcr2spi.TestAll.suite());
-        addTest(org.apache.jackrabbit.jcr2spi.lock.TestAll.suite());
-        addTest(org.apache.jackrabbit.jcr2spi.name.TestAll.suite());
-        addTest(org.apache.jackrabbit.jcr2spi.nodetype.TestAll.suite());
-        addTest(org.apache.jackrabbit.jcr2spi.observation.TestAll.suite());
-        addTest(org.apache.jackrabbit.jcr2spi.query.TestAll.suite());
-        addTest(org.apache.jackrabbit.jcr2spi.version.TestAll.suite());
-        addTest(org.apache.jackrabbit.jcr2spi.xml.TestAll.suite());
+        suite.addTestSuite(ObservationTest.class);
+
+        return suite;
     }
 }
