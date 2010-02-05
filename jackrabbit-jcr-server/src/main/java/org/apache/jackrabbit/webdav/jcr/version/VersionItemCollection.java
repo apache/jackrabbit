@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.webdav.jcr.version;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
@@ -174,7 +174,7 @@ public class VersionItemCollection extends DefaultItemCollection
             Version v = (Version)item;
             // created and creationDate properties
             try {
-                String creationDate = DavConstants.creationDateFormat.format(v.getCreated().getTime());
+                String creationDate = HttpDateFormat.creationDateFormat().format(v.getCreated().getTime());
                 // replace dummy creation date from default collection
                 properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, creationDate));
 

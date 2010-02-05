@@ -52,7 +52,6 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavCompliance;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -61,6 +60,7 @@ import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
@@ -881,7 +881,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 if (n.hasProperty(JcrConstants.JCR_CREATED)) {
                     long creationTime = n.getProperty(JcrConstants.JCR_CREATED).getValue().getLong();
                     properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE,
-                        DavConstants.creationDateFormat.format(new Date(creationTime))));
+                        HttpDateFormat.creationDateFormat().format(new Date(creationTime))));
                 }
             } catch (RepositoryException e) {
                 log.warn("Error while accessing jcr:created property");

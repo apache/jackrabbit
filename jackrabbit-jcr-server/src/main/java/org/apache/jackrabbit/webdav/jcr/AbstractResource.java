@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.jackrabbit.server.io.IOUtil;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -28,6 +27,7 @@ import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.DavCompliance;
+import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.jcr.search.SearchResourceImpl;
 import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
 import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
@@ -557,7 +557,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
         properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
 
         // default creation time
-        properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, DavConstants.creationDateFormat.format(new Date(0))));
+        properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, HttpDateFormat.creationDateFormat().format(new Date(0))));
 
         // supported lock property
         properties.add(supportedLock);

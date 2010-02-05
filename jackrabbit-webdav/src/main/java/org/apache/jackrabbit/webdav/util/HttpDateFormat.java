@@ -27,8 +27,38 @@ public class HttpDateFormat extends SimpleDateFormat {
 
     private static final TimeZone GMT_TIMEZONE = TimeZone.getTimeZone("GMT");
 
+    /**
+     * Pattern for the modification date as defined by RFC 1123
+     */
+    public static final String MODIFICATION_DATE_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
+
+    /**
+     * Simple date format pattern for the creation date ISO representation (partial).
+     */
+    public static final String CREATION_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
     public HttpDateFormat(String pattern) {
         super(pattern, Locale.ENGLISH);
         super.setTimeZone(GMT_TIMEZONE);
+    }
+
+    /**
+     * Creates a new HttpDateFormat using the
+     * {@link #MODIFICATION_DATE_PATTERN modifcation date pattern}.
+     *
+     * @return a new HttpDateFormat.
+     */
+    public static HttpDateFormat modificationDateFormat() {
+        return new HttpDateFormat(MODIFICATION_DATE_PATTERN);
+    }
+
+    /**
+     * Creates a new HttpDateFormat using the
+     * {@link #CREATION_DATE_PATTERN creation date pattern}.
+     *
+     * @return a new HttpDateFormat.
+     */
+    public static HttpDateFormat creationDateFormat() {
+        return new HttpDateFormat(CREATION_DATE_PATTERN);
     }
 }
