@@ -18,8 +18,7 @@ package org.apache.jackrabbit.server.io;
 
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -36,8 +35,6 @@ import java.util.Date;
  */
 public class IOUtil {
 
-    private static Logger log = LoggerFactory.getLogger(IOUtil.class);
-
     /**
      * Constant for undefined modification/creation time
      */
@@ -52,26 +49,26 @@ public class IOUtil {
      * Return the last modification time as formatted string.
      *
      * @return last modification time as string.
-     * @see DavConstants#modificationDateFormat
+     * @see org.apache.jackrabbit.webdav.util.HttpDateFormat#modificationDateFormat() 
      */
     public static String getLastModified(long modificationTime) {
         if (modificationTime <= IOUtil.UNDEFINED_TIME) {
             modificationTime = new Date().getTime();
         }
-        return DavConstants.modificationDateFormat.format(new Date(modificationTime));
+        return HttpDateFormat.modificationDateFormat().format(new Date(modificationTime));
     }
 
     /**
      * Return the creation time as formatted string.
      *
      * @return creation time as string.
-     * @see DavConstants#creationDateFormat
+     * @see org.apache.jackrabbit.webdav.util.HttpDateFormat#creationDateFormat()
      */
     public static String getCreated(long createdTime) {
         if (createdTime <= IOUtil.UNDEFINED_TIME) {
             createdTime = 0;
         }
-        return DavConstants.creationDateFormat.format(new Date(createdTime));
+        return HttpDateFormat.creationDateFormat().format(new Date(createdTime));
     }
 
     /**

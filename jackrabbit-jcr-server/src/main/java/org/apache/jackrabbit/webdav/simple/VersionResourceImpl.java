@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -26,6 +25,7 @@ import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavResourceIterator;
 import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -237,7 +237,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
             super.initProperties();
             Version v = (Version) getNode();
             try {
-                String creationDate = DavConstants.creationDateFormat.format(v.getCreated().getTime());
+                String creationDate = HttpDateFormat.creationDateFormat().format(v.getCreated().getTime());
                 // replace dummy creation date from default collection
                 properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, creationDate));
 

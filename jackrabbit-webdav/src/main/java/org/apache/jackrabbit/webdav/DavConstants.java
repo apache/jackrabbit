@@ -141,12 +141,14 @@ public interface DavConstants {
     public static long UNDEFINED_TIME = -1;
 
     /**
-     * modificationDate date format per RFC 1123
+     * modificationDate date format per RFC 1123.<br>
+     * NOTE: Access to <code>DateFormat</code> isn't thread save.
      */
-    public static DateFormat modificationDateFormat = new HttpDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+    public static DateFormat modificationDateFormat = HttpDateFormat.modificationDateFormat();
 
     /**
-     * Simple date format for the creation date ISO representation (partial).
+     * Simple date format for the creation date ISO representation (partial).<br>
+     * NOTE: Access to <code>DateFormat</code> isn't thread save.
      */
-    public static DateFormat creationDateFormat = new HttpDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    public static DateFormat creationDateFormat = HttpDateFormat.creationDateFormat();
 }
