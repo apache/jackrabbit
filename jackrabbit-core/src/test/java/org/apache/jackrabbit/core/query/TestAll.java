@@ -62,6 +62,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ShareableNodeTest.class);
         suite.addTestSuite(ParentNodeTest.class);
         suite.addTestSuite(SimilarQueryTest.class);
+        suite.addTestSuite(FulltextSQL2QueryTest.class);
 
         return suite;
     }
