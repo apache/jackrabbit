@@ -26,10 +26,9 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.functors.NotPredicate;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -93,30 +92,12 @@ public class GetItemsTest extends AbstractJCR2SPITest {
         super.tearDown();
     }
 
-    private Iterable itemInfosProvider;
-
     /**
      * Check whether we can traverse the hierarchy when the item info for root is
      * retrieved first.
      * @throws RepositoryException
      */
     public void testGetItemInfosRootFirst() throws RepositoryException {
-        itemInfosProvider = new Iterable() {
-            Predicate isRoot = new Predicate() {
-                public boolean evaluate(Object object) {
-                    ItemInfo itemInfo = (ItemInfo) object;
-                    return itemInfo.getPath().denotesRoot();
-                }
-            };
-
-            @SuppressWarnings("unchecked")
-            public Iterator<ItemInfo> iterator() {
-                return new IteratorChain(
-                        new FilterIterator(itemInfoStore.getItemInfos(), isRoot),
-                        new FilterIterator(itemInfoStore.getItemInfos(), NotPredicate.getInstance(isRoot)));
-            }
-        };
-
         assertTrue(session.getRootNode().getDepth() == 0);
         checkHierarchy();
     }
@@ -128,30 +109,14 @@ public class GetItemsTest extends AbstractJCR2SPITest {
      */
     public void testGetItemInfosDeepFirst() throws RepositoryException {
         final String targetPath = "/node2/node21/node211/node2111/node21111/node211111/node2111111";
-
-        itemInfosProvider = new Iterable() {
-            Predicate isTarget = new Predicate() {
-                public boolean evaluate(Object object) {
-                    ItemInfo itemInfo = (ItemInfo) object;
-                    return targetPath.equals(toJCRPath(itemInfo.getPath()));
-                }
-            };
-
-            @SuppressWarnings("unchecked")
-            public Iterator<ItemInfo> iterator() {
-                return new IteratorChain(
-                        new FilterIterator(itemInfoStore.getItemInfos(), isTarget),
-                        new FilterIterator(itemInfoStore.getItemInfos(), NotPredicate.getInstance(isTarget)));
-            }
-        };
-
         assertEquals(targetPath, session.getItem(targetPath).getPath());
         checkHierarchy();
     }
 
     private void checkHierarchy() throws PathNotFoundException, RepositoryException, ItemNotFoundException,
             AccessDeniedException {
-        for (Iterator<ItemInfo> itemInfos = itemInfosProvider.iterator(); itemInfos.hasNext();) {
+
+        for (Iterator<ItemInfo> itemInfos = itemInfoStore.getItemInfos(); itemInfos.hasNext();) {
             ItemInfo itemInfo = itemInfos.next();
             String jcrPath = toJCRPath(itemInfo.getPath());
             Item item = session.getItem(jcrPath);
@@ -160,10 +125,10 @@ public class GetItemsTest extends AbstractJCR2SPITest {
             if (item.getDepth() > 0) {
                 Node parent = item.getParent();
                 if (item.isNode()) {
-                    assertEquals(item, parent.getNode(item.getName()));
+                    assertTrue(item.isSame(parent.getNode(item.getName())));
                 }
                 else {
-                    assertEquals(item, parent.getProperty(item.getName()));
+                    assertTrue(item.isSame(parent.getProperty(item.getName())));
                 }
             }
 
@@ -199,24 +164,53 @@ public class GetItemsTest extends AbstractJCR2SPITest {
     }
 
     @Override
-    public Iterator<ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
-        return itemInfosProvider.iterator();
+    public Iterator<ItemInfo> getItemInfos(SessionInfo sessionInfo, final NodeId nodeId)
+            throws RepositoryException {
+
+        return chain(
+                singleton(itemInfoStore.getNodeInfo(nodeId)),
+                filter(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
+                    public boolean evaluate(ItemInfo info) {
+                        return !nodeId.equals(info.getId());
+                    }
+                }));
     }
 
     @Override
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
-        fail("Not implemented");
-        return null;
+        return itemInfoStore.getNodeInfo(nodeId);
     }
 
     @Override
-    public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) {
-        fail("Not implemented");
-        return null;
+    public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId)
+            throws ItemNotFoundException {
+
+        return itemInfoStore.getPropertyInfo(propertyId);
     }
 
-    interface Iterable {
-        public Iterator<ItemInfo> iterator();
+    // -----------------------------------------------------< private >---
+
+    private interface Predicate<T> {
+        public boolean evaluate(T value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Iterator<T> chain(Iterator<? extends T> first, Iterator<? extends T> second) {
+        return new IteratorChain(first, second);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Iterator<T> singleton(T value) {
+        return new SingletonIterator(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Iterator<T> filter(Iterator<T> source, final Predicate<T> predicate) {
+        return new FilterIterator(source, new org.apache.commons.collections.Predicate() {
+            public boolean evaluate(Object object) {
+                return predicate.evaluate((T) object);
+            }
+        });
     }
 
 }
