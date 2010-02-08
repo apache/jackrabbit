@@ -16,37 +16,41 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.StaticOperand;
-import javax.jcr.RepositoryException;
 
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.SortComparatorSource;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.SourceImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.SourceImpl;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.SortComparatorSource;
 
 /**
  * <code>LuceneQueryFactoryImpl</code> implements a lucene query factory.
@@ -94,6 +98,11 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
     private final IndexFormatVersion version;
 
     /**
+     * The Bind Variable values.
+     */
+    private final Map<Name, Value> bindVariables;
+
+    /**
      * Creates a new lucene query factory.
      *
      * @param session         the session that executes the query.
@@ -103,6 +112,7 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
      * @param analyzer        the analyzer of the index.
      * @param synonymProvider the synonym provider of the index.
      * @param version         the version of the index format.
+     * @param bindVariables   the bind variable values of the query
      */
     public LuceneQueryFactoryImpl(SessionImpl session,
                                   SortComparatorSource scs,
@@ -110,7 +120,8 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
                                   NamespaceMappings nsMappings,
                                   Analyzer analyzer,
                                   SynonymProvider synonymProvider,
-                                  IndexFormatVersion version) {
+                                  IndexFormatVersion version,
+                                  Map<Name, Value> bindVariables) {
         this.session = session;
         this.scs = scs;
         this.hmgr = hmgr;
@@ -119,6 +130,7 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
         this.synonymProvider = synonymProvider;
         this.version = version;
         this.npResolver = NamePathResolverImpl.create(nsMappings);
+        this.bindVariables = bindVariables;
     }
 
     /**
@@ -211,6 +223,13 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
             if (expr instanceof Literal) {
                 return parser.parse(
                         ((Literal) expr).getLiteralValue().getString());
+            } else if (expr instanceof BindVariableValueImpl) {
+                Value value = this.bindVariables.get(
+                        ((BindVariableValueImpl) expr).getBindVariableQName());
+                if (value == null) {
+                    throw new InvalidQueryException("Bind variable not bound");
+                }
+                return parser.parse(value.getString());
             } else {
                 throw new RepositoryException(
                         "Unknown static operand type: " + expr);
