@@ -193,9 +193,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             throws ItemNotFoundException, RepositoryException {
         NodeState nodeState;
         ItemInfos infos = new ItemInfos(itemInfos);
+
         // first entry in the iterator is the originally requested Node.
-        if (infos.hasNext()) {
-            NodeInfo first = (NodeInfo) infos.next();
+        NodeInfo first = first(infos);
+        if (first == null) {
+            throw new ItemNotFoundException("Node with id " + nodeId + " could not be found.");
+        }
+        else {
             if (isDeep) {
                 // for a deep state, the hierarchy entry does not correspond to
                 // the given NodeEntry -> retrieve NodeState before executing
@@ -208,9 +212,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 assertMatchingPath(first, entry);
                 nodeState = createNodeState(first, entry);
             }
-        } else {
-            // empty iterator
-            throw new ItemNotFoundException("Node with id " + nodeId + " could not be found.");
         }
 
         // deal with all additional ItemInfos that may be present.
@@ -227,6 +228,17 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             }
         }
         return nodeState;
+    }
+
+    private static NodeInfo first(ItemInfos infos) {
+        if (infos.hasNext()) {
+            ItemInfo first = infos.next();
+            if (first.denotesNode()) {
+                return (NodeInfo) first;
+            }
+        }
+
+        return null;
     }
 
     /**
