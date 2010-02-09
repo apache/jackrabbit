@@ -349,9 +349,8 @@ public abstract class AbstractLoginModule implements LoginModule {
      * there is no principal set the login is considered as ignored.
      * <p/>
      * The implementation stores the principal associated to the UserID and all
-     * the Groups it is member of.
-     * An instance of (#link SimpleCredentials} containing only the UserID used
-     * to login is set to the Subject's public Credentials.
+     * the Groups it is member of with the Subject and in addition adds an
+     * instance of (#link SimpleCredentials} to the Subject's public credentials.
      *
      * @return true if this method succeeded, or false if this
      *         <code>LoginModule</code> should be ignored.

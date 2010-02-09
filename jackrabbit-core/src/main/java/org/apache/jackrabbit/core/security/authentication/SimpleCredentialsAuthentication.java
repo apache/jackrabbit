@@ -27,13 +27,10 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * This {@link Authentication} implementation handles all
+ * This <code>Authentication</code> implementation compairs
  * {@link javax.jcr.SimpleCredentials SimpleCredentials} stored
- * for a given {@link org.apache.jackrabbit.api.security.user.User#getCredentials() User}.<br>
- * For verification the <code>SimpleCredentials</code>
- * {@link javax.jcr.SimpleCredentials#getUserID() UserID} and
- * {@link javax.jcr.SimpleCredentials#getPassword() Password} are tested.
- * If both are equal to the ones stored at the User, verification succeeded.
+ * for a given {@link org.apache.jackrabbit.api.security.user.User#getCredentials() User}
+ * to the credentials passed to {@link #authenticate(Credentials)}.
  *
  * @see org.apache.jackrabbit.core.security.authentication.Authentication
  * @see javax.jcr.SimpleCredentials
@@ -45,9 +42,9 @@ class SimpleCredentialsAuthentication implements Authentication {
     private final CryptedSimpleCredentials creds;
 
     /**
-     * Create an Authentication for this User
+     * Create a new <code>Authentication</code> instance for the given <code>User</code>.
      *
-     * @param user to create the Authentication for
+     * @param user to create the Authentication.
      * @throws javax.jcr.RepositoryException If an error occurs.
      */
     SimpleCredentialsAuthentication(User user) throws RepositoryException {
@@ -73,10 +70,10 @@ class SimpleCredentialsAuthentication implements Authentication {
      * This Authentication is able to handle the validation of SimpleCredentials.
      *
      * @param credentials to test
-     * @return <code>true</code> if the given Credentials are of type
-     *         {@link javax.jcr.SimpleCredentials SimpleCredentials} and if the
-     *         <code>User</code> used to construct this <code>Autentication</code>
-     *         has any SimpleCredentials
+     * @return <code>true</code> if the specified Credentials are
+     * <code>SimpleCredentials</code> and if the <code>User</code> used to
+     * construct this instance provides credentials that can be compared to
+     * <code>SimpleCredentials</code>.
      * @see Authentication#canHandle(Credentials)
      */
     public boolean canHandle(Credentials credentials) {
@@ -84,16 +81,18 @@ class SimpleCredentialsAuthentication implements Authentication {
     }
 
     /**
-     * Compairs any of the <code>SimpleCredentials</code> of the <code>User</code>
-     * with the one given.<br>
-     * If both, UserID and Password of the credentials are equal, the authentication
-     * succeded and <code>true</code> is returned;
+     * Compairs the
+     * {@link org.apache.jackrabbit.api.security.user.User#getCredentials() Credentials} obtained from the <code>User</code>
+     * with the specified <code>credentials</code>.<br>
+     * If the specified <code>credentials</code> are an instance of
+     * <code>SimpleCredentials</code> and match the user's credentials this
+     * method returns <code>true</code>; otherwise <code>false</code>.
      *
      * @param credentials Credentials to be used for the authentication.
-     * @return true if the given Credentials' UserID/Password pair match any
-     * of the credentials attached to the user this SimpleCredentialsAuthentication has
-     * been built for.
-     * @throws RepositoryException
+     * @return true if the given Credentials' UserID/Password pair match
+     * the credentials attached to the user this SimpleCredentialsAuthentication
+     * has been built for.
+     * @throws RepositoryException If an error occurs.
      */
     public boolean authenticate(Credentials credentials) throws RepositoryException {
         if (!(credentials instanceof SimpleCredentials)) {
@@ -104,9 +103,9 @@ class SimpleCredentialsAuthentication implements Authentication {
                 return true;
             }
         } catch (NoSuchAlgorithmException e) {
-            log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
+            log.debug("Failed to verify Credentials with {}: {}.", credentials.toString(), e);
         } catch (UnsupportedEncodingException e) {
-            log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
+            log.debug("Failed to verify Credentials with {}: {}.", credentials.toString(), e);
         }
         return false;
     }
