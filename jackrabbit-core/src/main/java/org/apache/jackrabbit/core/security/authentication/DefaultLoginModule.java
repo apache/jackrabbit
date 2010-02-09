@@ -57,6 +57,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
      *
      * @see AbstractLoginModule#doInit(CallbackHandler, Session, Map)
      */
+    @Override
     protected void doInit(CallbackHandler callbackHandler, Session session, Map options) throws LoginException {
         if (!(session instanceof SessionImpl)) {
             throw new LoginException("Unable to initialize LoginModule: SessionImpl expected.");
@@ -79,6 +80,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
      * @return a user principal or <code>null</code>.
      * @see AbstractLoginModule#getPrincipal(Credentials)
      */
+    @Override
     protected Principal getPrincipal(Credentials credentials) {
         Principal principal = null;
         String userId = getUserID(credentials);
@@ -98,6 +100,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
     /**
      * @see AbstractLoginModule#getAuthentication(Principal, Credentials)
      */
+    @Override
     protected Authentication getAuthentication(Principal principal, Credentials creds) throws RepositoryException {
         if (user != null) {
             Authentication authentication = new SimpleCredentialsAuthentication(user);
@@ -124,6 +127,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
      *                                       if credentials don't allow to impersonate to principal
      * @see AbstractLoginModule#impersonate(Principal, Credentials)
      */
+    @Override
     protected boolean impersonate(Principal principal, Credentials credentials)
             throws RepositoryException, FailedLoginException {
 
