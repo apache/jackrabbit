@@ -60,7 +60,7 @@ public class RemoveReferenceableNodeTest extends RemoveNodeTest {
         // check if the node has been properly removed
         try {
             superuser.getNodeByUUID(uuid);
-            fail("Permanently removed node should no longer be accessible from parent node.");
+            fail("Transiently removed node should no longer be accessible from parent node.");
         } catch (ItemNotFoundException e) {
             // ok , works as expected
         }
@@ -75,7 +75,7 @@ public class RemoveReferenceableNodeTest extends RemoveNodeTest {
         testRootNode.save();
         try {
             superuser.getNodeByUUID(uuid);
-            fail("Transiently removed node should no longer be accessible from parent node.");
+            fail("Permanently removed node should no longer be accessible from parent node.");
         } catch (ItemNotFoundException e) {
             // ok , works as expected
         }
