@@ -31,7 +31,6 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.collections.iterators.EmptyIterator;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.iterators.SingletonIterator;
@@ -346,11 +345,6 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
     @SuppressWarnings("unchecked")
     private static <T> Iterator<T> singleton(T value) {
         return new SingletonIterator(value);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> empty() {
-        return EmptyIterator.INSTANCE;
     }
 
     @SuppressWarnings("unchecked")
