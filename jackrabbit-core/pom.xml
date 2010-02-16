@@ -248,6 +248,12 @@
       <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.2.121</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <!--
@@ -318,13 +324,6 @@
     </profile>
     <profile>
       <id>h2</id>
-      <dependencies>
-        <dependency>
-          <groupId>com.h2database</groupId>
-          <artifactId>h2</artifactId>
-          <version>1.2.121</version>
-        </dependency>
-      </dependencies>
       <properties>
         <config.db.name>jackrabbit</config.db.name>
         <config.db.fsclass>org.apache.jackrabbit.core.fs.db.DbFileSystem</config.db.fsclass>
