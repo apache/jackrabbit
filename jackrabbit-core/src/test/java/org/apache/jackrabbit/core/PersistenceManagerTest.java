@@ -272,8 +272,6 @@ public class PersistenceManagerTest extends TestCase {
         assertEquals(expected.getNodeId(), actual.getNodeId());
         assertEquals(expected.getNodeTypeName(), actual.getNodeTypeName());
         assertEquals(expected.getMixinTypeNames(), actual.getMixinTypeNames());
-        System.out.println("expected: " + expected.getPropertyNames());
-        System.out.println("actual: " + actual.getPropertyNames());
         assertEquals(expected.getPropertyNames(), actual.getPropertyNames());
         assertEquals(expected.getChildNodeEntries(), actual.getChildNodeEntries());
     }
