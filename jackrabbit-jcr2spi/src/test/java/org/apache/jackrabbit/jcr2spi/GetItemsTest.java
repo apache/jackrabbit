@@ -33,13 +33,11 @@ import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.Path.Element;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
 
 /**
@@ -133,20 +131,6 @@ public class GetItemsTest extends AbstractJCR2SPITest {
             }
 
         }
-    }
-
-    private static String toJCRPath(Path path) {
-        Element[] elems = path.getElements();
-        StringBuffer jcrPath = new StringBuffer();
-
-        for (int k = 0; k < elems.length; k++) {
-            jcrPath.append(elems[k].getName().getLocalName());
-            if (k + 1 < elems.length || elems.length == 1) {
-                jcrPath.append('/');
-            }
-        }
-
-        return jcrPath.toString();
     }
 
     @Override
