@@ -59,6 +59,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(UserPerWorkspaceSecurityManagerTest.class);
 
+        suite.addTestSuite(PersistenceManagerTest.class);
+
         return suite;
     }
 }
