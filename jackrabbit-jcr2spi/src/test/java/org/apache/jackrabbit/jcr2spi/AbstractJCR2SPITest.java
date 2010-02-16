@@ -64,6 +64,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.Path.Element;
 import org.apache.jackrabbit.spi.commons.AbstractReadableRepositoryService;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
@@ -107,6 +108,30 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repository = getRepository();
     }
 
+    /**
+     * Convert the given <code>path</code> to a JCR path.
+     * @param path
+     * @return
+     */
+    public static final String toJCRPath(Path path) {
+        Element[] elems = path.getElements();
+        StringBuffer jcrPath = new StringBuffer();
+
+        for (int k = 0; k < elems.length; k++) {
+            jcrPath.append(elems[k].getName().getLocalName());
+            if (k + 1 < elems.length || elems.length == 1) {
+                jcrPath.append('/');
+            }
+        }
+
+        return jcrPath.toString();
+    }
+
+    /**
+     * Initialize the mock repository using the <code>builder</code>.
+     * @param builder
+     * @throws RepositoryException
+     */
     protected abstract void initInfosStore(NodeInfoBuilder builder) throws RepositoryException;
 
     protected RepositoryService getRepositoryService() throws RepositoryException, ParseException {
