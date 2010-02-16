@@ -384,9 +384,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 }
                 // else denotesCurrent -> ignore
             }
-            if (entry == anyParent) {
-                throw new RepositoryException("Internal error while getting deep itemState");
-            }
+
             return createNodeState(info, entry);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
