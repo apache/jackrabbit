@@ -16,6 +16,15 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
@@ -28,14 +37,6 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Collections;
 
 /**
  * <code>NodeInfoImpl</code>...
@@ -50,9 +51,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private Name[] mixinNodeTypeNames = new Name[0];
 
     private final Set propertyInfos = new HashSet();
-    private List childInfos = null;
+    private Set<ChildInfo> childInfos = null;
 
-    private int numberOfChildNodes = -1;
+    private final int numberOfChildNodes = -1;
 
     /**
      * Creates a new <code>NodeInfo</code>.
@@ -123,18 +124,14 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
     void addChildInfo(ChildInfo childInfo) {
         if (childInfos == null) {
-            childInfos = new ArrayList();
+            childInfos = new HashSet<ChildInfo>();
         }
-        if (childInfos.contains(childInfo)) {
-            log.warn("ChildInfo ( " + childInfo.toString() + " ) already contained -> ignore.");
-        } else {
-            childInfos.add(childInfo);
-        }
+        childInfos.add(childInfo);
     }
 
     void setNumberOfChildNodes(long numberOfChildNodes) {
         if (numberOfChildNodes == 0) {
-            childInfos = Collections.EMPTY_LIST;
+            childInfos = Collections.<ChildInfo>emptySet();
         } // else: wait for calls to #addChildInfo
     }
 
