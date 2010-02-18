@@ -99,7 +99,9 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
     }
 
     public static void stopServer() throws Exception {
-        server.stop();
+        if (server != null) {
+            server.stop();
+        }
     }
 
 }
