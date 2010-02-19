@@ -290,6 +290,32 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersion(NodeId id) {
+        InternalVersion v = getCachedVersion(id);
+
+        // If the version was not found, our cache may not have been
+        // synchronized with updates from another cluster node.  Reload the history
+        // to be sure we have the latest updates and try again.
+        if (v == null) {
+            try {
+                reload();
+            } catch (RepositoryException e) {
+
+                // We should add the checked exception to this method definition
+                // so we don't need to wrap it.
+                // Avoiding it for now to limit impact of this fix.
+                throw new RuntimeException(e);
+            }
+            v = getCachedVersion(id);
+        }
+
+        return v;
+    }
+
+    /**
+     * Returns the version from cache, or <code>null</code> if it is not
+     * present.
+     */
+    private InternalVersion getCachedVersion(NodeId id) {
         InternalVersion v = versionCache.get(id);
         if (v == null) {
             for (Name versionName : nameCache.keySet()) {
