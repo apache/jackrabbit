@@ -18,7 +18,7 @@ package org.apache.jackrabbit.spi2davex;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -50,7 +50,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private Name primaryNodeTypeName;
     private Name[] mixinNodeTypeNames = new Name[0];
 
-    private final Set propertyInfos = new HashSet();
+    private final Set propertyInfos = new LinkedHashSet();
     private Set<ChildInfo> childInfos = null;
 
     private final int numberOfChildNodes = -1;
@@ -124,7 +124,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
     void addChildInfo(ChildInfo childInfo) {
         if (childInfos == null) {
-            childInfos = new HashSet<ChildInfo>();
+            childInfos = new LinkedHashSet<ChildInfo>();
         }
         childInfos.add(childInfo);
     }
