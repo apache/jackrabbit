@@ -32,6 +32,12 @@ public class JcrValueTypeTest extends TestCase {
         }
     }
 
+    public void testTypeFromContentTypeIncludingCharSet() {
+        for (int i = PropertyType.UNDEFINED; i <= PropertyType.DECIMAL; i++) {
+            String ct = JcrValueType.contentTypeFromType(i) + "; charset=UTF-8";
+            assertEquals(i, JcrValueType.typeFromContentType(ct));
+        }
+    }
     public void testTypeFromInvalidContentType() {
         String[] invalids = new String[] {null, "", "jcr-value/invalid", "invalid/as-well"};
 

@@ -82,8 +82,13 @@ public final class JcrValueType {
     }
 
     public static int typeFromContentType(String contentType) {
-        if (contentType != null && TYPE_LOOKUP.containsKey(contentType)) {
-            return TYPE_LOOKUP.get(contentType);
+        if (contentType != null) {
+            // remove charset if present
+            int pos = contentType.indexOf(';');
+            String ct = (pos == -1) ? contentType : contentType.substring(0, pos);
+            if (TYPE_LOOKUP.containsKey(ct)) {
+                return TYPE_LOOKUP.get(ct);
+            }
         }
 
         // some invalid content type argument that does not match any of the
