@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
+import java.util.HashMap;
+import java.util.Map;
 
 /** <code>JcrValueType</code>... */
 public final class JcrValueType {
@@ -35,33 +37,58 @@ public final class JcrValueType {
      *
      * resulting in the following types:
      * <pre>
-     * jcr-value/string
-     * jcr-value/boolean
-     * jcr-value/long
-     * jcr-value/double
-     * jcr-value/date
      * jcr-value/binary
+     * jcr-value/boolean
      * jcr-value/date
+     * jcr-value/decimal
+     * jcr-value/double
+     * jcr-value/long
      * jcr-value/name
      * jcr-value/path
+     * jcr-value/reference
+     * jcr-value/string
+     * jcr-value/undefined
+     * jcr-value/uri
+     * jcr-value/weakreference
      * </pre>
      */
     private static final String VALUE_CONTENT_TYPE_FRAGMENT = "jcr-value/";
+
+    /**
+     * Hardcoded lookup from content type as created by {@link #contentTypeFromType(int)}.
+     * Reason: As of JCR 2.0 there is no trivial rule to obtain the the TYPENAME
+     * constant from a lower-cased string: WeakReference uses camel-case and URI
+     * is all upper case...
+     */
+    private static final Map<String, Integer> TYPE_LOOKUP = new HashMap<String,Integer>();
+    static {
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.BINARY), PropertyType.BINARY);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.BOOLEAN), PropertyType.BOOLEAN);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.DATE), PropertyType.DATE);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.DECIMAL), PropertyType.DECIMAL);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.DOUBLE), PropertyType.DOUBLE);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.LONG), PropertyType.LONG);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.NAME), PropertyType.NAME);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.PATH), PropertyType.PATH);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.REFERENCE), PropertyType.REFERENCE);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.STRING), PropertyType.STRING);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.UNDEFINED), PropertyType.UNDEFINED);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.URI), PropertyType.URI);
+        TYPE_LOOKUP.put(contentTypeFromType(PropertyType.WEAKREFERENCE), PropertyType.WEAKREFERENCE);
+    }
 
     public static String contentTypeFromType(int propertyType) {
         return VALUE_CONTENT_TYPE_FRAGMENT + PropertyType.nameFromValue(propertyType).toLowerCase();
     }
 
     public static int typeFromContentType(String contentType) {
-        if (contentType != null && contentType.startsWith(VALUE_CONTENT_TYPE_FRAGMENT)) {
-            // no need to create value/values property. instead
-            // prop-value can be retrieved directly:
-            int pos = contentType.indexOf('/');
-            int pos2 = contentType.indexOf(';');
-
-            String typename = contentType.substring(pos+1, pos+2).toUpperCase() + contentType.substring(pos+2, (pos2 > -1) ? pos2 : contentType.length());
-            return PropertyType.valueFromName(typename);
+        if (contentType != null && TYPE_LOOKUP.containsKey(contentType)) {
+            return TYPE_LOOKUP.get(contentType);
         }
+
+        // some invalid content type argument that does not match any of the
+        // strings created by contentTypeFromType(int propertyType)
+        log.warn("Cannot extract property type from content type " + contentType + " -> Fallback is UNDEFINED.");
         return PropertyType.UNDEFINED;
     }
 }
