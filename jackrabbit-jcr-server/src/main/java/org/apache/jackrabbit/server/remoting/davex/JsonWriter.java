@@ -170,9 +170,7 @@ class JsonWriter {
             }
         } else {
             boolean isMultiple = p.isMultiple();
-            if (type == PropertyType.NAME || type == PropertyType.PATH ||
-                    type == PropertyType.REFERENCE || type == PropertyType.DATE ||
-                    (isMultiple && p.getValues().length == 0)) {
+            if (requiresTypeInfo(type) || (isMultiple && p.getValues().length == 0)) {
                 /* special property types that have no correspondence in JSON
                    are transported as String. the type is transported with an
                    extra key-value pair, the key having a leading ':' the value
@@ -182,13 +180,29 @@ class JsonWriter {
                  */
                 writeKeyValue(w, ":" +  p.getName(), PropertyType.nameFromValue(type), true);
             }
-            /* append key-value pair containg the jcr value(s).
+            /* append key-value pair containing the jcr value(s).
                for String, Boolean, Double, Long -> types in json available */
             if (isMultiple) {
                 writeKeyArray(w, p.getName(), p.getValues());
             } else {
                 writeKeyValue(w, p.getName(), p.getValue());
             }
+        }
+    }
+
+    private static boolean requiresTypeInfo(int type) {
+        switch (type) {
+            case PropertyType.NAME:
+            case PropertyType.PATH:
+            case PropertyType.REFERENCE:
+            case PropertyType.DATE:
+            case PropertyType.WEAKREFERENCE:
+            case PropertyType.URI:
+            case PropertyType.DECIMAL:
+                return true;
+            default:
+                // any other property type
+                return false;
         }
     }
 
