@@ -67,7 +67,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
 
     private DavResource resource;
     private ReportInfo info;
-    private Iterator propertyElements;
+    private Iterator<Element> propertyElements;
 
     /**
      * Returns {@link ReportType#EXPAND_PROPERTY}.
@@ -189,10 +189,10 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * @return <code>MultiStatusResponse</code> for the given resource.
      * @see ExpandProperty
      */
-    private MultiStatusResponse getResponse(DavResource res, Iterator propertyElements) {
+    private MultiStatusResponse getResponse(DavResource res, Iterator<Element> propertyElements) {
         MultiStatusResponse resp = new MultiStatusResponse(res.getHref(), null);
         while (propertyElements.hasNext()) {
-            Element propertyElem = (Element)propertyElements.next();
+            Element propertyElem = propertyElements.next();
             // retrieve the localName present in the "name" attribute
             String nameAttr = propertyElem.getAttribute(ATTR_NAME);
             if (nameAttr == null || "".equals(nameAttr)) {
@@ -205,7 +205,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
             Namespace namespace = (namespaceAttr != null) ? Namespace.getNamespace(namespaceAttr) : NAMESPACE;
 
             DavPropertyName propName = DavPropertyName.create(nameAttr, namespace);
-            DavProperty p = res.getProperty(propName);
+            DavProperty<?> p = res.getProperty(propName);
             if (p != null) {
                 if (p instanceof HrefProperty && res instanceof DeltaVResource) {
                     ElementIterator it = DomUtil.getChildren(propertyElem, XML_PROPERTY, NAMESPACE);
@@ -230,9 +230,9 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * resource referenced to by the given DAV:href elements. The responses may
      * themselves have properties, which are defined by the separate list.
      */
-    private class ExpandProperty extends AbstractDavProperty {
+    private class ExpandProperty extends AbstractDavProperty<List<MultiStatusResponse>> {
 
-        private List valueList = new ArrayList();
+        private List<MultiStatusResponse> valueList = new ArrayList<MultiStatusResponse>();
 
         /**
          * Create a new <code>ExpandProperty</code>.
@@ -244,8 +244,8 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
             super(hrefProperty.getName(), hrefProperty.isInvisibleInAllprop());
             try {
                 DavResource[] refResource = deltaVResource.getReferenceResources(hrefProperty.getName());
-                for (int i = 0; i < refResource.length; i++) {
-                    MultiStatusResponse resp = getResponse(refResource[i], elementIter);
+                for (DavResource res : refResource) {
+                    MultiStatusResponse resp = getResponse(res, elementIter);
                     valueList.add(resp);
                 }
             } catch (DavException e) {
@@ -259,7 +259,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
          *
          * @return
          */
-        public Object getValue() {
+        public List<MultiStatusResponse> getValue() {
             return valueList;
         }
     }

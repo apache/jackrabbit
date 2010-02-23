@@ -25,7 +25,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -33,7 +32,7 @@ import java.util.List;
  * property that is sent in the request body (PROPFIND and LOCK) and received
  * in a LOCK response body.
  */
-public class LockDiscovery extends AbstractDavProperty {
+public class LockDiscovery extends AbstractDavProperty<List<ActiveLock>> {
 
     /**
      * Listing of existing locks applied to the resource this discovery was
@@ -42,7 +41,7 @@ public class LockDiscovery extends AbstractDavProperty {
      * NOTE, that any of the information listed may be not availble for the
      * server is free to withhold any or all of this information.
      */
-    private List activeLocks = new ArrayList();
+    private List<ActiveLock> activeLocks = new ArrayList<ActiveLock>();
 
     /**
      * Creates a new empty LockDiscovery property
@@ -68,8 +67,8 @@ public class LockDiscovery extends AbstractDavProperty {
      */
     public LockDiscovery(ActiveLock[] locks) {
         super(DavPropertyName.LOCKDISCOVERY, false);
-        for (int i = 0; i < locks.length; i++) {
-            addActiveLock(locks[i]);
+        for (ActiveLock lock : locks) {
+            addActiveLock(lock);
         }
     }
 
@@ -85,7 +84,7 @@ public class LockDiscovery extends AbstractDavProperty {
      * @return list of active locks
      * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
      */
-    public Object getValue() {
+    public List<ActiveLock> getValue() {
         return activeLocks;
     }
 
@@ -97,11 +96,10 @@ public class LockDiscovery extends AbstractDavProperty {
      * @return A <code>&lt;lockdiscovery&gt;</code> element.
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element lockdiscovery = getName().toXml(document);
-        Iterator it = activeLocks.iterator();
-        while (it.hasNext()) {
-            ActiveLock lock = (ActiveLock) it.next();
+        for (ActiveLock lock : activeLocks) {
             lockdiscovery.appendChild(lock.toXml(document));
         }
         return lockdiscovery;
@@ -121,14 +119,14 @@ public class LockDiscovery extends AbstractDavProperty {
             throw new IllegalArgumentException("DAV:lockdiscovery element expected.");
         }
 
-        List activeLocks = new ArrayList();
+        List<ActiveLock> activeLocks = new ArrayList<ActiveLock>();
         ElementIterator it = DomUtil.getChildren(lockDiscoveryElement, XML_ACTIVELOCK, NAMESPACE);
         while (it.hasNext()) {
             Element al = it.nextElement();
             activeLocks.add(new ALockImpl(al));
         }
 
-        return new LockDiscovery((ActiveLock[]) activeLocks.toArray(new ActiveLock[activeLocks.size()]));
+        return new LockDiscovery(activeLocks.toArray(new ActiveLock[activeLocks.size()]));
     }
 
     //------< inner class >-----------------------------------------------------

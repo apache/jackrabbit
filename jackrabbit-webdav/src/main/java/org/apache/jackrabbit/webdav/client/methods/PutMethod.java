@@ -36,6 +36,7 @@ public class PutMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_PUT;
     }
@@ -47,6 +48,7 @@ public class PutMethod extends DavMethodBase {
      * or {@link DavServletResponse#SC_NO_CONTENT 204 (No Content)}.
      * @see DavMethodBase#isSuccess(int)
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_CREATED || statusCode == DavServletResponse.SC_NO_CONTENT;
     }

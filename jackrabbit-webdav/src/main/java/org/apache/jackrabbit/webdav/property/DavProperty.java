@@ -44,7 +44,7 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
  * &lt;/Z:custom-property&gt;
  * </pre>
  */
-public interface DavProperty extends XmlSerializable, DavConstants {
+public interface DavProperty<T> extends XmlSerializable, DavConstants, PropEntry {
 
     /**
      * Returns the name of this property
@@ -58,7 +58,7 @@ public interface DavProperty extends XmlSerializable, DavConstants {
      *
      * @return the value of this property
      */
-    public Object getValue();
+    public T getValue();
 
     /**
      * Return <code>true</code> if this property should be suppressed

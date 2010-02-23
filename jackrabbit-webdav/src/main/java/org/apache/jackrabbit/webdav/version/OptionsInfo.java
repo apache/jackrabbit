@@ -28,8 +28,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * <code>OptionsInfo</code> represents the Xml request body, that may be present
@@ -55,7 +55,7 @@ public class OptionsInfo implements XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(OptionsInfo.class);
 
-    private final Set entriesLocalNames = new HashSet();
+    private final Set<String> entriesLocalNames = new HashSet<String>();
 
     /**
      * Create a new OptionsInfo with the specified entries. Each entry will
@@ -66,9 +66,7 @@ public class OptionsInfo implements XmlSerializable {
      */
     public OptionsInfo(String[] entriesLocalNames) {
        if (entriesLocalNames != null) {
-           for (int i = 0; i < entriesLocalNames.length; i++) {
-               this.entriesLocalNames.add(entriesLocalNames[i]);
-           }
+           this.entriesLocalNames.addAll(Arrays.asList(entriesLocalNames));
        }
     }
 
@@ -97,9 +95,7 @@ public class OptionsInfo implements XmlSerializable {
      */
     public Element toXml(Document document) {
         Element optionsElem = DomUtil.createElement(document, DeltaVConstants.XML_OPTIONS, DeltaVConstants.NAMESPACE);
-        Iterator it = entriesLocalNames.iterator();
-        while (it.hasNext()) {
-            String localName = (String)it.next();
+        for (String localName : entriesLocalNames) {
             DomUtil.addChildElement(optionsElem, localName, DeltaVConstants.NAMESPACE);
         }
         return optionsElem;

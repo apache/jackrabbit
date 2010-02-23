@@ -25,7 +25,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <code>SupportedReportSetProperty</code> represents the DAV:supported-report-set
@@ -38,11 +38,11 @@ import java.util.Iterator;
  * ANY value: a report element type
  * </pre>
  */
-public class SupportedReportSetProperty extends AbstractDavProperty {
+public class SupportedReportSetProperty extends AbstractDavProperty<Set<ReportType>> {
 
     private static Logger log = LoggerFactory.getLogger(SupportedReportSetProperty.class);
 
-    private final HashSet reportTypes = new HashSet();
+    private final Set<ReportType> reportTypes = new HashSet<ReportType>();
 
     /**
      * Create a new empty <code>SupportedReportSetProperty</code>.
@@ -58,8 +58,8 @@ public class SupportedReportSetProperty extends AbstractDavProperty {
      */
     public SupportedReportSetProperty(ReportType[] reportTypes) {
         super(DeltaVConstants.SUPPORTED_REPORT_SET, true);
-        for (int i = 0; i < reportTypes.length; i++) {
-            addReportType(reportTypes[i]);
+        for (ReportType reportType : reportTypes) {
+            addReportType(reportType);
         }
     }
 
@@ -80,10 +80,8 @@ public class SupportedReportSetProperty extends AbstractDavProperty {
      * @return true if the requested report is supported.
      */
     public boolean isSupportedReport(ReportInfo reqInfo) {
-        Iterator it = reportTypes.iterator();
-        while (it.hasNext()) {
-            ReportType rt = (ReportType)it.next();
-            if (rt.isRequestedReportType(reqInfo)) {
+        for (ReportType reportType : reportTypes) {
+            if (reportType.isRequestedReportType(reqInfo)) {
                 return true;
             }
         }
@@ -96,7 +94,7 @@ public class SupportedReportSetProperty extends AbstractDavProperty {
      * @return set of {@link ReportType}.
      * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
      */
-    public Object getValue() {
+    public Set<ReportType> getValue() {
         return reportTypes;
     }
 
@@ -107,13 +105,13 @@ public class SupportedReportSetProperty extends AbstractDavProperty {
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        Iterator it = reportTypes.iterator();
-        while (it.hasNext()) {
+        for (ReportType rt : reportTypes) {
             Element sr = DomUtil.addChildElement(elem, DeltaVConstants.XML_SUPPORTED_REPORT, DeltaVConstants.NAMESPACE);
             Element r = DomUtil.addChildElement(sr, DeltaVConstants.XML_REPORT, DeltaVConstants.NAMESPACE);
-            r.appendChild(((ReportType)it.next()).toXml(document));
+            r.appendChild(rt.toXml(document));
         }
         return elem;
     }

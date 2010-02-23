@@ -51,11 +51,11 @@ public class ActiveLockTest extends TestCase {
         lock.setIsDeep(true);
 
         LockDiscovery disc = LockDiscovery.createFromXml(new LockDiscovery(lock).toXml(doc));
-        List l  = (List) disc.getValue();
+        List<ActiveLock> l  = disc.getValue();
 
         assertFalse(l.isEmpty());
         assertEquals(1, l.size());
-        ActiveLock al = (ActiveLock) l.get(0);
+        ActiveLock al = l.get(0);
 
         assertEquals("lockroot", al.getLockroot());
         assertEquals("owner", al.getOwner());

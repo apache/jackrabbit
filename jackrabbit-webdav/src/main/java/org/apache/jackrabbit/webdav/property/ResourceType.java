@@ -40,7 +40,7 @@ import java.util.Set;
  * <li>'{@link #BASELINE DAV:baseline}',</li>
  * </ul>
  */
-public class ResourceType extends AbstractDavProperty {
+public class ResourceType extends AbstractDavProperty<Set<XmlSerializable>> {
 
     /**
      * The default resource type
@@ -70,14 +70,14 @@ public class ResourceType extends AbstractDavProperty {
     /**
      * Array containing all possible resourcetype elements
      */
-    private static final List NAMES = new ArrayList();
+    private static final List<TypeName> NAMES = new ArrayList<TypeName>();
     static {
         NAMES.add(null);
         NAMES.add(new TypeName(XML_COLLECTION, NAMESPACE));
         NAMES.add(new TypeName(DeltaVConstants.XML_VERSION_HISTORY, DeltaVConstants.NAMESPACE));
         NAMES.add(new TypeName(DeltaVConstants.XML_ACTIVITY, DeltaVConstants.NAMESPACE));
         NAMES.add(new TypeName(DeltaVConstants.XML_BASELINE, DeltaVConstants.NAMESPACE));
-    };
+    }
 
     private final int[] resourceTypes;
 
@@ -93,12 +93,12 @@ public class ResourceType extends AbstractDavProperty {
      */
     public ResourceType(int[] resourceTypes) {
         super(DavPropertyName.RESOURCETYPE, false);
-        for (int i=0; i<resourceTypes.length; i++) {
-            if (!isValidResourceType(resourceTypes[i])) {
-                throw new IllegalArgumentException("Invalid resource type '"+ resourceTypes[i] +"'.");
+        for (int resourceType : resourceTypes) {
+            if (!isValidResourceType(resourceType)) {
+                throw new IllegalArgumentException("Invalid resource type '" + resourceType + "'.");
             }
         }
-	this.resourceTypes = resourceTypes;
+        this.resourceTypes = resourceTypes;
     }
 
     /**
@@ -108,12 +108,12 @@ public class ResourceType extends AbstractDavProperty {
      * @return a <code>Set</code> of resource types representing this property.
      * @see DavProperty#getValue()
      */
-    public Object getValue() {
-        Set rTypes = new HashSet();
-        for (int i=0; i<resourceTypes.length; i++) {
-            Object n = NAMES.get(resourceTypes[i]);
+    public Set<XmlSerializable> getValue() {
+        Set<XmlSerializable> rTypes = new HashSet<XmlSerializable>();
+        for (int resourceType : resourceTypes) {
+            TypeName n = NAMES.get(resourceType);
             if (n != null) {
-               rTypes.add(n);
+                rTypes.add(n);
             }
         }
         return rTypes;
@@ -185,10 +185,12 @@ public class ResourceType extends AbstractDavProperty {
             hashCode = DomUtil.getExpandedName(localName, namespace).hashCode();
         }
 
+        @Override
         public int hashCode() {
             return hashCode;
         }
 
+        @Override
         public boolean equals(Object o) {
             if (o instanceof TypeName) {
                 return hashCode == ((TypeName)o).hashCode;
@@ -199,6 +201,5 @@ public class ResourceType extends AbstractDavProperty {
         public Element toXml(Document document) {
             return DomUtil.createElement(document, localName, namespace);
         }
-
     }
 }

@@ -51,6 +51,7 @@ import org.apache.jackrabbit.webdav.ordering.OrderingResource;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -173,6 +174,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @throws ServletException
      * @throws IOException
      */
+    @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -345,8 +347,8 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         response.addHeader("MS-Author-Via", DavConstants.HEADER_DAV);
         if (resource instanceof SearchResource) {
             String[] langs = ((SearchResource) resource).getQueryGrammerSet().getQueryLanguages();
-            for (int i = 0; i < langs.length; i++) {
-                response.addHeader(SearchConstants.HEADER_DASL, "<" + langs[i] + ">");
+            for (String lang : langs) {
+                response.addHeader(SearchConstants.HEADER_DASL, "<" + lang + ">");
             }
         }
         // with DeltaV the OPTIONS request may contain a Xml body.
@@ -417,7 +419,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             }
         }
 
-        // spool resource properties and ev. resource content.
+        // spool resource properties and eventually resource content.
         OutputStream out = (sendContent) ? response.getOutputStream() : null;
         resource.spool(getOutputContext(response, out));
         response.flushBuffer();
@@ -460,7 +462,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                                DavResource resource)
             throws IOException, DavException {
 
-        List changeList = request.getPropPatchChangeList();
+        List<? extends PropEntry> changeList = request.getPropPatchChangeList();
         if (changeList.isEmpty()) {
             response.sendError(DavServletResponse.SC_BAD_REQUEST);
             return;
@@ -760,22 +762,22 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         if (lockInfo.isRefreshLock()) {
             // refresh any matching existing locks
             ActiveLock[] activeLocks = resource.getLocks();
-            List lList = new ArrayList();
-            for (int i = 0; i < activeLocks.length; i++) {
+            List<ActiveLock> lList = new ArrayList<ActiveLock>();
+            for (ActiveLock activeLock : activeLocks) {
                 // adjust lockinfo with type/scope retrieved from the lock.
-                lockInfo.setType(activeLocks[i].getType());
-                lockInfo.setScope(activeLocks[i].getScope());
+                lockInfo.setType(activeLock.getType());
+                lockInfo.setScope(activeLock.getScope());
 
-                DavProperty etagProp = resource.getProperty(DavPropertyName.GETETAG);
+                DavProperty<?> etagProp = resource.getProperty(DavPropertyName.GETETAG);
                 String etag = etagProp != null ? String.valueOf(etagProp.getValue()) : "";
-                if (request.matchesIfHeader(resource.getHref(), activeLocks[i].getToken(), etag)) {
-                    lList.add(resource.refreshLock(lockInfo, activeLocks[i].getToken()));
+                if (request.matchesIfHeader(resource.getHref(), activeLock.getToken(), etag)) {
+                    lList.add(resource.refreshLock(lockInfo, activeLock.getToken()));
                 }
             }
             if (lList.isEmpty()) {
                 throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
             }
-            ActiveLock[] refreshedLocks = (ActiveLock[]) lList.toArray(new ActiveLock[lList.size()]);
+            ActiveLock[] refreshedLocks = lList.toArray(new ActiveLock[lList.size()]);
             response.sendRefreshLockResponse(refreshedLocks);
         } else {
             // create a new lock
@@ -1134,7 +1136,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             return;
         }
         // TODO: improve. see http://issues.apache.org/jira/browse/JCR-394
-        if (parentResource.getComplianceClass().indexOf(DavCompliance.ACTIVITY) < 0) {
+        if (!parentResource.getComplianceClass().contains(DavCompliance.ACTIVITY)) {
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }

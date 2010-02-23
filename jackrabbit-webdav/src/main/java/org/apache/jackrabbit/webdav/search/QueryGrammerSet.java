@@ -20,11 +20,11 @@ import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -32,9 +32,9 @@ import java.util.Set;
  * encapsulates the 'supported-query-grammer-set' as defined by the
  * Webdav SEARCH internet draft.
  */
-public class QueryGrammerSet extends AbstractDavProperty implements SearchConstants {
+public class QueryGrammerSet extends AbstractDavProperty<Set<? extends XmlSerializable>> implements SearchConstants {
 
-    private final Set queryGrammers = new HashSet();
+    private final Set<Grammer> queryGrammers = new HashSet<Grammer>();
 
     /**
      * Create a new empty <code>QueryGrammerSet</code>. Supported query grammers
@@ -64,7 +64,7 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
         int size = queryGrammers.size();
         if (size > 0) {
             String[] qLangStr = new String[size];
-            Grammer[] grammers = (Grammer[]) queryGrammers.toArray(new Grammer[size]);
+            Grammer[] grammers = queryGrammers.toArray(new Grammer[size]);
             for (int i = 0; i < grammers.length; i++) {
                 qLangStr[i] = grammers[i].namespace.getURI() + grammers[i].localName;
             }
@@ -83,14 +83,11 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        Iterator qlIter = queryGrammers.iterator();
-        while (qlIter.hasNext()) {
-            Element sqg = DomUtil.addChildElement(elem, XML_QUERY_GRAMMAR, SearchConstants.NAMESPACE);
-            Element grammer = DomUtil.addChildElement(sqg, XML_GRAMMER, SearchConstants.NAMESPACE);
-            Grammer qGrammer = (Grammer)qlIter.next();
-            DomUtil.addChildElement(grammer, qGrammer.localName, qGrammer.namespace);
+        for (Grammer qGrammer : queryGrammers) {
+            elem.appendChild(qGrammer.toXml(document));
         }
         return elem;
     }
@@ -101,12 +98,12 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
      * @return list of supported query languages.
      * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
      */
-    public Object getValue() {
+    public Set<? extends XmlSerializable> getValue() {
         return queryGrammers;
     }
 
 
-    private class Grammer {
+    private class Grammer implements XmlSerializable {
 
         private final String localName;
         private final Namespace namespace;
@@ -118,10 +115,12 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
             hashCode = DomUtil.getExpandedName(localName, namespace).hashCode();
         }
 
+        @Override
         public int hashCode() {
             return hashCode;
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;
@@ -130,6 +129,16 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
                 return obj.hashCode() == hashCode();
             }
             return false;
+        }
+
+        /**
+         * @see XmlSerializable#toXml(org.w3c.dom.Document) 
+         */
+        public Element toXml(Document document) {
+            Element sqg = DomUtil.createElement(document, XML_QUERY_GRAMMAR, SearchConstants.NAMESPACE);
+            Element grammer = DomUtil.addChildElement(sqg, XML_GRAMMER, SearchConstants.NAMESPACE);
+            DomUtil.addChildElement(grammer, localName, namespace);
+            return sqg;
         }
     }
 }

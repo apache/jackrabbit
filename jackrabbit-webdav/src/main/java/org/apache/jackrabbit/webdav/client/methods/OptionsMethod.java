@@ -39,8 +39,8 @@ public class OptionsMethod extends DavMethodBase {
 
     private static Logger log = LoggerFactory.getLogger(OptionsMethod.class);
 
-    private final Set allowedMethods = new HashSet();
-    private final Set complianceClasses = new HashSet();
+    private final Set<String> allowedMethods = new HashSet<String>();
+    private final Set<String> complianceClasses = new HashSet<String>();
 
     public OptionsMethod(String uri) {
 	super(uri);
@@ -90,7 +90,7 @@ public class OptionsMethod extends DavMethodBase {
      */
     public String[] getAllowedMethods() {
         checkUsed();
-        return (String[]) allowedMethods.toArray(new String[allowedMethods.size()]);
+        return allowedMethods.toArray(new String[allowedMethods.size()]);
     }
 
     /**
@@ -113,13 +113,14 @@ public class OptionsMethod extends DavMethodBase {
      */
     public String[] getComplianceClasses() {
         checkUsed();
-        return (String[]) complianceClasses.toArray(new String[complianceClasses.size()]);
+        return complianceClasses.toArray(new String[complianceClasses.size()]);
     }
 
     //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_OPTIONS;
     }
@@ -137,19 +138,18 @@ public class OptionsMethod extends DavMethodBase {
      *        this HTTP method
      * @see HttpMethodBase#processResponseHeaders(HttpState, HttpConnection)
      */
+    @Override
     protected void processResponseHeaders(HttpState state, HttpConnection conn) {
         Header allow = getResponseHeader("Allow");
         if (allow != null) {
-            String[] methods = allow.getValue().split(",");
-            for (int i = 0; i < methods.length; i++) {
-                allowedMethods.add(methods[i].trim().toUpperCase());
+            for (String method : allow.getValue().split(",")) {
+                allowedMethods.add(method.trim().toUpperCase());
             }
         }
         Header dav = getResponseHeader("DAV");
         if (dav != null) {
-            String[] classes = dav.getValue().split(",");
-            for (int i = 0; i < classes.length; i++) {
-                complianceClasses.add(classes[i].trim());
+            for (String cl : dav.getValue().split(",")) {
+                complianceClasses.add(cl.trim());
             }
         }
     }
@@ -160,6 +160,7 @@ public class OptionsMethod extends DavMethodBase {
      * @param statusCode
      * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_OK;
     }

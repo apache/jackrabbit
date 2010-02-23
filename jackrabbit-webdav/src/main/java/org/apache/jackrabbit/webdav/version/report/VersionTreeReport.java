@@ -145,12 +145,11 @@ public class VersionTreeReport implements Report, DeltaVConstants {
     private void buildResponse(DavResource res, DavPropertyNameSet propNameSet,
                                int depth, MultiStatus ms) {
         try {
-            VersionResource[] versions = getVersions(res);
-            for (int i = 0; i < versions.length; i++) {
+            for (VersionResource version : getVersions(res)) {
                 if (propNameSet.isEmpty()) {
-                    ms.addResourceStatus(versions[i], DavServletResponse.SC_OK, 0);
+                    ms.addResourceStatus(version, DavServletResponse.SC_OK, 0);
                 } else {
-                    ms.addResourceProperties(versions[i], propNameSet, 0);
+                    ms.addResourceProperties(version, propNameSet, 0);
                 }
             }
         } catch (DavException e) {

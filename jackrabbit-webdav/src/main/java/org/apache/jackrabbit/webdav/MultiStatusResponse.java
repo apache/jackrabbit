@@ -72,7 +72,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     /**
      * Type of MultiStatus response: PropStat Hashmap containing all status
      */
-    private HashMap statusMap = new HashMap();
+    private HashMap<Integer, PropContainer> statusMap = new HashMap<Integer, PropContainer>();
 
     private MultiStatusResponse(String href, String responseDescription, int type) {
         if (!isValidHref(href)) {
@@ -167,9 +167,8 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
         // only property names requested
         if (propFindType == PROPFIND_PROPERTY_NAMES) {
             PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, true);
-            DavPropertyName[] propNames = resource.getPropertyNames();
-            for (int i = 0; i < propNames.length; i++) {
-                status200.addContent(propNames[i]);
+            for (DavPropertyName propName : resource.getPropertyNames()) {
+                status200.addContent(propName);
             }
             // all or a specified set of property and their values requested.
         } else {
@@ -180,7 +179,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
             // non-protected properties plus requested properties (allprop/include) 
             DavPropertyIterator iter = resource.getProperties().iterator();
             while (iter.hasNext()) {
-                DavProperty property = iter.nextProperty();
+                DavProperty<?> property = iter.nextProperty();
                 boolean allDeadPlusRfc4918LiveProperties =
                     propFindType == PROPFIND_ALL_PROP || propFindType == PROPFIND_ALL_PROP_INCLUDE;
                 boolean wasRequested = propNameSet.remove(property.getName());
@@ -231,10 +230,10 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
         Status[] sts;
         if (type == TYPE_PROPSTAT) {
             sts = new Status[statusMap.size()];
-            Iterator iter = statusMap.keySet().iterator();
+            Iterator<Integer> iter = statusMap.keySet().iterator();
             for (int i = 0; iter.hasNext(); i++) {
-                Integer statusKey = (Integer) iter.next();
-                sts[i] = new Status(statusKey.intValue());
+                Integer statusKey = iter.next();
+                sts[i] = new Status(statusKey);
             }
         } else {
             sts = new Status[] {status};
@@ -252,11 +251,9 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
         response.appendChild(DomUtil.hrefToXml(getHref(), document));
         if (type == TYPE_PROPSTAT) {
             // add '<propstat>' elements
-            Iterator iter = statusMap.keySet().iterator();
-            while (iter.hasNext()) {
-                Integer statusKey = (Integer) iter.next();
-                Status st = new Status(statusKey.intValue());
-                PropContainer propCont = (PropContainer) statusMap.get(statusKey);
+            for (Integer statusKey : statusMap.keySet()) {
+                Status st = new Status(statusKey);
+                PropContainer propCont = statusMap.get(statusKey);
                 if (!propCont.isEmpty()) {
                     Element propstat = DomUtil.createElement(document, XML_PROPSTAT, NAMESPACE);
                     propstat.appendChild(propCont.toXml(document));
@@ -284,7 +281,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      *
      * @param property the property to add
      */
-    public void add(DavProperty property) {
+    public void add(DavProperty<?> property) {
         checkType(TYPE_PROPSTAT);
         PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, false);
         status200.addContent(property);
@@ -307,7 +304,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * @param property the property to add
      * @param status the status of the response set to select
      */
-    public void add(DavProperty property, int status) {
+    public void add(DavProperty<?> property, int status) {
         checkType(TYPE_PROPSTAT);
         PropContainer propCont = getPropContainer(status, false);
         propCont.addContent(property);
@@ -330,18 +327,14 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * @return
      */
     private PropContainer getPropContainer(int status, boolean forNames) {
-        Integer statusKey = new Integer(status);
-        PropContainer propContainer;
-        Object entry = statusMap.get(statusKey);
-        if (entry == null) {
+        PropContainer propContainer = statusMap.get(status);
+        if (propContainer == null) {
             if (forNames) {
                 propContainer = new DavPropertyNameSet();
             } else {
                 propContainer = new DavPropertySet();
             }
-            statusMap.put(statusKey, propContainer);
-        } else {
-            propContainer = (PropContainer) entry;
+            statusMap.put(status, propContainer);
         }
         return propContainer;
     }
@@ -361,9 +354,8 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * @return property set
      */
     public DavPropertySet getProperties(int status) {
-        Integer key = new Integer(status);
-        if (statusMap.containsKey(key)) {
-            Object mapEntry = statusMap.get(key);
+        if (statusMap.containsKey(status)) {
+            PropContainer mapEntry = statusMap.get(status);
             if (mapEntry != null && mapEntry instanceof DavPropertySet) {
                 return (DavPropertySet) mapEntry;
             }
@@ -380,19 +372,17 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * @return property names
      */
     public DavPropertyNameSet getPropertyNames(int status) {
-        Integer key = new Integer(status);
-        if (statusMap.containsKey(key)) {
-            Object mapEntry = statusMap.get(key);
+        if (statusMap.containsKey(status)) {
+            PropContainer mapEntry = statusMap.get(status);
             if (mapEntry != null) {
                 if (mapEntry instanceof DavPropertySet) {
                     DavPropertyNameSet set = new DavPropertyNameSet();
-                    DavPropertyName[] names = ((DavPropertySet) mapEntry).getPropertyNames();
-                    for (int i = 0; i < names.length; i++) {
-                        set.add(names[i]);
+                    for (DavPropertyName name : ((DavPropertySet) mapEntry).getPropertyNames()) {
+                        set.add(name);
                     }
                     return set;
                 } else {
-                    // is alread a DavPropertyNameSet
+                    // is already a DavPropertyNameSet
                     return (DavPropertyNameSet) mapEntry;
                 }
             }
@@ -439,12 +429,12 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
                         Element el = propIt.nextElement();
                         /*
                         always build dav property from the given element, since
-                        destinction between prop-names and properties not having
+                        distinction between prop-names and properties not having
                         a value is not possible.
                         retrieval of the set of 'property names' is possible from
                         the given prop-set by calling DavPropertySet#getPropertyNameSet()
                         */
-                        DavProperty property = DefaultDavProperty.createFromXml(el);
+                        DavProperty<?> property = DefaultDavProperty.createFromXml(el);
                         response.add(property, statusCode);
                     }
                 }

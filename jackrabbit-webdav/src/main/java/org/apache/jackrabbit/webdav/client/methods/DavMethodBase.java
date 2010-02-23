@@ -67,6 +67,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * @return Name of the method.
      * @see HttpMethod#getName()
      */
+    @Override
     public abstract String getName();
 
     //----------------------------------------------------------< DavMethod >---
@@ -264,6 +265,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * @param httpState
      * @param httpConnection
      */
+    @Override
     protected void processStatusLine(HttpState httpState, HttpConnection httpConnection) {
         super.processStatusLine(httpState, httpConnection);
         int code = getStatusCode();
@@ -280,6 +282,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * @param httpConnection
      * @see HttpMethodBase#processResponseBody(HttpState, HttpConnection)
      */
+    @Override
     protected void processResponseBody(HttpState httpState, HttpConnection httpConnection) {
         // in case of multi-status response
         if (getStatusCode() == DavServletResponse.SC_MULTI_STATUS) {

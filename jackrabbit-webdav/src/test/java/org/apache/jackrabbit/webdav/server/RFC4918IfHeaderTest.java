@@ -54,6 +54,7 @@ public class RFC4918IfHeaderTest extends TestCase {
     private String username, password;
     private HttpClient client;
     
+    @Override
     protected void setUp() throws Exception {
         this.uri = URI.create(System.getProperty("webdav.test.url"));
         this.root = this.uri.toASCIIString();
@@ -69,6 +70,7 @@ public class RFC4918IfHeaderTest extends TestCase {
         super.setUp();
     }
   
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

@@ -41,6 +41,7 @@ public class AclMethod extends DavMethodBase {
      * @return DavMethods#METHOD_ACL
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_ACL;
     }
@@ -50,6 +51,7 @@ public class AclMethod extends DavMethodBase {
      * @param statusCode
      * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_OK;
     }

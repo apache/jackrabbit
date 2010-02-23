@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -94,23 +93,23 @@ public class PrincipalSearchReport extends AbstractSecurityReport {
     /**
      * @see Report#init(DavResource, ReportInfo)
      */
+    @Override
     public void init(DavResource resource, ReportInfo info) throws DavException {
         super.init(resource, info);
-        // make sure the request body contains all mandator elements
+        // make sure the request body contains all mandatory elements
         if (!info.containsContentElement(XML_PROPERTY_SEARCH, SecurityConstants.NAMESPACE)) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Request body must contain at least a single DAV:property-search element.");
         }
-        List psElements = info.getContentElements(XML_PROPERTY_SEARCH, SecurityConstants.NAMESPACE);
+        List<Element> psElements = info.getContentElements(XML_PROPERTY_SEARCH, SecurityConstants.NAMESPACE);
         searchArguments = new SearchArgument[psElements.size()];
-        Iterator it = psElements.iterator();
         int i = 0;
-        while (it.hasNext()) {
-            searchArguments[i++] = new SearchArgument((Element)it.next());
+        for (Element psElement : psElements) {
+            searchArguments[i++] = new SearchArgument(psElement);
         }
 
         if (info.containsContentElement(XML_APPLY_TO_PRINCIPAL_COLLECTION_SET, SecurityConstants.NAMESPACE)) {
             HrefProperty p = new HrefProperty(resource.getProperty(SecurityConstants.PRINCIPAL_COLLECTION_SET));
-            searchRoots = (String[]) p.getHrefs().toArray(new String[0]);
+            searchRoots = p.getHrefs().toArray(new String[0]);
         } else {
             searchRoots = new String[] {resource.getHref()};
         }

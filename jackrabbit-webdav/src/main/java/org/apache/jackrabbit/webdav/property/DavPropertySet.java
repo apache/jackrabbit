@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /**
  * The <code>DavPropertySet</code> class represents a set of WebDAV
@@ -38,7 +37,7 @@ public class DavPropertySet extends PropContainer {
     /**
      * the set of property
      */
-    private final Map map = new HashMap();
+    private final Map<DavPropertyName, DavProperty<?>> map = new HashMap<DavPropertyName, DavProperty<?>>();
 
     /**
      * Adds a new property to this set.
@@ -47,8 +46,8 @@ public class DavPropertySet extends PropContainer {
      *
      * @return The previously assigned property or <code>null</code>.
      */
-    public DavProperty add(DavProperty property) {
-        return (DavProperty) map.put(property.getName(), property);
+    public DavProperty<?> add(DavProperty<?> property) {
+        return map.put(property.getName(), property);
     }
 
     /**
@@ -56,7 +55,7 @@ public class DavPropertySet extends PropContainer {
      * @param pset Properties to add
      */
     public void addAll(DavPropertySet pset) {
-	map.putAll(pset.map);
+        map.putAll(pset.map);
     }
 
     /**
@@ -67,8 +66,8 @@ public class DavPropertySet extends PropContainer {
      *
      * @return The desired property or <code>null</code>
      */
-    public DavProperty get(String name) {
-    	return get(DavPropertyName.create(name));
+    public DavProperty<?> get(String name) {
+        return get(DavPropertyName.create(name));
     }
 
     /**
@@ -80,7 +79,7 @@ public class DavPropertySet extends PropContainer {
      *
      * @return The desired property or <code>null</code>
      */
-    public DavProperty get(String name, Namespace namespace) {
+    public DavProperty<?> get(String name, Namespace namespace) {
         return get(DavPropertyName.create(name, namespace));
     }
 
@@ -91,8 +90,8 @@ public class DavPropertySet extends PropContainer {
      *
      * @return The desired property or <code>null</code>
      */
-    public DavProperty get(DavPropertyName name) {
-    	return (DavProperty) map.get(name);
+    public DavProperty<?> get(DavPropertyName name) {
+        return map.get(name);
     }
 
 
@@ -103,8 +102,8 @@ public class DavPropertySet extends PropContainer {
      *
      * @return The removed property or <code>null</code>
      */
-    public DavProperty remove(DavPropertyName name) {
-        return (DavProperty) map.remove(name);
+    public DavProperty<?> remove(DavPropertyName name) {
+        return map.remove(name);
     }
 
     /**
@@ -115,7 +114,7 @@ public class DavPropertySet extends PropContainer {
      *
      * @return The removed property or <code>null</code>
      */
-    public DavProperty remove(String name) {
+    public DavProperty<?> remove(String name) {
         return remove(DavPropertyName.create(name));
     }
 
@@ -128,7 +127,7 @@ public class DavPropertySet extends PropContainer {
      *
      * @return The removed property or <code>null</code>
      */
-    public DavProperty remove(String name, Namespace namespace) {
+    public DavProperty<?> remove(String name, Namespace namespace) {
         return remove(DavPropertyName.create(name, namespace));
     }
 
@@ -159,8 +158,7 @@ public class DavPropertySet extends PropContainer {
      * @return array of {@link DavPropertyName property names} present in this set.
      */
     public DavPropertyName[] getPropertyNames() {
-        Set keySet = map.keySet();
-	return (DavPropertyName[]) keySet.toArray(new DavPropertyName[keySet.size()]);
+        return map.keySet().toArray(new DavPropertyName[map.keySet().size()]);
     }
 
     //------------------------------------------------------< PropContainer >---
@@ -172,6 +170,7 @@ public class DavPropertySet extends PropContainer {
      *         <code>false</code> otherwise.
      * @see PropContainer#contains(DavPropertyName)
      */
+    @Override
     public boolean contains(DavPropertyName name) {
         return map.containsKey(name);
     }
@@ -181,11 +180,12 @@ public class DavPropertySet extends PropContainer {
      * <code>DavProperty</code> in order to be successfully added to this set.
      * @return true if the specified object is an instance of <code>DavProperty</code>
      * and false otherwise.
-     * @see PropContainer#addContent(Object)
+     * @see PropContainer#addContent(PropEntry)
      */
-    public boolean addContent(Object contentEntry) {
+    @Override
+    public boolean addContent(PropEntry contentEntry) {
         if (contentEntry instanceof DavProperty) {
-            add((DavProperty)contentEntry);
+            add((DavProperty<?>) contentEntry);
             return true;
         }
         log.debug("DavProperty object expected. Found: " + contentEntry.getClass().toString());
@@ -195,6 +195,7 @@ public class DavPropertySet extends PropContainer {
     /**
      * @see PropContainer#isEmpty()
      */
+    @Override
     public boolean isEmpty() {
         return map.isEmpty();
     }
@@ -202,6 +203,7 @@ public class DavPropertySet extends PropContainer {
     /**
      * @see PropContainer#getContentSize()
      */
+    @Override
     public int getContentSize() {
         return map.size();
     }
@@ -209,7 +211,8 @@ public class DavPropertySet extends PropContainer {
     /**
      * @see PropContainer#getContent()
      */
-    public Collection getContent() {
+    @Override
+    public Collection<? extends PropEntry> getContent() {
         return map.values();
     }
 
@@ -224,10 +227,10 @@ public class DavPropertySet extends PropContainer {
         private final Namespace namespace;
 
         /** the internal iterator */
-        private final Iterator iterator;
+        private final Iterator<DavProperty<?>> iterator;
 
         /** the next property to return */
-        private DavProperty next;
+        private DavProperty<?> next;
 
         /**
          * Creates a new property iterator.
@@ -240,7 +243,7 @@ public class DavPropertySet extends PropContainer {
          * Creates a new iterator with the given namespace
          * @param namespace The namespace to match against
          */
-	private PropIter(Namespace namespace) {
+        private PropIter(Namespace namespace) {
             this.namespace = namespace;
             iterator = map.values().iterator();
             seek();
@@ -249,11 +252,11 @@ public class DavPropertySet extends PropContainer {
         /**
          * @see DavPropertyIterator#nextProperty();
          */
-        public DavProperty nextProperty() throws NoSuchElementException {
+        public DavProperty<?> nextProperty() throws NoSuchElementException {
             if (next==null) {
                 throw new NoSuchElementException();
             }
-            DavProperty ret = next;
+            DavProperty<?> ret = next;
             seek();
             return ret;
         }
@@ -268,7 +271,7 @@ public class DavPropertySet extends PropContainer {
         /**
          * @see DavPropertyIterator#next();
          */
-        public Object next() {
+        public DavProperty<?> next() {
             return nextProperty();
         }
 
@@ -284,7 +287,7 @@ public class DavPropertySet extends PropContainer {
          */
         private void seek() {
             while (iterator.hasNext()) {
-                next = (DavProperty) iterator.next();
+                next = iterator.next();
                 if (namespace == null || namespace.equals(next.getName().getNamespace())) {
                     return;
                 }

@@ -129,7 +129,7 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
-        List filters = new ArrayList();
+        List<Filter> filters = new ArrayList<Filter>();
         el = DomUtil.getChildElement(reqInfo, XML_FILTER, NAMESPACE);
         if (el != null) {
             ElementIterator it = DomUtil.getChildren(el);
@@ -138,7 +138,7 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
                 filters.add(f);
             }
         }
-        this.filters = (Filter[])filters.toArray(new Filter[filters.size()]);
+        this.filters = filters.toArray(new Filter[filters.size()]);
 
         this.noLocal = DomUtil.hasChildElement(reqInfo, XML_NOLOCAL, NAMESPACE);
         this.isDeep = isDeep;
@@ -174,13 +174,13 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
      * name.
      */
     public Filter[] getFilters(String localName, Namespace namespace) {
-        List l = new ArrayList();
-        for (int i = 0; i < filters.length; i++) {
-            if (filters[i].isMatchingFilter(localName, namespace)) {
-               l.add(filters[i]);
+        List<Filter> l = new ArrayList<Filter>();
+        for (Filter filter : filters) {
+            if (filter.isMatchingFilter(localName, namespace)) {
+                l.add(filter);
             }
         }
-        return (Filter[])l.toArray(new Filter[l.size()]);
+        return l.toArray(new Filter[l.size()]);
     }
 
     /**
@@ -223,14 +223,14 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
     public Element toXml(Document document) {
         Element subscrInfo = DomUtil.createElement(document, XML_SUBSCRIPTIONINFO, NAMESPACE);
         Element eventType = DomUtil.addChildElement(subscrInfo, XML_EVENTTYPE, NAMESPACE);
-        for (int i = 0; i < eventTypes.length; i++) {
-            eventType.appendChild(eventTypes[i].toXml(document));
+        for (EventType et : eventTypes) {
+            eventType.appendChild(et.toXml(document));
         }
 
         if (filters.length > 0) {
             Element filter = DomUtil.addChildElement(subscrInfo, XML_FILTER, NAMESPACE);
-            for (int i = 0; i < filters.length; i++) {
-                filter.appendChild(filters[i].toXml(document));
+            for (Filter f : filters) {
+                filter.appendChild(f.toXml(document));
             }
         }
 

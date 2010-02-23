@@ -37,7 +37,7 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(ReportType.class);
 
-    private static final HashMap types = new HashMap();
+    private static final HashMap<String, ReportType> types = new HashMap<String, ReportType>();
 
     public static final ReportType VERSION_TREE = register(XML_VERSION_TREE, NAMESPACE, VersionTreeReport.class);
     public static final ReportType EXPAND_PROPERTY = register(XML_EXPAND_PROPERTY, NAMESPACE, ExpandPropertyReport.class);
@@ -46,14 +46,14 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
     private final String key;
     private final String localName;
     private final Namespace namespace;
-    private final Class reportClass;
+    private final Class<? extends Report> reportClass;
 
     /**
      * Private constructor
      *
      * @see ReportType#register(String, org.apache.jackrabbit.webdav.xml.Namespace, Class)
      */
-    private ReportType(String localName, Namespace namespace, String key, Class reportClass) {
+    private ReportType(String localName, Namespace namespace, String key, Class<? extends Report> reportClass) {
         this.localName = localName;
         this.namespace = namespace;
         this.key = key;
@@ -68,7 +68,7 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
      */
     public Report createReport(DeltaVResource resource, ReportInfo info) throws DavException {
         try {
-            Report report = (Report) reportClass.newInstance();
+            Report report = reportClass.newInstance();
             report.init(resource, info);
             return report;
         } catch (IllegalAccessException e) {
@@ -143,13 +143,13 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
      * if the given class does not implement the {@link Report} interface or if
      * it does not provide an empty constructor.
      */
-    public static ReportType register(String localName, Namespace namespace, Class reportClass) {
+    public static ReportType register(String localName, Namespace namespace, Class<? extends Report> reportClass) {
         if (localName == null || namespace == null || reportClass == null) {
             throw new IllegalArgumentException("A ReportType cannot be registered with a null name, namespace or report class");
         }
         String key = DomUtil.getExpandedName(localName, namespace);
         if (types.containsKey(key)) {
-            return (ReportType) types.get(key);
+            return types.get(key);
         } else {
             try {
                 Object report =  reportClass.newInstance();
@@ -182,7 +182,7 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
         }
         String key = reportInfo.getReportName();
         if (types.containsKey(key)) {
-            return (ReportType) types.get(key);
+            return types.get(key);
         } else {
             throw new IllegalArgumentException("The request report '"+key+"' has not been registered yet.");
         }

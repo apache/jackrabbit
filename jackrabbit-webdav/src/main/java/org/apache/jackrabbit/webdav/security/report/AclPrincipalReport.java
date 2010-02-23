@@ -29,7 +29,6 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -69,29 +68,29 @@ public class AclPrincipalReport extends AbstractSecurityReport {
     /**
      * @see Report#init(DavResource, ReportInfo)
      */
+    @Override
     public void init(DavResource resource, ReportInfo info) throws DavException {
         super.init(resource, info);
         // build the DAV:responses objects.
-        DavProperty acl = resource.getProperty(SecurityConstants.ACL);
+        DavProperty<?> acl = resource.getProperty(SecurityConstants.ACL);
         if (!(acl instanceof AclProperty)) {
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "DAV:acl property expected.");
         }
 
         DavResourceLocator loc = resource.getLocator();
-        Map principalMap = new HashMap();
-        Iterator aceIt = ((List)((AclProperty)acl).getValue()).iterator();
-        while (aceIt.hasNext()) {
-            AclProperty.Ace ace = (AclProperty.Ace) aceIt.next();
+        Map<String, MultiStatusResponse> respMap = new HashMap<String, MultiStatusResponse>();
+        List<AclProperty.Ace> list = (List<AclProperty.Ace>) ((AclProperty)acl).getValue();
+        for (AclProperty.Ace ace : list) {
             String href = ace.getPrincipal().getHref();
-            if (href == null && principalMap.containsKey(href)) {
+            if (href == null && respMap.containsKey(href)) {
                 // ignore non-href principals and principals that have been listed before
                 continue;
             }
             // href-principal that has not been found before
             DavResourceLocator princLocator = loc.getFactory().createResourceLocator(loc.getPrefix(), href);
             DavResource principalResource = resource.getFactory().createResource(princLocator, resource.getSession());
-            principalMap.put(href, new MultiStatusResponse(principalResource, info.getPropertyNameSet()));
+            respMap.put(href, new MultiStatusResponse(principalResource, info.getPropertyNameSet()));
         }
-        this.responses = (MultiStatusResponse[]) principalMap.values().toArray(new MultiStatusResponse[principalMap.size()]);
+        this.responses = respMap.values().toArray(new MultiStatusResponse[respMap.size()]);
     }
 }

@@ -37,7 +37,7 @@ public class EventDiscovery implements ObservationConstants, XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(EventDiscovery.class);
 
-    private final List bundles = new ArrayList();
+    private final List<EventBundle> bundles = new ArrayList<EventBundle>();
 
     /**
      * Add the Xml representation of an single 'eventBundle' listing the
@@ -59,7 +59,7 @@ public class EventDiscovery implements ObservationConstants, XmlSerializable {
      *
      * @return iterator over event bundles present.
      */
-    public Iterator getEventBundles() {
+    public Iterator<EventBundle> getEventBundles() {
         return bundles.iterator();
     }
 
@@ -84,9 +84,7 @@ public class EventDiscovery implements ObservationConstants, XmlSerializable {
      */
     public Element toXml(Document document) {
         Element ed = DomUtil.createElement(document, XML_EVENTDISCOVERY, NAMESPACE);
-        Iterator it = getEventBundles();
-        while (it.hasNext()) {
-            EventBundle bundle = (EventBundle)it.next();
+        for (EventBundle bundle : bundles) {
             ed.appendChild(bundle.toXml(document));
         }
         return ed;

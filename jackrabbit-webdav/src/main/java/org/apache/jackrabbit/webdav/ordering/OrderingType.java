@@ -26,7 +26,7 @@ import org.apache.jackrabbit.webdav.property.HrefProperty;
  * including the Ordering-Type header with a MKCOL request or by submitting an
  * ORDERPATCH request.
  *
- * @see org.apache.jackrabbit.webdav.property.DavProperty#isProtected()
+ * @see org.apache.jackrabbit.webdav.property.DavProperty#isInvisibleInAllprop()
  */
 public class OrderingType extends HrefProperty implements OrderingConstants {
 
@@ -43,7 +43,7 @@ public class OrderingType extends HrefProperty implements OrderingConstants {
      * NOTE: the ordering-type property is defined to be protected.
      *
      * @param href
-     * @see org.apache.jackrabbit.webdav.property.DavProperty#isProtected()
+     * @see org.apache.jackrabbit.webdav.property.DavProperty#isInvisibleInAllprop()
      */
     public OrderingType(String href) {
         // spec requires that the default value is 'DAV:unordered'

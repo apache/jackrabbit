@@ -30,6 +30,7 @@ public class PollTimeoutHeader extends TimeoutHeader {
         super(timeout);
     }
 
+    @Override
     public String getHeaderName() {
         return ObservationConstants.HEADER_POLL_TIMEOUT;
     }

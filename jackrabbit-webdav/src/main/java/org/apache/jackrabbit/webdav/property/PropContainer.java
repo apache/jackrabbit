@@ -25,7 +25,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 /**
  * <code>PropContainer</code>...
@@ -41,8 +40,27 @@ public abstract class PropContainer implements XmlSerializable, DavConstants {
      *
      * @param contentEntry
      * @return true if the object could be added; false otherwise
+     * @deprecated Use {@link #addContent(PropEntry) instead.
      */
-    public abstract boolean addContent(Object contentEntry);
+    public boolean addContent(Object contentEntry) {
+        if (contentEntry instanceof PropEntry) {
+            return addContent((PropEntry) contentEntry);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Tries to add the specified entry to the <code>PropContainer</code> and
+     * returns a boolean indicating whether the content could be added to the
+     * internal set/map.
+     *
+     * @param contentEntry
+     * @return true if the object could be added; false otherwise
+     * @param contentEntry
+     * @return
+     */
+    public abstract boolean addContent(PropEntry contentEntry);
 
     /**
      * Returns true if the PropContainer does not yet contain any content elements.
@@ -65,7 +83,7 @@ public abstract class PropContainer implements XmlSerializable, DavConstants {
      *
      * @return collection representing the contents of this <code>PropContainer</code>.
      */
-    public abstract Collection getContent();
+    public abstract Collection<? extends PropEntry> getContent();
 
     /**
      * Returns true if this <code>PropContainer</code> contains a content element
@@ -90,11 +108,9 @@ public abstract class PropContainer implements XmlSerializable, DavConstants {
      */
     public Element toXml(Document document) {
         Element prop = DomUtil.createElement(document, XML_PROP, NAMESPACE);
-        Iterator it = getContent().iterator();
-        while (it.hasNext()) {
-            Object content = it.next();
+        for (Object content : getContent()) {
             if (content instanceof XmlSerializable) {
-                prop.appendChild(((XmlSerializable)content).toXml(document));
+                prop.appendChild(((XmlSerializable) content).toXml(document));
             } else {
                 log.debug("Unexpected content in PropContainer: should be XmlSerializable.");
             }

@@ -76,6 +76,7 @@ public class PrincipalMatchReport extends AbstractSecurityReport {
     /**
      * @see Report#init(DavResource, ReportInfo)
      */
+    @Override
     public void init(DavResource resource, ReportInfo info) throws DavException {
         super.init(resource, info);
         if (info.containsContentElement(XML_PRINCIPAL_PROPERTY, SecurityConstants.NAMESPACE)) {

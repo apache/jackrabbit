@@ -18,8 +18,9 @@ package org.apache.jackrabbit.webdav.security;
 
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Collections;
 
 /**
  * <code>SupportedPrivilegeSetProperty</code> defines the
@@ -37,7 +38,7 @@ import java.util.Arrays;
  * @see SupportedPrivilege
  * @see Privilege
  */
-public class SupportedPrivilegeSetProperty extends AbstractDavProperty {
+public class SupportedPrivilegeSetProperty extends AbstractDavProperty<List<SupportedPrivilege>> {
 
     private final SupportedPrivilege[] supportedPrivileges;
 
@@ -54,7 +55,13 @@ public class SupportedPrivilegeSetProperty extends AbstractDavProperty {
     /**
      * @return List of {@link SupportedPrivilege}s.
      */
-    public Object getValue() {
-        return (supportedPrivileges == null) ? new ArrayList() : Arrays.asList(supportedPrivileges);
+    public List<SupportedPrivilege> getValue() {
+        List<SupportedPrivilege> l;
+        if (supportedPrivileges == null) {
+            l = Collections.emptyList();
+        } else {
+            l = Arrays.asList(supportedPrivileges);
+        }
+        return l;
     }
 }

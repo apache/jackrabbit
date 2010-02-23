@@ -70,6 +70,7 @@ public class AclRestrictionsProperty extends AbstractDavProperty {
    /**
      * @see DavProperty#toXml(Document)
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
         if (grantOnly) {

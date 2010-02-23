@@ -38,32 +38,8 @@ public class Namespace {
         this.uri = uri;
     }
 
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public String getURI() {
-        return uri;
-    }
-
-    public boolean isSame(String namespaceURI) {
-        return uri.equals(namespaceURI);
-    }
-
-    public int hashCode() {
-        return uri.hashCode();
-    }
-
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj instanceof Namespace) {
-            return uri.equals(((Namespace)obj).uri);
-        }
-        return false;
-    }
-
+    //-----------------------------------------------------------< creation >---
+    
     public static Namespace getNamespace(String prefix, String uri) {
         if (prefix == null) {
             prefix = EMPTY_NAMESPACE.getPrefix();
@@ -76,5 +52,36 @@ public class Namespace {
 
     public static Namespace getNamespace(String uri) {
         return getNamespace("", uri);
+    }
+
+    //--------------------------------------------------------------------------
+    
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public String getURI() {
+        return uri;
+    }
+
+    public boolean isSame(String namespaceURI) {
+        return uri.equals(namespaceURI);
+    }
+
+    //-------------------------------------------------------------< Object >---
+    @Override
+    public int hashCode() {
+        return uri.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof Namespace) {
+            return uri.equals(((Namespace)obj).uri);
+        }
+        return false;
     }
 }

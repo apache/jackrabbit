@@ -85,14 +85,14 @@ public class DomUtil {
      */
     public static Attr[] getNamespaceAttributes(Element element) {
         NamedNodeMap attributes = element.getAttributes();
-        List nsAttr = new ArrayList();
+        List<Attr> nsAttr = new ArrayList<Attr>();
         for (int i = 0; i < attributes.getLength(); i++) {
             Attr attr = (Attr) attributes.item(i);
             if (Namespace.XMLNS_NAMESPACE.getURI().equals(attr.getNamespaceURI())) {
                 nsAttr.add(attr);
             }
         }
-        return (Attr[]) nsAttr.toArray(new Attr[nsAttr.size()]);
+        return nsAttr.toArray(new Attr[nsAttr.size()]);
     }
 
     /**
@@ -286,8 +286,8 @@ public class DomUtil {
      * @param parent
      * @return a list of all child nodes that are either Element, Text or CDATA.
      */
-    public static List getContent(Node parent) {
-        List content = new ArrayList();
+    public static List<Node> getContent(Node parent) {
+        List<Node> content = new ArrayList<Node>();
         if (parent != null) {
             NodeList children = parent.getChildNodes();
             for (int i = 0; i < children.getLength(); i++) {

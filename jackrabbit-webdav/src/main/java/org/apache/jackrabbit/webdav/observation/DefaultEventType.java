@@ -35,7 +35,7 @@ import java.util.ArrayList;
  */
 public class DefaultEventType implements EventType {
 
-    private static final Map eventTypes = new HashMap();
+    private static final Map<String, EventType> eventTypes = new HashMap<String, EventType>();
 
     private final String localName;
     private final Namespace namespace;
@@ -66,7 +66,7 @@ public class DefaultEventType implements EventType {
         }
         String key = DomUtil.getExpandedName(localName, namespace);
         if (eventTypes.containsKey(key)) {
-            return (EventType) eventTypes.get(key);
+            return eventTypes.get(key);
         } else {
             EventType type = new DefaultEventType(localName, namespace);
             eventTypes.put(key, type);
@@ -88,13 +88,13 @@ public class DefaultEventType implements EventType {
             throw new IllegalArgumentException("'eventtype' element expected which contains a least a single child element.");
         }
 
-        List etypes = new ArrayList();
+        List<EventType> etypes = new ArrayList<EventType>();
         ElementIterator it = DomUtil.getChildren(eventType);
         while (it.hasNext()) {
             Element el = it.nextElement();
             etypes.add(create(el.getLocalName(), DomUtil.getNamespace(el)));
         }
-        return (EventType[]) etypes.toArray(new EventType[etypes.size()]);
+        return etypes.toArray(new EventType[etypes.size()]);
     }
 
     //----------------------------------------------------------< EventType >---

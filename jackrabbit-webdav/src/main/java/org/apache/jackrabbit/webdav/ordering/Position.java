@@ -41,7 +41,7 @@ public class Position implements OrderingConstants, XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(Position.class);
 
-    private static final Set VALID_TYPES = new HashSet();
+    private static final Set<String> VALID_TYPES = new HashSet<String>();
     static {
         VALID_TYPES.add(XML_FIRST);
         VALID_TYPES.add(XML_LAST);

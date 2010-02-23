@@ -25,6 +25,7 @@ import org.w3c.dom.Element;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <code>DavPropertyNameSet</code> represents a Set of {@link DavPropertyName}
@@ -33,7 +34,7 @@ import java.util.Iterator;
 public class DavPropertyNameSet extends PropContainer {
 
     private static Logger log = LoggerFactory.getLogger(DavPropertyNameSet.class);
-    private final HashSet set = new HashSet();
+    private final Set<DavPropertyName> set = new HashSet<DavPropertyName>();
 
     /**
      * Create a new empty set.
@@ -89,7 +90,7 @@ public class DavPropertyNameSet extends PropContainer {
      * @return true if the set has been modified by this call.
      */
     public boolean addAll(DavPropertyNameSet propertyNames) {
-        return set.addAll(propertyNames.getContent());
+        return set.addAll(propertyNames.set);
     }
 
     /**
@@ -115,6 +116,7 @@ public class DavPropertyNameSet extends PropContainer {
     /**
      * @see PropContainer#contains(DavPropertyName)
      */
+    @Override
     public boolean contains(DavPropertyName name) {
         return set.contains(name);
     }
@@ -126,9 +128,10 @@ public class DavPropertyNameSet extends PropContainer {
      * that could be added to this set. False otherwise.
      * @see PropContainer#addContent(Object)
      */
-    public boolean addContent(Object contentEntry) {
+    @Override
+    public boolean addContent(PropEntry contentEntry) {
         if (contentEntry instanceof DavPropertyName) {
-            return add((DavPropertyName)contentEntry);
+            return add((DavPropertyName) contentEntry);
         }
         log.debug("DavPropertyName object expected. Found: " + contentEntry.getClass().toString());
         return false;
@@ -137,6 +140,7 @@ public class DavPropertyNameSet extends PropContainer {
     /**
      * @see PropContainer#isEmpty()
      */
+    @Override
     public boolean isEmpty() {
         return set.isEmpty();
     }
@@ -144,6 +148,7 @@ public class DavPropertyNameSet extends PropContainer {
     /**
      * @see PropContainer#getContentSize()
      */
+    @Override
     public int getContentSize() {
         return set.size();
     }
@@ -151,21 +156,22 @@ public class DavPropertyNameSet extends PropContainer {
     /**
      * @see PropContainer#getContent()
      */
-    public Collection getContent() {
+    @Override
+    public Collection<? extends PropEntry> getContent() {
         return set;
     }
 
     //--------------------------------------------------------< inner class >---
     private class PropertyNameIterator implements DavPropertyNameIterator {
 
-        private Iterator iter;
+        private Iterator<DavPropertyName> iter;
 
         private PropertyNameIterator() {
             this.iter = set.iterator();
         }
 
         public DavPropertyName nextPropertyName() {
-            return (DavPropertyName)iter.next();
+            return iter.next();
         }
 
         public void remove() {
@@ -176,7 +182,7 @@ public class DavPropertyNameSet extends PropContainer {
             return iter.hasNext();
         }
 
-        public Object next() {
+        public DavPropertyName next() {
             return iter.next();
         }
     }

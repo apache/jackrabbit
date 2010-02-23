@@ -34,7 +34,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
 import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
 
 /**
@@ -87,7 +86,7 @@ public class CompareBaselineReport implements Report {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:compare-baseline element expected.");
         }
 
-        // make sure the report is applied to a vh-resource
+        // make sure the report is applied to a version history resource
         if (resource != null && (resource instanceof BaselineResource)) {
             this.requestBaseline = (BaselineResource) resource;
         } else {
@@ -107,7 +106,7 @@ public class CompareBaselineReport implements Report {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:latest-activity-version report: The DAV:href in the request body MUST identify an activity.");
         }
 
-        // TODO: ev. add check for 'same-baseline-history' (RFC: "A server MAY require that the baselines being compared be from the same baseline history.")
+        // TODO: eventually add check for 'same-baseline-history' (RFC: "A server MAY require that the baselines being compared be from the same baseline history.")
     }
 
     /**
@@ -117,15 +116,13 @@ public class CompareBaselineReport implements Report {
         Element el = DomUtil.createElement(document, XML_COMPARE_BASELINE_REPORT, DeltaVConstants.NAMESPACE);
         try {
             // TODO: check if correct
-            List requestVs = new ArrayList();
+            List<VersionResource> requestVs = new ArrayList<VersionResource>();
             getVersions(requestBaseline.getBaselineCollection(), requestVs);
 
-            List compareVs = new ArrayList();
+            List<VersionResource> compareVs = new ArrayList<VersionResource>();
             getVersions(compareBaseline.getBaselineCollection(), compareVs);
 
-            VersionResource[] rArr = (VersionResource[]) requestVs.toArray(new VersionResource[requestVs.size()]);
-            for (int i = 0; i < rArr.length; i++) {
-                VersionResource requestV = rArr[i];
+            for (VersionResource requestV : requestVs) {
                 if (!compareVs.remove(requestV)) {
                     // check if another version of the same vh is present (change)
                     VersionResource changedV = findChangedVersion(requestV, compareVs);
@@ -145,9 +142,7 @@ public class CompareBaselineReport implements Report {
 
             // all remaining versions from the 'compare-baseline' can be considered
             // to be added-versions.
-            Iterator it = compareVs.iterator();
-            while (it.hasNext()) {
-                VersionResource addedV = (VersionResource) it.next();
+            for (VersionResource addedV : compareVs) {
                 Element cv = DomUtil.addChildElement(el, XML_ADDED_VERSION, DeltaVConstants.NAMESPACE);
                 cv.appendChild(DomUtil.hrefToXml(addedV.getHref(), document));
             }
@@ -157,18 +152,18 @@ public class CompareBaselineReport implements Report {
         return el;
     }
 
-    private void getVersions(DavResource collection, List vList) throws DavException {
+    private void getVersions(DavResource collection, List<VersionResource> vList) throws DavException {
         DavResourceIterator it = collection.getMembers();
         while (it.hasNext()) {
             DavResource member = it.nextResource();
             if (member instanceof VersionControlledResource) {
-                String href = (String) new HrefProperty(member.getProperty(VersionControlledResource.CHECKED_IN)).getHrefs().get(0);
+                String href = new HrefProperty(member.getProperty(VersionControlledResource.CHECKED_IN)).getHrefs().get(0);
                 DavResourceLocator locator = member.getLocator();
                 DavResourceLocator vLocator = locator.getFactory().createResourceLocator(locator.getPrefix(), href);
 
                 DavResource v = member.getFactory().createResource(vLocator, member.getSession());
                 if (v instanceof VersionResource) {
-                    vList.add(v);
+                    vList.add((VersionResource) v);
                 } else {
                     log.error("Internal error: DAV:checked-in property must point to a VersionResource.");
                 }
@@ -179,13 +174,13 @@ public class CompareBaselineReport implements Report {
         }
     }
 
-    private VersionResource findChangedVersion(VersionResource requestV, List compareVs) throws DavException {
+    private VersionResource findChangedVersion(VersionResource requestV, List<VersionResource> compareVs) throws DavException {
         VersionResource[] vs = requestV.getVersionHistory().getVersions();
-        for (int i = 0; i < vs.length; i++) {
-            if (compareVs.remove(vs[i])) {
+        for (VersionResource v : vs) {
+            if (compareVs.remove(v)) {
                 // another version of the same versionhistory is present among
                 // the compare-baseline versions.
-                return vs[i];
+                return v;
             }
         }
         return null;

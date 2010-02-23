@@ -28,14 +28,14 @@ import java.util.List;
 /**
  * <code>DefaultDavProperty</code>...
  */
-public class DefaultDavProperty extends AbstractDavProperty {
+public class DefaultDavProperty<T> extends AbstractDavProperty<T> {
 
     private static Logger log = LoggerFactory.getLogger(DefaultDavProperty.class);
 
     /**
      * the value of the property
      */
-    private final Object value;
+    private final T value;
 
     /**
      * Creates a new WebDAV property with the given namespace, name and value.
@@ -49,7 +49,7 @@ public class DefaultDavProperty extends AbstractDavProperty {
      * It will not be returned in a {@link org.apache.jackrabbit.webdav.DavConstants#PROPFIND_ALL_PROP DAV:allprop}
      * PROPFIND request and cannot be set/removed with a PROPPATCH request.
      */
-    public DefaultDavProperty(String name, Object value, Namespace namespace, boolean isProtected) {
+    public DefaultDavProperty(String name, T value, Namespace namespace, boolean isProtected) {
         super(DavPropertyName.create(name, namespace), isProtected);
         this.value = value;
     }
@@ -62,7 +62,7 @@ public class DefaultDavProperty extends AbstractDavProperty {
      * @param value the value of the property
      * @param namespace the namespace of the property
      */
-    public DefaultDavProperty(String name, Object value, Namespace namespace) {
+    public DefaultDavProperty(String name, T value, Namespace namespace) {
         this(name, value, namespace, false);
     }
 
@@ -77,7 +77,7 @@ public class DefaultDavProperty extends AbstractDavProperty {
      * It will not be returned in a {@link org.apache.jackrabbit.webdav.DavConstants#PROPFIND_ALL_PROP DAV:allprop}
      * PROPFIND request and cannot be set/removed with a PROPPATCH request.
      */
-    public DefaultDavProperty(DavPropertyName name, Object value, boolean isProtected) {
+    public DefaultDavProperty(DavPropertyName name, T value, boolean isProtected) {
         super(name, isProtected);
         this.value = value;
     }
@@ -89,7 +89,7 @@ public class DefaultDavProperty extends AbstractDavProperty {
      * @param name the name of the property
      * @param value the value of the property
      */
-    public DefaultDavProperty(DavPropertyName name, Object value) {
+    public DefaultDavProperty(DavPropertyName name, T value) {
         this(name, value, false);
     }
 
@@ -98,7 +98,7 @@ public class DefaultDavProperty extends AbstractDavProperty {
      *
      * @return the value of this property
      */
-    public Object getValue() {
+    public T getValue() {
         return value;
     }
 
@@ -117,28 +117,28 @@ public class DefaultDavProperty extends AbstractDavProperty {
      * @param propertyElement
      * @return
      */
-    public static DefaultDavProperty createFromXml(Element propertyElement) {
+    public static DefaultDavProperty<?> createFromXml(Element propertyElement) {
         if (propertyElement == null) {
             throw new IllegalArgumentException("Cannot create a new DavProperty from a 'null' element.");
         }
         DavPropertyName name = DavPropertyName.createFromXml(propertyElement);
-        Object value;
-
+        DefaultDavProperty<?> prop;
+        
         if (!DomUtil.hasContent(propertyElement)) {
-            value = null;
+            prop = new DefaultDavProperty<String>(name, null, false);
         }  else {
-            List c = DomUtil.getContent(propertyElement);
+            List<Node> c = DomUtil.getContent(propertyElement);
             if (c.size() == 1) {
-                Node n = (Node)c.get(0);
+                Node n = c.get(0);
                 if (n instanceof Element) {
-                    value = n;
+                    prop = new DefaultDavProperty<Element>(name, (Element) n, false);
                 } else {
-                    value = n.getNodeValue();
+                    prop = new DefaultDavProperty<String>(name, n.getNodeValue(), false);
                 }
             } else /* size > 1 */ {
-                value = c;
+                prop = new DefaultDavProperty<List<Node>>(name, c, false);
             }
         }
-        return new DefaultDavProperty(name, value, false);
+        return prop;
     }
 }

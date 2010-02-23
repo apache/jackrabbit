@@ -24,7 +24,6 @@ import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -36,7 +35,7 @@ import java.util.List;
  * @see org.apache.jackrabbit.webdav.DavConstants#XML_HREF
  * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
  */
-public class HrefProperty extends AbstractDavProperty {
+public class HrefProperty extends AbstractDavProperty<String[]> {
 
     private static Logger log = LoggerFactory.getLogger(HrefProperty.class);
 
@@ -77,25 +76,23 @@ public class HrefProperty extends AbstractDavProperty {
      *
      * @param prop
      */
-    public HrefProperty(DavProperty prop) {
+    public HrefProperty(DavProperty<?> prop) {
         super(prop.getName(), prop.isInvisibleInAllprop());
         if (prop instanceof HrefProperty) {
             // already an HrefProperty: no parsing required
             this.value = ((HrefProperty)prop).value;
         } else {
             // assume property has be built from xml
-            ArrayList hrefList = new ArrayList();
+            ArrayList<String> hrefList = new ArrayList<String>();
             Object val = prop.getValue();
             if (val instanceof List) {
-                Iterator it = ((List)val).iterator();
-                while (it.hasNext()) {
-                    Object o = it.next();
-                    if (o instanceof Element && XML_HREF.equals(((Element)o).getLocalName())) {
-                        String href = DomUtil.getText((Element)o);
+                for (Object entry : ((List<?>) val)) {
+                    if (entry instanceof Element && XML_HREF.equals(((Element) entry).getLocalName())) {
+                        String href = DomUtil.getText((Element) entry);
                         if (href != null) {
                             hrefList.add(href);
                         } else {
-                            log.warn("Valid DAV:href element expected instead of " + o.toString());
+                            log.warn("Valid DAV:href element expected instead of " + entry.toString());
                         }
                     } else {
                         log.warn("DAV: href element expected in the content of " + getName().toString());
@@ -109,7 +106,7 @@ public class HrefProperty extends AbstractDavProperty {
                     log.warn("Valid DAV:href element expected instead of " + val.toString());
                 }
             }
-            value = (String[]) hrefList.toArray(new String[hrefList.size()]);
+            value = hrefList.toArray(new String[hrefList.size()]);
         }
     }
 
@@ -127,14 +124,14 @@ public class HrefProperty extends AbstractDavProperty {
      * @see org.apache.jackrabbit.webdav.xml.DomUtil#hrefToXml(String,org.w3c.dom.Document)
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
         Object value = getValue();
         if (value != null) {
             if (value instanceof String[]) {
-                String[] hrefs = (String[]) value;
-                for (int i = 0; i < hrefs.length; i++) {
-                    elem.appendChild(DomUtil.hrefToXml(hrefs[i], document));
+                for (String href : (String[]) value) {
+                    elem.appendChild(DomUtil.hrefToXml(href, document));
                 }
             } else {
                 elem.appendChild(DomUtil.hrefToXml(value.toString(), document));
@@ -149,7 +146,7 @@ public class HrefProperty extends AbstractDavProperty {
      * @return an array of String.
      * @see DavProperty#getValue()
      */
-    public Object getValue() {
+    public String[] getValue() {
         return value;
     }
 
@@ -160,7 +157,7 @@ public class HrefProperty extends AbstractDavProperty {
      *
      * @return list of href String
      */
-    public List getHrefs() {
-        return (value != null) ? Arrays.asList(value) : new ArrayList();
+    public List<String> getHrefs() {
+        return (value != null) ? Arrays.asList(value) : new ArrayList<String>();
     }
 }

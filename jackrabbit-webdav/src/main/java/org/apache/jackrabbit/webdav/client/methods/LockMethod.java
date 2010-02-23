@@ -146,6 +146,7 @@ public class LockMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_LOCK;
     }
@@ -155,6 +156,7 @@ public class LockMethod extends DavMethodBase {
      * @return true, if the status code indicates success and if the response
      * contains a Lock-Token header for a request used to create a new lock.
      */
+    @Override
     public boolean succeeded() {
         checkUsed();
         String lt = getLockToken();
@@ -167,6 +169,7 @@ public class LockMethod extends DavMethodBase {
      * @param statusCode
      * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_OK;
     }
@@ -184,6 +187,7 @@ public class LockMethod extends DavMethodBase {
      * @param httpConnection
      * @see HttpMethodBase#processResponseBody(HttpState, HttpConnection)
      */
+    @Override
     protected void processResponseBody(HttpState httpState, HttpConnection httpConnection) {
         // in case of successful response code -> parse xml body into lockDiscovery.
         if (getSuccess()) {

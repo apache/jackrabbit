@@ -32,9 +32,11 @@ public class OutputContextImplTest extends TestCase {
 
     public void testSetContentLength() {
         HttpServletResponse response = new DummyResponse() {
+            @Override
             public void setContentLength(int len) {
                 assertTrue(len >= 0);
             }
+            @Override
             public void setHeader(String name, String value) {
                 assertTrue(Long.parseLong(value) > Integer.MAX_VALUE);
             }

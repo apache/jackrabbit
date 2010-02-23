@@ -31,12 +31,14 @@ import java.util.Map;
  */
 public class Type implements XmlSerializable {
 
-    private static Map types = new HashMap();
+    private static Map<String, Type> types = new HashMap<String, Type>();
 
     public static final Type WRITE = Type.create(DavConstants.XML_WRITE, DavConstants.NAMESPACE);
 
     private final String localName;
     private final Namespace namespace;
+
+    private int hashCode = -1;
 
     /**
      * Private constructor.
@@ -61,21 +63,32 @@ public class Type implements XmlSerializable {
         return lockType;
     }
 
+    @Override
+    public int hashCode() {
+        if (hashCode == -1) {
+            StringBuilder b = new StringBuilder();
+            b.append("LockType : {").append(namespace).append("}").append(localName);
+            hashCode = b.toString().hashCode();         
+        }
+        return hashCode;
+    }
+
     /**
      * Returns <code>true</code> if this Type is equal to the given one.
      *
      * @param obj
      * @return
      */
+    @Override
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof Type) {
-	    Type other = (Type) obj;
-	    return localName.equals(other.localName) && namespace.equals(other.namespace);
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof Type) {
+            Type other = (Type) obj;
+            return localName.equals(other.localName) && namespace.equals(other.namespace);
+        }
+        return false;
     }
 
     /**
@@ -106,7 +119,7 @@ public class Type implements XmlSerializable {
     public static Type create(String localName, Namespace namespace) {
         String key = DomUtil.getExpandedName(localName, namespace);
         if (types.containsKey(key)) {
-            return (Type) types.get(key);
+            return types.get(key);
         } else {
             Type type = new Type(localName, namespace);
             types.put(key, type);

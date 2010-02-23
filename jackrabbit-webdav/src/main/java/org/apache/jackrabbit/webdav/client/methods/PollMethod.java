@@ -69,11 +69,13 @@ public class PollMethod extends DavMethodBase implements ObservationConstants {
         }
     }
     //---------------------------------------------------------< HttpMethod >---
+    @Override
     public String getName() {
         return DavMethods.METHOD_POLL;
     }
 
     //------------------------------------------------------< DavMethodBase >---
+    @Override
     protected boolean isSuccess(int statusCode) {
         return DavServletResponse.SC_OK == statusCode;
     }
@@ -91,6 +93,7 @@ public class PollMethod extends DavMethodBase implements ObservationConstants {
       * @param httpConnection
       * @see HttpMethodBase#processResponseBody(HttpState, HttpConnection)
       */
+     @Override
      protected void processResponseBody(HttpState httpState, HttpConnection httpConnection) {
          // in case of successful response code -> parse xml body discovery object
          if (getSuccess()) {

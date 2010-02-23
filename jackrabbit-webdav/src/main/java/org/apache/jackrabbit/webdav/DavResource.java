@@ -26,6 +26,7 @@ import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 
 import java.io.IOException;
 import java.util.List;
@@ -137,7 +138,7 @@ public interface DavResource {
      * @return the {@link DavProperty} with the given name or <code>null</code>
      * if the property does not exist.
      */
-    public DavProperty getProperty(DavPropertyName name);
+    public DavProperty<?> getProperty(DavPropertyName name);
 
     /**
      * Returns all webdav properties present on this resource.
@@ -153,7 +154,7 @@ public interface DavResource {
      * @param property
      * @throws DavException if an error occurs
      */
-    public void setProperty(DavProperty property) throws DavException;
+    public void setProperty(DavProperty<?> property) throws DavException;
 
     /**
      * Remove the specified property from this resource.
@@ -176,7 +177,7 @@ public interface DavResource {
      * general state of the resource prevents any properties to be set or removed
      * (e.g. due to a lock).
      */
-    public MultiStatusResponse alterProperties(List changeList) throws DavException;
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException;
 
     /**
      * Retrieve the resource this resource is internal member of.

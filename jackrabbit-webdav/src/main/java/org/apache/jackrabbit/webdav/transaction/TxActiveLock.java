@@ -66,6 +66,7 @@ public class TxActiveLock extends DefaultActiveLock implements TransactionConsta
      *
      * @return true
      */
+    @Override
     public boolean isDeep() {
         return true;
     }
@@ -75,6 +76,7 @@ public class TxActiveLock extends DefaultActiveLock implements TransactionConsta
      *
      * @return {@link #TRANSACTION}
      */
+    @Override
     public Type getType() {
         return TRANSACTION;
     }
@@ -84,6 +86,7 @@ public class TxActiveLock extends DefaultActiveLock implements TransactionConsta
      *
      * @return {@link #LOCAL} or {@link #GLOBAL}
      */
+    @Override
     public Scope getScope() {
         return scope;
     }

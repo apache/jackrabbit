@@ -118,11 +118,13 @@ public class SubscribeMethod extends DavMethodBase implements ObservationConstan
     }
 
     //---------------------------------------------------------< HttpMethod >---
+    @Override
     public String getName() {
         return DavMethods.METHOD_SUBSCRIBE;
     }
 
     //------------------------------------------------------< DavMethodBase >---
+    @Override
     protected boolean isSuccess(int statusCode) {
         return DavServletResponse.SC_OK == statusCode;
     }
@@ -140,6 +142,7 @@ public class SubscribeMethod extends DavMethodBase implements ObservationConstan
      * @param httpConnection
      * @see HttpMethodBase#processResponseBody(HttpState, HttpConnection)
      */
+    @Override
     protected void processResponseBody(HttpState httpState, HttpConnection httpConnection) {
         // in case of successful response code -> parse xml body discovery object
         if (getSuccess()) {

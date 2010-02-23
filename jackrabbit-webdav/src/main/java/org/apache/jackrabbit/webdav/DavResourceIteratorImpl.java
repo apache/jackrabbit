@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Collections;
 
 /**
  * <code>DavResourceIteratorImpl</code> implementation of the {@link DavResourceIterator}
@@ -31,14 +32,16 @@ public class DavResourceIteratorImpl implements DavResourceIterator {
 
     private static Logger log = LoggerFactory.getLogger(DavResourceIteratorImpl.class);
 
-    private Iterator it;
+    public static DavResourceIterator EMPTY = new DavResourceIteratorImpl(Collections.<DavResource>emptyList());
+
+    private Iterator<DavResource> it;
     private int size;
 
     /**
      * Create a new DavResourceIterator from the specified list.
      * @param list
      */
-    public DavResourceIteratorImpl(List list) {
+    public DavResourceIteratorImpl(List<DavResource> list) {
         it = list.iterator();
         size = list.size();
     }
@@ -53,7 +56,7 @@ public class DavResourceIteratorImpl implements DavResourceIterator {
     /**
      * @see DavResourceIterator#next()
      */
-    public Object next() {
+    public DavResource next() {
         return it.next();
     }
 
@@ -61,7 +64,7 @@ public class DavResourceIteratorImpl implements DavResourceIterator {
      * @see DavResourceIterator#nextResource()
      */
     public DavResource nextResource() {
-        return (DavResource) next();
+        return next();
     }
 
     /**

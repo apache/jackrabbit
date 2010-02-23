@@ -32,7 +32,8 @@ public interface BindableResource {
     public void bind(DavResource collection, DavResource newBinding) throws DavException;
 
     /**
-     * Will rebind the resource to the given collection. By definition, this is an atomic move operation.
+     * Will rebind the resource to the given collection. By definition, this is
+     * an atomic move operation.
      *
      * @param collection the collection to create the new binding in.
      * @param newBinding the new binding
@@ -40,9 +41,10 @@ public interface BindableResource {
     public void rebind(DavResource collection, DavResource newBinding) throws DavException;
 
     /**
-     * Will retrieve a collection of parent elements of the bindable resource representing the parent set.
+     * Will retrieve a collection of parent elements of the bindable resource
+     * representing the parent set.
      *
      * @return newBinding the new binding
      */
-    public Set getParentElements();
+    public Set<ParentElement> getParentElements();
 }
