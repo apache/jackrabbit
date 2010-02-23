@@ -120,6 +120,11 @@ public class NodeIndexer {
     protected List<Fieldable> doNotUseInExcerpt = new ArrayList<Fieldable>();
 
     /**
+     * The maximum number of characters to extract from binaries.
+     */
+    private int maxExtractLength = Integer.MAX_VALUE;
+
+    /**
      * Creates a new node indexer.
      *
      * @param node          the node state to index.
@@ -173,6 +178,24 @@ public class NodeIndexer {
      */
     public void setIndexingConfiguration(IndexingConfiguration config) {
         this.indexingConfig = config;
+    }
+
+    /**
+     * Returns the maximum number of characters to extract from binaries.
+     *
+     * @return maximum extraction length
+     */
+    public int getMaxExtractLength() {
+        return maxExtractLength;
+    }
+
+    /**
+     * Sets the maximum number of characters to extract from binaries.
+     *
+     * @param length maximum extraction length
+     */
+    public void setMaxExtractLength(int length) {
+        this.maxExtractLength = length;
     }
 
     /**
@@ -818,7 +841,8 @@ public class NodeIndexer {
     protected Fieldable createFulltextField(
             InternalValue value, Metadata metadata) {
         return new LazyTextExtractorField(
-                parser, value, metadata, executor, supportHighlighting);
+                parser, value, metadata, executor,
+                supportHighlighting, getMaxExtractLength());
     }
 
     /**

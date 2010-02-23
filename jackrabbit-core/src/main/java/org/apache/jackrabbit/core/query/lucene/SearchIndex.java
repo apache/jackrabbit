@@ -260,6 +260,13 @@ public class SearchIndex extends AbstractQueryHandler {
     private int maxFieldLength = DEFAULT_MAX_FIELD_LENGTH;
 
     /**
+     * maxExtractLength config parameter. Positive values are used as-is,
+     * negative values are interpreted as factors of the maxFieldLength
+     * parameter.
+     */
+    private int maxExtractLength = -10;
+
+    /**
      * extractorPoolSize config parameter
      */
     private int extractorPoolSize = 2 * Runtime.getRuntime().availableProcessors();
@@ -1092,6 +1099,7 @@ public class SearchIndex extends AbstractQueryHandler {
         indexer.setSupportHighlighting(supportHighlighting);
         indexer.setIndexingConfiguration(indexingConfig);
         indexer.setIndexFormatVersion(indexFormatVersion);
+        indexer.setMaxExtractLength(getMaxExtractLength());
         Document doc = indexer.createDoc();
         mergeAggregatedNodeIndexes(node, doc, indexFormatVersion);
         return doc;
@@ -1830,6 +1838,18 @@ public class SearchIndex extends AbstractQueryHandler {
 
     public int getMaxFieldLength() {
         return maxFieldLength;
+    }
+
+    public void setMaxExtractLength(int length) {
+        maxExtractLength = length;
+    }
+
+    public int getMaxExtractLength() {
+        if (maxExtractLength < 0) {
+            return -maxExtractLength * maxFieldLength;
+        } else {
+            return maxExtractLength;
+        }
     }
 
     /**
