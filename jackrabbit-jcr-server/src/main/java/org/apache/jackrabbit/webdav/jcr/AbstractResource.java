@@ -571,8 +571,9 @@ abstract class AbstractResource implements DavResource, TransactionResource,
 
         // DeltaV properties
         properties.add(supportedReports);
-        // creator-displayname, comment: not value available from jcr
+        // DAV:creator-displayname default value : not available
         properties.add(new DefaultDavProperty<String>(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
+        // DAV:comment not value available from jcr
         properties.add(new DefaultDavProperty<String>(DeltaVConstants.COMMENT, null, true));
 
         // 'workspace' property as defined by RFC 3253
