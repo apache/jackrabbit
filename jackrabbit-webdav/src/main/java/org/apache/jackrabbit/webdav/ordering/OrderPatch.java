@@ -106,8 +106,8 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
         Element otype = DomUtil.addChildElement(orderPatch, XML_ORDERING_TYPE, NAMESPACE);
         otype.appendChild(DomUtil.hrefToXml(orderingType, document));
         // add DAV:member elements below DAV:orderpatch
-        for (int i = 0; i < instructions.length; i++) {
-            orderPatch.appendChild(instructions[i].toXml(document));
+        for (Member instruction : instructions) {
+            orderPatch.appendChild(instruction.toXml(document));
         }
         return orderPatch;
     }
@@ -136,7 +136,7 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
         }
 
         // set build the list of ordering instructions
-        List tmpList = new ArrayList();
+        List<Member> tmpList = new ArrayList<Member>();
         ElementIterator it = DomUtil.getChildren(orderPatchElement, XML_ORDER_MEMBER, NAMESPACE);
         while (it.hasNext()) {
             Element el = it.nextElement();
@@ -152,7 +152,7 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
         }
-        Member[] instructions = (Member[]) tmpList.toArray(new Member[tmpList.size()]);
+        Member[] instructions = tmpList.toArray(new Member[tmpList.size()]);
         return new OrderPatch(orderingType, instructions);
     }
 

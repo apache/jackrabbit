@@ -26,13 +26,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 /**
  * <code>AbstractDavProperty</code> provides generic METHODS used by various
  * implementations of the {@link DavProperty} interface.
  */
-public abstract class AbstractDavProperty implements DavProperty {
+public abstract class AbstractDavProperty<T> implements DavProperty<T> {
 
     private static Logger log = LoggerFactory.getLogger(AbstractDavProperty.class);
 
@@ -54,6 +53,7 @@ public abstract class AbstractDavProperty implements DavProperty {
      *
      * @return the hash code
      */
+    @Override
     public int hashCode() {
         int hashCode = getName().hashCode();
         if (getValue() != null) {
@@ -70,9 +70,10 @@ public abstract class AbstractDavProperty implements DavProperty {
      * @return <code>true</code> if the 2 objects are equal;
      *         <code>false</code> otherwise
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof DavProperty) {
-            DavProperty prop = (DavProperty) obj;
+            DavProperty<?> prop = (DavProperty<?>) obj;
             boolean equalName = getName().equals(prop.getName());
             boolean equalValue = (getValue() == null) ? prop.getValue() == null : getValue().equals(prop.getValue());
             return equalName && equalValue;
@@ -108,7 +109,7 @@ public abstract class AbstractDavProperty implements DavProperty {
      */
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        Object value = getValue();
+        T value = getValue();
         // todo: improve....
         if (value != null) {
             if (value instanceof XmlSerializable) {
@@ -122,13 +123,11 @@ public abstract class AbstractDavProperty implements DavProperty {
                     elem.appendChild(n);
                 }
             } else if (value instanceof Collection) {
-                Iterator it = ((Collection)value).iterator();
-                while (it.hasNext()) {
-                    Object entry = it.next();
+                for (Object entry : ((Collection<?>) value)) {
                     if (entry instanceof XmlSerializable) {
-                        elem.appendChild(((XmlSerializable)entry).toXml(document));
+                        elem.appendChild(((XmlSerializable) entry).toXml(document));
                     } else if (entry instanceof Node) {
-                        Node n = document.importNode((Node)entry, true);
+                        Node n = document.importNode((Node) entry, true);
                         elem.appendChild(n);
                     } else {
                         DomUtil.setText(elem, entry.toString());

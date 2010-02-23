@@ -133,16 +133,17 @@ public class PropFindMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_PROPFIND;
     }
 
     //------------------------------------------------------< DavMethodBase >---
     /**
-     *
      * @param statusCode
      * @return true if status code is {@link DavServletResponse#SC_MULTI_STATUS 207 (Multi-Status)}.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_MULTI_STATUS;
     }

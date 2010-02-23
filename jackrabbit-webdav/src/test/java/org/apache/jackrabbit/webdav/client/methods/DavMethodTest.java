@@ -29,10 +29,12 @@ public class DavMethodTest extends TestCase {
 
     private static Logger log = LoggerFactory.getLogger(DavMethodTest.class);
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -49,28 +51,37 @@ public class DavMethodTest extends TestCase {
         private TestDavMethod() {
             super("test");
         }
+        @Override
         public String getName() {
             return "test";
         }
+        @Override
         public int getStatusCode() {
             return 404;
         }
+        @Override
         public String getStatusText() {
             return "404";
         }
+        @Override
         public Document getResponseBodyAsDocument() throws IOException {
             throw new IOException();
         }
+        @Override
         public void checkSuccess() throws DavException, IOException {
             throw new DavException(404);
         }
+        @Override
         public boolean succeeded() {
             return false;
         }
+        @Override
         protected void checkUsed() {}
+        @Override
         protected boolean isSuccess(int statusCode) {
             return false;
         }
+        @Override
         protected boolean getSuccess() {
             return false;
         }

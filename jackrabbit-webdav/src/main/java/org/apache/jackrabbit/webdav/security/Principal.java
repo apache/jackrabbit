@@ -58,7 +58,7 @@ public class Principal implements XmlSerializable, SecurityConstants {
     private static final Principal UNAUTHENTICATED_PRINCIPAL = new Principal(TYPE_UNAUTHENTICATED);
     private static final Principal SELF_PRINCIPAL = new Principal(TYPE_SELF);
 
-    private static final Map PROP_PRINCIPALS = new HashMap();
+    private static final Map<DavPropertyName, Principal> PROP_PRINCIPALS = new HashMap<DavPropertyName, Principal>();
 
     private final int type;
     private DavPropertyName propertyName;
@@ -148,7 +148,7 @@ public class Principal implements XmlSerializable, SecurityConstants {
         // there is a limited amount of properties, that can be used
         // for a Property-Principal
         if (PROP_PRINCIPALS.containsKey(propertyName)) {
-            return (Principal) PROP_PRINCIPALS.get(propertyName);
+            return PROP_PRINCIPALS.get(propertyName);
         } else {
             Principal p = new Principal(propertyName);
             PROP_PRINCIPALS.put(propertyName, p);

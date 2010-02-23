@@ -62,6 +62,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.version.LabelInfo;
@@ -94,8 +95,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     private int propfindType = PROPFIND_ALL_PROP;
     private DavPropertyNameSet propfindProps;
     private DavPropertySet proppatchSet;
-    private DavPropertyNameSet proppatchRemove;
-    private List proppatchList;
+    private List<PropEntry> proppatchList;
 
     /**
      * Creates a new <code>DavServletRequest</code> with the given parameters.
@@ -129,9 +129,9 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 session.addLockToken(lt);
             }
             // add all token present in the the If header to the session as well.
-            Iterator it = ifHeader.getAllTokens();
+            Iterator<String> it = ifHeader.getAllTokens();
             while (it.hasNext()) {
-                String ifHeaderToken = (String) it.next();
+                String ifHeaderToken = it.next();
                 session.addLockToken(ifHeaderToken);
             }
         }
@@ -208,7 +208,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             if (ref.startsWith(contextPath)) {
                 ref = ref.substring(contextPath.length());
             } else {
-                //absolute path has to start with contextpath
+                //absolute path has to start with context path
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
             }
         }
@@ -281,7 +281,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public Document getRequestDocument() throws DavException {
         Document requestDocument = null;
         /*
-        Don't attempt to parse the body if the contentlength header is 0.
+        Don't attempt to parse the body if the content length header is 0.
         NOTE: a value of -1 indicates that the length is unknown, thus we have
         to parse the body. Note that http1.1 request using chunked transfer
         coding will therefore not be detected here.
@@ -431,7 +431,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
       * @return the list of change operations entries in the PROPPATCH request body
       * @see DavServletRequest#getPropPatchChangeList()
       */
-     public List getPropPatchChangeList() throws DavException {
+     public List<? extends PropEntry> getPropPatchChangeList() throws DavException {
          if (proppatchList == null) {
              parsePropPatchRequest();
          }
@@ -444,8 +444,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     private void parsePropPatchRequest() throws DavException {
 
         proppatchSet = new DavPropertySet();
-        proppatchRemove = new DavPropertyNameSet();
-        proppatchList = new ArrayList();
+        proppatchList = new ArrayList<PropEntry>();
 
         Document requestDocument = getRequestDocument();
 
@@ -467,7 +466,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 if (propEl != null) {
                     ElementIterator properties = DomUtil.getChildren(propEl);
                     while (properties.hasNext()) {
-                        DavProperty davProp = DefaultDavProperty.createFromXml(properties.nextElement());
+                        DavProperty<?> davProp = DefaultDavProperty.createFromXml(properties.nextElement());
                         proppatchSet.add(davProp);
                         proppatchList.add(davProp);
                     }
@@ -477,7 +476,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 if (propEl != null) {
                     ElementIterator properties = DomUtil.getChildren(propEl);
                     while (properties.hasNext()) {
-                        DavProperty davProp = DefaultDavProperty.createFromXml(properties.nextElement());
+                        DavProperty<?> davProp = DefaultDavProperty.createFromXml(properties.nextElement());
                         proppatchSet.add(davProp);
                         proppatchList.add(davProp.getName());
                     }
@@ -575,7 +574,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @return strong etag or empty string.
      */
     private String getStrongETag(DavResource resource) {
-        DavProperty prop = resource.getProperty(DavPropertyName.GETETAG);
+        DavProperty<?> prop = resource.getProperty(DavPropertyName.GETETAG);
         if (prop != null && prop.getValue() != null) {
             String etag = prop.getValue().toString();
             if (isStrongETag(etag)) {
@@ -816,11 +815,11 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         return httpRequest.getHeader(s);
     }
 
-    public Enumeration getHeaders(String s) {
+    public Enumeration<?> getHeaders(String s) {
         return httpRequest.getHeaders(s);
     }
 
-    public Enumeration getHeaderNames() {
+    public Enumeration<?> getHeaderNames() {
         return httpRequest.getHeaderNames();
     }
 
@@ -904,7 +903,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         return httpRequest.getAttribute(s);
     }
 
-    public Enumeration getAttributeNames() {
+    public Enumeration<?> getAttributeNames() {
         return httpRequest.getAttributeNames();
     }
 
@@ -932,7 +931,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         return httpRequest.getParameter(s);
     }
 
-    public Enumeration getParameterNames() {
+    public Enumeration<?> getParameterNames() {
         return httpRequest.getParameterNames();
     }
 
@@ -940,7 +939,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         return httpRequest.getParameterValues(s);
     }
 
-    public Map getParameterMap() {
+    public Map<?,?> getParameterMap() {
         return httpRequest.getParameterMap();
     }
 
@@ -984,7 +983,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         return httpRequest.getLocale();
     }
 
-    public Enumeration getLocales() {
+    public Enumeration<?> getLocales() {
         return httpRequest.getLocales();
     }
 

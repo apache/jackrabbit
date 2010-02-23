@@ -31,7 +31,7 @@ import java.util.ArrayList;
  * <code>SubscriptionDiscovery</code> encapsulates the 'subscriptiondiscovery'
  * property of a webdav resource.
  */
-public class SubscriptionDiscovery extends AbstractDavProperty {
+public class SubscriptionDiscovery extends AbstractDavProperty<Subscription[]> {
 
     private final Subscription[] subscriptions;
 
@@ -71,7 +71,7 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
      * @return an array of {@link Subscription}s
      * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
      */
-    public Object getValue() {
+    public Subscription[] getValue() {
         return subscriptions;
     }
 
@@ -82,10 +82,11 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        for (int i = 0; i < subscriptions.length; i++) {
-            elem.appendChild(subscriptions[i].toXml(document));
+        for (Subscription subscription : subscriptions) {
+            elem.appendChild(subscription.toXml(document));
         }
         return elem;
     }
@@ -96,7 +97,7 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
             throw new IllegalArgumentException("'subscriptiondiscovery' element expected.");
         }
 
-        List subscriptions = new ArrayList();
+        List<Subscription> subscriptions = new ArrayList<Subscription>();
         ElementIterator it = DomUtil.getChildren(sDiscoveryElement, ObservationConstants.XML_SUBSCRIPTION, ObservationConstants.NAMESPACE);
         while (it.hasNext()) {
             final Element sb = it.nextElement();
@@ -122,6 +123,6 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
             subscriptions.add(s);
         }
 
-        return new SubscriptionDiscovery((Subscription[]) subscriptions.toArray(new Subscription[subscriptions.size()]));
+        return new SubscriptionDiscovery(subscriptions.toArray(new Subscription[subscriptions.size()]));
     }
 }

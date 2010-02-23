@@ -37,7 +37,7 @@ public class Privilege implements XmlSerializable {
     /**
      * Map for registered privileges
      */
-    private static final Map REGISTERED_PRIVILEGES = new HashMap();
+    private static final Map<String, Privilege> REGISTERED_PRIVILEGES = new HashMap<String, Privilege>();
 
     //-------------------------------------< Privileges defined by RFC 3744 >---
     /**
@@ -179,7 +179,7 @@ public class Privilege implements XmlSerializable {
         }
         String key = "{" + namespace.getURI() + "}" + privilege;
         if (REGISTERED_PRIVILEGES.containsKey(key)) {
-            return (Privilege) REGISTERED_PRIVILEGES.get(key);
+            return REGISTERED_PRIVILEGES.get(key);
         } else {
             Privilege p = new Privilege(privilege, namespace);
             REGISTERED_PRIVILEGES.put(key, p);

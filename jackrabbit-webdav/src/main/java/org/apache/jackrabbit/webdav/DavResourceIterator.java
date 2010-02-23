@@ -23,7 +23,7 @@ import java.util.Iterator;
  * METHODS allow to retrieve the next {@link DavResource} from the iterator
  * and the iterators size.
  */
-public interface DavResourceIterator extends Iterator {
+public interface DavResourceIterator extends Iterator<DavResource> {
 
     /**
      * Returns the next {@link DavResource} in the iterator

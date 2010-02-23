@@ -34,6 +34,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <code>LocateByHistoryReport</code> encapsulates the DAV:locate-by-hisotry
@@ -52,7 +53,7 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
     private static Logger log = LoggerFactory.getLogger(LocateByHistoryReport.class);
 
     private ReportInfo info;
-    private HashSet vhHrefSet = new HashSet();
+    private Set<String> vhHrefSet = new HashSet<String>();
     private DavResource resource;
 
     /**

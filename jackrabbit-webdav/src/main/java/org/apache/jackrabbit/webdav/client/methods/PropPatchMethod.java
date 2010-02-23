@@ -23,6 +23,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
@@ -39,7 +40,6 @@ import org.w3c.dom.Element;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Iterator;
 
 /**
  * <code>PropPatchMethod</code>...
@@ -59,7 +59,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
      * (for 'remove') entries.
      * @throws IOException
      */
-    public PropPatchMethod(String uri, List changeList) throws IOException {
+    public PropPatchMethod(String uri, List<? extends PropEntry> changeList) throws IOException {
         super(uri);
         if (changeList == null || changeList.isEmpty()) {
             throw new IllegalArgumentException("PROPPATCH cannot be executed without properties to be set or removed.");
@@ -70,12 +70,10 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
 
             Element propElement = null;
             boolean isSet = false;
-            Iterator it = changeList.iterator();
-            while (it.hasNext()) {
-                Object entry = it.next();
+            for (Object entry : changeList) {
                 if (entry instanceof DavPropertyName) {
                     // DAV:remove
-                    DavPropertyName removeName = (DavPropertyName)entry;
+                    DavPropertyName removeName = (DavPropertyName) entry;
                     if (propElement == null || isSet) {
                         isSet = false;
                         propElement = getPropElement(propUpdateElement, isSet);
@@ -84,7 +82,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
                     propertyNames.add(removeName);
                 } else if (entry instanceof DavProperty) {
                     // DAV:set
-                    DavProperty setProperty = (DavProperty)entry;
+                    DavProperty<?> setProperty = (DavProperty<?>) entry;
                     if (propElement == null || !isSet) {
                         isSet = true;
                         propElement = getPropElement(propUpdateElement, isSet);
@@ -112,9 +110,8 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
         }
 
         propertyNames.addAll(removeProperties);
-        DavPropertyName[] setNames = setProperties.getPropertyNames();
-        for (int i = 0; i < setNames.length; i++) {
-            propertyNames.add(setNames[i]);
+        for (DavPropertyName setName : setProperties.getPropertyNames()) {
+            propertyNames.add(setName);
         }
 
         try {
@@ -145,6 +142,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_PROPPATCH;
     }
@@ -157,6 +155,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
      * For compliance reason {@link DavServletResponse#SC_OK 200 (OK)} is
      * interpreted as successful response as well.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_MULTI_STATUS || statusCode == DavServletResponse.SC_OK;
     }
@@ -167,6 +166,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
      * @param httpState
      * @param httpConnection
      */
+    @Override
     protected void processMultiStatusBody(MultiStatus multiStatus, HttpState httpState, HttpConnection httpConnection) {
         // check of OK response contains all set/remove properties
         MultiStatusResponse[] resp = multiStatus.getResponses();
@@ -218,6 +218,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
      * @throws IOException
      * @see DavMethod#getResponseException()
      */
+    @Override
     public DavException getResponseException() throws IOException {
         checkUsed();
         if (getSuccess()) {

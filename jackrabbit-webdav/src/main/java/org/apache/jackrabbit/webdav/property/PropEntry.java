@@ -14,32 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.webdav.bind;
-
-import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-
-import java.util.Collection;
+package org.apache.jackrabbit.webdav.property;
 
 /**
- * <code>ParentSet</code> represents a DAV:parent-set property.
+ * Marker interface used to flag the different types of entries that form
+ * part of a PROPPATCH request and define the possible entries for a
+ * <code>PropContainer</code>.
  */
-public class ParentSet extends AbstractDavProperty<Collection<ParentElement>> {
-
-    private final Collection<ParentElement> parents;
-
-    /**
-     * Creates a new ParentSet from a collection of <code>ParentElement</code> objects.
-     * @param parents
-     */
-    public ParentSet(Collection<ParentElement> parents) {
-        super(BindConstants.PARENTSET, true);
-        this.parents = parents;
-    }
-
-    /**
-     * @see org.apache.jackrabbit.webdav.property.AbstractDavProperty#getValue() 
-     */
-    public Collection<ParentElement> getValue() {
-        return this.parents;
-    }
+public interface PropEntry {
 }

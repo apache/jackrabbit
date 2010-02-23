@@ -26,7 +26,7 @@ import org.w3c.dom.Element;
 /**
  * <code>LabelSetProperty</code>...
  */
-public class LabelSetProperty extends AbstractDavProperty {
+public class LabelSetProperty extends AbstractDavProperty<String[]> {
 
     private static Logger log = LoggerFactory.getLogger(LabelSetProperty.class);
 
@@ -43,7 +43,7 @@ public class LabelSetProperty extends AbstractDavProperty {
     }
 
 
-    public Object getValue() {
+    public String[] getValue() {
         return value;
     }
 
@@ -51,10 +51,11 @@ public class LabelSetProperty extends AbstractDavProperty {
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        for (int i = 0; i < value.length; i++) {
-            DomUtil.addChildElement(elem, DeltaVConstants.XML_LABEL_NAME, DeltaVConstants.NAMESPACE, value[i]);
+        for (String str : value) {
+            DomUtil.addChildElement(elem, DeltaVConstants.XML_LABEL_NAME, DeltaVConstants.NAMESPACE, str);
         }
         return elem;
     }

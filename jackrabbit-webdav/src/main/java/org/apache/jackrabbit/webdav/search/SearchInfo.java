@@ -31,7 +31,6 @@ import org.w3c.dom.Attr;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -72,10 +71,10 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
     /**
      * Set of namespace uri String which are ignored in the search request.
      */
-    private static final Set IGNORED_NAMESPACES;
+    private static final Set<String> IGNORED_NAMESPACES;
 
     static {
-        Set s = new HashSet();
+        Set<String> s = new HashSet<String>();
         s.add(Namespace.XMLNS_NAMESPACE.getURI());
         s.add(Namespace.XML_NAMESPACE.getURI());
         s.add(DavConstants.NAMESPACE.getURI());
@@ -85,7 +84,7 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
     private final String language;
     private final Namespace languageNamespace;
     private final String query;
-    private final Map namespaces;
+    private final Map<String, String> namespaces;
 
     private long nresults = NRESULTS_UNDEFINED;
     private long offset = OFFSET_UNDEFINED;
@@ -98,7 +97,8 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
      * @param query
      * @param namespaces the re-mapped namespaces. Key=prefix, value=uri.
      */
-    public SearchInfo(String language, Namespace languageNamespace, String query, Map namespaces) {
+    public SearchInfo(String language, Namespace languageNamespace, String query,
+                      Map<String, String> namespaces) {
         this.language = language;
         this.languageNamespace = languageNamespace;
         this.query = query;
@@ -113,7 +113,7 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
      * @param query
      */
     public SearchInfo(String language, Namespace languageNamespace, String query) {
-        this(language,  languageNamespace, query, Collections.EMPTY_MAP);
+        this(language,  languageNamespace, query, Collections.<String, String>emptyMap());
     }
 
     /**
@@ -148,7 +148,7 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
      *
      * @return map of namespace to prefix mappings. Key=prefix, value=uri.
      */
-    public Map getNamespaces() {
+    public Map<String, String> getNamespaces() {
         return namespaces;
     }
 
@@ -196,9 +196,8 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
      */
     public Element toXml(Document document) {
         Element sRequestElem = DomUtil.createElement(document, XML_SEARCHREQUEST, NAMESPACE);
-        for (Iterator it = namespaces.keySet().iterator(); it.hasNext(); ) {
-            String prefix = (String) it.next();
-            String uri = (String) namespaces.get(prefix);
+        for (String prefix : namespaces.keySet()) {
+            String uri = namespaces.get(prefix);
             DomUtil.setNamespaceAttribute(sRequestElem, prefix, uri);
         }
         DomUtil.addChildElement(sRequestElem, language, languageNamespace, query);
@@ -231,11 +230,11 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
         }
         Element first = DomUtil.getFirstChildElement(searchRequest);
         Attr[] nsAttributes = DomUtil.getNamespaceAttributes(searchRequest);
-        Map namespaces = new HashMap();
-        for (int i = 0; i < nsAttributes.length; i++) {
+        Map<String, String> namespaces = new HashMap<String, String>();
+        for (Attr nsAttribute : nsAttributes) {
             // filter out xmlns namespace and DAV namespace
-            if (!IGNORED_NAMESPACES.contains(nsAttributes[i].getValue())) {
-                namespaces.put(nsAttributes[i].getLocalName(), nsAttributes[i].getValue());
+            if (!IGNORED_NAMESPACES.contains(nsAttribute.getValue())) {
+                namespaces.put(nsAttribute.getLocalName(), nsAttribute.getValue());
             }
         }
         SearchInfo sInfo;

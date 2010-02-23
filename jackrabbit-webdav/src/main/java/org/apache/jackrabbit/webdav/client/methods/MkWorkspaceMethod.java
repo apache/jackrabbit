@@ -36,16 +36,17 @@ public class MkWorkspaceMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_MKWORKSPACE;
     }
 
     //------------------------------------------------------< DavMethodBase >---
     /**
-     *
      * @param statusCode
      * @return true if status code is {@link DavServletResponse#SC_CREATED 201 (Created)}.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_CREATED;
     }

@@ -74,8 +74,8 @@ public class SupportedPrivilege implements XmlSerializable {
             }
         }
         if (supportedPrivileges != null) {
-            for (int i = 0; i < supportedPrivileges.length; i++) {
-                spElem.appendChild(supportedPrivileges[i].toXml(document));
+            for (SupportedPrivilege supportedPrivilege : supportedPrivileges) {
+                spElem.appendChild(supportedPrivilege.toXml(document));
             }
         }
         return spElem;

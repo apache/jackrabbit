@@ -34,11 +34,13 @@ public class UnSubscribeMethod extends DavMethodBase {
     }
 
     //---------------------------------------------------------< HttpMethod >---
+    @Override
     public String getName() {
         return DavMethods.METHOD_UNSUBSCRIBE;
     }
 
     //------------------------------------------------------< DavMethodBase >---
+    @Override
     protected boolean isSuccess(int statusCode) {
         return DavServletResponse.SC_NO_CONTENT == statusCode;
     }

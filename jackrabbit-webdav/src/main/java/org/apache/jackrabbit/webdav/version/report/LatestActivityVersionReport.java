@@ -124,21 +124,19 @@ public class LatestActivityVersionReport implements Report {
     private String getLatestVersionHref() {
         String latestVersionHref = ""; // not found (TODO: check if this valid according to the RFC)
         try {
-            List versionHrefs = new HrefProperty(activity.getProperty(ActivityResource.ACTIVITY_VERSION_SET)).getHrefs();
-            VersionResource[] versions = vhResource.getVersions();
-
-            for (int i = 0; i < versions.length; i++) {
-                VersionResource vr = versions[i];
+            List<String> versionHrefs = new HrefProperty(activity.getProperty(ActivityResource.ACTIVITY_VERSION_SET)).getHrefs();
+            
+            for (VersionResource vr : vhResource.getVersions()) {
                 String href = vr.getHref();
                 if (versionHrefs.contains(href)) {
                     if ("".equals(latestVersionHref)) {
                         // shortcut
                         latestVersionHref = href;
                     } else {
-                        // if this vr is a decendant of the one already found, set latestVersion again
-                        List predecessors = new HrefProperty(vr.getProperty(VersionResource.PREDECESSOR_SET)).getHrefs();
+                        // if this vr is a descendant of the one already found, set latestVersion again
+                        List<String> predecessors = new HrefProperty(vr.getProperty(VersionResource.PREDECESSOR_SET)).getHrefs();
                         if (predecessors.contains(latestVersionHref)) {
-                            // version is a decendant of the vr identified by latestVersionHref
+                            // version is a descendant of the vr identified by latestVersionHref
                             latestVersionHref = href;
                         } // else: version is predecessor -> nothing to do.
                     }

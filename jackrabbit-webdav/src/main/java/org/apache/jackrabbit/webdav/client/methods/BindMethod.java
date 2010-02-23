@@ -35,6 +35,7 @@ public class BindMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return "BIND";
     }
@@ -43,8 +44,10 @@ public class BindMethod extends DavMethodBase {
     /**
      *
      * @param statusCode
-     * @return true if status code is 200 (existing binding was overwritten) or 201 (new binding created).
+     * @return true if status code is 200 (existing binding was overwritten) or
+     * 201 (new binding created).
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_CREATED || statusCode == DavServletResponse.SC_OK;
     }

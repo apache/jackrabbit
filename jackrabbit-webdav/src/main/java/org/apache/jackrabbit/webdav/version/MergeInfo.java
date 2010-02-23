@@ -85,7 +85,7 @@ public class MergeInfo implements DeltaVConstants, XmlSerializable {
      * @return href present in the DAV:source child element or <code>null</code>.
      */
     public String[] getSourceHrefs() {
-        List sourceHrefs = new ArrayList();
+        List<String> sourceHrefs = new ArrayList<String>();
         Element srcElem = DomUtil.getChildElement(mergeElement, DavConstants.XML_SOURCE, DavConstants.NAMESPACE);
         if (srcElem != null) {
             ElementIterator it = DomUtil.getChildren(srcElem, DavConstants.XML_HREF, DavConstants.NAMESPACE);
@@ -96,7 +96,7 @@ public class MergeInfo implements DeltaVConstants, XmlSerializable {
                 }
             }
         }
-        return (String[])sourceHrefs.toArray(new String[sourceHrefs.size()]);
+        return sourceHrefs.toArray(new String[sourceHrefs.size()]);
     }
 
     /**
@@ -168,8 +168,8 @@ public class MergeInfo implements DeltaVConstants, XmlSerializable {
     public static Element createMergeElement(String[] mergeSource, boolean isNoAutoMerge, boolean isNoCheckout, Document factory) {
         Element mergeElem = DomUtil.createElement(factory, XML_MERGE, NAMESPACE);
         Element source = DomUtil.addChildElement(mergeElem, DavConstants.XML_SOURCE, DavConstants.NAMESPACE);
-        for (int i = 0; i < mergeSource.length; i++) {
-            source.appendChild(DomUtil.hrefToXml(mergeSource[i], factory));
+        for (String ms : mergeSource) {
+            source.appendChild(DomUtil.hrefToXml(ms, factory));
         }
         if (isNoAutoMerge) {
             DomUtil.addChildElement(mergeElem, XML_N0_AUTO_MERGE, NAMESPACE);

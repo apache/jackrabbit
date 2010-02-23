@@ -25,15 +25,14 @@ import org.w3c.dom.Element;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
  * <code>CurrentUserPrivilegeSetProperty</code>...
  */
-public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty {
+public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty<Collection<Privilege>> {
 
-    private final Set privileges;
+    private final Set<Privilege> privileges;
 
     /**
      * Create a new instance of this property.
@@ -43,10 +42,10 @@ public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty {
     public CurrentUserPrivilegeSetProperty(Privilege[] privileges) {
         super(SecurityConstants.CURRENT_USER_PRIVILEGE_SET, true);
 
-        this.privileges = new HashSet();
-        for (int i = 0; i < privileges.length; i++) {
-            if (privileges[i] != null) {
-                this.privileges.add(privileges[i]);
+        this.privileges = new HashSet<Privilege>();
+        for (Privilege privilege : privileges) {
+            if (privilege != null) {
+                this.privileges.add(privilege);
             }
         }
     }
@@ -58,12 +57,12 @@ public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty {
      * @param xmlDavProperty
      * @throws DavException
      */
-    public CurrentUserPrivilegeSetProperty(DavProperty xmlDavProperty) throws DavException {
+    public CurrentUserPrivilegeSetProperty(DavProperty<?> xmlDavProperty) throws DavException {
         super(xmlDavProperty.getName(), true);
         if (!SecurityConstants.CURRENT_USER_PRIVILEGE_SET.equals(getName())) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:current-user-privilege-set expected.");
         }
-        privileges = new HashSet();
+        privileges = new HashSet<Privilege>();
 
         // parse property value
         Object value = xmlDavProperty.getValue();
@@ -71,11 +70,9 @@ public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty {
             if (value instanceof Element) {
                 privileges.add(Privilege.getPrivilege((Element)value));
             } else if (value instanceof Collection) {
-                Iterator it = ((Collection)value).iterator();
-                while (it.hasNext()) {
-                    Object entry = it.next();
+                for (Object entry : ((Collection<?>) value)) {
                     if (entry instanceof Element) {
-                        privileges.add(Privilege.getPrivilege((Element)entry));
+                        privileges.add(Privilege.getPrivilege((Element) entry));
                     }
                 }
             }
@@ -87,7 +84,7 @@ public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty {
      * @see DavProperty#getValue()
      * @see AbstractDavProperty#toXml(Document)
      */
-    public Object getValue() {
+    public Collection<Privilege> getValue() {
         return privileges;
     }
 }

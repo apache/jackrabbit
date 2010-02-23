@@ -48,6 +48,7 @@ public class ReportMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
 	return DavMethods.METHOD_REPORT;
     }
@@ -61,6 +62,7 @@ public class ReportMethod extends DavMethodBase {
      * report request included a depth other than {@link DavConstants#DEPTH_0 0}
      * a multi status response is required.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         if (isDeep) {
             return statusCode == DavServletResponse.SC_MULTI_STATUS;

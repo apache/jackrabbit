@@ -26,7 +26,7 @@ import org.w3c.dom.Element;
 /**
  * The <code>SupportedMethodSetProperty</code>
  */
-public class SupportedMethodSetProperty extends AbstractDavProperty implements DeltaVConstants {
+public class SupportedMethodSetProperty extends AbstractDavProperty<String[]> implements DeltaVConstants {
 
     private static Logger log = LoggerFactory.getLogger(SupportedMethodSetProperty.class);
 
@@ -42,7 +42,7 @@ public class SupportedMethodSetProperty extends AbstractDavProperty implements D
         this.methods = methods;
     }
 
-    public Object getValue() {
+    public String[] getValue() {
         return methods;
     }
 
@@ -50,11 +50,12 @@ public class SupportedMethodSetProperty extends AbstractDavProperty implements D
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        for (int i = 0; i < methods.length; i++) {
+        for (String method : methods) {
             Element methodElem = DomUtil.addChildElement(elem, XML_SUPPORTED_METHOD, DeltaVConstants.NAMESPACE);
-            DomUtil.setAttribute(methodElem, "name", DeltaVConstants.NAMESPACE, methods[i]);
+            DomUtil.setAttribute(methodElem, "name", DeltaVConstants.NAMESPACE, method);
         }
         return elem;
     }

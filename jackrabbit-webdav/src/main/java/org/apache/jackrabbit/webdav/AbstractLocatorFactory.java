@@ -363,6 +363,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
          *
          * @return the hash code
          */
+        @Override
         public int hashCode() {
             return href.hashCode();
         }
@@ -375,6 +376,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
          * @return <code>true</code> if the 2 objects are equal;
          *         <code>false</code> otherwise
          */
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;

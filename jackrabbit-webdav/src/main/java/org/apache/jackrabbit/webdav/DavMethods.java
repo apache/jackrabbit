@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <code>DavMethods</code> defines constants for the WebDAV METHODS.
@@ -31,7 +32,7 @@ public class DavMethods {
     /**
      * A hashmap of webdav METHODS
      */
-    private static HashMap methodMap = new HashMap();
+    private static Map<String, Integer> methodMap = new HashMap<String, Integer>();
 
     /**
      * An array of method codes that are affected by a Label header
@@ -287,9 +288,9 @@ public class DavMethods {
      * Valid type codes > 0
      */
     public static int getMethodCode(String method) {
-        Integer code = (Integer) methodMap.get(method.toUpperCase());
+        Integer code = methodMap.get(method.toUpperCase());
         if (code != null) {
-            return code.intValue();
+            return code;
         }
         return 0;
     }
@@ -298,7 +299,7 @@ public class DavMethods {
      * Static intializer for methodTable hashmap
      */
     private static void addMethodCode(String method, int code) {
-        methodMap.put(method, new Integer(code));
+        methodMap.put(method, code);
     }
 
     /**
@@ -382,8 +383,8 @@ public class DavMethods {
      */
     public static boolean isMethodAffectedByLabel(DavServletRequest request) {
         int code = getMethodCode(request.getMethod());
-        for (int i = 0; i < labelMethods.length; i++) {
-            if (code == labelMethods[i]) {
+        for (int labelMethod : labelMethods) {
+            if (code == labelMethod) {
                 return true;
             }
         }
@@ -398,8 +399,8 @@ public class DavMethods {
      */
     public static boolean isDeltaVMethod(DavServletRequest request) {
         int code = getMethodCode(request.getMethod());
-        for (int i = 0; i < deltaVMethods.length; i++) {
-            if (code == deltaVMethods[i]) {
+        for (int deltaVMethod : deltaVMethods) {
+            if (code == deltaVMethod) {
                 return true;
             }
         }

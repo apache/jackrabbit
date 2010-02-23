@@ -28,7 +28,6 @@ import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +54,7 @@ public class OptionsResponse implements DeltaVConstants, XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(OptionsResponse.class);
 
-    private final Map entries = new HashMap();
+    private final Map<String, Entry> entries = new HashMap<String, Entry>();
 
     /**
      * Add a new entry to this <code>OptionsResponse</code> and make each
@@ -80,7 +79,7 @@ public class OptionsResponse implements DeltaVConstants, XmlSerializable {
     public String[] getHrefs(String localName, Namespace namespace) {
         String key = DomUtil.getExpandedName(localName, namespace);
         if (entries.containsKey(key)) {
-            return ((Entry)entries.get(key)).hrefs;
+            return entries.get(key).hrefs;
         } else {
             return new String[0];
         }
@@ -95,12 +94,10 @@ public class OptionsResponse implements DeltaVConstants, XmlSerializable {
      */
     public Element toXml(Document document) {
         Element optionsResponse = DomUtil.createElement(document, XML_OPTIONS_RESPONSE, NAMESPACE);
-        Iterator it = entries.values().iterator();
-        while (it.hasNext()) {
-            Entry entry = (Entry)it.next();
+        for (Entry entry : entries.values()) {
             Element elem = DomUtil.addChildElement(optionsResponse, entry.localName, entry.namespace);
-            for (int i = 0; i < entry.hrefs.length; i++) {
-                elem.appendChild(DomUtil.hrefToXml(entry.hrefs[i], document));
+            for (String href : entry.hrefs) {
+                elem.appendChild(DomUtil.hrefToXml(href, document));
             }
         }
         return optionsResponse;
@@ -122,12 +119,12 @@ public class OptionsResponse implements DeltaVConstants, XmlSerializable {
         ElementIterator it = DomUtil.getChildren(orElem);
         while (it.hasNext()) {
             Element el = it.nextElement();
-            List hrefs = new ArrayList();
+            List<String> hrefs = new ArrayList<String>();
             ElementIterator hrefIt = DomUtil.getChildren(el, DavConstants.XML_HREF, DavConstants.NAMESPACE);
             while (hrefIt.hasNext()) {
                 hrefs.add(DomUtil.getTextTrim(hrefIt.nextElement()));
             }
-            oResponse.addEntry(el.getLocalName(), DomUtil.getNamespace(el), (String[])hrefs.toArray(new String[hrefs.size()]));
+            oResponse.addEntry(el.getLocalName(), DomUtil.getNamespace(el), hrefs.toArray(new String[hrefs.size()]));
         }
         return oResponse;
     }

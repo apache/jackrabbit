@@ -51,9 +51,9 @@ import java.util.List;
  * @see Principal for details regarding DAV:principal
  * @see Privilege for details regarding DAV:privilege
  */
-public class AclProperty extends AbstractDavProperty {
+public class AclProperty extends AbstractDavProperty<List<AclProperty.Ace>> {
 
-    private final List aces;
+    private final List<Ace> aces;
 
     /**
      * Create a new <code>AclProperty</code> from the given ACEs.
@@ -62,10 +62,10 @@ public class AclProperty extends AbstractDavProperty {
      * @see AclProperty#createDenyAce(Principal, Privilege[], boolean, boolean, AclResource) for a factory method to create a deny ACE.
      */
     public AclProperty(Ace[] accessControlElements) {
-        this((accessControlElements == null) ? new ArrayList() : Arrays.asList(accessControlElements));
+        this((accessControlElements == null) ? new ArrayList<Ace>() : Arrays.asList(accessControlElements));
     }
 
-    private AclProperty(List aces) {
+    private AclProperty(List<Ace> aces) {
         super(SecurityConstants.ACL, true);
         this.aces = aces;
     }
@@ -75,7 +75,7 @@ public class AclProperty extends AbstractDavProperty {
      * an empty list is returned.
      * @see DavProperty#getValue()
      */
-    public Object getValue() {
+    public List<Ace> getValue() {
         return aces;
     }
 
@@ -91,7 +91,7 @@ public class AclProperty extends AbstractDavProperty {
         if (!DomUtil.matches(aclElement, SecurityConstants.ACL.getName(), SecurityConstants.ACL.getNamespace())) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "ACL request requires a DAV:acl body.");
         }
-        List aces = new ArrayList();
+        List<Ace> aces = new ArrayList<Ace>();
         ElementIterator it = DomUtil.getChildren(aclElement, Ace.XML_ACE, SecurityConstants.NAMESPACE);
         while (it.hasNext()) {
             Element aceElem = it.nextElement();
@@ -101,13 +101,11 @@ public class AclProperty extends AbstractDavProperty {
     }
 
     public static Ace createGrantAce(Principal principal, Privilege[] privileges, boolean invert, boolean isProtected, AclResource inheritedFrom) {
-        Ace ace = new Ace(principal, invert, privileges, true, isProtected, inheritedFrom);
-        return ace;
+        return new Ace(principal, invert, privileges, true, isProtected, inheritedFrom);
     }
 
     public static Ace createDenyAce(Principal principal, Privilege[] privileges, boolean invert, boolean isProtected, AclResource inheritedFrom) {
-        Ace ace = new Ace(principal, invert, privileges, false, isProtected, inheritedFrom);
-        return ace;
+        return new Ace(principal, invert, privileges, false, isProtected, inheritedFrom);
     }
 
     //--------------------------------------------------------< inner class >---
@@ -212,8 +210,8 @@ public class AclProperty extends AbstractDavProperty {
                 ace.appendChild(principal.toXml(document));
             }
             Element gd = DomUtil.addChildElement(ace, ((grant) ? XML_GRANT : XML_DENY), SecurityConstants.NAMESPACE);
-            for (int i = 0; i < privileges.length; i++) {
-                gd.appendChild(privileges[i].toXml(document));
+            for (Privilege privilege : privileges) {
+                gd.appendChild(privilege.toXml(document));
             }
             if (isProtected) {
                 DomUtil.addChildElement(ace, XML_PROTECTED, SecurityConstants.NAMESPACE);
@@ -243,13 +241,13 @@ public class AclProperty extends AbstractDavProperty {
             } else {
                 gdElem = DomUtil.getChildElement(aceElement, XML_DENY, NAMESPACE);
             }
-            List privilegeList = new ArrayList();
+            List<Privilege> privilegeList = new ArrayList<Privilege>();
             ElementIterator privIt = DomUtil.getChildren(gdElem, Privilege.XML_PRIVILEGE, NAMESPACE);
             while (privIt.hasNext()) {
                Privilege pv = Privilege.getPrivilege(privIt.nextElement());
                privilegeList.add(pv);
             }
-            Privilege[] privileges = (Privilege[])privilegeList.toArray(new Privilege[privilegeList.size()]);
+            Privilege[] privileges = privilegeList.toArray(new Privilege[privilegeList.size()]);
 
             boolean isProtected = DomUtil.hasChildElement(aceElement, XML_PROTECTED, NAMESPACE);
             String inheritedHref = null;

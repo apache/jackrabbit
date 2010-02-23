@@ -97,11 +97,11 @@ public class IfHeader implements Header {
     /**
      * The list of all positive tokens present in the If header.
      */
-    private List allTokens = new ArrayList();
+    private List<String> allTokens = new ArrayList<String>();
     /**
      * The list of all NOT tokens present in the If header.
      */
-    private List allNotTokens = new ArrayList();
+    private List<String> allNotTokens = new ArrayList<String>();
 
     /**
      * Create a Untagged <code>IfHeader</code> if the given lock tokens.
@@ -111,9 +111,9 @@ public class IfHeader implements Header {
     public IfHeader(String[] tokens) {
         allTokens.addAll(Arrays.asList(tokens));
         StringBuffer b = new StringBuffer();
-        for (int i = 0; i < tokens.length; i++) {
+        for (String token : tokens) {
             b.append("(").append("<");
-            b.append(tokens[i]);
+            b.append(token);
             b.append(">").append(")");
         }
         headerValue = b.toString();
@@ -194,7 +194,7 @@ public class IfHeader implements Header {
      * @return an iterator over all tokens present in the if header, that were
      * not denied by a leading NOT statement.
      */
-    public Iterator getAllTokens() {
+    public Iterator<String> getAllTokens() {
         return allTokens.iterator();
     }
 
@@ -202,7 +202,7 @@ public class IfHeader implements Header {
      * @return an iterator over all NOT tokens present in the if header, that
      * were explicitly denied.
      */
-    public Iterator getAllNotTokens() {
+    public Iterator<String> getAllNotTokens() {
         return allNotTokens.iterator();
     }
 
@@ -265,7 +265,7 @@ public class IfHeader implements Header {
         IfHeaderMap map = new IfHeaderMap();
         try {
             while (true) {
-                // read next non-whitespace
+                // read next non-white space
                 int c = readWhiteSpace(reader);
                 if (c < 0) {
                     // end of input, no more entries
@@ -307,7 +307,7 @@ public class IfHeader implements Header {
         IfHeaderList list = new IfHeaderList();
         try {
             while (true) {
-                // read next non-whitespace
+                // read next non white space
                 reader.mark(1);
                 int c = readWhiteSpace(reader);
                 if (c < 0) {
@@ -617,6 +617,7 @@ public class IfHeader implements Header {
          *
          * @return the String representation of this entry.
          */
+        @Override
         public String toString() {
             if (stringValue == null) {
                 stringValue = getType() + ": " + (positive?"":"!") + value;
@@ -654,6 +655,7 @@ public class IfHeader implements Header {
          * @return <code>true</code> if the token matches the <em>IfList</em>
          *      entry's token value.
          */
+        @Override
         public boolean match(String token, String etag) {
             return super.match(token);
         }
@@ -664,6 +666,7 @@ public class IfHeader implements Header {
          *
          * @return The fixed string <em>Token</em> as the type name.
          */
+        @Override
         protected String getType() {
             return "Token";
         }
@@ -698,6 +701,7 @@ public class IfHeader implements Header {
          * @return <code>true</code> if the etag matches the <em>IfList</em>
          *      entry's etag value.
          */
+        @Override
         public boolean match(String token, String etag) {
             return super.match(etag);
         }
@@ -708,6 +712,7 @@ public class IfHeader implements Header {
          *
          * @return The fixed string <em>ETag</em> as the type name.
          */
+        @Override
         protected String getType() {
             return "ETag";
         }
@@ -725,44 +730,16 @@ public class IfHeader implements Header {
      * </pre>
      * <p>
      */
-    private static class IfList extends ArrayList {
-
-        /**
-         * Throws an <code>IllegalStateException</code> because only
-         * {@link IfListEntry} objects are supported in this list.
-         *
-         * @param o The <code>Object</code> to add.
-         * @return <code>true</code> if successful
-         *
-         * @throws IllegalStateException because only {@link IfListEntry}
-         *      objects are supported in this list.
-         */
-        public boolean add(Object o) {
-            throw new IllegalArgumentException("Only IfListEntry instances allowed");
-        }
-
-        /**
-         * Throws an <code>IllegalStateException</code> because only
-         * {@link IfListEntry} objects are supported in this list.
-         *
-         * @param index The position at which to add the object.
-         * @param element The <code>Object</code> to add.
-         *
-         * @throws IllegalStateException because only {@link IfListEntry}
-         *      objects are supported in this list.
-         */
-        public void add(int index, Object element) {
-            throw new IllegalArgumentException("Only IfListEntry instances allowed");
-        }
+    private static class IfList extends ArrayList<IfListEntry> {
 
         /**
          * Adds the {@link IfListEntry} at the end of the list.
          *
          * @param entry The {@link IfListEntry} to add to the list
          *
-         * @return <code>true</code> (as per the general contract of
-         *      Collection.add).
+         * @return <code>true</code> (as per the general contract of Collection.add).
          */
+        @Override
         public boolean add(IfListEntry entry) {
             return super.add(entry);
         }
@@ -776,6 +753,7 @@ public class IfHeader implements Header {
          * @throws IndexOutOfBoundsException if index is out of range
          *      <code>(index &lt; 0 || index &gt; size())</code>.
          */
+        @Override
         public void add(int index, IfListEntry entry) {
             super.add(index, entry);
         }
@@ -794,7 +772,7 @@ public class IfHeader implements Header {
         public boolean match(String token, String etag) {
             log.debug("match: Trying to match token="+token+", etag="+etag);
             for (int i=0; i < size(); i++) {
-                IfListEntry ile = (IfListEntry) get(i);
+                IfListEntry ile = get(i);
                 if (!ile.match(token, etag)) {
                     log.debug("match: Entry "+String.valueOf(i)+"-"+ile+" does not match");
                     return false;
@@ -840,7 +818,7 @@ public class IfHeader implements Header {
          Untagged = { "(" IfList ")" } .
      * </pre>
      */
-    private static class IfHeaderList extends ArrayList implements IfHeaderInterface {
+    private static class IfHeaderList extends ArrayList<IfList> implements IfHeaderInterface {
 
         /**
          * Matches a list of {@link IfList}s against the token and etag. If any of
@@ -860,10 +838,9 @@ public class IfHeader implements Header {
         public boolean matches(String resource, String token, String etag) {
             log.debug("matches: Trying to match token="+token+", etag="+etag);
 
-            for (int i=0; i < size(); i++) {
-                IfList il = (IfList) get(i);
+            for (IfList il : this) {
                 if (il.match(token, etag)) {
-                    log.debug("matches: Found match with "+il);
+                    log.debug("matches: Found match with " + il);
                     return true;
                 }
             }
@@ -881,7 +858,7 @@ public class IfHeader implements Header {
          Tagged = { "<" Word ">" "(" IfList ")" } .
      * </pre>
      */
-    private static class IfHeaderMap extends HashMap implements IfHeaderInterface {
+    private static class IfHeaderMap extends HashMap<String, IfHeaderList> implements IfHeaderInterface {
 
         /**
          * Matches the token and etag for the given resource. If the resource is
@@ -899,7 +876,7 @@ public class IfHeader implements Header {
         public boolean matches(String resource, String token, String etag) {
             log.debug("matches: Trying to match resource="+resource+", token="+token+","+etag);
 
-            IfHeaderList list = (IfHeaderList) get(resource);
+            IfHeaderList list = get(resource);
             if (list == null) {
                 log.debug("matches: No entry for tag "+resource+", assuming match");
                 return true;

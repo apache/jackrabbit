@@ -21,7 +21,7 @@ import java.util.Iterator;
 /**
  * <code>DavPropertyNameIterator</code>...
  */
-public interface DavPropertyNameIterator extends Iterator {
+public interface DavPropertyNameIterator extends Iterator<DavPropertyName> {
 
     public DavPropertyName nextPropertyName();
 

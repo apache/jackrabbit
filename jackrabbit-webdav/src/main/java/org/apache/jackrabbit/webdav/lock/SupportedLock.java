@@ -23,16 +23,17 @@ import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * The <code>SupportedLock</code> class encapsulates the lock capabilties
  * of a resource. It is mainly responsible for generating the &lt;supportedlock>
  * property.
  */
-public class SupportedLock extends AbstractDavProperty {
+public class SupportedLock extends AbstractDavProperty<List<LockEntry>> {
 
     /** the list of lock entries */
-    private final ArrayList entries = new ArrayList();
+    private final List<LockEntry> entries = new ArrayList<LockEntry>();
 
     /**
      * Creates a new empty SupportedLock property.
@@ -75,9 +76,7 @@ public class SupportedLock extends AbstractDavProperty {
      * supported.
      */
     public boolean isSupportedLock(Type type, Scope scope) {
-        Iterator it = entries.iterator();
-        while (it.hasNext()) {
-            LockEntry le = (LockEntry) it.next();
+        for (LockEntry le : entries) {
             if (le.getType().equals(type) && le.getScope().equals(scope)) {
                 return true;
             }
@@ -90,7 +89,7 @@ public class SupportedLock extends AbstractDavProperty {
      *
      * @return an iterator over all supported locks
      */
-    public Iterator getSupportedLocks() {
+    public Iterator<LockEntry> getSupportedLocks() {
         return entries.iterator();
     }
 
@@ -100,11 +99,10 @@ public class SupportedLock extends AbstractDavProperty {
      * @return An XML element of this lock support.
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element support = getName().toXml(document);
-        Iterator iter = entries.iterator();
-        while (iter.hasNext()) {
-            LockEntry le = (LockEntry) iter.next();
+        for (LockEntry le : entries) {
             support.appendChild(le.toXml(document));
         }
         return support;
@@ -116,7 +114,7 @@ public class SupportedLock extends AbstractDavProperty {
      * @return list of supported lock.
      * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
      */
-    public Object getValue() {
+    public List<LockEntry> getValue() {
         return entries;
     }
 

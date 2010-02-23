@@ -20,6 +20,7 @@ import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletRequest;
@@ -160,7 +161,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @return {@link List} of property change operations
      * @throws DavException In case of invalid request body
      */
-    public List getPropPatchChangeList() throws DavException;
+    public List<? extends PropEntry> getPropPatchChangeList() throws DavException;
 
     /**
      * Return the parsed 'lockinfo' request body, the {@link DavConstants#HEADER_TIMEOUT

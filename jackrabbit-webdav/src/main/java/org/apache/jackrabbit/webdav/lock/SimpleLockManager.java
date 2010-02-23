@@ -23,7 +23,7 @@ import org.apache.jackrabbit.webdav.DavResourceIterator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Simple manager for webdav locks.<br>
@@ -31,7 +31,7 @@ import java.util.Iterator;
 public class SimpleLockManager implements LockManager {
 
     /** map of locks */
-    private HashMap locks = new HashMap();
+    private Map<String, ActiveLock> locks = new HashMap<String, ActiveLock>();
 
     /**
      *
@@ -41,7 +41,7 @@ public class SimpleLockManager implements LockManager {
      * @see LockManager#hasLock(String, org.apache.jackrabbit.webdav.DavResource)
      */
     public boolean hasLock(String lockToken, DavResource resource) {
-        ActiveLock lock = (ActiveLock) locks.get(resource.getResourcePath());
+        ActiveLock lock = locks.get(resource.getResourcePath());
         if (lock != null && lock.getToken().equals(lockToken)) {
             return true;
         }
@@ -71,7 +71,7 @@ public class SimpleLockManager implements LockManager {
      * @return
      */
     private ActiveLock getLock(String path) {
-        ActiveLock lock = (ActiveLock) locks.get(path);
+        ActiveLock lock = locks.get(path);
         if (lock != null) {
             // check if not expired
             if (lock.isExpired()) {
@@ -105,7 +105,7 @@ public class SimpleLockManager implements LockManager {
 
         String resourcePath = resource.getResourcePath();
         // test if there is already a lock present on this resource
-        ActiveLock lock = (ActiveLock) locks.get(resourcePath);
+        ActiveLock lock = locks.get(resourcePath);
         if (lock != null && lock.isExpired()) {
             locks.remove(resourcePath);
             lock = null;
@@ -115,12 +115,10 @@ public class SimpleLockManager implements LockManager {
         }
         // test if the new lock would conflict with any lock inherited from the
         // collection or with a lock present on any member resource.
-        Iterator it = locks.keySet().iterator();
-        while (it.hasNext()) {
-            String key = (String) it.next();
+        for (String key : locks.keySet()) {
             // TODO: is check for lock on internal-member correct?
             if (Text.isDescendant(key, resourcePath)) {
-                ActiveLock l = (ActiveLock) locks.get(key);
+                ActiveLock l = locks.get(key);
                 if (l.isDeep() || (key.equals(Text.getRelativeParent(resourcePath, 1)) && !resource.isCollection())) {
                     throw new DavException(DavServletResponse.SC_LOCKED, "Resource '" + resource.getResourcePath() + "' already inherits a lock by its collection.");
                 }
@@ -168,7 +166,7 @@ public class SimpleLockManager implements LockManager {
         if (!locks.containsKey(resource.getResourcePath())) {
             throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
         }
-        ActiveLock lock = (ActiveLock) locks.get(resource.getResourcePath());
+        ActiveLock lock = locks.get(resource.getResourcePath());
         if (lock.getToken().equals(lockToken)) {
             locks.remove(resource.getResourcePath());
         } else {

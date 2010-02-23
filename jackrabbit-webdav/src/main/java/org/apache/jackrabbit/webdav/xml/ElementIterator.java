@@ -28,7 +28,7 @@ import java.util.NoSuchElementException;
 /**
  * <code>ElementIterator</code>...
  */
-public class ElementIterator implements Iterator {
+public class ElementIterator implements Iterator<Element> {
 
     private static Logger log = LoggerFactory.getLogger(ElementIterator.class);
 
@@ -85,7 +85,7 @@ public class ElementIterator implements Iterator {
      * @see java.util.Iterator#next()
      * @see #nextElement()
      */
-    public Object next() {
+    public Element next() {
         return nextElement();
     }
 

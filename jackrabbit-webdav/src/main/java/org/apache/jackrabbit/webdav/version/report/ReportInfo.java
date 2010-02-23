@@ -31,7 +31,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -48,7 +47,7 @@ public class ReportInfo implements XmlSerializable {
     private final Namespace typeNamespace;
     private final int depth;
     private final DavPropertyNameSet propertyNames;
-    private final List content = new ArrayList();
+    private final List<Element> content = new ArrayList<Element>();
 
     /**
      * Create a new <code>ReportInfo</code>
@@ -152,9 +151,7 @@ public class ReportInfo implements XmlSerializable {
         if (content.isEmpty()) {
             return false;
         }
-        Iterator it = content.iterator();
-        while (it.hasNext()) {
-            Element elem = (Element)it.next();
+        for (Element elem : content) {
             boolean sameNamespace = (namespace == null) ? elem.getNamespaceURI() == null : namespace.isSame(elem.getNamespaceURI());
             if (sameNamespace && elem.getLocalName().equals(localName)) {
                 return true;
@@ -173,11 +170,11 @@ public class ReportInfo implements XmlSerializable {
      * @return Xml element with the given name/namespace or <code>null</code>
      */
     public Element getContentElement(String localName, Namespace namespace) {
-        List values = getContentElements(localName, namespace);
+        List<Element> values = getContentElements(localName, namespace);
         if (values.isEmpty()) {
             return null;
         } else {
-            return (Element)values.get(0);
+            return values.get(0);
         }
     }
 
@@ -191,11 +188,9 @@ public class ReportInfo implements XmlSerializable {
      * @return List contain all child elements with the given name/namespace
      * or an empty list.
      */
-    public List getContentElements(String localName, Namespace namespace) {
-        List l = new ArrayList();
-        Iterator it = content.iterator();
-        while (it.hasNext()) {
-            Element elem = (Element)it.next();
+    public List<Element> getContentElements(String localName, Namespace namespace) {
+        List<Element> l = new ArrayList<Element>();
+        for (Element elem : content) {
             if (DomUtil.matches(elem, localName, namespace)) {
                 l.add(elem);
             }
@@ -232,14 +227,9 @@ public class ReportInfo implements XmlSerializable {
     public Element toXml(Document document) {
         Element reportElement = DomUtil.createElement(document, typeLocalName, typeNamespace);
         if (!content.isEmpty()) {
-            Iterator it = content.iterator();
-            while (it.hasNext()) {
-                Object contentEntry = it.next();
-                if (contentEntry instanceof Node) {
-                    Node n = document.importNode((Node)contentEntry, true);
-                    reportElement.appendChild(n);
-                }
-                // else: another object. this should never occure and is therefore ignored.
+            for (Element contentEntry : content) {
+                Node n = document.importNode(contentEntry, true);
+                reportElement.appendChild(n);
             }
         }
         if (!propertyNames.isEmpty()) {

@@ -90,6 +90,7 @@ public class OrderPatchMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_ORDERPATCH;
     }
@@ -100,6 +101,7 @@ public class OrderPatchMethod extends DavMethodBase {
      * @param statusCode
      * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_OK;
     }

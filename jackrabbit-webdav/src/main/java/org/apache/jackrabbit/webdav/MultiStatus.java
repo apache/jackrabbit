@@ -23,7 +23,6 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -37,7 +36,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * Map collecting the responses for this multistatus, where every href must
      * only occure one single time.
      */
-    private Map responses = new LinkedHashMap();
+    private Map<String, MultiStatusResponse> responses = new LinkedHashMap<String, MultiStatusResponse>();
 
     /**
      * A general response description at the multistatus top level is used to
@@ -120,7 +119,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * multistatus.
      */
     public MultiStatusResponse[] getResponses() {
-        return (MultiStatusResponse[]) responses.values().toArray(new MultiStatusResponse[responses.size()]);
+        return responses.values().toArray(new MultiStatusResponse[responses.size()]);
     }
 
     /**
@@ -149,9 +148,8 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      */
     public Element toXml(Document document) {
         Element multistatus = DomUtil.createElement(document, XML_MULTISTATUS, NAMESPACE);
-        Iterator it = responses.values().iterator();
-        while(it.hasNext()) {
-            multistatus.appendChild(((MultiStatusResponse)it.next()).toXml(document));
+        for (MultiStatusResponse resp : responses.values()) {
+            multistatus.appendChild(resp.toXml(document));
         }
         if (responseDescription != null) {
             Element respDesc = DomUtil.createElement(document, XML_RESPONSEDESCRIPTION, NAMESPACE, responseDescription);

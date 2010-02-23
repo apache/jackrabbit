@@ -31,7 +31,7 @@ import java.util.Map;
  */
 public class Scope implements XmlSerializable {
 
-    private static final Map scopes = new HashMap();
+    private static final Map<String, Scope> scopes = new HashMap<String, Scope>();
 
     public static final Scope EXCLUSIVE = Scope.create(DavConstants.XML_EXCLUSIVE, DavConstants.NAMESPACE);
     public static final Scope SHARED = Scope.create(DavConstants.XML_SHARED, DavConstants.NAMESPACE);
@@ -69,6 +69,7 @@ public class Scope implements XmlSerializable {
      * @param obj
      * @return
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -108,7 +109,7 @@ public class Scope implements XmlSerializable {
     public static Scope create(String localName, Namespace namespace) {
         String key = DomUtil.getExpandedName(localName, namespace);
         if (scopes.containsKey(key)) {
-            return (Scope) scopes.get(key);
+            return scopes.get(key);
         } else {
             Scope scope = new Scope(localName, namespace);
             scopes.put(key, scope);

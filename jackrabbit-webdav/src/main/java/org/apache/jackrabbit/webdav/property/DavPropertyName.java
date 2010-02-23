@@ -24,15 +24,16 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The <code>DavPropertyName</code> class reflects a Webdav property name. It
  * holds together the actualy name of the property and its namespace.
  */
-public class DavPropertyName implements DavConstants, XmlSerializable {
+public class DavPropertyName implements DavConstants, XmlSerializable, PropEntry {
 
     /** internal 'cache' of created property names */
-    private static final HashMap cache = new HashMap();
+    private static final Map<Namespace, Map<String, DavPropertyName>> cache = new HashMap<Namespace, Map<String, DavPropertyName>>();
 
     /* some standard webdav property (that have #PCDATA) */
     public static final DavPropertyName CREATIONDATE = DavPropertyName.create(PROPERTY_CREATIONDATE);
@@ -70,13 +71,13 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
     public synchronized static DavPropertyName create(String name, Namespace namespace) {
 
         // get (or create) map for the given namespace
-        HashMap map = (HashMap) cache.get(namespace);
+        Map<String, DavPropertyName> map = cache.get(namespace);
         if (map == null) {
-            map = new HashMap();
+            map = new HashMap<String, DavPropertyName>();
             cache.put(namespace, map);
         }
         // get (or create) property name object
-        DavPropertyName ret = (DavPropertyName) map.get(name);
+        DavPropertyName ret = map.get(name);
         if (ret == null) {
             if (namespace.equals(NAMESPACE)) {
                 // ensure prefix for default 'DAV:' namespace
@@ -157,6 +158,7 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
      *
      * @return the hash code
      */
+    @Override
     public int hashCode() {
         return (name.hashCode() + namespace.hashCode()) % Integer.MAX_VALUE;
     }
@@ -170,6 +172,7 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
      * @return <code>true</code> if the 2 objects are equal;
      *         <code>false</code> otherwise
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof DavPropertyName) {
             DavPropertyName propName = (DavPropertyName) obj;
@@ -183,6 +186,7 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
      *
      * @return a human readable string representation
      */
+    @Override
     public String toString() {
         return DomUtil.getExpandedName(name, namespace);
     }

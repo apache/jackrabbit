@@ -35,6 +35,7 @@ public class UnbindMethod extends DavMethodBase {
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return "UNBIND";
     }
@@ -45,6 +46,7 @@ public class UnbindMethod extends DavMethodBase {
      * @param statusCode
      * @return true if status code is 200 (binding was removed).
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_OK;
     }

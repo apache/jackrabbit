@@ -33,7 +33,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -78,7 +77,7 @@ public class SearchablePropertyReport implements Report {
     /**
      * Set collecting the DAV:principal-search-property entries.
      */
-    public final Set searchPropertySet = new HashSet();
+    public final Set<PrincipalSearchProperty> searchPropertySet = new HashSet<PrincipalSearchProperty>();
 
     /**
      * @see Report#getType()
@@ -116,9 +115,7 @@ public class SearchablePropertyReport implements Report {
      */
     public Element toXml(Document document) {
         Element rootElem = DomUtil.createElement(document, XML_PRINCIPAL_SEARCH_PROPERTY_SET, SecurityConstants.NAMESPACE);
-        Iterator it = searchPropertySet.iterator();
-        while (it.hasNext()) {
-            PrincipalSearchProperty psp = (PrincipalSearchProperty) it.next();
+        for (PrincipalSearchProperty psp : searchPropertySet) {
             rootElem.appendChild(psp.toXml(document));
         }
         return rootElem;
@@ -184,6 +181,8 @@ public class SearchablePropertyReport implements Report {
             return psElem;
         }
 
+        //---------------------------------------------------------< Object >---
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;
@@ -196,6 +195,7 @@ public class SearchablePropertyReport implements Report {
             return false;
         }
 
+        @Override
         public int hashCode() {
             return hashCode;
         }

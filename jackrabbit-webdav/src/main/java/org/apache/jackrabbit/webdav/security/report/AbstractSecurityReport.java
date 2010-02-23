@@ -72,8 +72,8 @@ public abstract class AbstractSecurityReport implements Report {
     public Element toXml(Document document) {
         MultiStatus ms = new MultiStatus();
         if (responses != null) {
-            for (int i = 0; i < responses.length; i++) {
-                ms.addResponse(responses[i]);
+            for (MultiStatusResponse response : responses) {
+                ms.addResponse(response);
             }
         }
         return ms.toXml(document);

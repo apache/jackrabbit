@@ -42,6 +42,7 @@ public class UnLockMethod extends DavMethodBase {
     /**
      * @see HttpMethod#getName()
      */
+    @Override
     public String getName() {
         return DavMethods.METHOD_UNLOCK;
     }
@@ -53,6 +54,7 @@ public class UnLockMethod extends DavMethodBase {
      * {@link DavServletResponse#SC_NO_CONTENT 204 (No Content)}.
      * @see DavMethodBase#isSuccess(int)
      */
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_NO_CONTENT;
     }
