@@ -77,6 +77,7 @@ public class VersionItemCollection extends DefaultItemCollection
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
+    @Override
     public String getSupportedMethods() {
         StringBuffer sb = new StringBuffer(ItemResourceConstants.METHODS);
         sb.append(", ").append(VersionResource.METHODS);
@@ -157,6 +158,7 @@ public class VersionItemCollection extends DefaultItemCollection
      *
      * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
      */
+    @Override
     protected void initSupportedReports() {
         super.initSupportedReports();
         if (exists()) {
@@ -167,6 +169,7 @@ public class VersionItemCollection extends DefaultItemCollection
     /**
      * Fill the property set for this resource.
      */
+    @Override
     protected void initProperties() {
         super.initProperties();
 
@@ -176,10 +179,10 @@ public class VersionItemCollection extends DefaultItemCollection
             try {
                 String creationDate = HttpDateFormat.creationDateFormat().format(v.getCreated().getTime());
                 // replace dummy creation date from default collection
-                properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, creationDate));
+                properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE, creationDate));
 
                 // required, protected DAV:version-name property
-                properties.add(new DefaultDavProperty(VERSION_NAME, v.getName(), true));
+                properties.add(new DefaultDavProperty<String>(VERSION_NAME, v.getName(), true));
 
                 // required, protected DAV:label-name-set property
                 String[] labels = getVersionHistoryItem().getVersionLabels(v);
@@ -195,7 +198,7 @@ public class VersionItemCollection extends DefaultItemCollection
 
                 // required DAV:checkout-set (computed) property
                 PropertyIterator it = v.getReferences();
-                List nodeList = new ArrayList();
+                List<Node> nodeList = new ArrayList<Node>();
                 while (it.hasNext()) {
                     Property p = it.nextProperty();
                     if (JcrConstants.JCR_BASEVERSION.equals(p.getName())) {
@@ -205,7 +208,7 @@ public class VersionItemCollection extends DefaultItemCollection
                         }
                     }
                 }
-                addHrefProperty(CHECKOUT_SET, (Node[]) nodeList.toArray(new Node[nodeList.size()]), true);
+                addHrefProperty(CHECKOUT_SET, nodeList.toArray(new Node[nodeList.size()]), true);
 
             } catch (RepositoryException e) {
                 log.error(e.getMessage());

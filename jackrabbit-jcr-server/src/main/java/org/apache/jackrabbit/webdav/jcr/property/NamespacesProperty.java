@@ -30,7 +30,6 @@ import org.w3c.dom.Element;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -39,28 +38,27 @@ import java.util.Collections;
 /**
  * <code>NamespacesProperty</code>...
  */
-public class NamespacesProperty extends AbstractDavProperty implements ItemResourceConstants {
+public class NamespacesProperty extends AbstractDavProperty<Map<String, String>> implements ItemResourceConstants {
 
     private static Logger log = LoggerFactory.getLogger(NamespacesProperty.class);
 
-    private final Map value = new HashMap();
+    private final Map<String, String> value = new HashMap<String, String>();
 
     public NamespacesProperty(NamespaceRegistry nsReg) throws RepositoryException {
         super(JCR_NAMESPACES, false);
         if (nsReg != null) {
-            String[] prefixes = nsReg.getPrefixes();
-            for (int i = 0; i < prefixes.length; i++) {
-                value.put(prefixes[i], nsReg.getURI(prefixes[i]));
+            for (String prefix : nsReg.getPrefixes()) {
+                value.put(prefix, nsReg.getURI(prefix));
             }
         }
     }
 
-    public NamespacesProperty(Map namespaces) {
+    public NamespacesProperty(Map<String, String> namespaces) {
         super(JCR_NAMESPACES, false);
         value.putAll(namespaces);
     }
 
-    public NamespacesProperty(DavProperty property) throws DavException {
+    public NamespacesProperty(DavProperty<?> property) throws DavException {
         super(JCR_NAMESPACES, false);
         Object v = property.getValue();
         if (!(v instanceof List)) {
@@ -69,9 +67,7 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
         }
         // retrieve list of prefix/uri pairs that build the new values of
         // the ns-registry
-        Iterator it = ((List)v).iterator();
-        while (it.hasNext()) {
-            Object listEntry = it.next();
+        for (Object listEntry : (List<?>) v) {
             if (listEntry instanceof Element) {
                 Element e = (Element)listEntry;
                 if (XML_NAMESPACE.equals(e.getLocalName())) {
@@ -85,23 +81,22 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
         }
     }
 
-    public Map getNamespaces() {
+    public Map<String, String> getNamespaces() {
         return Collections.unmodifiableMap(value);
     }
 
-    public Object getValue() {
+    public Map<String, String> getValue() {
         return Collections.unmodifiableMap(value);
     }
 
     /**
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        Iterator prefixes = value.keySet().iterator();
-        while (prefixes.hasNext()) {
-            String prefix = (String) prefixes.next();
-            String uri = (String) value.get(prefix);
+        for (String prefix : value.keySet()) {
+            String uri = value.get(prefix);
             Element nsElem = DomUtil.addChildElement(elem, XML_NAMESPACE, ItemResourceConstants.NAMESPACE);
             DomUtil.addChildElement(nsElem, XML_PREFIX, ItemResourceConstants.NAMESPACE, prefix);
             DomUtil.addChildElement(nsElem, XML_URI, ItemResourceConstants.NAMESPACE, uri);

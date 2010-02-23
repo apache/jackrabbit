@@ -58,7 +58,7 @@ import java.util.Map;
  //todo: removing all expired locks
  //todo: 'local' and 'global' are not accurate terms in the given context > replace
  /*todo: the usage of the 'global' transaction is not according to the JTA specification,
-   which explicitely requires any transaction present on a servlet to be completed before
+   which explicitly requires any transaction present on a servlet to be completed before
    the service method returns. Starting/completing transactions on the session object,
    which is possible with the jackrabbit implementation is a hack.*/
  /*todo: review of this transaction part is therefore required. Is there a use-case
@@ -67,9 +67,9 @@ public class TxLockManagerImpl implements TxLockManager {
 
     private static Logger log = LoggerFactory.getLogger(TxLockManagerImpl.class);
 
-    private TransactionMap map = new TransactionMap();
+    private final TransactionMap map = new TransactionMap();
 
-    private Map listeners = new IdentityHashMap();
+    private final Map<TransactionListener, TransactionListener> listeners = new IdentityHashMap<TransactionListener, TransactionListener>();
 
     /**
      * Create a new lock.
@@ -218,10 +218,10 @@ public class TxLockManagerImpl implements TxLockManager {
             if (lockInfo.isCommit()) {
                 TransactionListener[] txListeners;
                 synchronized (listeners) {
-                    txListeners = (TransactionListener[]) listeners.values().toArray(new TransactionListener[0]);
+                    txListeners = listeners.values().toArray(new TransactionListener[listeners.values().size()]);
                 }
-                for (int i = 0; i < txListeners.length; i++) {
-                    txListeners[i].beforeCommit(resource, lockToken);
+                for (TransactionListener txListener : txListeners) {
+                    txListener.beforeCommit(resource, lockToken);
                 }
                 DavException ex = null;
                 try {
@@ -229,8 +229,8 @@ public class TxLockManagerImpl implements TxLockManager {
                 } catch (DavException e) {
                     ex = e;
                 }
-                for (int i = 0; i < txListeners.length; i++) {
-                    txListeners[i].afterCommit(resource, lockToken, ex == null);
+                for (TransactionListener txListener : txListeners) {
+                    txListener.afterCommit(resource, lockToken, ex == null);
                 }
                 if (ex != null) {
                     throw ex;
@@ -336,11 +336,11 @@ public class TxLockManagerImpl implements TxLockManager {
             tx = m.get(lockToken);
         } else {
             // look through all the nested tx-maps (i.e. global txs) for the given txId
-            Iterator it = m.values().iterator();
+            Iterator<Transaction> it = m.values().iterator();
             while (it.hasNext() && tx == null) {
-                Transaction txMap = (Transaction) it.next();
+                Transaction txMap = it.next();
                 if (!txMap.isLocal()) {
-                    m = ((TransactionMap) txMap);
+                    m = (TransactionMap) txMap;
                     if (m.containsKey(lockToken)) {
                         tx = ((TransactionMap) txMap).get(lockToken);
                     }
@@ -418,7 +418,7 @@ public class TxLockManagerImpl implements TxLockManager {
      * @throws DavException
      */
     private static void addReferences(Transaction tx, TransactionMap responsibleMap,
-                                      TransactionResource resource) throws DavException {
+                                      TransactionResource resource) {
         log.debug("Adding transactionId '" + tx.getId() + "' as session lock token.");
         resource.getSession().addLockToken(tx.getId());
 
@@ -449,6 +449,7 @@ public class TxLockManagerImpl implements TxLockManager {
     private static Session getRepositorySession(TransactionResource resource) throws DavException {
         return JcrDavSession.getRepositorySession(resource.getSession());
     }
+
     //------------------------------------------< inner classes, interfaces >---
     /**
      * Internal <code>Transaction</code> interface
@@ -520,6 +521,7 @@ public class TxLockManagerImpl implements TxLockManager {
             this.lock = lock;
         }
 
+        //----------------------------------------------------< Transaction >---
         /**
          * @see #getLock()
          */
@@ -561,7 +563,7 @@ public class TxLockManagerImpl implements TxLockManager {
     }
 
     /**
-     *
+     * Local transaction
      */
     private final static class LocalTransaction extends AbstractTransaction {
 
@@ -569,10 +571,17 @@ public class TxLockManagerImpl implements TxLockManager {
             super(locator, lock);
         }
 
+        //----------------------------------------------------< Transaction >---        
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#isLocal() 
+         */
         public boolean isLocal() {
             return true;
         }
 
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#start(TransactionResource)
+         */
         public void start(TransactionResource resource) throws DavException {
             try {
                 // make sure, the given resource represents an existing repository item
@@ -585,6 +594,9 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
 
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#commit(TransactionResource) 
+         */
         public void commit(TransactionResource resource) throws DavException {
             try {
                 getItem(resource).save();
@@ -593,6 +605,9 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
 
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#rollback(TransactionResource)
+         */
         public void rollback(TransactionResource resource) throws DavException {
             try {
                 getItem(resource).refresh(false);
@@ -601,18 +616,35 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
 
+        //-------------------------------------------------< TransactionMap >---
+        /**
+         * Always throws <code>DavException</code>.
+         * 
+         * @see TransactionMap#putTransaction(String, org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction) 
+         */
+        @Override
+        public Transaction putTransaction(String key, Transaction value) throws DavException {
+            throw new DavException(WebdavResponse.SC_PRECONDITION_FAILED, "Attempt to nest a new transaction into a local one.");
+        }
+
+        //--------------------------------------------------------< private >---
+        /**
+         * Retrieve the repository item from the given transaction resource.
+         *
+         * @param resource
+         * @return
+         * @throws PathNotFoundException
+         * @throws RepositoryException
+         * @throws DavException
+         */
         private Item getItem(TransactionResource resource) throws PathNotFoundException, RepositoryException, DavException {
             String itemPath = resource.getLocator().getRepositoryPath();
             return getRepositorySession(resource).getItem(itemPath);
         }
-
-        public Transaction put(String key, Transaction value) throws DavException {
-            throw new DavException(WebdavResponse.SC_PRECONDITION_FAILED, "Attempt to nest a new transaction into a local one.");
-        }
     }
 
     /**
-     *
+     * Global transaction
      */
     private static class GlobalTransaction extends AbstractTransaction {
 
@@ -623,10 +655,17 @@ public class TxLockManagerImpl implements TxLockManager {
             xid = new XidImpl(lock.getToken());
         }
 
+        //----------------------------------------------------< Transaction >---
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#isLocal()
+         */
         public boolean isLocal() {
             return false;
         }
 
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#start(TransactionResource)
+         */
         public void start(TransactionResource resource) throws DavException {
             XAResource xaRes = getXAResource(resource);
             try {
@@ -637,6 +676,9 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
 
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#commit(TransactionResource)
+         */
         public void commit(TransactionResource resource) throws DavException {
             XAResource xaRes = getXAResource(resource);
             try {
@@ -647,6 +689,9 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
 
+        /**
+         * @see org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl.Transaction#rollback(TransactionResource)
+         */
         public void rollback(TransactionResource resource) throws DavException {
             XAResource xaRes = getXAResource(resource);
             try {
@@ -657,51 +702,53 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
 
+        //-------------------------------------------------< TransactionMap >---
+        @Override
+        public Transaction putTransaction(String key, Transaction value) throws DavException {
+            if (!(value instanceof LocalTransaction)) {
+                throw new DavException(WebdavResponse.SC_PRECONDITION_FAILED, "Attempt to nest global transaction into a global one.");
+            }
+            return super.put(key, value);
+        }
+
+        //--------------------------------------------------------< private >---
         private XAResource getXAResource(TransactionResource resource) throws DavException {
             /*
-            // commented, since server should be jackrabbit independant
-	    Session session = resource.getSession().getRepositorySession();
-	    if (session instanceof XASession) {
-		return ((XASession)session).getXAResource();
-	    } else {
-		throw new DavException(DavServletResponse.SC_FORBIDDEN);
-	    }
+            // commented, since server should be jackrabbit independent
+            Session session = resource.getSession().getRepositorySession();
+            if (session instanceof XASession) {
+            return ((XASession)session).getXAResource();
+            } else {
+            throw new DavException(DavServletResponse.SC_FORBIDDEN);
+            }
             */
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
 
         private void removeLocalTxReferences(TransactionResource resource) {
-            Iterator it = values().iterator();
-            while (it.hasNext()) {
-                Transaction tx = (Transaction) it.next();
+            for (Object o : values()) {
+                Transaction tx = (Transaction) o;
                 removeReferences(tx, this, resource);
             }
-        }
-
-        public Transaction put(String key, Transaction value) throws DavException {
-            if (!(value instanceof LocalTransaction)) {
-                throw new DavException(WebdavResponse.SC_PRECONDITION_FAILED, "Attempt to nest global transaction into a global one.");
-            }
-            return (Transaction) super.put(key, value);
         }
     }
 
     /**
      *
      */
-    private static class TransactionMap extends HashMap {
+    private static class TransactionMap extends HashMap<String, Transaction> {
 
         public Transaction get(String key) {
             Transaction tx = null;
             if (containsKey(key)) {
-                tx = (Transaction) super.get(key);
+                tx = super.get(key);
             }
             return tx;
         }
 
-        public Transaction put(String key, Transaction value) throws DavException {
-            // any global an local transactions allowed.
-            return (Transaction) super.put(key, value);
+        public Transaction putTransaction(String key, Transaction value) throws DavException {
+            // any global and local transactions allowed.
+            return super.put(key, value);
         }
     }
 

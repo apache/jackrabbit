@@ -40,6 +40,7 @@ import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
 import org.apache.jackrabbit.webdav.jcr.version.report.JcrPrivilegeReport;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.w3c.dom.Element;
@@ -52,12 +53,11 @@ import javax.jcr.Session;
 import javax.jcr.Repository;
 import javax.jcr.version.Version;
 import javax.jcr.observation.EventListener;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collections;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
@@ -214,16 +214,17 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @return
      */
     public DavResourceIterator getMembers() {
-        List l = new ArrayList();
         try {
             DavResourceLocator loc = getLocatorFromItem(getRepositorySession().getRootNode());
-            l.add(createResourceFromLocator(loc));
+            List<DavResource> list = Collections.singletonList(createResourceFromLocator(loc));
+            return new DavResourceIteratorImpl(list);
         } catch (DavException e) {
             log.error("Internal error while building resource for the root node.", e);
+            return DavResourceIteratorImpl.EMPTY;
         } catch (RepositoryException e) {
             log.error("Internal error while building resource for the root node.", e);
-        }
-        return new DavResourceIteratorImpl(l);
+            return DavResourceIteratorImpl.EMPTY;
+        }       
     }
 
     /**
@@ -247,30 +248,27 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException
      * @see DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      */
-    public void setProperty(DavProperty property) throws DavException {
+    @Override
+    public void setProperty(DavProperty<?> property) throws DavException {
         if (ItemResourceConstants.JCR_NAMESPACES.equals(property.getName())) {
             NamespacesProperty nsp = new NamespacesProperty(property);
             try {
-                Map changes = new HashMap(nsp.getNamespaces());
+                Map<String, String> changes = new HashMap<String, String>(nsp.getNamespaces());
                 NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
-                String[] registeredPrefixes = nsReg.getPrefixes();
-                for (int i = 0; i < registeredPrefixes.length; i++) {
-                    String prfx = registeredPrefixes[i];
-                    if (!changes.containsKey(prfx)) {
+                for (String prefix : nsReg.getPrefixes()) {
+                    if (!changes.containsKey(prefix)) {
                         // prefix not present amongst the new values any more > unregister
-                        nsReg.unregisterNamespace(prfx);
-                    } else if (changes.get(prfx).equals(nsReg.getURI(prfx))) {
+                        nsReg.unregisterNamespace(prefix);
+                    } else if (changes.get(prefix).equals(nsReg.getURI(prefix))) {
                         // present with same uri-value >> no action required
-                        changes.remove(prfx);
+                        changes.remove(prefix);
                     }
                 }
 
                 // try to register any prefix/uri pair that has a changed uri or
                 // it has not been present before.
-                Iterator prefixIt = changes.keySet().iterator();
-                while (prefixIt.hasNext()) {
-                    String prefix = (String)prefixIt.next();
-                    String uri = (String)changes.get(prefix);
+                for (String prefix : changes.keySet()) {
+                    String uri = changes.get(prefix);
                     nsReg.registerNamespace(prefix, uri);
                 }
             } catch (RepositoryException e) {
@@ -287,22 +285,23 @@ public class WorkspaceResourceImpl extends AbstractResource
      * and forwards any other set or remove requests to the super class.
      *
      * @see #setProperty(DavProperty)
-     * @see DefaultItemCollection#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
+     * @see DefaultItemCollection#alterProperties(List)
      */
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+    @Override
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
         if (changeList.size() == 1) {
-           Object propEntry = changeList.get(0);
+           PropEntry propEntry = changeList.get(0);
             // only modification of prop is allowed. removal is not possible
             if (propEntry instanceof DavProperty
-                && ItemResourceConstants.JCR_NAMESPACES.equals(((DavProperty)propEntry).getName())) {
-                DavProperty namespaceProp = (DavProperty) propEntry;
+                && ItemResourceConstants.JCR_NAMESPACES.equals(((DavProperty<?>)propEntry).getName())) {
+                DavProperty<?> namespaceProp = (DavProperty<?>) propEntry;
                 setProperty(namespaceProp);
             } else {
                 // attempt to remove the namespace property
                 throw new DavException(DavServletResponse.SC_CONFLICT);
             }
         } else {
-            // changelist contains more than the jcr:namespaces property
+            // change list contains more than the jcr:namespaces property
             // TODO: build multistatus instead
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
@@ -427,25 +426,29 @@ public class WorkspaceResourceImpl extends AbstractResource
     }
 
     //---------------------------------------------------< AbstractResource >---
+    @Override
     protected void initLockSupport() {
         // lock not allowed
     }
 
+    @Override
     protected void initSupportedReports() {
         super.initSupportedReports();
         supportedReports.addReportType(JcrPrivilegeReport.PRIVILEGES_REPORT);
     }
 
+    @Override
     protected String getWorkspaceHref() {
         return getHref();
     }
 
+    @Override
     protected void initProperties() {
         super.initProperties();
         try {
             // init workspace specific properties
             NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
-            DavProperty namespacesProp = new NamespacesProperty(nsReg);
+            DavProperty<?> namespacesProp = new NamespacesProperty(nsReg);
             properties.add(namespacesProp);
         } catch (RepositoryException e) {
             log.error("Failed to access NamespaceRegistry: " + e.getMessage());

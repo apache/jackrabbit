@@ -26,7 +26,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -44,6 +43,8 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionIterator;
+import javax.jcr.version.Version;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeType;
 import javax.xml.parsers.ParserConfigurationException;
@@ -82,6 +83,7 @@ import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +118,7 @@ public class DefaultItemCollection extends AbstractItemResource
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
+    @Override
     public String getComplianceClass() {
         String cc = super.getComplianceClass();
         if (isOrderable()) {
@@ -148,6 +151,7 @@ public class DefaultItemCollection extends AbstractItemResource
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
+    @Override
     public String getSupportedMethods() {
         String ms = super.getSupportedMethods();
         if (isOrderable()) {
@@ -177,6 +181,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @throws IOException
      * @see Session#exportSystemView(String, OutputStream, boolean, boolean)
      */
+    @Override
     public void spool(OutputContext outputContext) throws IOException {
         // spool properties
         super.spool(outputContext);
@@ -207,7 +212,8 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      * @see #JCR_MIXINNODETYPES
      */
-    public void setProperty(DavProperty property) throws DavException {
+    @Override
+    public void setProperty(DavProperty<?> property) throws DavException {
         internalSetProperty(property);
         complete();
     }
@@ -219,7 +225,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @throws DavException
      * @see #setProperty(DavProperty)
      */
-    private void internalSetProperty(DavProperty property) throws DavException {
+    private void internalSetProperty(DavProperty<?> property) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
@@ -227,12 +233,11 @@ public class DefaultItemCollection extends AbstractItemResource
         if (JCR_MIXINNODETYPES.equals(propName)) {
             Node n = (Node) item;
             try {
-                NodeType[] existingMixin = n.getMixinNodeTypes();
                 NodeTypeProperty mix = new NodeTypeProperty(property);
-                Set mixins = mix.getNodeTypeNames();
+                Set<String> mixins = mix.getNodeTypeNames();
 
-                for (int i = 0; i < existingMixin.length; i++) {
-                    String name = existingMixin[i].getName();
+                for (NodeType existingMixin : n.getMixinNodeTypes()) {
+                    String name = existingMixin.getName();
                     if (mixins.contains(name)){
                         // do not add existing mixins
                         mixins.remove(name);
@@ -243,9 +248,8 @@ public class DefaultItemCollection extends AbstractItemResource
                 }
 
                 // add the remaining mixing types that are not yet set
-                Iterator it = mixins.iterator();
-                while (it.hasNext()) {
-                    n.addMixin((String)it.next());
+                for (String mixin : mixins) {
+                    n.addMixin(mixin);
                 }
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
@@ -254,9 +258,9 @@ public class DefaultItemCollection extends AbstractItemResource
             Node n = (Node) item;
             try {
                 NodeTypeProperty ntProp = new NodeTypeProperty(property);
-                Set names = ntProp.getNodeTypeNames();
+                Set<String> names = ntProp.getNodeTypeNames();
                 if (names.size() == 1) {
-                    String ntName = names.iterator().next().toString();
+                    String ntName = names.iterator().next();
                     n.setPrimaryType(ntName);
                 } else {
                     // only a single node type can be primary node type.
@@ -266,7 +270,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 throw new JcrDavException(e);
             }
         } else {
-            // all props except for mixinnodetypes and primaryType are read-only
+            // all props except for mixin node types and primaryType are read-only
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
     }
@@ -280,6 +284,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#removeProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      * @see #JCR_MIXINNODETYPES
      */
+    @Override
     public void removeProperty(DavPropertyName propertyName) throws DavException {
         internalRemoveProperty(propertyName);
         complete();
@@ -300,16 +305,15 @@ public class DefaultItemCollection extends AbstractItemResource
             // remove all mixin nodetypes
             try {
                 Node n = (Node)item;
-                NodeType[] mixins = n.getMixinNodeTypes();
-                for (int i = 0; i < mixins.length; i++) {
-                    n.removeMixin(mixins[i].getName());
+                for (NodeType mixin : n.getMixinNodeTypes()) {
+                    n.removeMixin(mixin.getName());
                 }
             } catch (RepositoryException e) {
                 // NoSuchNodeTypeException, ConstraintViolationException should never occur...
                 throw new JcrDavException(e);
             }
         } else {
-            // all props except for mixinnodetypes are read-only
+            // all props except for mixin node types are read-only
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
     }
@@ -328,17 +332,16 @@ public class DefaultItemCollection extends AbstractItemResource
      * @return
      * @throws DavException
      */
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
-        Iterator it = changeList.iterator();
-        while (it.hasNext()) {
-            Object propEntry = it.next();
+    @Override
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
+        for (PropEntry propEntry : changeList) {
             if (propEntry instanceof DavPropertyName) {
                 // use the internal remove method in order to prevent premature 'save'
                 DavPropertyName propName = (DavPropertyName) propEntry;
                 internalRemoveProperty(propName);
             } else if (propEntry instanceof DavProperty) {
                 // use the internal set method in order to prevent premature 'save'
-                DavProperty prop = (DavProperty) propEntry;
+                DavProperty<?> prop = (DavProperty<?>) propEntry;
                 internalSetProperty(prop);
             } else {
                 throw new IllegalArgumentException("unknown object in change list: " + propEntry.getClass().getName());
@@ -347,7 +350,7 @@ public class DefaultItemCollection extends AbstractItemResource
         // TODO: missing undo of successful set/remove if subsequent operation fails
         // NOTE, that this is relevant with transactions only.
 
-        // success: save all changes together if no error occured
+        // success: save all changes together if no error occurred
         complete();
         return new MultiStatusResponse(getHref(), DavServletResponse.SC_OK);
     }
@@ -404,8 +407,8 @@ public class DefaultItemCollection extends AbstractItemResource
                         }
                     }
                     if (getTransactionId() == null) {
-                        // if not part of a transaction directely import on workspace
-                        // since changes would be explicitely saved in the
+                        // if not part of a transaction directly import on workspace
+                        // since changes would be explicitly saved in the
                         // complete-call.
                         getRepositorySession().getWorkspace().importXML(itemPath, in, uuidBehavior);
                     } else {
@@ -483,7 +486,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#getMembers()
      */
     public DavResourceIterator getMembers() {
-        ArrayList memberList = new ArrayList();
+        ArrayList<DavResource> memberList = new ArrayList<DavResource>();
         if (exists()) {
             try {
                 Node n = (Node)item;
@@ -547,6 +550,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * fails, false is returned.
      * @see org.apache.jackrabbit.webdav.DavResource#hasLock(org.apache.jackrabbit.webdav.lock.Type, org.apache.jackrabbit.webdav.lock.Scope)
      */
+    @Override
     public boolean hasLock(Type type, Scope scope) {
         if (isLockable(type, scope)) {
             if (Type.WRITE.equals(type)) {
@@ -573,6 +577,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#getLock(org.apache.jackrabbit.webdav.lock.Type, org.apache.jackrabbit.webdav.lock.Scope)
      * @see javax.jcr.Node#getLock() for the write locks.
      */
+    @Override
     public ActiveLock getLock(Type type, Scope scope) {
         ActiveLock lock = null;
         if (Type.WRITE.equals(type)) {
@@ -608,6 +613,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#lock(org.apache.jackrabbit.webdav.lock.LockInfo)
      * @see Node#lock(boolean, boolean)
      */
+    @Override
     public ActiveLock lock(LockInfo reqLockInfo) throws DavException {
 
         if (!isLockable(reqLockInfo.getType(), reqLockInfo.getScope())) {
@@ -648,6 +654,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#refreshLock(org.apache.jackrabbit.webdav.lock.LockInfo, String)
      * @see javax.jcr.lock.Lock#refresh()
      */
+    @Override
     public ActiveLock refreshLock(LockInfo reqLockInfo, String lockToken)
             throws DavException {
 
@@ -688,6 +695,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#unlock(String)
      * @see javax.jcr.Node#unlock()
      */
+    @Override
     public void unlock(String lockToken) throws DavException {
         ActiveLock lock = getWriteLock();
         if (lock != null && lockToken.equals(lock.getToken())) {
@@ -761,12 +769,11 @@ public class DefaultItemCollection extends AbstractItemResource
             throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Only DAV:custom ordering type supported.");
         }
 
-        OrderPatch.Member[] instructions = orderPatch.getOrderInstructions();
         Node n = (Node)item;
         try {
-            for (int i = 0; i < instructions.length; i++) {
-                String srcRelPath = Text.unescape(instructions[i].getMemberHandle());
-                Position pos = instructions[i].getPosition();
+            for (OrderPatch.Member instruction : orderPatch.getOrderInstructions()) {
+                String srcRelPath = Text.unescape(instruction.getMemberHandle());
+                Position pos = instruction.getPosition();
                 String destRelPath = getRelDestinationPath(pos, n.getNodes());
                 // preform the reordering
                 n.orderBefore(srcRelPath, destRelPath);
@@ -807,7 +814,7 @@ public class DefaultItemCollection extends AbstractItemResource
             String afterRelPath = position.getSegment();
             boolean found = false;
             // jcr only knows order-before > retrieve the node that follows the
-            // one incidated by the 'afterRelPath'.
+            // one indicated by the 'afterRelPath'.
             while (childNodes.hasNext() && destRelPath == null) {
                 // compare to last segment of node-path instead of name.
                 String childRelPath = Text.getName(childNodes.nextNode().getPath());
@@ -818,7 +825,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 }
             }
         } else {
-            // before or last. in the latter case the segmet is 'null'
+            // before or last. in the latter case the segment is 'null'
             destRelPath = position.getSegment();
         }
         if (destRelPath != null) {
@@ -836,6 +843,7 @@ public class DefaultItemCollection extends AbstractItemResource
      *
      * @see org.apache.jackrabbit.JcrConstants#MIX_LOCKABLE
      */
+    @Override
     protected void initLockSupport() {
         super.initLockSupport();
         // add exclusive write lock if allowed for the given node
@@ -859,6 +867,7 @@ public class DefaultItemCollection extends AbstractItemResource
      *
      * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
      */
+    @Override
     protected void initSupportedReports() {
         super.initSupportedReports();
         if (exists()) {
@@ -870,17 +879,18 @@ public class DefaultItemCollection extends AbstractItemResource
     /**
      * Fill the property set for this resource.
      */
+    @Override
     protected void initProperties() {
         super.initProperties();
         if (exists()) {
             // resource is serialized as system-view (xml)
-            properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, "text/xml"));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.GETCONTENTTYPE, "text/xml"));
             Node n = (Node)item;
             // overwrite the default creation date if possible
             try {
                 if (n.hasProperty(JcrConstants.JCR_CREATED)) {
                     long creationTime = n.getProperty(JcrConstants.JCR_CREATED).getValue().getLong();
-                    properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE,
+                    properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE,
                         HttpDateFormat.creationDateFormat().format(new Date(creationTime))));
                 }
             } catch (RepositoryException e) {
@@ -891,11 +901,11 @@ public class DefaultItemCollection extends AbstractItemResource
             try {
                 properties.add(new NodeTypeProperty(JCR_PRIMARYNODETYPE, n.getPrimaryNodeType(), false));
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
-                properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex()), true));
+                properties.add(new DefaultDavProperty<Integer>(JCR_INDEX, n.getIndex(), true));
                 addHrefProperty(JCR_REFERENCES, n.getReferences(), true);
                 addHrefProperty(JCR_WEAK_REFERENCES, n.getWeakReferences(), true);
                 if (n.isNodeType(JcrConstants.MIX_REFERENCEABLE)) {
-                    properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID(), true));
+                    properties.add(new DefaultDavProperty<String>(JCR_UUID, n.getUUID(), true));
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve node-specific property: " + e);
@@ -938,7 +948,7 @@ public class DefaultItemCollection extends AbstractItemResource
 
     /**
      * Add a new {@link HrefProperty href property} to the property set, where
-     * all items present in the specifed iterator are referenced in the
+     * all properties present in the specifed iterator are referenced in the
      * resulting property.
      *
      * @param name
@@ -946,13 +956,31 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param isProtected
      * @see #addHrefProperty(DavPropertyName, Item[], boolean)
      */
-    protected void addHrefProperty(DavPropertyName name, Iterator itemIterator,
+    protected void addHrefProperty(DavPropertyName name, PropertyIterator itemIterator,
                                    boolean isProtected) {
-        ArrayList l = new ArrayList();
+        ArrayList<Property> l = new ArrayList<Property>();
         while (itemIterator.hasNext()) {
-            l.add(itemIterator.next());
+            l.add(itemIterator.nextProperty());
         }
-        addHrefProperty(name, (Item[]) l.toArray(new Item[l.size()]), isProtected);
+        addHrefProperty(name, l.toArray(new Property[l.size()]), isProtected);
+    }
+
+    /**
+     * Add a new {@link HrefProperty href property} to the property set, where
+     * all versions present in the specifed iterator are referenced in the
+     * resulting property.
+     *
+     * @param name
+     * @param itemIterator
+     * @param isProtected
+     */
+    protected void addHrefProperty(DavPropertyName name, VersionIterator itemIterator,
+                                   boolean isProtected) {
+        ArrayList<Version> l = new ArrayList<Version>();
+        while (itemIterator.hasNext()) {
+            l.add(itemIterator.nextVersion());
+        }
+        addHrefProperty(name, l.toArray(new Version[l.size()]), isProtected);
     }
 
     /**
@@ -967,7 +995,7 @@ public class DefaultItemCollection extends AbstractItemResource
         String errorMsg = "Cannot parse stream into a 'ValuesProperty'.";
         try {
             Document reqBody = DomUtil.BUILDER_FACTORY.newDocumentBuilder().parse(in);
-            DavProperty defaultProp = DefaultDavProperty.createFromXml(reqBody.getDocumentElement());
+            DavProperty<?> defaultProp = DefaultDavProperty.createFromXml(reqBody.getDocumentElement());
             ValuesProperty vp = new ValuesProperty(defaultProp, PropertyType.STRING, getRepositorySession().getValueFactory());
             return vp;
         } catch (IOException e) {

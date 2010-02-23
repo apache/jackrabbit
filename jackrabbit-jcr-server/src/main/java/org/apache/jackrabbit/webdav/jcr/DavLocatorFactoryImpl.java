@@ -45,6 +45,7 @@ public class DavLocatorFactoryImpl extends AbstractLocatorFactory {
      * @return
      * @see AbstractLocatorFactory#getRepositoryPath(String, String)
      */
+    @Override
     protected String getRepositoryPath(String resourcePath, String wspPath) {
         if (resourcePath == null) {
             return null;
@@ -73,6 +74,7 @@ public class DavLocatorFactoryImpl extends AbstractLocatorFactory {
      * @return
      * @see AbstractLocatorFactory#getResourcePath(String, String)
      */
+    @Override
     protected String getResourcePath(String repositoryPath, String wspPath) {
         if (wspPath != null) {
             StringBuffer b = new StringBuffer(wspPath);

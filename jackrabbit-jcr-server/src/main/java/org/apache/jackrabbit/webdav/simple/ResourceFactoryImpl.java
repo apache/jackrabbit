@@ -203,6 +203,6 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      */
     private static boolean versioningSupported(Session repoSession) {
         String desc = repoSession.getRepository().getDescriptor(Repository.OPTION_VERSIONING_SUPPORTED);
-        return Boolean.valueOf(desc).booleanValue();
+        return Boolean.valueOf(desc);
     }
 }

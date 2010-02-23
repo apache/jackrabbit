@@ -56,9 +56,9 @@ public class RequestData {
      * 
      * @return an iterator over strings.
      */
-    public Iterator getParameterNames() {
+    public Iterator<String> getParameterNames() {
         
-        HashSet names = new HashSet(request.getParameterMap().keySet());
+        HashSet<String> names = new HashSet<String>(request.getParameterMap().keySet());
         names.addAll(mpReq.getParameterNames());
         
         return names.iterator();

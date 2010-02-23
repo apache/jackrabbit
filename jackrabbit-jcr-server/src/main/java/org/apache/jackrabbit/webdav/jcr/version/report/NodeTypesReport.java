@@ -41,7 +41,6 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -96,6 +95,7 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
     /**
      * @see Report#init(DavResource, ReportInfo)
      */
+    @Override
     public void init(DavResource resource, ReportInfo info) throws DavException {
         // delegate basic validation to super class
         super.init(resource, info);
@@ -133,25 +133,22 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
             ntDef.setAttribute(ISQUERYABLE_ATTRIBUTE, Boolean.toString(nt.isQueryable()));
 
             // declared supertypes
-            NodeType[] snts = nt.getDeclaredSupertypes();
             Element supertypes = DomUtil.addChildElement(ntDef, SUPERTYPES_ELEMENT, null);
-            for (int i = 0; i < snts.length; i++) {
-                DomUtil.addChildElement(supertypes, SUPERTYPE_ELEMENT, null, snts[i].getName());
+            for (NodeType snt : nt.getDeclaredSupertypes()) {
+                DomUtil.addChildElement(supertypes, SUPERTYPE_ELEMENT, null, snt.getName());
             }
 
-            // declared childnode defs
-            NodeDefinition[] cnd = nt.getChildNodeDefinitions();
-            for (int i = 0; i < cnd.length; i++) {
-                if (cnd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
-                    ntDef.appendChild(NodeDefinitionImpl.create(cnd[i]).toXml(document));
+            // declared child node definitions
+            for (NodeDefinition aCnd : nt.getChildNodeDefinitions()) {
+                if (aCnd.getDeclaringNodeType().getName().equals(nt.getName())) {
+                    ntDef.appendChild(NodeDefinitionImpl.create(aCnd).toXml(document));
                 }
             }
 
-            // declared propertyDefs
-            PropertyDefinition[] pd = nt.getPropertyDefinitions();
-            for (int i = 0; i < pd.length; i++) {
-                if (pd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
-                    ntDef.appendChild(PropertyDefinitionImpl.create(pd[i]).toXml(document));
+            // declared property definitions
+            for (PropertyDefinition aPd : nt.getPropertyDefinitions()) {
+                if (aPd.getDeclaringNodeType().getName().equals(nt.getName())) {
+                    ntDef.appendChild(PropertyDefinitionImpl.create(aPd).toXml(document));
                 }
             }
 
@@ -185,17 +182,15 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
         } else {
             // None of the simple types. test if a report for individual
             // nodetype was request. If not, the request body is not valid.
-            List elemList = info.getContentElements(XML_NODETYPE, NAMESPACE);
+            List<Element> elemList = info.getContentElements(XML_NODETYPE, NAMESPACE);
             if (elemList.isEmpty()) {
                 // throw exception if the request body does not contain a single nodetype element
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST, "NodeTypes report: request body has invalid format.");
             }
 
             // todo: find better solution...
-            List ntList = new ArrayList();
-            Iterator elemIter = elemList.iterator();
-            while (elemIter.hasNext()) {
-                Element el = ((Element)elemIter.next());
+            List<NodeType> ntList = new ArrayList<NodeType>();
+            for (Element el : elemList) {
                 String nodetypeName = DomUtil.getChildTextTrim(el, XML_NODETYPENAME, NAMESPACE);
                 if (nodetypeName != null) {
                     ntList.add(ntMgr.getNodeType(nodetypeName));

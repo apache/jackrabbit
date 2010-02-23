@@ -216,6 +216,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
 
     private BatchReadConfig brConfig;
 
+    @Override
     public void init() throws ServletException {
         super.init();
 
@@ -265,10 +266,12 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         super.setLocatorFactory(new DavLocatorFactoryImpl(getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX)));
     }
 
+    @Override
     public DavResourceFactory getResourceFactory() {
         return new ResourceFactoryImpl(txMgr, subscriptionMgr);
     }
 
+    @Override
     protected void doGet(WebdavRequest webdavRequest,
                          WebdavResponse webdavResponse,
                          DavResource davResource) throws IOException, DavException {
@@ -300,6 +303,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         }
     }
 
+    @Override
     protected void doPost(WebdavRequest webdavRequest, WebdavResponse webdavResponse, DavResource davResource)
             throws IOException, DavException {
         if (canHandle(DavMethods.DAV_POST, webdavRequest, davResource)) {
@@ -370,10 +374,10 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     private static String clone(Session session, String[] cloneArgs, DavResourceLocator reqLocator) throws RepositoryException {
         Workspace wsp = session.getWorkspace();
         String destPath = null;
-        for (int i = 0; i < cloneArgs.length; i++) {
-            String[] args = cloneArgs[i].split(",");
+        for (String cloneArg : cloneArgs) {
+            String[] args = cloneArg.split(",");
             if (args.length == 4) {
-                wsp.clone(args[0], args[1], args[2], new Boolean(args[3]).booleanValue());
+                wsp.clone(args[0], args[1], args[2], new Boolean(args[3]));
                 destPath = args[2];
             } else {
                 throw new RepositoryException(":clone parameter must have a value consisting of the 4 args needed for a Workspace.clone() call.");
@@ -385,8 +389,8 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     private static String copy(Session session, String[] copyArgs, DavResourceLocator reqLocator) throws RepositoryException {
         Workspace wsp = session.getWorkspace();
         String destPath = null;
-        for (int i = 0; i < copyArgs.length; i++) {
-            String[] args = copyArgs[i].split(",");
+        for (String copyArg : copyArgs) {
+            String[] args = copyArg.split(",");
             switch (args.length) {
                 case 2:
                     wsp.copy(args[0], args[1]);
@@ -427,10 +431,9 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         DiffHandler handler = new JsonDiffHandler(session, targetPath, data);
         DiffParser parser = new DiffParser(handler);
 
-        for (int i = 0; i < diffs.length; i++) {
+        for (String diff : diffs) {
             boolean success = false;
             try {
-                String diff = diffs[i];
                 parser.parse(diff);
 
                 session.save();
@@ -459,8 +462,8 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         JsonDiffHandler dh = new JsonDiffHandler(session, targetPath, data);
         boolean success = false;
         try {
-            for (Iterator pNames = data.getParameterNames(); pNames.hasNext();) {
-                String paramName = pNames.next().toString();
+            for (Iterator<String> pNames = data.getParameterNames(); pNames.hasNext();) {
+                String paramName = pNames.next();
                 String propPath = dh.getItemPath(paramName);
                 String parentPath = Text.getRelativeParent(propPath, 1);
 
@@ -499,8 +502,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         Node parent = session.getRootNode();
         String[] smgts = Text.explode(nodePath, '/');
 
-        for (int i = 0; i < smgts.length; i++) {
-            String nodeName = smgts[i];
+        for (String nodeName : smgts) {
             if (parent.hasNode(nodeName)) {
                 parent = parent.getNode(nodeName);
             } else {
@@ -547,6 +549,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             super(s);
         }
 
+        @Override
         public DavResourceLocator createResourceLocator(String prefix, String href) {
             DavResourceLocator loc = super.createResourceLocator(prefix, href);
             if (endsWithJson(href)) {
@@ -555,6 +558,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             return loc;
         }
 
+        @Override
         public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String path, boolean isResourcePath) {
             DavResourceLocator loc = super.createResourceLocator(prefix, workspacePath, path, isResourcePath);
             if (isResourcePath && endsWithJson(path)) {
@@ -669,6 +673,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             super(txMgr, subsMgr);
         }
 
+        @Override
         protected Item getItem(JcrDavSession sessionImpl, DavResourceLocator locator) throws PathNotFoundException, RepositoryException {
             if (locator instanceof WrappingLocator && ((WrappingLocator)locator).isJsonRequest) {
                 // check if the .json extension has been correctly interpreted.

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -24,7 +25,6 @@ import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.property.LengthsProperty;
@@ -34,10 +34,9 @@ import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.jackrabbit.server.io.IOUtil;
+import org.apache.jackrabbit.webdav.property.PropEntry;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.slf4j.Logger;
@@ -49,16 +48,15 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * <code>DefaultItemResource</code> represents JCR property item.
@@ -113,6 +111,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * @param outputContext
      * @see DavResource#spool(OutputContext)
      */
+    @Override
     public void spool(OutputContext outputContext) throws IOException {
         // write properties
         super.spool(outputContext);
@@ -158,7 +157,8 @@ public class DefaultItemResource extends AbstractItemResource {
      * @throws DavException
      * @see DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      */
-    public void setProperty(DavProperty property) throws DavException {
+    @Override
+    public void setProperty(DavProperty<?> property) throws DavException {
         internalSetProperty(property);
         complete();
     }
@@ -169,9 +169,9 @@ public class DefaultItemResource extends AbstractItemResource {
      * @param property
      * @throws DavException
      * @see #setProperty(DavProperty)
-     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
+     * @see #alterProperties(List)
      */
-    private void internalSetProperty(DavProperty property) throws DavException {
+    private void internalSetProperty(DavProperty<?> property) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
@@ -201,6 +201,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * @throws DavException
      * @see org.apache.jackrabbit.webdav.DavResource#removeProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
+    @Override
     public void removeProperty(DavPropertyName propertyName) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -220,16 +221,15 @@ public class DefaultItemResource extends AbstractItemResource {
      * @throws DavException
      * @see DavResource#alterProperties(List)
      */
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
-        Iterator it = changeList.iterator();
-        while (it.hasNext()) {
-            Object propEntry = it.next();
+    @Override
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
+        for (PropEntry propEntry : changeList) {
             if (propEntry instanceof DavPropertyName) {
                 // altering any properties fails if an attempt is made to remove
                 // a property
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
             } else if (propEntry instanceof DavProperty) {
-                DavProperty prop = (DavProperty) propEntry;
+                DavProperty<?> prop = (DavProperty<?>) propEntry;
                 internalSetProperty(prop);
             } else {
                 throw new IllegalArgumentException("unknown object in change list: " + propEntry.getClass().getName());
@@ -257,7 +257,8 @@ public class DefaultItemResource extends AbstractItemResource {
      */
     public DavResourceIterator getMembers() {
         log.warn("A non-collection resource never has internal members.");
-        return new DavResourceIteratorImpl(new ArrayList(0));
+        List<DavResource> drl = Collections.emptyList();
+        return new DavResourceIteratorImpl(drl);
     }
 
     /**
@@ -281,6 +282,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * has no lock.
      * @see DavResource#getLock(Type, Scope)
      */
+    @Override
     public ActiveLock getLock(Type type, Scope scope) {
         if (Type.WRITE.equals(type)) {
             return getCollection().getLock(type, scope);
@@ -293,6 +295,7 @@ public class DefaultItemResource extends AbstractItemResource {
     /**
      * Add resource specific properties.
      */
+    @Override
     protected void initProperties() {
         super.initProperties();
         if (exists()) {
@@ -308,17 +311,17 @@ public class DefaultItemResource extends AbstractItemResource {
                     contentType = IOUtil.buildContentType(JcrValueType.contentTypeFromType(type), "utf-8");
 
                 }
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
+                properties.add(new DefaultDavProperty<String>(DavPropertyName.GETCONTENTTYPE, contentType));
 
                 // add jcr-specific resource properties
-                properties.add(new DefaultDavProperty(JCR_TYPE, PropertyType.nameFromValue(type)));
+                properties.add(new DefaultDavProperty<String>(JCR_TYPE, PropertyType.nameFromValue(type)));
                 if (isMultiple()) {
                     properties.add(new ValuesProperty(prop.getValues()));
                     properties.add(new LengthsProperty(prop.getLengths()));
                 } else {
                     properties.add(new ValuesProperty(prop.getValue()));
                     long length = prop.getLength();
-                    properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(length), true));
+                    properties.add(new DefaultDavProperty<String>(JCR_LENGTH, String.valueOf(length), true));
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve resource properties: "+e.getMessage());

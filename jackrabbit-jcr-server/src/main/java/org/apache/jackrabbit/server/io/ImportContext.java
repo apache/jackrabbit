@@ -17,9 +17,6 @@
 package org.apache.jackrabbit.server.io;
 
 import javax.jcr.Item;
-
-import org.apache.tika.detect.Detector;
-
 import java.io.InputStream;
 
 /**

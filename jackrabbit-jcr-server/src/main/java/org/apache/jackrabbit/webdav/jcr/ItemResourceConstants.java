@@ -76,7 +76,7 @@ public interface ItemResourceConstants {
     public static final String XML_PREFIX = "prefix";
     public static final String XML_URI = "uri";
 
-    // xml elements used for repository-descritors report
+    // xml elements used for repository-descriptors report
     public static final String XML_DESCRIPTOR = "descriptor";
     public static final String XML_DESCRIPTORKEY = "descriptorkey";
     public static final String XML_DESCRIPTORVALUE = "descriptorvalue";
@@ -146,7 +146,7 @@ public interface ItemResourceConstants {
     // property names used for resource representing a workspace
     public static final DavPropertyName JCR_NAMESPACES = DavPropertyName.create("namespaces", NAMESPACE);
 
-    // property names used for resource representing a version hisotry
+    // property names used for resource representing a version history
     public static final DavPropertyName JCR_VERSIONABLEUUID = DavPropertyName.create("versionableuuid", NAMESPACE);
 
     //-----------------------------------------< JSR170 specific privileges >---

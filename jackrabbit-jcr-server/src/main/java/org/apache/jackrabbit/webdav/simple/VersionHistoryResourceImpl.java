@@ -31,6 +31,7 @@ import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.slf4j.Logger;
@@ -68,8 +69,9 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
      * @return
      * @see DavResource#getMembers()
      */
+    @Override
     public DavResourceIterator getMembers() {
-        ArrayList list = new ArrayList();
+        ArrayList<DavResource> list = new ArrayList<DavResource>();
         if (exists() && isCollection()) {
             try {
                 // only display versions as members of the vh. the jcr:versionLabels
@@ -85,9 +87,11 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
                     list.add(childRes);
                 }
             } catch (RepositoryException e) {
-                // should not occure
+                // should not occur
+                log.error("Unexpected error",e);
             } catch (DavException e) {
-                // should not occure
+                // should not occur
+                log.error("Unexpected error",e);
             }
         }
         return new DavResourceIteratorImpl(list);
@@ -98,6 +102,7 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
      *
      * @see DavResource#addMember(DavResource, InputContext)
      */
+    @Override
     public void addMember(DavResource member, InputContext inputContext) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -110,6 +115,7 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
      * while deleting.
      * @see DavResource#removeMember(org.apache.jackrabbit.webdav.DavResource)
      */
+    @Override
     public void removeMember(DavResource member) throws DavException {
         if (exists()) {
             VersionHistory versionHistory = (VersionHistory) getNode();
@@ -138,7 +144,8 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
      *
      * @see DavResource#setProperty(DavProperty)
      */
-    public void setProperty(DavProperty property) throws DavException {
+    @Override
+    public void setProperty(DavProperty<?> property) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 
@@ -147,6 +154,7 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
      *
      * @see DavResource#removeProperty(DavPropertyName)
      */
+    @Override
     public void removeProperty(DavPropertyName propertyName) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -156,7 +164,8 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
      *
      * @see DavResource#alterProperties(List)
      */
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+    @Override
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 
@@ -173,18 +182,18 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
     public VersionResource[] getVersions() throws DavException {
         try {
             VersionIterator vIter = ((VersionHistory)getNode()).getAllVersions();
-            ArrayList l = new ArrayList();
+            ArrayList<VersionResource> l = new ArrayList<VersionResource>();
             while (vIter.hasNext()) {
                     DavResourceLocator versionLoc = getLocatorFromNode(vIter.nextVersion());
                     DavResource vr = createResourceFromLocator(versionLoc);
                     if (vr instanceof VersionResource) {
-                        l.add(vr);
+                        l.add((VersionResource) vr);
                     } else {
                         // severe error since resource factory doesn't behave correctly.
                         throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
                     }
             }
-            return (VersionResource[]) l.toArray(new VersionResource[l.size()]);
+            return l.toArray(new VersionResource[l.size()]);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -194,11 +203,12 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
     /**
      * Fill the property set for this resource.
      */
+    @Override
     protected void initProperties() {
         if (!propsInitialized) {
             super.initProperties();
 
-            // change resourcetype defined by default item collection
+            // change resource type defined by default item collection
             properties.add(new ResourceType(new int[] {ResourceType.COLLECTION, ResourceType.VERSION_HISTORY}));
 
             // required root-version property for version-history resource
@@ -212,11 +222,11 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
             // required, protected version-set property for version-history resource
             try {
                 VersionIterator vIter = ((VersionHistory)getNode()).getAllVersions();
-                ArrayList l = new ArrayList();
+                ArrayList<Version> l = new ArrayList<Version>();
                 while (vIter.hasNext()) {
                     l.add(vIter.nextVersion());
                 }
-                properties.add(getHrefProperty(VersionHistoryResource.VERSION_SET, (Version[]) l.toArray(new Version[l.size()]), true, false));
+                properties.add(getHrefProperty(VersionHistoryResource.VERSION_SET, l.toArray(new Version[l.size()]), true, false));
             } catch (RepositoryException e) {
                 log.error(e.getMessage());
             }

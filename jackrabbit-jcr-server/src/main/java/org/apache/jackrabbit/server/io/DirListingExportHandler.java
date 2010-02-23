@@ -19,6 +19,7 @@ package org.apache.jackrabbit.server.io;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,7 +131,7 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
             throw new IOException(getName() + ": Cannot export " + context.getExportRoot());
         }
 
-        // properties (contentlength undefined)
+        // properties (content length undefined)
         context.setModificationTime(new Date().getTime());
         context.setContentType("text/html", "UTF-8");
         context.setETag("");
@@ -194,7 +195,7 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
             throw new IOException(getName() + ": Cannot export " + context.getExportRoot());
         }
 
-        // properties (contentlength undefined)
+        // properties (content length undefined)
         context.setModificationTime(new Date().getTime());
         context.setContentType("text/html", "UTF-8");
         context.setETag("");
@@ -281,7 +282,7 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
      * @see PropertyHandler#exportProperties(PropertyExportContext, boolean)
      */
     public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException {
-        // export-content facility only... no responsible for propfind.
+        // export-content facility only... no responsible for PROPFIND.
         throw new RepositoryException(getName() + ": Cannot export properties for context " + exportContext);
     }
 
@@ -292,7 +293,7 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
     /**
      * @see PropertyHandler#importProperties(PropertyImportContext, boolean)
      */
-    public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
+    public Map<? extends PropEntry, ?> importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
         // export facilities only -> throw
         throw new RepositoryException(getName() + ": Cannot import properties.");
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.server.io;
 
+import org.apache.jackrabbit.webdav.property.PropEntry;
+
 import javax.jcr.RepositoryException;
 import java.util.Map;
 
@@ -40,7 +42,7 @@ public interface PropertyManager {
      * @return
      * @throws RepositoryException
      */
-    public Map alterProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException;
+    public Map<? extends PropEntry, ?> alterProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException;
 
     /**
      *

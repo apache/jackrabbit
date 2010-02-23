@@ -44,7 +44,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
@@ -58,47 +57,49 @@ public class JcrDavException extends DavException {
     private static Logger log = LoggerFactory.getLogger(JcrDavException.class);
 
     // ordered mapping of Jcr exceptions to error codes.
-    private static Map codeMap = new LinkedHashMap(20);
+    private static Map<Class<? extends Throwable>, Integer> codeMap = new LinkedHashMap<Class<? extends Throwable>, Integer>(20);
     static {
-        codeMap.put(AccessDeniedException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
-        codeMap.put(ConstraintViolationException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(InvalidItemStateException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(InvalidSerializedDataException.class, new Integer(DavServletResponse.SC_BAD_REQUEST));
-        codeMap.put(InvalidQueryException.class, new Integer(DavServletResponse.SC_BAD_REQUEST));
-        codeMap.put(ItemExistsException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(ItemNotFoundException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
-        codeMap.put(LockException.class, new Integer(DavServletResponse.SC_LOCKED));
-        codeMap.put(MergeException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(NamespaceException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(NoSuchNodeTypeException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(NoSuchWorkspaceException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(PathNotFoundException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(ReferentialIntegrityException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(LoginException.class, new Integer(DavServletResponse.SC_UNAUTHORIZED));
-        codeMap.put(UnsupportedRepositoryOperationException.class, new Integer(DavServletResponse.SC_NOT_IMPLEMENTED));
-        codeMap.put(ValueFormatException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(VersionException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(RepositoryException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
+        codeMap.put(AccessDeniedException.class, DavServletResponse.SC_FORBIDDEN);
+        codeMap.put(ConstraintViolationException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(InvalidItemStateException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(InvalidSerializedDataException.class, DavServletResponse.SC_BAD_REQUEST);
+        codeMap.put(InvalidQueryException.class, DavServletResponse.SC_BAD_REQUEST);
+        codeMap.put(ItemExistsException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(ItemNotFoundException.class, DavServletResponse.SC_FORBIDDEN);
+        codeMap.put(LockException.class, DavServletResponse.SC_LOCKED);
+        codeMap.put(MergeException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(NamespaceException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(NoSuchNodeTypeException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(NoSuchWorkspaceException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(PathNotFoundException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(ReferentialIntegrityException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(LoginException.class, DavServletResponse.SC_UNAUTHORIZED);
+        codeMap.put(UnsupportedRepositoryOperationException.class, DavServletResponse.SC_NOT_IMPLEMENTED);
+        codeMap.put(ValueFormatException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(VersionException.class, DavServletResponse.SC_CONFLICT);
+        codeMap.put(RepositoryException.class, DavServletResponse.SC_FORBIDDEN);
     }
 
-    private static int lookupErrorCode(Class exceptionClass) {
-        Integer code = (Integer) codeMap.get(exceptionClass);
+    private static int lookupErrorCode(Class<? extends Throwable> exceptionClass) {
+        Integer code = codeMap.get(exceptionClass);
         if (code == null) {
-            for (Iterator it = codeMap.keySet().iterator(); it.hasNext();) {
-                Class jcrExceptionClass = (Class) it.next();
+            for (Class<? extends Throwable> jcrExceptionClass : codeMap.keySet()) {
                 if (jcrExceptionClass.isAssignableFrom(exceptionClass)) {
-                    code = (Integer) codeMap.get(jcrExceptionClass);
+                    code = codeMap.get(jcrExceptionClass);
                     break;
                 }
             }
             if (code == null) {
-                code = new Integer(DavServletResponse.SC_FORBIDDEN); // fallback
+                code = DavServletResponse.SC_FORBIDDEN; // fallback
             }
         }
-        return code.intValue();
+        return code;
     }
-    
-    private Class exceptionClass;
+
+    /**
+     * The exception wrapped by this DavException instance.
+     */
+    private Class<? extends Throwable> exceptionClass;
 
     /**
      * Create a new <code>JcrDavException</code>.
@@ -136,6 +137,7 @@ public class JcrDavException extends DavException {
      *
      * @return true
      */
+    @Override
     public boolean hasErrorCondition() {
         return true;
     }
@@ -148,6 +150,7 @@ public class JcrDavException extends DavException {
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element error = DomUtil.createElement(document, XML_ERROR, DavConstants.NAMESPACE);
         Element excep = DomUtil.createElement(document, "exception", ItemResourceConstants.NAMESPACE);

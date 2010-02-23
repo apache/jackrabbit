@@ -140,6 +140,7 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
          *
          * @return the hash code
          */
+        @Override
         public int hashCode() {
             return href.hashCode();
         }
@@ -152,6 +153,7 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
          * @return <code>true</code> if the 2 objects are equal;
          *         <code>false</code> otherwise
          */
+        @Override
         public boolean equals(Object obj) {
             if (obj instanceof DavResourceLocator) {
                 DavResourceLocator other = (DavResourceLocator) obj;

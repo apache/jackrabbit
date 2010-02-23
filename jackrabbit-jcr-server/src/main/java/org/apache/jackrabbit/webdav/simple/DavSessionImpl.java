@@ -29,7 +29,7 @@ import java.util.HashSet;
 public class DavSessionImpl extends JcrDavSession {
 
     /** the lock tokens of this session */
-    private final HashSet lockTokens = new HashSet();
+    private final HashSet<String> lockTokens = new HashSet<String>();
 
     /**
      * Creates a new DavSession based on a jcr session
@@ -56,6 +56,7 @@ public class DavSessionImpl extends JcrDavSession {
     /**
      * @see DavSession#addLockToken(String)
      */
+    @Override
     public void addLockToken(String token) {
         super.addLockToken(token);
         lockTokens.add(token);
@@ -64,13 +65,15 @@ public class DavSessionImpl extends JcrDavSession {
     /**
      * @see DavSession#getLockTokens()
      */
+    @Override
     public String[] getLockTokens() {
-        return (String[]) lockTokens.toArray(new String[lockTokens.size()]);
+        return lockTokens.toArray(new String[lockTokens.size()]);
     }
 
     /**
      * @see DavSession#removeLockToken(String)
      */
+    @Override
     public void removeLockToken(String token) {
         super.removeLockToken(token);
         lockTokens.remove(token);

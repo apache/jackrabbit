@@ -35,7 +35,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.ValueFactory;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -43,7 +42,7 @@ import java.util.List;
  * utilities to handle the multiple values of the property item represented
  * by this resource.
  */
-public class ValuesProperty extends AbstractDavProperty implements ItemResourceConstants {
+public class ValuesProperty extends AbstractDavProperty<Value[]> implements ItemResourceConstants {
 
     private static Logger log = LoggerFactory.getLogger(ValuesProperty.class);
 
@@ -82,7 +81,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @param valueFactory Factory used to retrieve JCR values from the value
      * of the given <code>DavProperty</code>.
      */
-    public ValuesProperty(DavProperty property, int defaultType,
+    public ValuesProperty(DavProperty<?> property, int defaultType,
                           ValueFactory valueFactory)
         throws RepositoryException, DavException {
         super(property.getName(), false);
@@ -92,32 +91,31 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
         }
 
         // retrieve jcr-values from child 'value'-element(s)
-        List valueElements = new ArrayList();
+        List<Element> valueElements = new ArrayList<Element>();
         Object propValue = property.getValue();
         if (propValue == null) {
             jcrValues = new Value[0];
         } else { /* not null propValue */
             if (isValueElement(propValue)) {
-                valueElements.add(propValue);
+                valueElements.add((Element) propValue);
             } else if (propValue instanceof List) {
-                Iterator elemIt = ((List)property.getValue()).iterator();
-                while (elemIt.hasNext()) {
-                    Object el = elemIt.next();
+                for (Object el : ((List<?>) property.getValue())) {
                     /* make sure, only Elements with name 'value' are used for
                     * the 'value' field. any other content (other elements, text,
                     * comment etc.) is ignored. NO bad-request/conflict error is
                     * thrown.
                     */
                     if (isValueElement(el)) {
-                        valueElements.add(el);
+                        valueElements.add((Element) el);
                     }
                 }
             }
             /* fill the 'value' with the valid 'value' elements found before */
-            Element[] elems = (Element[])valueElements.toArray(new Element[valueElements.size()]);
-            jcrValues = new Value[elems.length];
-            for (int i = 0; i < elems.length; i++) {
-                jcrValues[i] = getJcrValue(elems[i], defaultType, valueFactory);
+            jcrValues = new Value[valueElements.size()];
+            int i = 0;
+            for (Element element : valueElements) {
+                jcrValues[i] = getJcrValue(element, defaultType, valueFactory);
+                i++;
             }
         }
     }
@@ -222,7 +220,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @see #getJcrValues()
      * @see #getJcrValue()
      */
-    public Object getValue() {
+    public Value[] getValue() {
         return jcrValues;
     }
 
@@ -231,11 +229,11 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @param document
      * @return the xml element
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
         try {
-            for (int i = 0; i < jcrValues.length; i++) {
-                Value v = jcrValues[i];
+            for (Value v : jcrValues) {
                 String type = PropertyType.nameFromValue(v.getType());
                 String serializedValue = ValueHelper.serialize(v, true);
                 Element xmlValue = DomUtil.createElement(document, XML_VALUE, ItemResourceConstants.NAMESPACE, serializedValue);

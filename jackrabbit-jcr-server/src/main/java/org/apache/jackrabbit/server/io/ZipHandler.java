@@ -109,6 +109,7 @@ public class ZipHandler extends DefaultHandler {
     /**
      * @see IOHandler#canImport(ImportContext, boolean)
      */
+    @Override
     public boolean canImport(ImportContext context, boolean isCollection) {
         if (context == null || context.isCompleted()) {
             return false;
@@ -120,6 +121,7 @@ public class ZipHandler extends DefaultHandler {
     /**
      * @see DefaultHandler#importData(ImportContext, boolean, Node)
      */
+    @Override
     protected boolean importData(ImportContext context, boolean isCollection, Node contentNode) throws IOException, RepositoryException {
         boolean success = true;
         InputStream in = context.getInputStream();
@@ -140,6 +142,7 @@ public class ZipHandler extends DefaultHandler {
     /**
      * @see IOHandler#canExport(ExportContext, boolean)
      */
+    @Override
     public boolean canExport(ExportContext context, boolean isCollection) {
         if (super.canExport(context, isCollection)) {
             // mimetype must be application/zip
@@ -166,6 +169,7 @@ public class ZipHandler extends DefaultHandler {
     /**
      * @see DefaultHandler#exportData(ExportContext,boolean,Node)
      */
+    @Override
     protected void exportData(ExportContext context, boolean isCollection, Node contentNode) throws IOException, RepositoryException {
         ZipOutputStream zout = new ZipOutputStream(context.getOutputStream());
         zout.setMethod(ZipOutputStream.DEFLATED);
@@ -194,11 +198,11 @@ public class ZipHandler extends DefaultHandler {
         try {
             if (node.isNodeType(getNodeType())) {
                 ZipEntryExportContext subctx = new ZipEntryExportContext(node, zout, context, pos);
-                // try if iomanager can treat node as zip entry otherwise recurse.
+                // try if iomanager can treat node as zip entry otherwise recurs.
                 zout.putNextEntry(subctx.entry);
                 getIOManager().exportContent(subctx, false);
             } else {
-                // recurse
+                // recurs
                 NodeIterator niter = node.getNodes();
                 while (niter.hasNext()) {
                     exportZipEntry(context, zout, niter.nextNode(), pos);
@@ -290,14 +294,17 @@ public class ZipHandler extends DefaultHandler {
             importRoot = IOUtil.mkDirs(contentNode, Text.getRelativeParent(path, 1), getCollectionNodeType());
         }
 
+        @Override
         public Item getImportRoot() {
             return importRoot;
         }
 
+        @Override
         public long getModificationTime() {
             return entry.getTime();
         }
 
+        @Override
         public long getContentLength() {
             return entry.getSize();
         }

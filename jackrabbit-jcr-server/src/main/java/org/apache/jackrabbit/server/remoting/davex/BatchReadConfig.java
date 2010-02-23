@@ -42,7 +42,7 @@ class BatchReadConfig {
     public static final int DEPTH_INFINITE = -1;
 
     private int defaultDepth = DEPTH_DEFAULT;
-    private final Map depthMap = new HashMap();
+    private final Map<String, Integer> depthMap = new HashMap<String, Integer>();
 
     /**
      * Create an empty batch-read config.
@@ -67,7 +67,7 @@ class BatchReadConfig {
      * @param props
      */
     public void add(Properties props) {
-        for (Enumeration en = props.propertyNames(); en.hasMoreElements();) {
+        for (Enumeration<?> en = props.propertyNames(); en.hasMoreElements();) {
             String name = en.nextElement().toString();
             String depthStr = props.getProperty(name);
             try {
@@ -102,7 +102,7 @@ class BatchReadConfig {
      */
     public int getDepth(String ntName) {
         if (depthMap.containsKey(ntName)) {
-            return ((Integer) (depthMap.get(ntName))).intValue();
+            return depthMap.get(ntName);
         } else {
             return defaultDepth;
         }
@@ -122,7 +122,7 @@ class BatchReadConfig {
         try {
             String ntName = node.getPrimaryNodeType().getName();
             if (depthMap.containsKey(ntName)) {
-                depth = ((Integer) (depthMap.get(ntName))).intValue();
+                depth = depthMap.get(ntName);
             }
         } catch (RepositoryException e) {
             // ignore and return default.
@@ -142,7 +142,7 @@ class BatchReadConfig {
         if (ntName == null || depth < DEPTH_INFINITE) {
             throw new IllegalArgumentException();
         }
-        depthMap.put(ntName, new Integer(depth));
+        depthMap.put(ntName, depth);
     }
 
     /**

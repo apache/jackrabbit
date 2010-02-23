@@ -36,6 +36,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>JCRWebdavServer</code>...
@@ -140,8 +142,8 @@ public class JCRWebdavServer implements DavSessionProvider {
      */
     private class SessionCache {
 
-        private SessionMap sessionMap = new SessionMap();
-        private HashMap referenceToSessionMap = new HashMap();
+        private Map<DavSession, Set<Object>> sessionMap = new HashMap<DavSession, Set<Object>>();
+        private Map<Object, DavSession> referenceToSessionMap = new HashMap<Object, DavSession>();
 
         /**
          * Try to retrieve <code>DavSession</code> if a TransactionId or
@@ -171,8 +173,8 @@ public class JCRWebdavServer implements DavSessionProvider {
             if (session == null) {
                 // try tokens present in the if-header
                 IfHeader ifHeader = new IfHeader(request);
-                for (Iterator it = ifHeader.getAllTokens(); it.hasNext();) {
-                    String token = it.next().toString();
+                for (Iterator<String> it = ifHeader.getAllTokens(); it.hasNext();) {
+                    String token = it.next();
                     if (containsReference(token)) {
                         session = getSessionByReference(token);
                         break;
@@ -184,7 +186,7 @@ public class JCRWebdavServer implements DavSessionProvider {
             if (session == null) {
                 Session repSession = getRepositorySession(request);
                 session = new DavSessionImpl(repSession);
-                sessionMap.put(session, new HashSet());
+                sessionMap.put(session, new HashSet<Object>());
                 log.debug("login: User '" + repSession.getUserID() + "' logged in.");
             } else {
                 log.debug("login: Retrieved cached session for user '" + getUserID(session) + "'");
@@ -200,7 +202,7 @@ public class JCRWebdavServer implements DavSessionProvider {
          * @param reference
          */
         private void addReference(DavSession session, Object reference) {
-            HashSet referenceSet = sessionMap.get(session);
+            Set<Object> referenceSet = sessionMap.get(session);
             if (referenceSet != null) {
                 referenceSet.add(reference);
                 referenceToSessionMap.put(reference, session);
@@ -216,7 +218,7 @@ public class JCRWebdavServer implements DavSessionProvider {
          * @param reference
          */
         private void removeReference(DavSession session, Object reference) {
-            HashSet referenceSet = sessionMap.get(session);
+            Set<Object> referenceSet = sessionMap.get(session);
             if (referenceSet != null) {
                 if (referenceSet.remove(reference)) {
                     log.debug("Removed reference " + reference + " to session " + session);
@@ -233,8 +235,8 @@ public class JCRWebdavServer implements DavSessionProvider {
                         sessionProvider.releaseSession(repSession);
                         log.debug("Login: User '" + usr + "' logged out");
                     } catch (DavException e) {
-                        // should not occure, since we original built a DavSessionImpl
-                        // that wraps a repository session.
+                        // should not occur, since we originally built a
+                        // DavSessionImpl that wraps a repository session.
                         log.error("Unexpected error: " + e.getMessage(), e.getCause());
                     }
                 } else {
@@ -267,7 +269,7 @@ public class JCRWebdavServer implements DavSessionProvider {
          * @see #containsReference(Object)
          */
         private DavSession getSessionByReference(Object reference) {
-            return (DavSession) referenceToSessionMap.get(reference);
+            return referenceToSessionMap.get(reference);
         }
 
         /**
@@ -304,24 +306,6 @@ public class JCRWebdavServer implements DavSessionProvider {
             }
             // fallback
             return session.toString();
-        }
-    }
-
-    /**
-     * Simple inner class extending the {@link HashMap}.
-     */
-    private static class SessionMap extends HashMap {
-
-        public HashSet get(DavSession key) {
-            return (HashSet) super.get(key);
-        }
-
-        public HashSet put(DavSession key, HashSet value) {
-            return (HashSet) super.put(key, value);
-        }
-
-        public HashSet remove(DavSession key) {
-            return (HashSet) super.remove(key);
         }
     }
 }

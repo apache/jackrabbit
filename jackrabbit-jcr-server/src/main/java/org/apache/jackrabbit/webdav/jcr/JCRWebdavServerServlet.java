@@ -95,6 +95,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      *
      * @throws ServletException
      */
+    @Override
     public void init() throws ServletException {
         super.init();
 
@@ -113,7 +114,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
         subscriptionMgr = new SubscriptionManagerImpl();
         txMgr.addTransactionListener((SubscriptionManagerImpl) subscriptionMgr);
 
-        // todo: ev. make configurable
+        // todo: eventually make configurable
         resourceFactory = new DavResourceFactoryImpl(txMgr, subscriptionMgr);
         locatorFactory = new DavLocatorFactoryImpl(pathPrefix);
     }
@@ -128,6 +129,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      *
      * @see AbstractWebdavServlet#isPreconditionValid(WebdavRequest, DavResource)
      */
+    @Override
     protected boolean isPreconditionValid(WebdavRequest request, DavResource resource) {
         // first check matching If header
         if (!request.matchesIfHeader(resource)) {
@@ -140,7 +142,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
             Session repositorySesssion = JcrDavSession.getRepositorySession(request.getDavSession());
             String reqWspName = resource.getLocator().getWorkspaceName();
             String wsName = repositorySesssion.getWorkspace().getName();
-            //  compare workspace names if the req. resource is not the root-collection.
+            //  compare workspace names if the requested resource isn't the root-collection.
             if (reqWspName != null && !reqWspName.equals(wsName)) {
                 return false;
             }
@@ -161,6 +163,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      * @return server
      * @see AbstractWebdavServlet#getDavSessionProvider()
      */
+    @Override
     public DavSessionProvider getDavSessionProvider() {
         if (server == null) {
             Repository repository = getRepository();
@@ -177,6 +180,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      *
      * @see AbstractWebdavServlet#setDavSessionProvider(DavSessionProvider)
      */
+    @Override
     public void setDavSessionProvider(DavSessionProvider davSessionProvider) {
         throw new UnsupportedOperationException("Not implemented. DavSession(s) are provided by the 'JCRWebdavServer'");
     }
@@ -186,6 +190,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      *
      * @see AbstractWebdavServlet#getLocatorFactory()
      */
+    @Override
     public DavLocatorFactory getLocatorFactory() {
         if (locatorFactory == null) {
             locatorFactory = new DavLocatorFactoryImpl(pathPrefix);
@@ -198,6 +203,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      *
      * @see AbstractWebdavServlet#setLocatorFactory(DavLocatorFactory)
      */
+    @Override
     public void setLocatorFactory(DavLocatorFactory locatorFactory) {
         this.locatorFactory = locatorFactory;
     }
@@ -207,6 +213,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      *
      * @see AbstractWebdavServlet#getResourceFactory()
      */
+    @Override
     public DavResourceFactory getResourceFactory() {
         if (resourceFactory == null) {
             resourceFactory = new DavResourceFactoryImpl(txMgr, subscriptionMgr);
@@ -219,6 +226,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      *
      * @see AbstractWebdavServlet#setResourceFactory(org.apache.jackrabbit.webdav.DavResourceFactory)
      */
+    @Override
     public void setResourceFactory(DavResourceFactory resourceFactory) {
         this.resourceFactory = resourceFactory;
     }
@@ -230,6 +238,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      * @return corresponding init parameter or {@link #DEFAULT_AUTHENTICATE_HEADER}.
      * @see #INIT_PARAM_AUTHENTICATE_HEADER
      */
+    @Override
     public String getAuthenticateHeaderValue() {
         return authenticate_header;
     }

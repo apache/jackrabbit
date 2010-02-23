@@ -143,6 +143,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      *
      * @throws ServletException
      */
+    @Override
     public void init() throws ServletException {
         super.init();
 
@@ -211,6 +212,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected boolean isPreconditionValid(WebdavRequest request,
                                           DavResource resource) {
         return !resource.exists() || request.matchesIfHeader(resource);
@@ -244,6 +246,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @return the locator factory
      * @see AbstractWebdavServlet#getLocatorFactory()
      */
+    @Override
     public DavLocatorFactory getLocatorFactory() {
         if (locatorFactory == null) {
             locatorFactory = new LocatorFactoryImplEx(resourcePathPrefix);
@@ -257,6 +260,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @param locatorFactory
      * @see AbstractWebdavServlet#setLocatorFactory(DavLocatorFactory)
      */
+    @Override
     public void setLocatorFactory(DavLocatorFactory locatorFactory) {
         this.locatorFactory = locatorFactory;
     }
@@ -292,6 +296,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @return the resource factory
      * @see AbstractWebdavServlet#getResourceFactory()
      */
+    @Override
     public DavResourceFactory getResourceFactory() {
         if (resourceFactory == null) {
             resourceFactory = new ResourceFactoryImpl(getLockManager(), getResourceConfig());
@@ -305,6 +310,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @param resourceFactory
      * @see AbstractWebdavServlet#setResourceFactory(org.apache.jackrabbit.webdav.DavResourceFactory)
      */
+    @Override
     public void setResourceFactory(DavResourceFactory resourceFactory) {
         this.resourceFactory = resourceFactory;
     }
@@ -355,6 +361,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @return the session provider
      * @see AbstractWebdavServlet#getDavSessionProvider()
      */
+    @Override
     public synchronized DavSessionProvider getDavSessionProvider() {
         if (davSessionProvider == null) {
             davSessionProvider =
@@ -369,6 +376,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @param sessionProvider
      * @see AbstractWebdavServlet#setDavSessionProvider(org.apache.jackrabbit.webdav.DavSessionProvider)
      */
+    @Override
     public synchronized void setDavSessionProvider(DavSessionProvider sessionProvider) {
         this.davSessionProvider = sessionProvider;
     }
@@ -382,6 +390,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * or {@link #DEFAULT_AUTHENTICATE_HEADER}.
      * @see AbstractWebdavServlet#getAuthenticateHeaderValue()
      */
+    @Override
     public String getAuthenticateHeaderValue() {
         return authenticate_header;
     }

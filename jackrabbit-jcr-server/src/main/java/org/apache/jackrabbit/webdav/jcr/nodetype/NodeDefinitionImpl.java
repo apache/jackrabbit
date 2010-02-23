@@ -99,6 +99,7 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
      * @return xml representation
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = super.toXml(document);
         elem.setAttribute(SAMENAMESIBLINGS_ATTRIBUTE, Boolean.toString(allowsSameNameSiblings()));
@@ -108,11 +109,10 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
             elem.setAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE, defaultPrimaryType.getName());
         }
         // reqPrimaryTypes: minimal set is nt:base.
-        NodeType[] nts = getRequiredPrimaryTypes();
         Element reqPrimaryTypes = document.createElement(REQUIREDPRIMARYTYPES_ELEMENT);
-        for (int i = 0; i < nts.length; i++) {
+        for (NodeType nt : getRequiredPrimaryTypes()) {
             Element rptElem = document.createElement(REQUIREDPRIMARYTYPE_ELEMENT);
-            DomUtil.setText(rptElem, nts[i].getName());
+            DomUtil.setText(rptElem, nt.getName());
             reqPrimaryTypes.appendChild(rptElem);
 
         }
@@ -125,6 +125,7 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
      *
      * @return always returns {@link #CHILDNODEDEFINITION_ELEMENT}.
      */
+    @Override
     String getElementName() {
         return CHILDNODEDEFINITION_ELEMENT;
     }

@@ -116,9 +116,8 @@ public class DavSessionProviderImpl implements DavSessionProvider {
         DavSession ds = request.getDavSession();
         if (ds != null && ds instanceof DavSessionImpl) {
             Session repSession = ((DavSessionImpl)ds).getRepositorySession();
-            String[] lockTokens = repSession.getLockTokens();
-            for (int i = 0; i < lockTokens.length; i++) {
-                repSession.removeLockToken(lockTokens[i]);
+            for (String lockToken : repSession.getLockTokens()) {
+                repSession.removeLockToken(lockToken);
             }
             sesProvider.releaseSession(repSession);
             log.debug("Releasing session '"+ ds + "' from request '" + request + "'");

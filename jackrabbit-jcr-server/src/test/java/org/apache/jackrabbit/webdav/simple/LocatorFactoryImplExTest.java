@@ -25,6 +25,7 @@ public class LocatorFactoryImplExTest extends TestCase {
 
     private DavLocatorFactory factory;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         // for simplicity (not yet used) ignore the path prefix.

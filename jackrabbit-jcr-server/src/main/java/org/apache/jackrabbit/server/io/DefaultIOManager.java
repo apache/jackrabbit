@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.tika.detect.Detector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -48,6 +48,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -184,7 +185,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
-    public DavProperty getProperty(DavPropertyName name) {
+    public DavProperty<?> getProperty(DavPropertyName name) {
         return getProperties().get(name);
     }
 
@@ -205,7 +206,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException Always throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      * @see org.apache.jackrabbit.webdav.DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      */
-    public void setProperty(DavProperty property) throws DavException {
+    public void setProperty(DavProperty<?> property) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 
@@ -225,7 +226,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      *
      * @see DavResource#alterProperties(List)
      */
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 
@@ -295,7 +296,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * todo improve....
      */
     public ActiveLock[] getLocks() {
-        List locks = new ArrayList();
+        List<ActiveLock> locks = new ArrayList<ActiveLock>();
         // tx locks
         ActiveLock l = getLock(TransactionConstants.TRANSACTION, TransactionConstants.LOCAL);
         if (l != null) {
@@ -315,7 +316,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
                 locks.add(l);
             }
         }
-        return (ActiveLock[]) locks.toArray(new ActiveLock[locks.size()]);
+        return locks.toArray(new ActiveLock[locks.size()]);
     }
 
     /**
@@ -471,17 +472,17 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see DeltaVResource#getReferenceResources(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
     public DavResource[] getReferenceResources(DavPropertyName hrefPropertyName) throws DavException {
-        DavProperty prop = getProperty(hrefPropertyName);
+        DavProperty<?> prop = getProperty(hrefPropertyName);
         if (prop == null || !(prop instanceof HrefProperty)) {
             throw new DavException(DavServletResponse.SC_CONFLICT, "Unknown Href-Property '"+hrefPropertyName+"' on resource "+getResourcePath());
         }
 
-        List hrefs = ((HrefProperty)prop).getHrefs();
+        List<String> hrefs = ((HrefProperty)prop).getHrefs();
         DavResource[] refResources = new DavResource[hrefs.size()];
-        Iterator hrefIter = hrefs.iterator();
+        Iterator<String> hrefIter = hrefs.iterator();
         int i = 0;
         while (hrefIter.hasNext()) {
-            refResources[i] = getResourceFromHref((String)hrefIter.next());
+            refResources[i] = getResourceFromHref(hrefIter.next());
             i++;
         }
         return refResources;
@@ -539,31 +540,31 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      */
     protected void initProperties() {
         if (getDisplayName() != null) {
-            properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, getDisplayName()));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.DISPLAYNAME, getDisplayName()));
         }
         if (isCollection()) {
             properties.add(new ResourceType(ResourceType.COLLECTION));
             // Windows XP support
-            properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "1"));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.ISCOLLECTION, "1"));
         } else {
             properties.add(new ResourceType(ResourceType.DEFAULT_RESOURCE));
             // Windows XP support
-            properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "0"));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.ISCOLLECTION, "0"));
         }
         // todo: add etag
 
         // default last modified
         String lastModified = IOUtil.getLastModified(getModificationTime());
-        properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
+        properties.add(new DefaultDavProperty<String>(DavPropertyName.GETLASTMODIFIED, lastModified));
 
         // default creation time
-        properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, HttpDateFormat.creationDateFormat().format(new Date(0))));
+        properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE, HttpDateFormat.creationDateFormat().format(new Date(0))));
 
         // supported lock property
         properties.add(supportedLock);
 
         // set current lock information. If no lock is applied to this resource,
-        // an empty lockdiscovery will be returned in the response.
+        // an empty xlockdiscovery will be returned in the response.
         properties.add(new LockDiscovery(getLocks()));
 
         properties.add(new SupportedMethodSetProperty(getSupportedMethods().split(",\\s")));
@@ -571,8 +572,8 @@ abstract class AbstractResource implements DavResource, TransactionResource,
         // DeltaV properties
         properties.add(supportedReports);
         // creator-displayname, comment: not value available from jcr
-        properties.add(new DefaultDavProperty(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
-        properties.add(new DefaultDavProperty(DeltaVConstants.COMMENT, null, true));
+        properties.add(new DefaultDavProperty<String>(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
+        properties.add(new DefaultDavProperty<String>(DeltaVConstants.COMMENT, null, true));
 
         // 'workspace' property as defined by RFC 3253
         String workspaceHref = getWorkspaceHref();
@@ -580,7 +581,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
             properties.add(new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true));
         }
         // name of the jcr workspace
-        properties.add(new DefaultDavProperty(ItemResourceConstants.JCR_WORKSPACE_NAME,
+        properties.add(new DefaultDavProperty<String>(ItemResourceConstants.JCR_WORKSPACE_NAME,
                 getRepositorySession().getWorkspace().getName()));
 
         // TODO: required supported-live-property-set

@@ -70,6 +70,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int read() throws IOException {
         if (max>=0 && pos==max) {
             return -1;
@@ -82,6 +83,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int read(byte[] b) throws IOException {
         return this.read(b, 0, b.length);
     }
@@ -89,6 +91,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (max>=0 && pos>=max) {
             return -1;
@@ -107,6 +110,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public long skip(long n) throws IOException {
         long toSkip = max>=0 ? Math.min(n, max-pos) : n;
         long skippedBytes = in.skip(toSkip);
@@ -117,6 +121,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int available() throws IOException {
         if (max>=0 && pos>=max) {
             return 0;
@@ -127,6 +132,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return in.toString();
     }
@@ -134,6 +140,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void close() throws IOException {
         if (propagateClose) {
             in.close();
@@ -143,6 +150,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void reset() throws IOException {
         in.reset();
         pos = mark;
@@ -151,6 +159,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void mark(int readlimit) {
         in.mark(readlimit);
         mark = pos;
@@ -159,6 +168,7 @@ public class BoundedInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean markSupported() {
         return in.markSupported();
     }

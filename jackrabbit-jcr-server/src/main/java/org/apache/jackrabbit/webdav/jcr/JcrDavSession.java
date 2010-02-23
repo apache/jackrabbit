@@ -49,7 +49,7 @@ public abstract class JcrDavSession implements DavSession {
     private final Session session;
 
     /** the lock tokens of this session */
-    private final HashSet lockTokens = new HashSet();
+    private final HashSet<String> lockTokens = new HashSet<String>();
 
     /**
      *
@@ -107,7 +107,7 @@ public abstract class JcrDavSession implements DavSession {
      * @see DavSession#getLockTokens()
      */
     public String[] getLockTokens() {
-        return (String[]) lockTokens.toArray(new String[lockTokens.size()]);
+        return lockTokens.toArray(new String[lockTokens.size()]);
     }
 
     /**

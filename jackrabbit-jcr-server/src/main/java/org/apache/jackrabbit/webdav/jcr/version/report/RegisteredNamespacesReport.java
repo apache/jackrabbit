@@ -84,6 +84,7 @@ public class RegisteredNamespacesReport extends AbstractJcrReport implements Ite
     /**
      * @see Report#init(DavResource, ReportInfo)
      */
+    @Override
     public void init(DavResource resource, ReportInfo info) throws DavException {
         // delegate validation to abstract super class
         super.init(resource, info);
@@ -105,11 +106,10 @@ public class RegisteredNamespacesReport extends AbstractJcrReport implements Ite
     public Element toXml(Document document)  {
         Element report = DomUtil.createElement(document, "registerednamespaces-report", NAMESPACE);
         try {
-            String[] prefixes = nsReg.getPrefixes();
-            for (int i = 0; i < prefixes.length; i++) {
+            for (String prefix : nsReg.getPrefixes()) {
                 Element elem = DomUtil.addChildElement(report, XML_NAMESPACE, NAMESPACE);
-                DomUtil.addChildElement(elem, XML_PREFIX, NAMESPACE, prefixes[i]);
-                DomUtil.addChildElement(elem, XML_URI, NAMESPACE, nsReg.getURI(prefixes[i]));
+                DomUtil.addChildElement(elem, XML_PREFIX, NAMESPACE, prefix);
+                DomUtil.addChildElement(elem, XML_URI, NAMESPACE, nsReg.getURI(prefix));
             }
         } catch (RepositoryException e) {
             // should not occur.
