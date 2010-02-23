@@ -390,6 +390,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return uriResolver.getItemUri(itemId, sessionInfo.getWorkspaceName(), sessionInfo);
     }
 
+    /**
+     * Clear all URI mappings. This is required after hierarchy operations such
+     * as e.g. MOVE.
+     * 
+     * @param sessionInfo
+     */
+    protected void clearItemUriCache(SessionInfo sessionInfo) {
+        uriResolver.clearCacheEntries(sessionInfo);
+    }
+
     private String getItemUri(NodeId parentId, Name childName,
                               SessionInfo sessionInfo) throws RepositoryException {
         String parentUri = uriResolver.getItemUri(parentId, sessionInfo.getWorkspaceName(), sessionInfo);
@@ -1272,6 +1282,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
         MoveMethod method = new MoveMethod(uri, destUri, true);
         execute(method, sessionInfo);
+        // need to clear the cache as the move may have affected nodes with uuid.
+        clearItemUriCache(sessionInfo);
     }
 
     /**
@@ -2230,6 +2242,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private String batchId;
 
         private boolean isConsumed = false;
+        private boolean clear = false;
 
         private BatchImpl(ItemId targetId, SessionInfo sessionInfo) throws RepositoryException {
             this.targetId = targetId;
@@ -2280,6 +2293,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.checkSuccess();
                 if (sessionInfo instanceof SessionInfoImpl) {
                     ((SessionInfoImpl) sessionInfo).setLastBatchId(batchId);
+                }
+                if (clear) {
+                    clearItemUriCache(sessionInfo);
                 }
             } catch (IOException e) {
                 throw new RepositoryException(e);
@@ -2564,6 +2580,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             MoveMethod method = new MoveMethod(uri, destUri, true);
 
             methods.add(method);
+            clear = true;
         }
     }
 

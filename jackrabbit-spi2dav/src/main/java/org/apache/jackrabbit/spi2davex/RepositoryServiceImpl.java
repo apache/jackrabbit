@@ -418,6 +418,9 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
         private PostMethod method; // TODO: use PATCH request instead.
         private boolean isConsumed;
+        // flag to determine if the uri-lookup needs to be cleared... e.g.
+        // after a move operation.
+        private boolean clear;
 
         private BatchImpl(ItemId targetId, SessionInfo sessionInfo) {
             this.targetId = targetId;
@@ -458,6 +461,9 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             try {
                 client.executeMethod(method);
                 method.checkSuccess();
+                if (clear) {
+                    RepositoryServiceImpl.super.clearItemUriCache(sessionInfo);
+                }
             }  catch (IOException e) {
                 throw new RepositoryException(e);
             } catch (DavException e) {
@@ -625,6 +631,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             String destJcrPath = getNamePathResolver(sessionInfo).getJCRPath(destPath);
 
             appendDiff(SYMBOL_MOVE, srcPath, destJcrPath);
+
+            clear = true;
         }
 
         /**
