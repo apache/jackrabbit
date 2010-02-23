@@ -61,6 +61,7 @@ import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -886,15 +887,20 @@ public class DefaultItemCollection extends AbstractItemResource
             // resource is serialized as system-view (xml)
             properties.add(new DefaultDavProperty<String>(DavPropertyName.GETCONTENTTYPE, "text/xml"));
             Node n = (Node)item;
-            // overwrite the default creation date if possible
+            // overwrite the default creation date and creator-displayname if possible
             try {
                 if (n.hasProperty(JcrConstants.JCR_CREATED)) {
                     long creationTime = n.getProperty(JcrConstants.JCR_CREATED).getValue().getLong();
                     properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE,
                         HttpDateFormat.creationDateFormat().format(new Date(creationTime))));
                 }
+                // DAV:creator-displayname -> use jcr:createBy if present.
+                if (n.hasProperty(Property.JCR_CREATED_BY)) {
+                    String createdBy = n.getProperty(Property.JCR_CREATED_BY).getString();
+                    properties.add(new DefaultDavProperty<String>(DeltaVConstants.CREATOR_DISPLAYNAME, createdBy, true));
+                }
             } catch (RepositoryException e) {
-                log.warn("Error while accessing jcr:created property");
+                log.warn("Error while accessing jcr:created or jcr:createdBy property");
             }
 
             // add node-specific resource properties

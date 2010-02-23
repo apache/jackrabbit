@@ -21,6 +21,9 @@ import java.util.List;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Property;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavCompliance;
@@ -34,6 +37,7 @@ import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.OptionsInfo;
@@ -247,6 +251,17 @@ public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResourc
             super.initProperties();
             if (exists()) {
                 properties.add(supportedReports);
+
+                // DAV:creator-displayname -> use jcr:createBy if present.
+                Node n = getNode();
+                try {
+                    if (n.hasProperty(Property.JCR_CREATED_BY)) {
+                        String createdBy = n.getProperty(Property.JCR_CREATED_BY).getString();
+                        properties.add(new DefaultDavProperty<String>(DeltaVConstants.CREATOR_DISPLAYNAME, createdBy, true));
+                    }
+                } catch (RepositoryException e) {
+                    log.debug("Error while accessing jcr:createdBy property");
+                }
             }
         }
     }
