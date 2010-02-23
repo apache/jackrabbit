@@ -24,13 +24,12 @@ import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.commons.httpclient.methods.PutMethod;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.w3c.dom.Element;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
 import java.lang.reflect.Constructor;
@@ -40,16 +39,14 @@ import java.lang.reflect.Constructor;
  */
 public class ExceptionConverter {
 
-    private static Logger log = LoggerFactory.getLogger(ExceptionConverter.class);
-
     // avoid instantiation
     private ExceptionConverter() {}
 
-    public static RepositoryException generate(DavException davExc) throws RepositoryException {
+    public static RepositoryException generate(DavException davExc) {
         return generate(davExc, null);
     }
 
-    public static RepositoryException generate(DavException davExc, DavMethod method) throws RepositoryException {
+    public static RepositoryException generate(DavException davExc, DavMethod method) {
         String msg = davExc.getMessage();
         if (davExc.hasErrorCondition()) {
             try {
@@ -64,7 +61,7 @@ public class ExceptionConverter {
                             Class<?> cl = Class.forName(DomUtil.getChildText(exc, "class", null));
                             Constructor<?> excConstr = cl.getConstructor(String.class);
                             if (excConstr != null) {
-                                Object o = excConstr.newInstance(new String[]{msg});
+                                Object o = excConstr.newInstance(msg);
                                 if (o instanceof RepositoryException) {
                                     return (RepositoryException) o;
                                 } else if (o instanceof Exception) {
@@ -75,7 +72,7 @@ public class ExceptionConverter {
                     }
                 }
             } catch (Exception e) {
-                throw new RepositoryException(e);
+                return new RepositoryException(e);
             }
         }
 
@@ -88,7 +85,7 @@ public class ExceptionConverter {
                                        method instanceof PutMethod)) {
                     // target item has probably while transient changes have
                     // been made.
-                    throw new InvalidItemStateException(msg, davExc);
+                    return new InvalidItemStateException(msg, davExc);
                 } else {
                     return new ItemNotFoundException(msg, davExc);
                 }
@@ -102,11 +99,11 @@ public class ExceptionConverter {
                 return new LockException(msg, davExc);
             case DavServletResponse.SC_NOT_IMPLEMENTED:
                 if (method != null) {
-                    throw new UnsupportedOperationException(
+                    return new UnsupportedRepositoryOperationException(
                             "Missing implementation: Method "
                             + method + " could not be executed", davExc);
                 } else {
-                    throw new UnsupportedOperationException(
+                    return new UnsupportedRepositoryOperationException(
                             "Missing implementation", davExc);
                 }
             default:
