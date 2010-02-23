@@ -75,18 +75,18 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
 
             Element reqPrimaryTypes = DomUtil.getChildElement(ndefElement, REQUIREDPRIMARYTYPES_ELEMENT, null);
             if (reqPrimaryTypes != null) {
-                List qNames = new ArrayList();
+                List<Name> qNames = new ArrayList<Name>();
                 ElementIterator it = DomUtil.getChildren(reqPrimaryTypes, REQUIREDPRIMARYTYPE_ELEMENT, null);
                 while (it.hasNext()) {
                     qNames.add(resolver.getQName(DomUtil.getTextTrim(it.nextElement())));
                 }
-                requiredPrimaryTypes = (Name[]) qNames.toArray(new Name[qNames.size()]);
+                requiredPrimaryTypes = qNames.toArray(new Name[qNames.size()]);
             } else {
                 requiredPrimaryTypes = new Name[] { NameConstants.NT_BASE };
             }
 
             if (ndefElement.hasAttribute(SAMENAMESIBLINGS_ATTRIBUTE)) {
-                allowsSameNameSiblings = Boolean.valueOf(ndefElement.getAttribute(SAMENAMESIBLINGS_ATTRIBUTE)).booleanValue();
+                allowsSameNameSiblings = Boolean.valueOf(ndefElement.getAttribute(SAMENAMESIBLINGS_ATTRIBUTE));
             } else {
                 allowsSameNameSiblings = false;
             }
@@ -137,6 +137,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      *         <code>false</code> otherwise
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -158,6 +159,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      * 
      * @return
      */
+    @Override
     public int hashCode() {
         if (hashCode == 0) {
             // build hashCode (format: <declaringNodeType>/<name>/<requiredPrimaryTypes>)
@@ -174,10 +176,9 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
             }
             sb.append('/');
             // set of required node type names, sorted in ascending order
-            TreeSet set = new TreeSet();
-            Name[] names = getRequiredPrimaryTypes();
-            for (int i = 0; i < names.length; i++) {
-                set.add(names[i]);
+            TreeSet<Name> set = new TreeSet<Name>();
+            for (Name name : getRequiredPrimaryTypes()) {
+                set.add(name);
             }
             sb.append(set.toString());
 

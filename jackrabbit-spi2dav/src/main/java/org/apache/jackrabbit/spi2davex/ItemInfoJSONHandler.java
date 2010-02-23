@@ -26,6 +26,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -49,7 +50,7 @@ class ItemInfoJsonHandler implements JsonHandler {
 
     private static final int SPECIAL_JSON_PAIR = Integer.MAX_VALUE;
 
-    private final List itemInfos;
+    private final List<ItemInfo> itemInfos;
     private final NamePathResolver resolver;
     private final String rootURI;
 
@@ -61,7 +62,7 @@ class ItemInfoJsonHandler implements JsonHandler {
     private int propertyType;
     private int index = Path.INDEX_DEFAULT;
 
-    private Stack nodeInfos = new Stack();
+    private Stack<NodeInfo> nodeInfos = new Stack<NodeInfo>();
     private PropertyInfoImpl mvPropInfo;
 
     ItemInfoJsonHandler(NamePathResolver resolver, NodeInfo nInfo,
@@ -76,7 +77,7 @@ class ItemInfoJsonHandler implements JsonHandler {
         this.pFactory = pFactory;
         this.idFactory = idFactory;
 
-        itemInfos = new ArrayList();
+        itemInfos = new ArrayList<ItemInfo>();
         itemInfos.add(nInfo);
         nodeInfos.push(nInfo);
     }
@@ -265,12 +266,12 @@ class ItemInfoJsonHandler implements JsonHandler {
         }
     }
 
-    Iterator getItemInfos() {
+    Iterator<? extends ItemInfo> getItemInfos() {
         return Collections.unmodifiableList(itemInfos).iterator();
     }
 
     private NodeInfoImpl getCurrentNodeInfo() {
-        return  (nodeInfos.isEmpty()) ? (NodeInfoImpl) null : (NodeInfoImpl) nodeInfos.peek();
+        return  (nodeInfos.isEmpty()) ? null : (NodeInfoImpl) nodeInfos.peek();
     }
 
     private PropertyInfoImpl createPropertyInfo(QValue value, boolean isMultiValued) throws RepositoryException {

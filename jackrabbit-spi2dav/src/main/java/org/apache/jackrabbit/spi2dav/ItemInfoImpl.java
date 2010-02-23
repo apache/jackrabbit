@@ -44,7 +44,7 @@ abstract class ItemInfoImpl implements ItemInfo {
     ItemInfoImpl(DavPropertySet propSet, NamePathResolver resolver)
             throws NameException, NamespaceException {
 
-        DavProperty pathProp = propSet.get(ItemResourceConstants.JCR_PATH);
+        DavProperty<?> pathProp = propSet.get(ItemResourceConstants.JCR_PATH);
         String jcrPath = pathProp.getValue().toString();
         path = resolver.getQPath(jcrPath);
     }

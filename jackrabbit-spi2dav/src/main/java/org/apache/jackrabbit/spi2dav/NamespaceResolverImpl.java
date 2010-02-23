@@ -35,8 +35,8 @@ class NamespaceResolverImpl extends AbstractNamespaceResolver {
 
     // TODO: TO_BE_FIXED. missing notification and subsequent reloading of namespaces causes this resolver to throw NameException
 
-    private Map prefixToURI = new HashMap();
-    private Map uriToPrefix = new HashMap();
+    private Map<String, String> prefixToURI = new HashMap<String, String>();
+    private Map<String, String> uriToPrefix = new HashMap<String, String>();
 
     void add(String prefix, String uri) {
         prefixToURI.put(prefix, uri);
@@ -48,7 +48,7 @@ class NamespaceResolverImpl extends AbstractNamespaceResolver {
         uriToPrefix.remove(uri);
     }
 
-    Map getNamespaces() {
+    Map<String, String> getNamespaces() {
         return Collections.unmodifiableMap(prefixToURI);
     }
     
@@ -57,7 +57,7 @@ class NamespaceResolverImpl extends AbstractNamespaceResolver {
      * @see NamespaceResolver#getURI(String)
      */
     public String getURI(String prefix) throws NamespaceException {
-        String uri = (String) prefixToURI.get(prefix);
+        String uri = prefixToURI.get(prefix);
         if (uri == null) {
             throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
         }
@@ -68,7 +68,7 @@ class NamespaceResolverImpl extends AbstractNamespaceResolver {
      * @see org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver#getPrefix(String)
      */
     public String getPrefix(String uri) throws NamespaceException {
-        String prefix = (String) uriToPrefix.get(uri);
+        String prefix = uriToPrefix.get(uri);
         if (prefix == null) {
             throw new NamespaceException(uri + ": is not a registered namespace uri.");
         }

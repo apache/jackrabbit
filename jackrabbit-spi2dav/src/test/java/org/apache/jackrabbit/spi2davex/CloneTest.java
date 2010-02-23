@@ -22,6 +22,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -45,6 +46,7 @@ public class CloneTest extends AbstractSPITest {
     private SessionInfo sInfo;
     private NodeId clonedId;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -72,6 +74,7 @@ public class CloneTest extends AbstractSPITest {
         sInfo = rs.obtain(si, "test");
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             if (si != null) {
@@ -108,7 +111,7 @@ public class CloneTest extends AbstractSPITest {
 
         clonedId = getNodeId("/destname");
         NodeInfo nInfo = rs.getNodeInfo(sInfo, clonedId);
-        Iterator it = rs.getItemInfos(sInfo, clonedId);
+        Iterator<? extends ItemInfo> it = rs.getItemInfos(sInfo, clonedId);
 
         assertTrue(it.hasNext());
         NodeInfo nInfo2 = (NodeInfo) it.next();

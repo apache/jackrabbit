@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import java.util.Properties;
 
@@ -34,8 +33,6 @@ public class ServiceStubImpl extends org.apache.jackrabbit.spi2dav.ServiceStubIm
     public static final String PROP_DEFAULT_DEPTH = "org.apache.jackrabbit.spi2davex.defaultDepth";
 
     private RepositoryService service;
-    private Credentials adminCredentials;
-    private Credentials readOnlyCredentials;
 
     /**
      * Implementations of this class must overwrite this constructor.
@@ -46,6 +43,7 @@ public class ServiceStubImpl extends org.apache.jackrabbit.spi2dav.ServiceStubIm
         super(env);
     }
 
+    @Override
     public RepositoryService getRepositoryService() throws RepositoryException {
         if (service == null) {
             String uri = getProperty(PROP_REPOSITORY_URI);

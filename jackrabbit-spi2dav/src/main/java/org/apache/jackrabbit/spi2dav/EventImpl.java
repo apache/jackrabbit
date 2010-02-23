@@ -88,10 +88,10 @@ public class EventImpl
                                                   NamePathResolver resolver,
                                                   QValueFactory qvFactory) {
         if (infoElement == null) {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
 
-        Map<Name, QValue> info = new HashMap();
+        Map<Name, QValue> info = new HashMap<Name, QValue>();
         ElementIterator it = DomUtil.getChildren(infoElement);
         while (it.hasNext()) {
             Element el = it.nextElement();

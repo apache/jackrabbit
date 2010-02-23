@@ -16,15 +16,6 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
@@ -35,25 +26,27 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.jcr.RepositoryException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 /**
  * <code>NodeInfoImpl</code>...
  */
 public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
-    private static Logger log = LoggerFactory.getLogger(NodeInfoImpl.class);
-
     private NodeId id;
     private String uniqueID;
     private Name primaryNodeTypeName;
     private Name[] mixinNodeTypeNames = new Name[0];
 
-    private final Set propertyInfos = new LinkedHashSet();
+    private final Set<PropertyInfo> propertyInfos = new LinkedHashSet<PropertyInfo>();
     private Set<ChildInfo> childInfos = null;
-
-    private final int numberOfChildNodes = -1;
 
     /**
      * Creates a new <code>NodeInfo</code>.
@@ -88,16 +81,15 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         return new PropertyId[0];
     }
 
-    public Iterator getPropertyIds() {
-        List l = new ArrayList();
-        for (Iterator it = propertyInfos.iterator(); it.hasNext(); ) {
-            PropertyId pId = ((PropertyInfo) it.next()).getId();
-            l.add(pId);
+    public Iterator<PropertyId> getPropertyIds() {
+        List<PropertyId> l = new ArrayList<PropertyId>();
+        for (PropertyInfo propertyInfo : propertyInfos) {
+            l.add(propertyInfo.getId());
         }
         return l.iterator();
     }
 
-    public Iterator getChildInfos() {
+    public Iterator<ChildInfo> getChildInfos() {
         return (childInfos == null) ? null : childInfos.iterator();
     }
 

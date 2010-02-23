@@ -43,7 +43,7 @@ class PostMethod extends DavMethodBase {
     /**
      * The buffered request body consisting of <code>NameValuePair</code>s.
      */
-    private List params = new ArrayList();
+    private List<NameValuePair> params = new ArrayList<NameValuePair>();
 
     public PostMethod(String uri) {
         super(uri);
@@ -52,18 +52,21 @@ class PostMethod extends DavMethodBase {
     }
 
     // -----------------------------------------------------< DavMethodBase >---
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_OK ||
                 statusCode == DavServletResponse.SC_NO_CONTENT ||
                 statusCode == DavServletResponse.SC_CREATED;
     }
 
+    @Override
     public String getName() {
         return DavMethods.METHOD_POST;
     }
 
     // COPIED FROM httpclient PostMethod.
     // ---------------------------------------------< EntityEnclosingMethod >---
+    @Override
     protected boolean hasRequestContent() {
         if (!params.isEmpty()) {
             return true;
@@ -72,12 +75,14 @@ class PostMethod extends DavMethodBase {
         }
     }
 
+    @Override
     protected void clearRequestBody() {
         log.debug("enter PostMethod.clearRequestBody()");
         this.params.clear();
         super.clearRequestBody();
     }
 
+    @Override
     protected RequestEntity generateRequestEntity() {
         if (!this.params.isEmpty()) {
             // Use a ByteArrayRequestEntity instead of a StringRequestEntity.
@@ -85,7 +90,7 @@ class PostMethod extends DavMethodBase {
             // are ASCII by definition but the content type may not be.  Treating the content
             // as bytes allows us to keep the current charset without worrying about how
             // this charset will effect the encoding of the form url encoded string.
-            NameValuePair[] mvps = (NameValuePair[]) params.toArray(new NameValuePair[params.size()]);
+            NameValuePair[] mvps = params.toArray(new NameValuePair[params.size()]);
             String content = EncodingUtil.formUrlEncode(mvps, getRequestCharSet());
             ByteArrayRequestEntity entity = new ByteArrayRequestEntity(
                     EncodingUtil.getAsciiBytes(content),

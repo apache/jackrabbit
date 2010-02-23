@@ -238,6 +238,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
          *         or -1L if the length can't be determined.
          * @see QValue#getLength()
          */
+        @Override
         public long getLength() {
             if (file != null) {
                 // this instance is backed by a 'real' file
@@ -286,6 +287,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
         /**
          * @see QValue#getName()
          */
+        @Override
         public Name getName() throws RepositoryException {
             throw new UnsupportedOperationException();
         }
@@ -293,6 +295,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
         /**
          * @see QValue#getPath()
          */
+        @Override
         public Path getPath() throws RepositoryException {
             throw new UnsupportedOperationException();
         }
@@ -303,6 +306,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
          * calling this method will have no effect.
          * @see QValue#discard()
          */
+        @Override
         public void discard() {
             if (!temp) {
                 // do nothing if this instance is not backed by temporarily
@@ -328,6 +332,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
          *
          * @return A string representation of this <code>BinaryQValue</code> instance.
          */
+        @Override
         public String toString() {
             if (file != null) {
                 // this instance is backed by a 'real' file
@@ -343,6 +348,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -379,6 +385,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
          * @return always zero
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             return 0;
         }
@@ -450,7 +457,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
                     DocumentBuilder db = DomUtil.BUILDER_FACTORY.newDocumentBuilder();
                     Document doc = db.parse(in);
                     Element prop = DomUtil.getChildElement(doc, ItemResourceConstants.JCR_VALUES.getName(), ItemResourceConstants.JCR_VALUES.getNamespace());
-                    DavProperty p = DefaultDavProperty.createFromXml(prop);
+                    DavProperty<?> p = DefaultDavProperty.createFromXml(prop);
                     ValuesProperty vp = new ValuesProperty(p, PropertyType.BINARY, vf);
 
                     Value[] jcrVs = vp.getJcrValues();

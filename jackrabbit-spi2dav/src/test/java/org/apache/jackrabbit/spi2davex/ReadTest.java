@@ -16,15 +16,13 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import org.apache.jackrabbit.spi.AbstractSPITest;
 import org.apache.jackrabbit.spi.Batch;
-import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.AbstractSPITest;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -34,7 +32,6 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
-import java.util.Iterator;
 
 /**
  * <code>ConnectionTest</code>...
@@ -46,16 +43,17 @@ public class ReadTest extends AbstractSPITest {
     private RepositoryService rs;
     private SessionInfo si;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         rs = helper.getRepositoryService();
         si = helper.getAdminSessionInfo();
 
         NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
-            public String getURI(String prefix) throws NamespaceException {
+            public String getURI(String prefix) {
                 return ("jcr".equals(prefix)) ? "http://www.jcp.org/jcr/1.0" : prefix;
             }
-            public String getPrefix(String uri) throws NamespaceException {
+            public String getPrefix(String uri) {
                 return ("http://www.jcp.org/jcr/1.0".equals(uri)) ? "jcr" : uri;
             }
         };
@@ -70,6 +68,7 @@ public class ReadTest extends AbstractSPITest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             Batch b = rs.createBatch(si, getNodeId("/"));
@@ -135,19 +134,5 @@ public class ReadTest extends AbstractSPITest {
 
     private PropertyId getPropertyId(NodeId nId, Name propName) throws RepositoryException {
         return rs.getIdFactory().createPropertyId(nId, propName);
-    }
-
-    private PropertyInfo getPropertyInfo(NodeId parentId, Name propName) throws RepositoryException {
-        Iterator it = rs.getItemInfos(si, parentId);
-        while (it.hasNext()) {
-            ItemInfo info = (ItemInfo) it.next();
-            if (!info.denotesNode()) {
-                PropertyInfo pInfo = (PropertyInfo) info;
-                if (propName.equals((pInfo.getId().getName()))) {
-                    return pInfo;
-                }
-            }
-        }
-        throw new ItemNotFoundException();
     }
 }

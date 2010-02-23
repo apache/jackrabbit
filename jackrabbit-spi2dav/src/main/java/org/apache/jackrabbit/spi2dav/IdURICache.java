@@ -32,19 +32,19 @@ class IdURICache {
 
     private final String workspaceUri;
 
-    private Map idToUriCache = new HashMap();
-    private Map uriToIdCache = new HashMap();
+    private Map<ItemId, String> idToUriCache = new HashMap<ItemId, String>();
+    private Map<String, ItemId> uriToIdCache = new HashMap<String, ItemId>();
 
     IdURICache(String workspaceUri) {
         this.workspaceUri = workspaceUri;
     }
 
     public ItemId getItemId(String uri) {
-        return (ItemId) uriToIdCache.get(getCleanUri(uri));
+        return uriToIdCache.get(getCleanUri(uri));
     }
 
     public String getUri(ItemId itemId) {
-        return (String) idToUriCache.get(itemId);
+        return idToUriCache.get(itemId);
     }
 
     public boolean containsUri(String uri) {
@@ -67,7 +67,7 @@ class IdURICache {
 
     public void remove(String uri) {
         String cleanUri = getCleanUri(uri);
-        Object itemId = uriToIdCache.remove(cleanUri);
+        ItemId itemId = uriToIdCache.remove(cleanUri);
         if (itemId != null) {
             idToUriCache.remove(itemId);
         }
@@ -75,7 +75,7 @@ class IdURICache {
     }
 
     public void remove(ItemId itemId) {
-        Object uri = idToUriCache.remove(itemId);
+        String uri = idToUriCache.remove(itemId);
         if (uri != null) {
             uriToIdCache.remove(uri);
         }

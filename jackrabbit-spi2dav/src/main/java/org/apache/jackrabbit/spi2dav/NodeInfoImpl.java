@@ -50,9 +50,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private final Name primaryNodeTypeName;
     private final Name[] mixinNodeTypeNames;
 
-    private final List references = new ArrayList();
-    private final List propertyIds = new ArrayList();
-    private List childInfos = null;
+    private final List<PropertyId> references = new ArrayList<PropertyId>();
+    private final List<PropertyId> propertyIds = new ArrayList<PropertyId>();
+    private List<ChildInfo> childInfos = null;
 
     public NodeInfoImpl(NodeId id, DavPropertySet propSet,
                         NamePathResolver resolver) throws RepositoryException, NameException {
@@ -61,7 +61,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         // set id
         this.id = id;
 
-        DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
+        DavProperty<?> indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
         if (indexProp != null && indexProp.getValue() != null) {
             index = Integer.parseInt(indexProp.getValue().toString());
         } else {
@@ -71,9 +71,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         // retrieve properties
         try {
             if (propSet.contains(ItemResourceConstants.JCR_PRIMARYNODETYPE)) {
-                Iterator it = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_PRIMARYNODETYPE)).getNodeTypeNames().iterator();
+                Iterator<String> it = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_PRIMARYNODETYPE)).getNodeTypeNames().iterator();
                 if (it.hasNext()) {
-                    String jcrName = it.next().toString();
+                    String jcrName = it.next();
                     primaryNodeTypeName = resolver.getQName(jcrName);
                 } else {
                     throw new RepositoryException("Missing primary nodetype for node " + id + ".");
@@ -82,12 +82,10 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 throw new RepositoryException("Missing primary nodetype for node " + id);
             }
             if (propSet.contains(ItemResourceConstants.JCR_MIXINNODETYPES)) {
-                Set mixinNames = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_MIXINNODETYPES)).getNodeTypeNames();
+                Set<String> mixinNames = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_MIXINNODETYPES)).getNodeTypeNames();
                 mixinNodeTypeNames = new Name[mixinNames.size()];
-                Iterator it = mixinNames.iterator();
                 int i = 0;
-                while(it.hasNext()) {
-                    String jcrName = it.next().toString();
+                for (String jcrName : mixinNames) {
                     mixinNodeTypeNames[i] = resolver.getQName(jcrName);
                     i++;
                 }
@@ -122,14 +120,14 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     }
 
     public PropertyId[] getReferences() {
-        return (PropertyId[]) references.toArray(new PropertyId[references.size()]);
+        return references.toArray(new PropertyId[references.size()]);
     }
 
-    public Iterator getPropertyIds() {
+    public Iterator<PropertyId> getPropertyIds() {
         return propertyIds.iterator();
     }
 
-    public Iterator getChildInfos() {
+    public Iterator<ChildInfo> getChildInfos() {
         return (childInfos == null) ? null : childInfos.iterator();
     }
 
@@ -144,7 +142,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
     void addChildInfo(ChildInfo childInfo) {
         if (childInfos == null) {
-            childInfos = new ArrayList();
+            childInfos = new ArrayList<ChildInfo>();
         }
         childInfos.add(childInfo);
     }

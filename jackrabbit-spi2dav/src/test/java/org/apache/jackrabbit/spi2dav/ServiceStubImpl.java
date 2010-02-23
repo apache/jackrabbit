@@ -54,6 +54,7 @@ public class ServiceStubImpl extends RepositoryServiceStub {
         super(env);
     }
 
+    @Override
     public RepositoryService getRepositoryService() throws RepositoryException {
         if (service == null) {
             String uri = getProperty(PROP_REPOSITORY_URI);
@@ -66,6 +67,7 @@ public class ServiceStubImpl extends RepositoryServiceStub {
         return service;
     }
 
+    @Override
     public Credentials getAdminCredentials() {
         if (adminCredentials == null) {
             adminCredentials = new SimpleCredentials(getProperty(RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_ADMIN_NAME),
@@ -74,6 +76,7 @@ public class ServiceStubImpl extends RepositoryServiceStub {
         return adminCredentials;
     }
 
+    @Override
     public Credentials getReadOnlyCredentials() {
         if (readOnlyCredentials == null) {
             readOnlyCredentials = new SimpleCredentials(getProperty(RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_READONLY_NAME),

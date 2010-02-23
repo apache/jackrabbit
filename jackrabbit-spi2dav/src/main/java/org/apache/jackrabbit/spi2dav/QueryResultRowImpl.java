@@ -70,7 +70,7 @@ public class QueryResultRowImpl implements QueryResultRow {
 
         String jcrPath = resolver.getJCRName(NameConstants.JCR_PATH);
         String jcrScore = resolver.getJCRName(NameConstants.JCR_SCORE);
-        DavProperty davProp = okSet.get(SearchResultProperty.SEARCH_RESULT_PROPERTY);
+        DavProperty<?> davProp = okSet.get(SearchResultProperty.SEARCH_RESULT_PROPERTY);
         SearchResultProperty resultProp = new SearchResultProperty(davProp, valueFactory);
         Value[] values = resultProp.getValues();
         String[] names = resultProp.getColumnNames();

@@ -82,12 +82,15 @@ public class ChildInfoImpl implements ChildInfo {
     /**
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         // build hashCode (format: <name>/<name>/<index>/<uniqueID>)
         if (hashCode == 0) {
             StringBuffer sb = new StringBuffer();
             sb.append(name.toString());
+            sb.append("/");
             sb.append(index);
+            sb.append("/");
             if (uniqueId != null) {
                 sb.append(uniqueId);
             }
@@ -99,6 +102,7 @@ public class ChildInfoImpl implements ChildInfo {
     /**
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object object) {
         if (object == this) {
             return true;
@@ -114,6 +118,7 @@ public class ChildInfoImpl implements ChildInfo {
     /**
      * @see Object#toString()
      */
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append(name.toString());
