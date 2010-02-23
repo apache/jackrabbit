@@ -770,9 +770,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 if (value != null && value instanceof Element) {
                     Element idfElem = (Element) value;
                     if (itemId.denotesNode()) {
-                        definition = new QNodeDefinitionImpl(null, idfElem, resolver);
+                        definition = DefinitionUtil.createQNodeDefinition(null, idfElem, resolver);
                     } else {
-                        definition = new QPropertyDefinitionImpl(null, idfElem, resolver, getQValueFactory());
+                        definition = DefinitionUtil.createQPropertyDefinition(null, idfElem, resolver, getQValueFactory());
                     }
                 }
             }
@@ -2196,7 +2196,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             List<QNodeTypeDefinition> ntDefs = new ArrayList<QNodeTypeDefinition>();
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
             while (it.hasNext()) {
-                ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), resolver, getQValueFactory()));
+                ntDefs.add(DefinitionUtil.createQNodeTypeDefinition(it.nextElement(), resolver, getQValueFactory()));
             }
             // refresh node type definitions map
             synchronized (nodeTypeDefinitions) {
