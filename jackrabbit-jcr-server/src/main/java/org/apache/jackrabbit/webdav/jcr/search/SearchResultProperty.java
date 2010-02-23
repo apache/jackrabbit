@@ -39,7 +39,7 @@ import java.util.List;
  * <code>SearchResultProperty</code>...
  */
 // todo: find proper solution for transporting search results...
-public class SearchResultProperty extends AbstractDavProperty implements ItemResourceConstants {
+public class SearchResultProperty extends AbstractDavProperty<Value[]> implements ItemResourceConstants {
 
     private static Logger log = LoggerFactory.getLogger(SearchResultProperty.class);
 
@@ -78,18 +78,18 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * required form.
      * @see #getValues()
      */
-    public SearchResultProperty(DavProperty property, ValueFactory valueFactory) throws RepositoryException {
+    public SearchResultProperty(DavProperty<?> property, ValueFactory valueFactory) throws RepositoryException {
         super(property.getName(), true);
         if (!SEARCH_RESULT_PROPERTY.equals(getName())) {
-	    throw new IllegalArgumentException("SearchResultProperty may only be created from a property named " + SEARCH_RESULT_PROPERTY.toString());
-	}
+            throw new IllegalArgumentException("SearchResultProperty may only be created from a property named " + SEARCH_RESULT_PROPERTY.toString());
+        }
 
         List<String> colList = new ArrayList<String>();
         List<String> selList = new ArrayList<String>();
         List<Value> valList = new ArrayList<Value>();
         Object propValue = property.getValue();
         if (propValue instanceof List) {
-            for (Object o : ((List) propValue)) {
+            for (Object o : ((List<?>) propValue)) {
                 if (o instanceof Element) {
                     parseColumnElement((Element) o, colList, selList, valList, valueFactory);
                 }
@@ -164,7 +164,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      *
      * @return Array of JCR Value object
      */
-    public Object getValue() {
+    public Value[] getValue() {
         return values;
     }
 
@@ -208,6 +208,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      *
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(org.w3c.dom.Document)
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
         for (int i = 0; i < columnNames.length; i++) {

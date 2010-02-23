@@ -19,6 +19,7 @@ package org.apache.jackrabbit.server.io;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 
 import javax.jcr.version.VersionHistory;
 import javax.jcr.RepositoryException;
@@ -108,7 +109,7 @@ public class VersionHistoryHandler implements IOHandler, PropertyHandler {
         return false;
     }
 
-    public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
+    public Map<? extends PropEntry, ?> importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

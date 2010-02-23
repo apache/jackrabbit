@@ -24,6 +24,7 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * <code>DefaultHandler</code> implements a simple IOHandler that creates 'file'
@@ -86,8 +86,6 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * <li>Nodetype for Non-Collection: {@link JcrConstants#NT_FILE nt:file}</li>
      * <li>Nodetype for Non-Collection content: {@link JcrConstants#NT_UNSTRUCTURED nt:unstructured}</li>
      * </ul>
-     *
-     * @param ioManager the I/O manager
      */
     public DefaultHandler() {
         this(null);
@@ -439,7 +437,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         if (contentNode.hasProperty(JcrConstants.JCR_DATA)) {
             Property p = contentNode.getProperty(JcrConstants.JCR_DATA);
             IOUtil.spool(p.getStream(), context.getOutputStream());
-        } // else: stream undefined -> contentlength was not set
+        } // else: stream undefined -> content length was not set
     }
 
     /**
@@ -474,7 +472,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             }
             if (contentNode.hasProperty(JcrConstants.JCR_ENCODING)) {
                 encoding = contentNode.getProperty(JcrConstants.JCR_ENCODING).getString();
-                // ignore "" encodings (although this is avoided during import)
+                // ignore "" encoding (although this is avoided during import)
                 if ("".equals(encoding)) {
                     encoding = null;
                 }
@@ -604,15 +602,15 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         }
     }
 
-    public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
+    public Map<? extends PropEntry, ?> importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
         if (!canImport(importContext, isCollection)) {
             throw new RepositoryException("PropertyHandler " + getName() + " failed import properties");
         }
 
         // loop over List and remember all properties and propertyNames
         // that failed to be imported (set or remove).
-        Map failures = new HashMap();
-        List changeList = importContext.getChangeList();
+        Map<PropEntry, RepositoryException> failures = new HashMap<PropEntry, RepositoryException>();
+        List<? extends PropEntry> changeList = importContext.getChangeList();
 
         // for collections the import-root is the target node where properties
         // are altered. in contrast 'non-collections' are with the handler
@@ -625,9 +623,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         }
 
         if (changeList != null) {
-            Iterator it = changeList.iterator();
-            while (it.hasNext()) {
-                Object propEntry = it.next();
+            for (PropEntry propEntry : changeList) {
                 try {
                     if (propEntry instanceof DavPropertyName) {
                         // remove
@@ -635,7 +631,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
                         removeJcrProperty(propName, cn);
                     } else if (propEntry instanceof DavProperty) {
                         // add or modify property
-                        DavProperty prop = (DavProperty)propEntry;
+                        DavProperty<?> prop = (DavProperty<?>) propEntry;
                         setJcrProperty(prop, cn);
                     } else {
                         // ignore any other entry in the change list
@@ -726,7 +722,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * @param contentNode the content node
      * @throws RepositoryException if an error during repository access occurs.
      */
-    private void setJcrProperty(DavProperty property, Node contentNode) throws RepositoryException {
+    private void setJcrProperty(DavProperty<?> property, Node contentNode) throws RepositoryException {
         // Retrieve the property value. Note, that a 'null' value is replaced
         // by empty string, since setting a jcr property value to 'null'
         // would be equivalent to its removal.

@@ -46,7 +46,6 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -111,7 +110,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
 
     private final DavResourceLocator locator;
     private final String subscriptionId = UUID.randomUUID().toString();
-    private final List eventBundles = new ArrayList();
+    private final List<EventBundle> eventBundles = new ArrayList<EventBundle>();
     private final ObservationManager obsMgr;
 
     /**
@@ -193,8 +192,8 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     int getJcrEventTypes() throws DavException {
         EventType[] eventTypes = info.getEventTypes();
         int events = 0;
-        for (int i = 0; i < eventTypes.length; i++) {
-            events |= getJcrEventType(eventTypes[i]);
+        for (EventType eventType : eventTypes) {
+            events |= getJcrEventType(eventType);
         }
         return events;
     }
@@ -214,15 +213,14 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     }
 
     private String[] getFilterValues(String filterLocalName) {
-        Filter[] filters = info.getFilters(filterLocalName, NAMESPACE);
-        List values = new ArrayList();
-        for (int i = 0; i < filters.length; i++) {
-            String val = filters[i].getValue();
+        List<String> values = new ArrayList<String>();
+        for (Filter filter : info.getFilters(filterLocalName, NAMESPACE)) {
+            String val = filter.getValue();
             if (val != null) {
                 values.add(val);
             }
         }
-        return (values.size() > 0) ? (String[])values.toArray(new String[values.size()]) : null;
+        return (values.size() > 0) ? values.toArray(new String[values.size()]) : null;
     }
 
     /**
@@ -290,9 +288,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 // continue and possibly return empty event discovery
             }
         }
-        Iterator it = eventBundles.iterator();
-        while (it.hasNext()) {
-            EventBundle eb = (EventBundle) it.next();
+        for (EventBundle eb : eventBundles) {
             ed.addEventBundle(eb);
         }
         // clear list
@@ -310,14 +306,17 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
             // a subscription which is not interested in local changes does
             // not need the transaction id
             return new TransactionEvent() {
+                @Override
                 public void onEvent(EventIterator events) {
                     // ignore
                 }
 
+                @Override
                 public void beforeCommit(TransactionResource resource, String lockToken) {
                     // ignore
                 }
 
+                @Override
                 public void afterCommit(TransactionResource resource,
                                         String lockToken,
                                         boolean success) {
@@ -518,20 +517,20 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                     log.error(e.getMessage());
                 }
                 eventElem.appendChild(DomUtil.hrefToXml(eHref, document));
-                // eventtype
+                // event type
                 Element eType = DomUtil.addChildElement(eventElem, XML_EVENTTYPE, NAMESPACE);
                 eType.appendChild(getEventType(event.getType()).toXml(document));
                 // user id
                 DomUtil.addChildElement(eventElem, XML_EVENTUSERID, NAMESPACE, event.getUserID());
 
                 // Additional JCR 2.0 event information
-                // userdata
+                // user data
                 try {
                     DomUtil.addChildElement(eventElem, XML_EVENTUSERDATA, NAMESPACE, event.getUserData());
                 } catch (RepositoryException e) {
                     log.error("Internal error while retrieving event user data.", e.getMessage());
                 }
-                // timestamp
+                // time stamp
                 try {
                     DomUtil.addChildElement(eventElem, XML_EVENTDATE, NAMESPACE, String.valueOf(event.getDate()));
                 } catch (RepositoryException e) {
@@ -546,9 +545,9 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 // info
                 Element info = DomUtil.addChildElement(eventElem, XML_EVENTINFO, NAMESPACE);
                 try {
-                    Map m = event.getInfo();
-                    for (Iterator it = m.keySet().iterator(); it.hasNext();) {
-                        String key = it.next().toString();
+                    @SuppressWarnings({"RawUseOfParameterizedType"}) Map m = event.getInfo();
+                    for (Object o : m.keySet()) {
+                        String key = o.toString();
                         Object value = m.get(key);
                         if (value != null) {
                             DomUtil.addChildElement(info, key, Namespace.EMPTY_NAMESPACE, value.toString());

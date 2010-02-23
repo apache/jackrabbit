@@ -41,6 +41,7 @@ public class LocatorFactoryImplEx extends AbstractLocatorFactory {
      *
      * @see AbstractLocatorFactory#getRepositoryPath(String, String)
      */
+    @Override
     protected String getRepositoryPath(String resourcePath, String wspPath) {
         if (resourcePath == null) {
             return resourcePath;
@@ -58,6 +59,7 @@ public class LocatorFactoryImplEx extends AbstractLocatorFactory {
      *
      * @see AbstractLocatorFactory#getResourcePath(String, String)
      */
+    @Override
     protected String getResourcePath(String repositoryPath, String wspPath) {
         if (repositoryPath == null) {
             throw new IllegalArgumentException("Cannot build resource path from 'null' repository path");

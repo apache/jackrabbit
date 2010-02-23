@@ -60,7 +60,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
      */
     private final SubscriptionMap subscriptions = new SubscriptionMap();
 
-    private final Map transactionListenerById = new HashMap();
+    private final Map<String, List<TransactionListener>> transactionListenerById = new HashMap<String, List<TransactionListener>>();
 
     /**
      * Retrieve the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery}
@@ -97,7 +97,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
             SubscriptionImpl newSubs = new SubscriptionImpl(info, resource);
             registerSubscription(newSubs, resource);
 
-            // ajust references to this subscription
+            // adjust references to this subscription
             subscriptions.put(newSubs.getSubscriptionId(), newSubs);
             resource.getSession().addReference(newSubs.getSubscriptionId());
             subscription = newSubs;
@@ -213,7 +213,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
 
         SubscriptionImpl subs;
         if (subscriptions.contains(subscriptionId)) {
-            subs = (SubscriptionImpl) subscriptions.get(subscriptionId);
+            subs = subscriptions.get(subscriptionId);
             if (!subs.isSubscribedToResource(resource)) {
                 throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Attempt to operate on subscription with invalid resource path.");
             }
@@ -243,9 +243,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
     public synchronized void beforeCommit(TransactionResource resource,
                                           String lockToken) {
         // suspend regular subscriptions during a commit
-        List transactionListeners = new ArrayList();
-        for (Iterator it = subscriptions.iterator(); it.hasNext(); ) {
-            SubscriptionImpl sub = (SubscriptionImpl) it.next();
+        List<TransactionListener> transactionListeners = new ArrayList<TransactionListener>();
+        for (Iterator<SubscriptionImpl> it = subscriptions.iterator(); it.hasNext(); ) {
+            SubscriptionImpl sub = it.next();
             TransactionListener tl = sub.createTransactionListener();
             tl.beforeCommit(resource, lockToken);
             transactionListeners.add(tl);
@@ -257,10 +257,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
      * {@inheritDoc}
      */
     public void afterCommit(TransactionResource resource, String lockToken, boolean success) {
-        List transactionListeners = (List) transactionListenerById.remove(lockToken);
+        List<TransactionListener> transactionListeners = transactionListenerById.remove(lockToken);
         if (transactionListeners != null) {
-            for (Iterator it = transactionListeners.iterator(); it.hasNext(); ) {
-                TransactionListener txListener = (TransactionListener) it.next();
+            for (TransactionListener txListener : transactionListeners) {
                 txListener.afterCommit(resource, lockToken, success);
             }
         }
@@ -297,29 +296,29 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
      */
     private class SubscriptionMap {
 
-        private HashMap subscriptions = new HashMap();
-        private HashMap ids = new HashMap();
+        private HashMap<String, SubscriptionImpl> subscriptions = new HashMap<String, SubscriptionImpl>();
+        private HashMap<DavResourceLocator, Set<String>> ids = new HashMap<DavResourceLocator, Set<String>>();
 
         private boolean contains(String subscriptionId) {
             return subscriptions.containsKey(subscriptionId);
         }
 
-        private Subscription get(String subscriptionId) {
-            return (Subscription) subscriptions.get(subscriptionId);
+        private SubscriptionImpl get(String subscriptionId) {
+            return subscriptions.get(subscriptionId);
         }
 
-        private Iterator iterator() {
+        private Iterator<SubscriptionImpl> iterator() {
             return subscriptions.values().iterator();
         }
 
         private void put(String subscriptionId, SubscriptionImpl subscription) {
             subscriptions.put(subscriptionId, subscription);
             DavResourceLocator key = subscription.getLocator();
-            Set idSet;
+            Set<String> idSet;
             if (ids.containsKey(key)) {
-                idSet = (Set) ids.get(key);
+                idSet = ids.get(key);
             } else {
-                idSet = new HashSet();
+                idSet = new HashSet<String>();
                 ids.put(key, idSet);
             }
             if (!idSet.contains(subscriptionId)) {
@@ -328,19 +327,19 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
         }
 
         private void remove(String subscriptionId) {
-            SubscriptionImpl sub = (SubscriptionImpl) subscriptions.remove(subscriptionId);
-            ((Set)ids.get(sub.getLocator())).remove(subscriptionId);
+            SubscriptionImpl sub = subscriptions.remove(subscriptionId);
+            ids.get(sub.getLocator()).remove(subscriptionId);
         }
 
         private Subscription[] getByPath(DavResourceLocator locator) {
-            Set idSet = (Set) ids.get(locator);
+            Set<String> idSet = ids.get(locator);
             if (idSet != null && !idSet.isEmpty()) {
-                Iterator idIterator = idSet.iterator();
                 Subscription[] subsForResource = new Subscription[idSet.size()];
                 int i = 0;
-                while (idIterator.hasNext()) {
-                    SubscriptionImpl s = (SubscriptionImpl) subscriptions.get(idIterator.next());
+                for (String id : idSet) {
+                    SubscriptionImpl s = subscriptions.get(id);
                     subsForResource[i] = new WrappedSubscription(s);
+                    i++;
                 }
                 return subsForResource;
             } else {

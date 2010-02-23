@@ -17,41 +17,23 @@
 package org.apache.jackrabbit.server.remoting.davex;
 
 import junit.framework.TestCase;
+import org.xml.sax.ContentHandler;
 
-import javax.jcr.Property;
-import javax.jcr.Session;
-import javax.jcr.Repository;
-import javax.jcr.Workspace;
 import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Item;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.Repository;
+import javax.jcr.Session;
 import javax.jcr.ValueFactory;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.NamespaceException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.Workspace;
 import javax.jcr.retention.RetentionManager;
 import javax.jcr.security.AccessControlManager;
-import javax.jcr.version.VersionException;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.security.AccessControlException;
 import java.io.InputStream;
-import java.io.IOException;
 import java.io.OutputStream;
-
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
+import java.security.AccessControlException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <code>JsonDiffHandlerTest</code>...
@@ -59,7 +41,7 @@ import org.xml.sax.SAXException;
 public class JsonDiffHandlerTest extends TestCase {
 
     public void testGetItemPath() throws Exception {
-        Map m = new HashMap();
+        Map<String, String> m = new HashMap<String, String>();
         m.put("abc", "/reqPath/abc");
         m.put("abc/def/ghi", "/reqPath/abc/def/ghi");
         m.put("/abc", "/abc");
@@ -82,9 +64,8 @@ public class JsonDiffHandlerTest extends TestCase {
         m.put("/./abc/def/../ghi", "/abc/ghi");
         
         JsonDiffHandler handler = new JsonDiffHandler(new DummySession(), "/reqPath", null);
-        for (Iterator it = m.keySet().iterator(); it.hasNext();) {
-            String targetPath = it.next().toString();
-            String expItemPath = m.get(targetPath).toString();
+        for (String targetPath : m.keySet()) {
+            String expItemPath = m.get(targetPath);
             assertEquals(expItemPath, handler.getItemPath(targetPath));
         }
     }
@@ -111,77 +92,77 @@ public class JsonDiffHandlerTest extends TestCase {
             return null;
         }
 
-        public Session impersonate(Credentials credentials) throws LoginException, RepositoryException {
+        public Session impersonate(Credentials credentials) {
             return null;
         }
 
-        public Node getRootNode() throws RepositoryException {
+        public Node getRootNode() {
             return null;
         }
 
-        public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
+        public Node getNodeByUUID(String uuid) {
             return null;
         }
 
-        public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
+        public Item getItem(String absPath) {
             return null;
         }
 
-        public boolean itemExists(String absPath) throws RepositoryException {
+        public boolean itemExists(String absPath) {
             return false;
         }
 
-        public void move(String srcAbsPath, String destAbsPath) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, RepositoryException {
+        public void move(String srcAbsPath, String destAbsPath) {
         }
 
-        public void save() throws AccessDeniedException, ItemExistsException, ConstraintViolationException, InvalidItemStateException, VersionException, LockException, NoSuchNodeTypeException, RepositoryException {
+        public void save() {
         }
 
-        public void refresh(boolean keepChanges) throws RepositoryException {
+        public void refresh(boolean keepChanges) {
         }
 
-        public boolean hasPendingChanges() throws RepositoryException {
+        public boolean hasPendingChanges() {
             return false;
         }
 
-        public ValueFactory getValueFactory() throws UnsupportedRepositoryOperationException, RepositoryException {
+        public ValueFactory getValueFactory() {
             return null;
         }
 
-        public void checkPermission(String absPath, String actions) throws AccessControlException, RepositoryException {
+        public void checkPermission(String absPath, String actions) throws AccessControlException {
         }
 
-        public ContentHandler getImportContentHandler(String parentAbsPath, int uuidBehavior) throws PathNotFoundException, ConstraintViolationException, VersionException, LockException, RepositoryException {
+        public ContentHandler getImportContentHandler(String parentAbsPath, int uuidBehavior) {
             return null;
         }
 
-        public void importXML(String parentAbsPath, InputStream in, int uuidBehavior) throws IOException, PathNotFoundException, ItemExistsException, ConstraintViolationException, VersionException, InvalidSerializedDataException, LockException, RepositoryException {
+        public void importXML(String parentAbsPath, InputStream in, int uuidBehavior) {
         }
 
-        public void exportSystemView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws PathNotFoundException, SAXException, RepositoryException {
+        public void exportSystemView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) {
         }
 
-        public void exportSystemView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws IOException, PathNotFoundException, RepositoryException {
+        public void exportSystemView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) {
         }
 
-        public void exportDocumentView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws PathNotFoundException, SAXException, RepositoryException {
+        public void exportDocumentView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) {
         }
 
-        public void exportDocumentView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws IOException, PathNotFoundException, RepositoryException {
+        public void exportDocumentView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) {
         }
 
-        public void setNamespacePrefix(String prefix, String uri) throws NamespaceException, RepositoryException {
+        public void setNamespacePrefix(String prefix, String uri) {
         }
 
-        public String[] getNamespacePrefixes() throws RepositoryException {
+        public String[] getNamespacePrefixes() {
             return new String[0];
         }
 
-        public String getNamespaceURI(String prefix) throws NamespaceException, RepositoryException {
+        public String getNamespaceURI(String prefix) {
             return null;
         }
 
-        public String getNamespacePrefix(String uri) throws NamespaceException, RepositoryException {
+        public String getNamespacePrefix(String uri) {
             return null;
         }
 
@@ -202,63 +183,52 @@ public class JsonDiffHandlerTest extends TestCase {
         public void removeLockToken(String lt) {
         }
 
-        public AccessControlManager getAccessControlManager()
-                throws UnsupportedRepositoryOperationException,
-                RepositoryException {
+        public AccessControlManager getAccessControlManager() {
             // TODO Auto-generated method stub
             return null;
         }
 
-        public Node getNode(String arg0) throws PathNotFoundException,
-                RepositoryException {
+        public Node getNode(String arg0) {
             // TODO Auto-generated method stub
             return null;
         }
 
-        public Node getNodeByIdentifier(String arg0)
-                throws ItemNotFoundException, RepositoryException {
+        public Node getNodeByIdentifier(String arg0) {
             // TODO Auto-generated method stub
             return null;
         }
 
-        public Property getProperty(String arg0) throws PathNotFoundException,
-                RepositoryException {
+        public Property getProperty(String arg0) {
             // TODO Auto-generated method stub
             return null;
         }
 
-        public RetentionManager getRetentionManager()
-                throws UnsupportedRepositoryOperationException,
-                RepositoryException {
+        public RetentionManager getRetentionManager() {
             // TODO Auto-generated method stub
             return null;
         }
 
-        public boolean hasCapability(String arg0, Object arg1, Object[] arg2)
-                throws RepositoryException {
+        public boolean hasCapability(String arg0, Object arg1, Object[] arg2) {
             // TODO Auto-generated method stub
             return false;
         }
 
-        public boolean hasPermission(String arg0, String arg1)
-                throws RepositoryException {
+        public boolean hasPermission(String arg0, String arg1) {
             // TODO Auto-generated method stub
             return false;
         }
 
-        public boolean nodeExists(String arg0) throws RepositoryException {
+        public boolean nodeExists(String arg0) {
             // TODO Auto-generated method stub
             return false;
         }
 
-        public boolean propertyExists(String arg0) throws RepositoryException {
+        public boolean propertyExists(String arg0) {
             // TODO Auto-generated method stub
             return false;
         }
 
-        public void removeItem(String arg0) throws VersionException,
-                LockException, ConstraintViolationException,
-                PathNotFoundException, RepositoryException {
+        public void removeItem(String arg0) {
             // TODO Auto-generated method stub
             
         }

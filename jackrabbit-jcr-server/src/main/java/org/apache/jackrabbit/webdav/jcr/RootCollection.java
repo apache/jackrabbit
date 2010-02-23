@@ -194,11 +194,11 @@ public class RootCollection extends AbstractResource {
      * @see org.apache.jackrabbit.webdav.DavResource#getMembers()
      */
     public DavResourceIterator getMembers() {
-        List memberList = new ArrayList();
+        List<DavResource> memberList = new ArrayList();
         try {
             String[] wsNames = getRepositorySession().getWorkspace().getAccessibleWorkspaceNames();
-            for (int i = 0; i < wsNames.length; i++) {
-                String wspPath = "/"+wsNames[i];
+            for (String wsName : wsNames) {
+                String wspPath = "/" + wsName;
                 DavResourceLocator childLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), wspPath, wspPath);
                 memberList.add(createResourceFromLocator(childLoc));
             }
@@ -223,6 +223,7 @@ public class RootCollection extends AbstractResource {
     /**
      * @see AbstractResource#initLockSupport()
      */
+    @Override
     protected void initLockSupport() {
         // no locking supported
     }
@@ -235,6 +236,7 @@ public class RootCollection extends AbstractResource {
      * @return <code>null</code>
      * @see AbstractResource#getWorkspaceHref()
      */
+    @Override
     protected String getWorkspaceHref() {
         return null;
     }

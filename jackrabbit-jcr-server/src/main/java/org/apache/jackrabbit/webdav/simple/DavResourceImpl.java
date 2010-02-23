@@ -61,6 +61,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +79,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -288,7 +288,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     /**
      * @see DavResource#getProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
-    public DavProperty getProperty(DavPropertyName name) {
+    public DavProperty<?> getProperty(DavPropertyName name) {
         initProperties();
         return properties.get(name);
     }
@@ -324,29 +324,29 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
 
         // set (or reset) fundamental properties
         if (getDisplayName() != null) {
-            properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, getDisplayName()));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.DISPLAYNAME, getDisplayName()));
         }
         if (isCollection()) {
             properties.add(new ResourceType(ResourceType.COLLECTION));
             // Windows XP support
-            properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "1"));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.ISCOLLECTION, "1"));
         } else {
             properties.add(new ResourceType(ResourceType.DEFAULT_RESOURCE));
             // Windows XP support
-            properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "0"));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.ISCOLLECTION, "0"));
         }
 
         if (rfc4122Uri != null) {
             properties.add(new HrefProperty(BindConstants.RESOURCEID, rfc4122Uri, true));
         }
 
-        Set parentElements = getParentElements();
+        Set<ParentElement> parentElements = getParentElements();
         if (!parentElements.isEmpty()) {
             properties.add(new ParentSet(parentElements));
         }
 
         /* set current lock information. If no lock is set to this resource,
-        an empty lockdiscovery will be returned in the response. */
+        an empty lock discovery will be returned in the response. */
         properties.add(new LockDiscovery(getLock(Type.WRITE, Scope.EXCLUSIVE)));
 
         /* lock support information: all locks are lockable. */
@@ -362,7 +362,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * @throws DavException
      * @see DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      */
-    public void setProperty(DavProperty property) throws DavException {
+    public void setProperty(DavProperty<?> property) throws DavException {
         alterProperty(property);
     }
 
@@ -375,7 +375,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         alterProperty(propertyName);
     }
 
-    private void alterProperty(Object prop) throws DavException {
+    private void alterProperty(PropEntry prop) throws DavException {
         if (isLocked(this)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
@@ -383,10 +383,9 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         try {
-            List l = new ArrayList(1);
-            l.add(prop);
-            alterProperties(l);
-            Map failure = config.getPropertyManager().alterProperties(getPropertyImportContext(l), isCollection());
+            List<? extends PropEntry> list = Collections.singletonList(prop);
+            alterProperties(list);
+            Map<? extends PropEntry, ?> failure = config.getPropertyManager().alterProperties(getPropertyImportContext(list), isCollection());
             if (failure.isEmpty()) {
                 node.save();
             } else {
@@ -406,7 +405,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         }
     }
 
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
         if (isLocked(this)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
@@ -415,7 +414,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         }
         MultiStatusResponse msr = new MultiStatusResponse(getHref(), null);
         try {
-            Map failures = config.getPropertyManager().alterProperties(getPropertyImportContext(changeList), isCollection());
+            Map<? extends PropEntry, ?> failures = config.getPropertyManager().alterProperties(getPropertyImportContext(changeList), isCollection());
             if (failures.isEmpty()) {
                 // save all changes together (reverted in case this fails)
                 node.save();
@@ -424,26 +423,24 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                 node.refresh(false);
             }
             /* loop over list of properties/names that were successfully altered
-               and them to the multistatus response respecting the resulte of the
+               and them to the multistatus response respecting the result of the
                complete action. in case of failure set the status to 'failed-dependency'
                in order to indicate, that altering those names/properties would
                have succeeded, if no other error occured.*/
-            Iterator it = changeList.iterator();
-            while (it.hasNext()) {
-                Object o = it.next();
+            for (PropEntry propEntry : changeList) {
                 int statusCode;
-                if (failures.containsKey(o)) {
-                    Object error = failures.get(o);
+                if (failures.containsKey(propEntry)) {
+                    Object error = failures.get(propEntry);
                     statusCode = (error instanceof RepositoryException)
-                        ? new JcrDavException((RepositoryException) error).getErrorCode()
-                        : DavServletResponse.SC_INTERNAL_SERVER_ERROR;
+                            ? new JcrDavException((RepositoryException) error).getErrorCode()
+                            : DavServletResponse.SC_INTERNAL_SERVER_ERROR;
                 } else {
                     statusCode = (failures.isEmpty()) ? DavServletResponse.SC_OK : DavServletResponse.SC_FAILED_DEPENDENCY;
                 }
-                if (o instanceof DavProperty) {
-                    msr.add(((DavProperty) o).getName(), statusCode);
+                if (propEntry instanceof DavProperty) {
+                    msr.add(((DavProperty<?>) propEntry).getName(), statusCode);
                 } else {
-                    msr.add((DavPropertyName) o, statusCode);
+                    msr.add((DavPropertyName) propEntry, statusCode);
                 }
             }
             return msr;
@@ -482,7 +479,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * @see DavResource#getMembers()
      */
     public DavResourceIterator getMembers() {
-        ArrayList list = new ArrayList();
+        ArrayList<DavResource> list = new ArrayList<DavResource>();
         if (exists() && isCollection()) {
             try {
                 NodeIterator it = node.getNodes();
@@ -497,9 +494,9 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                     }
                 }
             } catch (RepositoryException e) {
-                // should not occure
+                // should not occur
             } catch (DavException e) {
-                // should not occure
+                // should not occur
             }
         }
         return new DavResourceIteratorImpl(list);
@@ -860,10 +857,10 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     /**
      * @see org.apache.jackrabbit.webdav.bind.BindableResource#getParentElements()
      */
-    public Set getParentElements() {
+    public Set<ParentElement> getParentElements() {
         try {
             if (node.getDepth() > 0) {
-                Set ps = new HashSet();
+                Set<ParentElement> ps = new HashSet<ParentElement>();
                 NodeIterator sharedSetIterator = node.getSharedSet();
                 while (sharedSetIterator.hasNext()) {
                     Node sharednode = sharedSetIterator.nextNode();
@@ -876,7 +873,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         } catch (RepositoryException e) {
             log.warn("unable to calculate parent set", e);
         }
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     /**
@@ -920,7 +917,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * @param changeList
      * @return a new <code>PropertyImportContext</code>.
      */
-    protected PropertyImportContext getPropertyImportContext(List changeList) {
+    protected PropertyImportContext getPropertyImportContext(List<? extends PropEntry> changeList) {
         return new ProperyImportCtx(changeList);
     }
 
@@ -969,9 +966,8 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         if (lock == null) {
             return false;
         } else {
-            String[] sLockTokens = session.getLockTokens();
-            for (int i = 0; i < sLockTokens.length; i++) {
-                if (sLockTokens[i].equals(lock.getToken())) {
+            for (String sLockToken : session.getLockTokens()) {
+                if (sLockToken.equals(lock.getToken())) {
                     return false;
                 }
             }
@@ -1021,26 +1017,26 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
 
         public void setContentLanguage(String contentLanguage) {
             if (contentLanguage != null) {
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLANGUAGE, contentLanguage));
+                properties.add(new DefaultDavProperty<String>(DavPropertyName.GETCONTENTLANGUAGE, contentLanguage));
             }
         }
 
         public void setContentLength(long contentLength) {
             if (contentLength > IOUtil.UNDEFINED_LENGTH) {
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, contentLength + ""));
+                properties.add(new DefaultDavProperty<String>(DavPropertyName.GETCONTENTLENGTH, contentLength + ""));
             }
         }
 
         public void setContentType(String mimeType, String encoding) {
             String contentType = IOUtil.buildContentType(mimeType, encoding);
             if (contentType != null) {
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
+                properties.add(new DefaultDavProperty<String>(DavPropertyName.GETCONTENTTYPE, contentType));
             }
         }
 
         public void setCreationTime(long creationTime) {
             String created = IOUtil.getCreated(creationTime);
-            properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, created));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE, created));
         }
 
         public void setModificationTime(long modTime) {
@@ -1050,12 +1046,12 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                 modificationTime = modTime;
             }
             String lastModified = IOUtil.getLastModified(modificationTime);
-            properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
+            properties.add(new DefaultDavProperty<String>(DavPropertyName.GETLASTMODIFIED, lastModified));
         }
 
         public void setETag(String etag) {
             if (etag != null) {
-                properties.add(new DefaultDavProperty(DavPropertyName.GETETAG, etag));
+                properties.add(new DefaultDavProperty<String>(DavPropertyName.GETETAG, etag));
             }
         }
 
@@ -1066,7 +1062,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
             }
 
             if (propertyValue instanceof DavProperty) {
-                properties.add((DavProperty)propertyValue);
+                properties.add((DavProperty<?>)propertyValue);
             } else {
                 DavPropertyName pName;
                 if (propertyName instanceof DavPropertyName) {
@@ -1075,7 +1071,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                     // create property name with default DAV: namespace
                     pName = DavPropertyName.create(propertyName.toString());
                 }
-                properties.add(new DefaultDavProperty(pName, propertyValue));
+                properties.add(new DefaultDavProperty<Object>(pName, propertyValue));
             }
         }
     }
@@ -1083,10 +1079,10 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     private class ProperyImportCtx implements PropertyImportContext {
 
         private final IOListener ioListener = new DefaultIOListener(log);
-        private final List changeList;
+        private final List<? extends PropEntry> changeList;
         private boolean completed;
 
-        private ProperyImportCtx(List changeList) {
+        private ProperyImportCtx(List<? extends PropEntry> changeList) {
             this.changeList = changeList;
         }
 
@@ -1100,7 +1096,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         /**
          * @see PropertyImportContext#getChangeList()
          */
-        public List getChangeList() {
+        public List<? extends PropEntry> getChangeList() {
             return Collections.unmodifiableList(changeList);
         }
 

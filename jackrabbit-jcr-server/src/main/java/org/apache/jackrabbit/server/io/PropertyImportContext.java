@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.server.io;
 
+import org.apache.jackrabbit.webdav.property.PropEntry;
+
 import javax.jcr.Item;
 import java.util.List;
 
@@ -40,5 +42,5 @@ public interface PropertyImportContext extends IOContext {
      *
      * @return list of properties to be modified
      */
-    public List getChangeList();
+    public List<? extends PropEntry> getChangeList();
 }

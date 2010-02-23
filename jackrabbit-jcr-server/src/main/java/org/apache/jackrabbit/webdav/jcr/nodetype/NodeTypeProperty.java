@@ -26,20 +26,19 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.jcr.nodetype.NodeType;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 /**
  * <code>NodeTypeProperty</code>...
  */
-public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeConstants {
+public class NodeTypeProperty extends AbstractDavProperty<Set<String>> implements NodeTypeConstants {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeProperty.class);
 
-    private final Set nodetypeNames = new HashSet();
+    private final Set<String> nodetypeNames = new HashSet<String>();
 
     public NodeTypeProperty(DavPropertyName name, NodeType nodeType, boolean isProtected) {
         this(name, new NodeType[]{nodeType}, isProtected);
@@ -47,19 +46,18 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
 
     public NodeTypeProperty(DavPropertyName name, NodeType[] nodeTypes, boolean isProtected) {
         super(name, isProtected);
-        for (int i = 0; i < nodeTypes.length; i++) {
-            NodeType nt = nodeTypes[i];
+        for (NodeType nt : nodeTypes) {
             if (nt != null) {
-                nodetypeNames.add(nodeTypes[i].getName());
+                nodetypeNames.add(nt.getName());
             }
         }
     }
 
     public NodeTypeProperty(DavPropertyName name, String[] nodeTypeNames, boolean isProtected) {
         super(name, isProtected);
-        for (int i = 0; i < nodeTypeNames.length; i++) {
-            if (nodeTypeNames[i] != null) {
-                nodetypeNames.add(nodeTypeNames[i]);
+        for (String nodeTypeName : nodeTypeNames) {
+            if (nodeTypeName != null) {
+                nodetypeNames.add(nodeTypeName);
             }
         }
     }
@@ -70,18 +68,17 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
      *
      * @param property
      */
-    public NodeTypeProperty(DavProperty property) {
+    public NodeTypeProperty(DavProperty<?> property) {
         super(property.getName(), property.isInvisibleInAllprop());
         if (property instanceof NodeTypeProperty) {
-            nodetypeNames.addAll(((NodeTypeProperty)property).nodetypeNames);
+            nodetypeNames.addAll(((NodeTypeProperty) property).nodetypeNames);
         } else {
             // assume property has be built from xml
             Object propValue = property.getValue();
             if (propValue instanceof List) {
-                retrieveNodeTypeNames(((List)propValue));
+                retrieveNodeTypeNames(((List<?>)propValue));
             } else if (propValue instanceof Element) {
-                List l = new ArrayList();
-                l.add(propValue);
+                List<Element> l = Collections.singletonList((Element) propValue);
                 retrieveNodeTypeNames(l);
             } else {
                 log.debug("NodeTypeProperty '" + property.getName() + "' has no/unparsable value.");
@@ -89,21 +86,19 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
         }
     }
 
-    private void retrieveNodeTypeNames(List elementList) {
-        Iterator it = elementList.iterator();
-        while (it.hasNext()) {
-            Object content = it.next();
+    private void retrieveNodeTypeNames(List<?> elementList) {
+        for (Object content : elementList) {
             if (!(content instanceof Element)) {
                 continue;
             }
-            Element el = (Element)content;
+            Element el = (Element) content;
             if (XML_NODETYPE.equals(el.getLocalName()) && NodeTypeConstants.NAMESPACE.isSame(el.getNamespaceURI())) {
                 String nodetypeName = DomUtil.getChildText(el, XML_NODETYPENAME, NodeTypeConstants.NAMESPACE);
                 if (nodetypeName != null && !"".equals(nodetypeName)) {
                     nodetypeNames.add(nodetypeName);
                 }
             } else {
-                log.debug("'dcr:nodetype' element expected -> ignoring element '" + ((Element)content).getNodeName() + "'");
+                log.debug("'dcr:nodetype' element expected -> ignoring element '" + ((Element) content).getNodeName() + "'");
             }
         }
     }
@@ -113,7 +108,7 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
      *
      * @return set of nodetype names
      */
-    public Set getNodeTypeNames() {
+    public Set<String> getNodeTypeNames() {
         return nodetypeNames;
     }
 
@@ -122,18 +117,17 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
      *
      * @return a Set of nodetype names (String).
      */
-    public Object getValue() {
+    public Set<String> getValue() {
         return nodetypeNames;
     }
 
     /**
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        Iterator it = getNodeTypeNames().iterator();
-        while (it.hasNext()) {
-            String name = it.next().toString();
+        for (String name : getNodeTypeNames()) {
             Element ntElem = DomUtil.addChildElement(elem, XML_NODETYPE, NodeTypeConstants.NAMESPACE);
             DomUtil.addChildElement(ntElem, XML_NODETYPENAME, NodeTypeConstants.NAMESPACE, name);
         }

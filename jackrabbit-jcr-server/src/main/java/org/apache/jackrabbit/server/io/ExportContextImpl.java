@@ -19,7 +19,6 @@ package org.apache.jackrabbit.server.io;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.io.OutputContext;
-import org.apache.tika.detect.Detector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -48,7 +46,7 @@ public class ExportContextImpl extends AbstractExportContext {
 
     private static Logger log = LoggerFactory.getLogger(ExportContextImpl.class);
 
-    private final Map properties = new HashMap();
+    private final Map<String, String> properties = new HashMap<String, String>();
     private final OutputContext outputCtx;
 
     private File outFile;
@@ -75,7 +73,7 @@ public class ExportContextImpl extends AbstractExportContext {
         checkCompleted();
         if (hasStream()) {
             try {
-                // clean up the stream retrieved by the preceeding handler, that
+                // clean up the stream retrieved by the preceding handler, that
                 // did not behave properly and failed to export although initially
                 // willing to handle the export.
                 if (outStream != null) {
@@ -144,7 +142,9 @@ public class ExportContextImpl extends AbstractExportContext {
      * @see ExportContext#setProperty(Object, Object)
      */
     public void setProperty(Object propertyName, Object propertyValue) {
-        properties.put(propertyName, propertyValue);
+        if (propertyName != null && propertyValue != null) {
+            properties.put(propertyName.toString(), propertyValue.toString());
+        }
     }
 
     /**
@@ -154,6 +154,7 @@ public class ExportContextImpl extends AbstractExportContext {
      * @param success
      * @see ExportContext#informCompleted(boolean)
      */
+    @Override
     public void informCompleted(boolean success) {
         checkCompleted();
         completed = true;
@@ -170,14 +171,12 @@ public class ExportContextImpl extends AbstractExportContext {
             // write properties and data to the output-context
             if (outputCtx != null) {
                 boolean hasContentLength = false;
-                Iterator it = properties.keySet().iterator();
-                while (it.hasNext()) {
-                    Object name = it.next();
-                    Object value = properties.get(name);
+                for (String name : properties.keySet()) {
+                    String value = properties.get(name);
                     if (name != null && value != null) {
-                        outputCtx.setProperty(name.toString(), value.toString());
+                        outputCtx.setProperty(name, value);
                         // check for content-length
-                        hasContentLength = DavConstants.HEADER_CONTENT_LENGTH.equals(name.toString());
+                        hasContentLength = DavConstants.HEADER_CONTENT_LENGTH.equals(name);
                     }
                 }
 

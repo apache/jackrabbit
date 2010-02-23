@@ -96,6 +96,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
      * @return the supported method names.
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
+    @Override
     public String getSupportedMethods() {
         StringBuffer sb = new StringBuffer(super.getSupportedMethods());
         // Versioning support
@@ -134,7 +135,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
         if (isCollection()) {
             // since the version-controlled-collection feature is not supported
             // collections may not be put under dav version control even if
-            // the underlaying node was / could be made jcr versionable.
+            // the underlying node was / could be made jcr versionable.
             throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
         }
         if (!isVersionControlled()) {
@@ -301,6 +302,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
      * @see SupportedReportSetProperty
      * @see DeltaVResourceImpl#initSupportedReports()
      */
+    @Override
     protected void initSupportedReports() {
         super.initSupportedReports();
         if (exists()) {
@@ -315,6 +317,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
      * Fill the property set for this resource.
      * @see DavResourceImpl#initProperties()
      */
+    @Override
     protected void initProperties() {
         if (!propsInitialized) {
             super.initProperties();
@@ -337,7 +340,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
                             Value[] pv = n.getProperty(JcrConstants.JCR_PREDECESSORS).getValues();
                             Node[] predecessors = new Node[pv.length];
                             for (int i = 0; i < pv.length; i++) {
-                                predecessors[i] = n.getSession().getNodeByUUID(pv[i].getString());
+                                predecessors[i] = n.getSession().getNodeByIdentifier(pv[i].getString());
                             }
                             properties.add(getHrefProperty(VersionResource.PREDECESSOR_SET, predecessors, false, false));
                         }
@@ -361,7 +364,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
     private boolean isVersionControlled() {
         boolean vc = false;
         // since the version-controlled-collection feature is not supported
-        // all collection are excluded from version-controll even if the
+        // all collection are excluded from version-control even if the
         // underlying node was JCR versionable.
         if (exists() && !isCollection()) {
             Node item = getNode();

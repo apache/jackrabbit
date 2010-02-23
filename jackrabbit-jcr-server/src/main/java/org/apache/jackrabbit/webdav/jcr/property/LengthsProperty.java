@@ -27,7 +27,7 @@ import org.w3c.dom.Element;
  * utilities to handle the multiple lengths of the property item represented
  * by this resource.
  */
-public class LengthsProperty extends AbstractDavProperty implements ItemResourceConstants {
+public class LengthsProperty extends AbstractDavProperty<long[]> implements ItemResourceConstants {
 
     private final long[] value;
 
@@ -47,17 +47,18 @@ public class LengthsProperty extends AbstractDavProperty implements ItemResource
      *
      * @return an array of {@link long}s
      */
-    public Object getValue() {
+    public long[] getValue() {
         return value;
     }
 
     /**
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        for (int i = 0; i < value.length; i++) {
-            String txtContent = String.valueOf(value[i]);
+        for (long length : value) {
+            String txtContent = String.valueOf(length);
             DomUtil.addChildElement(elem, XML_LENGTH, ItemResourceConstants.NAMESPACE, txtContent);
         }
         return elem;

@@ -97,6 +97,7 @@ public class LocateCorrespondingNodeReport extends AbstractJcrReport {
     /**
      * @see Report#init(DavResource, ReportInfo)
      */
+    @Override
     public void init(DavResource resource, ReportInfo info) throws DavException {
         // general validation checks
         super.init(resource, info);

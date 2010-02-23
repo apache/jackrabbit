@@ -18,12 +18,12 @@ package org.apache.jackrabbit.server.io;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 
 import javax.jcr.RepositoryException;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * <code>PropertyManagerImpl</code>...
@@ -34,7 +34,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
     private static PropertyManager DEFAULT_MANAGER;
 
-    private final List propertyHandlers = new ArrayList();
+    private final List<PropertyHandler> propertyHandlers = new ArrayList<PropertyHandler>();
 
     /**
      * Create a new <code>PropertyManagerImpl</code>.
@@ -66,17 +66,15 @@ public class PropertyManagerImpl implements PropertyManager {
     /**
      * @see PropertyManager#alterProperties(PropertyImportContext, boolean)
      */
-    public Map alterProperties(PropertyImportContext context, boolean isCollection) throws RepositoryException {
-        boolean foundHandler = false;
-        Map failures = new HashMap(0);
-        PropertyHandler[] propertyHandlers = getPropertyHandlers();
-        for (int i = 0; i < propertyHandlers.length && !foundHandler; i++) {
-            PropertyHandler ph = propertyHandlers[i];
-            if ((foundHandler = ph.canImport(context, isCollection))) {
+    public Map<? extends PropEntry, ?> alterProperties(PropertyImportContext context, boolean isCollection) throws RepositoryException {
+        Map<? extends PropEntry, ?> failures = null;
+        for (PropertyHandler ph : getPropertyHandlers()) {
+            if (ph.canImport(context, isCollection)) {
                 failures = ph.importProperties(context, isCollection);
+                break;
             }
         }
-        if (!foundHandler) {
+        if (failures == null) {
             throw new RepositoryException("Unable to alter properties: No matching handler found.");
         }
         context.informCompleted(failures.isEmpty());
@@ -97,7 +95,7 @@ public class PropertyManagerImpl implements PropertyManager {
      * @see PropertyManager#getPropertyHandlers()
      */
     public PropertyHandler[] getPropertyHandlers() {
-        return (PropertyHandler[]) propertyHandlers.toArray(new PropertyHandler[propertyHandlers.size()]);
+        return propertyHandlers.toArray(new PropertyHandler[propertyHandlers.size()]);
     }
 
     /**

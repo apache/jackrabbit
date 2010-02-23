@@ -85,6 +85,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
     /**
      * @see Report#init(DavResource, ReportInfo)
      */
+    @Override
     public void init(DavResource resource, ReportInfo info) throws DavException {
         // delegate basic validation to super class
         super.init(resource, info);
@@ -115,11 +116,11 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
     private void addResponses(DavResourceLocator locator) {
         String repositoryPath = locator.getRepositoryPath();
         MultiStatusResponse resp = new MultiStatusResponse(locator.getHref(false), null);
-        List currentPrivs = new ArrayList();
-        for (int i = 0; i < PRIVS.length; i++) {
+        List<Privilege> currentPrivs = new ArrayList<Privilege>();
+        for (Privilege priv : PRIVS) {
             try {
-                getRepositorySession().checkPermission(repositoryPath, PRIVS[i].getName());
-                currentPrivs.add(PRIVS[i]);
+                getRepositorySession().checkPermission(repositoryPath, priv.getName());
+                currentPrivs.add(priv);
             } catch (AccessControlException e) {
                 // ignore
                 log.debug(e.toString());
@@ -128,7 +129,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
                 log.debug(e.toString());
             }
         }
-        resp.add(new CurrentUserPrivilegeSetProperty((Privilege[])currentPrivs.toArray(new Privilege[currentPrivs.size()])));
+        resp.add(new CurrentUserPrivilegeSetProperty(currentPrivs.toArray(new Privilege[currentPrivs.size()])));
         ms.addResponse(resp);
     }
 }

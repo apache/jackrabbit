@@ -86,6 +86,7 @@ abstract class AbstractItemResource extends AbstractResource implements
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
+    @Override
     public String getComplianceClass() {
         return DavCompliance.concatComplianceClasses(
             new String[] {
@@ -140,15 +141,15 @@ abstract class AbstractItemResource extends AbstractResource implements
         }
         // export properties
         outputContext.setModificationTime(getModificationTime());
-        DavProperty etag = getProperty(DavPropertyName.GETETAG);
+        DavProperty<?> etag = getProperty(DavPropertyName.GETETAG);
         if (etag != null) {
             outputContext.setETag(String.valueOf(etag.getValue()));
         }
-        DavProperty contentType = getProperty(DavPropertyName.GETCONTENTTYPE);
+        DavProperty<?> contentType = getProperty(DavPropertyName.GETCONTENTTYPE);
         if (contentType != null) {
             outputContext.setContentType(String.valueOf(contentType.getValue()));
         }
-        DavProperty contentLength = getProperty(DavPropertyName.GETCONTENTLENGTH);
+        DavProperty<?> contentLength = getProperty(DavPropertyName.GETCONTENTLENGTH);
         if (contentLength != null) {
             try {
                 long length = Long.parseLong(contentLength.getValue() + "");
@@ -159,7 +160,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                 log.error("Could not build content length from property value '" + contentLength.getValue() + "'");
             }
         }
-        DavProperty contentLanguage = getProperty(DavPropertyName.GETCONTENTLANGUAGE);
+        DavProperty<?> contentLanguage = getProperty(DavPropertyName.GETCONTENTLANGUAGE);
         if (contentLanguage != null) {
             outputContext.setContentLanguage(contentLanguage.getValue().toString());
         }
@@ -197,6 +198,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see DavResource#move(DavResource)
      * @see javax.jcr.Session#move(String, String)
      */
+    @Override
     public void move(DavResource destination) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -210,7 +212,7 @@ abstract class AbstractItemResource extends AbstractResource implements
             String itemPath = getLocator().getRepositoryPath();
             String destItemPath = destination.getLocator().getRepositoryPath();
             if (getTransactionId() == null) {
-                // if not part of a transaction directely import on workspace
+                // if not part of a transaction directly import on workspace
                 getRepositorySession().getWorkspace().move(itemPath, destItemPath);
             } else {
                 // changes will not be persisted unless the tx is completed.
@@ -240,6 +242,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see Workspace#copy(String, String)
      * @see Workspace#copy(String, String, String)
      */
+    @Override
     public void copy(DavResource destination, boolean shallow) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -309,9 +312,11 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see org.apache.jackrabbit.webdav.transaction.TxLockEntry
      * @see AbstractResource#initLockSupport()
      */
+    @Override
     protected void initLockSupport() {
         if (exists()) {
-            // add supportedlock entries for local and eventually for global transaction locks
+            // add supported lock entries for local and eventually for global
+            // transaction locks
             supportedLock.addEntry(new TxLockEntry(true));
             supportedLock.addEntry(new TxLockEntry(false));
         }
@@ -320,13 +325,14 @@ abstract class AbstractItemResource extends AbstractResource implements
     /**
      * Fill the property set for this resource.
      */
+    @Override
     protected void initProperties() {
         super.initProperties();
         if (exists()) {
             try {
-                properties.add(new DefaultDavProperty(JCR_NAME, item.getName()));
-                properties.add(new DefaultDavProperty(JCR_PATH, item.getPath()));
-                properties.add(new DefaultDavProperty(JCR_DEPTH, String.valueOf(item.getDepth())));
+                properties.add(new DefaultDavProperty<String>(JCR_NAME, item.getName()));
+                properties.add(new DefaultDavProperty<String>(JCR_PATH, item.getPath()));
+                properties.add(new DefaultDavProperty<String>(JCR_DEPTH, String.valueOf(item.getDepth())));
                 // add href-property for the items parent unless its the root item
                 if (item.getDepth() > 0) {
                     String parentHref = getLocatorFromItem(item.getParent()).getHref(true);
@@ -339,7 +345,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                 } else {
                     val = PropertyDefinitionImpl.create(((Property)item).getDefinition());
                 }
-                properties.add(new DefaultDavProperty(JCR_DEFINITION, val, true));
+                properties.add(new DefaultDavProperty<ItemDefinitionImpl>(JCR_DEFINITION, val, true));
             } catch (RepositoryException e) {
                 // should not get here
                 log.error("Error while accessing jcr properties: " + e.getMessage());
@@ -347,9 +353,9 @@ abstract class AbstractItemResource extends AbstractResource implements
 
             // transaction resource additional protected properties
             if (item.isNew()) {
-                properties.add(new DefaultDavProperty(JCR_ISNEW, null, true));
+                properties.add(new DefaultDavProperty<String>(JCR_ISNEW, null, true));
             } else if (item.isModified()) {
-                properties.add(new DefaultDavProperty(JCR_ISMODIFIED, null, true));
+                properties.add(new DefaultDavProperty<String>(JCR_ISMODIFIED, null, true));
             }
         }
 
@@ -362,11 +368,12 @@ abstract class AbstractItemResource extends AbstractResource implements
                                                 PRIVILEGE_JCR_ADD_NODE,
                                                 PRIVILEGE_JCR_SET_PROPERTY,
                                                 PRIVILEGE_JCR_REMOVE};
-        List currentPrivs = new ArrayList();
-        for (int i = 0; i < allPrivs.length; i++) {
+        List<Privilege> currentPrivs = new ArrayList<Privilege>();
+        for (Privilege priv : allPrivs) {
             try {
-                getRepositorySession().checkPermission(getLocator().getRepositoryPath(), allPrivs[i].getName());
-                currentPrivs.add(allPrivs[i]);
+                String path = getLocator().getRepositoryPath();
+                getRepositorySession().checkPermission(path, priv.getName());
+                currentPrivs.add(priv);
             } catch (AccessControlException e) {
                 // ignore
                 log.debug(e.toString());
@@ -375,7 +382,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                 log.debug(e.toString());
             }
         }
-        properties.add(new CurrentUserPrivilegeSetProperty((Privilege[])currentPrivs.toArray(new Privilege[currentPrivs.size()])));
+        properties.add(new CurrentUserPrivilegeSetProperty(currentPrivs.toArray(new Privilege[currentPrivs.size()])));
     }
 
     /**
@@ -384,6 +391,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      *
      * @see AbstractResource#getWorkspaceHref()
      */
+    @Override
     protected String getWorkspaceHref() {
         String workspaceHref = null;
         DavResourceLocator locator = getLocator();

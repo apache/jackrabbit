@@ -39,7 +39,7 @@ public class IOManagerImpl implements IOManager {
      */
     private Detector detector;
 
-    private final List ioHandlers = new ArrayList();
+    private final List<IOHandler> ioHandlers = new ArrayList<IOHandler>();
 
     /**
      * Create a new <code>IOManager</code>.
@@ -66,7 +66,7 @@ public class IOManagerImpl implements IOManager {
      * @see IOManager#getIOHandlers()
      */
     public IOHandler[] getIOHandlers() {
-        return (IOHandler[]) ioHandlers.toArray(new IOHandler[ioHandlers.size()]);
+        return ioHandlers.toArray(new IOHandler[ioHandlers.size()]);
     }
 
     /**

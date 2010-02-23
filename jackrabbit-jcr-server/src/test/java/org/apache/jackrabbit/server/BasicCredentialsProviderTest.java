@@ -32,7 +32,6 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Locale;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.security.Principal;
 import java.io.UnsupportedEncodingException;
 import java.io.IOException;
@@ -68,21 +67,20 @@ public class BasicCredentialsProviderTest extends TestCase {
     }
 
     public void testDefaultPassword() throws ServletException, LoginException {
-        Map m = new HashMap();
+        Map<String, char[]> m = new HashMap<String, char[]>();
         m.put("userId", new char[0]);
         m.put("userId:", new char[0]);
         m.put("userId:pw", "pw".toCharArray());
 
-        for (Iterator it = m.keySet().iterator(); it.hasNext();) {
-            String defaultHeaderValue = it.next().toString();
-            char[] pw = (char[]) m.get(defaultHeaderValue);
+        for (String uid : m.keySet()) {
+            char[] pw = m.get(uid);
 
-            CredentialsProvider cb = new BasicCredentialsProvider(defaultHeaderValue);
+            CredentialsProvider cb = new BasicCredentialsProvider(uid);
             Credentials creds = cb.getCredentials(new RequestImpl(null));
 
             assertNotNull(creds);
             assertTrue(creds instanceof SimpleCredentials);
-            assertEquals("userId",((SimpleCredentials) creds).getUserID());
+            assertEquals("userId", ((SimpleCredentials) creds).getUserID());
             if (pw.length == 0) {
                 assertEquals(0, ((SimpleCredentials) creds).getPassword().length);
             } else {
@@ -118,11 +116,11 @@ public class BasicCredentialsProviderTest extends TestCase {
             return authHeader;
         }
 
-        public Enumeration getHeaders(String name) {
+        public Enumeration<?> getHeaders(String name) {
             return null;
         }
 
-        public Enumeration getHeaderNames() {
+        public Enumeration<?> getHeaderNames() {
             return null;
         }
 
@@ -206,7 +204,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return null;
         }
 
-        public Enumeration getAttributeNames() {
+        public Enumeration<?> getAttributeNames() {
             return null;
         }
 
@@ -233,7 +231,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return null;
         }
 
-        public Enumeration getParameterNames() {
+        public Enumeration<?> getParameterNames() {
             return null;
         }
 
@@ -241,7 +239,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return new String[0];
         }
 
-        public Map getParameterMap() {
+        public Map<?,?> getParameterMap() {
             return null;
         }
 
@@ -283,7 +281,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return null;
         }
 
-        public Enumeration getLocales() {
+        public Enumeration<?> getLocales() {
             return null;
         }
 

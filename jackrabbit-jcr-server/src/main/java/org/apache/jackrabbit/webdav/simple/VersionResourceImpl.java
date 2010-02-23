@@ -32,6 +32,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.version.LabelInfo;
 import org.apache.jackrabbit.webdav.version.LabelSetProperty;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
@@ -50,7 +51,6 @@ import javax.jcr.version.VersionHistory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 
 /**
  * <code>VersionResourceImpl</code> represents a JCR version.
@@ -86,6 +86,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
      *
      * @return always false
      */
+    @Override
     public boolean isCollection() {
         return false;
     }
@@ -93,8 +94,9 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
     /**
      * @return An empty <code>DavResourceIterator</code>
      */
+    @Override
     public DavResourceIterator getMembers() {
-        return new DavResourceIteratorImpl(Collections.EMPTY_LIST);
+        return DavResourceIteratorImpl.EMPTY;
     }
 
     /**
@@ -102,6 +104,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
      *
      * @see DavResource#addMember(DavResource, InputContext)
      */
+    @Override
     public void addMember(DavResource member, InputContext inputContext) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -111,6 +114,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
      *
      * @see DavResource#removeMember(DavResource)
      */
+    @Override
     public void removeMember(DavResource member) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -120,7 +124,8 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
      *
      * @see DavResource#setProperty(DavProperty)
      */
-    public void setProperty(DavProperty property) throws DavException {
+    @Override
+    public void setProperty(DavProperty<?> property) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 
@@ -129,6 +134,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
      *
      * @see DavResource#removeProperty(DavPropertyName)
      */
+    @Override
     public void removeProperty(DavPropertyName propertyName) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -138,7 +144,8 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
      *
      * @see DavResource#alterProperties(List)
      */
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+    @Override
+    public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 
@@ -222,6 +229,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
      *
      * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
      */
+    @Override
     protected void initSupportedReports() {
         super.initSupportedReports();
         if (exists()) {
@@ -232,6 +240,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
     /**
      * Fill the property set for this resource.
      */
+    @Override
     protected void initProperties() {
         if (!propsInitialized) {
             super.initProperties();
@@ -239,10 +248,10 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
             try {
                 String creationDate = HttpDateFormat.creationDateFormat().format(v.getCreated().getTime());
                 // replace dummy creation date from default collection
-                properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, creationDate));
+                properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE, creationDate));
 
                 // required, protected DAV:version-name property
-                properties.add(new DefaultDavProperty(VERSION_NAME, v.getName(), true));
+                properties.add(new DefaultDavProperty<String>(VERSION_NAME, v.getName(), true));
 
                 // required, protected DAV:label-name-set property
                 String[] labels = getVersionHistoryItem().getVersionLabels(v);
@@ -258,7 +267,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
 
                 // required DAV:checkout-set (computed) property
                 PropertyIterator it = v.getReferences();
-                List nodeList = new ArrayList();
+                List<Node> nodeList = new ArrayList<Node>();
                 while (it.hasNext()) {
                     Property p = it.nextProperty();
                     if (JcrConstants.JCR_BASEVERSION.equals(p.getName())) {
@@ -268,7 +277,7 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
                         }
                     }
                 }
-                properties.add(getHrefProperty(CHECKOUT_SET, (Node[]) nodeList.toArray(new Node[nodeList.size()]), true, false));
+                properties.add(getHrefProperty(CHECKOUT_SET, nodeList.toArray(new Node[nodeList.size()]), true, false));
 
             } catch (RepositoryException e) {
                 log.error(e.getMessage());

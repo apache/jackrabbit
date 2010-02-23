@@ -187,12 +187,11 @@ public class IOUtil {
      * @throws RepositoryException
      */
     public static Node mkDirs(Node root, String relPath, String dirNodeType) throws RepositoryException {
-        String[] seg = Text.explode(relPath, '/');
-        for (int i=0; i< seg.length; i++) {
-            if (!root.hasNode(seg[i])) {
-                root.addNode(seg[i], dirNodeType);
+        for (String seg : Text.explode(relPath, '/')) {
+            if (!root.hasNode(seg)) {
+                root.addNode(seg, dirNodeType);
             }
-            root = root.getNode(seg[i]);
+            root = root.getNode(seg);
         }
         return root;
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.server.io;
 
+import org.apache.jackrabbit.webdav.property.PropEntry;
+
 import javax.jcr.RepositoryException;
 import java.util.Map;
 
@@ -79,6 +81,6 @@ public interface PropertyHandler {
      * error occured. Note, that normal failure of a property update must be
      * reported with the return value and should not result in an exception.
      */
-    public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException;
+    public Map<? extends PropEntry, ?> importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException;
 
 }

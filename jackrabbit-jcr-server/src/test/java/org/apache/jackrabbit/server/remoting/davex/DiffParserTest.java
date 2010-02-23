@@ -20,14 +20,13 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /** <code>DiffParserTest</code>... */
 public class DiffParserTest extends TestCase {
 
     public void testSetProperty() throws IOException, DiffException {
-        ArrayList l = new ArrayList();
+        ArrayList<String> l = new ArrayList<String>();
         l.add("\"simple string\"");
         l.add("2345");
         l.add("true");
@@ -35,11 +34,11 @@ public class DiffParserTest extends TestCase {
         l.add("234.3455");
         l.add("null");
 
-        for (int i = 0; i < l.size(); i++) {
-            final String value = l.get(i).toString();
+        for (final String value : l) {
             String diff = "^/a/prop : " + value;
 
             DummyDiffHandler handler = new DummyDiffHandler() {
+                @Override
                 public void setProperty(String targetPath, String diffValue) {
                     assertEquals(targetPath, "/a/prop");
                     assertEquals(value, diffValue);
@@ -52,16 +51,15 @@ public class DiffParserTest extends TestCase {
 
     public void testSetPropertyMissing() throws IOException,
             DiffException {
-        ArrayList l = new ArrayList();
+        ArrayList<String> l = new ArrayList<String>();
         l.add("");
         l.add(null);
 
-        for (int i = 0; i < l.size(); i++) {
-            Object obj = l.get(i);
-            String value = (obj == null) ? "" : obj.toString();
-            String diff = "^/a/prop : " + value;
+        for (String value : l) {
+            String diff = "^/a/prop : " + ((value == null) ? "" : value);
 
             DummyDiffHandler handler = new DummyDiffHandler() {
+                @Override
                 public void setProperty(String targetPath, String diffValue) {
                     assertEquals(targetPath, "/a/prop");
                     assertTrue(diffValue == null || "".equals(diffValue));
@@ -78,6 +76,7 @@ public class DiffParserTest extends TestCase {
         String diff = "^/a/prop : " + value;
 
         DiffHandler handler = new DummyDiffHandler() {
+            @Override
             public void setProperty(String targetPath, String diffValue) {
                 assertEquals(targetPath, "/a/prop");
                 assertEquals(value, diffValue);
@@ -94,6 +93,7 @@ public class DiffParserTest extends TestCase {
         String diff = "^/a/prop : " + value;
 
         DiffHandler handler = new DummyDiffHandler() {
+            @Override
             public void setProperty(String targetPath, String diffValue) {
                 assertEquals(targetPath, "/a/prop");
                 assertEquals(value, diffValue);
@@ -109,6 +109,7 @@ public class DiffParserTest extends TestCase {
         String diff = "^/a/prop : " + value;
 
         DiffHandler handler = new DummyDiffHandler() {
+            @Override
             public void setProperty(String targetPath, String diffValue) {
                 assertEquals(targetPath, "/a/prop");
                 assertEquals(value, diffValue);
@@ -125,6 +126,7 @@ public class DiffParserTest extends TestCase {
         String diff = "^/a/prop : " + value;
 
         DiffHandler handler = new DummyDiffHandler() {
+            @Override
             public void setProperty(String targetPath, String diffValue) {
                 assertEquals(targetPath, "/a/prop");
                 assertEquals(value, diffValue);
@@ -139,22 +141,24 @@ public class DiffParserTest extends TestCase {
         String diff = "^abc : \r+def : \n-ghi : \r\n^jkl : \n\r>mno : \n";
 
         DiffHandler handler = new DummyDiffHandler() {
-            public void addNode(String targetPath, String diffValue)
-                    throws DiffException {
+            @Override
+            public void addNode(String targetPath, String diffValue) {
                 assertEquals("def", targetPath);
                 assertEquals("", diffValue);
             }
+            @Override
             public void setProperty(String targetPath, String diffValue) {
                 assertTrue("abc".equals(targetPath) || "jkl".equals(targetPath));
                 assertEquals("", diffValue);
             }
-            public void remove(String targetPath, String diffValue)
-                    throws DiffException {
+            @Override
+            public void remove(String targetPath, String diffValue) {
                 assertEquals("ghi", targetPath);
                 assertEquals("", diffValue);
             }
 
-            public void move(String targetPath, String diffValue) throws DiffException {
+            @Override
+            public void move(String targetPath, String diffValue) {
                 assertEquals("mno", targetPath);
                 assertEquals("\n", diffValue);
             }
@@ -165,7 +169,7 @@ public class DiffParserTest extends TestCase {
     }
 
     public void testValidDiffs() throws IOException, DiffException {
-        List l = new ArrayList();
+        List<String[]> l = new ArrayList<String[]>();
         // unquoted string value
         l.add(new String[] {"+/a/b : 134", "/a/b","134"});
         l.add(new String[] {"+/a/b : 2.3", "/a/b","2.3"});
@@ -187,21 +191,21 @@ public class DiffParserTest extends TestCase {
         l.add(new String[] {"+/a/b : \r", "/a/b","\r"});
         l.add(new String[] {"+/a/b : \r\n", "/a/b","\r\n"});
         l.add(new String[] {"+/a/b : \r\n\n\r", "/a/b","\r\n\n\r"});
-        // path containing whilespace
+        // path containing white space
         l.add(new String[] {"+/a   /b : 123", "/a   /b","123"});
         l.add(new String[] {"+/a\r\t/b : 123", "/a\r\t/b","123"});
-        // path having trailing whitespace
+        // path having trailing white space
         l.add(new String[] {"+/a/b  : 123", "/a/b","123"});
         l.add(new String[] {"+/a/b\r : 123", "/a/b\r","123"});
         l.add(new String[] {"+/a/b\r\n\n\r\n: 123", "/a/b\r\n\n\r\n","123"});
         // path containing reserved characters
         l.add(new String[] {"++abc+ : val", "+abc+","val"});
         l.add(new String[] {"++++++ : val", "+++++","val"});
-        // value containing reserver characters
+        // value containing reserved characters
         l.add(new String[] {"+/a/b : +", "/a/b","+"});
         l.add(new String[] {"+/a/b : +->+-", "/a/b","+->+-"});
         l.add(new String[] {"+/a/b : \"+->+-\"", "/a/b","\"+->+-\""});
-        // other whitespace than ' ' used as key-value separator
+        // other white space than ' ' used as key-value separator
         l.add(new String[] {"+/a/b :\r123", "/a/b","123"});
         l.add(new String[] {"+/a/b\r: 123", "/a/b","123"});
         l.add(new String[] {"+/a/b\r:\r123", "/a/b","123"});
@@ -216,11 +220,10 @@ public class DiffParserTest extends TestCase {
         l.add(new String[] {"+/a/b : ", "/a/b", ""});
         l.add(new String[] {"+/a/b :\n", "/a/b", ""});
 
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            final String[] strs = (String[]) it.next();
+        for (final String[] strs : l) {
             DiffHandler hndl = new DummyDiffHandler() {
-                public void setProperty(String targetPath, String diffValue)
-                        throws DiffException {
+                @Override
+                public void setProperty(String targetPath, String diffValue) {
                     assertEquals(strs[1], targetPath);
                     assertEquals(strs[2], diffValue);
                 }
@@ -229,27 +232,27 @@ public class DiffParserTest extends TestCase {
             parser.parse(strs[0]);
         }
 
-        l = new ArrayList();
+        List<String> l2 = new ArrayList<String>();
         // multiple commands
-        l.add("+abc :\n\n+def : val");
-        l.add("+abc :\n\n+def : val\n");
-        l.add("+abc : \r+def : val");
-        l.add("+/a/b : val\r+abc : \r ");
-        l.add("+/a/b : val\r+abc :\n\n ");
+        l2.add("+abc :\n\n+def : val");
+        l2.add("+abc :\n\n+def : val\n");
+        l2.add("+abc : \r+def : val");
+        l2.add("+/a/b : val\r+abc : \r ");
+        l2.add("+/a/b : val\r+abc :\n\n ");
         // missing value in the last action.
-        l.add("+/a/b : \r+abc :\n");
-        l.add("+/a/b : \\r+abc : abc\r\r+abc :\r");
-        l.add("+abc :\n\n+def : val\r\r>abc : ");
+        l2.add("+/a/b : \r+abc :\n");
+        l2.add("+/a/b : \\r+abc : abc\r\r+abc :\r");
+        l2.add("+abc :\n\n+def : val\r\r>abc : ");
 
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            final List li = new ArrayList();
+        for (String diff : l2) {
+            final List<String> li = new ArrayList<String>();
             DiffHandler dh = new DummyDiffHandler() {
-                public void addNode(String targetPath, String diffValue) throws DiffException {
+                @Override
+                public void addNode(String targetPath, String diffValue) {
                     li.add(diffValue);
                 }
             };
 
-            String diff = it.next().toString();
             DiffParser parser = new DiffParser(dh);
             parser.parse(diff);
             assertEquals(2, li.size());
@@ -259,7 +262,8 @@ public class DiffParserTest extends TestCase {
     public void testSeparatorLines() throws IOException, DiffException {
         String diff = "+abc :\n\n+val : val";
         DiffHandler dh = new DummyDiffHandler() {
-            public void addNode(String targetPath, String diffValue) throws DiffException {
+            @Override
+            public void addNode(String targetPath, String diffValue) {
                 if ("abc".equals(targetPath)) {
                     assertEquals("", diffValue);
                 } else {
@@ -271,16 +275,18 @@ public class DiffParserTest extends TestCase {
 
         diff = "+abc :\n+val : val";
         dh = new DummyDiffHandler() {
-            public void addNode(String targetPath, String diffValue) throws DiffException {
+            @Override
+            public void addNode(String targetPath, String diffValue) {
                 assertEquals("+val : val", diffValue);
             }
         };
         new DiffParser(dh).parse(diff);
 
-        // TODO: check again: currently all line-sep. chars before an diff-char are ignored unless they are escaped in way the handler understands (e.g. JSON does: \\r for \r).
+        // TODO: check again: currently all line separation chars before an diff-char are ignored unless they are escaped in way the handler understands (e.g. JSON does: \\r for \r).
         diff = "+abc :\r\r\r+def : val";
         dh = new DummyDiffHandler() {
-            public void addNode(String targetPath, String diffValue) throws DiffException {
+            @Override
+            public void addNode(String targetPath, String diffValue) {
                 if ("abc".equals(targetPath)) {
                     assertEquals("", diffValue);
                 } else {
@@ -292,7 +298,8 @@ public class DiffParserTest extends TestCase {
 
         diff = "+abc : val\r+def :\n\n ";
         dh = new DummyDiffHandler() {
-            public void addNode(String targetPath, String diffValue) throws DiffException {
+            @Override
+            public void addNode(String targetPath, String diffValue) {
                 if ("abc".equals(targetPath)) {
                     assertEquals("val", diffValue);
                 } else {
@@ -306,7 +313,8 @@ public class DiffParserTest extends TestCase {
     public void testUnicodeLineSep() throws IOException, DiffException {
         String diff = "+abc : val" + new String(new byte[] {Character.LINE_SEPARATOR}, "utf-8") + "+abc : val";
         DiffHandler dh = new DummyDiffHandler() {
-            public void addNode(String targetPath, String diffValue) throws DiffException {
+            @Override
+            public void addNode(String targetPath, String diffValue) {
                 assertEquals("abc", targetPath);
                 assertEquals("val", diffValue);
             }
@@ -315,35 +323,34 @@ public class DiffParserTest extends TestCase {
     }
 
     public void testInvalidDiff() throws IOException, DiffException {
-        List l = new ArrayList();
+        List<String> l = new ArrayList<String>();
         l.add("");
         // path, separator and value missing
         l.add("+");
         l.add("+/a/b : val\r+");
-        // path starting with whitespace, separator and value missing
+        // path starting with white space, separator and value missing
         l.add("+\n");
         // separator and value missing
         l.add("+/a/b");
         l.add("+/a/b : val\r+abc\n");
         l.add("+/a/b :");
-        // invalid for separator and value are missing (all : and whitespace
+        // invalid for separator and value are missing (all : and white space
         // is interpreted as part of the path.
         l.add("+/a/b:");
         l.add("+/a/b:val");
         l.add("+/a/b: val");
         l.add("+/a/b:\rval");
         l.add("+/a/b :: val");
-        // diff starting with whitespace
+        // diff starting with white space
         l.add(" +/a/b: val");
         l.add("\r\r\r\r\r\r+/a/b: val");
-        // key starting with whitespace
+        // key starting with white space
         l.add("+\r/a/b : 123");
         l.add("+ /a/b : 123");
         // key starting with colon
         l.add("+:/a/b : 123");
 
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            String diff = it.next().toString();
+        for (String diff : l) {
             try {
                 DiffParser parser = new DiffParser(new DummyDiffHandler());
                 parser.parse(diff);

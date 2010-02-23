@@ -213,7 +213,7 @@ public class ResourceConfig {
             try {
                 String className = DomUtil.getAttribute(classElem, "name", null);
                 if (className != null) {
-                    Class c = Class.forName(className);
+                    Class<?> c = Class.forName(className);
                     instance = c.newInstance();
                 } else {
                     log.error("Invalid configuration: missing 'class' element");
@@ -228,14 +228,14 @@ public class ResourceConfig {
     private void parseNamespacesEntry(Element parent) {
         Element namespaces = DomUtil.getChildElement(parent, "namespaces", null);
         if (namespaces != null) {
-            List l = new ArrayList();
+            List<String> l = new ArrayList<String>();
             // retrieve prefix child elements
             ElementIterator it = DomUtil.getChildren(namespaces, "prefix", null);
             while (it.hasNext()) {
                 Element e = it.nextElement();
                 l.add(DomUtil.getText(e));
             }
-            String[] prefixes = (String[])l.toArray(new String[l.size()]);
+            String[] prefixes = l.toArray(new String[l.size()]);
             l.clear();
             // retrieve uri child elements
             it = DomUtil.getChildren(namespaces, "uri", null);
@@ -243,7 +243,7 @@ public class ResourceConfig {
                 Element e = it.nextElement();
                 l.add(DomUtil.getText(e));
             }
-            String[] uris = (String[])l.toArray(new String[l.size()]);
+            String[] uris = l.toArray(new String[l.size()]);
             itemFilter.setFilteredPrefixes(prefixes);
             itemFilter.setFilteredURIs(uris);
         }
@@ -253,13 +253,13 @@ public class ResourceConfig {
         String[] ntNames;
         Element nodetypes = DomUtil.getChildElement(parent, "nodetypes", null);
         if (nodetypes != null) {
-            List l = new ArrayList();
+            List<String> l = new ArrayList<String>();
             ElementIterator it = DomUtil.getChildren(nodetypes, "nodetype", null);
             while (it.hasNext()) {
                 Element e = it.nextElement();
                 l.add(DomUtil.getText(e));
             }
-            ntNames = (String[])l.toArray(new String[l.size()]);
+            ntNames = l.toArray(new String[l.size()]);
         } else {
             ntNames = new String[0];
         }

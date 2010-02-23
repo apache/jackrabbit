@@ -34,9 +34,9 @@ public class DefaultItemFilter implements ItemFilter {
 
     private static Logger log = LoggerFactory.getLogger(DefaultItemFilter.class);
 
-    private List prefixFilter = new ArrayList();
-    private List uriFilter = new ArrayList();
-    private List nodetypeFilter = new ArrayList();
+    private List<String> prefixFilter = new ArrayList<String>();
+    private List<String> uriFilter = new ArrayList<String>();
+    private List<String> nodetypeFilter = new ArrayList<String>();
 
     public DefaultItemFilter() {
     }
@@ -46,8 +46,8 @@ public class DefaultItemFilter implements ItemFilter {
      */
     public void setFilteredURIs(String[] uris) {
         if (uris != null) {
-            for (int i = 0; i < uris.length; i++) {
-                uriFilter.add(uris[i]);
+            for (String uri : uris) {
+                uriFilter.add(uri);
             }
         }
     }
@@ -57,8 +57,8 @@ public class DefaultItemFilter implements ItemFilter {
      */
     public void setFilteredPrefixes(String[] prefixes) {
         if (prefixes != null) {
-            for (int i = 0; i < prefixes.length; i++) {
-                prefixFilter.add(prefixes[i]);
+            for (String prefix : prefixes) {
+                prefixFilter.add(prefix);
             }
         }
     }
@@ -68,8 +68,8 @@ public class DefaultItemFilter implements ItemFilter {
      */
     public void setFilteredNodetypes(String[] nodetypeNames) {
         if (nodetypeNames != null) {
-            for (int i = 0; i < nodetypeNames.length; i++) {
-                nodetypeFilter.add(nodetypeNames[i]);
+            for (String nodetypeName : nodetypeNames) {
+                nodetypeFilter.add(nodetypeName);
             }
         }
     }

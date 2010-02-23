@@ -70,6 +70,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
+    @Override
     public String getSupportedMethods() {
         StringBuffer sb = new StringBuffer(ItemResourceConstants.METHODS);
         sb.append(", ").append(VersionHistoryResource.METHODS);
@@ -84,6 +85,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
      * while deleting.
      * @see DavResource#removeMember(org.apache.jackrabbit.webdav.DavResource)
      */
+    @Override
     public void removeMember(DavResource member) throws DavException {
         if (exists()) {
             VersionHistory versionHistory = (VersionHistory) item;
@@ -109,13 +111,13 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
     public VersionResource[] getVersions() throws DavException {
         try {
             VersionIterator vIter = ((VersionHistory)item).getAllVersions();
-            ArrayList l = new ArrayList();
+            ArrayList<VersionResource> l = new ArrayList<VersionResource>();
             while (vIter.hasNext()) {
                 DavResourceLocator versionLoc = getLocatorFromItem(vIter.nextVersion());
-                DavResource vr = createResourceFromLocator(versionLoc);
+                VersionResource vr = (VersionResource) createResourceFromLocator(versionLoc);
                 l.add(vr);
             }
-            return (VersionResource[]) l.toArray(new VersionResource[l.size()]);
+            return l.toArray(new VersionResource[l.size()]);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -125,15 +127,16 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
     /**
      * Fill the property set for this resource.
      */
+    @Override
     protected void initProperties() {
         super.initProperties();
 
-        // change resourcetype defined by default item collection
+        // change resource type defined by default item collection
         properties.add(new ResourceType(ResourceType.VERSION_HISTORY));
 
         // jcr specific property pointing to the node this history belongs to
         try {
-            properties.add(new DefaultDavProperty(JCR_VERSIONABLEUUID, ((VersionHistory)item).getVersionableUUID()));
+            properties.add(new DefaultDavProperty<String>(JCR_VERSIONABLEUUID, ((VersionHistory)item).getVersionableIdentifier()));
         } catch (RepositoryException e) {
             log.error(e.getMessage());
         }
@@ -148,7 +151,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
 
         // required, protected version-set property for version-history resource
         try {
-            VersionIterator vIter = ((VersionHistory)item).getAllVersions();
+            VersionIterator vIter = ((VersionHistory) item).getAllVersions();
             addHrefProperty(VersionHistoryResource.VERSION_SET, vIter, true);
         } catch (RepositoryException e) {
             log.error(e.getMessage());

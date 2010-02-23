@@ -24,6 +24,7 @@ import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,21 +40,25 @@ public class VersionHandler extends DefaultHandler implements IOHandler{
     }
 
     //----------------------------------------------------------< IOHandler >---
+    @Override
     public boolean canImport(ImportContext context, boolean isCollection) {
         // version node is read only.
         return false;
     }
 
+    @Override
     public boolean canImport(ImportContext context, DavResource resource) {
         // version node is read only.
         return false;
     }
 
+    @Override
     public boolean importContent(ImportContext context, boolean isCollection) throws IOException {
         // version node is read only.
         return false;
     }
 
+    @Override
     public boolean importContent(ImportContext context, DavResource resource) throws IOException {
         // version node is read only.
         return false;
@@ -64,6 +69,7 @@ public class VersionHandler extends DefaultHandler implements IOHandler{
      * @param isCollection
      * @return true if the export root is a <code>Version</code> node. False otherwise.
      */
+    @Override
     public boolean canExport(ExportContext context, boolean isCollection) {
         if (context == null) {
             return false;
@@ -75,6 +81,7 @@ public class VersionHandler extends DefaultHandler implements IOHandler{
      * @return true if the export root is a <code>Version</code> node. False otherwise.
      * @see IOHandler#canExport(ExportContext, DavResource)
      */
+    @Override
     public boolean canExport(ExportContext context, DavResource resource) {
         if (context == null) {
             return false;
@@ -83,12 +90,14 @@ public class VersionHandler extends DefaultHandler implements IOHandler{
     }
 
     //----------------------------------------------------< PropertyHandler >---
+    @Override
     public boolean canImport(PropertyImportContext context, boolean isCollection) {
         // version is read only
         return false;
     }
 
-    public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
+    @Override
+    public Map<? extends PropEntry, ?> importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
         // version is read only
         throw new RepositoryException("Properties cannot be imported");
     }
@@ -96,6 +105,7 @@ public class VersionHandler extends DefaultHandler implements IOHandler{
     /**
      * @see PropertyHandler#exportProperties(PropertyExportContext, boolean)
      */
+    @Override
     public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException {
         if (!canExport(exportContext, isCollection)) {
             throw new RepositoryException("PropertyHandler " + getName() + " failed to export properties.");
@@ -120,6 +130,7 @@ public class VersionHandler extends DefaultHandler implements IOHandler{
      * @return content node used for the export
      * @throws javax.jcr.RepositoryException
      */
+    @Override
     protected Node getContentNode(ExportContext context, boolean isCollection) throws RepositoryException {
         Node node = (Node)context.getExportRoot();
         Node frozenNode = node.getNode(JcrConstants.JCR_FROZENNODE);

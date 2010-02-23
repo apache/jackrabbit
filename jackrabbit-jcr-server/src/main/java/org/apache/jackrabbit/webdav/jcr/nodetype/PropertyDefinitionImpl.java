@@ -119,6 +119,7 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
      * @return xml representation
      * @param document
      */
+    @Override
     public Element toXml(Document document) {
         Element elem = super.toXml(document);
 
@@ -133,10 +134,10 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
         Value[] values = getDefaultValues();
         if (values != null) {
             Element dvElement = document.createElement(DEFAULTVALUES_ELEMENT);
-            for (int i = 0; i < values.length; i++) {
+            for (Value value : values) {
                 try {
                     Element valElem = document.createElement(DEFAULTVALUE_ELEMENT);
-                    DomUtil.setText(valElem, values[i].getString());
+                    DomUtil.setText(valElem, value.getString());
                     dvElement.appendChild(valElem);
                 } catch (RepositoryException e) {
                     // should not occur
@@ -147,20 +148,18 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
         }
         // value constraints array is never null.
         Element constrElem = document.createElement(VALUECONSTRAINTS_ELEMENT);
-        String[] constraints = getValueConstraints();
-        for (int i = 0; i < constraints.length; i++) {
+        for (String constraint : getValueConstraints()) {
             Element vcElem = document.createElement(VALUECONSTRAINT_ELEMENT);
-            DomUtil.setText(vcElem, constraints[i]);
+            DomUtil.setText(vcElem, constraint);
             constrElem.appendChild(vcElem);
         }
         elem.appendChild(constrElem);
 
         // JCR 2.0 extension
         Element qopElem = document.createElement(AVAILABLE_QUERY_OPERATORS_ELEMENT);
-        String[] qops = getAvailableQueryOperators();
-        for (int i = 0; i < qops.length; i++) {
+        for (String qop : getAvailableQueryOperators()) {
             Element opElem = document.createElement(AVAILABLE_QUERY_OPERATOR_ELEMENT);
-            DomUtil.setText(opElem, qops[i]);
+            DomUtil.setText(opElem, qop);
             qopElem.appendChild(opElem);
         }
         elem.appendChild(qopElem);
@@ -173,6 +172,7 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
      *
      * @return always returns {@link #PROPERTYDEFINITION_ELEMENT}
      */
+    @Override
     String getElementName() {
         return PROPERTYDEFINITION_ELEMENT;
     }

@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +45,8 @@ class HttpMultipartPost {
      */
     private static final Logger log = LoggerFactory.getLogger(HttpMultipartPost.class);
 
-    private final Map nameToItems = new LinkedHashMap();
-    private final Set fileParamNames = new HashSet();
+    private final Map<String, List<FileItem>> nameToItems = new LinkedHashMap<String, List<FileItem>>();
+    private final Set<String> fileParamNames = new HashSet<String>();
 
     private boolean initialized;
 
@@ -81,10 +80,9 @@ class HttpMultipartPost {
 
         ServletFileUpload upload = new ServletFileUpload(getFileItemFactory(tmpDir));
         try {
-            List fileItems = upload.parseRequest(request);
-            for (Iterator it = fileItems.iterator(); it.hasNext();) {
-                FileItem item = (FileItem) it.next();
-                addItem(item);
+            List<Object> fileItems = upload.parseRequest(request);
+            for (Object fileItem : fileItems) {
+                addItem((FileItem) fileItem);
             }
         } catch (FileUploadException e) {
             log.error("Error while processing multipart.", e);
@@ -101,15 +99,15 @@ class HttpMultipartPost {
      */
     private void addItem(FileItem item) {
         String name = item.getFieldName();
-        ArrayList l = (ArrayList) nameToItems.get(item.getFieldName());
+        List<FileItem> l = nameToItems.get(item.getFieldName());
         if (l == null) {
-            l = new ArrayList();
+            l = new ArrayList<FileItem>();
             nameToItems.put(name, l);
         }
         l.add(item);
 
-        // if file parameter, add name to the set of file params in order to
-        // be able to extract the file param values later on without iterating
+        // if file parameter, add name to the set of file parameters in order to
+        // be able to extract the file parameter values later on without iterating
         // over all keys.
         if (!item.isFormField()) {
             fileParamNames.add(name);
@@ -131,11 +129,9 @@ class HttpMultipartPost {
     synchronized void dispose() {
         checkInitialized();
 
-        for (Iterator it = nameToItems.values().iterator(); it.hasNext();) {
-            List fileItems = (List) it.next();
-            for (int i = 0; i < fileItems.size(); i++) {
-                FileItem item = (FileItem) fileItems.get(i);
-                item.delete();
+        for (List<FileItem> fileItems : nameToItems.values()) {
+            for (FileItem fileItem : fileItems) {
+                fileItem.delete();
             }
         }
 
@@ -149,7 +145,7 @@ class HttpMultipartPost {
      *
      * @return a set of strings.
      */
-    Set getParameterNames() {
+    Set<String> getParameterNames() {
         checkInitialized();
         return nameToItems.keySet();
     }
@@ -187,11 +183,11 @@ class HttpMultipartPost {
     String[] getParameterTypes(String name) {
         checkInitialized();
         String[] cts = null;
-        List l = (List) nameToItems.get(name);
+        List<FileItem> l = nameToItems.get(name);
         if (l != null && !l.isEmpty()) {
             cts = new String[l.size()];
             for (int i = 0; i < cts.length; i++) {
-                cts[i] = ((FileItem) l.get(i)).getContentType();
+                cts[i] = l.get(i).getContentType();
             }
         }
         return cts;
@@ -212,11 +208,11 @@ class HttpMultipartPost {
      */
     String getParameter(String name) {
         checkInitialized();
-        List l = (List) nameToItems.get(name);
+        List<FileItem> l = nameToItems.get(name);
         if (l == null || l.isEmpty()) {
             return null;
         } else {
-            FileItem item = ((FileItem) l.get(0));
+            FileItem item = l.get(0);
             if (item.isFormField()) {
                 return item.getString();
             } else {
@@ -240,13 +236,13 @@ class HttpMultipartPost {
      */
     String[] getParameterValues(String name) {
         checkInitialized();
-        List l = (List) nameToItems.get(name);
+        List<FileItem> l = nameToItems.get(name);
         if (l == null || l.isEmpty()) {
             return null;
         } else {
             String[] values = new String[l.size()];
             for (int i = 0; i < values.length; i++) {
-                FileItem item = ((FileItem) l.get(i));
+                FileItem item = l.get(i);
                 if (item.isFormField()) {
                     values[i] = item.getString();
                 } else {
@@ -264,7 +260,7 @@ class HttpMultipartPost {
      * @return an set of file item names representing the file
      * parameters available with the request.
      */
-    Set getFileParameterNames() {
+    Set<String> getFileParameterNames() {
         checkInitialized();
         return fileParamNames;
     }
@@ -281,16 +277,15 @@ class HttpMultipartPost {
         checkInitialized();
         InputStream[] values = null;
         if (fileParamNames.contains(name)) {
-            List l = (List) nameToItems.get(name);
+            List<FileItem> l = nameToItems.get(name);
             if (l != null && !l.isEmpty()) {
-                List ins = new ArrayList(l.size());
-                for (Iterator it = l.iterator(); it.hasNext();) {
-                    FileItem item = (FileItem) it.next();
+                List<InputStream> ins = new ArrayList<InputStream>(l.size());
+                for (FileItem item : l) {
                     if (!item.isFormField()) {
                         ins.add(item.getInputStream());
                     }
                 }
-                values = (InputStream[]) ins.toArray(new InputStream[ins.size()]);
+                values = ins.toArray(new InputStream[ins.size()]);
             }
         }
         return values;

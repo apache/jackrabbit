@@ -30,7 +30,7 @@ class DiffParser {
     // TODO: ignored unless they are escaped in way the handler understands (e.g.
     // TODO: JSON does: \\r for \r).
     // TODO: in contrast line sep. at the end of the string are treated as value.
-    // TODO: ... similar: line sep. following by non-diff sybol.
+    // TODO: ... similar: line sep. following by non-diff symbol.
 
     private final DiffHandler handler;
 
@@ -188,7 +188,7 @@ class DiffParser {
             }
         }
 
-        // append eventual remaining line-searators to the value
+        // append eventual remaining line-separators to the value
         if (lineSeparator != null) {
             bf.append(lineSeparator);
         }
