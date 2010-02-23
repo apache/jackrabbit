@@ -24,10 +24,15 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
 
 /**
  * <code>MoveTest</code>...
@@ -263,6 +268,45 @@ public class MoveTest extends AbstractMoveTest {
             // move the node: same name property and node must be supported
             // see Issue 725
             doMove(moveNode.getPath(), destProperty.getPath());
+        }
+    }
+
+
+    public void testMoveFile() throws RepositoryException, NotExecutableException {
+        // create a new file
+        String parentPath;
+        String filePath;
+        try {
+            Node parent = testRootNode.addNode("parent");
+            Node n = JcrUtils.putFile(parent, "file", "text/plain", new ByteArrayInputStream("data".getBytes()));
+            parentPath = parent.getPath();
+            filePath = n.getPath();
+            superuser.save();
+        } catch (RepositoryException e) {
+            throw new NotExecutableException();
+        }
+
+        Session s = getHelper().getSuperuserSession();
+        try {
+            Node n1 = s.getNode(filePath);
+            Node n2 = n1.getNode("jcr:content");
+            n2.setProperty("jcr:data", new java.io.ByteArrayInputStream("data2".getBytes()));
+            n2.save();
+
+            String destPath = parentPath + "1";
+            if (isSessionMove()) {
+                s.move(parentPath, destPath);
+                s.save();
+            } else {
+                s.getWorkspace().move(parentPath, destPath);
+            }
+            Node n3 = s.getNode(destPath + "/file");
+            Node n4 = n3.getNode("jcr:content");
+            n4.refresh(false);
+            // call must succeed (see JCR-2472)
+            Node n5 = n3.getNode("jcr:content");
+        } finally {
+            s.logout();
         }
     }
 }

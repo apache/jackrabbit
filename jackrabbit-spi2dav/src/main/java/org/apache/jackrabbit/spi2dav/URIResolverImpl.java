@@ -215,6 +215,11 @@ class URIResolverImpl implements URIResolver {
         }
     }
 
+    void clearCacheEntries(SessionInfo sessionInfo) {
+        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
+        cache.clear();
+    }
+
     private static boolean isSameURI(String uri1, String uri2) {
         return getCleanURI(uri1).equals(getCleanURI(uri2));
 

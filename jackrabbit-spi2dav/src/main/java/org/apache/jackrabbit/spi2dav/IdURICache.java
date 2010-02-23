@@ -82,6 +82,11 @@ class IdURICache {
         log.debug("Removed: ItemId = " + itemId + " URI = " + uri);
     }
 
+    public void clear() {
+        idToUriCache.clear();
+        uriToIdCache.clear();
+    }
+
     private static String getCleanUri(String uri) {
         if (uri.endsWith("/")) {
             return uri.substring(0, uri.length() - 1);
