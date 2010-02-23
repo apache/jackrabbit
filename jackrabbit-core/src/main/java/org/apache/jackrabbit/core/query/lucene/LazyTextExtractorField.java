@@ -27,11 +27,12 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.Field.TermVector;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
-import org.apache.tika.sax.BodyContentHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * <code>LazyTextExtractorField</code> implements a Lucene field with a String
@@ -50,6 +51,13 @@ public class LazyTextExtractorField extends AbstractField {
         LoggerFactory.getLogger(LazyTextExtractorField.class);
 
     /**
+     * The exception used to forcibly terminate the extraction process
+     * when the maximum field length is reached.
+     */
+    private static final SAXException STOP =
+        new SAXException("max field length reached");
+
+    /**
      * The extracted text content of the given binary value.
      * Set to non-null when the text extraction task finishes.
      */
@@ -66,12 +74,13 @@ public class LazyTextExtractorField extends AbstractField {
      */
     public LazyTextExtractorField(
             Parser parser, InternalValue value, Metadata metadata,
-            Executor executor, boolean highlighting) {
+            Executor executor, boolean highlighting, int maxFieldLength) {
         super(FieldNames.FULLTEXT,
                 highlighting ? Store.YES : Store.NO,
                 Field.Index.ANALYZED,
                 highlighting ? TermVector.WITH_OFFSETS : TermVector.NO);
-        executor.execute(new ParsingTask(parser, value, metadata));
+        executor.execute(
+                new ParsingTask(parser, value, metadata, maxFieldLength));
     }
 
     /**
@@ -137,7 +146,7 @@ public class LazyTextExtractorField extends AbstractField {
     /**
      * The background task for extracting text from a binary value.
      */
-    private class ParsingTask implements Runnable {
+    private class ParsingTask extends DefaultHandler implements Runnable {
 
         private final Parser parser;
 
@@ -145,28 +154,52 @@ public class LazyTextExtractorField extends AbstractField {
 
         private final Metadata metadata;
 
+        private final int maxFieldLength;
+
+        private final StringBuilder builder = new StringBuilder();
+
         public ParsingTask(
-                Parser parser, InternalValue value, Metadata metadata) {
+                Parser parser, InternalValue value, Metadata metadata,
+                int maxFieldLength) {
             this.parser = parser;
             this.value = value;
             this.metadata = metadata;
+            this.maxFieldLength = maxFieldLength;
         }
 
         public void run() {
-            ContentHandler handler = new BodyContentHandler();
             try {
                 InputStream stream = value.getStream();
                 try {
-                    parser.parse(stream, handler, metadata);
+                    parser.parse(stream, this, metadata, new ParseContext());
                 } finally {
                     stream.close();
                 }
             } catch (Throwable t) {
-                log.warn("Failed to extract text from a binary property", t);
+                if (t != STOP) {
+                    log.warn("Failed to extract text from a binary property", t);
+                }
             } finally {
                 value.discard();
             }
-            setExtractedText(handler.toString());
+            setExtractedText(builder.toString());
+        }
+
+        @Override
+        public void characters(char[] ch, int start, int length)
+                throws SAXException {
+            builder.append(
+                    ch, start,
+                    Math.min(length, maxFieldLength - builder.length()));
+            if (builder.length() >= maxFieldLength) {
+                throw STOP;
+            }
+        }
+
+        @Override
+        public void ignorableWhitespace(char[] ch, int start, int length)
+                throws SAXException {
+            characters(ch, start, length);
         }
 
     }
