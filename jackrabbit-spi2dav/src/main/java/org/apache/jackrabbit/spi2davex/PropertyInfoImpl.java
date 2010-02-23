@@ -35,7 +35,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
 
     private PropertyId id;
     private int propertyType;
-    private List values = new ArrayList();
+    private List<QValue> values = new ArrayList<QValue>();
 
     public PropertyInfoImpl(PropertyId id, Path path, int propertyType,
                             QValue singleValue) throws RepositoryException {
@@ -72,7 +72,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
     }
 
     public QValue[] getValues() {
-        return (QValue[]) values.toArray(new QValue[values.size()]);
+        return values.toArray(new QValue[values.size()]);
     }
 
     //--------------------------------------------------------------------------
@@ -86,7 +86,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
 
     void addValue(QValue value) throws RepositoryException {
         if (values == null) {
-            values = new ArrayList();
+            values = new ArrayList<QValue>();
         } else if (!isMultiValued && !values.isEmpty()) {
             throw new RepositoryException("Attempt to add multiple values to a single valued PropertyInfo");
         }

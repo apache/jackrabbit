@@ -17,18 +17,18 @@
 package org.apache.jackrabbit.spi2davex;
 
 import org.apache.jackrabbit.spi.AbstractSPITest;
+import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Batch;
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
@@ -44,16 +44,17 @@ public class CopyTest extends AbstractSPITest {
     private SessionInfo sInfo;
     private NodeId copiedId;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
         rs = helper.getRepositoryService();
         si = helper.getAdminSessionInfo();
         NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
-            public String getURI(String prefix) throws NamespaceException {
+            public String getURI(String prefix) {
                 return ("jcr".equals(prefix)) ? "http://www.jcp.org/jcr/1.0" : prefix;
             }
-            public String getPrefix(String uri) throws NamespaceException {
+            public String getPrefix(String uri) {
                 return ("http://www.jcp.org/jcr/1.0".equals(uri)) ? "jcr" : uri;
             }
         };
@@ -68,6 +69,7 @@ public class CopyTest extends AbstractSPITest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             if (si != null) {
@@ -106,7 +108,7 @@ public class CopyTest extends AbstractSPITest {
 
             nid = getNodeId("/destname");
             NodeInfo nInfo = rs.getNodeInfo(si, nid);
-            Iterator it = rs.getItemInfos(si, nid);
+            Iterator<? extends ItemInfo> it = rs.getItemInfos(si, nid);
 
             assertTrue(it.hasNext());
             NodeInfo nInfo2 = (NodeInfo) it.next();
@@ -131,7 +133,7 @@ public class CopyTest extends AbstractSPITest {
 
         copiedId = getNodeId("/destname");
         NodeInfo nInfo = rs.getNodeInfo(sInfo, copiedId);
-        Iterator it = rs.getItemInfos(sInfo, copiedId);
+        Iterator<? extends ItemInfo> it = rs.getItemInfos(sInfo, copiedId);
 
         assertTrue(it.hasNext());
         NodeInfo nInfo2 = (NodeInfo) it.next();

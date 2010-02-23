@@ -23,6 +23,7 @@ import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -44,22 +45,24 @@ public class ExtensionTest extends AbstractSPITest {
     private RepositoryService rs;
     private SessionInfo si;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
         rs = helper.getRepositoryService();
         si = helper.getAdminSessionInfo();
         NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
-            public String getURI(String prefix) throws NamespaceException {
+            public String getURI(String prefix) {
                 return ("jcr".equals(prefix)) ? "http://www.jcp.org/jcr/1.0" : prefix;
             }
-            public String getPrefix(String uri) throws NamespaceException {
+            public String getPrefix(String uri) {
                 return ("http://www.jcp.org/jcr/1.0".equals(uri)) ? "jcr" : uri;
             }
         };
         resolver = new DefaultNamePathResolver(nsResolver);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             removeTestNode(testPath);
@@ -97,7 +100,7 @@ public class ExtensionTest extends AbstractSPITest {
         //System.out.println("NodeInfo: " + nInfo.getPath().getNameElement().getName());
         assertEquals(testName, nInfo.getPath().getNameElement().getName());
 
-        Iterator it = rs.getItemInfos(si, getNodeId(path));
+        Iterator<? extends ItemInfo > it = rs.getItemInfos(si, getNodeId(path));
         assertTrue(it.hasNext());
         nInfo = (NodeInfo) it.next();
         //System.out.println("ItemInfo: " + nInfo.getPath().getNameElement().getName());
@@ -140,7 +143,7 @@ public class ExtensionTest extends AbstractSPITest {
          //System.out.println("NodeInfo: " + nInfo.getPath().getNameElement().getName());
          assertEquals(testName, nInfo.getPath().getNameElement().getName());
 
-         Iterator it = rs.getItemInfos(si, getNodeId("/test[2]"));
+         Iterator<? extends ItemInfo> it = rs.getItemInfos(si, getNodeId("/test[2]"));
          assertTrue(it.hasNext());
          nInfo = (NodeInfo) it.next();
          //System.out.println("ItemInfo: " + nInfo.getPath().getNameElement().getName());

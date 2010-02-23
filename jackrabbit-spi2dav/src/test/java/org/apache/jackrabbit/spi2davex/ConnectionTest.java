@@ -25,7 +25,6 @@ import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
 import javax.jcr.LoginException;
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 
@@ -34,18 +33,18 @@ import javax.jcr.SimpleCredentials;
  */
 public class ConnectionTest extends AbstractSPITest {
 
-    private final String testPath = "/";
     private NamePathResolver resolver;
     private RepositoryService rs;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         rs = helper.getRepositoryService();
                 NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
-            public String getURI(String prefix) throws NamespaceException {
+            public String getURI(String prefix) {
                 return ("jcr".equals(prefix)) ? "http://www.jcp.org/jcr/1.0" : prefix;
             }
-            public String getPrefix(String uri) throws NamespaceException {
+            public String getPrefix(String uri) {
                 return ("http://www.jcp.org/jcr/1.0".equals(uri)) ? "jcr" : uri;
             }
         };

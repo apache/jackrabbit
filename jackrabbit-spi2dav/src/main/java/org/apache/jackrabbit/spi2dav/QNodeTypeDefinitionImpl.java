@@ -56,7 +56,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     private final Name primaryItemName;
     private final QPropertyDefinition[] propDefs;
     private final QNodeDefinition[] nodeDefs;
-    private Set dependencies;
+    private Set<Name> dependencies;
 
     private final boolean isAbstract;
     private final boolean isQueryable;
@@ -85,52 +85,52 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
         Element child = DomUtil.getChildElement(ntdElement, SUPERTYPES_ELEMENT, null);
         if (child != null) {
             ElementIterator stIter = DomUtil.getChildren(child, SUPERTYPE_ELEMENT, null);
-            List qNames = new ArrayList();
+            List<Name> qNames = new ArrayList<Name>();
             while (stIter.hasNext()) {
                 Name st = resolver.getQName(DomUtil.getTextTrim(stIter.nextElement()));
                 qNames.add(st);
             }
-            supertypes = (Name[]) qNames.toArray(new Name[qNames.size()]);
+            supertypes = qNames.toArray(new Name[qNames.size()]);
         } else {
             supertypes = Name.EMPTY_ARRAY;
         }
         if (ntdElement.hasAttribute(ISMIXIN_ATTRIBUTE)) {
-            mixin = Boolean.valueOf(ntdElement.getAttribute(ISMIXIN_ATTRIBUTE)).booleanValue();
+            mixin = Boolean.valueOf(ntdElement.getAttribute(ISMIXIN_ATTRIBUTE));
         } else {
             mixin = false;
         }
         if (ntdElement.hasAttribute(HASORDERABLECHILDNODES_ATTRIBUTE)) {
-            orderableChildNodes = Boolean.valueOf(ntdElement.getAttribute(HASORDERABLECHILDNODES_ATTRIBUTE)).booleanValue();
+            orderableChildNodes = Boolean.valueOf(ntdElement.getAttribute(HASORDERABLECHILDNODES_ATTRIBUTE));
         } else {
             orderableChildNodes = false;
         }
         if (ntdElement.hasAttribute(ISABSTRACT_ATTRIBUTE)) {
-            isAbstract = Boolean.valueOf(ntdElement.getAttribute(ISABSTRACT_ATTRIBUTE)).booleanValue();
+            isAbstract = Boolean.valueOf(ntdElement.getAttribute(ISABSTRACT_ATTRIBUTE));
         } else {
             isAbstract = false;
         }
         if (ntdElement.hasAttribute(ISQUERYABLE_ATTRIBUTE)) {
-            isQueryable = Boolean.valueOf(ntdElement.getAttribute(ISQUERYABLE_ATTRIBUTE)).booleanValue();
+            isQueryable = Boolean.valueOf(ntdElement.getAttribute(ISQUERYABLE_ATTRIBUTE));
         } else {
             isQueryable = false;
         }
 
         // nodeDefinitions
         ElementIterator it = DomUtil.getChildren(ntdElement, CHILDNODEDEFINITION_ELEMENT, null);
-        List itemDefs = new ArrayList();
+        List<QNodeDefinition> nds = new ArrayList<QNodeDefinition>();
         while (it.hasNext()) {
-            itemDefs.add(new QNodeDefinitionImpl(name, it.nextElement(), resolver));
+            nds.add(new QNodeDefinitionImpl(name, it.nextElement(), resolver));
         }
-        nodeDefs = (QNodeDefinition[]) itemDefs.toArray(new QNodeDefinition[itemDefs.size()]);
+        nodeDefs = nds.toArray(new QNodeDefinition[nds.size()]);
 
 
         // propertyDefinitions
         it = DomUtil.getChildren(ntdElement, PROPERTYDEFINITION_ELEMENT, null);
-        itemDefs = new ArrayList();
+        List<QPropertyDefinition> pds = new ArrayList<QPropertyDefinition>();
         while (it.hasNext()) {
-            itemDefs.add(new QPropertyDefinitionImpl(name, it.nextElement(), resolver, qValueFactory));
+            pds.add(new QPropertyDefinitionImpl(name, it.nextElement(), resolver, qValueFactory));
         }
-        propDefs = (QPropertyDefinition[]) itemDefs.toArray(new QPropertyDefinition[itemDefs.size()]);
+        propDefs = pds.toArray(new QPropertyDefinition[pds.size()]);
         } catch (NameException e) {
             log.error(e.getMessage());
             throw new RepositoryException(e);
@@ -217,38 +217,37 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     /**
      * @see QNodeTypeDefinition#getDependencies() 
      */
-    public Collection getDependencies() {
+    public Collection<Name> getDependencies() {
         if (dependencies == null) {
-            dependencies = new HashSet();
+            dependencies = new HashSet<Name>();
             // supertypes
-            for (int i = 0; i < supertypes.length; i++) {
-                dependencies.add(supertypes[i]);
+            for (Name supertype : supertypes) {
+                dependencies.add(supertype);
             }
             // child node definitions
-            for (int i = 0; i < nodeDefs.length; i++) {
+            for (QNodeDefinition nodeDef : nodeDefs) {
                 // default primary type
-                Name ntName = nodeDefs[i].getDefaultPrimaryType();
+                Name ntName = nodeDef.getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
                     dependencies.add(ntName);
                 }
                 // required primary type
-                Name[] ntNames = nodeDefs[i].getRequiredPrimaryTypes();
-                for (int j = 0; j < ntNames.length; j++) {
-                    if (ntNames[j] != null && !name.equals(ntNames[j])) {
-                        dependencies.add(ntNames[j]);
+                for (Name rpt : nodeDef.getRequiredPrimaryTypes()) {
+                    if (rpt != null && !name.equals(rpt)) {
+                        dependencies.add(rpt);
                     }
                 }
             }
             // property definitions
-            for (int i = 0; i < propDefs.length; i++) {
+            for (QPropertyDefinition propDef : propDefs) {
                 // [WEAK]REFERENCE value constraints
-                if (propDefs[i].getRequiredType() == PropertyType.REFERENCE
-                        || propDefs[i].getRequiredType() == PropertyType.WEAKREFERENCE) {
-                    QValueConstraint[] ca = propDefs[i].getValueConstraints();
+                if (propDef.getRequiredType() == PropertyType.REFERENCE
+                        || propDef.getRequiredType() == PropertyType.WEAKREFERENCE) {
+                    QValueConstraint[] ca = propDef.getValueConstraints();
                     if (ca != null) {
-                        for (int j = 0; j < ca.length; j++) {
+                        for (QValueConstraint vc : ca) {
                             // TODO: don't rely on a specific factory
-                            Name ntName = NameFactoryImpl.getInstance().create(ca[j].getString());
+                            Name ntName = NameFactoryImpl.getInstance().create(vc.getString());
                             if (!name.equals(ntName)) {
                                 dependencies.add(ntName);
                             }
@@ -264,6 +263,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     /**
      * @see Object#equals(Object) 
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -288,6 +288,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
      *
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         // TODO: can be calculated for the definition is immutable
         return 0;

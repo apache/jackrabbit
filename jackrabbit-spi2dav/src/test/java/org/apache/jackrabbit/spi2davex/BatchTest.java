@@ -58,16 +58,17 @@ public class BatchTest extends AbstractSPITest {
     private RepositoryService rs;
     private SessionInfo si;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
         rs = helper.getRepositoryService();
         si = helper.getAdminSessionInfo();
         NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
-            public String getURI(String prefix) throws NamespaceException {
+            public String getURI(String prefix) {
                 return ("jcr".equals(prefix)) ? "http://www.jcp.org/jcr/1.0" : prefix;
             }
-            public String getPrefix(String uri) throws NamespaceException {
+            public String getPrefix(String uri) {
                 return ("http://www.jcp.org/jcr/1.0".equals(uri)) ? "jcr" : uri;
             }
         };
@@ -82,6 +83,7 @@ public class BatchTest extends AbstractSPITest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             Batch b = rs.createBatch(si, getNodeId("/"));
@@ -105,13 +107,13 @@ public class BatchTest extends AbstractSPITest {
         rs.submit(b);
 
         NodeId id = rs.getIdFactory().createNodeId(nid, resolver.getQPath("aNode"));
-        Iterator it = rs.getItemInfos(si, id);
+        Iterator<? extends ItemInfo> it = rs.getItemInfos(si, id);
         while (it.hasNext()) {
-            ItemInfo info = (ItemInfo) it.next();
+            ItemInfo info = it.next();
             if (info.denotesNode()) {
                 NodeInfo nInfo = (NodeInfo) info;
                 assertEquals(NameConstants.NT_UNSTRUCTURED, nInfo.getNodetype());
-                Iterator childIt = nInfo.getChildInfos();
+                Iterator<ChildInfo> childIt = nInfo.getChildInfos();
                 assertTrue(childIt == null || !childIt.hasNext());
                 assertEquals(id, nInfo.getId());
             }
@@ -211,11 +213,11 @@ public class BatchTest extends AbstractSPITest {
         b.reorderNodes(nid, getNodeId(testPath + "/3"), null);
         rs.submit(b);
 
-        Iterator it = rs.getChildInfos(si, nid);
+        Iterator<ChildInfo> it = rs.getChildInfos(si, nid);
         int i = 1;
         while (it.hasNext()) {
-            ChildInfo ci = (ChildInfo) it.next();
-            assertEquals(i, new Integer(ci.getName().getLocalName()).intValue());
+            ChildInfo ci = it.next();
+            assertEquals(i, Integer.parseInt(ci.getName().getLocalName()));
             i++;
         }
     }
@@ -233,11 +235,11 @@ public class BatchTest extends AbstractSPITest {
         b.reorderNodes(nid, getNodeId(testPath + "/1"), getNodeId(testPath + "/2"));
         rs.submit(b);
 
-        Iterator it = rs.getChildInfos(si, nid);
+        Iterator<ChildInfo> it = rs.getChildInfos(si, nid);
         int i = 1;
         while (it.hasNext()) {
-            ChildInfo ci = (ChildInfo) it.next();
-            assertEquals(i, new Integer(ci.getName().getLocalName()).intValue());
+            ChildInfo ci = it.next();
+            assertEquals(i, Integer.parseInt(ci.getName().getLocalName()));
             i++;
         }
     }
@@ -278,9 +280,9 @@ public class BatchTest extends AbstractSPITest {
         assertEquals(Arrays.asList(new QValue[0]), Arrays.asList(pi.getValues()));
         assertFalse(pi.getType() == PropertyType.UNDEFINED);
 
-        Iterator it = rs.getItemInfos(si, nid);
+        Iterator<? extends ItemInfo> it = rs.getItemInfos(si, nid);
         while (it.hasNext()) {
-            ItemInfo info = (ItemInfo) it.next();
+            ItemInfo info = it.next();
             if (!info.denotesNode()) {
                 PropertyInfo pInfo = (PropertyInfo) info;
                 if (propName.equals((pInfo.getId().getName()))) {
@@ -546,7 +548,7 @@ public class BatchTest extends AbstractSPITest {
         Name propName = resolver.getQName("stringProp");
         QValueFactory vf = rs.getQValueFactory();
 
-        List l = new ArrayList();
+        List<String> l = new ArrayList<String>();
         l.add("String value containing \"double quotes\" and \'single\' and \"undeterminated quote.");
         l.add("String value \ncontaining \n\rline \r\nseparators and \t tab.");
         l.add("String value containing \r\n\r\r\n\r\n multiple \r\n\r\n line separators in sequence.");
@@ -554,8 +556,8 @@ public class BatchTest extends AbstractSPITest {
         l.add("String value containing \n>line sep \r+and \r\n-diff\n\r^chars.");
         l.add("String value containing \u0633\u0634 unicode chars.");
 
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            QValue v = vf.create(it.next().toString(), PropertyType.STRING);
+        for (String val : l) {
+            QValue v = vf.create(val, PropertyType.STRING);
             Batch b = rs.createBatch(si, nid);
             b.addProperty(nid, propName, v);
             rs.submit(b);
@@ -664,6 +666,33 @@ public class BatchTest extends AbstractSPITest {
         assertEquals(PropertyType.REFERENCE, pi.getType());
     }
 
+    public void testSetWeakReferenceValue() throws RepositoryException {
+        NodeId nid = getNodeId(testPath);
+        NodeInfo nInfo = rs.getNodeInfo(si, nid);
+        if (!Arrays.asList(nInfo.getMixins()).contains(NameConstants.MIX_REFERENCEABLE)) {
+            Batch b = rs.createBatch(si, nid);
+            b.setMixins(nid, new Name[] {NameConstants.MIX_REFERENCEABLE});
+            rs.submit(b);
+        }
+
+        String ref = rs.getNodeInfo(si, nid).getId().getUniqueID();
+        Name propName = resolver.getQName("weakRefProp");
+        QValue v = rs.getQValueFactory().create(ref, PropertyType.WEAKREFERENCE);
+
+        Batch b = rs.createBatch(si, nid);
+        b.addProperty(nid, propName, v);
+        rs.submit(b);
+
+        PropertyInfo pi = rs.getPropertyInfo(si, getPropertyId(nid, propName));
+        assertFalse(pi.isMultiValued());
+        assertEquals(v, pi.getValues()[0]);
+        assertEquals(PropertyType.WEAKREFERENCE, pi.getType());
+
+        pi = getPropertyInfo(nid, propName);
+        assertEquals(v, pi.getValues()[0]);
+        assertEquals(PropertyType.WEAKREFERENCE, pi.getType());
+    }
+
     public void testSetPropertyTwice() throws RepositoryException {
         NodeId nid = getNodeId(testPath);
         Name propName = resolver.getQName("nameProp");
@@ -716,9 +745,9 @@ public class BatchTest extends AbstractSPITest {
     }
 
     private PropertyInfo getPropertyInfo(NodeId parentId, Name propName) throws RepositoryException {
-        Iterator it = rs.getItemInfos(si, parentId);
+        Iterator<? extends ItemInfo> it = rs.getItemInfos(si, parentId);
         while (it.hasNext()) {
-            ItemInfo info = (ItemInfo) it.next();
+            ItemInfo info = it.next();
             if (!info.denotesNode()) {
                 PropertyInfo pInfo = (PropertyInfo) info;
                 if (propName.equals((pInfo.getId().getName()))) {

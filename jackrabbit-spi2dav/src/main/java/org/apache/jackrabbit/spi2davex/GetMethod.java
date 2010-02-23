@@ -33,10 +33,12 @@ class GetMethod extends DavMethodBase {
         super(uri);
     }
 
+    @Override
     public String getName() {
         return DavMethods.METHOD_GET;
     }
 
+    @Override
     protected boolean isSuccess(int statusCode) {
         return statusCode == DavServletResponse.SC_OK;
     }

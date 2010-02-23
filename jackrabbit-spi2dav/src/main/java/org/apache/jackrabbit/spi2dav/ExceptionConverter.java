@@ -42,7 +42,7 @@ public class ExceptionConverter {
 
     private static Logger log = LoggerFactory.getLogger(ExceptionConverter.class);
 
-    // avoid instanciation
+    // avoid instantiation
     private ExceptionConverter() {}
 
     public static RepositoryException generate(DavException davExc) throws RepositoryException {
@@ -61,8 +61,8 @@ public class ExceptionConverter {
                             msg = DomUtil.getChildText(exc, "message", null);
                         }
                         if (DomUtil.hasChildElement(exc, "class", null)) {
-                            Class cl = Class.forName(DomUtil.getChildText(exc, "class", null));
-                            Constructor excConstr = cl.getConstructor(new Class[]{String.class});
+                            Class<?> cl = Class.forName(DomUtil.getChildText(exc, "class", null));
+                            Constructor<?> excConstr = cl.getConstructor(String.class);
                             if (excConstr != null) {
                                 Object o = excConstr.newInstance(new String[]{msg});
                                 if (o instanceof RepositoryException) {

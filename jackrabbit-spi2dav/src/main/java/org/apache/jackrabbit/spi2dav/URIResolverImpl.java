@@ -60,7 +60,7 @@ class URIResolverImpl implements URIResolver {
 
     // TODO: to-be-fixed. uri/id-caches don't get updated
     // for each workspace a separate idUri-cache is created
-    private final Map idURICaches = new HashMap();
+    private final Map<String, IdURICache> idURICaches = new HashMap<String, IdURICache>();
 
     URIResolverImpl(URI repositoryUri, RepositoryServiceImpl service, Document domFactory) {
         this.repositoryUri = repositoryUri;
@@ -70,7 +70,7 @@ class URIResolverImpl implements URIResolver {
 
     private IdURICache getCache(String workspaceName) {
         if (idURICaches.containsKey(workspaceName)) {
-            return (IdURICache) idURICaches.get(workspaceName);
+            return idURICaches.get(workspaceName);
         } else {
             IdURICache c = new IdURICache(getWorkspaceUri(workspaceName));
             idURICaches.put(workspaceName, c);

@@ -43,6 +43,7 @@ public class RepositoryStubImpl extends org.apache.jackrabbit.spi2dav.Repository
         super(env);
     }
 
+    @Override
     protected RepositoryService createService(String uri) throws RepositoryException {
         BatchReadConfig brc = new BatchReadConfig() {
             public int getDepth(Path path, PathResolver resolver) throws NamespaceException {

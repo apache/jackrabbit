@@ -85,18 +85,18 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
         }
 
         if (pdefElement.hasAttribute(MULTIPLE_ATTRIBUTE)) {
-            multiple = Boolean.valueOf(pdefElement.getAttribute(MULTIPLE_ATTRIBUTE)).booleanValue();
+            multiple = Boolean.valueOf(pdefElement.getAttribute(MULTIPLE_ATTRIBUTE));
         } else {
             multiple = false;
         }
 
         if (pdefElement.hasAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE)) {
-            fullTextSearcheable = Boolean.valueOf(pdefElement.getAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE)).booleanValue();
+            fullTextSearcheable = Boolean.valueOf(pdefElement.getAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE));
         } else {
             fullTextSearcheable = false;
         }
         if (pdefElement.hasAttribute(QUERY_ORDERABLE_ATTRIBUTE)) {
-            queryOrderable = Boolean.valueOf(pdefElement.getAttribute(QUERY_ORDERABLE_ATTRIBUTE)).booleanValue();
+            queryOrderable = Boolean.valueOf(pdefElement.getAttribute(QUERY_ORDERABLE_ATTRIBUTE));
         } else {
             queryOrderable = false;
         }
@@ -106,7 +106,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             // No default value defined at all.
             defaultValues = null;
         } else {
-            List vs = new ArrayList();
+            List<QValue> vs = new ArrayList<QValue>();
             ElementIterator it = DomUtil.getChildren(child, DEFAULTVALUE_ELEMENT, null);
             while (it.hasNext()) {
                 String jcrVal = DomUtil.getText(it.nextElement());
@@ -123,7 +123,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                 }
                 vs.add(qValue);
             }
-            defaultValues = (QValue[]) vs.toArray(new QValue[vs.size()]);
+            defaultValues = vs.toArray(new QValue[vs.size()]);
         }
 
         child = DomUtil.getChildElement(pdefElement, VALUECONSTRAINTS_ELEMENT, null);
@@ -226,6 +226,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      *         <code>false</code> otherwise
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -249,6 +250,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      *
      * @return
      */
+    @Override
     public int hashCode() {
         if (hashCode == 0) {
             // build hashCode (format: <declaringNodeType>/<name>/<requiredType>/<multiple>)
@@ -270,9 +272,9 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             sb.append('/');
             sb.append(queryOrderable ? 1 : 0);
             sb.append('/');
-            Set s = new HashSet(availableQueryOperators.length);
-            for (int i = 0; i < availableQueryOperators.length; i++) {
-                s.add(availableQueryOperators[i]);
+            Set<String> s = new HashSet<String>(availableQueryOperators.length);
+            for (String availableQueryOperator : availableQueryOperators) {
+                s.add(availableQueryOperator);
             }
             sb.append(s.toString());
 

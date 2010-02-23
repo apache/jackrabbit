@@ -114,17 +114,17 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
         }
 
         if (itemDefElement.hasAttribute(AUTOCREATED_ATTRIBUTE)) {
-            autoCreated = Boolean.valueOf(itemDefElement.getAttribute(AUTOCREATED_ATTRIBUTE)).booleanValue();
+            autoCreated = Boolean.valueOf(itemDefElement.getAttribute(AUTOCREATED_ATTRIBUTE));
         } else {
             autoCreated = false;
         }
         if (itemDefElement.hasAttribute(MANDATORY_ATTRIBUTE)) {
-            mandatory = Boolean.valueOf(itemDefElement.getAttribute(MANDATORY_ATTRIBUTE)).booleanValue();
+            mandatory = Boolean.valueOf(itemDefElement.getAttribute(MANDATORY_ATTRIBUTE));
         } else {
             mandatory = false;
         }
         if (itemDefElement.hasAttribute(PROTECTED_ATTRIBUTE)) {
-            writeProtected = Boolean.valueOf(itemDefElement.getAttribute(PROTECTED_ATTRIBUTE)).booleanValue();
+            writeProtected = Boolean.valueOf(itemDefElement.getAttribute(PROTECTED_ATTRIBUTE));
         } else {
             writeProtected = false;
         }
@@ -197,6 +197,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
      *         <code>false</code> otherwise
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -220,6 +221,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
      *
      * @return
      */
+    @Override
     public abstract int hashCode();
 
     //--------------------------------------------------------------------------
