@@ -76,13 +76,6 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
                 brc = (BatchReadConfig) param;
             }
         }
-        if (brc == null) {
-            brc = new BatchReadConfig() {
-                public int getDepth(Path path, PathResolver pathResolver) throws NamespaceException {
-                    return 4;
-                }
-            };
-        }
 
         return new RepositoryServiceImpl(uri, brc);
     }
