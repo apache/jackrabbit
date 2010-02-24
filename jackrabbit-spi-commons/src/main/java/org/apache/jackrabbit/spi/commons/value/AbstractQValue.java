@@ -398,13 +398,13 @@ public abstract class AbstractQValue implements QValue, Serializable {
         // nothing to do
     }
 
-    //---------------------------------------------------------< Object >---
-
+    //-------------------------------------------------------------< Object >---
     /**
      * Returns the string representation of this internal value.
      *
      * @return string representation of this internal value
      */
+    @Override
     public String toString() {
         if (type == PropertyType.DATE) {
             return ISO8601.format((Calendar) val);
@@ -420,6 +420,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
      * @param obj
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -445,6 +446,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
      * @return the hashCode of the internal value object.
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         if (PropertyType.DATE == type) {
             return ISO8601.format((Calendar) val).hashCode();

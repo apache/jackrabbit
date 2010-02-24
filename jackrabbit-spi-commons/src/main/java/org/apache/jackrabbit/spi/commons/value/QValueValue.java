@@ -74,7 +74,7 @@ public final class QValueValue implements Value {
      */
     public boolean getBoolean() throws RepositoryException {
         if (getType() == PropertyType.STRING || getType() == PropertyType.BINARY || getType() == PropertyType.BOOLEAN) {
-            return Boolean.valueOf(qvalue.getString()).booleanValue();
+            return Boolean.valueOf(qvalue.getString());
         } else {
             throw new ValueFormatException("incompatible type " + PropertyType.nameFromValue(qvalue.getType()));
         }
@@ -172,6 +172,7 @@ public final class QValueValue implements Value {
     /**
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof QValueValue) {
             return qvalue.equals(((QValueValue) obj).qvalue);
@@ -183,6 +184,7 @@ public final class QValueValue implements Value {
     /**
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return qvalue.hashCode();
     }
