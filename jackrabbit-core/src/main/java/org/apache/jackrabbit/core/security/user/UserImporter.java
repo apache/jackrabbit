@@ -73,10 +73,6 @@ import java.security.Principal;
  * hashed authorizable id as calculated by the UserManager. This importer
  * is therefore not able to handle imports with
  * {@link ImportUUIDBehavior#IMPORT_UUID_CREATE_NEW}.</li>
- * <li>The rep:password property is expected to contain the crypted password
- * value as stored in the content upon calling {@link UserManager#createUser}
- * and exposed upon {@link javax.jcr.Property#getString()}
- * or {@link javax.jcr.Session#exportSystemView}</li>
  * <li>Importing user/group nodes outside of the hierarchy defined by
  * {@link org.apache.jackrabbit.core.security.user.UserManagerImpl#getUsersPath()}
  * and {@link org.apache.jackrabbit.core.security.user.UserManagerImpl#getGroupsPath()}
@@ -222,9 +218,8 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                     return false;
                 }
 
-                // expectation: pw must already be crypted.
                 Value v = protectedPropInfo.getValues(PropertyType.STRING, resolver)[0];
-                userManager.setProtectedProperty(parent, UserConstants.P_PASSWORD, v);
+                ((User) a).changePassword(v.getString());
 
                 return true;
 
@@ -297,7 +292,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
             userManager.autoSave(false);
         }
         try {
-            List<Object> processed = new ArrayList();
+            List<Object> processed = new ArrayList<Object>();
             for (Iterator<Object> it = referenceTracker.getProcessedReferences(); it.hasNext();) {
                 Object reference = it.next();
                 if (reference instanceof Membership) {
@@ -308,14 +303,14 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
 
                     Group gr = (Group) a;
                     // 1. collect members to add and to remove.
-                    Map<String, Authorizable> toRemove = new HashMap();
-                    for (Iterator<Authorizable> aIt = gr.getDeclaredMembers(); it.hasNext();) {
-                        Authorizable dm = aIt.next();
+                    Map<String, Authorizable> toRemove = new HashMap<String, Authorizable>();
+                    for (Iterator<Authorizable> declMembers = gr.getDeclaredMembers(); declMembers.hasNext();) {
+                        Authorizable dm = declMembers.next();
                         toRemove.put(dm.getID(), dm);
                     }
 
-                    List<Authorizable> toAdd = new ArrayList();
-                    List<Value> nonExisting = new ArrayList();
+                    List<Authorizable> toAdd = new ArrayList<Authorizable>();
+                    List<Value> nonExisting = new ArrayList<Value>();
 
                     for (NodeId originalId : ((Membership) reference).ids) {
 
@@ -361,7 +356,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
 
                         NodeImpl groupNode = ((AuthorizableImpl) gr).getNode();
                         // build list of valid members set before ....
-                        List<Value> memberValues = new ArrayList();
+                        List<Value> memberValues = new ArrayList<Value>();
                         if (groupNode.hasProperty(UserConstants.P_MEMBERS)) {
                             Value[] vls = groupNode.getProperty(UserConstants.P_MEMBERS).getValues();
                             memberValues.addAll(Arrays.asList(vls));
@@ -388,13 +383,13 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                     Impersonation imp = ((User) a).getImpersonation();
 
                     // 1. collect principals to add and to remove.
-                    Map<String, Principal> toRemove = new HashMap();
+                    Map<String, Principal> toRemove = new HashMap<String, Principal>();
                     for (PrincipalIterator pit = imp.getImpersonators(); pit.hasNext();) {
                         Principal princ = pit.nextPrincipal();
                         toRemove.put(princ.getName(), princ);
                     }
 
-                    List<Principal> toAdd = new ArrayList();
+                    List<Principal> toAdd = new ArrayList<Principal>();
                     Value[] vs = ((Impersonators) reference).values;
                     for (Value v : vs) {
                         String princName = v.getString();
