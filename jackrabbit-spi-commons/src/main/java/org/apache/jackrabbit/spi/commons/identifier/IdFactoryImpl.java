@@ -37,6 +37,10 @@ public final class IdFactoryImpl extends AbstractIdFactory {
         return IdFactoryImpl.INSTANCE;
     }
 
+    /**
+     * @see org.apache.jackrabbit.spi.commons.identifier.AbstractIdFactory#getPathFactory() 
+     */
+    @Override
     protected PathFactory getPathFactory() {
         return PathFactoryImpl.getInstance();
     }

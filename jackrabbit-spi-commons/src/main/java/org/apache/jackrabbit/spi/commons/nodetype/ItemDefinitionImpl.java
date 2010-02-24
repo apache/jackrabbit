@@ -149,9 +149,11 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
         return itemDef.isProtected();
     }
 
+    //-------------------------------------------------------------< Object >---
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -165,6 +167,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode() {
         return itemDef.hashCode();
     }

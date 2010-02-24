@@ -347,6 +347,7 @@ public class NodeTypeDefDiff {
         return maxType;
     }
 
+    @Override
     public String toString() {
         String result = getClass().getName() + "[\n\tnodeTypeName="
                 + oldDef.getName();
@@ -475,6 +476,7 @@ public class NodeTypeDefDiff {
                     && !oldDef.equals(newDef);
         }
 
+        @Override
         public String toString() {
             String typeString = modificationTypeToString(getType());
 
@@ -512,6 +514,7 @@ public class NodeTypeDefDiff {
             return (QPropertyDefinition) newDef;
         }
 
+        @Override
         protected void init() {
             super.init();
             /**
@@ -588,6 +591,7 @@ public class NodeTypeDefDiff {
             return (QNodeDefinition) newDef;
         }
 
+        @Override
         protected void init() {
             super.init();
             /**
