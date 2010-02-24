@@ -139,6 +139,7 @@ public class NameFactoryImpl implements NameFactory {
          * @see NameFactory#create(String)
          * @see Object#toString()
          */
+        @Override
         public String toString() {
             // Name is immutable, we can store the string representation
             if (string == null) {
@@ -157,6 +158,7 @@ public class NameFactoryImpl implements NameFactory {
          *         <code>false</code> otherwise.
          * @see Object#equals(Object)
          */
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -182,6 +184,7 @@ public class NameFactoryImpl implements NameFactory {
          * @return hash code
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             // Name is immutable, we can store the computed hash code value
             int h = hash;
@@ -203,6 +206,7 @@ public class NameFactoryImpl implements NameFactory {
          * @throws CloneNotSupportedException never thrown
          * @see Object#clone()
          */
+        @Override
         public Object clone() throws CloneNotSupportedException {
             // Name is immutable, no special handling required
             return super.clone();
