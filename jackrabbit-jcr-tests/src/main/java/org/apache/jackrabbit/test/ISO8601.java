@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.test;
 
-import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
@@ -25,7 +24,7 @@ import java.util.TimeZone;
  * The <code>ISO8601</code> utility class provides helper methods
  * to deal with date/time formatting using a specific ISO8601-compliant
  * format (see <a href="http://www.w3.org/TR/NOTE-datetime">ISO 8601</a>).
- * <p>
+ * <p/>
  * The currently supported format is:
  * <pre>
  *   &plusmn;YYYY-MM-DDThh:mm:ss.SSSTZD
@@ -47,13 +46,6 @@ import java.util.TimeZone;
  * </pre>
  */
 public final class ISO8601 {
-    /**
-     * misc. numeric formats used in formatting
-     */
-    private static final DecimalFormat XX_FORMAT = new DecimalFormat("00");
-    private static final DecimalFormat XXX_FORMAT = new DecimalFormat("000");
-    private static final DecimalFormat XXXX_FORMAT = new DecimalFormat("0000");
-
     /**
      * Parses an ISO8601-compliant date/time string.
      *
@@ -197,6 +189,10 @@ public final class ISO8601 {
              * if any of the set values are illegal or out of range
              */
             cal.getTime();
+            /**
+             * in addition check the validity of the year
+             */
+            getYear(cal);
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -211,21 +207,12 @@ public final class ISO8601 {
      * @param cal the time value to be formatted into a date/time string.
      * @return the formatted date/time string.
      * @throws IllegalArgumentException if a <code>null</code> argument is passed
+     * or the calendar cannot be represented as defined by ISO 8601 (i.e. year
+     * with more than four digits).
      */
-    public static String format(Calendar cal) {
+    public static String format(Calendar cal) throws IllegalArgumentException {
         if (cal == null) {
             throw new IllegalArgumentException("argument can not be null");
-        }
-
-        // determine era and adjust year if necessary
-        int year = cal.get(Calendar.YEAR);
-        if (cal.isSet(Calendar.ERA)
-                && cal.get(Calendar.ERA) == GregorianCalendar.BC) {
-            /**
-             * calculate year using astronomical system:
-             * year n BCE => astronomical year -n + 1
-             */
-            year = 0 - year + 1;
         }
 
         /**
@@ -237,25 +224,25 @@ public final class ISO8601 {
          */
         StringBuffer buf = new StringBuffer();
         // year ([-]YYYY)
-        buf.append(XXXX_FORMAT.format(year));
+        appendZeroPaddedInt(buf, getYear(cal), 4);
         buf.append('-');
         // month (MM)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.MONTH) + 1));
+        appendZeroPaddedInt(buf, cal.get(Calendar.MONTH) + 1, 2);
         buf.append('-');
         // day (DD)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.DAY_OF_MONTH)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.DAY_OF_MONTH), 2);
         buf.append('T');
         // hour (hh)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.HOUR_OF_DAY)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.HOUR_OF_DAY), 2);
         buf.append(':');
         // minute (mm)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.MINUTE)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.MINUTE), 2);
         buf.append(':');
         // second (ss)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.SECOND)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.SECOND), 2);
         buf.append('.');
         // millisecond (SSS)
-        buf.append(XXX_FORMAT.format(cal.get(Calendar.MILLISECOND)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.MILLISECOND), 3);
         // time zone designator (Z or +00:00 or -00:00)
         TimeZone tz = cal.getTimeZone();
         // determine offset of timezone from UTC (incl. daylight saving)
@@ -264,12 +251,66 @@ public final class ISO8601 {
             int hours = Math.abs((offset / (60 * 1000)) / 60);
             int minutes = Math.abs((offset / (60 * 1000)) % 60);
             buf.append(offset < 0 ? '-' : '+');
-            buf.append(XX_FORMAT.format(hours));
+            appendZeroPaddedInt(buf, hours, 2);
             buf.append(':');
-            buf.append(XX_FORMAT.format(minutes));
+            appendZeroPaddedInt(buf, minutes, 2);
         } else {
             buf.append('Z');
         }
         return buf.toString();
+    }
+
+    /**
+     * Returns the astronomical year of the given calendar.
+     *
+     * @param cal a calendar instance.
+     * @return the astronomical year.
+     * @throws IllegalArgumentException if calendar cannot be represented as
+     *                                  defined by ISO 8601 (i.e. year with more
+     *                                  than four digits).
+     */
+    public static int getYear(Calendar cal) throws IllegalArgumentException {
+        // determine era and adjust year if necessary
+        int year = cal.get(Calendar.YEAR);
+        if (cal.isSet(Calendar.ERA)
+                && cal.get(Calendar.ERA) == GregorianCalendar.BC) {
+            /**
+             * calculate year using astronomical system:
+             * year n BCE => astronomical year -n + 1
+             */
+            year = 0 - year + 1;
+        }
+
+        if (year > 9999 || year < -9999) {
+            throw new IllegalArgumentException("Calendar has more than four " +
+                    "year digits, cannot be formatted as ISO8601: " + year);
+        }
+        return year;
+    }
+
+    /**
+     * Appends a zero-padded number to the given string buffer.
+     * <p/>
+     * This is an internal helper method which doesn't perform any
+     * validation on the given arguments.
+     *
+     * @param buf String buffer to append to
+     * @param n number to append
+     * @param precision number of digits to append
+     */
+    private static void appendZeroPaddedInt(StringBuffer buf, int n, int precision) {
+        if (n < 0) {
+            buf.append('-');
+            n = -n;
+        }
+
+        int exp = 1;
+        while (exp < precision) {
+            if (n < Math.pow(10, exp)) {
+                buf.append('0');
+            }
+            exp++;
+        }
+        buf.append(n);
     }
 }
