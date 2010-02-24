@@ -169,6 +169,7 @@ public abstract class AbstractIdFactory implements IdFactory {
          * @param obj
          * @return
          */
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;
@@ -192,6 +193,7 @@ public abstract class AbstractIdFactory implements IdFactory {
          * @return hash code
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             // since the ItemIdImpl is immutable, store the computed hash code value
             if (hashCode == 0) {
@@ -208,6 +210,7 @@ public abstract class AbstractIdFactory implements IdFactory {
          *
          * @return
          */
+        @Override
         public String toString() {
             StringBuffer b = new StringBuffer();
             if (uniqueID != null) {
@@ -237,10 +240,12 @@ public abstract class AbstractIdFactory implements IdFactory {
             super(parentId.getUniqueID(), (parentId.getPath() != null) ? factory.create(parentId.getPath(), path, true) : path);
         }
 
+        @Override
         public boolean denotesNode() {
             return true;
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;
@@ -264,6 +269,7 @@ public abstract class AbstractIdFactory implements IdFactory {
             this.parentId = parentId;
         }
 
+        @Override
         public boolean denotesNode() {
             return false;
         }
@@ -276,6 +282,7 @@ public abstract class AbstractIdFactory implements IdFactory {
             return getPath().getNameElement().getName();
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;

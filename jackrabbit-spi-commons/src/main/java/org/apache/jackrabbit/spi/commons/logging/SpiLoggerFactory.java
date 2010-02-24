@@ -265,8 +265,7 @@ public final class SpiLoggerFactory {
         }
     }
 
-    // -----------------------------------------------------< private >---
-
+    //------------------------------------------------------------< private >---
     /**
      * Helper class which wraps SPI entities returned from calls to {@link RepositoryService}
      * into log wrappers if the {@link LogWriterProvider} can provide a {@link LogWriter}.
@@ -279,6 +278,7 @@ public final class SpiLoggerFactory {
             this.logWriterProvider = logWriterProvider;
         }
 
+        @Override
         public NameFactory getNameFactory() throws RepositoryException {
             NameFactory result = super.getNameFactory();
             return result == null
@@ -286,6 +286,7 @@ public final class SpiLoggerFactory {
                 : create(result, logWriterProvider);
         }
 
+        @Override
         public PathFactory getPathFactory() throws RepositoryException {
             PathFactory result = super.getPathFactory();
             return result == null
@@ -293,6 +294,7 @@ public final class SpiLoggerFactory {
                 : create(result, logWriterProvider);
         }
 
+        @Override
         public IdFactory getIdFactory() throws RepositoryException {
             IdFactory result = super.getIdFactory();
             return result == null
@@ -300,6 +302,7 @@ public final class SpiLoggerFactory {
                 : create(result, logWriterProvider);
         }
 
+        @Override
         public QValueFactory getQValueFactory() throws RepositoryException {
             QValueFactory result = super.getQValueFactory();
             return result == null
@@ -307,6 +310,7 @@ public final class SpiLoggerFactory {
                 : create(result, logWriterProvider);
         }
 
+        @Override
         public SessionInfo obtain(final Credentials credentials, final String workspaceName)
                 throws RepositoryException {
 
@@ -316,6 +320,7 @@ public final class SpiLoggerFactory {
                 : create(result, logWriterProvider);
         }
 
+        @Override
         public SessionInfo obtain(final SessionInfo sessionInfo, final String workspaceName)
                 throws RepositoryException {
 
@@ -325,6 +330,7 @@ public final class SpiLoggerFactory {
                 : create(result, logWriterProvider);
         }
 
+        @Override
         public SessionInfo impersonate(final SessionInfo sessionInfo, final Credentials credentials)
                 throws RepositoryException {
 
@@ -334,6 +340,7 @@ public final class SpiLoggerFactory {
                 : create(result, logWriterProvider);
         }
 
+        @Override
         public Batch createBatch(final SessionInfo sessionInfo, final ItemId itemId)
                 throws RepositoryException {
 
@@ -342,6 +349,5 @@ public final class SpiLoggerFactory {
                 ? null
                 : create(result, logWriterProvider);
         }
-
     }
 }

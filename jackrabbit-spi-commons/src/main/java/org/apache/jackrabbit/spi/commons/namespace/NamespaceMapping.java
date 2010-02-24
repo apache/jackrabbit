@@ -50,6 +50,7 @@ public class NamespaceMapping implements NamespaceResolver {
     }
 
 
+    //--------------------------------------------------< NamespaceResolver >---
     /**
      * {@inheritDoc}
      */
@@ -76,6 +77,7 @@ public class NamespaceMapping implements NamespaceResolver {
         }
     }
 
+    //-------------------------------------------------------------< public >---
     /**
      * Returns true if prefix is already mapped to some URI. Returns false otherwise.
      * @param prefix prefix to check
@@ -129,9 +131,11 @@ public class NamespaceMapping implements NamespaceResolver {
         return new HashMap<String, String>(URIToPrefix);
     }
 
+    //-------------------------------------------------------------< Object >---
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -145,10 +149,11 @@ public class NamespaceMapping implements NamespaceResolver {
     }
 
     /**
-     * Override toString()
+     * Override {@link Object#toString()}
      *
      * @return String
      */
+    @Override
     public String toString() {
         String s = "";
         for (Map.Entry<String, String> entry: prefixToURI.entrySet()) {
