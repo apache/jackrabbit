@@ -67,7 +67,7 @@ class DateConstraint extends ValueConstraint {
                 } else {
                     upperLimit = DateValue.valueOf(matcher.group(3)).getDate();
                 }
-                // group 4 is upepr inclusive/exclusive
+                // group 4 is upper inclusive/exclusive
                 s = matcher.group(4);
                 upperInclusive = s.equals("]");
 
