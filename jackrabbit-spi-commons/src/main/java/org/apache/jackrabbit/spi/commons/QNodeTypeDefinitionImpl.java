@@ -342,8 +342,11 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         }
     }
     
-    //-------------------------------------------< java.lang.Object overrides >
-
+    //-------------------------------------------------------------< Object >---
+    /**
+     * @see Object#equals(Object)
+     */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -370,12 +373,12 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      * @return always zero
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return 0;
     }
 
-    //-------------------------------< internal >-------------------------------
-
+    //-----------------------------------------------------------< internal >---
     /**
      * Returns a set of serializable property definitions for
      * <code>propDefs</code>.
