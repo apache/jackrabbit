@@ -43,7 +43,7 @@ public final class PathBuilder {
     /**
      * the list of path elements of the constructed path
      */
-    private final LinkedList queue;
+    private final LinkedList<Path.Element> queue;
 
     /**
      * Creates a new PathBuilder to create a Path using the
@@ -62,7 +62,7 @@ public final class PathBuilder {
      */
     public PathBuilder(PathFactory factory) {
         this.factory = (factory != null) ? factory : PathFactoryImpl.getInstance();
-        queue = new LinkedList();
+        queue = new LinkedList<Path.Element>();
     }
 
     /**
@@ -100,8 +100,8 @@ public final class PathBuilder {
      * @param elements
      */
     public void addAll(Path.Element[] elements) {
-        for (int i = 0; i < elements.length; i++) {
-            addLast(elements[i]);
+        for (Path.Element element : elements) {
+            addLast(element);
         }
     }
 
@@ -171,7 +171,7 @@ public final class PathBuilder {
         if (queue.size() == 0) {
             throw new MalformedPathException("empty path");
         }
-        Path.Element[] elements = (Path.Element[]) queue.toArray(new Path.Element[queue.size()]);
+        Path.Element[] elements = queue.toArray(new Path.Element[queue.size()]);
         return factory.create(elements);
     }
 }

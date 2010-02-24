@@ -71,7 +71,7 @@ public class PathFactoryImpl implements PathFactory {
             throw new IllegalArgumentException(
                     "relPath is not a relative path: " + relPath);
         }
-        List l = new ArrayList();
+        List<Path.Element> l = new ArrayList<Path.Element>();
         l.addAll(Arrays.asList(parent.getElements()));
         l.addAll(Arrays.asList(relPath.getElements()));
 
@@ -88,7 +88,7 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#create(Path, Name, boolean)
      */
     public Path create(Path parent, Name name, boolean normalize) throws RepositoryException {
-        List elements = new ArrayList();
+        List<Path.Element> elements = new ArrayList<Path.Element>();
         elements.addAll(Arrays.asList(parent.getElements()));
         elements.add(createElement(name));
 
@@ -105,7 +105,7 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#create(Path, Name, int, boolean)
      */
     public Path create(Path parent, Name name, int index, boolean normalize) throws IllegalArgumentException, RepositoryException {
-        List elements = new ArrayList();
+        List<Path.Element> elements = new ArrayList<Path.Element>();
         elements.addAll(Arrays.asList(parent.getElements()));
         elements.add(createElement(name, index));
 
@@ -155,7 +155,7 @@ public class PathFactoryImpl implements PathFactory {
         // split into path elements
         int lastPos = 0;
         int pos = pathString.indexOf(Path.DELIMITER);
-        ArrayList list = new ArrayList();
+        ArrayList<Path.Element> list = new ArrayList<Path.Element>();
         while (lastPos >= 0) {
             Path.Element elem;
             if (pos >= 0) {
@@ -244,7 +244,7 @@ public class PathFactoryImpl implements PathFactory {
             throw new IllegalArgumentException("invalid PathElement literal: " + elementString + " (missing ']')");
         }
         try {
-            int index = Integer.valueOf(elementString.substring(pos + 1, pos1)).intValue();
+            int index = Integer.valueOf(elementString.substring(pos + 1, pos1));
             if (index < 1) {
                 throw new IllegalArgumentException("invalid PathElement literal: " + elementString + " (index is 1-based)");
             }
@@ -365,16 +365,15 @@ public class PathFactoryImpl implements PathFactory {
                 throw new RepositoryException(
                         "Identifier-based path cannot be normalized: " + this);
             }
-            LinkedList queue = new LinkedList();
+            LinkedList<Path.Element> queue = new LinkedList<Path.Element>();
             Path.Element last = PARENT_ELEMENT;
-            for (int i = 0; i < elements.length; i++) {
-                Path.Element elem = elements[i];
+            for (Element elem : elements) {
                 if (elem.denotesParent() && !last.denotesParent()) {
                     queue.removeLast();
                     if (queue.isEmpty()) {
                         last = PARENT_ELEMENT;
                     } else {
-                        last = (Path.Element) queue.getLast();
+                        last = queue.getLast();
                     }
                 } else if (!elem.denotesCurrent()) {
                     last = elem;
@@ -385,7 +384,7 @@ public class PathFactoryImpl implements PathFactory {
                 return CURRENT_PATH;
             }
             boolean isNormalized = true;
-            return new PathImpl((Path.Element[]) queue.toArray(new Element[queue.size()]), isNormalized);
+            return new PathImpl(queue.toArray(new Element[queue.size()]), isNormalized);
         }
 
         /**
@@ -445,7 +444,7 @@ public class PathFactoryImpl implements PathFactory {
                 }
                 lengthCommon++;
             }
-            List l = new ArrayList();
+            List<Path.Element> l = new ArrayList<Path.Element>();
             if (lengthCommon < elems0.length) {
                 /**
                  * the common path fragment is an ancestor of this path;
@@ -524,10 +523,10 @@ public class PathFactoryImpl implements PathFactory {
                         "Cannot determine depth of an identifier based path: " + this);
             }
             int depth = ROOT_DEPTH;
-            for (int i = 0; i < elements.length; i++) {
-                if (elements[i].denotesParent()) {
+            for (Element element : elements) {
+                if (element.denotesParent()) {
                     depth--;
-                } else if (elements[i].denotesName()) {
+                } else if (element.denotesName()) {
                     // don't count root/current element.
                     depth++;
                 }
@@ -645,6 +644,7 @@ public class PathFactoryImpl implements PathFactory {
          *
          * @return the internal string representation of this <code>Path</code>.
          */
+        @Override
         public String toString() {
             // Path is immutable, we can store the string representation
             if (string == null) {
@@ -668,13 +668,14 @@ public class PathFactoryImpl implements PathFactory {
          * @return a hash code value for this path.
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             // Path is immutable, we can store the computed hash code value
             int h = hash;
             if (h == 0) {
                 h = 17;
-                for (int i = 0; i < elements.length; i++) {
-                    h = 37 * h + elements[i].hashCode();
+                for (Element element : elements) {
+                    h = 37 * h + element.hashCode();
                 }
                 hash = h;
             }
@@ -687,6 +688,7 @@ public class PathFactoryImpl implements PathFactory {
          * @param obj the object to be compared for equality with this path.
          * @return <tt>true</tt> if the specified object is equal to this path.
          */
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -826,6 +828,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return string representation of the path element
          * @see Object#toString()
          */
+        @Override
         public String toString() {
             StringBuffer sb = new StringBuffer();
             // name
@@ -845,6 +848,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return hash code
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             int h = 17;
             h = 37 * h + getNormalizedIndex();
@@ -861,6 +865,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return <code>true</code> if the path elements are equal
          * @see Object#equals(Object)
          */
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -903,6 +908,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return true if this is the {@link #ROOT root element}.
          * @see Path.Element#denotesRoot()
          */
+        @Override
         public boolean denotesRoot() {
             return type == ROOT;
         }
@@ -911,6 +917,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return true if this is the {@link #PARENT parent element}.
          * @see Path.Element#denotesParent()
          */
+        @Override
         public boolean denotesParent() {
             return type == PARENT;
         }
@@ -919,6 +926,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return true if this is the {@link #CURRENT current element}.
          * @see Path.Element#denotesCurrent()
          */
+        @Override
         public boolean denotesCurrent() {
             return type == CURRENT;
         }
@@ -927,6 +935,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return Always returns false.
          * @see Path.Element#denotesName()
          */
+        @Override
         public boolean denotesName() {
             return false;
         }
@@ -951,6 +960,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return Always returns true.
          * @see Path.Element#denotesIdentifier()
          */
+        @Override
         public boolean denotesIdentifier() {
             return true;
         }
@@ -959,6 +969,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return Always returns false.
          * @see Path.Element#denotesName()
          */
+        @Override
         public boolean denotesName() {
             return false;
         }
@@ -971,6 +982,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return string representation of the path element
          * @see Object#toString()
          */
+        @Override
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append('[');
@@ -985,6 +997,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return hash code
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             int h = 37 * 17 + identifier.hashCode();
             return h;
@@ -999,6 +1012,7 @@ public class PathFactoryImpl implements PathFactory {
          * @return <code>true</code> if the path elements are equal
          * @see Object#equals(Object)
          */
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -1035,8 +1049,8 @@ public class PathFactoryImpl implements PathFactory {
          * @throws IllegalArgumentException if the given elements array is null
          * or has a length less than 1;
          */
-        private Builder(List elemList) {
-            this((Path.Element[]) elemList.toArray(new Path.Element[elemList.size()]));
+        private Builder(List<Path.Element> elemList) {
+            this(elemList.toArray(new Path.Element[elemList.size()]));
         }
 
         /**
