@@ -251,6 +251,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
          *         or -1L if the length can't be determined.
          * @see QValue#getLength()
          */
+        @Override
         public long getLength() {
             if (file != null) {
                 // this instance is backed by a 'real' file
@@ -286,6 +287,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
         /**
          * @see QValue#getName()
          */
+        @Override
         public Name getName() throws RepositoryException {
             throw new UnsupportedOperationException();
         }
@@ -293,6 +295,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
         /**
          * @see QValue#getPath()
          */
+        @Override
         public Path getPath() throws RepositoryException {
             throw new UnsupportedOperationException();
         }
@@ -303,6 +306,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
          * calling this method will have no effect.
          * @see QValue#discard()
          */
+        @Override
         public void discard() {
             if (!temp) {
                 // do nothing if this instance is not backed by temporarily
@@ -328,6 +332,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
          *
          * @return A string representation of this <code>BinaryQValue</code> instance.
          */
+        @Override
         public String toString() {
             if (file != null) {
                 // this instance is backed by a 'real' file
@@ -341,6 +346,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -360,12 +366,12 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
          * @return always zero
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
             return 0;
         }
 
-        //-----------------------------< Serializable >-------------------------
-
+        //---------------------------------------------------< Serializable >---
         private void writeObject(ObjectOutputStream out)
                 throws IOException {
             out.defaultWriteObject();
@@ -412,7 +418,5 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
             // deserialized value is always temp
             temp = true;
         }
-
     }
-
 }
