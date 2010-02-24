@@ -267,9 +267,8 @@ public abstract class AbstractNodeType implements NodeType {
             if (!nt.getName().equals(thisName)) {
                 if (directOnly) {
                     // direct subtypes only
-                    String[] names = nt.getDeclaredSupertypeNames();
-                    for (int i = 0; i < names.length; i++) {
-                        if (names[i].equals(thisName)) {
+                    for (String name : nt.getDeclaredSupertypeNames()) {
+                        if (name.equals(thisName)) {
                             result.add(nt);
                             break;
                         }
