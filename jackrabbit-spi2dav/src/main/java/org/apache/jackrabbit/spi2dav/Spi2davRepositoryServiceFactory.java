@@ -21,11 +21,13 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.RepositoryServiceFactory;
+import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -68,6 +70,12 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
      * of {@link QValueFactory}. If missing {@link QValueFactoryImpl} is used.
      */
     public static final String PARAM_QVALUE_FACTORY = "org.apache.jackrabbit.spi2dav.QValueFactory";
+
+    /**
+     * Optional configuration parameter: It's value determines the size of the
+     * {@link ItemInfoCache} cache. Defaults to {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE}.
+     */
+    public static final String PARAM_ITEMINFO_CACHE_SIZE = "org.apache.jackrabbit.spi2dav.ItemInfoCacheSize";
 
     public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
         if (parameters == null) {
@@ -113,7 +121,18 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
         } else {
             vFactory = QValueFactoryImpl.getInstance();
         }
-        return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory);
+
+        int itemInfoCacheSize = ItemInfoCacheImpl.DEFAULT_CACHE_SIZE;
+        param = parameters.get(PARAM_ITEMINFO_CACHE_SIZE);
+        if (param != null) {
+            try {
+                itemInfoCacheSize = Integer.parseInt(param.toString());
+            }
+            catch (NumberFormatException e) {
+                // ignore, use default
+            }
+        }
+        return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize);
     }
 
 }

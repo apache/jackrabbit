@@ -37,6 +37,7 @@ import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.jackrabbit.jcr2spi.AbstractJCR2SPITest;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyId;
@@ -44,6 +45,7 @@ import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.PropertyInfoBuilder;
 
@@ -73,6 +75,12 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
     private static int OP_COUNT = 500;
 
     /**
+     * Size of the item info cache.
+     * @see ItemInfoCache
+     */
+    private static int ITEM_INFO_CACHE_SIZE = 50000;
+
+    /**
      * Ratios of the number of items in the whole content tree compared to the number of items
      * in a batch of a {@link RepositoryService#getItemInfos(SessionInfo, NodeId)} call.
      * The array contains one ratio per run
@@ -90,6 +98,15 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
     private final List<String> propertyPaths = new ArrayList<String>();
 
     private final Random rnd = new Random(12345);
+
+    /**
+     * This implementation ovverides the default cache size with the value of
+     * {@value #ITEM_INFO_CACHE_SIZE}
+     */
+    @Override
+    public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) throws RepositoryException {
+        return new ItemInfoCacheImpl(ITEM_INFO_CACHE_SIZE);
+    }
 
     /**
      * This implementation adds a tree of nodes and properties up to certain {@link #TREE_DEPTH}.

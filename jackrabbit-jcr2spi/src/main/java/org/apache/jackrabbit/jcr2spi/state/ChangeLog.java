@@ -137,7 +137,7 @@ public class ChangeLog {
                     break;
                 case Status.INVALIDATED:
                 case Status.REMOVED:
-                    // ignore. operations already have been completed
+                    he.invalidate(false);
                     break;
             }
         }

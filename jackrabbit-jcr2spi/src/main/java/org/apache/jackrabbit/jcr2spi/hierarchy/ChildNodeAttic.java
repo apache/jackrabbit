@@ -98,7 +98,7 @@ class ChildNodeAttic {
         if (uniqueId == null) {
             throw new IllegalArgumentException();
         }
-        for (NodeEntryImpl ne : attic) {
+        for (NodeEntry ne : attic) {
             if (uniqueId.equals(ne.getUniqueID())) {
                 return ne;
             }
@@ -111,7 +111,7 @@ class ChildNodeAttic {
         attic.add(movedEntry);
     }
 
-    boolean remove(NodeEntryImpl movedEntry) {
+    boolean remove(NodeEntry movedEntry) {
         if (attic.contains(movedEntry)) {
             return attic.remove(movedEntry);
         }

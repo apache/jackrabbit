@@ -16,112 +16,115 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.PropertyInfo;
-import org.apache.jackrabbit.spi.Batch;
-import org.apache.jackrabbit.spi.LockInfo;
-import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.commons.EventFilterImpl;
-import org.apache.jackrabbit.spi.commons.EventBundleImpl;
-import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.JcrConstants;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.AccessControlException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ValueFormatException;
 import javax.jcr.AccessDeniedException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ItemExistsException;
+import javax.jcr.Credentials;
+import javax.jcr.GuestCredentials;
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.LoginException;
 import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
-import javax.jcr.Repository;
-import javax.jcr.Session;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.NodeIterator;
 import javax.jcr.NamespaceRegistry;
-import javax.jcr.Workspace;
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Value;
-import javax.jcr.ItemVisitor;
-import javax.jcr.ValueFactory;
-import javax.jcr.GuestCredentials;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
-import javax.jcr.util.TraversingItemVisitor;
-import javax.jcr.observation.ObservationManager;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventJournal;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.Query;
-import javax.jcr.lock.LockException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
+import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.observation.EventJournal;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.util.TraversingItemVisitor;
+import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.Version;
 import javax.jcr.version.VersionManager;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.nodetype.NodeTypeDefinition;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Collection;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
-import java.security.AccessControlException;
+
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.ItemInfoCache;
+import org.apache.jackrabbit.spi.LockInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.PropertyInfo;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.commons.EventBundleImpl;
+import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
+import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 
 /**
  * <code>RepositoryServiceImpl</code> implements a repository service on top
@@ -156,6 +159,12 @@ public class RepositoryServiceImpl implements RepositoryService {
      */
     private final boolean supportsObservation;
 
+    private final int itemInfoCacheSize;
+
+    public RepositoryServiceImpl(Repository repository, BatchReadConfig batchReadConfig) {
+        this(repository, batchReadConfig, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE);
+    }
+
     /**
      * Creates a new repository service based on the given
      * <code>repository</code>.
@@ -164,10 +173,11 @@ public class RepositoryServiceImpl implements RepositoryService {
      * @param batchReadConfig
      * {@link #getNodeInfo(SessionInfo, NodeId)}.
      */
-    public RepositoryServiceImpl(Repository repository, BatchReadConfig batchReadConfig) {
+    public RepositoryServiceImpl(Repository repository, BatchReadConfig batchReadConfig, int itemInfoCacheSize) {
         this.repository = repository;
         this.batchReadConfig = batchReadConfig;
         this.supportsObservation = "true".equals(repository.getDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED));
+        this.itemInfoCacheSize = itemInfoCacheSize;
 
         try {
             Session s = repository.login(new GuestCredentials());
@@ -176,7 +186,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 qValueFactory = ((ValueFactoryQImpl) vf).getQValueFactory();
             }
         } catch (RepositoryException e) {
-            // ignore            
+            // ignore
         }
     }
 
@@ -206,6 +216,10 @@ public class RepositoryServiceImpl implements RepositoryService {
      */
     public QValueFactory getQValueFactory() {
         return qValueFactory;
+    }
+
+    public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) throws RepositoryException {
+        return new ItemInfoCacheImpl(itemInfoCacheSize);
     }
 
     /**
@@ -650,7 +664,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 Lock lock;
                 // TODO: remove check once jsr283 is released
                 if (sInfo.getSession() instanceof javax.jcr.Session) {
-                    javax.jcr.lock.LockManager lMgr = (((javax.jcr.Workspace) sInfo.getSession().getWorkspace()).getLockManager());
+                    javax.jcr.lock.LockManager lMgr = ((sInfo.getSession().getWorkspace()).getLockManager());
                     lock = lMgr.lock(n.getPath(), deep, sessionScoped, timeoutHint, ownerHint);
                 } else {
                     lock = n.lock(deep, sessionScoped);
@@ -1259,7 +1273,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             try {
                 String ntName = sInfo.getNamePathResolver().getJCRName(nodetypeName);
                 NodeType nt = ntMgr.getNodeType(ntName);
-                defs.add(new QNodeTypeDefinitionImpl(nt, 
+                defs.add(new QNodeTypeDefinitionImpl(nt,
                         sInfo.getNamePathResolver(), getQValueFactory()));
 
                 // in addition pack all supertypes into the return value
@@ -1769,7 +1783,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * Utility method that changes the namespace mappings of the
      * given sessions to include the given prefix to URI mappings.
-     * 
+     *
      * @param session current session
      * @param namespaces prefix to URI mappings
      * @return the previous namespace mappings that were modified

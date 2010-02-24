@@ -141,7 +141,4 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
         }
     }
 
-    public void calculateStatus() {
-        parent.calculateStatus();
-    }
 }

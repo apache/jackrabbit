@@ -110,6 +110,14 @@ public interface RepositoryService {
      */
     public QValueFactory getQValueFactory() throws RepositoryException;
 
+    /**
+     * Returns a {@link ItemInfoCache} for the given <code>SessionInfo</code>.
+     * @param sessionInfo
+     * @return
+     * @throws RepositoryException
+     */
+    public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) throws RepositoryException;
+
     //--------------------------------------------------------------------------
     /**
      * Returns all property descriptors that can be exposed with the
@@ -1256,4 +1264,5 @@ public interface RepositoryService {
      * @since JCR 2.0
      */
     public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException;
+
 }

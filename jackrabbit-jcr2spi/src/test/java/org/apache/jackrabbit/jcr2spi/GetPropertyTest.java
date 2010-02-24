@@ -265,7 +265,7 @@ public class GetPropertyTest extends AbstractJCRTest {
             Property pAgain = (Property) rw.getItem(prop1Path);
 
             // TODO: for generic jsr 170 test: change assert to p.isSame(pAgain)
-            assertSame(p, pAgain);
+            assertTrue(p.isSame(pAgain));
             assertEquals("string1", p.getString());
         } finally {
             rw.logout();

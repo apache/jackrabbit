@@ -93,9 +93,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
         int i = 0;
         while (it.hasNext()) {
             Node child = it.nextNode();
-            // TODO: check for sameNess must be replaced by 'isSame' for generic JCR impl
-            // assertTrue(child.isSame(children[i]));
-            assertSame(child, children[i]);
+            assertTrue(child.isSame(children[i]));
             i++;
         }
     }

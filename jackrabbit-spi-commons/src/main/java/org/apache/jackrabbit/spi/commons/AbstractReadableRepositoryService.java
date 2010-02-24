@@ -35,6 +35,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.QValue;
@@ -95,6 +96,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
 
     //---------------------< may be overwritten by subclasses>------------------
 
+
     /**
      * Checks whether the <code>workspaceName</code> is valid.
      * @param workspaceName  name of the workspace to check
@@ -113,6 +115,12 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
             throws RepositoryException {
 
         return super.createSessionInfo(credentials, workspaceName == null? defaulWsp : workspaceName);
+    }
+
+    // -----------------------------------------------------< cache >---
+
+    public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) {
+        return new ItemInfoCacheImpl();
     }
 
     //-----------------------------< reading >----------------------------------

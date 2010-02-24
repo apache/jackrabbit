@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 /**
  * <code>AbstractRepositoryConfig</code>...
@@ -29,6 +29,7 @@ public abstract class AbstractRepositoryConfig implements RepositoryConfig {
     private static Logger log = LoggerFactory.getLogger(AbstractRepositoryConfig.class);
 
     private static final int DEFAULT_ITEM_CACHE_SIZE = 5000;
+    private static final int DEFAULT_INFO_CACHE_SIZE = 5000;
     private static final int DEFAULT_POLL_TIMEOUT = 3000; // 3 seconds
 
     public CacheBehaviour getCacheBehaviour() {
@@ -41,6 +42,10 @@ public abstract class AbstractRepositoryConfig implements RepositoryConfig {
 
     public int getPollTimeout() {
         return DEFAULT_POLL_TIMEOUT;
+    }
+
+    public int getInfoCacheSize() {
+        return DEFAULT_INFO_CACHE_SIZE;
     }
 
 }

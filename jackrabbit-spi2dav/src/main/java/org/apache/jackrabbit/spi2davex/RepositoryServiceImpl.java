@@ -16,6 +16,19 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.Credentials;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
@@ -38,6 +51,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
@@ -54,18 +68,6 @@ import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Credentials;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <code>RepositoryServiceImpl</code>...
@@ -112,11 +114,14 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     private final Map<SessionInfo, QValueFactoryImpl> qvFactories = new HashMap<SessionInfo, QValueFactoryImpl>();
 
     public RepositoryServiceImpl(String jcrServerURI, BatchReadConfig batchReadConfig) throws RepositoryException {
-        this(jcrServerURI, null, batchReadConfig);
+        this(jcrServerURI, null, batchReadConfig, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE);
     }
 
-    public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName, BatchReadConfig batchReadConfig) throws RepositoryException {
-        super(jcrServerURI, IdFactoryImpl.getInstance(), NameFactoryImpl.getInstance(), PathFactoryImpl.getInstance(), new QValueFactoryImpl());
+    public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
+            BatchReadConfig batchReadConfig, int itemInfoCacheSize) throws RepositoryException {
+
+        super(jcrServerURI, IdFactoryImpl.getInstance(), NameFactoryImpl.getInstance(), PathFactoryImpl
+                .getInstance(), new QValueFactoryImpl(), itemInfoCacheSize);
 
         this.jcrServerURI = jcrServerURI.endsWith("/") ? jcrServerURI : jcrServerURI + "/";
         this.defaultWorkspaceName = defaultWorkspaceName;

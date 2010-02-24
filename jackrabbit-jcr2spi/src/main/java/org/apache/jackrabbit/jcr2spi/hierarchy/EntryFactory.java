@@ -166,20 +166,20 @@ public class EntryFactory {
          * <code>entry</code>. Implementors may choose to delay the actual call to
          * {@link org.apache.jackrabbit.jcr2spi.state.ItemState#invalidate()} for this
          * <code>entry</code> and for any of its child entries. They need to ensure however that
-         * {@link #applyPending(NodeEntry)} properly invalidates the respective state when called.
+         * {@link #applyPending(HierarchyEntry)} properly invalidates the respective state when called.
          *
-         * @param entry The <code>NodeEntry</code> to invalidate.
+         * @param entry The <code>HierarchyEntry</code> to invalidate.
          * @param recursive Invalidate state of child entries if <code>true</code>.
          */
-        public void invalidate(NodeEntry entry, boolean recursive);
+        public void invalidate(HierarchyEntry entry, boolean recursive);
 
         /**
          * Apply any pending {@link org.apache.jackrabbit.jcr2spi.state.ItemState#invalidate()
-         * invalidation} of the underyling {@link org.apache.jackrabbit.jcr2spi.state.ItemState} of
+         * invalidation} of the underlying {@link org.apache.jackrabbit.jcr2spi.state.ItemState} of
          * this <code>entry</code>.
          *
          * @param entry The affected <code>NodeEntry</code>.
          */
-        public void applyPending(NodeEntry entry);
+        public void applyPending(HierarchyEntry entry);
     }
 }

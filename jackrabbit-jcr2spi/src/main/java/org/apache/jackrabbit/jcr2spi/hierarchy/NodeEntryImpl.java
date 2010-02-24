@@ -116,12 +116,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     private RevertInfo revertInfo;
 
     /**
-     * Information regarding the invalidation status of the underlying {@link ItemState}
-     * of this entry. The semantics depend on the {@link EntryFactory.InvalidationStrategy}.
-     */
-    private long invalidationStatus;
-
-    /**
      * Creates a new <code>NodeEntryImpl</code>
      *
      * @param parent    the <code>NodeEntry</code> that owns this child item
@@ -171,15 +165,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         return true;
     }
 
-    @Override
-    public void invalidate(boolean recursive) {
-        getInvalidationStrategy().invalidate(this, recursive);
-    }
-
-    public void calculateStatus() {
-        getInvalidationStrategy().applyPending(this);
-    }
-
     /**
      * If 'recursive' is true, the complete hierarchy below this entry is
      * traversed and reloaded. Otherwise only this entry and the direct
@@ -205,7 +190,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * Calls {@link HierarchyEntryImpl#revert()} and moves all properties from the
-     * attic back into th properties map. If this HierarchyEntry has been
+     * attic back into the properties map. If this HierarchyEntry has been
      * transiently moved, it is in addition moved back to its old parent.
      * Similarly reordering of child node entries is reverted.
      *
@@ -885,7 +870,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
            }
        }
 
-       NodeEntryImpl entry = (NodeEntryImpl) parent.childNodeEntries.remove(this);
+       NodeEntry entry = parent.childNodeEntries.remove(this);
        if (entry != this) {
            // should never occur
            String msg = "Internal error. Attempt to move NodeEntry (" + getName() + ") which is not connected to its parent.";
@@ -1083,7 +1068,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     void internalRemoveChildEntry(HierarchyEntry childEntry) {
         if (childEntry.denotesNode()) {
             if (childNodeEntries.remove((NodeEntry) childEntry) == null) {
-                childNodeAttic.remove((NodeEntryImpl) childEntry);
+                childNodeAttic.remove((NodeEntry) childEntry);
             }
         } else {
             Name propName = childEntry.getName();
@@ -1101,16 +1086,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
     }
 
-    private EntryFactory.InvalidationStrategy getInvalidationStrategy() {
-        return factory.getInvalidationStrategy();
-    }
-
-    /**
-     * Invalidates the underlying {@link ItemState}. If <code>recursive</code> is
-     * true also invalidates the underlying item states of all child entries.
-     * @param recursive
-     */
-    private void invalidateInternal(boolean recursive) {
+    @Override
+    protected void invalidateInternal(boolean recursive) {
         if (recursive) {
             // invalidate all child entries including properties present in the
             // attic (removed props shadowed by a new property with the same name).
@@ -1119,7 +1096,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 ce.invalidate(true);
             }
         }
-        super.invalidate(true);
+        super.invalidateInternal(true);
     }
 
     /**
@@ -1651,15 +1628,15 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         private final NodeEntryImpl oldParent;
         private final Name oldName;
         private final int oldIndex;
-        private final NodeEntryImpl oldSuccessor;
-        private final NodeEntryImpl oldPredecessor;
+        private final NodeEntry oldSuccessor;
+        private final NodeEntry oldPredecessor;
 
         private RevertInfo() throws InvalidItemStateException, RepositoryException {
             this.oldParent = parent;
             this.oldName = name;
             this.oldIndex = getIndex();
-            this.oldSuccessor = (NodeEntryImpl) ((ChildNodeEntriesImpl) parent.childNodeEntries).getNext(NodeEntryImpl.this);
-            this.oldPredecessor = (NodeEntryImpl) ((ChildNodeEntriesImpl) parent.childNodeEntries).getPrevious(NodeEntryImpl.this);
+            this.oldSuccessor = ((ChildNodeEntriesImpl) parent.childNodeEntries).getNext(NodeEntryImpl.this);
+            this.oldPredecessor = ((ChildNodeEntriesImpl) parent.childNodeEntries).getPrevious(NodeEntryImpl.this);
         }
 
         private boolean isMoved() {
@@ -1668,7 +1645,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
         private void dispose(boolean persisted) {
             if (!persisted) {
-                NodeEntryImpl ne = NodeEntryImpl.this;
+                NodeEntry ne = NodeEntryImpl.this;
                 ChildNodeEntriesImpl parentCNEs = (ChildNodeEntriesImpl) parent.childNodeEntries;
                 parentCNEs.reorderAfter(ne, revertInfo.oldPredecessor);
                 try {
@@ -1684,133 +1661,4 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
     }
 
-    // ----------------------------------------------< InvalidationStrategy >---
-    /**
-     * An implementation of <code>InvalidationStrategy</code> which lazily invalidates
-     * the underlying {@link ItemState}s.
-     */
-    static class LazyInvalidation implements EntryFactory.InvalidationStrategy {
-
-        /**
-         * Marker for entries with a pending recursive invalidation.
-         */
-        private static long INVALIDATION_PENDING = -1;
-
-        /**
-         * Time stamp of the last time a recursive invalidation occurred.
-         */
-        private long lastInvalidation;
-
-        /**
-         * A recursive invalidation is being processed if <code>true</code>.
-         * This flag is for preventing re-entrance.
-         */
-        private boolean invalidating;
-
-        /**
-         * Actual time stamp
-         */
-        private long timeStamp;
-
-        /**
-         * @return  time stamp used to mark entries
-         */
-        private long getTimeStamp() {
-            return timeStamp++;
-        }
-
-        /**
-         * Records a pending recursive {@link ItemState#invalidate() invalidation} for
-         * <code>entry</code> if <code>recursive</code> is <code>true</code>. Otherwise
-         * invalidates the entry right away.
-         * {@inheritDoc}
-         */
-        public void invalidate(NodeEntry entry, boolean recursive) {
-            if (recursive) {
-                ((NodeEntryImpl)entry).invalidationStatus = INVALIDATION_PENDING;
-                if (!invalidating) {
-                    lastInvalidation = getTimeStamp();
-                }
-            } else {
-                ((NodeEntryImpl)entry).invalidateInternal(false);
-            }
-        }
-
-        /**
-         * Checks whether <code>entry</code> itself has a invalidation pending.
-         * If so, the <code>entry</code> is invalidated. Otherwise check
-         * whether an invalidation occurred after the entry has last been
-         * invalidated. If so, search the path to the root for an originator of
-         * the pending invalidation.
-         * If such an originator is found, invalidate each entry on the path.
-         * Otherwise this method does nothing.
-         * {@inheritDoc}
-         */
-        public void applyPending(NodeEntry entry) {
-            if (!invalidating) {
-                invalidating = true;
-                try {
-                    NodeEntryImpl ne = (NodeEntryImpl) entry;
-                    if (ne.invalidationStatus == INVALIDATION_PENDING) {
-                        ne.invalidateInternal(true);
-                        ne.invalidationStatus = getTimeStamp();
-                    } else if (ne.invalidationStatus <= lastInvalidation) {
-                        resolvePendingInvalidation(ne);
-                    }
-                } finally {
-                    invalidating = false;
-                }
-            }
-        }
-
-        /**
-         * Search the path to the root for an originator of a pending invalidation of
-         * this <code>entry</code>. If such an originator is found, invalidate each
-         * entry on the path. Otherwise do nothing.
-         *
-         * @param entry
-         */
-        private void resolvePendingInvalidation(NodeEntryImpl entry) {
-            if (entry != null) {
-
-                // First recursively travel up to the first parent node
-                // which has invalidation pending or to the root node if
-                // no such node exists.
-                if (entry.invalidationStatus != INVALIDATION_PENDING) {
-                    resolvePendingInvalidation(entry.parent);
-                }
-
-                // Then travel the path backwards invalidating as required
-                if (entry.invalidationStatus == INVALIDATION_PENDING) {
-                    entry.invalidateInternal(true);
-                }
-                entry.invalidationStatus = getTimeStamp();
-            }
-        }
-    }
-
-    /**
-     * An implementation of <code>InvalidationStrategy</code> which eagerly invalidates
-     * the underlying {@link ItemState}s.
-     */
-    static class EagerInvalidation implements EntryFactory.InvalidationStrategy {
-
-        /**
-         * Calls {@link ItemState#invalidate()} for the underlying item state of this
-         * <code>entry</code> and - if <code>recursive</code> is <code>true</code> -
-         * recursively for all item states of all child entries
-         * {@inheritDoc}
-         */
-        public void invalidate(NodeEntry entry, boolean recursive) {
-            ((NodeEntryImpl) entry).invalidateInternal(recursive);
-        }
-
-        /**
-         * Does nothing since invalidation has occurred already.
-         * {@inheritDoc}
-         */
-        public void applyPending(NodeEntry entry) {
-            // Empty
-        }
-    }
 }

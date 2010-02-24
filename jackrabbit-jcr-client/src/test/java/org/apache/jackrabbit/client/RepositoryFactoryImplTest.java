@@ -60,6 +60,7 @@ import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -233,6 +234,7 @@ public class RepositoryFactoryImplTest extends TestCase {
      * Dummy RepositoryService
      */
     private static final class RepositoryServiceImpl implements RepositoryService {
+
         public static final RepositoryService INSTANCE = new RepositoryServiceImpl();
 
         private RepositoryServiceImpl() {
@@ -252,6 +254,10 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public QValueFactory getQValueFactory() throws RepositoryException {
+            return null;
+        }
+
+        public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) throws RepositoryException {
             return null;
         }
 
