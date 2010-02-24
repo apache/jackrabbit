@@ -304,12 +304,12 @@ public final class ISO8601 {
             n = -n;
         }
 
-        int exp = 1;
-        while (exp < precision) {
+        for (int exp = precision - 1; exp > 0; exp--) {
             if (n < Math.pow(10, exp)) {
                 buf.append('0');
+            } else {
+                break;
             }
-            exp++;
         }
         buf.append(n);
     }
