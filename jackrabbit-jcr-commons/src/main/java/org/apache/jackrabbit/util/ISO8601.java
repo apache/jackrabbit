@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.util;
 
-import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
@@ -47,13 +46,6 @@ import java.util.TimeZone;
  * </pre>
  */
 public final class ISO8601 {
-    /**
-     * misc. numeric formats used in formatting
-     */
-    private static final DecimalFormat XX_FORMAT = new DecimalFormat("00");
-    private static final DecimalFormat XXX_FORMAT = new DecimalFormat("000");
-    private static final DecimalFormat XXXX_FORMAT = new DecimalFormat("0000");
-
     /**
      * Parses an ISO8601-compliant date/time string.
      *
@@ -232,25 +224,25 @@ public final class ISO8601 {
          */
         StringBuffer buf = new StringBuffer();
         // year ([-]YYYY)
-        buf.append(XXXX_FORMAT.format(getYear(cal)));
+        appendZeroPaddedInt(buf, getYear(cal), 4);
         buf.append('-');
         // month (MM)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.MONTH) + 1));
+        appendZeroPaddedInt(buf, cal.get(Calendar.MONTH) + 1, 2);
         buf.append('-');
         // day (DD)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.DAY_OF_MONTH)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.DAY_OF_MONTH), 2);
         buf.append('T');
         // hour (hh)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.HOUR_OF_DAY)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.HOUR_OF_DAY), 2);
         buf.append(':');
         // minute (mm)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.MINUTE)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.MINUTE), 2);
         buf.append(':');
         // second (ss)
-        buf.append(XX_FORMAT.format(cal.get(Calendar.SECOND)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.SECOND), 2);
         buf.append('.');
         // millisecond (SSS)
-        buf.append(XXX_FORMAT.format(cal.get(Calendar.MILLISECOND)));
+        appendZeroPaddedInt(buf, cal.get(Calendar.MILLISECOND), 3);
         // time zone designator (Z or +00:00 or -00:00)
         TimeZone tz = cal.getTimeZone();
         // determine offset of timezone from UTC (incl. daylight saving)
@@ -259,9 +251,9 @@ public final class ISO8601 {
             int hours = Math.abs((offset / (60 * 1000)) / 60);
             int minutes = Math.abs((offset / (60 * 1000)) % 60);
             buf.append(offset < 0 ? '-' : '+');
-            buf.append(XX_FORMAT.format(hours));
+            appendZeroPaddedInt(buf, hours, 2);
             buf.append(':');
-            buf.append(XX_FORMAT.format(minutes));
+            appendZeroPaddedInt(buf, minutes, 2);
         } else {
             buf.append('Z');
         }
@@ -269,7 +261,7 @@ public final class ISO8601 {
     }
 
     /**
-     * Returns the astonomical year of the given calendar.
+     * Returns the astronomical year of the given calendar.
      *
      * @param cal a calendar instance.
      * @return the astronomical year.
@@ -294,5 +286,31 @@ public final class ISO8601 {
                     "year digits, cannot be formatted as ISO8601: " + year);
         }
         return year;
+    }
+
+    /**
+     * Appends a zero-padded number to the given string buffer.
+     * <p/>
+     * This is an internal helper method which doesn't perform any
+     * validation on the given arguments.
+     *
+     * @param buf String buffer to append to
+     * @param n number to append
+     * @param precision number of digits to append
+     */
+    private static void appendZeroPaddedInt(StringBuffer buf, int n, int precision) {
+        if (n < 0) {
+            buf.append('-');
+            n = -n;
+        }
+
+        int exp = 1;
+        while (exp < precision) {
+            if (n < Math.pow(10, exp)) {
+                buf.append('0');
+            }
+            exp++;
+        }
+        buf.append(n);
     }
 }
