@@ -63,7 +63,7 @@ public class EventBundleImpl implements EventBundle, Serializable {
         return isLocal;
     }
 
-    //-----------------------------< Iterable >---------------------------------
+    //-----------------------------------------------------------< Iterable >---
 
     /**
      * {@inheritDoc}

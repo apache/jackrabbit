@@ -226,7 +226,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         return false;
     }
 
-    //-------------------------------------------< java.lang.Object overrides >
+    //-------------------------------------------------------------< Object >---
     /**
      * Compares two property definitions for equality. Returns <code>true</code>
      * if the given object is a property defintion and has the same attributes
@@ -237,6 +237,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
      *         <code>false</code> otherwise
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -260,6 +261,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
      *
      * @return the hashcode
      */
+    @Override
     public int hashCode() {
         if (hashCode == 0) {
             // build hashCode (format: <declaringNodeType>/<name>/<requiredType>/<multiple>)
@@ -291,7 +293,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         return hashCode;
     }
 
-    //-------------------------------< internal >-------------------------------
+    //-----------------------------------------------------------< internal >---
 
     /**
      * Convers JCR {@link Value}s to {@link QValue}s.

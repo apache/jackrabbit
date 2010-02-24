@@ -147,6 +147,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
      *         <code>false</code> otherwise
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -170,5 +171,6 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
      *
      * @return the hashcode
      */
+    @Override
     public abstract int hashCode();
 }

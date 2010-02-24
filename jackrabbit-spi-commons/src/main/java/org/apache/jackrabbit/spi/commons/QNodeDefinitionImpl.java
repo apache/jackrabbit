@@ -114,8 +114,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
                 nodeDef.allowsSameNameSiblings());
     }
 
-    //-------------------------------------------------------< QNodeDefinition >
-
+    //----------------------------------------------------< QNodeDefinition >---
     /**
      * {@inheritDoc}
      */
@@ -146,7 +145,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
         return true;
     }
 
-    //-------------------------------------------< java.lang.Object overrides >
+    //-------------------------------------------------------------< Object >---
     /**
      * Compares two node definitions for equality. Returns <code>true</code>
      * if the given object is a node defintion and has the same attributes
@@ -157,6 +156,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      *         <code>false</code> otherwise
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -179,6 +179,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      *
      * @return the hash code
      */
+    @Override
     public int hashCode() {
         if (hashCode == 0) {
             // build hashCode (format: <declaringNodeType>/<name>/<requiredPrimaryTypes>)
@@ -205,8 +206,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
         return hashCode;
     }
 
-    //-----------------------------< internal >---------------------------------
-
+    //-----------------------------------------------------------< internal >---
     /**
      * Returns the names of the passed node types using the namespace resolver
      * to parse the names.

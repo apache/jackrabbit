@@ -106,6 +106,7 @@ public class EventImpl implements Event, Serializable {
         this.timestamp = timestamp;
     }
 
+    //--------------------------------------------------------------< Event >---
     /**
      * {@inheritDoc}
      */
@@ -181,7 +182,9 @@ public class EventImpl implements Event, Serializable {
             return timestamp;
         }
     }
-    
+
+    //-------------------------------------------------------------< Object >---
+    @Override
     public String toString() {
         return new StringBuffer(getClass().getName())
             .append("[")
