@@ -44,9 +44,9 @@ class PathConstraint extends ValueConstraint {
     private final Path path;
     private final boolean deep;
 
-    static PathConstraint create(String pathString) throws InvalidConstraintException {
+    static PathConstraint create(String pathString) {
         // constraint format: String representation of an absolute or relative
-        // Path object with optionally having a trailing wildcard
+        // Path object with optionally having a trailing wild card
         if (WILDCARD.equals(pathString)) {
             return new PathConstraint(pathString, PATH_FACTORY.getRootPath(), true);
         } else {
@@ -65,14 +65,14 @@ class PathConstraint extends ValueConstraint {
             throws InvalidConstraintException {
         try {
             // constraint format: absolute or relative path with optional
-            // trailing wildcard
+            // trailing wild card
             boolean deep = jcrPath.endsWith(JCR_WILDCARD);
             Path path;
             if (JCR_WILDCARD.equals(jcrPath)) {
                 path = PATH_FACTORY.getRootPath();
             } else {
                 if (deep) {
-                    // trim trailing wildcard before building path
+                    // trim trailing wild card before building path
                     jcrPath = jcrPath.substring(0, jcrPath.length() - JCR_WILDCARD.length());
                 }
                 path = resolver.getQPath(jcrPath);
@@ -93,7 +93,7 @@ class PathConstraint extends ValueConstraint {
         }
     }
 
-    private PathConstraint(String pathString, Path path, boolean deep) throws InvalidConstraintException {
+    private PathConstraint(String pathString, Path path, boolean deep) {
         super(pathString);
         this.path = path;
         this.deep = deep;
@@ -106,6 +106,7 @@ class PathConstraint extends ValueConstraint {
      * @see ValueConstraint#getDefinition(NamePathResolver)
      * @param resolver name-path resolver
      */
+    @Override
     public String getDefinition(NamePathResolver resolver) {
         try {
             String p = resolver.getJCRPath(path);

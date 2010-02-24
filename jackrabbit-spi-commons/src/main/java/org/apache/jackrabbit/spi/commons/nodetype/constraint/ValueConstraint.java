@@ -87,6 +87,7 @@ public abstract class ValueConstraint implements QValueConstraint {
      * @return the internal definition String
      * @see Object#toString()
      */
+    @Override
     public String toString() {
         return getString();
     }
@@ -94,6 +95,7 @@ public abstract class ValueConstraint implements QValueConstraint {
     /**
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object other) {
         return other == this
                 || other instanceof ValueConstraint
@@ -106,6 +108,7 @@ public abstract class ValueConstraint implements QValueConstraint {
      * @return the hashCode of the definition String
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return definition.hashCode();
     }

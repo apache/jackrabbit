@@ -69,6 +69,7 @@ class NameConstraint extends ValueConstraint {
      * @see ValueConstraint#getDefinition(NamePathResolver)
      * @param resolver name-path resolver
      */
+    @Override
     public String getDefinition(NamePathResolver resolver) {
         try {
             return resolver.getJCRName(name);
