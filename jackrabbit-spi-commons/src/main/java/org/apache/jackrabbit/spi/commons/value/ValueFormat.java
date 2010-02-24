@@ -84,13 +84,13 @@ public class ValueFormat {
         if (jcrValues == null) {
             throw new IllegalArgumentException("null value");
         }
-        List qValues = new ArrayList();
-        for (int i = 0; i < jcrValues.length; i++) {
-            if (jcrValues[i] != null) {
-                qValues.add(getQValue(jcrValues[i], resolver, factory));
+        List<QValue> qValues = new ArrayList<QValue>();
+        for (Value jcrValue : jcrValues) {
+            if (jcrValue != null) {
+                qValues.add(getQValue(jcrValue, resolver, factory));
             }
         }
-        return (QValue[]) qValues.toArray(new QValue[qValues.size()]);
+        return qValues.toArray(new QValue[qValues.size()]);
     }
 
     /**
