@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+import java.io.Reader;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-
-import java.io.Reader;
 
 /**
  * This is the global jackrabbit lucene analyzer. By default, all
@@ -74,4 +75,15 @@ public class JackrabbitAnalyzer  extends Analyzer {
         return defaultAnalyzer.tokenStream(fieldName, reader);
     }
 
+    @Override
+    public TokenStream reusableTokenStream(String fieldName, Reader reader)
+            throws IOException {
+        if (indexingConfig != null) {
+            Analyzer propertyAnalyzer = indexingConfig.getPropertyAnalyzer(fieldName);
+            if (propertyAnalyzer != null) {
+                return propertyAnalyzer.reusableTokenStream(fieldName, reader);
+            }
+        }
+        return defaultAnalyzer.reusableTokenStream(fieldName, reader);
+    }
 }
