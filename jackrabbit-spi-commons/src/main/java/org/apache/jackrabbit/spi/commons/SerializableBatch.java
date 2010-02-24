@@ -36,7 +36,6 @@ import javax.jcr.version.VersionException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <code>SerializableBatch</code> implements a serializable SPI Batch, which
@@ -46,7 +45,7 @@ import java.util.Iterator;
  */
 public class SerializableBatch implements Batch, Serializable {
 
-    private List recording = new ArrayList();
+    private List<Operation> recording = new ArrayList<Operation>();
 
     private final ItemId itemId;
 
@@ -75,8 +74,8 @@ public class SerializableBatch implements Batch, Serializable {
      * @param batch the target batch.
      */
     public void replay(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-        for (Iterator it = recording.iterator(); it.hasNext(); ) {
-            ((Operation) it.next()).replay(batch);
+        for (Operation operation : recording) {
+            operation.replay(batch);
         }
     }
 

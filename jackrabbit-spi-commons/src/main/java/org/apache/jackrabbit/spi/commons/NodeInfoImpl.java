@@ -58,17 +58,17 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     /**
      * The list of {@link PropertyId}s that reference this node info.
      */
-    private final List references;
+    private final List<PropertyId> references;
 
     /**
      * The list of {@link PropertyId}s of this node info.
      */
-    private final List propertyIds;
+    private final List<PropertyId> propertyIds;
 
     /**
      * The list of {@link ChildInfo}s of this node info.
      */
-    private final List childInfos;
+    private final List<ChildInfo> childInfos;
 
     /**
      * Creates a new serializable <code>NodeInfo</code> for the given
@@ -81,27 +81,26 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         if (nodeInfo instanceof Serializable) {
             return nodeInfo;
         } else {
-            PropertyId[] refs = nodeInfo.getReferences();
-            List serRefs = new ArrayList();
-            for (int i = 0; i < refs.length; i++) {
-                NodeId parentId = refs[i].getParentId();
+            List<PropertyId> serRefs = new ArrayList<PropertyId>();
+            for (PropertyId ref : nodeInfo.getReferences()) {
+                NodeId parentId = ref.getParentId();
                 parentId = idFactory.createNodeId(
                         parentId.getUniqueID(), parentId.getPath());
-                serRefs.add(idFactory.createPropertyId(parentId, refs[i].getName()));
+                serRefs.add(idFactory.createPropertyId(parentId, ref.getName()));
             }
             NodeId nodeId = nodeInfo.getId();
             nodeId = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
-            final Iterator propIds = nodeInfo.getPropertyIds();
-            final Iterator childInfos = nodeInfo.getChildInfos();
+            final Iterator<PropertyId> propIds = nodeInfo.getPropertyIds();
+            final Iterator<ChildInfo> childInfos = nodeInfo.getChildInfos();
             return new NodeInfoImpl(nodeInfo.getPath(), nodeId,
                     nodeInfo.getIndex(), nodeInfo.getNodetype(),
                     nodeInfo.getMixins(), serRefs.iterator(),
-                    new Iterator() {
+                    new Iterator<PropertyId>() {
                         public boolean hasNext() {
                             return propIds.hasNext();
                         }
-                        public Object next() {
-                            PropertyId propId = (PropertyId) propIds.next();
+                        public PropertyId next() {
+                            PropertyId propId = propIds.next();
                             NodeId parentId = propId.getParentId();
                             idFactory.createNodeId(
                                     parentId.getUniqueID(), parentId.getPath());
@@ -113,12 +112,12 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                         }
                     },
                     ((childInfos == null) ? null :
-                    new Iterator() {
+                    new Iterator<ChildInfo>() {
                         public boolean hasNext() {
                             return childInfos.hasNext();
                         }
-                        public Object next() {
-                            ChildInfo cInfo = (ChildInfo) childInfos.next();
+                        public ChildInfo next() {
+                            ChildInfo cInfo = childInfos.next();
                             if (cInfo instanceof Serializable) {
                                 return cInfo;
                             } else {
@@ -146,13 +145,13 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param references      the references to this node.
      * @param propertyIds     the properties of this node.
      * @param childInfos      the child infos of this node or <code>null</code>.
-     * @deprecated Use {@link #NodeInfoImpl(Name, Path, NodeId, int, Name, Name[], Iterator, Iterator)}
+     * @deprecated Use {@link #NodeInfoImpl(Path, NodeId, int, Name, Name[], Iterator, Iterator, Iterator)}
      * instead. The parentId is not used any more.
      */
     public NodeInfoImpl(NodeId parentId, Name name, Path path, NodeId id,
                         int index, Name primaryTypeName, Name[] mixinNames,
-                        Iterator references, Iterator propertyIds,
-                        Iterator childInfos) {
+                        Iterator<PropertyId> references, Iterator<PropertyId> propertyIds,
+                        Iterator<ChildInfo> childInfos) {
          this(path, id, index, primaryTypeName, mixinNames, references, propertyIds, childInfos);
     }
 
@@ -168,25 +167,26 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param propertyIds     the properties of this node.
      */
     public NodeInfoImpl(Path path, NodeId id, int index, Name primaryTypeName,
-                        Name[] mixinNames, Iterator references, Iterator propertyIds,
-                        Iterator childInfos) {
+                        Name[] mixinNames, Iterator<PropertyId> references,
+                        Iterator<PropertyId> propertyIds,
+                        Iterator<ChildInfo> childInfos) {
         super(path, true);
         this.id = id;
         this.index = index;
         this.primaryTypeName = primaryTypeName;
         this.mixinNames = mixinNames;
-        this.references = new ArrayList();
+        this.references = new ArrayList<PropertyId>();
         while (references.hasNext()) {
             this.references.add(references.next());
         }
-        this.propertyIds = new ArrayList();
+        this.propertyIds = new ArrayList<PropertyId>();
         while (propertyIds.hasNext()) {
             this.propertyIds.add(propertyIds.next());
         }
         if (childInfos == null) {
             this.childInfos = null;
         } else {
-            this.childInfos = new ArrayList();
+            this.childInfos = new ArrayList<ChildInfo>();
             while (childInfos.hasNext()) {
                 this.childInfos.add(childInfos.next());
             }
@@ -229,20 +229,20 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * {@inheritDoc}
      */
     public PropertyId[] getReferences() {
-        return (PropertyId[]) references.toArray(new PropertyId[references.size()]);
+        return references.toArray(new PropertyId[references.size()]);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Iterator getPropertyIds() {
+    public Iterator<PropertyId> getPropertyIds() {
         return propertyIds.iterator();
     }
 
     /**
      * {@inheritDoc}
      */
-    public Iterator getChildInfos() {
+    public Iterator<ChildInfo> getChildInfos() {
         return (childInfos == null) ? null : childInfos.iterator();
     }
 }

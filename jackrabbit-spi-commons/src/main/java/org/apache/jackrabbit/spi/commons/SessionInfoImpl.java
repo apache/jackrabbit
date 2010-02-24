@@ -48,7 +48,7 @@ public class SessionInfoImpl implements SessionInfo, Serializable {
     /**
      * The list of lock tokens.
      */
-    private List lockTokens = new ArrayList();
+    private List<String> lockTokens = new ArrayList<String>();
 
     /**
      * Default constructor
@@ -95,7 +95,7 @@ public class SessionInfoImpl implements SessionInfo, Serializable {
      * {@inheritDoc}
      */
     public String[] getLockTokens() {
-        return (String[]) lockTokens.toArray(new String[lockTokens.size()]);
+        return lockTokens.toArray(new String[lockTokens.size()]);
     }
 
     /**
