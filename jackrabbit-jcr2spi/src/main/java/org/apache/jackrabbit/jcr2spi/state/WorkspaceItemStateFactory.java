@@ -18,11 +18,8 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.jcr.ItemExistsException;
@@ -37,6 +34,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
@@ -46,6 +44,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache.Entry;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,24 +52,24 @@ import org.slf4j.LoggerFactory;
 /**
  * <code>WorkspaceItemStateFactory</code>...
  */
-public class WorkspaceItemStateFactory extends AbstractItemStateFactory implements ItemStateFactory {
-
+public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     private static Logger log = LoggerFactory.getLogger(WorkspaceItemStateFactory.class);
 
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
     private final ItemDefinitionProvider definitionProvider;
 
+    public final ItemInfoCache cache;
+
     public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo,
-                                     ItemDefinitionProvider definitionProvider) {
+            ItemDefinitionProvider definitionProvider, ItemInfoCache cache) throws RepositoryException {
+
         this.service = service;
         this.sessionInfo = sessionInfo;
         this.definitionProvider = definitionProvider;
+        this.cache = cache;
     }
 
-    /**
-     * @see ItemStateFactory#createRootState(NodeEntry)
-     */
     public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
         IdFactory idFactory = service.getIdFactory();
         PathFactory pf = service.getPathFactory();
@@ -79,98 +78,182 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * Creates the node with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @see ItemStateFactory#createNodeState(NodeId,NodeEntry)
+     * Creates the node with information retrieved from the <code>RepositoryService</code>.
      */
-    public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
-            throws ItemNotFoundException, RepositoryException {
-        // build new node state from server information
-        try {
-            Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
-            NodeState nodeState = createItemStates(nodeId, infos, entry, false);
+    public NodeState createNodeState(NodeId nodeId, NodeEntry entry) throws ItemNotFoundException,
+            RepositoryException {
 
-            if (nodeState == null) {
-                throw new ItemNotFoundException("HierarchyEntry does not belong to any existing ItemInfo.");
+        try {
+            // Get item info from cache and use it if up to date
+            long generation = entry.getGeneration();
+            Entry<NodeInfo> cached = cache.getNodeInfo(nodeId);
+            NodeInfo info;
+            if (isUpToDate(cached, generation)) {
+                info = cached.info;
             }
-            return nodeState;
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage());
+            else {
+                // otherwise retreive item info from service and cache the whole batch
+                Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
+                info = first(infos, cache, generation);
+                if (info == null) {
+                    throw new ItemNotFoundException("NodeId: " + nodeId);
+                }
+            }
+
+            assertMatchingPath(info, entry);
+            return createNodeState(info, entry);
+        }
+        catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(e);
         }
     }
 
     /**
-     * @see ItemStateFactory#createDeepNodeState(NodeId,NodeEntry)
+     * Creates the node with information retrieved from the <code>RepositoryService</code>.
+     * Intermediate entries are created as needed.
      */
-    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws ItemNotFoundException,
+            RepositoryException {
+
         try {
-            Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
-            return createItemStates(nodeId, infos, anyParent, true);
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage());
+            // Get item info from cache
+            Iterator<? extends ItemInfo> infos = null;
+            Entry<NodeInfo> cached = cache.getNodeInfo(nodeId);
+            NodeInfo info;
+            if (cached == null) {
+                // or from service if not in cache
+                infos = service.getItemInfos(sessionInfo, nodeId);
+                info = first(infos, null, 0);
+                if (info == null) {
+                    throw new ItemNotFoundException("NodeId: " + nodeId);
+                }
+            }
+            else {
+                info = cached.info;
+            }
+
+            // Build the hierarchy entry for the item info
+            HierarchyEntry entry = createHierarchyEntries(info, anyParent);
+            if (entry == null || !entry.denotesNode()) {
+                throw new ItemNotFoundException(
+                        "HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
+            }
+            else {
+                // Now we can check wheter the item info from the cache is up to date
+                long generation = entry.getGeneration();
+                if (isOutdated(cached, generation)) {
+                    // if not, retreive the item info from the service and put the whole batch into the cache
+                    infos = service.getItemInfos(sessionInfo, nodeId);
+                    info = first(infos, cache, generation);
+                }
+                else if (infos != null) {
+                    // Otherwise put the whole batch retreived from the service earlier into the cache
+                    cache.put(info, generation);
+                    first(infos, cache, generation);
+                }
+
+                assertMatchingPath(info, entry);
+                return createNodeState(info, (NodeEntry) entry);
+            }
+        }
+        catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(e);
         }
     }
 
     /**
-     * Creates the PropertyState with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @see ItemStateFactory#createPropertyState(PropertyId,PropertyEntry)
+     * Creates the PropertyState with information retrieved from the <code>RepositoryService</code>.
      */
-    public PropertyState createPropertyState(PropertyId propertyId,
-                                             PropertyEntry entry)
+    public PropertyState createPropertyState(PropertyId propertyId, PropertyEntry entry)
             throws ItemNotFoundException, RepositoryException {
+
         try {
-            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
+            // Get item info from cache and use it if up to date
+            Entry<PropertyInfo> cached = cache.getPropertyInfo(propertyId);
+            PropertyInfo info;
+            if (isUpToDate(cached, entry.getGeneration())) {
+                info = cached.info;
+            }
+            else {
+                // otherwise retreive item info from service and cache the whole batch
+                info = service.getPropertyInfo(sessionInfo, propertyId);
+                cache.put(info, entry.getGeneration());
+            }
+
             assertMatchingPath(info, entry);
             return createPropertyState(info, entry);
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage());
+        }
+        catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(e);
         }
     }
 
     /**
-     * @see ItemStateFactory#createDeepPropertyState(PropertyId,NodeEntry)
+     * Creates the PropertyState with information retrieved from the <code>RepositoryService</code>.
+     * Intermediate entries are created as needed.
      */
-    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
+    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent)
+            throws RepositoryException {
+
         try {
-            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            PropertyState propState = createDeepPropertyState(info, anyParent, null);
-            assertValidState(propState, info);
-            return propState;
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage());
+            // Get item info from cache
+            Entry<PropertyInfo> cached = cache.getPropertyInfo(propertyId);
+            PropertyInfo info;
+            if (cached == null) {
+                // or from service if not in cache
+                info = service.getPropertyInfo(sessionInfo, propertyId);
+            }
+            else {
+                info = cached.info;
+            }
+
+            // Build the hierarchy entry for the item info
+            HierarchyEntry entry = createHierarchyEntries(info, anyParent);
+
+            if (entry == null || entry.denotesNode()) {
+                throw new ItemNotFoundException(
+                        "HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
+            }
+            else {
+                // Now we can check wheter the item info from the cache is up to date
+                long generation = entry.getGeneration();
+                if (isOutdated(cached, generation)) {
+                    // if not, retreive the item info from the service and put the whole batch into the cache
+                    info = service.getPropertyInfo(sessionInfo, propertyId);
+                    cache.put(info, generation);
+                }
+
+                assertMatchingPath(info, entry);
+                return createPropertyState(info, (PropertyEntry) entry);
+            }
+
+        }
+        catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(e);
         }
     }
 
-    /**
-     * @see ItemStateFactory#getChildNodeInfos(NodeId)
-     * @param nodeId
-     */
-    public Iterator<ChildInfo> getChildNodeInfos(NodeId nodeId)
-            throws ItemNotFoundException, RepositoryException {
+    public Iterator<ChildInfo> getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException,
+            RepositoryException {
+
         return service.getChildInfos(sessionInfo, nodeId);
     }
 
-    /**
-     * @see ItemStateFactory#getNodeReferences(NodeState,org.apache.jackrabbit.spi.Name,boolean)
-     */
     public Iterator<PropertyId> getNodeReferences(NodeState nodeState, Name propertyName, boolean weak) {
         NodeEntry entry = nodeState.getNodeEntry();
-        // shortcut
-        if (entry.getUniqueID() == null
-                || !entry.hasPropertyEntry(NameConstants.JCR_UUID)) {
+
+        // Shortcut
+        if (entry.getUniqueID() == null || !entry.hasPropertyEntry(NameConstants.JCR_UUID)) {
             // for sure not referenceable
             Set<PropertyId> t = Collections.emptySet();
             return t.iterator();
         }
 
-        // nodestate has a unique ID and is potentially mix:referenceable
-        // => try to retrieve references
+        // Has a unique ID and is potentially mix:referenceable. Try to retrieve references
         try {
             return service.getReferences(sessionInfo, entry.getWorkspaceId(), propertyName, weak);
-        } catch (RepositoryException e) {
+        }
+        catch (RepositoryException e) {
             log.debug("Unable to determine references to {}", nodeState);
             Set<PropertyId> t = Collections.emptySet();
             return t.iterator();
@@ -178,80 +261,48 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     //------------------------------------------------------------< private >---
+
     /**
-     *
-     * @param nodeId
-     * @param itemInfos
-     * @param entry
-     * @param isDeep
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
+     * Returns the first item in the iterator if it exists and denotes a node.
+     * Otherwise returns <code>null</code>. If <code>cache</code> is not
+     * <code>null</code>, caches all items by the given <code>generation</code>.
+     * @param generation
      */
-    private synchronized NodeState createItemStates(NodeId nodeId, Iterator<? extends ItemInfo> itemInfos,
-                                                    NodeEntry entry, boolean isDeep)
-            throws ItemNotFoundException, RepositoryException {
-        NodeState nodeState;
-        ItemInfos infos = new ItemInfos(itemInfos);
-
-        // first entry in the iterator is the originally requested Node.
-        NodeInfo first = first(infos);
-        if (first == null) {
-            throw new ItemNotFoundException("Node with id " + nodeId + " could not be found.");
-        }
-        else {
-            if (isDeep) {
-                // for a deep state, the hierarchy entry does not correspond to
-                // the given NodeEntry -> retrieve NodeState before executing
-                // validation check.
-                nodeState = createDeepNodeState(first, entry, infos);
-                assertValidState(nodeState, first);
-            } else {
-                // 'isDeep' == false -> the given NodeEntry must match to the
-                // first ItemInfo retrieved from the iterator.
-                assertMatchingPath(first, entry);
-                nodeState = createNodeState(first, entry);
-            }
-        }
-
-        // deal with all additional ItemInfos that may be present.
-        // Assuming locality of the itemInfos, we keep an estimate of a parent entry.
-        // This reduces the part of the hierarchy to traverse. For large batches this
-        // optimization results in about 25% speed up.
-        NodeEntry approxParentEntry = nodeState.getNodeEntry();
-        while (infos.hasNext()) {
-            ItemInfo info = infos.next();
-            if (info.denotesNode()) {
-                approxParentEntry = createDeepNodeState((NodeInfo) info, approxParentEntry, infos).getNodeEntry();
-            } else {
-                createDeepPropertyState((PropertyInfo) info, approxParentEntry, infos);
-            }
-        }
-        return nodeState;
-    }
-
-    private static NodeInfo first(ItemInfos infos) {
+    private static NodeInfo first(Iterator<? extends ItemInfo> infos, ItemInfoCache cache, long generation) {
+        ItemInfo first = null;
         if (infos.hasNext()) {
-            ItemInfo first = infos.next();
-            if (first.denotesNode()) {
-                return (NodeInfo) first;
+            first = infos.next();
+            if (cache != null) {
+                cache.put(first, generation);
+            }
+
+            if (!first.denotesNode()) {
+                first = null;
             }
         }
 
-        return null;
+        if (cache != null) {
+            while (infos.hasNext()) {
+                cache.put(infos.next(), generation);
+            }
+        }
+
+        return (NodeInfo) first;
     }
 
     /**
-     * Creates the node with information retrieved from <code>info</code>.
+     * Create the node state with the information from <code>info</code>.
      *
      * @param info the <code>NodeInfo</code> to use to create the <code>NodeState</code>.
-     * @param entry
+     * @param entry  the hierarchy entry for of this state
      * @return the new <code>NodeState</code>.
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws ItemNotFoundException, RepositoryException {
-        // make sure the entry has the correct ItemId
+    private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws ItemNotFoundException,
+            RepositoryException {
+
+        // Make sure the entry has the correct ItemId
         // this may not be the case, if the hierarchy has not been completely
         // resolved yet -> if uniqueID is present, set it on this entry or on
         // the appropriate parent entry
@@ -282,7 +333,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             entry.setPropertyEntries(propNames);
         } catch (ItemExistsException e) {
             // should not get here
-            log.warn("Internal error", e);
+            log.error("Internal error", e);
         }
 
         // unless the child-info are omitted by the SPI impl -> make sure
@@ -309,15 +360,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * Creates the property with information retrieved from <code>info</code>.
+     * Create the property state with the information from <code>info</code>.
      *
-     * @param info   the <code>PropertyInfo</code> to use to create the
-     *               <code>PropertyState</code>.
-     * @param entry
+     * @param info the <code>PropertyInfo</code> to use to create the <code>PropertyState</code>.
+     * @param entry  the hierarchy entry for of this state
      * @return the new <code>PropertyState</code>.
+     * @throws RepositoryException
      */
     private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry)
             throws RepositoryException {
+
         // make sure uuid part of id is correct
         String uniqueID = info.getId().getUniqueID();
         if (uniqueID != null) {
@@ -349,136 +401,78 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
+     * Create missing hierarchy entries on the path from <code>anyParent</code> to the path
+     * of the <code>itemInfo</code>.
      *
      * @param info
      * @param anyParent
-     * @return
+     * @return the hierarchy entry for <code>info</code>
      * @throws RepositoryException
      */
-    private NodeState createDeepNodeState(NodeInfo info, NodeEntry anyParent, ItemInfos infos) throws RepositoryException {
-        try {
-            // node for nodeId exists -> build missing entries in hierarchy
-            // Note, that the path contained in NodeId does not reveal which
-            // entries are missing -> calculate relative path.
-            Path anyParentPath = anyParent.getWorkspacePath();
-            Path relPath = anyParentPath.computeRelativePath(info.getPath());
-            Path.Element[] missingElems = relPath.getElements();
+    private HierarchyEntry createHierarchyEntries(ItemInfo info, NodeEntry anyParent)
+            throws RepositoryException {
 
-            if (startsWithIllegalElement(missingElems)) {
-                log.error("Relative path to NodeEntry starts with illegal element -> ignore NodeInfo with path " + info.getPath());
-                return null;
+        // Calculate relative path of missing entries
+        Path anyParentPath = anyParent.getWorkspacePath();
+        Path relPath = anyParentPath.computeRelativePath(info.getPath());
+        Path.Element[] missingElems = relPath.getElements();
+
+        NodeEntry entry = anyParent;
+        int last = missingElems.length - 1;
+        for (int i = 0; i <= last; i++) {
+            if (missingElems[i].denotesParent()) {
+                // Walk up the hierarchy for 'negative' paths
+                // until the smallest common root is found
+                entry = entry.getParent();
             }
+            else if (missingElems[i].denotesName()) {
+                // Add missing elements starting from the smallest common root
+                Name name = missingElems[i].getName();
+                int index = missingElems[i].getNormalizedIndex();
 
-            NodeEntry entry = anyParent;
-            for (int i = 0; i < missingElems.length; i++) {
-                if (missingElems[i].denotesParent()) {
-                    // Walk up the hierarchy for 'negative' paths
-                    // until the smallest common root is found
-                    entry = entry.getParent();
+                if (i == last && !info.denotesNode()) {
+                    return entry.getOrAddPropertyEntry(name);
                 }
-                else if (missingElems[i].denotesName()) {
-                    // Add missing elements starting from the smallest common root
-                    Name name = missingElems[i].getName();
-                    int index = missingElems[i].getNormalizedIndex();
-                    entry = createIntermediateNodeEntry(entry, name, index, infos);
+                else {
+                    entry = createNodeEntry(entry, name, index);
                 }
-                // else denotesCurrent -> ignore
             }
-
-            return createNodeState(info, entry);
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage());
         }
+        return entry;
     }
 
-    /**
-     *
-     * @param info
-     * @param anyParent
-     * @return
-     * @throws RepositoryException
-     */
-    private PropertyState createDeepPropertyState(PropertyInfo info, NodeEntry anyParent, ItemInfos infos) throws RepositoryException {
-        try {
-            // prop for propertyId exists -> build missing entries in hierarchy
-            // Note, that the path contained in PropertyId does not reveal which
-            // entries are missing -> calculate relative path.
-            Path anyParentPath = anyParent.getWorkspacePath();
-            Path relPath = anyParentPath.computeRelativePath(info.getPath());
-            Path.Element[] missingElems = relPath.getElements();
-
-            // make sure the missing elements don't start with . or .. in which
-            // case the info is not within the tree as it is expected
-            // (see also JCR-1797)
-            if (startsWithIllegalElement(missingElems)) {
-                log.error("Relative path to PropertyEntry starts with illegal element -> ignore PropertyInfo with path " + info.getPath());
-                return null;
-            }
-
-            NodeEntry entry = anyParent;
-            int i = 0;
-            // NodeEntries except for the very last 'missingElem'
-            while (i < missingElems.length - 1) {
-                if (missingElems[i].denotesParent()) {
-                    // Walk up the hierarchy for 'negative' paths
-                    // until the smallest common root is found
-                    entry = entry.getParent();
-                }
-                else if (missingElems[i].denotesName()) {
-                    // Add missing elements starting from the smallest common root
-                    Name name = missingElems[i].getName();
-                    int index = missingElems[i].getNormalizedIndex();
-                    entry = createIntermediateNodeEntry(entry, name, index, infos);
-                }
-                // else denotesCurrent -> ignore
-                i++;
-            }
-            // create PropertyEntry for the last element if not existing yet
-            Name propName = missingElems[i].getName();
-            PropertyEntry propEntry = entry.getOrAddPropertyEntry(propName);
-
-            return createPropertyState(info, propEntry);
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage());
-        }
-    }
-
-    /**
-     *
-     * @param parentEntry
-     * @param name
-     * @param index
-     * @return
-     * @throws RepositoryException
-     */
-    private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry,
-                                                         Name name, int index,
-                                                         ItemInfos infos) throws RepositoryException {
-        if (infos != null) {
-            Iterator<ChildInfo> childInfos = infos.getChildInfos(parentEntry.getWorkspaceId());
+    private NodeEntry createNodeEntry(NodeEntry parentEntry, Name name, int index) throws RepositoryException {
+        Entry<NodeInfo> cached = cache.getNodeInfo(parentEntry.getWorkspaceId());
+        if (isUpToDate(cached, parentEntry.getGeneration())) {
+            Iterator<ChildInfo> childInfos = cached.info.getChildInfos();
             if (childInfos != null) {
                 parentEntry.setNodeEntries(childInfos);
             }
         }
-        NodeEntry entry = parentEntry.getOrAddNodeEntry(name, index, null);
-        return entry;
+
+        return parentEntry.getOrAddNodeEntry(name, index, null);
     }
 
     /**
-     * Validation check: make sure the state is not null (was really created)
-     * and matches with the specified ItemInfo (path).
-     *
-     * @param state
-     * @param info
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
+     * Returns true iff <code>cache</code> is not <code>null</code> and
+     * the cached entry is up to date.
+     * @param cacheEntry
+     * @param generation
+     * @return
      */
-    private static void assertValidState(ItemState state, ItemInfo info)
-            throws ItemNotFoundException, RepositoryException {
-        if (state == null) {
-            throw new ItemNotFoundException("HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
-        }
-        assertMatchingPath(info, state.getHierarchyEntry());
+    private static boolean isUpToDate(Entry<?> cacheEntry, long generation) {
+        return cacheEntry != null && cacheEntry.generation >= generation;
+    }
+
+    /**
+     * Returns true iff <code>cache</code> is not <code>null</code> and
+     * the cached entry is not up to date.
+     * @param cacheEntry
+     * @param generation
+     * @return
+     */
+    private static boolean isOutdated(Entry<?> cacheEntry, long generation) {
+        return cacheEntry != null && cacheEntry.generation < generation;
     }
 
     /**
@@ -488,32 +482,15 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      *
      * @param info
      * @param entry
-     * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private static void assertMatchingPath(ItemInfo info, HierarchyEntry entry)
-            throws ItemNotFoundException, RepositoryException {
+    private static void assertMatchingPath(ItemInfo info, HierarchyEntry entry) throws RepositoryException {
         Path infoPath = info.getPath();
-        if (!infoPath.equals(entry.getWorkspacePath())) {
+        Path wspPath = entry.getWorkspacePath();
+        if (!infoPath.equals(wspPath)) {
             // TODO: handle external move of nodes (parents) identified by uniqueID
-            throw new ItemNotFoundException("HierarchyEntry does not belong the given ItemInfo.");
+            throw new ItemNotFoundException("HierarchyEntry " + infoPath + " does not match ItemInfo " + wspPath);
         }
-    }
-
-    /**
-     * Returns true if the given <code>missingElems</code> start with
-     * the root element, in which case the info is not within
-     * the tree as it is expected.
-     * See also #JCR-1797 for the corresponding enhancement request.
-     *
-     * @param missingElems
-     * @return true if the first element doesn't denote a named element.
-     */
-    private static boolean startsWithIllegalElement(Path.Element[] missingElems) {
-        if (missingElems.length > 0) {
-            return missingElems[0].denotesRoot();
-        }
-        return false;
     }
 
     /**
@@ -529,91 +506,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             degree--;
         }
         if (degree != 0) {
+            log.error("Parent of degree {} does not exist.", degree);
             throw new IllegalArgumentException();
         }
         return parent;
-    }
-
-    //--------------------------------------------------------------------------
-    /**
-     * Iterator
-     */
-    private class ItemInfos implements Iterator<ItemInfo> {
-
-        private final List<ItemInfo> prefetchQueue = new ArrayList<ItemInfo>();
-        private final Map<NodeId, NodeInfo> nodeInfos = new HashMap<NodeId, NodeInfo>();
-        private final Iterator<? extends ItemInfo> infos;
-
-        private ItemInfos(Iterator<? extends ItemInfo> infos) {
-            super();
-            this.infos = infos;
-        }
-
-        // ------------------------------------------------------< Iterator >---
-        /**
-         * @see Iterator#hasNext()
-         */
-        public boolean hasNext() {
-            if (!prefetchQueue.isEmpty()) {
-                return true;
-            } else {
-                return prefetch();
-            }
-        }
-
-        /**
-         * @see Iterator#next()
-         */
-        public ItemInfo next() {
-            if (prefetchQueue.isEmpty()) {
-                throw new NoSuchElementException();
-            } else {
-                ItemInfo next = prefetchQueue.remove(0);
-                if (next instanceof NodeInfo) {
-                    nodeInfos.remove(((NodeInfo) next).getId());
-                }
-                return next;
-            }
-        }
-
-        /**
-         * @see Iterator#remove()
-         */
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        // -------------------------------------------------------< private >---
-        /**
-         * @param parentId
-         * @return The children <code>NodeInfo</code>s for the parent identified
-         * by the given <code>parentId</code> or <code>null</code> if the parent
-         * has not been read yet, has already been processed (childInfo is up
-         * to date) or does not provide child infos.
-         */
-        private Iterator<ChildInfo> getChildInfos(NodeId parentId) {
-            NodeInfo nodeInfo = nodeInfos.get(parentId);
-            while (nodeInfo == null && prefetch()) {
-                nodeInfo = nodeInfos.get(parentId);
-            }
-            return nodeInfo == null? null : nodeInfo.getChildInfos();
-        }
-
-        /**
-         * @return <code>true</code> if the next info could be retrieved.
-         */
-        private boolean prefetch() {
-            if (infos.hasNext()) {
-                ItemInfo info = infos.next();
-                prefetchQueue.add(info);
-                if (info.denotesNode()) {
-                    NodeInfo nodeInfo = (NodeInfo) info;
-                    nodeInfos.put(nodeInfo.getId(), nodeInfo);
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
     }
 }

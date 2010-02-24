@@ -178,8 +178,6 @@ public class MoveTest extends AbstractMoveTest {
         doMove(oldPath, destinationPath);
         Item movedItem = superuser.getItem(newPath);
         assertTrue("Moved Node must be the same after the move.", movedItem.isSame(moveNode));
-        // NOTE: implementation specific test
-        assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", movedItem == moveNode);
     }
 
     /**
@@ -202,8 +200,6 @@ public class MoveTest extends AbstractMoveTest {
 
         Item movedItem = superuser.getItem(destinationPath);
         assertTrue("Moved Node must be the same after the move.", movedItem.isSame(moveNode));
-        // NOTE: implementation specific test
-        assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", movedItem == moveNode);
     }
 
     /**
@@ -216,8 +212,6 @@ public class MoveTest extends AbstractMoveTest {
         //move the node
         doMove(moveNode.getPath(), destinationPath);
         assertTrue("Parent of moved node must be the destination parent node.", moveNode.getParent().isSame(destParentNode));
-        // NOTE: implementation specific test
-        assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", moveNode.getParent() == destParentNode);
     }
 
     /**
@@ -232,8 +226,6 @@ public class MoveTest extends AbstractMoveTest {
         superuser.save();
 
         assertTrue("Parent of moved node must be the destination parent node.", moveNode.getParent().isSame(destParentNode));
-        // NOTE: implementation specific test
-        assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", moveNode.getParent() == destParentNode);
     }
 
     /**

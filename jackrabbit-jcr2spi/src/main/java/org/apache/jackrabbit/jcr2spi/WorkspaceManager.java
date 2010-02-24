@@ -98,6 +98,7 @@ import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -165,6 +166,11 @@ public class WorkspaceManager
      * The current subscription for change events if there are listeners.
      */
     private Subscription subscription;
+
+    /**
+     * A cache for item infos as supplied by {@link RepositoryService#getItemInfoCache(SessionInfo)}
+     */
+    private ItemInfoCache cache;
 
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
                             CacheBehaviour cacheBehaviour, int pollTimeout,
@@ -450,8 +456,11 @@ public class WorkspaceManager
     /**
      * @return a new instance of <code>TransientItemStateFactory</code>.
      */
-    private TransientItemStateFactory createItemStateFactory() {
-        WorkspaceItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, getItemDefinitionProvider());
+    private TransientItemStateFactory createItemStateFactory() throws RepositoryException {
+        cache = service.getItemInfoCache(sessionInfo);
+        WorkspaceItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo,
+                getItemDefinitionProvider(), cache);
+
         TransientItemStateFactory tisf = new TransientISFactory(isf, getItemDefinitionProvider());
         return tisf;
     }
@@ -619,6 +628,7 @@ public class WorkspaceManager
                 service.dispose(subscription);
             }
             service.dispose(sessionInfo);
+            cache.dispose();
         } catch (Exception e) {
             log.warn("Exception while disposing WorkspaceManager: " + e);
         } finally {

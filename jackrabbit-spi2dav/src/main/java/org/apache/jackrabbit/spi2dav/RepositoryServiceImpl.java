@@ -16,6 +16,46 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
+import javax.jcr.MergeException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.version.VersionException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -35,6 +75,8 @@ import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -54,10 +96,11 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.commons.ChildInfoImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
+import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -66,7 +109,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -154,45 +196,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.LoginException;
-import javax.jcr.MergeException;
-import javax.jcr.NamespaceException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-import javax.jcr.ValueFormatException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.version.VersionException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 /**
  * <code>RepositoryServiceImpl</code>...
  */
@@ -220,6 +223,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final QValueFactory qValueFactory;
     private final ValueFactory valueFactory;
 
+    private final int itemInfoCacheSize;
+
     private final Document domFactory;
     private final NamespaceCache nsCache;
     private final URIResolverImpl uriResolver;
@@ -233,9 +238,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private Map<String, QValue[]> descriptors;
 
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
+            NameFactory nameFactory,
+            PathFactory pathFactory,
+            QValueFactory qValueFactory) throws RepositoryException {
+
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE);
+    }
+
+    public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory,
                                  PathFactory pathFactory,
-                                 QValueFactory qValueFactory) throws RepositoryException {
+                                 QValueFactory qValueFactory,
+                                 int itemInfoCacheSize) throws RepositoryException {
         if (uri == null || "".equals(uri)) {
             throw new RepositoryException("Invalid repository uri '" + uri + "'.");
         }
@@ -247,6 +261,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         this.nameFactory = nameFactory;
         this.pathFactory = pathFactory;
         this.qValueFactory = qValueFactory;
+        this.itemInfoCacheSize = itemInfoCacheSize;
 
         try {
             domFactory = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
@@ -263,7 +278,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             uriResolver = new URIResolverImpl(repositoryUri, this, domFactory);
             NamePathResolver resolver = new NamePathResolverImpl(nsCache);
             valueFactory = new ValueFactoryQImpl(qValueFactory, resolver);
-            
+
         } catch (URIException e) {
             throw new RepositoryException(e);
         }
@@ -359,7 +374,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
         return resolver;
     }
-    
+
     protected HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
         HttpClient client = clients.get(sessionInfo);
         if (client == null) {
@@ -393,7 +408,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * Clear all URI mappings. This is required after hierarchy operations such
      * as e.g. MOVE.
-     * 
+     *
      * @param sessionInfo
      */
     protected void clearItemUriCache(SessionInfo sessionInfo) {
@@ -452,7 +467,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
         return index;
     }
-    
+
     //--------------------------------------------------------------------------
     /**
      * Execute a 'Workspace' operation.
@@ -503,6 +518,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     public QValueFactory getQValueFactory() {
         return qValueFactory;
+    }
+
+    public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) throws RepositoryException {
+        return new ItemInfoCacheImpl(itemInfoCacheSize);
     }
 
     /**
@@ -1786,7 +1805,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#getEvents(SessionInfo, EventFilter,long) 
+     * @see RepositoryService#getEvents(SessionInfo, EventFilter,long)
      */
     public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter,
                                    long after) throws
@@ -2631,7 +2650,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private class IdentifierResolverImpl implements IdentifierResolver {
 
         private final SessionInfo sessionInfo;
-        
+
         private IdentifierResolverImpl(SessionInfo sessionInfo) {
             this.sessionInfo = sessionInfo;
         }
@@ -2644,7 +2663,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private Path resolvePath(String jcrPath) throws RepositoryException {
             return ((SessionInfoImpl) sessionInfo).getNamePathResolver().getQPath(jcrPath);
         }
-        
+
         /**
          * @inheritDoc
          */

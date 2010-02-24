@@ -24,14 +24,17 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeTypeExistsException;
 
 import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -42,16 +45,14 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.ItemInfo;
 
 /**
  * Log wrapper for a {@link RepositoryService}.
@@ -115,6 +116,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return service.getRepositoryDescriptors();
             }
         }, "getRepositoryDescriptors()", new Object[]{});
+    }
+
+    public ItemInfoCache getItemInfoCache(final SessionInfo sessionInfo) throws RepositoryException {
+        return (ItemInfoCache) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getItemInfoCache(sessionInfo);
+            }
+        }, "getItemInfoCache(SessionInfo)", new Object[]{sessionInfo});
     }
 
     public SessionInfo obtain(final Credentials credentials, final String workspaceName)

@@ -29,6 +29,7 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.ItemState.MergeResult;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
@@ -42,6 +43,13 @@ import org.slf4j.LoggerFactory;
 abstract class HierarchyEntryImpl implements HierarchyEntry {
 
     private static Logger log = LoggerFactory.getLogger(HierarchyEntryImpl.class);
+
+    /**
+     * The required generation of this entry. This is used by the {@link ItemInfoCache} to determine
+     * wheter an item info in the cache is up to date or not. That is whether the generation of the
+     * item info in the cache is the same or more recent as the required generation of this entry.
+     */
+    public long generation;
 
     /**
      * Cached soft reference to the target ItemState.
@@ -170,6 +178,24 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         return state;
     }
 
+    protected EntryFactory.InvalidationStrategy getInvalidationStrategy() {
+        return factory.getInvalidationStrategy();
+    }
+
+    /**
+     * Invalidates the underlying {@link ItemState}. If <code>recursive</code> is
+     * true also invalidates the underlying item states of all child entries.
+     * @param recursive
+     */
+    protected void invalidateInternal(boolean recursive) {
+        ItemState state = internalGetItemState();
+        if (state == null) {
+            log.debug("Skip invalidation for unresolved HierarchyEntry " + name);
+        } else {
+            state.invalidate();
+        }
+    }
+
     //-----------------------------------------------------< HierarchyEntry >---
     /**
      * @see HierarchyEntry#getName()
@@ -260,12 +286,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @see HierarchyEntry#invalidate(boolean)
      */
     public void invalidate(boolean recursive) {
-        ItemState state = internalGetItemState();
-        if (state == null) {
-            log.debug("Skip invalidation for unresolved HierarchyEntry " + name);
-        } else {
-            state.invalidate();
-        }
+        getInvalidationStrategy().invalidate(this, recursive);
+    }
+
+    public void calculateStatus() {
+        getInvalidationStrategy().applyPending(this);
     }
 
     /**
@@ -396,7 +421,13 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         internalRemove(false);
     }
 
+    public long getGeneration() {
+        calculateStatus();
+        return generation;
+    }
+
     //--------------------------------------------------------------------------
+
     /**
      * @param staleParent
      */
@@ -421,4 +452,109 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             }
         }
     }
+
+    // ----------------------------------------------< InvalidationStrategy >---
+    /**
+     * An implementation of <code>InvalidationStrategy</code> which lazily invalidates
+     * the underlying {@link ItemState}s.
+     */
+    static class LazyInvalidation implements EntryFactory.InvalidationStrategy {
+
+        /**
+         * Marker for entries with a pending recursive invalidation.
+         */
+        private static long INVALIDATION_PENDING = -1;
+
+        /**
+         * Number of the current generation
+         */
+        private long currentGeneration;
+
+        /**
+         * Increment for obtaining the next generation from the current generation.
+         */
+        private int nextGeneration;
+
+        /**
+         * A recursive invalidation is being processed if <code>true</code>.
+         * This flag is for preventing re-entrance.
+         */
+        private boolean invalidating;
+
+        /**
+         * Records a pending recursive {@link ItemState#invalidate() invalidation} for
+         * <code>entry</code> if <code>recursive</code> is <code>true</code>. Otherwise
+         * invalidates the entry right away.
+         * {@inheritDoc}
+         */
+        public void invalidate(HierarchyEntry entry, boolean recursive) {
+            HierarchyEntryImpl he = (HierarchyEntryImpl) entry;
+            if (recursive) {
+                he.generation = INVALIDATION_PENDING;
+                if (!invalidating) {
+                    nextGeneration = 1;
+                }
+            } else {
+                if (!invalidating) {
+                    nextGeneration = 1;
+                }
+                he.invalidateInternal(false);
+            }
+        }
+
+        /**
+         * Checks whether <code>entry</code> itself has a invalidation pending.
+         * If so, the <code>entry</code> is invalidated. Otherwise check
+         * whether an invalidation occurred after the entry has last been
+         * invalidated. If so, search the path to the root for an originator of
+         * the pending invalidation.
+         * If such an originator is found, invalidate each entry on the path.
+         * Otherwise this method does nothing.
+         * {@inheritDoc}
+         */
+        public void applyPending(HierarchyEntry entry) {
+            if (!invalidating) {
+                invalidating = true;
+                currentGeneration += nextGeneration;
+                nextGeneration = 0;
+                try {
+                    HierarchyEntryImpl he = (HierarchyEntryImpl) entry;
+                    if (he.generation == INVALIDATION_PENDING) {
+                        he.invalidateInternal(true);
+                        he.generation = currentGeneration;
+                    } else if (he.generation < currentGeneration) {
+                        resolvePendingInvalidation(he);
+                    }
+                } finally {
+                    invalidating = false;
+                }
+            }
+        }
+
+        /**
+         * Search the path to the root for an originator of a pending invalidation of
+         * this <code>entry</code>. If such an originator is found, invalidate each
+         * entry on the path. Otherwise do nothing.
+         *
+         * @param entry
+         */
+        private void resolvePendingInvalidation(HierarchyEntryImpl entry) {
+            if (entry != null) {
+
+                // First recursively travel up to the first parent node
+                // which has invalidation pending or to the root node if
+                // no such node exists.
+                if (entry.generation != INVALIDATION_PENDING) {
+                    resolvePendingInvalidation(entry.parent);
+                }
+
+                // Then travel the path backwards invalidating as required
+                if (entry.generation == INVALIDATION_PENDING) {
+                    entry.invalidateInternal(true);
+                }
+                entry.generation = currentGeneration;
+            }
+        }
+    }
+
 }

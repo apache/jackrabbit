@@ -83,8 +83,6 @@ public class MoveReferenceableTest extends AbstractMoveTest {
 
         Node n = superuser.getNodeByUUID(uuid);
         assertTrue("After successful moving a referenceable node node, accessing the node by uuid must return the same node.", n.isSame(moveNode));
-        // NOTE: implementation specific test
-        assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", n == moveNode);
     }
 
     /**
@@ -100,7 +98,5 @@ public class MoveReferenceableTest extends AbstractMoveTest {
 
         Node n = superuser.getNodeByUUID(uuid);
         assertTrue("After successful moving a referenceable node node, accessing the node by uuid must return the same node.", n.isSame(moveNode));
-        // NOTE: implementation specific test
-        assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", n == moveNode);
     }
 }

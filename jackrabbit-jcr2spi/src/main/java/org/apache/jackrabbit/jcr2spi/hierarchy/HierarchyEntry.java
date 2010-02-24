@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
@@ -173,4 +174,11 @@ public interface HierarchyEntry {
      */
     public void complete(Operation transientOperation) throws RepositoryException;
 
+    /**
+     * The required generation of this <code>HierarchyEntry</code> . This is used by the
+     * {@link ItemInfoCache} to determine wheter an item info in the cache is up to date or not.
+     * That is whether the generation of the item info in the cache is the same or more recent
+     * as the required generation of this entry.
+     */
+    public long getGeneration();
 }

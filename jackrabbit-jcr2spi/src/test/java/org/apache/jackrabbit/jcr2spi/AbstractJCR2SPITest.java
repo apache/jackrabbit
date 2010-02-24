@@ -46,6 +46,7 @@ import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -78,8 +79,9 @@ import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 public abstract class AbstractJCR2SPITest extends TestCase implements RepositoryService {
     private static final String DEFAULT_WSP = "default";
 
+    private RepositoryService repositoryService;
+
     protected ItemInfoStore itemInfoStore;
-    protected RepositoryService repositoryService;
     protected RepositoryConfig config;
     protected Repository repository;
 
@@ -223,7 +225,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     protected RepositoryConfig getRepositoryConfig() {
         return new AbstractRepositoryConfig() {
             public RepositoryService getRepositoryService() throws RepositoryException {
-                return repositoryService;
+                return AbstractJCR2SPITest.this;
             }
         };
     }
@@ -258,6 +260,9 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.getRepositoryDescriptors();
     }
 
+    public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) throws RepositoryException {
+        return repositoryService.getItemInfoCache(sessionInfo);
+    }
 
     //-----------------------------------< SessionInfo creation and release >---
 

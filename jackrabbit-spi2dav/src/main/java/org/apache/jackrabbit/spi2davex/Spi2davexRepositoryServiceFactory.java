@@ -18,13 +18,12 @@ package org.apache.jackrabbit.spi2davex;
 
 import java.util.Map;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.RepositoryServiceFactory;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 
 /**
  * This {@link RepositoryServiceFactory} implementation is responsible
@@ -52,7 +51,13 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      * Optional batch read configuration parameter: If present it's value is
      * expected to be an instance of {@link BatchReadConfig}
      */
-    public static final String PARAM_BATCHREAD_CONFIG = "org.apache.jackrabbit.spi2dav.BatchReadConfig";
+    public static final String PARAM_BATCHREAD_CONFIG = "org.apache.jackrabbit.spi2davex.BatchReadConfig";
+
+    /**
+     * Optional configuration parameter: It's value determines the size of the
+     * {@link ItemInfoCache} cache. Defaults to {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE}.
+     */
+    public static final String PARAM_ITEMINFO_CACHE_SIZE = "org.apache.jackrabbit.spi2davex.ItemInfoCacheSize";
 
     public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
         String uri;
@@ -77,7 +82,18 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
             }
         }
 
-        return new RepositoryServiceImpl(uri, brc);
+        int itemInfoCacheSize = ItemInfoCacheImpl.DEFAULT_CACHE_SIZE;
+        Object param = parameters.get(PARAM_ITEMINFO_CACHE_SIZE);
+        if (param != null) {
+            try {
+                itemInfoCacheSize = Integer.parseInt(param.toString());
+            }
+            catch (NumberFormatException e) {
+                // ignore, use default
+            }
+        }
+
+        return new RepositoryServiceImpl(uri, null, brc, itemInfoCacheSize);
     }
 
 }
