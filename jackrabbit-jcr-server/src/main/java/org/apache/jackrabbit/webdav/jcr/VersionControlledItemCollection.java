@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -54,6 +55,7 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
 import java.util.List;
 import java.util.Collections;
 
@@ -153,6 +155,9 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         }
         try {
             Node n = (Node) item;
+            VersionManager vMgr = getVersionManager();
+            String path = item.getPath();
+
             DavProperty<?> autoMergeSet = null;
             DavProperty<?> predecessorSet = null;
             /* find DAV:auto-merge-set entries. If none exists no attempt is made
@@ -168,7 +173,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                     }
                     Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
                     for (Value value : mergeFailed) {
-                        n.cancelMerge((Version) getRepositorySession().getNodeByUUID(value.getString()));
+                        vMgr.cancelMerge(path, (Version) getRepositorySession().getNodeByIdentifier(value.getString()));
                     }
                     // remove this entry from the changeList
                     changeList.remove(propEntry);
@@ -204,7 +209,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                 for (Value value : mergeFailed) {
                     // build version-href from each entry in the jcr:mergeFailed property
                     // in order to be able to compare to the entries in the HrefProperty.
-                    Version version = (Version) session.getNodeByUUID(value.getString());
+                    Version version = (Version) session.getNodeByIdentifier(value.getString());
                     String href = getLocatorFromItem(version).getHref(true);
 
                     // Test if that version has been removed from the merge-set.
@@ -216,9 +221,9 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                         // merge-set but not added to the predecessors 'cancelMerge'
                         // must be called.
                         if (predecL.contains(href)) {
-                            n.doneMerge(version);
+                            vMgr.doneMerge(path, version);
                         } else {
-                            n.cancelMerge(version);
+                            vMgr.cancelMerge(path, version);
                         }
                     }
                 }
@@ -273,7 +278,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
         }
         try {
-            Version v = ((Node) item).checkin();
+            Version v = getVersionManager().checkin(item.getPath());
             String versionHref = getLocatorFromItem(v).getHref(true);
             return versionHref;
         } catch (RepositoryException e) {
@@ -296,7 +301,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
         }
         try {
-            ((Node) item).checkout();
+            getVersionManager().checkout(item.getPath());
         } catch (RepositoryException e) {
             // UnsupportedRepositoryException should not occur
             throw new JcrDavException(e);
@@ -365,8 +370,11 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                 if (relPath == null) {
                     // restore version by name
                     node.restore(versionName, removeExisting);
+                } else if (node.hasNode(relPath)) {
+                    Version v = node.getNode(relPath).getVersionHistory().getVersion(versionName);
+                    node.restore(v, relPath, removeExisting);
                 } else {
-                    Version v = node.getVersionHistory().getVersion(versionName);
+                    Version v = (Version) getRepositorySession().getNode(versionPath);
                     node.restore(v, relPath, removeExisting);
                 }
 
@@ -416,19 +424,18 @@ public class VersionControlledItemCollection extends DefaultItemCollection
 
         MultiStatus ms = new MultiStatus();
         try {
-            Node node = (Node)item;
-
-            // register eventListener in order to be able to report all
-            // modified resources.
-            EventListener el = new EListener(mergeInfo.getPropertyNameSet(), ms);
-            registerEventListener(el, node.getPath());
-
+            // NOTE: RFC requires that all modified resources are reported in the
+            // multistatus response. this doesn't work however with the remoting
+            // there is no way to distinguish the 'failedId's from any other
+            // resources that got modified by this merge operation -> omitted.
+            
             // todo: RFC allows multiple href elements inside the DAV:source element
             String workspaceName = getLocatorFromHref(mergeInfo.getSourceHrefs()[0]).getWorkspaceName();
-            NodeIterator failed = node.merge(workspaceName, !mergeInfo.isNoAutoMerge());
 
-            // unregister the event listener again
-            unregisterEventListener(el);
+            String depth = DomUtil.getChildTextTrim(mergeInfo.getMergeElement(), DavConstants.XML_DEPTH, DavConstants.NAMESPACE);
+            boolean isShallow = "0".equals(depth);
+
+            NodeIterator failed = getVersionManager().merge(item.getPath(), workspaceName, !mergeInfo.isNoAutoMerge(), isShallow);
 
             // add resources to the multistatus, that failed to be merged
             while (failed.hasNext()) {
@@ -611,5 +618,9 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         DavLocatorFactory f = getLocator().getFactory();
         String prefix = getLocator().getPrefix();
         return f.createResourceLocator(prefix, href);
+    }
+
+    private VersionManager getVersionManager() throws RepositoryException {
+        return getRepositorySession().getWorkspace().getVersionManager();
     }
 }
