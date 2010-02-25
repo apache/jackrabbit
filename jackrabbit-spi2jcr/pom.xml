@@ -58,9 +58,7 @@
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
                 org.apache.jackrabbit.test.api.ShareableNodeTest
                 org.apache.jackrabbit.test.api.version.simple
-                org.apache.jackrabbit.test.api.version.ActivitiesTest#testActivitiesPath
                 org.apache.jackrabbit.test.api.version.ActivitiesTest#testActivitiesRelation
-                org.apache.jackrabbit.test.api.version.ConfigurationsTest#testCreateConfigWithBaseline
                 org.apache.jackrabbit.test.api.LifecycleTest
               </value>
             </property>
