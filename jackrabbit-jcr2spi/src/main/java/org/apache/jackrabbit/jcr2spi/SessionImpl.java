@@ -545,7 +545,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see Session#hasCapability(String, Object, Map)
+     * @see Session#hasCapability(String, Object, Object[])
      */
     public boolean hasCapability(String methodName, Object target, Object[] arguments)
             throws RepositoryException {
@@ -936,7 +936,7 @@ public class SessionImpl extends AbstractSession
      */
     boolean isSupportedOption(String option) {
         String desc = repository.getDescriptor(option);
-        return Boolean.valueOf(desc).booleanValue();
+        return Boolean.valueOf(desc);
     }
 
     /**
