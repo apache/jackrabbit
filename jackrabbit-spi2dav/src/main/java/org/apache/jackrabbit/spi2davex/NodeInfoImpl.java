@@ -16,6 +16,15 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
@@ -26,14 +35,6 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
-import javax.jcr.RepositoryException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.LinkedHashSet;
 
 /**
  * <code>NodeInfoImpl</code>...
@@ -101,7 +102,6 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         if (NameConstants.JCR_UUID.equals(pn)) {
             uniqueID = propInfo.getValues()[0].getString();
             id = idFactory.createNodeId(uniqueID);
-            propInfo.setId(idFactory.createPropertyId(id, propInfo.getName()));
         } else if (NameConstants.JCR_PRIMARYTYPE.equals(pn)) {
             primaryNodeTypeName = propInfo.getValues()[0].getName();
         } else if (NameConstants.JCR_MIXINTYPES.equals(pn)) {
@@ -111,6 +111,15 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 mixins[i] = vs[i].getName();
             }
             mixinNodeTypeNames = mixins;
+        }
+    }
+
+    void resolveUUID(IdFactory idFactory) {
+        if (uniqueID != null) {
+            for (Object o : propertyInfos) {
+                PropertyInfoImpl propInfo = (PropertyInfoImpl) o;
+                propInfo.setId(idFactory.createPropertyId(id, propInfo.getName()));
+            }
         }
     }
 
