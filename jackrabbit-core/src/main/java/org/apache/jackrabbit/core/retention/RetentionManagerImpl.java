@@ -16,13 +16,10 @@
  */
 package org.apache.jackrabbit.core.retention;
 
-import javax.jcr.retention.Hold;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.retention.RetentionPolicy;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.ProtectedItemModifier;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -32,10 +29,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyType;
 import javax.jcr.lock.LockException;
+import javax.jcr.retention.Hold;
+import javax.jcr.retention.RetentionManager;
+import javax.jcr.retention.RetentionPolicy;
 import javax.jcr.version.VersionException;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,8 +100,8 @@ public class RetentionManagerImpl extends ProtectedItemModifier implements Reten
         if (n.hasProperty(REP_HOLD)) {
             Value[] vs = n.getProperty(REP_HOLD).getValues();
             // check if the same hold already exists
-            for (int i = 0; i < vs.length; i++) {
-                if (hold.equals(HoldImpl.createFromValue(vs[i], n.getNodeId(), session))) {
+            for (Value v : vs) {
+                if (hold.equals(HoldImpl.createFromValue(v, n.getNodeId(), session))) {
                     throw new RepositoryException("Hold already exists.");
                 }
             }
@@ -134,9 +134,9 @@ public class RetentionManagerImpl extends ProtectedItemModifier implements Reten
             Value[] vls = p.getValues();
 
             List<Value> newValues = new ArrayList<Value>(vls.length - 1);
-            for (int i = 0; i < vls.length; i++) {
-                if (!hold.equals(HoldImpl.createFromValue(vls[i], n.getNodeId(), session))) {
-                    newValues.add(vls[i]);
+            for (Value v : vls) {
+                if (!hold.equals(HoldImpl.createFromValue(v, n.getNodeId(), session))) {
+                    newValues.add(v);
                 }
             }
             if (newValues.size() < vls.length) {

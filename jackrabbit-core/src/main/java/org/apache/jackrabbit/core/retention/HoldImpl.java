@@ -79,7 +79,7 @@ class HoldImpl implements Hold {
         return holds;
     }
 
-    //-----------------------------------------------------------< Hold >---
+    //---------------------------------------------------------------< Hold >---
     /**
      * @see javax.jcr.retention.Hold#isDeep()
      */
@@ -94,10 +94,11 @@ class HoldImpl implements Hold {
         return resolver.getJCRName(name);
     }
 
-    //---------------------------------------------------------< Object >---
+    //-------------------------------------------------------------< Object >---
     /**
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         if (hashCode == 0) {
             int h = 17;
@@ -112,6 +113,7 @@ class HoldImpl implements Hold {
     /**
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;

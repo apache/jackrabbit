@@ -30,12 +30,13 @@ public class HoldTest extends AbstractRetentionTest {
 
     private static Logger log = LoggerFactory.getLogger(HoldTest.class);
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             superuser.refresh(false);
             Hold[] holds = retentionMgr.getHolds(testNodePath);
-            for (int i = 0; i < holds.length; i++) {
-                retentionMgr.removeHold(testNodePath, holds[i]);
+            for (Hold hold : holds) {
+                retentionMgr.removeHold(testNodePath, hold);
             }
             superuser.save();
         } catch (RepositoryException e) {
