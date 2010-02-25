@@ -46,7 +46,7 @@ import java.util.Map;
  */
 public class DefaultLoginModule extends AbstractLoginModule {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractLoginModule.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultLoginModule.class);
 
     protected User user;
     private UserManager userManager;
