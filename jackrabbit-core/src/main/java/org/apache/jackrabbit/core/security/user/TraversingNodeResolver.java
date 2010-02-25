@@ -61,6 +61,7 @@ class TraversingNodeResolver extends NodeResolver {
     /**
      * @inheritDoc
      */
+    @Override
     public Node findNode(Name nodeName, Name ntName) throws RepositoryException {
         String sr = getSearchRoot(ntName);
         if (getSession().nodeExists(sr)) {
@@ -78,6 +79,7 @@ class TraversingNodeResolver extends NodeResolver {
     /**
      * @inheritDoc
      */
+    @Override
     public Node findNode(Name propertyName, String value, Name ntName) throws RepositoryException {
         String sr = getSearchRoot(ntName);
         if (getSession().nodeExists(sr)) {
@@ -100,6 +102,7 @@ class TraversingNodeResolver extends NodeResolver {
     /**
      * @inheritDoc
      */
+    @Override
     public NodeIterator findNodes(Set<Name> propertyNames, String value, Name ntName,
                                   boolean exact, long maxSize) throws RepositoryException {
         String sr = getSearchRoot(ntName);
