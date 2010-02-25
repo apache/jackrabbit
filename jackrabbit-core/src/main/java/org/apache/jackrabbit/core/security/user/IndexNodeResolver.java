@@ -45,6 +45,7 @@ class IndexNodeResolver extends NodeResolver {
     /**
      * @inheritDoc
      */
+    @Override
     public Node findNode(Name nodeName, Name ntName) throws RepositoryException {
         Query query = buildQuery(nodeName, ntName);
         NodeIterator res = query.execute().getNodes();
@@ -57,6 +58,7 @@ class IndexNodeResolver extends NodeResolver {
     /**
      * @inheritDoc
      */
+    @Override
     public Node findNode(Name propertyName, String value, Name ntName) throws RepositoryException {
         Query query = buildQuery(value, Collections.singleton(propertyName), ntName, true, 1);
         NodeIterator res = query.execute().getNodes();
@@ -78,6 +80,7 @@ class IndexNodeResolver extends NodeResolver {
      * @return
      * @throws javax.jcr.RepositoryException
      */
+    @Override
     public NodeIterator findNodes(Set<Name> propertyNames, String value, Name ntName,
                                   boolean exact, long maxSize) throws RepositoryException {
         Query query = buildQuery(value, propertyNames, ntName, exact, maxSize);
