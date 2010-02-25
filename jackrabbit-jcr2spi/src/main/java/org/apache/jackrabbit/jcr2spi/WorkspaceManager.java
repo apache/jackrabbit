@@ -286,9 +286,8 @@ public class WorkspaceManager
      * @see SessionInfo#removeLockToken(String)
      */
     public void removeLockToken(String lt) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        String[] tokems = sessionInfo.getLockTokens();
-        for (int i = 0; i < tokems.length; i++) {
-            if (tokems[i].equals(lt)) {
+        for (String token : sessionInfo.getLockTokens()) {
+            if (token.equals(lt)) {
                 sessionInfo.removeLockToken(lt);
                 return;
             }
@@ -693,9 +692,8 @@ public class WorkspaceManager
      * @see AccessManager#canAccess(String)
      */
     public boolean canAccess(String workspaceName) throws NoSuchWorkspaceException, RepositoryException {
-        String[] wspNames = getWorkspaceNames();
-        for (int i = 0; i < wspNames.length; i++) {
-            if (wspNames[i].equals(workspaceName)) {
+        for (String wspName : getWorkspaceNames()) {
+            if (wspName.equals(workspaceName)) {
                 return true;
             }
         }
@@ -738,10 +736,10 @@ public class WorkspaceManager
                                  InternalEventListener[] lstnrs)
             throws InterruptedException {
         if (log.isDebugEnabled()) {
-            log.debug("received {} event bundles.", new Integer(eventBundles.length));
-            for (int i = 0; i < eventBundles.length; i++) {
-                log.debug("IsLocal:  {}", Boolean.valueOf(eventBundles[i].isLocal()));
-                for (Iterator<Event> it = eventBundles[i].getEvents(); it.hasNext(); ) {
+            log.debug("received {} event bundles.", eventBundles.length);
+            for (EventBundle eventBundle : eventBundles) {
+                log.debug("IsLocal:  {}", eventBundle.isLocal());
+                for (Iterator<Event> it = eventBundle.getEvents(); it.hasNext();) {
                     Event e = it.next();
                     String type;
                     switch (e.getType()) {
@@ -778,9 +776,9 @@ public class WorkspaceManager
         updateSync.acquire();
         try {
             // notify listener
-            for (int i = 0; i < eventBundles.length; i++) {
-                for (int j = 0; j < lstnrs.length; j++) {
-                    lstnrs[j].onEvent(eventBundles[i]);
+            for (EventBundle eventBundle : eventBundles) {
+                for (InternalEventListener lstnr : lstnrs) {
+                    lstnr.onEvent(eventBundle);
                 }
             }
         } finally {
