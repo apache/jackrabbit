@@ -898,8 +898,13 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsVersionable();
         checkHasPendingChanges();
         checkIsLocked();
-        NodeEntry newVersion = session.getVersionStateManager().checkpoint(getNodeState());
-        return (Version) getItemManager().getItem(newVersion);
+        if (!isCheckedOut()) {
+            checkout();
+            return getBaseVersion();
+        } else {
+            NodeEntry newVersion = session.getVersionStateManager().checkpoint(getNodeState());
+            return (Version) getItemManager().getItem(newVersion);
+        }
     }
 
     /**

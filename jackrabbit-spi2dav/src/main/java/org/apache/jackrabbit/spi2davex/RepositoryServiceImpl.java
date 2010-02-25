@@ -137,6 +137,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     private Path getPath(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
+        return getPath(itemId, sessionInfo, sessionInfo.getWorkspaceName());
+    }
+
+    private Path getPath(ItemId itemId, SessionInfo sessionInfo, String workspaceName) throws RepositoryException {
         if (itemId.denotesNode()) {
             Path p = itemId.getPath();
             String uid = itemId.getUniqueID();
@@ -144,7 +148,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 return p;
             } else {
                 NamePathResolver resolver = getNamePathResolver(sessionInfo);
-                String uri = super.getItemUri(itemId, sessionInfo);
+                String uri = super.getItemUri(itemId, sessionInfo, workspaceName);
                 String rootUri = getRootURI(sessionInfo);
                 String jcrPath;
                 if (uri.startsWith(rootUri)) {
@@ -162,7 +166,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }
         } else {
             PropertyId pId = (PropertyId) itemId;
-            Path parentPath = getPath(pId.getParentId(), sessionInfo);
+            Path parentPath = getPath(pId.getParentId(), sessionInfo, workspaceName);
             return getPathFactory().create(parentPath, pId.getName(), true);
         }
     }
@@ -332,7 +336,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             StringBuffer args = new StringBuffer();
             args.append(srcWorkspaceName);
             args.append(",");
-            args.append(resolver.getJCRPath(getPath(srcNodeId, sessionInfo)));
+            args.append(resolver.getJCRPath(getPath(srcNodeId, sessionInfo, srcWorkspaceName)));
             args.append(",");
             String destParentPath = resolver.getJCRPath(getPath(destParentNodeId, sessionInfo));
             String destPath = (destParentPath.endsWith("/") ?
@@ -366,7 +370,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             StringBuffer args = new StringBuffer();
             args.append(srcWorkspaceName);
             args.append(",");
-            args.append(resolver.getJCRPath(getPath(srcNodeId, sessionInfo)));
+            args.append(resolver.getJCRPath(getPath(srcNodeId, sessionInfo, srcWorkspaceName)));
             args.append(",");
             String destParentPath = resolver.getJCRPath(getPath(destParentNodeId, sessionInfo));
             String destPath = (destParentPath.endsWith("/") ?

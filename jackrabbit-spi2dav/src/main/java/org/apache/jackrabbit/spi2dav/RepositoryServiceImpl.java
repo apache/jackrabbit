@@ -65,6 +65,7 @@ import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -402,7 +403,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     protected String getItemUri(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
-        return uriResolver.getItemUri(itemId, sessionInfo.getWorkspaceName(), sessionInfo);
+        return getItemUri(itemId, sessionInfo, sessionInfo.getWorkspaceName());
+    }
+
+    protected String getItemUri(ItemId itemId, SessionInfo sessionInfo, String workspaceName) throws RepositoryException {
+        return uriResolver.getItemUri(itemId, workspaceName, sessionInfo);
     }
 
     /**
@@ -1111,10 +1116,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             boolean isMultiValued;
             QValue[] values;
-            int type = JcrValueType.typeFromContentType(ct);
+            int type;
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            if (type != PropertyType.UNDEFINED) {
+            if (ct.startsWith("jcr-value")) {
+                type = JcrValueType.typeFromContentType(ct);                
                 QValue v;
                 if (type == PropertyType.BINARY) {
                     v = getQValueFactory().create(method.getResponseBodyAsStream());
@@ -1144,6 +1150,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             return new PropertyInfoImpl(propertyId, path, type, isMultiValued, values);
+            
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1322,7 +1329,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String uri = getItemUri(nodeId, sessionInfo);
         String workspUri = uriResolver.getWorkspaceUri(srcWorkspaceName);
 
-        update(uri, new String[] {workspUri}, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
+        update(uri, null, new String[] {workspUri}, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
     }
 
     /**
@@ -1502,16 +1509,22 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#checkout(SessionInfo, NodeId, NodeId)
      */
     public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        if (activityId == null) {
+            checkout(sessionInfo, nodeId);
+        } else {
+            // TODO
+            throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        }
     }
 
     /**
      * @see RepositoryService#checkpoint(SessionInfo, NodeId)
      */
     public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        // TODO review again.
+        NodeId vID = checkin(sessionInfo, nodeId);
+        checkout(sessionInfo, nodeId);
+        return vID;
     }
 
     /**
@@ -1530,8 +1543,48 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String uri = getItemUri(nodeId, sessionInfo);
         String vUri = getItemUri(versionId, sessionInfo);
 
-        update(uri, new String[] {vUri}, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
+        Path relPath = null;
+        if (!exists(sessionInfo, uri)) {
+            // restore with rel-Path part
+            Path path = nodeId.getPath();
+            if (nodeId.getUniqueID() != null) {
+                uri = getItemUri(idFactory.createNodeId(nodeId.getUniqueID(), null), sessionInfo);
+                relPath = (path.isAbsolute()) ? getPathFactory().getRootPath().computeRelativePath(path) : path;
+            } else {
+                int degree = 0;
+                while (degree < path.getLength()) {
+                    Path ancestorPath = path.getAncestor(degree);
+                    NodeId parentId = idFactory.createNodeId(nodeId.getUniqueID(), ancestorPath);
+                    if (exists(sessionInfo, getItemUri(parentId, sessionInfo))) {
+                        uri = getItemUri(parentId, sessionInfo);
+                        relPath = ancestorPath.computeRelativePath(path);
+                        break;
+                    }
+                    degree++;
+                }
+            }
+        }
+
+        update(uri, relPath, new String[] {vUri}, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
     }
+
+    private boolean exists(SessionInfo sInfo, String uri) {
+        HeadMethod method = new HeadMethod(uri);
+        try {
+            int statusCode = getClient(sInfo).executeMethod(method);
+            if (statusCode == DavServletResponse.SC_OK) {
+                return true;
+            }
+        } catch (IOException e) {
+            log.error("Unexpected error while testing existence of item.",e);
+        } catch (RepositoryException e) {
+            log.error(e.getMessage());
+        } finally {
+            method.releaseConnection();
+        }
+        return false;
+    }
+
 
     /**
      * @see RepositoryService#restore(SessionInfo, NodeId[], boolean)
@@ -1543,15 +1596,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             vUris[i] = getItemUri(versionIds[i], sessionInfo);
         }
 
-        update(uri, vUris, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
+        update(uri, null, vUris, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
     }
 
-    private void update(String uri, String[] updateSource, int updateType, boolean removeExisting, SessionInfo sessionInfo) throws RepositoryException {
+    private void update(String uri, Path relPath, String[] updateSource, int updateType, boolean removeExisting, SessionInfo sessionInfo) throws RepositoryException {
         try {
             UpdateInfo uInfo;
-            if (removeExisting) {
+            if (removeExisting || relPath != null) {
                 Element uElem = UpdateInfo.createUpdateElement(updateSource, updateType, domFactory);
-                DomUtil.addChildElement(uElem, ItemResourceConstants.XML_REMOVEEXISTING, ItemResourceConstants.NAMESPACE);
+                if (removeExisting) {
+                    DomUtil.addChildElement(uElem, ItemResourceConstants.XML_REMOVEEXISTING, ItemResourceConstants.NAMESPACE);
+                }
+                if (relPath != null) {
+                    DomUtil.addChildElement(uElem, ItemResourceConstants.XML_RELPATH, ItemResourceConstants.NAMESPACE, getNamePathResolver(sessionInfo).getJCRPath(relPath));
+                }
+
                 uInfo = new UpdateInfo(uElem);
             } else {
                 uInfo = new UpdateInfo(updateSource, updateType, new DavPropertyNameSet());
@@ -1577,30 +1636,28 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean, boolean)
      */
     public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        if (!isShallow) {
-            try {
-                String wspHref = uriResolver.getWorkspaceUri(srcWorkspaceName);
-                Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, bestEffort, false, domFactory);
-                MergeInfo mInfo = new MergeInfo(mElem);
-
-                MergeMethod method = new MergeMethod(getItemUri(nodeId, sessionInfo), mInfo);
-                execute(method, sessionInfo);
-
-                MultiStatusResponse[] resps = method.getResponseBodyAsMultiStatus().getResponses();
-                List<NodeId> failedIds = new ArrayList<NodeId>(resps.length);
-                for (MultiStatusResponse resp : resps) {
-                    String href = resp.getHref();
-                    failedIds.add(uriResolver.getNodeId(href, sessionInfo));
-                }
-                return failedIds.iterator();
-            } catch (IOException e) {
-                throw new RepositoryException(e);
-            } catch (DavException e) {
-                throw ExceptionConverter.generate(e);
+        try {
+            String wspHref = uriResolver.getWorkspaceUri(srcWorkspaceName);
+            Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, !bestEffort, false, domFactory);
+            if (isShallow) {
+                mElem.appendChild(DomUtil.depthToXml(false, domFactory));
             }
-        } else {
-            // TODO
-            throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+            MergeInfo mInfo = new MergeInfo(mElem);
+
+            MergeMethod method = new MergeMethod(getItemUri(nodeId, sessionInfo), mInfo);
+            execute(method, sessionInfo);
+
+            MultiStatusResponse[] resps = method.getResponseBodyAsMultiStatus().getResponses();
+            List<NodeId> failedIds = new ArrayList<NodeId>(resps.length);
+            for (MultiStatusResponse resp : resps) {
+                String href = resp.getHref();
+                failedIds.add(uriResolver.getNodeId(href, sessionInfo));
+            }
+            return failedIds.iterator();
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
         }
     }
 
