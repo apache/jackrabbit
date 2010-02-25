@@ -16,9 +16,20 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.commons.json.JsonHandler;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
@@ -26,20 +37,10 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
 
 /**
  * <code>ItemInfoJSONHandler</code>...
@@ -102,6 +103,7 @@ class ItemInfoJsonHandler implements JsonHandler {
     public void endObject() throws IOException {
         try {
             NodeInfoImpl nInfo = (NodeInfoImpl) nodeInfos.pop();
+            nInfo.resolveUUID(idFactory);
             NodeInfo parent = getCurrentNodeInfo();
             if (parent != null) {
                 if (nInfo.getPath().getAncestor(1).equals(parent.getPath())) {
