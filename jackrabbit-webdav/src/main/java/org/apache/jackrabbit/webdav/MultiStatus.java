@@ -148,7 +148,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      */
     public Element toXml(Document document) {
         Element multistatus = DomUtil.createElement(document, XML_MULTISTATUS, NAMESPACE);
-        for (MultiStatusResponse resp : responses.values()) {
+        for (MultiStatusResponse resp : getResponses()) {
             multistatus.appendChild(resp.toXml(document));
         }
         if (responseDescription != null) {
