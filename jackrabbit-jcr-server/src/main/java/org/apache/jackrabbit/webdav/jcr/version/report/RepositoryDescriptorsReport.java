@@ -44,13 +44,19 @@ import javax.jcr.PropertyType;
  *
  * <pre>
  * &lt;!ELEMENT repositorydescriptors-report ( descriptor )* &gt;
- * &lt;!ELEMENT descriptor ( descriptorkey, descriptorvalue ) &gt;
+ * &lt;!ELEMENT descriptor ( descriptorkey, descriptorvalue+ ) &gt;
  * &lt;!ELEMENT descriptorkey (#PCDATA) &gt;
  * &lt;!ELEMENT descriptorvalue (#PCDATA) &gt;
+ * &lt;!ATTLIST descriptorvalue
+ *      type ( Reference | Path | Name | Boolean | String | Date | Double |
+               Long | Binary | WeakReference | URI | Decimal )
+   &gt;
  * </pre>
  *
  * @see javax.jcr.Repository#getDescriptorKeys()
- * @see javax.jcr.Repository#getDescriptor(String)
+ * @see javax.jcr.Repository#getDescriptor(String
+ * @see javax.jcr.Repository#getDescriptorValue(String)
+ * @see javax.jcr.Repository#getDescriptorValues(String) 
  */
 public class RepositoryDescriptorsReport extends AbstractJcrReport implements ItemResourceConstants {
 
