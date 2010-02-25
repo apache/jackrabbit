@@ -26,6 +26,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
  */
 public abstract class AbstractRetentionTest extends org.apache.jackrabbit.test.api.retention.AbstractRetentionTest {
 
+    @Override
     protected RetentionPolicy getApplicableRetentionPolicy() throws NotExecutableException, RepositoryException {
         return getApplicableRetentionPolicy("retentionPolicyName");
     }

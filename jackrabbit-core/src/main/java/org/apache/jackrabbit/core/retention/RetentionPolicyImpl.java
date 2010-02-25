@@ -85,6 +85,7 @@ public class RetentionPolicyImpl implements RetentionPolicy {
     /**
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         if (hashCode == 0) {
             int h = 17;
@@ -98,6 +99,7 @@ public class RetentionPolicyImpl implements RetentionPolicy {
     /**
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
