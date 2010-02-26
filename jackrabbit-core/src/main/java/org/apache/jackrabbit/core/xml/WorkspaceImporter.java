@@ -160,19 +160,21 @@ public class WorkspaceImporter implements Importer {
         parents.push(importTarget);
 
         // TODO: TOBEFIXED importer doesn't yet pass protected items to the configured importers.
-        // for the time being throw exception if an importer is configured that
-        // is expected to work with workspace import.
+        // for the time being log an exception if an importer is configured that
+        // is expected to work with workspace import. see JCR-2521
         if (config != null) {
             List<ProtectedNodeImporter> ln = config.getProtectedNodeImporters();
             for (ProtectedNodeImporter pni : ln) {
                 if (pni.init(session, session, true, uuidBehavior, refTracker)) {
-                    throw new UnsupportedOperationException("Workspace-Import of protected nodes: Not yet implement. ");
+                    log.warn("Protected node importer configured is not supported by workspace import.");
+                    //throw new UnsupportedOperationException("Workspace-Import of protected nodes: Not yet implement. ");
                 }
             }
             List<ProtectedPropertyImporter> lp = config.getProtectedPropertyImporters();
             for (ProtectedPropertyImporter ppi : lp) {
                 if (ppi.init(session, session, true, uuidBehavior, refTracker)) {
-                    throw new UnsupportedOperationException("Workspace-Import of protected properties: Not yet implement. ");
+                    log.warn("Protected property importer configured is not supported by workspace import.");
+                    //throw new UnsupportedOperationException("Workspace-Import of protected properties: Not yet implement. ");
                 }
             }
         }
