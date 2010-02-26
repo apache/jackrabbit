@@ -27,6 +27,8 @@ import javax.jcr.Session;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <code>XmlHandler</code> imports xml files and exports nodes that have
@@ -46,6 +48,19 @@ public class XmlHandler extends DefaultHandler {
      * the xml mimetype
      */
     public static final String XML_MIMETYPE = "text/xml";
+
+    /**
+     * the alternative xml mimetype. tika detects xml as this.
+     */
+    public static final String XML_MIMETYPE_ALT = "application/xml";
+
+    private static final Set<String> supportedTypes;
+    static {
+        supportedTypes = new HashSet<String>();
+        supportedTypes.add(XML_MIMETYPE);
+        supportedTypes.add(XML_MIMETYPE_ALT);
+    }
+
 
     /**
      * Creates a new <code>XmlHandler</code> with default nodetype definitions
@@ -87,11 +102,8 @@ public class XmlHandler extends DefaultHandler {
      */
     @Override
     public boolean canImport(ImportContext context, boolean isCollection) {
-        if (context == null || context.isCompleted()) {
-            return false;
-        }
-        boolean isXmlMimeType = XML_MIMETYPE.equals(context.getMimeType());
-        return isXmlMimeType
+        return !(context == null || context.isCompleted())
+                && supportedTypes.contains(context.getMimeType())
                 && context.hasStream()
                 && context.getContentLength() > 0
                 && super.canImport(context, isCollection);
