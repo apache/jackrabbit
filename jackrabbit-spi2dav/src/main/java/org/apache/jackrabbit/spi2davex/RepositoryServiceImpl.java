@@ -399,11 +399,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
     private static void addIfHeader(SessionInfo sInfo, HttpMethod method) {
         try {
-            String[] locktokens = sInfo.getLockTokens();
-            if (locktokens != null && locktokens.length > 0) {
-                IfHeader ifH = new IfHeader(locktokens);
-                method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
-            }
+            initMethod(method, sInfo, true);
         } catch (RepositoryException e) {
             // should never get here
             log.error("Unable to retrieve lock tokens: omitted from request header.");
