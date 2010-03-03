@@ -181,7 +181,7 @@ class SerializableBinary implements Binary, Serializable {
                 byte[] buffer = new byte[BUFFER_SIZE];
                 long count = 0;
                 int n = stream.read(buffer);
-                while (n != -1) {
+                while (n != -1 && count < length) {
                     output.write(buffer, 0, n);
                     count += n;
                     n = stream.read(buffer, 0, Math.min(
