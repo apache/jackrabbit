@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <code>SessionInfoImpl</code> is a searializable bean based implementation of
+ * <code>SessionInfoImpl</code> is a serializable bean based implementation of
  * <code>SessionInfo</code>.
  */
 public class SessionInfoImpl implements SessionInfo, Serializable {
