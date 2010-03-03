@@ -161,10 +161,13 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     }
 
     /**
+     * Note: as of 2.x this method returns the session irrespective of the item's
+     * status.
+     * 
      * @see javax.jcr.Item#getSession()
+     * @see <a href="http://issues.apache.org/jira/browse/JCR-2529">Issue JCR-2529</a>
      */
     public Session getSession() throws RepositoryException {
-        checkStatus();
         return session;
     }
 
