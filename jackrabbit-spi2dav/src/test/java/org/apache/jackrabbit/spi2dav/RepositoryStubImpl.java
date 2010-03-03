@@ -41,7 +41,7 @@ import java.util.Properties;
 /**
  * <code>RepositoryStubImpl</code>...
  */
-public class RepositoryStubImpl  extends RepositoryStub {
+public class RepositoryStubImpl extends RepositoryStub {
 
     /**
      * Property for the repository url

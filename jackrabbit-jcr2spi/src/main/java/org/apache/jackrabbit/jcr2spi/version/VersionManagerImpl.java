@@ -85,6 +85,12 @@ public class VersionManagerImpl implements VersionManager {
         return workspaceManager.getHierarchyManager().getNodeEntry(cp.getNewVersionId());
     }
 
+    public NodeEntry checkpoint(NodeState nodeState, NodeId activityId) throws RepositoryException {
+        Checkpoint cp = Checkpoint.create(nodeState, activityId, this);
+        workspaceManager.execute(cp);
+        return workspaceManager.getHierarchyManager().getNodeEntry(cp.getNewVersionId());
+    }
+
     /**
      * Search nearest ancestor that is versionable. If no versionable ancestor
      * can be found, <code>true</code> is returned.

@@ -426,6 +426,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "checkpoint(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
+    public NodeId checkpoint(final SessionInfo sessionInfo, final NodeId nodeId, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        return (NodeId) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.checkpoint(unwrap(sessionInfo), nodeId, activityId);
+            }
+        }, "checkpoint(SessionInfo, NodeId, NodeId)", new Object[]{unwrap(sessionInfo), nodeId, activityId});
+    }
+
     public void removeVersion(final SessionInfo sessionInfo, final NodeId versionHistoryId,
             final NodeId versionId) throws RepositoryException {
 
@@ -538,8 +546,8 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 new Object[]{unwrap(sessionInfo), activityId});
     }
 
-    public Iterator mergeActivity(final SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
-        return (Iterator) execute(new Callable() {
+    public Iterator<NodeId> mergeActivity(final SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        return (Iterator<NodeId>) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.mergeActivity(unwrap(sessionInfo), activityId);
             }

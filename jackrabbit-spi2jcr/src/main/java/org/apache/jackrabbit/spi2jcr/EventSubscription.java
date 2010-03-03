@@ -101,13 +101,6 @@ class EventSubscription implements Subscription, EventListener {
     }
 
     /**
-     * @return the session info associated with this event subscription.
-     */
-    SessionInfoImpl getSessionInfo() {
-        return sessionInfo;
-    }
-
-    /**
      * Sets a new list of event filters for this subscription.
      *
      * @param filters the new filters.
@@ -175,22 +168,21 @@ class EventSubscription implements Subscription, EventListener {
                     // continue
                 }
             }
-            bundles = (EventBundle[]) eventBundles.toArray(new EventBundle[eventBundles.size()]);
+            bundles = eventBundles.toArray(new EventBundle[eventBundles.size()]);
             eventBundles.clear();
         }
-        EventFilter[] eventFilters = (EventFilter[]) filters.toArray(
-                new EventFilter[filters.size()]);
+        EventFilter[] eventFilters = filters.toArray(new EventFilter[filters.size()]);
         // apply filters to bundles
         for (int i = 0; i < bundles.length; i++) {
-            List filteredEvents = new ArrayList();
-            for (Iterator it = bundles[i].getEvents(); it.hasNext(); ) {
-                Event e = (Event) it.next();
+            List<Event> filteredEvents = new ArrayList<Event>();
+            for (Iterator<Event> it = bundles[i].getEvents(); it.hasNext(); ) {
+                Event e = it.next();
                 // TODO: this is actually not correct. if filters are empty no event should go out
                 if (eventFilters == null || eventFilters.length == 0) {
                     filteredEvents.add(e);
                 } else {
-                    for (int j = 0; j < eventFilters.length; j++) {
-                        if (eventFilters[j].accept(e, bundles[i].isLocal())) {
+                    for (EventFilter eventFilter : eventFilters) {
+                        if (eventFilter.accept(e, bundles[i].isLocal())) {
                             filteredEvents.add(e);
                             break;
                         }

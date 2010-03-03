@@ -977,7 +977,12 @@ public class WorkspaceManager
          * @see OperationVisitor#visit(Checkpoint)
          */
         public void visit(Checkpoint operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-            NodeId newId = service.checkpoint(sessionInfo, operation.getNodeId());
+            NodeId newId;
+            if (operation.supportsActivity()) {
+                newId = service.checkpoint(sessionInfo, operation.getNodeId(), operation.getActivityId());
+            } else {
+                newId = service.checkpoint(sessionInfo, operation.getNodeId());
+            }
             operation.setNewVersionId(newId);
         }
 

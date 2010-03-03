@@ -1528,6 +1528,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
+     * @see RepositoryService#checkpoint(SessionInfo, NodeId, NodeId)
+     */
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        if (activityId == null) {
+            return checkpoint(sessionInfo, nodeId);
+        } else {
+            // TODO
+            throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        }
+    }
+
+    /**
      * @see RepositoryService#removeVersion(SessionInfo, NodeId, NodeId)
      */
     public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId) throws RepositoryException {

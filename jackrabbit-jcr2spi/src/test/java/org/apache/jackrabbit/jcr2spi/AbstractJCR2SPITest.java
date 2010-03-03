@@ -427,6 +427,11 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.checkpoint(sessionInfo, nodeId);
     }
 
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId)
+            throws RepositoryException {
+        return repositoryService.checkpoint(sessionInfo, nodeId, activityId);
+    }
+
     public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId)
             throws RepositoryException {
 

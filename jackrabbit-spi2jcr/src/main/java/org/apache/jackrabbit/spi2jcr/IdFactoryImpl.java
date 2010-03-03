@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeId;
@@ -44,6 +43,7 @@ class IdFactoryImpl extends AbstractIdFactory {
         return INSTANCE;
     }
 
+    @Override
     protected PathFactory getPathFactory() {
         return PathFactoryImpl.getInstance();
     }
@@ -51,15 +51,11 @@ class IdFactoryImpl extends AbstractIdFactory {
      * Creates a <code>NodeId</code> for the given <code>node</code>.
      *
      * @param node       the JCR Node.
-     * @param resolver
      * @return the <code>NodeId</code> for <code>node</code>.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>node</code>.
      */
-    public NodeId createNodeId(Node node, NamePathResolver resolver)
-            throws RepositoryException {
-        PathBuilder builder = new PathBuilder();
-        int pathElements = 0;
+    public NodeId createNodeId(Node node) throws RepositoryException {
         String uniqueId = node.getIdentifier();
         return createNodeId(uniqueId);
     }
@@ -77,7 +73,7 @@ class IdFactoryImpl extends AbstractIdFactory {
                                        NamePathResolver resolver)
             throws RepositoryException {
         Node parent = property.getParent();
-        NodeId nodeId = createNodeId(parent, resolver);
+        NodeId nodeId = createNodeId(parent);
         String jcrName = property.getName();
         Name name;
         try {

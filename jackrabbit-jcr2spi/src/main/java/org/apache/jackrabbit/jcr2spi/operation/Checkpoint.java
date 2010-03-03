@@ -42,12 +42,25 @@ public class Checkpoint extends AbstractOperation {
 
     private final NodeState nodeState;
     private final VersionManager mgr;
-    
+
+    private final NodeId activityId;
+    private final boolean supportsActivity;
+
     private NodeId newVersionId;
 
     private Checkpoint(NodeState nodeState, VersionManager mgr) {
         this.nodeState = nodeState;
         this.mgr = mgr;
+        // NOTE: affected-states only needed for transient modifications
+        supportsActivity = false;
+        activityId = null;
+    }
+
+    private Checkpoint(NodeState nodeState, NodeId activityId, VersionManager mgr) {
+        this.nodeState = nodeState;
+        this.activityId = activityId;
+        this.mgr = mgr;
+        supportsActivity = true;
         // NOTE: affected-states only needed for transient modifications
     }
 
@@ -92,6 +105,26 @@ public class Checkpoint extends AbstractOperation {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 
+    /**
+     * The id of the current activity present on the editing session or <code>null</code>.
+     *
+     * @return id of the current activity present on the editing session or <code>null</code>.
+     */
+    public NodeId getActivityId() {
+        return activityId;
+    }
+
+    /**
+     * Returns <code>true</code>, if activities are supported,
+     * <code>false</code> otherwise.
+     *
+     * @return  <code>true</code>, if activities are supported,
+     * <code>false</code> otherwise.
+     */
+    public boolean supportsActivity() {
+        return supportsActivity;
+    }
+
     public void setNewVersionId(NodeId newVersionId) {
         this.newVersionId = newVersionId;
     }
@@ -103,5 +136,9 @@ public class Checkpoint extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     public static Checkpoint create(NodeState nodeState, VersionManager mgr) {
         return new Checkpoint(nodeState, mgr);
+    }
+
+    public static Checkpoint create(NodeState nodeState, NodeId activityId, VersionManager mgr) {
+        return new Checkpoint(nodeState, activityId, mgr);
     }
 }

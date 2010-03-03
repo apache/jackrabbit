@@ -78,6 +78,12 @@ public interface VersionManager {
 
     /**
      * @param nodeState
+     * @throws RepositoryException
+     * @see javax.jcr.version.VersionManager#checkpoint(String)
+     */
+    public NodeEntry checkpoint(NodeState nodeState, NodeId activityId) throws RepositoryException;
+    /**
+     * @param nodeState
      * @return
      * @throws RepositoryException
      * @see javax.jcr.Node#isCheckedOut()

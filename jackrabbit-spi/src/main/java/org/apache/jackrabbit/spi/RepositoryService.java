@@ -665,6 +665,21 @@ public interface RepositoryService {
     public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
+     * Performs a checkpoint for the <code>Node</code> identified by the given
+     * <code>NodeId</code>. For the checkout part the specified <code>activityId</code>
+     * is taken into account as specified in {@link #checkout(SessionInfo, NodeId, NodeId)}.
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @param activityId Id of the activity node set to the editing session or
+     * <code>null</code> if no activity is in effect.
+     * @throws UnsupportedRepositoryOperationException
+     * @throws LockException
+     * @throws RepositoryException
+     * @since JCR 2.0
+     */
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId)  throws UnsupportedRepositoryOperationException, RepositoryException;
+    /**
      * Remove the version inditified by the specified <code>versionId</code>.
      *
      * @param sessionInfo
