@@ -365,21 +365,18 @@ public class SearchResourceImpl implements SearchResource {
             } else {
                 path = row.getPath();
             }
-            return vf.createValue(path, PropertyType.PATH);
+            return (path == null) ? null : vf.createValue(path, PropertyType.PATH);
         }
     }
 
     private static void collectSelectorNames(Query query,
                                              QueryResult result,
-                                             List<String> sn) {
+                                             List<String> sn) throws RepositoryException {
         if (query instanceof QueryObjectModel) {
             QueryObjectModel qom = (QueryObjectModel) query;
             collectSelectorNames(qom.getSource(), sn);
         } else {
-            // TODO
-            // sn.addAll(Arrays.asList(qResult.getSelectorNames()));
-            // TODO: remove once getSelectorNames() is available
-            sn.add(null); // default selector
+            sn.addAll(Arrays.asList(result.getSelectorNames()));
         }
     }
 
