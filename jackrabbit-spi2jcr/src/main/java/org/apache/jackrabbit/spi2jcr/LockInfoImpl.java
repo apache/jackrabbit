@@ -33,15 +33,13 @@ class LockInfoImpl extends org.apache.jackrabbit.spi.commons.LockInfoImpl {
      *
      * @param lock the lock.
      * @param idFactory the id factory.
-     * @param resolver the name and path resolver.
      * @throws RepositoryException if an error occurs while the node from the
      * given lock or while creating the node id.
      */
-    private LockInfoImpl(Lock lock, IdFactoryImpl idFactory,
-                         NamePathResolver resolver) throws RepositoryException {
+    private LockInfoImpl(Lock lock, IdFactoryImpl idFactory) throws RepositoryException {
         super(lock.getLockToken(), lock.getLockOwner(), lock.isDeep(),
                 lock.isSessionScoped(), lock.getSecondsRemaining(), lock.isLockOwningSession(), 
-                idFactory.createNodeId(lock.getNode(), resolver));
+                idFactory.createNodeId(lock.getNode()));
     }
 
     /**
@@ -49,11 +47,10 @@ class LockInfoImpl extends org.apache.jackrabbit.spi.commons.LockInfoImpl {
      * 
      * @param lock the JCR lock.
      * @param idFactory the id factory.
-     * @param resolver the name and path resolver.
      * @return a new <code>LockInfo</code>
      * @throws RepositoryException If an error occurs while creating the info.
      */
-    public static LockInfo createLockInfo(Lock lock, IdFactoryImpl idFactory, NamePathResolver resolver) throws RepositoryException {
-        return new LockInfoImpl(lock, idFactory, resolver);
+    public static LockInfo createLockInfo(Lock lock, IdFactoryImpl idFactory) throws RepositoryException {
+        return new LockInfoImpl(lock, idFactory);
     }
 }

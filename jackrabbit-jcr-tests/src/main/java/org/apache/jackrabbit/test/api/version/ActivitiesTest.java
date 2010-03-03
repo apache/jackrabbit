@@ -154,5 +154,32 @@ public class ActivitiesTest extends AbstractVersionTest {
         }
     }
 
+    public void testActivitiesRelationWithCheckpoint() throws Exception {
+
+        Node an = null;
+
+        try {
+            an = vm.createActivity("foobar2");
+            vm.setActivity(an);
+
+            String path = versionableNode.getPath();
+
+            vm.checkpoint(path);
+
+            versionableNode = superuser.getNode(path);
+            Property act = versionableNode.getProperty(Property.JCR_ACTIVITY);
+            assertNotNull(act);
+            assertEquals(PropertyType.REFERENCE, act.getType());
+            assertTrue(act.getNode().isSame(an));
+
+            versionableNode.remove();
+            superuser.save();
+        }
+        finally {
+            if (an != null) {
+                vm.removeActivity(an);
+            }
+        }
+    }
 }
 

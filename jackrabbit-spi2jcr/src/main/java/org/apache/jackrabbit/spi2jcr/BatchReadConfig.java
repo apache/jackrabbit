@@ -31,7 +31,7 @@ public class BatchReadConfig {
     public static final int DEPTH_DEFAULT = 0;
     public static final int DEPTH_INFINITE = -1;
 
-    private Map depthMap = new HashMap(0);
+    private Map<Name, Integer> depthMap = new HashMap<Name, Integer>(0);
 
     /**
      * Return the depth for the given node type name. If the name is
@@ -47,7 +47,7 @@ public class BatchReadConfig {
      */
     public int getDepth(Name ntName) {
         if (depthMap.containsKey(ntName)) {
-            return ((Integer) (depthMap.get(ntName))).intValue();
+            return depthMap.get(ntName);
         } else {
             return DEPTH_DEFAULT;
         }
@@ -63,6 +63,6 @@ public class BatchReadConfig {
         if (ntName == null || depth < DEPTH_INFINITE) {
             throw new IllegalArgumentException();
         }
-        depthMap.put(ntName, new Integer(depth));
+        depthMap.put(ntName, depth);
     }
 }

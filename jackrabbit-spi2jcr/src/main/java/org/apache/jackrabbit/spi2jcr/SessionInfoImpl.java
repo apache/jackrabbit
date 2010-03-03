@@ -71,12 +71,12 @@ class SessionInfoImpl implements SessionInfo {
     /**
      * The subscriptions that are currently in place for this session info.
      */
-    private List subscriptions = Collections.EMPTY_LIST;
+    private List<EventSubscription> subscriptions = Collections.emptyList();
 
     /**
      * Monitor object for subscription changes.
      */
-    private Object subscriptionChange = new Object();
+    private final Object subscriptionChange = new Object();
 
     /**
      * Creates a new session info based on the given <code>session</code>.
@@ -144,7 +144,7 @@ class SessionInfoImpl implements SessionInfo {
         return duplicateCredentials(credentials);
     }
 
-    Collection getSubscriptions() {
+    Collection<EventSubscription> getSubscriptions() {
         synchronized (subscriptionChange) {
             return subscriptions;
         }
@@ -162,7 +162,7 @@ class SessionInfoImpl implements SessionInfo {
     Subscription createSubscription(IdFactory idFactory, QValueFactory qValueFactory, EventFilter[] filters)
             throws RepositoryException {
         synchronized (subscriptionChange) {
-            List tmp = new ArrayList(subscriptions);
+            List<EventSubscription> tmp = new ArrayList<EventSubscription>(subscriptions);
             EventSubscription s = new EventSubscription(idFactory, qValueFactory, this, filters);
             tmp.add(s);
             subscriptions = Collections.unmodifiableList(tmp);
@@ -175,9 +175,9 @@ class SessionInfoImpl implements SessionInfo {
      *
      * @param subscription the subscription to remove.
      */
-    void removeSubscription(Subscription subscription) {
+    void removeSubscription(EventSubscription subscription) {
         synchronized (subscriptionChange) {
-            List tmp = new ArrayList(subscriptions);
+            List<EventSubscription> tmp = new ArrayList<EventSubscription>(subscriptions);
             tmp.remove(subscription);
             subscriptions = Collections.unmodifiableList(tmp);
         }

@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
@@ -50,7 +52,7 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
                         NamePathResolver resolver)
             throws RepositoryException, NameException {
         super(resolver.getQPath(node.getPath()),
-                idFactory.createNodeId(node, resolver), node.getIndex(),
+                idFactory.createNodeId(node), node.getIndex(),
                 resolver.getQName(node.getPrimaryNodeType().getName()),
                 getNodeTypeNames(node.getMixinNodeTypes(), resolver),
                 getPropertyIds(node.getReferences(), resolver, idFactory),
@@ -90,20 +92,20 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
      * @throws RepositoryException if an error occurs while reading from the
      *                             properties.
      */
-    private static Iterator getPropertyIds(PropertyIterator props,
-                                              NamePathResolver resolver,
-                                              IdFactoryImpl idFactory)
+    private static Iterator<PropertyId> getPropertyIds(PropertyIterator props,
+                                                       NamePathResolver resolver,
+                                                       IdFactoryImpl idFactory)
             throws RepositoryException {
-        List references = new ArrayList();
+        List<PropertyId> references = new ArrayList<PropertyId>();
         while (props.hasNext()) {
             references.add(idFactory.createPropertyId(props.nextProperty(), resolver));
         }
         return references.iterator();
     }
 
-    private static Iterator getChildInfos(NodeIterator childNodes,
-                                          NamePathResolver resolver) throws RepositoryException {
-        List childInfos = new ArrayList();
+    private static Iterator<ChildInfo> getChildInfos(NodeIterator childNodes,
+                                                     NamePathResolver resolver) throws RepositoryException {
+        List<ChildInfo> childInfos = new ArrayList<ChildInfo>();
         while (childNodes.hasNext()) {
             childInfos.add(new ChildInfoImpl(childNodes.nextNode(), resolver));
         }

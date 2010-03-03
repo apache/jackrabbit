@@ -643,6 +643,14 @@ public abstract class AbstractRepositoryService implements RepositoryService {
     /**
      * @throws UnsupportedRepositoryOperationException always.
      */
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId)
+            throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
     public void removeVersion(SessionInfo sessionInfo,
                               NodeId versionHistoryId,
                               NodeId versionId)

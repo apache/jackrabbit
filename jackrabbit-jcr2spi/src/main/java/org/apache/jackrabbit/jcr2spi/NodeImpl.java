@@ -902,7 +902,14 @@ public class NodeImpl extends ItemImpl implements Node {
             checkout();
             return getBaseVersion();
         } else {
-            NodeEntry newVersion = session.getVersionStateManager().checkpoint(getNodeState());
+            NodeEntry newVersion;
+            if (session.isSupportedOption(Repository.OPTION_ACTIVITIES_SUPPORTED)) {
+                NodeImpl activity = (NodeImpl) session.getWorkspace().getVersionManager().getActivity();
+                NodeId activityId = (activity == null) ? null : activity.getNodeState().getNodeId();
+                newVersion = session.getVersionStateManager().checkpoint(getNodeState(), activityId);
+            } else {
+                newVersion = session.getVersionStateManager().checkpoint(getNodeState());
+            }
             return (Version) getItemManager().getItem(newVersion);
         }
     }
@@ -1304,9 +1311,8 @@ public class NodeImpl extends ItemImpl implements Node {
             return true;
         }
         // check if contained in mixin types
-        Name[] mixins = getNodeState().getMixinTypeNames();
-        for (int i = 0; i < mixins.length; i++) {
-            if (mixins[i].equals(qName)) {
+        for (Name mixin : getNodeState().getMixinTypeNames()) {
+            if (mixin.equals(qName)) {
                 return true;
             }
         }
@@ -1521,7 +1527,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Create a new multivalue property
+     * Create a new multi valued property
      *
      * @param qName
      * @param type
@@ -1539,9 +1545,9 @@ public class NodeImpl extends ItemImpl implements Node {
             if (type == PropertyType.UNDEFINED) {
                 // try to retrieve type from the values array
                 if (values.length > 0) {
-                    for (int i = 0; i < values.length; i++) {
-                        if (values[i] != null) {
-                            targetType = values[i].getType();
+                    for (Value value : values) {
+                        if (value != null) {
+                            targetType = value.getType();
                             break;
                         }
                     }

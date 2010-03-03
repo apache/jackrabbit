@@ -46,8 +46,7 @@ class PropertyInfoImpl
     public PropertyInfoImpl(Property property,
                             IdFactoryImpl idFactory,
                             NamePathResolver resolver,
-                            QValueFactory qValueFactory)
-            throws RepositoryException, NameException {
+                            QValueFactory qValueFactory) throws RepositoryException, NameException {
         super(resolver.getQPath(property.getPath()),
                 idFactory.createPropertyId(property, resolver),
                 property.getType(), property.isMultiple(),
@@ -65,8 +64,7 @@ class PropertyInfoImpl
      */
     private static QValue[] getValues(Property property,
                                       NamePathResolver resolver,
-                                      QValueFactory factory)
-            throws RepositoryException {
+                                      QValueFactory factory) throws RepositoryException {
         boolean isMultiValued = property.isMultiple();
         QValue[] values;
         if (isMultiValued) {
@@ -77,7 +75,8 @@ class PropertyInfoImpl
             }
         } else {
             values = new QValue[]{
-                ValueFormat.getQValue(property.getValue(), resolver, factory)};
+                    ValueFormat.getQValue(property.getValue(), resolver, factory)
+            };
         }
         return values;
     }

@@ -103,6 +103,7 @@ class QueryInfoImpl implements QueryInfo {
     public RangeIterator getRows() {
         try {
             return new RangeIteratorDecorator(result.getRows()) {
+                @Override
                 public Object next() {
                     try {
                         return new QueryResultRowImpl(

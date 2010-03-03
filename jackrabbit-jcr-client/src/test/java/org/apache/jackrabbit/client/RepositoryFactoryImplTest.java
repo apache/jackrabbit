@@ -107,14 +107,14 @@ public class RepositoryFactoryImplTest extends TestCase {
     public void testGetRepositoryWithLogger() throws RepositoryException {
         List<Object> lwprovider = new ArrayList<Object>();
         lwprovider.add(null);
-        lwprovider.add(new Boolean(true));
+        lwprovider.add(true);
         lwprovider.add(new Slf4jLogWriterProvider());
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("org.apache.jackrabbit.jcr2spi.RepositoryConfig", RepositoryConfigImpl.INSTANCE);
 
-        for (int i = 0; i < lwprovider.size(); i++) {
-            params.put("org.apache.jackrabbit.spi.commons.logging.LogWriterProvider", lwprovider.get(i));
+        for (Object aLwprovider : lwprovider) {
+            params.put("org.apache.jackrabbit.spi.commons.logging.LogWriterProvider", aLwprovider);
             Repository repo = factory.getRepository(params);
             assertNotNull(repo);
         }
@@ -181,7 +181,7 @@ public class RepositoryFactoryImplTest extends TestCase {
     }
 
     public void testGetRepositoryUnknownParams() throws RepositoryException {
-        Repository repo = factory.getRepository(Collections.EMPTY_MAP);
+        Repository repo = factory.getRepository(Collections.emptyMap());
         assertNull(repo);
     }
 
@@ -378,6 +378,10 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
+            return null;
+        }
+
+        public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
             return null;
         }
 
