@@ -87,7 +87,7 @@ public class SessionInfoImpl extends org.apache.jackrabbit.spi.commons.SessionIn
      * request(s) as well as those tokens that have been added to the
      * corresponding JCR session.
      * Note, that the <code>sessionScopedTokens</code> are only used for
-     * communiation with the DAV server and are never exposed through the
+     * communication with the DAV server and are never exposed through the
      * JCR API for they belong to session-scoped locks.
      */
     String[] getAllLockTokens() {
