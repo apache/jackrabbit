@@ -44,15 +44,15 @@ public class UserImpl extends AuthorizableImpl implements User {
 
     //--------------------------------------------------------------------------
     /**
-     *
+     * Creates a hash of the specified password if it is found to be plain text.
+     * 
      * @param password
      * @return
      * @throws RepositoryException
      */
     static String buildPasswordValue(String password) throws RepositoryException {
         try {
-            CryptedSimpleCredentials creds = new CryptedSimpleCredentials("_", password);
-            return creds.getPassword();
+            return new CryptedSimpleCredentials("_", password).getPassword();
         } catch (NoSuchAlgorithmException e) {
             throw new RepositoryException(e);
         } catch (UnsupportedEncodingException e) {
@@ -122,9 +122,6 @@ public class UserImpl extends AuthorizableImpl implements User {
      * @see User#changePassword(String)
      */
     public void changePassword(String password) throws RepositoryException {
-        if (password == null) {
-            throw new IllegalArgumentException("The password may never be null.");
-        }
         Value v = getSession().getValueFactory().createValue(buildPasswordValue(password));
         userManager.setProtectedProperty(getNode(), P_PASSWORD, v);
     }

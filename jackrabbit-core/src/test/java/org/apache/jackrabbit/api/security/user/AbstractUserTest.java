@@ -115,6 +115,10 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
         }
     }
 
+    protected String buildPassword(String uid) {
+        return buildPassword(uid, false);
+    }
+
     protected String buildPassword(Principal p) {
         return buildPassword(p.getName(), false);
     }

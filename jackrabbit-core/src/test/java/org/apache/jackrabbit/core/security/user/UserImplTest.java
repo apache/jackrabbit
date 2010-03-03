@@ -20,11 +20,11 @@ import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.value.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -34,19 +34,20 @@ import javax.jcr.Value;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <code>UserImplTest</code>...
  */
 public class UserImplTest extends AbstractUserTest {
 
-    private static Logger log = LoggerFactory.getLogger(UserImplTest.class);
-
     private String uID;
     private Credentials creds;
     private Session uSession;
     private UserManager uMgr;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -62,6 +63,7 @@ public class UserImplTest extends AbstractUserTest {
         uMgr = getUserManager(uSession);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             userMgr.getAuthorizable(uID).remove();
@@ -120,23 +122,64 @@ public class UserImplTest extends AbstractUserTest {
         assertNull(u.getProperty(propertyName1));
     }
 
+    public void testCredentials() throws RepositoryException, NoSuchAlgorithmException, UnsupportedEncodingException {
+        User u = (User) userMgr.getAuthorizable(uID);
+
+        Credentials uc = u.getCredentials();
+        assertTrue(uc instanceof CryptedSimpleCredentials);
+        assertTrue(((CryptedSimpleCredentials) uc).matches((SimpleCredentials) creds));
+    }
+
     public void testChangePassword() throws RepositoryException, NotExecutableException, NoSuchAlgorithmException, UnsupportedEncodingException {
-        String oldPw = getHelper().getProperty("javax.jcr.tck.superuser.pwd");
-        if (oldPw == null) {
-            // missing property
-            throw new NotExecutableException();
+        User u = (User) userMgr.getAuthorizable(uID);
+
+        String sha1Hash = "{" +SecurityConstants.DEFAULT_DIGEST+ "}" + Text.digest(SecurityConstants.DEFAULT_DIGEST, "abc".getBytes());
+        String md5Hash = "{md5}" + Text.digest("md5", "abc".getBytes());
+
+        // valid passwords and the corresponding match
+        Map<String,String> pwds = new HashMap<String, String>();
+        // plain text passwords
+        pwds.put("abc", "abc");
+        pwds.put("{a}password", "{a}password");
+        // passwords already in hashed format.
+        pwds.put(sha1Hash, "abc");
+        pwds.put(md5Hash, "abc");
+
+        for (String pw : pwds.keySet()) {
+            u.changePassword(pw);
+
+            String plain = pwds.get(pw);
+            SimpleCredentials sc = new SimpleCredentials(u.getID(), plain.toCharArray());
+            CryptedSimpleCredentials cc = (CryptedSimpleCredentials) u.getCredentials();
+
+            assertTrue(cc.matches(sc));
         }
 
-        User user = getTestUser(superuser);
-        try {
-            user.changePassword("pw");
-            save(superuser);
+        // valid passwords, non-matching plain text
+        Map<String, String>noMatch = new HashMap<String, String>();
+        noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}", "");
+        noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}", "{"+SecurityConstants.DEFAULT_DIGEST+"}");
+        noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}any", "any");
+        noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}any", "{"+SecurityConstants.DEFAULT_DIGEST+"}any");
+        noMatch.put(sha1Hash, sha1Hash);
+        noMatch.put(md5Hash, md5Hash);
 
-            SimpleCredentials creds = new SimpleCredentials(user.getID(), "pw".toCharArray());
-            assertTrue(((CryptedSimpleCredentials) user.getCredentials()).matches(creds));
-        } finally {
-            user.changePassword(oldPw);
-            save(superuser);
+        for (String pw : noMatch.keySet()) {
+            u.changePassword(pw);
+
+            String plain = noMatch.get(pw);
+            SimpleCredentials sc = new SimpleCredentials(u.getID(), plain.toCharArray());
+            CryptedSimpleCredentials cc = (CryptedSimpleCredentials) u.getCredentials();
+
+            assertFalse(cc.matches(sc));
+        }
+
+        // invalid pw string
+        try {
+            u.changePassword(null);
+            fail("invalid pw null");
+        } catch (Exception e) {
+            // success
         }
     }
 }

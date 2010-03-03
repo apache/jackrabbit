@@ -45,6 +45,7 @@ public class UserManagerImplTest extends AbstractUserTest {
 
     private String pPrincipalName;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         if (!(userMgr instanceof UserManagerImpl)) {
@@ -107,7 +108,7 @@ public class UserManagerImplTest extends AbstractUserTest {
     public void testCreateUserIdDifferentFromPrincipalName() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
         String uid = getTestUserId(p);
-        String pw = buildPassword(uid, true);
+        String pw = buildPassword(uid);
 
         User u = null;
         Session uSession = null;
@@ -142,7 +143,7 @@ public class UserManagerImplTest extends AbstractUserTest {
         User u = null;
         Group gr = null;
         try {
-            u = userMgr.createUser(uid, buildPassword(uid, true), p, null);
+            u = userMgr.createUser(uid, buildPassword(uid), p, null);
             save(superuser);
             gr = userMgr.createGroup(new TestPrincipal(uid));
             save(superuser);
@@ -177,7 +178,7 @@ public class UserManagerImplTest extends AbstractUserTest {
 
                     // the result must contain 1 authorizable
                     assertTrue(users.hasNext());
-                    Authorizable first = (Authorizable) users.next();
+                    Authorizable first = users.next();
                     assertEquals(first.getID(), val);
 
                     // since id is unique -> there should be no more users in
@@ -221,7 +222,7 @@ public class UserManagerImplTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             String uid = "UID" + p.getName();
-            u = userMgr.createUser(uid, buildPassword(uid, false), p, null);
+            u = userMgr.createUser(uid, buildPassword(uid), p, null);
             save(superuser);
 
             boolean found = false;
@@ -246,7 +247,7 @@ public class UserManagerImplTest extends AbstractUserTest {
 
             it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
             while (it.hasNext()) {
-                if (((Authorizable) it.next()).getPrincipal().getName().equals(p.getName())) {
+                if (it.next().getPrincipal().getName().equals(p.getName())) {
                     fail("Searching for Groups should never find a user");
                 }
             }
@@ -285,7 +286,7 @@ public class UserManagerImplTest extends AbstractUserTest {
 
             it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
             while (it.hasNext()) {
-                if (((Authorizable) it.next()).getPrincipal().getName().equals(p.getName())) {
+                if (it.next().getPrincipal().getName().equals(p.getName())) {
                     fail("Searching for Users should never find a group");
                 }
             }
@@ -313,7 +314,7 @@ public class UserManagerImplTest extends AbstractUserTest {
 
     public void testNewUserCanLogin() throws RepositoryException, NotExecutableException {
         String uid = getTestPrincipal().getName();
-        String pw = buildPassword(uid, false);
+        String pw = buildPassword(uid);
 
         User u = null;
         Session s = null;
@@ -476,13 +477,13 @@ public class UserManagerImplTest extends AbstractUserTest {
 
         String usersPath = ((UserManagerImpl) userMgr).getUsersPath();
 
-        List<String> invalid = new ArrayList();
+        List<String> invalid = new ArrayList<String>();
         invalid.add("../../path");
         invalid.add(usersPath + "/../test");
 
         for (String path : invalid) {
             try {
-                User user = userMgr.createUser(uid, buildPassword(uid, true), p, path);
+                User user = userMgr.createUser(uid, buildPassword(uid), p, path);
                 save(superuser);
 
                 fail("intermediate path may not point outside of the user tree.");

@@ -16,51 +16,125 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.user.User;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
+import java.security.NoSuchAlgorithmException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.TestCase;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * <code>CryptedSimpleCredentialsTest</code>...
  */
-public class CryptedSimpleCredentialsTest extends AbstractJCRTest {
+public class CryptedSimpleCredentialsTest extends TestCase {
 
-    private String userID;
-    private CryptedSimpleCredentials creds;
+    private final String userID = "anyUserID";
+    private final String pw = "somePw";
+
+    private SimpleCredentials sCreds;
+    private List<CryptedSimpleCredentials> cCreds = new ArrayList<CryptedSimpleCredentials>();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
 
-        userID = superuser.getUserID();
-        if (superuser instanceof JackrabbitSession) {
-            UserManager umg = ((JackrabbitSession) superuser).getUserManager();
-            User u = (User) umg.getAuthorizable(userID);
-            Credentials crd = u.getCredentials();
-            if (crd instanceof SimpleCredentials) {
-                creds = new CryptedSimpleCredentials((SimpleCredentials) crd);
-            } else {
-                throw new NotExecutableException();
-            }
-        } else {
-            throw new NotExecutableException();
+        sCreds = new SimpleCredentials(userID, pw.toCharArray());
+        // build crypted credentials from the simple credentials
+        CryptedSimpleCredentials cc = new CryptedSimpleCredentials(sCreds);
+        cCreds.add(cc);
+        // build from uid/pw
+        cCreds.add(new CryptedSimpleCredentials(userID, pw));
+        // build from uid and crypted pw
+        cCreds.add(new CryptedSimpleCredentials(userID, cc.getPassword()));
+    }
+
+    public void testSimpleMatch() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertTrue(cc.matches(sCreds));
         }
     }
 
     public void testUserIDMatchesCaseInsensitive() throws Exception {
         String uid = userID.toUpperCase();
-        assertTrue(creds.matches(new SimpleCredentials(uid, creds.getPassword().toCharArray())));
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertTrue(cc.matches(new SimpleCredentials(uid, pw.toCharArray())));
+        }
 
         uid = userID.toLowerCase();
-        assertTrue(creds.matches(new SimpleCredentials(uid, creds.getPassword().toCharArray())));
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertTrue(cc.matches(new SimpleCredentials(uid, pw.toCharArray())));
+        }
     }
 
     public void testGetUserID() {
-        assertEquals(userID, creds.getUserID());
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertEquals(userID, cc.getUserID());
+        }
+    }
+
+    public void testGetPassword() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        CryptedSimpleCredentials prev = null;
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertFalse(pw.equals(cc.getPassword()));
+            if (prev != null) {
+                assertEquals(prev.getPassword(), cc.getPassword());
+            }
+            prev = cc;
+        }
+
+        // build crypted credentials from the uid and the crypted pw contained
+        // in simple credentials -> simple-c-password must be treated plain-text
+        SimpleCredentials sc = new SimpleCredentials(userID, prev.getPassword().toCharArray());
+        CryptedSimpleCredentials diff = new CryptedSimpleCredentials(sc);
+
+        assertFalse(prev.getPassword().equals(diff.getPassword()));
+        assertFalse(String.valueOf(sc.getPassword()).equals(diff.getPassword()));
+    }
+
+    public void testGetAlgorithm() {
+        CryptedSimpleCredentials prev = null;
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertNotNull(cc.getAlgorithm());
+            if (prev != null) {
+                assertEquals(prev.getAlgorithm(), cc.getAlgorithm());
+            }
+            prev = cc;
+        }
+    }
+
+    public void testPasswordMatch() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        // simple credentials containing the crypted pw must not match.
+        SimpleCredentials sc = new SimpleCredentials(userID, cCreds.get(0).getPassword().toCharArray());
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertFalse(cc.matches(sc));
+        }
+
+        // simple credentials containing different pw must not match.
+        SimpleCredentials sc2 = new SimpleCredentials(userID, "otherPw".toCharArray());
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertFalse(cc.matches(sc2));
+        }
+
+        // simple credentials with pw in digested form must not match.
+        SimpleCredentials sc3 = new SimpleCredentials(userID, "{unknown}somePw".toCharArray());
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertFalse(cc.matches(sc3));
+        }
+
+        // simple credentials with pw with different digest must not match
+        SimpleCredentials sc4 = new SimpleCredentials(userID, ("{md5}"+Text.digest("md5", pw.getBytes("UTF-8"))).toCharArray());
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertFalse(cc.matches(sc4));
+        }
+    }
+
+    public void testUserIdMatch()  throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        // simple credentials containing a different uid must not match
+        SimpleCredentials sc = new SimpleCredentials("another", pw.toCharArray());
+        for (CryptedSimpleCredentials cc : cCreds) {
+            assertFalse(cc.matches(sc));
+        }
     }
 }

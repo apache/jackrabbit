@@ -155,7 +155,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         checkProtectedProperty(name);
         try {
             // check if the property has already been created as multi valued
-            // property before -> in this case remove in order to avoid valueformatex.
+            // property before -> in this case remove in order to avoid
+            // ValueFormatException.
             if (node.hasProperty(name)) {
                 Property p = node.getProperty(name);
                 if (p.isMultiple()) {
@@ -188,7 +189,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         checkProtectedProperty(name);
         try {
             // check if the property has already been created as single valued
-            // property before -> in this case remove in order to avoid valueformatex.
+            // property before -> in this case remove in order to avoid
+            // ValueFormatException.
             if (node.hasProperty(name)) {
                 Property p = node.getProperty(name);
                 if (!p.isMultiple()) {

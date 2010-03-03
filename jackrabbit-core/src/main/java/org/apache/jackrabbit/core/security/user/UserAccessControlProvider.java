@@ -131,6 +131,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#init(Session, Map)
      */
+    @Override
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
         if (systemSession instanceof SessionImpl) {
@@ -321,6 +322,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         /**
          * @see AbstractCompiledPermissions#buildResult(Path)
          */
+        @Override
         protected Result buildResult(Path path) throws RepositoryException {
             NodeImpl userNode = null;
             try {
@@ -375,7 +377,8 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                     }
                 } else {
                     // rep:User node or some other custom node below an existing user.
-                    // as the auth-folder doesn't allow other residual child nodes.
+                    // as the authorizable folder doesn't allow other residual
+                    // child nodes.
                     boolean editingOwnUser = node.isSame(userNode);
                     if (editingOwnUser) {
                         // user can only read && write his own props
@@ -426,6 +429,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         /**
          * @see CompiledPermissions#close()
          */
+        @Override
         public void close() {
             try {
                 observationMgr.removeEventListener(this);
@@ -438,6 +442,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         /**
          * @see CompiledPermissions#grants(Path, int)
          */
+        @Override
         public boolean grants(Path absPath, int permissions) throws RepositoryException {
             if (permissions == Permission.READ) {
                 // read is always granted
@@ -450,6 +455,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         /**
          * @see CompiledPermissions#canReadAll()
          */
+        @Override
         public boolean canReadAll() throws RepositoryException {
             return true;
         }
