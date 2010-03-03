@@ -18,11 +18,14 @@ package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,14 +35,18 @@ import java.util.Map;
  */
 public class CryptedSimpleCredentials implements Credentials {
 
+    private static final Logger log = LoggerFactory.getLogger(CryptedSimpleCredentials.class);
+
     private final String algorithm;
     private final String cryptedPassword;
     private final String userId;
     private final Map<String, Object> attributes;
 
     /**
-     * Take {@link javax.jcr.SimpleCredentials SimpleCredentials} and
-     * digest the password if it is plain-text
+     * Build a new instance of <code>CryptedSimpleCredentials</code> from the
+     * given {@link javax.jcr.SimpleCredentials SimpleCredentials} and create
+     * the crypted password field using the {@link SecurityConstants#DEFAULT_DIGEST
+     * default digest}.
      *
      * @param credentials
      * @throws NoSuchAlgorithmException
@@ -56,16 +63,8 @@ public class CryptedSimpleCredentials implements Credentials {
             throw new IllegalArgumentException();
         }
         String password = new String(pwd);
-        String algo =  getAlgorithm(password);
-        if (algo == null) {
-            // password is plain text
-            algorithm = SecurityConstants.DEFAULT_DIGEST;
-            cryptedPassword = crypt(password, algorithm);
-        } else {
-            // password is already encrypted
-            algorithm = algo;
-            cryptedPassword = password;
-        }
+        algorithm = SecurityConstants.DEFAULT_DIGEST;
+        cryptedPassword = crypt(password, algorithm);
 
         String[] attNames = credentials.getAttributeNames();
         attributes = new HashMap<String, Object>(attNames.length);
@@ -74,20 +73,39 @@ public class CryptedSimpleCredentials implements Credentials {
         }
     }
 
-    public CryptedSimpleCredentials(String userId, String password) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        if (userId == null || userId.length() == 0 || password == null) {
-            throw new IllegalArgumentException("Invalid userID or password. Neither may be null, the userID must have a length > 0.");
+    /**
+     * Create a new instanceof <code>CryptedSimpleCredentials</code> from the
+     * given <code>userId</code> and <code>cryptedPassword</code> strings.
+     * In contrast to {@link CryptedSimpleCredentials(SimpleCredentials)} that
+     * expects the password to be plain text this constructor expects the
+     * password to be already crypted. However, it performs a simple validation
+     * and calls {@link Text#digest(String, byte[])} using the
+     * {@link SecurityConstants#DEFAULT_DIGEST default digest} in case the
+     * given password is found to be plain text.
+     *
+     * @param userId
+     * @param cryptedPassword
+     * @throws NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     */
+    public CryptedSimpleCredentials(String userId, String cryptedPassword) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        if (userId == null || userId.length() == 0) {
+            throw new IllegalArgumentException("Invalid userID: The userID must have a length > 0.");
+        }
+        if (cryptedPassword == null) {
+            throw new IllegalArgumentException("Password may not be null.");
         }
         this.userId = userId;
-        String algo =  getAlgorithm(password);
+        String algo =  extractAlgorithm(cryptedPassword);
         if (algo == null) {
-            // password is plain text
+            // password is plain text including those starting with {invalidAlgorithm}
+            log.debug("Plain text password -> Using " + SecurityConstants.DEFAULT_DIGEST + " to create digest.");
             algorithm = SecurityConstants.DEFAULT_DIGEST;
-            cryptedPassword = crypt(password, algorithm);
+            this.cryptedPassword = crypt(cryptedPassword, algorithm);
         } else {
-            // password is already encrypted
+            // password is already encrypted and started with {validAlgorithm}
             algorithm = algo;
-            cryptedPassword = password;
+            this.cryptedPassword = cryptedPassword;
         }
         attributes = Collections.emptyMap();
     }
@@ -114,9 +132,18 @@ public class CryptedSimpleCredentials implements Credentials {
 
     /**
      * Compares this instance with the given <code>SimpleCredentials</code> and
-     * returns <code>true</code> if both match.
+     * returns <code>true</code> if both match. Successful match is defined to
+     * be the result of
+     * <ul>
+     * <li>Case-insensitive comparison of the UserIDs</li>
+     * <li>Equality of the passwords if the password contained in the simple
+     * credentials is hashed with the algorithm defined in this credentials object.</li>
+     * </ul>
      *
-     * @param credentials
+     * NOTE, that the simple credentials are exptected to contain the plain text
+     * password.
+     *
+     * @param credentials An instance of simple credentials.
      * @return true if {@link SimpleCredentials#getUserID() UserID} and
      * {@link SimpleCredentials#getPassword() Password} match.
      * @throws NoSuchAlgorithmException
@@ -126,24 +153,20 @@ public class CryptedSimpleCredentials implements Credentials {
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
         if (getUserID().equalsIgnoreCase(credentials.getUserID())) {
-            String toMatch = new String(credentials.getPassword());
-            String algr = getAlgorithm(toMatch);
-
-            if (algr == null && algorithm != null) {
-                // pw to match not crypted -> crypt with algorithm present here.
-                return crypt(toMatch, algorithm).equals(cryptedPassword);
-            } else if (algr != null && algorithm == null) {
-                // crypted pw to match but unknown algorithm here -> crypt this pw
-                return crypt(algr, cryptedPassword).equals(toMatch);
-            }
-
-            // both pw to compare define a algorithm and are crypted
-            // -> simple comparison of the 2 password strings.
-            return toMatch.equals(cryptedPassword);
+            // crypt the password retrieved from the given simple credentials
+            // and test if it is equal to the cryptedPassword field.
+            return cryptedPassword.equals(crypt(String.valueOf(credentials.getPassword()), algorithm));
         }
         return false;
     }
 
+    /**
+     * @param pwd Plain text password
+     * @param algorithm The algorithm to be used for the digest.
+     * @return Digest of the given password with leading algorithm information.
+     * @throws NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     */
     private static String crypt(String pwd, String algorithm)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
@@ -153,12 +176,30 @@ public class CryptedSimpleCredentials implements Credentials {
         return password.toString();
     }
 
-    private static String getAlgorithm(String password) {
-        int end = password.indexOf("}");
-        if (password.startsWith("{") && end > 0) {
-            return password.substring(1, end);
-        } else {
-            return null;
+    /**
+     * Extract the algorithm from the given crypted password string. Returns the
+     * algorithm or <code>null</code> if the given string doesn't have a
+     * leading <code>{algorith}</code> such as created by {@link #crypt(String, String)
+     * or if the extracted string doesn't represent an available algorithm.
+     *
+     * @param cryptedPwd
+     * @return The algorithm or <code>null</code> if the given string doesn't have a
+     * leading <code>{algorith}</code> such as created by {@link #crypt(String, String)
+     * or if the extracted string isn't an available algorithm. 
+     */
+    private static String extractAlgorithm(String cryptedPwd) {
+        int end = cryptedPwd.indexOf("}");
+        if (cryptedPwd.startsWith("{") && end > 0) {
+            String algorithm = cryptedPwd.substring(1, end);
+            try {
+                MessageDigest.getInstance(algorithm);
+                return algorithm;
+            } catch (NoSuchAlgorithmException e) {
+                log.debug("Invalid algorithm detected " + algorithm);
+            }
         }
+
+        // not starting with {} or invalid algorithm
+        return null;
     }
 }

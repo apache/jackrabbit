@@ -244,7 +244,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param adminId The user ID of the administrator.
      * @throws RepositoryException If an error occurs.
      */
-    public UserManagerImpl(SessionImpl session, String adminId) throws RepositoryException {
+    public UserManagerImpl(SessionImpl session, String adminId) {
         this(session, adminId, null);
     }
 
@@ -267,7 +267,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param config The configuration parameters.
      * @throws RepositoryException If an error occurs.
      */
-    public UserManagerImpl(SessionImpl session, String adminId, Properties config) throws RepositoryException {
+    public UserManagerImpl(SessionImpl session, String adminId, Properties config) {
         this.session = session;
         this.adminId = adminId;
 
@@ -657,7 +657,7 @@ public class UserManagerImpl extends ProtectedItemModifier
                 if (n == null) {
                     // no user -> look for group.
                     // NOTE: JR < 2.0 always returned groupIDs that didn't contain any
-                    // illegal JCR chars. Since Group.getID() now unescapes the node
+                    // illegal JCR chars. Since Group.getID() 'unescapes' the node
                     // name additional escaping is required.
                     Name nodeName = session.getQName(Text.escapeIllegalJcrChars(id));
                     n = (NodeImpl) authResolver.findNode(nodeName, NT_REP_GROUP);
@@ -668,7 +668,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         return getAuthorizable(n);
     }
 
-    private Value getValue(String strValue) throws RepositoryException {
+    private Value getValue(String strValue) {
         return session.getValueFactory().createValue(strValue);
     }
 
@@ -757,9 +757,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * process.</li>
      * </ul>
      *
-     * @param adminId
-     * @param pw
-     * @return
+     * @return The admin user.
      * @throws RepositoryException
      */
     private User createAdmin() throws RepositoryException {

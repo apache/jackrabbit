@@ -46,9 +46,10 @@ import java.security.Principal;
  */
 public class AuthorizableImplTest extends AbstractUserTest {
 
-    private List<String> protectedUserProps = new ArrayList();
-    private List<String> protectedGroupProps = new ArrayList();
+    private List<String> protectedUserProps = new ArrayList<String>();
+    private List<String> protectedGroupProps = new ArrayList<String>();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -313,7 +314,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
 
         assertEquals(user, user2);
         assertEquals(user.hashCode(), user2.hashCode());
-        Set<Authorizable> s = new HashSet();
+        Set<Authorizable> s = new HashSet<Authorizable>();
         s.add(user);
         assertFalse(s.add(user2));
 
