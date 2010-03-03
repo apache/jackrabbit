@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2dav;
 
-import java.io.IOException;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestResult;
