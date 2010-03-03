@@ -431,6 +431,22 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     }
 
     /**
+     * @return The DAV event type representation for all known JCR event types.
+     */
+    public static EventType[] getAllEventTypes() {
+        EventType[] types = new EventType[] {
+                getEventType(javax.jcr.observation.Event.NODE_ADDED),
+                getEventType(javax.jcr.observation.Event.NODE_REMOVED),
+                getEventType(javax.jcr.observation.Event.PROPERTY_ADDED),
+                getEventType(javax.jcr.observation.Event.PROPERTY_CHANGED),
+                getEventType(javax.jcr.observation.Event.PROPERTY_REMOVED),
+                getEventType(javax.jcr.observation.Event.NODE_MOVED),
+                getEventType(javax.jcr.observation.Event.PERSIST)
+        };
+        return types;
+    }
+
+    /**
      * Static utility method to convert an <code>EventType</code> as present in
      * the Xml body into the corresponding JCR event constant defined by
      * {@link javax.jcr.observation.Event}.

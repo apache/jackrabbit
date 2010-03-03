@@ -60,6 +60,7 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
@@ -206,17 +207,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryServiceImpl.class);
 
-    private static final EventType[] ALL_EVENTS = new EventType[7];
-    static {
-        ALL_EVENTS[0] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_ADDED);
-        ALL_EVENTS[1] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_REMOVED);
-        ALL_EVENTS[2] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_ADDED);
-        ALL_EVENTS[3] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_CHANGED);
-        ALL_EVENTS[4] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_REMOVED);
-        ALL_EVENTS[5] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_MOVED);
-        ALL_EVENTS[6] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PERSIST);
-    }
-    private static final SubscriptionInfo S_INFO = new SubscriptionInfo(ALL_EVENTS, true, INFINITE_TIMEOUT);
+    private static final SubscriptionInfo S_INFO = new SubscriptionInfo(SubscriptionImpl.getAllEventTypes(), true, INFINITE_TIMEOUT);
 
     private final IdFactory idFactory;
     private final NameFactory nameFactory;
@@ -303,7 +294,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return DavMethods.DAV_UNLOCK == code;
     }
 
-    private static void initMethod(DavMethod method, SessionInfo sessionInfo, boolean addIfHeader) throws RepositoryException {
+    protected static void initMethod(HttpMethod method, SessionInfo sessionInfo, boolean addIfHeader) throws RepositoryException {
         if (addIfHeader) {
             checkSessionInfo(sessionInfo);
             String[] locktokens = ((SessionInfoImpl) sessionInfo).getAllLockTokens();
