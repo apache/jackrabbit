@@ -62,7 +62,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     public final ItemInfoCache cache;
 
     public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo,
-            ItemDefinitionProvider definitionProvider, ItemInfoCache cache) throws RepositoryException {
+                                     ItemDefinitionProvider definitionProvider, ItemInfoCache cache) throws RepositoryException {
 
         this.service = service;
         this.sessionInfo = sessionInfo;
@@ -90,8 +90,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             NodeInfo info;
             if (isUpToDate(cached, generation)) {
                 info = cached.info;
-            }
-            else {
+            } else {
                 // otherwise retreive item info from service and cache the whole batch
                 Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
                 info = first(infos, cache, generation);
@@ -127,8 +126,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
                 if (info == null) {
                     throw new ItemNotFoundException("NodeId: " + nodeId);
                 }
-            }
-            else {
+            } else {
                 info = cached.info;
             }
 
@@ -137,16 +135,14 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             if (entry == null || !entry.denotesNode()) {
                 throw new ItemNotFoundException(
                         "HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
-            }
-            else {
+            } else {
                 // Now we can check wheter the item info from the cache is up to date
                 long generation = entry.getGeneration();
                 if (isOutdated(cached, generation)) {
                     // if not, retreive the item info from the service and put the whole batch into the cache
                     infos = service.getItemInfos(sessionInfo, nodeId);
                     info = first(infos, cache, generation);
-                }
-                else if (infos != null) {
+                } else if (infos != null) {
                     // Otherwise put the whole batch retreived from the service earlier into the cache
                     cache.put(info, generation);
                     first(infos, cache, generation);
@@ -173,8 +169,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             PropertyInfo info;
             if (isUpToDate(cached, entry.getGeneration())) {
                 info = cached.info;
-            }
-            else {
+            } else {
                 // otherwise retreive item info from service and cache the whole batch
                 info = service.getPropertyInfo(sessionInfo, propertyId);
                 cache.put(info, entry.getGeneration());
@@ -202,8 +197,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             if (cached == null) {
                 // or from service if not in cache
                 info = service.getPropertyInfo(sessionInfo, propertyId);
-            }
-            else {
+            } else {
                 info = cached.info;
             }
 
@@ -213,8 +207,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             if (entry == null || entry.denotesNode()) {
                 throw new ItemNotFoundException(
                         "HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
-            }
-            else {
+            } else {
                 // Now we can check wheter the item info from the cache is up to date
                 long generation = entry.getGeneration();
                 if (isOutdated(cached, generation)) {
@@ -227,8 +220,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
                 return createPropertyState(info, (PropertyEntry) entry);
             }
 
-        }
-        catch (PathNotFoundException e) {
+        } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e);
         }
     }
@@ -252,8 +244,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
         // Has a unique ID and is potentially mix:referenceable. Try to retrieve references
         try {
             return service.getReferences(sessionInfo, entry.getWorkspaceId(), propertyName, weak);
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             log.debug("Unable to determine references to {}", nodeState);
             Set<PropertyId> t = Collections.emptySet();
             return t.iterator();
@@ -394,7 +385,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             // entry was not available before. otherwise the 2 states were
             // merged. see HierarchyEntryImpl#setItemState
             notifyCreated(pState);
-        }  else {
+        } else {
             notifyUpdated(pState, previousStatus);
         }
         return pState;
@@ -424,16 +415,14 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
                 // Walk up the hierarchy for 'negative' paths
                 // until the smallest common root is found
                 entry = entry.getParent();
-            }
-            else if (missingElems[i].denotesName()) {
+            } else if (missingElems[i].denotesName()) {
                 // Add missing elements starting from the smallest common root
                 Name name = missingElems[i].getName();
                 int index = missingElems[i].getNormalizedIndex();
 
                 if (i == last && !info.denotesNode()) {
                     return entry.getOrAddPropertyEntry(name);
-                }
-                else {
+                } else {
                     entry = createNodeEntry(entry, name, index);
                 }
             }
