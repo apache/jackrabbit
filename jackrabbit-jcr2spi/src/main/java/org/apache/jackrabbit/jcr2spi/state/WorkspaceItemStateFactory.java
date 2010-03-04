@@ -62,7 +62,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     public final ItemInfoCache cache;
 
     public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo,
-                                     ItemDefinitionProvider definitionProvider, ItemInfoCache cache) throws RepositoryException {
+                                     ItemDefinitionProvider definitionProvider, ItemInfoCache cache) {
 
         this.service = service;
         this.sessionInfo = sessionInfo;
