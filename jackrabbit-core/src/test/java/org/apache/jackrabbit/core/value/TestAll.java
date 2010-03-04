@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(BinaryValueTest.class);
         suite.addTestSuite(InternalValueFactoryTest.class);
         suite.addTestSuite(InternalValueTest.class);
+        suite.addTestSuite(PathTest.class);
 
         return suite;
     }
