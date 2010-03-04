@@ -62,7 +62,7 @@ public class Restore extends AbstractOperation {
     /**
      * In case of a workspace-restore or 'removeExisting' the complete tree gets
      * invalidated, otherwise the given <code>NodeState</code> that has been
-     * updated and all its decendants.
+     * updated and all its descendants.
      *
      * @see Operation#persisted()
      */
