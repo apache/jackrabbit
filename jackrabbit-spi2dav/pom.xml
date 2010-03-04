@@ -104,14 +104,6 @@
                   org.apache.jackrabbit.test.api.version.ActivitiesTest
                   org.apache.jackrabbit.test.api.version.MergeActivityTest#testMergeActivity
                   org.apache.jackrabbit.test.api.version.ConfigurationsTest
-                  <!-- JCR-2528 : some restore tests... -->
-                  org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreWithUUIDConflict
-                  org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreWithUUIDConflictJcr2
-                  org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreWithUUIDConflictJcr2_2
-                  org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreWithUUIDConflictJcr2_3
-                  org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreWithUUIDConflictJcr2_4
-                  org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest#testWorkspaceRestoreWithUUIDConflict
-                  org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest#testWorkspaceRestoreWithUUIDConflictJcr2
 
                   <!--  not yet debugged, unknown reason -->
                   org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorder2
