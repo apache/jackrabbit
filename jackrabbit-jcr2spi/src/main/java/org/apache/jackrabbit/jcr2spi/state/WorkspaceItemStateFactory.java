@@ -84,16 +84,14 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             RepositoryException {
 
         try {
-            // Get item info from cache and use it if up to date
-            long generation = entry.getGeneration();
             Entry<NodeInfo> cached = cache.getNodeInfo(nodeId);
             NodeInfo info;
-            if (isUpToDate(cached, generation)) {
+            if (isUpToDate(cached, entry)) {
                 info = cached.info;
             } else {
                 // otherwise retreive item info from service and cache the whole batch
                 Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
-                info = first(infos, cache, generation);
+                info = first(infos, cache, entry.getGeneration());
                 if (info == null) {
                     throw new ItemNotFoundException("NodeId: " + nodeId);
                 }
@@ -138,7 +136,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             } else {
                 // Now we can check wheter the item info from the cache is up to date
                 long generation = entry.getGeneration();
-                if (isOutdated(cached, generation)) {
+                if (isOutdated(cached, entry)) {
                     // if not, retreive the item info from the service and put the whole batch into the cache
                     infos = service.getItemInfos(sessionInfo, nodeId);
                     info = first(infos, cache, generation);
@@ -167,7 +165,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             // Get item info from cache and use it if up to date
             Entry<PropertyInfo> cached = cache.getPropertyInfo(propertyId);
             PropertyInfo info;
-            if (isUpToDate(cached, entry.getGeneration())) {
+            if (isUpToDate(cached, entry)) {
                 info = cached.info;
             } else {
                 // otherwise retreive item info from service and cache the whole batch
@@ -208,12 +206,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
                 throw new ItemNotFoundException(
                         "HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
             } else {
-                // Now we can check wheter the item info from the cache is up to date
-                long generation = entry.getGeneration();
-                if (isOutdated(cached, generation)) {
+                if (isOutdated(cached, entry)) {
                     // if not, retreive the item info from the service and put the whole batch into the cache
                     info = service.getPropertyInfo(sessionInfo, propertyId);
-                    cache.put(info, generation);
+                    cache.put(info, entry.getGeneration());
                 }
 
                 assertMatchingPath(info, entry);
@@ -432,7 +428,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
 
     private NodeEntry createNodeEntry(NodeEntry parentEntry, Name name, int index) throws RepositoryException {
         Entry<NodeInfo> cached = cache.getNodeInfo(parentEntry.getWorkspaceId());
-        if (isUpToDate(cached, parentEntry.getGeneration())) {
+        if (isUpToDate(cached, parentEntry)) {
             Iterator<ChildInfo> childInfos = cached.info.getChildInfos();
             if (childInfos != null) {
                 parentEntry.setNodeEntries(childInfos);
@@ -448,9 +444,12 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
      * @param cacheEntry
      * @param generation
      * @return
+     * @throws RepositoryException
      */
-    private static boolean isUpToDate(Entry<?> cacheEntry, long generation) {
-        return cacheEntry != null && cacheEntry.generation >= generation;
+    private static boolean isUpToDate(Entry<?> cacheEntry, HierarchyEntry entry) throws RepositoryException {
+        return cacheEntry != null &&
+            cacheEntry.generation >= entry.getGeneration() &&
+            isMatchingPath(cacheEntry.info, entry);
     }
 
     /**
@@ -459,9 +458,18 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
      * @param cacheEntry
      * @param generation
      * @return
+     * @throws RepositoryException
      */
-    private static boolean isOutdated(Entry<?> cacheEntry, long generation) {
-        return cacheEntry != null && cacheEntry.generation < generation;
+    private static boolean isOutdated(Entry<?> cacheEntry, HierarchyEntry entry) throws RepositoryException {
+        return cacheEntry != null &&
+            (cacheEntry.generation < entry.getGeneration() ||
+            !isMatchingPath(cacheEntry.info, entry));
+    }
+
+    private static boolean isMatchingPath(ItemInfo info, HierarchyEntry entry) throws RepositoryException {
+        Path infoPath = info.getPath();
+        Path wspPath = entry.getWorkspacePath();
+        return infoPath.equals(wspPath);
     }
 
     /**
@@ -474,11 +482,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
      * @throws RepositoryException
      */
     private static void assertMatchingPath(ItemInfo info, HierarchyEntry entry) throws RepositoryException {
-        Path infoPath = info.getPath();
-        Path wspPath = entry.getWorkspacePath();
-        if (!infoPath.equals(wspPath)) {
+        if (!isMatchingPath(info, entry)) {
             // TODO: handle external move of nodes (parents) identified by uniqueID
-            throw new ItemNotFoundException("HierarchyEntry " + infoPath + " does not match ItemInfo " + wspPath);
+            throw new ItemNotFoundException("HierarchyEntry " + entry.getWorkspacePath() + " does not match ItemInfo " + info.getPath());
         }
     }
 
