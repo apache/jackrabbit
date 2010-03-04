@@ -2572,6 +2572,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             DeleteMethod method = new DeleteMethod(uri);
 
             methods.add(method);
+            if (itemId.getPath() == null) {
+                clear = true;
+            }
         }
 
         /**

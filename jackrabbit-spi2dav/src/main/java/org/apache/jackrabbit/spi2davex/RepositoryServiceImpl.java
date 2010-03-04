@@ -579,6 +579,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }
             String rmJcrPath = getNamePathResolver(sessionInfo).getJCRPath(rmPath);
             appendDiff(SYMBOL_REMOVE, rmJcrPath, null);
+
+            if (itemId.getPath() == null) {
+                clear = true;
+            }
         }
 
         /**
