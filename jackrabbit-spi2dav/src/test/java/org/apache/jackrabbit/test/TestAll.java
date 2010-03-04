@@ -19,7 +19,6 @@ package org.apache.jackrabbit.test;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.jackrabbit.jcr2spi.Jcr2SpiTestSuite;
 
 /**
  * Execute all API tests from jackrabbit-jcr-test and jackrabbit-jcr2spi.
@@ -27,22 +26,10 @@ import org.apache.jackrabbit.jcr2spi.Jcr2SpiTestSuite;
 public class TestAll extends TestCase {
 
     public static Test suite() {
-        TestSuite suite = new JCRTestSuite();
-        suite.addTest(new Jcr2SpiTestSuite());
+        TestSuite suite = new TestSuite("JCR Test : jcr-test and jcr2spi");
+        suite.addTest(new org.apache.jackrabbit.test.JCRTestSuite());
+        suite.addTest(new org.apache.jackrabbit.jcr2spi.Jcr2SpiTestSuite());
+        
         return suite;
-    }
-
-    private static class JCRTestSuite extends TestSuite {
-
-        private JCRTestSuite() {
-            super("JCR API tests");
-            addTest(org.apache.jackrabbit.test.api.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.query.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.nodetype.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.util.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.lock.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.version.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.observation.TestAll.suite());
-        }
     }
 }
