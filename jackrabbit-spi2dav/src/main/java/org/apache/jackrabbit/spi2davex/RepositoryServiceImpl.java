@@ -385,7 +385,9 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             getClient(sessionInfo).executeMethod(method);
 
             method.checkSuccess();
-
+            if (removeExisting) {
+                clearItemUriCache(sessionInfo);
+            }
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
