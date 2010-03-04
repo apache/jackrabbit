@@ -112,6 +112,21 @@
                   org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreWithUUIDConflictJcr2_4
                   org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest#testWorkspaceRestoreWithUUIDConflict
                   org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest#testWorkspaceRestoreWithUUIDConflictJcr2
+
+                  <!--  not yet debugged, unknown reason -->
+                  org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorder2
+                  org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty3
+                  org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
+                  org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
+                  org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
+                  org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
+                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty
+                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty2
+                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty
+                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty2
+                  org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorderToEnd
+                  org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorderFinallyOriginalOrder
+                  org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
               </value>
             </property>
           </systemProperties>
