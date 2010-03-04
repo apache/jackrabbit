@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.commons.value;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -100,7 +101,38 @@ public final class QValueValue implements Value {
      * @see javax.jcr.Value#getBinary()
      */
     public Binary getBinary() throws RepositoryException {
-        return qvalue.getBinary();
+        // JCR-2511 Value#getBinary() and #getStream() return internal representation for type PATH and NAME
+        if (getType() == PropertyType.NAME || getType() == PropertyType.PATH) {
+            // qualified name/path value needs to be resolved,
+            // delegate conversion to getString() method
+            try {
+                final byte[] value = getString().getBytes("UTF-8");
+                return new Binary() {
+                    public int read(byte[] b, long position) {
+                        if (position >= value.length) {
+                            return -1;
+                        } else {
+                            int p = (int) position;
+                            int n = Math.min(b.length, value.length - p);
+                            System.arraycopy(value, p, b, 0, n);
+                            return n;
+                        }
+                    }
+                    public InputStream getStream() {
+                        return new ByteArrayInputStream(value);
+                    }
+                    public long getSize() {
+                        return value.length;
+                    }
+                    public void dispose() {
+                    }
+                };
+            } catch (UnsupportedEncodingException ex) {
+                throw new RepositoryException("UTF-8 is not supported", ex);
+            }
+        } else {
+            return qvalue.getBinary();
+        }
     }
 
     /**
@@ -130,14 +162,11 @@ public final class QValueValue implements Value {
     public InputStream getStream() throws IllegalStateException, RepositoryException {
         if (stream == null) {
             if (getType() == PropertyType.NAME || getType() == PropertyType.PATH) {
-                // needs namespace mapping
+                // qualified name/path value needs to be resolved
                 try {
-                    String l_s = getType() == PropertyType.NAME
-                      ? resolver.getJCRName(qvalue.getName())
-                      : resolver.getJCRPath(qvalue.getPath());
-                    stream = new ByteArrayInputStream(l_s.getBytes("UTF-8"));
+                    stream = new ByteArrayInputStream(getString().getBytes("UTF-8"));
                 } catch (UnsupportedEncodingException ex) {
-                    throw new RepositoryException(ex);
+                    throw new RepositoryException("UTF-8 is not supported", ex);
                 }
             } else {
                 stream = qvalue.getStream();
@@ -151,10 +180,10 @@ public final class QValueValue implements Value {
      */
     public String getString() throws RepositoryException {
         if (getType() == PropertyType.NAME) {
-            // needs formatting
+            // qualified name value needs to be resolved
             return resolver.getJCRName(qvalue.getName());
         } else if (getType() == PropertyType.PATH) {
-            // needs formatting
+            // qualified path value needs to be resolved
             return resolver.getJCRPath(qvalue.getPath());
         } else {
             return qvalue.getString();
