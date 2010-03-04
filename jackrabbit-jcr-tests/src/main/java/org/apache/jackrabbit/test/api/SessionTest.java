@@ -459,7 +459,7 @@ public class SessionTest extends AbstractJCRTest {
             // make node removal persistent
             testSession.save();
 
-            // save changes made wit superuser session
+            // save changes made with superuser session
             try {
                 superuser.save();
                 fail("Saving a modified Node using Session.save() already deleted by an other session should throw InvalidItemStateException");
