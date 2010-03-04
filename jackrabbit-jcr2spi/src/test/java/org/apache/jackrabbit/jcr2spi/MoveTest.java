@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import java.io.ByteArrayInputStream;
+
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
@@ -25,14 +27,12 @@ import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Workspace;
 
-import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
 
 /**
  * <code>MoveTest</code>...
@@ -261,6 +261,23 @@ public class MoveTest extends AbstractMoveTest {
             // see Issue 725
             doMove(moveNode.getPath(), destProperty.getPath());
         }
+    }
+
+    /**
+     * Regression tests for JCR-2528
+     * @throws RepositoryException
+     */
+    public void testMoveReferenceableNode() throws RepositoryException {
+        moveNode.addMixin(JcrConstants.MIX_REFERENCEABLE);
+        moveNode.getSession().save();
+
+        superuser.move(moveNode.getPath(), destParentNode.getPath() + "/" + moveNode.getName());
+        superuser.save();
+        destParentNode.remove();
+
+        // JCR-2528 caused this call to throw a javax.jcr.InvalidItemStateException: Item has already
+        // been removed by someone else. Status = REMOVED
+        destParentNode.getSession().save();
     }
 
 

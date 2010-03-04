@@ -114,6 +114,8 @@
                       org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreWithUUIDConflictJcr2_4
                       org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest#testWorkspaceRestoreWithUUIDConflict
                       org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest#testWorkspaceRestoreWithUUIDConflictJcr2
+                      org.apache.jackrabbit.jcr2spi.MoveTest#testMoveReferenceableNode
+                      org.apache.jackrabbit.jcr2spi.WorkspaceMoveTest#testMoveReferenceableNode
                       
                       <!--  not yet debugged, unknown reason -->
                       org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorder2
