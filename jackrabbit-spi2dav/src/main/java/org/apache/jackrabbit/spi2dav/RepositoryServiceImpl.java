@@ -1865,13 +1865,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#getEvents(SessionInfo, EventFilter,long)
+     * @see RepositoryService#getEvents(SessionInfo, EventFilter, long)
      */
     public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter,
                                    long after) throws
             RepositoryException, UnsupportedRepositoryOperationException {
         // TODO
-        throw new UnsupportedRepositoryOperationException();
+        throw new UnsupportedRepositoryOperationException("Not implemented -> JCR-2541");
     }
 
     /**
