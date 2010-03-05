@@ -1351,25 +1351,22 @@ public class SharedItemStateManager
 
     /**
      * Returns the item state for the given id without considering virtual
-     * item state providers.
+     * item state providers. This method is synchronized to ensure that
+     * a cache entry is not created twice.
      */
-    private ItemState getNonVirtualItemState(ItemId id)
+    private synchronized ItemState getNonVirtualItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-
-        // check cache; synchronized to ensure an entry is not created twice.
-        synchronized (cache) {
-            ItemState state = cache.retrieve(id);
-            if (state == null) {
-                // not found in cache, load from persistent storage
-                state = loadItemState(id);
-                state.setStatus(ItemState.STATUS_EXISTING);
-                // put it in cache
-                cache.cache(state);
-                // set parent container
-                state.setContainer(this);
-            }
-            return state;
+        ItemState state = cache.retrieve(id);
+        if (state == null) {
+            // not found in cache, load from persistent storage
+            state = loadItemState(id);
+            state.setStatus(ItemState.STATUS_EXISTING);
+            // put it in cache
+            cache.cache(state);
+            // set parent container
+            state.setContainer(this);
         }
+        return state;
     }
 
     /**
