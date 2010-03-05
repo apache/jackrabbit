@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
@@ -692,6 +693,15 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
         esc.setUserData(userData);
 
         sharedStateMgr.externalUpdate(changes, esc);
+
+        Collection<InternalVersionItem> items =
+            new ArrayList<InternalVersionItem>();
+        for (Map.Entry<ItemId, InternalVersionItem> entry : versionItems.entrySet()) {
+            if (changes.has(entry.getKey())) {
+                items.add(entry.getValue());
+            }
+        }
+        itemsUpdated(items);
     }
 
     //--------------------------------------------------------< inner classes >
