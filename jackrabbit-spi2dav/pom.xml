@@ -116,8 +116,6 @@
                   org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty2
                   org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty
                   org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty2
-                  org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorderToEnd
-                  org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorderFinallyOriginalOrder
                   org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
               </value>
             </property>
