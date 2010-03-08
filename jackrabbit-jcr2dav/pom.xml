@@ -107,18 +107,26 @@
                       org.apache.jackrabbit.test.api.version.MergeActivityTest#testMergeActivity                     
                       org.apache.jackrabbit.test.api.version.ConfigurationsTest
                       
-                      <!--  not yet debugged, unknown reason -->
+                      <!-- known issue!? -->                        
                       org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorder2
-					  org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty3
-					  org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
-					  org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
-					  org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
-					  org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
-					  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty
-					  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty2
-					  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty
-					  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty2
-					  org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
+                                            
+                      <!-- isSame should compare paths instead of ids !? -->
+                      org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty3
+                      org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
+                      org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
+                      
+                      <!-- known issue!? -->                        
+                      org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
+                      org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
+                      
+                      <!-- JCR-2547: Setting a property which has been transiently removed fails with a PathNotFoundException -->
+                      org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty
+                      org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty2
+                      org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty
+                      org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty2
+                      
+                      <!-- JCR-2548: Node#unlock sometimes fails with LockException: Precondition Failed -->                    
+                      org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
                   </value>
                 </property>
                 <property>
