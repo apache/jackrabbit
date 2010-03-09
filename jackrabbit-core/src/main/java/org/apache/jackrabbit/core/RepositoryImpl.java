@@ -2016,6 +2016,14 @@ public class RepositoryImpl extends AbstractRepository
                     ntReg,
                     dataStore);
 
+            // JCR-2551: Recovery from a lost version history
+            if (Boolean.getBoolean("org.apache.jackrabbit.version.recovery")) {
+                RepositoryChecker checker =
+                    new RepositoryChecker(persistMgr, vMgr);
+                checker.check(ROOT_NODE_ID, true);
+                checker.fix();
+            }
+
             ISMLocking ismLocking = config.getISMLocking();
 
             // create item state manager
