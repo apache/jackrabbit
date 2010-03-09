@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.core;
 
+import static org.apache.jackrabbit.core.RepositoryImpl.SYSTEM_ROOT_NODE_ID;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_BASEVERSION;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ISCHECKEDOUT;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_PREDECESSORS;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_VERSIONHISTORY;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_VERSIONABLE;
@@ -35,6 +37,8 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.spi.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tool for checking for and optionally fixing consistency issues in a
@@ -43,6 +47,12 @@ import org.apache.jackrabbit.spi.Name;
  * <a href="https://issues.apache.org/jira/browse/JCR-2551">JCR-2551</a>.
  */
 class RepositoryChecker {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger log =
+        LoggerFactory.getLogger(RepositoryChecker.class);
 
     private final PersistenceManager workspace;
 
@@ -61,12 +71,13 @@ class RepositoryChecker {
     public void check(NodeId id, boolean recurse)
             throws RepositoryException {
         try {
+            log.debug("Checking consistency of node {}", id);
             NodeState state = workspace.load(id);
             checkVersionHistory(state);
 
             if (recurse) {
                 for (ChildNodeEntry child : state.getChildNodeEntries()) {
-                    if (child.getId() != RepositoryImpl.SYSTEM_ROOT_NODE_ID) {
+                    if (!SYSTEM_ROOT_NODE_ID.equals(child.getId())) {
                         check(child.getId(), recurse);
                     }
                 }
@@ -77,9 +88,8 @@ class RepositoryChecker {
     }
 
     public void fix() throws RepositoryException {
-        System.out.println("Fixing workspace issues");
         if (workspaceChanges.hasUpdates()) {
-            System.out.println("... workspace has issues");
+            log.warn("Fixing repository inconsistencies");
             try {
                 workspace.store(workspaceChanges);
             } catch (ItemStateException e) {
@@ -87,16 +97,18 @@ class RepositoryChecker {
                 throw new RepositoryException(
                         "Failed to fix workspace inconsistencies", e);
             }
+        } else {
+            log.info("No repository inconcistencies found");
         }
     }
 
     private void checkVersionHistory(NodeState node) {
         if (node.hasPropertyName(JCR_VERSIONHISTORY)) {
-            System.out.println("Checking version history of node " + node.getNodeId());
+            log.debug("Checking version history of node {}", node.getNodeId());
             try {
                 versionManager.getVersionHistoryOfNode(node.getNodeId());
             } catch (Exception e) {
-                e.printStackTrace();
+                log.info("Removing references to a missing version history", e);
                 removeVersionHistoryReferences(node);
             }
         }
@@ -114,6 +126,7 @@ class RepositoryChecker {
         removeProperty(modified, JCR_VERSIONHISTORY);
         removeProperty(modified, JCR_BASEVERSION);
         removeProperty(modified, JCR_PREDECESSORS);
+        removeProperty(modified, JCR_ISCHECKEDOUT);
 
         workspaceChanges.modified(modified);
     }
