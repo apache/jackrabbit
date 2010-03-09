@@ -576,8 +576,10 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
                 genValues = getQValues(mixins, qValueFactory);
 
             } else if (NameConstants.JCR_CREATED.equals(name)
-                    && NameConstants.MIX_CREATED.equals(declaringNT)) {
-                // jcr:created property of a mix:created
+                    && (NameConstants.MIX_CREATED.equals(declaringNT) ||
+                            NameConstants.NT_HIERARCHYNODE.equals(declaringNT))) {
+
+                // jcr:created property of a mix:created or nt:hierarchyNode
                 genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
 
             } else if (NameConstants.JCR_CREATEDBY.equals(name)
