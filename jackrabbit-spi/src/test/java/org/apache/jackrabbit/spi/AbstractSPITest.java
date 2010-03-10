@@ -89,11 +89,13 @@ public class AbstractSPITest extends TestCase {
         return helper.getProperty(RepositoryServiceStub.PROP_PREFIX + "." + propName);
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         sessionInfo = helper.getAdminSessionInfo();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (sessionInfo != null) {
             helper.getRepositoryService().dispose(sessionInfo);

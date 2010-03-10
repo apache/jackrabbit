@@ -16,13 +16,10 @@
  */
 package org.apache.jackrabbit.server.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -30,11 +27,6 @@ import java.util.Iterator;
  * <code>RequestData</code>...
  */
 public class RequestData {
-
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(RequestData.class);
 
     private final HttpServletRequest request;
     private final HttpMultipartPost mpReq;
@@ -57,7 +49,7 @@ public class RequestData {
      * @return an iterator over strings.
      */
     public Iterator<String> getParameterNames() {
-        
+        @SuppressWarnings("unchecked")
         HashSet<String> names = new HashSet<String>(request.getParameterMap().keySet());
         names.addAll(mpReq.getParameterNames());
         

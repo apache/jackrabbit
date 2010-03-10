@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(CopyTest.class);
         suite.addTestSuite(CloneTest.class);
         suite.addTestSuite(ExtensionTest.class);
+        suite.addTestSuite(CreateFileTest.class);
 
         return suite;
     }
