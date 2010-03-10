@@ -37,6 +37,7 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
 
     protected Principal testPrincipal;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         testPrincipal = new Principal() {

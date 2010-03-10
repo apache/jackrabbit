@@ -19,19 +19,15 @@ package org.apache.jackrabbit.core.security.authorization.acl;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
 
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.security.AccessControlEntry;
@@ -402,14 +398,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             // retrieve all ACEs at path or at the direct ancestor of path that
             // apply for the principal names.
             Iterator<AccessControlEntry> entries = retrieveResultEntries(getNode(node), principalNames);
-            // build a list of ACEs that are defined locally at the node
-            List<AccessControlEntry> localACEs;
-            if (existingNode && isAccessControlled(node)) {
-                NodeImpl aclNode = node.getNode(N_POLICY);
-                localACEs = Arrays.asList(systemEditor.getACL(aclNode).getAccessControlEntries());
-            } else {
-                localACEs = Collections.emptyList();
-            }
             /*
              Calculate privileges and permissions:
              Since the ACEs only define privileges on a node and do not allow
@@ -426,12 +414,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
             while (entries.hasNext()) {
                 ACLTemplate.Entry ace = (ACLTemplate.Entry) entries.next();
-                // Determine if the ACE is defined on the node at absPath (locally):
-                // Except for READ-privileges the permissions must be determined
-                // from privileges defined for the parent. Consequently aces
-                // defined locally must be treated different than inherited entries.
+                /*
+                 Determine if the ACE is defined on the node at absPath (locally):
+                 Except for READ-privileges the permissions must be determined
+                 from privileges defined for the parent. Consequently aces
+                 defined locally must be treated different than inherited entries.
+                 */
                 int entryBits = ace.getPrivilegeBits();
-                boolean isLocal = localACEs.contains(ace);
+                boolean isLocal = existingNode && ace.isLocal(jcrPath);
                 if (!isLocal) {
                     if (ace.isAllow()) {
                         parentAllows |= Permission.diff(entryBits, parentDenies);
@@ -456,6 +446,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         /**
          * @see CompiledPermissions#close()
          */
+        @Override
         public void close() {
             try {
                 observationMgr.removeEventListener(this);
@@ -574,43 +565,21 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * @throws RepositoryException if an error occurs
          */
         private void collectEntriesFromAcl(NodeImpl aclNode) throws RepositoryException {
-            SessionImpl sImpl = (SessionImpl) aclNode.getSession();
-            PrincipalManager principalMgr = sImpl.getPrincipalManager();
-            AccessControlManager acMgr = sImpl.getAccessControlManager();
-
             // first collect aces present on the given aclNode.
             List<AccessControlEntry> gaces = new ArrayList<AccessControlEntry>();
             List<AccessControlEntry> uaces = new ArrayList<AccessControlEntry>();
 
-            NodeIterator itr = aclNode.getNodes();
-            while (itr.hasNext()) {
-                NodeImpl aceNode = (NodeImpl) itr.nextNode();
-                String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
+            ACLTemplate tmpl = (ACLTemplate) systemEditor.getACL(aclNode);
+            for (AccessControlEntry ace : tmpl.getAccessControlEntries()) {
+                Principal principal = ace.getPrincipal();
                 // only process aceNode if 'principalName' is contained in the given set
-                if (principalNames.contains(principalName)) {
-                    Principal princ = principalMgr.getPrincipal(principalName);
-                    if (princ == null) {
-                        log.warn("Principal with name " + principalName + " unknown to PrincipalManager -> Ignored from AC evaluation.");
-                        continue;
-                    }
-
-                    Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
-                    Privilege[] privs = new Privilege[privValues.length];
-                    for (int i = 0; i < privValues.length; i++) {
-                        privs[i] = acMgr.privilegeFromName(privValues[i].getString());
-                    }
-                    // create a new ACEImpl (omitting validation check)
-                    AccessControlEntry ace = new ACLTemplate.Entry(
-                            princ,
-                            privs,
-                            aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE),
-                            sImpl.getValueFactory());
+                if (principalNames.contains(principal.getName())) {
                     // add it to the proper list (e.g. separated by principals)
                     /**
                      * NOTE: access control entries must be collected in reverse
                      * order in order to assert proper evaluation.
                      */
-                    if (princ instanceof Group) {
+                    if (principal instanceof Group) {
                         gaces.add(0, ace);
                     } else {
                         uaces.add(0, ace);
