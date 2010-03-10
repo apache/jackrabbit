@@ -25,6 +25,7 @@ import java.lang.ref.WeakReference;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -33,6 +34,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple file-based data store. Data records are stored as normal files
@@ -56,6 +59,11 @@ import org.apache.commons.io.IOUtils;
  * atomic O(1) move operations with {@link File#renameTo(File)}.
  */
 public class FileDataStore implements DataStore {
+
+    /**
+     * Logger instance
+     */
+    private static Logger log = LoggerFactory.getLogger(FileDataStore.class);
 
     /**
      * The digest algorithm used to uniquely identify records.
@@ -303,6 +311,11 @@ public class FileDataStore implements DataStore {
                 if (file.lastModified() < min) {
                     DataIdentifier id = new DataIdentifier(fileName);
                     if (!inUse.containsKey(id)) {
+                        if (log.isInfoEnabled()) {
+                            log.info("Deleting old file " + file.getAbsolutePath() +
+                                    " modified: " + new Timestamp(file.lastModified()).toString() +
+                                    " length: " + file.length());
+                        }
                         file.delete();
                         count++;
                     }
