@@ -79,10 +79,17 @@ class HttpMultipartPost {
         }
 
         ServletFileUpload upload = new ServletFileUpload(getFileItemFactory(tmpDir));
+        // make sure the content disposition headers are read with the charset
+        // specified in the request content type (or UTF-8 if no charset is specified).
+        // see JCR
+        if (request.getCharacterEncoding() == null) {
+            upload.setHeaderEncoding("UTF-8");
+        }
         try {
-            List<Object> fileItems = upload.parseRequest(request);
-            for (Object fileItem : fileItems) {
-                addItem((FileItem) fileItem);
+            @SuppressWarnings("unchecked")
+            List<FileItem> fileItems = upload.parseRequest(request);
+            for (FileItem fileItem : fileItems) {
+                addItem(fileItem);
             }
         } catch (FileUploadException e) {
             log.error("Error while processing multipart.", e);
