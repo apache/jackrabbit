@@ -354,7 +354,6 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         } else if (mixinEntry != null) {
             // remove the jcr:mixinTypes property state if already present
             PropertyState pState = mixinEntry.getPropertyState();
-            boolean newMixinState = pState.getStatus() == Status.NEW;
             int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
             removeItemState(pState, options);
 
@@ -380,7 +379,8 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         Name[] mixins = nState.getMixinTypeNames();
         List<Name> all = new ArrayList<Name>(Arrays.asList(mixins));
         all.add(primaryName);
-        EffectiveNodeType entAll = entProvider.getEffectiveNodeType(all.toArray(new Name[all.size()]));
+        // retrieve effective to assert validity of arguments
+        entProvider.getEffectiveNodeType(all.toArray(new Name[all.size()]));
 
         // modify the value of the jcr:primaryType property entry without
         // changing the node state itself
@@ -485,9 +485,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         }
 
         // add 'auto-create' properties defined in node type
-        QPropertyDefinition[] pda = ent.getAutoCreateQPropertyDefinitions();
-        for (int i = 0; i < pda.length; i++) {
-            QPropertyDefinition pd = pda[i];
+        for (QPropertyDefinition pd : ent.getAutoCreateQPropertyDefinitions()) {
             if (!nodeState.hasPropertyName(pd.getName())) {
                 QValue[] autoValue = computeSystemGeneratedPropertyValues(nodeState, pd);
                 if (autoValue != null) {
@@ -499,9 +497,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        QNodeDefinition[] nda = ent.getAutoCreateQNodeDefinitions();
-        for (int i = 0; i < nda.length; i++) {
-            QNodeDefinition nd = nda[i];
+        for (QNodeDefinition nd : ent.getAutoCreateQNodeDefinitions()) {
             // execute 'addNode' without adding the operation.
             int opt = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_COLLISION;
             addedStates.addAll(addNodeState(nodeState, nd.getName(), nd.getDefaultPrimaryType(), null, nd, opt));
