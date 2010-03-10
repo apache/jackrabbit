@@ -17,7 +17,10 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.security.Privilege;
@@ -28,8 +31,26 @@ import java.security.Principal;
  */
 public class EntryTest extends AbstractEntryTest {
 
+    private ACLTemplate acl;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        SessionImpl s = (SessionImpl) superuser;
+        acl = new ACLTemplate(testPath, s.getPrincipalManager(), new PrivilegeRegistry(s), s.getValueFactory());
+    }
+
+    @Override
     protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow)
             throws RepositoryException {
-        return new ACLTemplate.Entry(principal, privileges, isAllow, superuser.getValueFactory());
+        return acl.createEntry(principal, privileges, isAllow);
+    }
+
+    public void testIsLocal() throws NotExecutableException, RepositoryException {
+        ACLTemplate.Entry entry = (ACLTemplate.Entry) createEntry(new String[] {Privilege.JCR_READ}, true);
+
+        assertTrue(entry.isLocal(testPath));
+        assertFalse(entry.isLocal(testPath + "/foo"));
     }
 }
