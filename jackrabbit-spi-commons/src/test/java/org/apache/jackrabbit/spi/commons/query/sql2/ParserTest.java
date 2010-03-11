@@ -20,13 +20,28 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Random;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.Column;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.Source;
+import javax.jcr.version.VersionException;
 import junit.framework.TestCase;
+import org.apache.jackrabbit.commons.query.sql2.QOMFormatter;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DummyNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -44,6 +59,66 @@ public class ParserTest extends TestCase {
 
     protected Random random = new Random();
 
+    public static class QOM implements QueryObjectModel {
+
+        protected QueryObjectModelTree qomTree;
+
+        QOM(QueryObjectModelTree qomTree) {
+            this.qomTree = qomTree;
+        }
+
+        public Source getSource() {
+            return qomTree.getSource();
+        }
+
+        public Constraint getConstraint() {
+            return qomTree.getConstraint();
+        }
+
+        public Ordering[] getOrderings() {
+            return qomTree.getOrderings();
+        }
+
+        public Column[] getColumns() {
+            return qomTree.getColumns();
+        }
+
+        public void bindValue(String varName, Value value) throws IllegalArgumentException, RepositoryException {
+        }
+
+        public QueryResult execute() throws InvalidQueryException, RepositoryException {
+            return null;
+        }
+
+        public String[] getBindVariableNames() throws RepositoryException {
+            return null;
+        }
+
+        public String getLanguage() {
+            return null;
+        }
+
+        public String getStatement() {
+            return null;
+        }
+
+        public String getStoredQueryPath() throws ItemNotFoundException, RepositoryException {
+            return null;
+        }
+
+        public void setLimit(long limit) {
+        }
+
+        public void setOffset(long offset) {
+        }
+
+        public Node storeAsNode(String absPath) throws ItemExistsException, PathNotFoundException, VersionException,
+                ConstraintViolationException, LockException, UnsupportedRepositoryOperationException,
+                RepositoryException {
+            return null;
+        }
+    }
+
     static class QOMF extends QueryObjectModelFactoryImpl  {
 
         public QOMF(NamePathResolver resolver) {
@@ -52,7 +127,7 @@ public class ParserTest extends TestCase {
 
         protected QueryObjectModel createQuery(QueryObjectModelTree qomTree) throws InvalidQueryException,
                 RepositoryException {
-            return null;
+            return new QOM(qomTree);
         }
 
     }
@@ -88,7 +163,11 @@ public class ParserTest extends TestCase {
             // System.out.println(line);
             String query = line;
             try {
-                parser.createQueryObjectModel(line);
+                QueryObjectModel qom = parser.createQueryObjectModel(line);
+                String s = QOMFormatter.format(qom);
+                qom = parser.createQueryObjectModel(s);
+                String s2 = QOMFormatter.format(qom);
+                assertEquals(s, s2);
                 fuzz(line);
             } catch (Exception e) {
                 line = reader.readLine();

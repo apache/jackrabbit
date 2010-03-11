@@ -65,12 +65,20 @@ select * from parent as p right outer join child as c on p.id=c.parentid inner j
 # 6.7.14 Or (p 109)
 select * from test where id<1 and id>1
 select * from test where id=2 or name='Hello'
+select * from test where id<1 and (id>1 or id<2)
+select * from test where (id<1 and id>1) or id<2
+select * from test where id<1 and id>1 or id<2
+select * from test where (id<1 or id>1) and id<2
+select * from test where id<1 or (id>1 and id<2)
+select * from test where id<1 or id>1 and id<2
 
 # 6.7.15 Not (p 110)
 select * from test where not id=2
 select * from test where not (id=2 and name='Hello')
 select * from test where not ([id]=2 and [name]='Hello')
 select * from test where id=2 or not (name='Hello' and id=3)
+select * from test where (not name='Hello') and id=3
+select * from test where id = 3 and (not name='Hello')
 
 # 6.7.16 Comparison (p 110)
 # 6.7.17 Operator (p 112)
