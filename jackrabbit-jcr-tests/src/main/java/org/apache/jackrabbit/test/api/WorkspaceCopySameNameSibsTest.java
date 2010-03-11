@@ -83,13 +83,46 @@ public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibs
         String dstAbsPath = snsfNode.getPath() + "/" + node1.getName();
         workspace.copy(node1.getPath(), dstAbsPath);
 
-        // try to copy again the node to same destAbsPath
-        // property already exist
+        // try to copy again the node to same destAbsPath where node already exists
         try {
             workspace.copy(node1.getPath(), dstAbsPath);
             fail("Node exists below '" + dstAbsPath + "'. Test should fail.");
         } catch (ItemExistsException e) {
             // successful
         }
+    }
+
+    /**
+     * NO ItemExistsException is thrown if a node already exists at destAbsPath
+     * and the node allows same-name-siblings.
+     *
+     * @tck.config sameNameSibsTrueNodeType name of a node type that
+     * allows same name siblings.
+     * @tck.config nodeName3 name of a child node that allows children with
+     * same name.
+     */
+    public void testCopyNodesNodeExistsAtDestPath2() throws RepositoryException {
+        // create a parent node where allowSameNameSiblings are set to true
+        Node snsfNode = testRootNode.addNode(nodeName3, sameNameSibsTrueNodeType.getName());
+        testRootNode.save();
+
+        String dstAbsPath = snsfNode.getPath() + "/" + node1.getName();
+        workspace.copy(node1.getPath(), dstAbsPath);
+
+        // try to copy again the node to same destAbsPath where node already exists
+        // must succeed
+        workspace.copy(node1.getPath(), dstAbsPath);
+
+        // make sure the parent now has 2 children with the same name
+        NodeIterator it = snsfNode.getNodes(node1.getName());
+        long size = it.getSize();
+        if (it.getSize() == -1) {
+            size = 0;
+            while (it.hasNext()) {
+                it.nextNode();
+                size++;
+            }
+        }
+        assertEquals("After second copy 2 same-name-siblings must exist",2, size);
     }
 }

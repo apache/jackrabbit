@@ -350,7 +350,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
+            throw ExceptionConverter.generate(e, method);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -389,7 +389,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
+            throw ExceptionConverter.generate(e, method);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -472,7 +472,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }  catch (IOException e) {
                 throw new RepositoryException(e);
             } catch (DavException e) {
-                throw ExceptionConverter.generate(e);
+                throw ExceptionConverter.generate(e, method);
             } finally {
                 method.releaseConnection();
             }

@@ -16,22 +16,21 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.client.methods.DavMethod;
-import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
-import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.commons.httpclient.methods.PutMethod;
 import org.w3c.dom.Element;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.lang.reflect.Constructor;
 
 /**
@@ -47,6 +46,12 @@ public class ExceptionConverter {
     }
 
     public static RepositoryException generate(DavException davExc, DavMethod method) {
+        String name = (method == null) ? "_undefined_" : method.getName();
+        int code = DavMethods.getMethodCode(name);
+        return generate(davExc, code, name);
+    }
+
+    public static RepositoryException generate(DavException davExc, int methodCode, String name) {
         String msg = davExc.getMessage();
         if (davExc.hasErrorCondition()) {
             try {
@@ -62,7 +67,10 @@ public class ExceptionConverter {
                             Constructor<?> excConstr = cl.getConstructor(String.class);
                             if (excConstr != null) {
                                 Object o = excConstr.newInstance(msg);
-                                if (o instanceof RepositoryException) {
+                                if (o instanceof PathNotFoundException && methodCode == DavMethods.DAV_POST) {
+                                    // see JCR-2536
+                                    return new InvalidItemStateException(msg);
+                                } else if (o instanceof RepositoryException) {
                                     return (RepositoryException) o;
                                 } else if (o instanceof Exception) {
                                     return new RepositoryException(msg, (Exception)o);
@@ -80,14 +88,16 @@ public class ExceptionConverter {
         switch (davExc.getErrorCode()) {
             // TODO: mapping DAV_error to jcr-exception is ambiguous. to be improved
             case DavServletResponse.SC_NOT_FOUND :
-                if (method != null && (method instanceof DeleteMethod ||
-                                       method instanceof MkColMethod ||
-                                       method instanceof PutMethod)) {
-                    // target item has probably while transient changes have
-                    // been made.
-                    return new InvalidItemStateException(msg, davExc);
-                } else {
-                    return new ItemNotFoundException(msg, davExc);
+                switch (methodCode) {
+                    case DavMethods.DAV_DELETE:
+                    case DavMethods.DAV_MKCOL:
+                    case DavMethods.DAV_PUT:
+                    case DavMethods.DAV_POST:
+                        // target item has probably while transient changes have
+                        // been made.
+                        return new InvalidItemStateException(msg, davExc);
+                    default:
+                        return new ItemNotFoundException(msg, davExc);
                 }
             case DavServletResponse.SC_LOCKED :
                 return new LockException(msg, davExc);
@@ -98,10 +108,10 @@ public class ExceptionConverter {
             case DavServletResponse.SC_PRECONDITION_FAILED :
                 return new LockException(msg, davExc);
             case DavServletResponse.SC_NOT_IMPLEMENTED:
-                if (method != null) {
+                if (methodCode > 0 && name != null) {
                     return new UnsupportedRepositoryOperationException(
                             "Missing implementation: Method "
-                            + method + " could not be executed", davExc);
+                            + name + " could not be executed", davExc);
                 } else {
                     return new UnsupportedRepositoryOperationException(
                             "Missing implementation", davExc);

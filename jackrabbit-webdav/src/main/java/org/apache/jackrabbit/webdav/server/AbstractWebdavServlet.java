@@ -709,9 +709,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      *
      * @param destResource destination resource to be validated.
      * @param request
+     * @param checkHeader flag indicating if the destination header must be present.
      * @return status code indicating whether the destination is valid.
      */
-    private int validateDestination(DavResource destResource, WebdavRequest request, boolean checkHeader)
+    protected int validateDestination(DavResource destResource, WebdavRequest request, boolean checkHeader)
             throws DavException {
 
         if (checkHeader) {
