@@ -104,15 +104,10 @@
                   org.apache.jackrabbit.test.api.version.ActivitiesTest
                   org.apache.jackrabbit.test.api.version.MergeActivityTest#testMergeActivity
                   org.apache.jackrabbit.test.api.version.ConfigurationsTest
-
-                  <!-- known issue!? -->                        
-                  org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorder2
-                                        
                   <!-- JCR-2560 -->
                   org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty3
                   org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
                   org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
-                  
                   <!-- Known, general issue of the Jcr2Spi - SPI setup.
                        No notification about changes to registered namespace(s) -->                         
                   org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace

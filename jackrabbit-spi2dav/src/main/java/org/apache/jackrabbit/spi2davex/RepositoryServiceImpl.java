@@ -606,6 +606,11 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 val.append(ORDER_POSITION_LAST);
             }
             appendDiff(SYMBOL_MOVE, srcPath, val.toString());
+
+            // clear the uri-lookup in case the itemID contains a uniqueID part.
+            if (srcNodeId.getPath() == null || (beforeNodeId != null && beforeNodeId.getPath() == null)) {
+                clear = true;
+            }
         }
 
         /**
