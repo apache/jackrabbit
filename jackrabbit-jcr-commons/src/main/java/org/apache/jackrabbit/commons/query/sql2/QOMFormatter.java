@@ -110,7 +110,7 @@ public class QOMFormatter implements QueryObjectModelConstants {
      *
      * @param qom the query object model to translate.
      * @return the JCR_SQL2 statement.
-     * @throws RepositoryException if an error occurs while formatting the qom. 
+     * @throws RepositoryException if an error occurs while formatting the qom.
      */
     public static String format(QueryObjectModel qom)
             throws RepositoryException {
@@ -118,458 +118,427 @@ public class QOMFormatter implements QueryObjectModelConstants {
     }
 
     private String format() throws RepositoryException {
-        sb.append("SELECT");
-        ws();
-        format(qom.getColumns());
-        ws();
-        sb.append("FROM");
-        ws();
-        format(qom.getSource());
+        append("SELECT ");
+        append(qom.getColumns());
+        append(" FROM ");
+        append(qom.getSource());
         Constraint c = qom.getConstraint();
         if (c != null) {
-            ws();
-            sb.append("WHERE");
-            ws();
-            format(c);
+            append(" WHERE ");
+            append(c);
         }
         Ordering[] orderings = qom.getOrderings();
         if (orderings.length > 0) {
-            ws();
-            sb.append("ORDER BY");
-            ws();
-            format(orderings);
+            append(" ORDER BY ");
+            append(orderings);
         }
         return sb.toString();
     }
 
-    private void format(Ordering[] orderings) {
+    private void append(Ordering[] orderings) {
         String comma = "";
         for (Ordering ordering : orderings) {
-            sb.append(comma);
+            append(comma);
             comma = ", ";
-            format(ordering.getOperand());
+            append(ordering.getOperand());
             if (JCR_ORDER_DESCENDING.equals(ordering.getOrder())) {
-                ws();
-                sb.append("DESC");
+                append(" DESC");
             }
         }
     }
 
-    private void format(Constraint c)
+    private void append(Constraint c)
             throws RepositoryException {
         if (c instanceof And) {
-            format((And) c);
+            append((And) c);
         } else if (c instanceof ChildNode) {
-            format((ChildNode) c);
+            append((ChildNode) c);
         } else if (c instanceof Comparison) {
-            format((Comparison) c);
+            append((Comparison) c);
         } else if (c instanceof DescendantNode) {
-            format((DescendantNode) c);
+            append((DescendantNode) c);
         } else if (c instanceof FullTextSearch) {
-            format((FullTextSearch) c);
+            append((FullTextSearch) c);
         } else if (c instanceof Not) {
-            format((Not) c);
+            append((Not) c);
         } else if (c instanceof Or) {
-            format((Or) c);
+            append((Or) c);
         } else if (c instanceof PropertyExistence) {
-            format((PropertyExistence) c);
+            append((PropertyExistence) c);
         } else {
-            format((SameNode) c);
+            append((SameNode) c);
         }
     }
 
-    private void format(And constraint)
+    private void append(And constraint)
             throws RepositoryException {
         String and = "";
         for (Constraint c : Arrays.asList(
                 constraint.getConstraint1(),
                 constraint.getConstraint2())) {
-            sb.append(and);
+            append(and);
             and = " AND ";
             boolean paren = c instanceof Or;
             if (paren) {
-                sb.append("(");
+                append("(");
             }
-            format(c);
+            append(c);
             if (paren) {
-                sb.append(")");
+                append(")");
             }
         }
     }
 
-    private void format(ChildNode constraint) {
-        sb.append("ISCHILDNODE(");
-        formatName(constraint.getSelectorName());
-        sb.append(",");
-        ws();
-        formatPath(constraint.getParentPath());
-        sb.append(")");
+    private void append(ChildNode constraint) {
+        append("ISCHILDNODE(");
+        appendName(constraint.getSelectorName());
+        append(", ");
+        appendPath(constraint.getParentPath());
+        append(")");
     }
 
-    private void format(Comparison constraint)
+    private void append(Comparison constraint)
             throws RepositoryException {
-        format(constraint.getOperand1());
-        ws();
-        formatOperator(constraint.getOperator());
-        ws();
-        format(constraint.getOperand2());
+        append(constraint.getOperand1());
+        append(" ");
+        appendOperator(constraint.getOperator());
+        append(" ");
+        append(constraint.getOperand2());
     }
 
-    private void format(StaticOperand operand)
+    private void append(StaticOperand operand)
             throws RepositoryException {
         if (operand instanceof BindVariableValue) {
-            format((BindVariableValue) operand);
+            append((BindVariableValue) operand);
         } else {
-            format((Literal) operand);
+            append((Literal) operand);
         }
     }
 
-    private void format(BindVariableValue value) {
-        sb.append("$");
-        sb.append(value.getBindVariableName());
+    private void append(BindVariableValue value) {
+        append("$");
+        append(value.getBindVariableName());
     }
 
-    private void format(Literal value)
+    private void append(Literal value)
             throws RepositoryException {
         Value v = value.getLiteralValue();
         switch (v.getType()) {
             case PropertyType.BINARY:
-                formatCastLiteral(v.getString(), "BINARY");
+                appendCastLiteral(v.getString(), "BINARY");
                 break;
             case PropertyType.BOOLEAN:
-                sb.append(v.getString());
+                append(v.getString());
                 break;
             case PropertyType.DATE:
-                formatCastLiteral(v.getString(), "DATE");
+                appendCastLiteral(v.getString(), "DATE");
                 break;
             case PropertyType.DECIMAL:
-                sb.append(v.getString());
+                append(v.getString());
                 break;
             case PropertyType.DOUBLE:
-                sb.append(v.getString());
+                append(v.getString());
                 break;
             case PropertyType.LONG:
-                sb.append(v.getString());
+                append(v.getString());
                 break;
             case PropertyType.NAME:
-                formatCastLiteral(v.getString(), "NAME");
+                appendCastLiteral(v.getString(), "NAME");
                 break;
             case PropertyType.PATH:
-                formatCastLiteral(v.getString(), "PATH");
+                appendCastLiteral(v.getString(), "PATH");
                 break;
             case PropertyType.REFERENCE:
-                formatCastLiteral(v.getString(), "REFERENCE");
+                appendCastLiteral(v.getString(), "REFERENCE");
                 break;
             case PropertyType.STRING:
-                formatStringLiteral(v.getString());
+                appendStringLiteral(v.getString());
                 break;
             case PropertyType.URI:
-                formatCastLiteral(v.getString(), "URI");
+                appendCastLiteral(v.getString(), "URI");
                 break;
             case PropertyType.WEAKREFERENCE:
-                formatCastLiteral(v.getString(), "WEAKREFERENCE");
+                appendCastLiteral(v.getString(), "WEAKREFERENCE");
                 break;
         }
     }
 
-    private void formatCastLiteral(String value, String propertyType) {
-        sb.append("CAST(");
-        formatStringLiteral(value);
-        ws();
-        sb.append("AS");
-        ws();
-        sb.append(propertyType);
-        sb.append(")");
+    private void appendCastLiteral(String value, String propertyType) {
+        append("CAST(");
+        appendStringLiteral(value);
+        append(" AS ");
+        append(propertyType);
+        append(")");
     }
 
-    private void formatStringLiteral(String value) {
-        sb.append("'");
-        sb.append(value.replaceAll("'", "''"));
-        sb.append("'");
+    private void appendStringLiteral(String value) {
+        append("'");
+        append(value.replaceAll("'", "''"));
+        append("'");
     }
 
-    private void formatOperator(String operator) {
+    private void appendOperator(String operator) {
         if (JCR_OPERATOR_EQUAL_TO.equals(operator)) {
-            sb.append("=");
+            append("=");
         } else if (JCR_OPERATOR_GREATER_THAN.equals(operator)) {
-            sb.append(">");
+            append(">");
         } else if (JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO.equals(operator)) {
-            sb.append(">=");
+            append(">=");
         } else if (JCR_OPERATOR_LESS_THAN.equals(operator)) {
-            sb.append("<");
+            append("<");
         } else if (JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO.equals(operator)) {
-            sb.append("<=");
+            append("<=");
         } else if (JCR_OPERATOR_LIKE.equals(operator)) {
-            sb.append("LIKE");
+            append("LIKE");
         } else {
-            sb.append("<>");
+            append("<>");
         }
     }
 
-    private void format(DynamicOperand operand) {
+    private void append(DynamicOperand operand) {
         if (operand instanceof FullTextSearchScore) {
-            format((FullTextSearchScore) operand);
+            append((FullTextSearchScore) operand);
         } else if (operand instanceof Length) {
-            format((Length) operand);
+            append((Length) operand);
         } else if (operand instanceof LowerCase) {
-            format((LowerCase) operand);
+            append((LowerCase) operand);
         } else if (operand instanceof NodeLocalName) {
-            format((NodeLocalName) operand);
+            append((NodeLocalName) operand);
         } else if (operand instanceof NodeName) {
-            format((NodeName) operand);
+            append((NodeName) operand);
         } else if (operand instanceof PropertyValue) {
-            format((PropertyValue) operand);
+            append((PropertyValue) operand);
         } else {
-            format((UpperCase) operand);
+            append((UpperCase) operand);
         }
     }
 
-    private void format(FullTextSearchScore operand) {
-        sb.append("SCORE(");
-        formatName(operand.getSelectorName());
-        sb.append(")");
+    private void append(FullTextSearchScore operand) {
+        append("SCORE(");
+        appendName(operand.getSelectorName());
+        append(")");
     }
 
-    private void format(Length operand) {
-        sb.append("LENGTH(");
-        format(operand.getPropertyValue());
-        sb.append(")");
+    private void append(Length operand) {
+        append("LENGTH(");
+        append(operand.getPropertyValue());
+        append(")");
     }
 
-    private void format(LowerCase operand) {
-        sb.append("LOWER(");
-        format(operand.getOperand());
-        sb.append(")");
+    private void append(LowerCase operand) {
+        append("LOWER(");
+        append(operand.getOperand());
+        append(")");
     }
 
-    private void format(NodeLocalName operand) {
-        sb.append("LOCALNAME(");
-        formatName(operand.getSelectorName());
-        sb.append(")");
+    private void append(NodeLocalName operand) {
+        append("LOCALNAME(");
+        appendName(operand.getSelectorName());
+        append(")");
     }
 
-    private void format(NodeName operand) {
-        sb.append("NAME(");
-        formatName(operand.getSelectorName());
-        sb.append(")");
+    private void append(NodeName operand) {
+        append("NAME(");
+        appendName(operand.getSelectorName());
+        append(")");
     }
 
-    private void format(PropertyValue operand) {
-        formatName(operand.getSelectorName());
-        sb.append(".");
-        formatName(operand.getPropertyName());
+    private void append(PropertyValue operand) {
+        appendName(operand.getSelectorName());
+        append(".");
+        appendName(operand.getPropertyName());
     }
 
-    private void format(UpperCase operand) {
-        sb.append("UPPER(");
-        format(operand.getOperand());
-        sb.append(")");
+    private void append(UpperCase operand) {
+        append("UPPER(");
+        append(operand.getOperand());
+        append(")");
     }
 
-    private void format(DescendantNode constraint) {
-        sb.append("ISDESCENDANTNODE(");
-        formatName(constraint.getSelectorName());
-        sb.append(",");
-        ws();
-        formatPath(constraint.getAncestorPath());
-        sb.append(")");
+    private void append(DescendantNode constraint) {
+        append("ISDESCENDANTNODE(");
+        appendName(constraint.getSelectorName());
+        append(", ");
+        appendPath(constraint.getAncestorPath());
+        append(")");
     }
 
-    private void format(FullTextSearch constraint)
-            throws RepositoryException {
-        sb.append("CONTAINS(");
-        formatName(constraint.getSelectorName());
-        sb.append(".");
+    private void append(FullTextSearch constraint) throws RepositoryException {
+        append("CONTAINS(");
+        appendName(constraint.getSelectorName());
+        append(".");
         String propName = constraint.getPropertyName();
         if (propName == null) {
-            sb.append("*");
+            append("*");
         } else {
-            formatName(propName);
+            appendName(propName);
         }
-        sb.append(",");
-        ws();
-        format(constraint.getFullTextSearchExpression());
-        sb.append(")");
+        append(", ");
+        append(constraint.getFullTextSearchExpression());
+        append(")");
     }
 
-    private void format(Not constraint)
-            throws RepositoryException {
-        sb.append("NOT");
-        ws();
+    private void append(Not constraint) throws RepositoryException {
+        append("NOT ");
         Constraint c = constraint.getConstraint();
         boolean paren = c instanceof And || c instanceof Or;
         if (paren) {
-            sb.append("(");
+            append("(");
         }
-        format(c);
+        append(c);
         if (paren) {
-            sb.append(")");
+            append(")");
         }
     }
 
-    private void format(Or constraint)
-            throws RepositoryException {
-        format(constraint.getConstraint1());
-        ws();
-        sb.append("OR");
-        ws();
-        format(constraint.getConstraint2());
+    private void append(Or constraint) throws RepositoryException {
+        append(constraint.getConstraint1());
+        append(" OR ");
+        append(constraint.getConstraint2());
     }
 
-    private void format(PropertyExistence constraint) {
-        formatName(constraint.getSelectorName());
-        sb.append(".");
-        formatName(constraint.getPropertyName());
-        ws();
-        sb.append("IS NOT NULL");
+    private void append(PropertyExistence constraint) {
+        appendName(constraint.getSelectorName());
+        append(".");
+        appendName(constraint.getPropertyName());
+        append(" IS NOT NULL");
     }
 
-    private void format(SameNode constraint) {
-        sb.append("ISSAMENODE(");
-        formatName(constraint.getSelectorName());
-        sb.append(",");
-        ws();
-        formatPath(constraint.getPath());
-        sb.append(")");
+    private void append(SameNode constraint) {
+        append("ISSAMENODE(");
+        appendName(constraint.getSelectorName());
+        append(", ");
+        appendPath(constraint.getPath());
+        append(")");
     }
 
-    private void format(Column[] columns) {
+    private void append(Column[] columns) {
         if (columns.length == 0) {
-            sb.append("*");
+            append("*");
         } else {
             String comma = "";
             for (Column c : columns) {
-                sb.append(comma);
+                append(comma);
                 comma = ", ";
-                formatName(c.getSelectorName());
-                sb.append(".");
+                appendName(c.getSelectorName());
+                append(".");
                 String propName = c.getPropertyName();
                 if (propName != null) {
-                    formatName(propName);
-                    ws();
-                    sb.append("AS");
-                    ws();
-                    formatName(c.getColumnName());
+                    appendName(propName);
+                    if (c.getColumnName() != null) {
+                        append(" AS ");
+                        appendName(c.getColumnName());
+                    }
                 } else {
-                    sb.append("*");
+                    append("*");
                 }
             }
         }
     }
 
-    private void format(Source source) {
+    private void append(Source source) {
         if (source instanceof Join) {
-            format((Join) source);
+            append((Join) source);
         } else {
-            format((Selector) source);
+            append((Selector) source);
         }
     }
 
-    private void format(Join join) {
-        format(join.getLeft());
-        ws();
-        formatJoinType(join.getJoinType());
-        ws();
-        sb.append("JOIN");
-        ws();
-        format(join.getRight());
-        ws();
-        sb.append("ON");
-        ws();
-        format(join.getJoinCondition());
+    private void append(Join join) {
+        append(join.getLeft());
+        append(" ");
+        appendJoinType(join.getJoinType());
+        append(" JOIN ");
+        append(join.getRight());
+        append(" ON ");
+        append(join.getJoinCondition());
     }
 
-    private void format(JoinCondition joinCondition) {
+    private void append(JoinCondition joinCondition) {
         if (joinCondition instanceof EquiJoinCondition) {
-            format((EquiJoinCondition) joinCondition);
+            append((EquiJoinCondition) joinCondition);
         } else if (joinCondition instanceof ChildNodeJoinCondition) {
-            format((ChildNodeJoinCondition) joinCondition);
+            append((ChildNodeJoinCondition) joinCondition);
         } else if (joinCondition instanceof DescendantNodeJoinCondition) {
-            format((DescendantNodeJoinCondition) joinCondition);
+            append((DescendantNodeJoinCondition) joinCondition);
         } else {
-            format((SameNodeJoinCondition) joinCondition);
+            append((SameNodeJoinCondition) joinCondition);
         }
     }
 
-    private void format(EquiJoinCondition condition) {
-        formatName(condition.getSelector1Name());
-        sb.append(".");
-        formatName(condition.getProperty1Name());
-        ws();
-        sb.append("=");
-        ws();
-        formatName(condition.getSelector2Name());
-        sb.append(".");
-        formatName(condition.getProperty2Name());
+    private void append(EquiJoinCondition condition) {
+        appendName(condition.getSelector1Name());
+        append(".");
+        appendName(condition.getProperty1Name());
+        append(" = ");
+        appendName(condition.getSelector2Name());
+        append(".");
+        appendName(condition.getProperty2Name());
     }
 
-    private void format(ChildNodeJoinCondition condition) {
-        sb.append("ISCHILDNODE(");
-        formatName(condition.getChildSelectorName());
-        sb.append(",");
-        ws();
-        formatName(condition.getParentSelectorName());
-        sb.append(")");
+    private void append(ChildNodeJoinCondition condition) {
+        append("ISCHILDNODE(");
+        appendName(condition.getChildSelectorName());
+        append(", ");
+        appendName(condition.getParentSelectorName());
+        append(")");
     }
 
-    private void format(DescendantNodeJoinCondition condition) {
-        sb.append("ISDESCENDANTNODE(");
-        formatName(condition.getDescendantSelectorName());
-        sb.append(",");
-        ws();
-        formatName(condition.getAncestorSelectorName());
-        sb.append(")");
+    private void append(DescendantNodeJoinCondition condition) {
+        append("ISDESCENDANTNODE(");
+        appendName(condition.getDescendantSelectorName());
+        append(", ");
+        appendName(condition.getAncestorSelectorName());
+        append(")");
     }
 
-    private void format(SameNodeJoinCondition condition) {
-        sb.append("ISSAMENODE(");
-        formatName(condition.getSelector1Name());
-        sb.append(",");
-        ws();
-        formatName(condition.getSelector2Name());
+    private void append(SameNodeJoinCondition condition) {
+        append("ISSAMENODE(");
+        appendName(condition.getSelector1Name());
+        append(", ");
+        appendName(condition.getSelector2Name());
         if (condition.getSelector2Path() != null) {
-            sb.append(",");
-            ws();
-            formatPath(condition.getSelector2Path());
+            append(", ");
+            appendPath(condition.getSelector2Path());
         }
-        sb.append(")");
+        append(")");
     }
 
-    private void formatPath(String path) {
+    private void appendPath(String path) {
         if (isSimpleName(path)) {
-            sb.append(path);
+            append(path);
         } else {
-            sb.append("[");
-            sb.append(path);
-            sb.append("]");
+            append("[");
+            append(path);
+            append("]");
         }
     }
 
-    private void formatJoinType(String joinType) {
+    private void appendJoinType(String joinType) {
         if (joinType.equals(JCR_JOIN_TYPE_INNER)) {
-            sb.append("INNER");
+            append("INNER");
         } else if (joinType.equals(JCR_JOIN_TYPE_LEFT_OUTER)) {
-            sb.append("LEFT OUTER");
+            append("LEFT OUTER");
         } else {
-            sb.append("RIGHT OUTER");
+            append("RIGHT OUTER");
         }
     }
 
-    private void format(Selector selector) {
-        formatName(selector.getNodeTypeName());
-        ws();
-        sb.append("AS");
-        ws();
-        formatName(selector.getSelectorName());
+    private void append(Selector selector) {
+        appendName(selector.getNodeTypeName());
+        if (!selector.getSelectorName().equals(selector.getNodeTypeName())) {
+            append(" AS ");
+            appendName(selector.getSelectorName());
+        }
     }
 
-    private void formatName(String name) {
+    private void appendName(String name) {
         if (isSimpleName(name)) {
-            sb.append(name);
+            append(name);
         } else {
-            sb.append("[");
-            sb.append(name);
-            sb.append("]");
+            append("[");
+            append(name);
+            append("]");
         }
     }
 
@@ -589,7 +558,8 @@ public class QOMFormatter implements QueryObjectModelConstants {
         return true;
     }
 
-    private void ws() {
-        sb.append(" ");
+    private void append(String s) {
+        sb.append(s);
     }
+
 }
