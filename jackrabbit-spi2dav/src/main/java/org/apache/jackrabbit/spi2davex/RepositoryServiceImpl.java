@@ -538,7 +538,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
             assertMethod();
             Path p = getPathFactory().create(getPath(parentId, sessionInfo), propertyName, true);
-            setProperty(p, value);
+            setProperty(p, value, false);
         }
 
         /**
@@ -547,7 +547,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void addProperty(NodeId parentId, Name propertyName, QValue[] values) throws RepositoryException {
             assertMethod();
             Path p = getPathFactory().create(getPath(parentId, sessionInfo), propertyName, true);
-            setProperty(p, values);
+            setProperty(p, values, false);
         }
 
         /**
@@ -555,7 +555,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
          */
         public void setValue(PropertyId propertyId, QValue value) throws RepositoryException {
             assertMethod();
-            setProperty(getPath(propertyId, sessionInfo), value);
+            Path p = getPath(propertyId, sessionInfo);
+            setProperty(p, value, false);
         }
 
         /**
@@ -564,7 +565,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException {
             assertMethod();
             Path p = getPath(propertyId, sessionInfo);
-            setProperty(p, values);
+            setProperty(p, values, false);
         }
 
         /**
@@ -580,6 +581,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             String rmJcrPath = getNamePathResolver(sessionInfo).getJCRPath(rmPath);
             appendDiff(SYMBOL_REMOVE, rmJcrPath, null);
 
+            // clear the uri-lookup in case the itemID contains a uniqueID part.
             if (itemId.getPath() == null) {
                 clear = true;
             }
@@ -616,7 +618,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             for (int i = 0; i < mixinNodeTypeNames.length; i++) {
                 vs[i] = getQValueFactory(sessionInfo).create(mixinNodeTypeNames[i]);
             }
-            addProperty(nodeId, NameConstants.JCR_MIXINTYPES, vs);
+            Path p = getPathFactory().create(getPath(nodeId, sessionInfo), NameConstants.JCR_MIXINTYPES, true);
+            // register the diff entry including clearing previous calls to
+            // setMixins for the same node.
+            setProperty(p, vs, true);
         }
 
         /**
@@ -626,7 +631,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             assertMethod();
 
             QValue v = getQValueFactory(sessionInfo).create(primaryNodeTypeName);
-            addProperty(nodeId, NameConstants.JCR_PRIMARYTYPE, v);
+            Path p = getPathFactory().create(getPath(nodeId, sessionInfo), NameConstants.JCR_PRIMARYTYPE, true);
+            // register the diff entry including clearing previous calls to
+            // setPrimaryType for the same node.
+            setProperty(p, v, true);
         }
 
         /**
@@ -665,10 +673,12 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
          * @param value
          * @throws RepositoryException
          */
-        private void setProperty(Path propPath, QValue value) throws RepositoryException {
+        private void setProperty(Path propPath, QValue value, boolean clearPrevious) throws RepositoryException {
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
             String jcrPropPath = resolver.getJCRPath(propPath);
-            clearPreviousSetProperty(jcrPropPath);
+            if (clearPrevious) {
+                clearPreviousSetProperty(jcrPropPath);
+            }
 
             String strValue = getJsonString(value);
             appendDiff(SYMBOL_SET_PROPERTY, jcrPropPath, strValue);
@@ -677,10 +687,12 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }
         }
 
-        private void setProperty(Path propPath, QValue[] values) throws RepositoryException {
+        private void setProperty(Path propPath, QValue[] values, boolean clearPrevious) throws RepositoryException {
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
             String jcrPropPath = resolver.getJCRPath(propPath);
-            clearPreviousSetProperty(jcrPropPath);
+            if (clearPrevious) {
+                clearPreviousSetProperty(jcrPropPath);
+            }
 
             StringBuffer strVal = new StringBuffer("[");
             for (int i = 0; i < values.length; i++) {
