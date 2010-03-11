@@ -51,15 +51,8 @@
                   <name>known.issues</name>
                   <value>
                       <!-- ***** PLEASE update spi2dav/pom.xml as well ***** -->                      
-                      <!-- JCR-2536 : PathNotFoundEx instead of InvalidItemStateEx. -->
-                      org.apache.jackrabbit.test.api.NodeTest#testSaveInvalidStateException
-                      org.apache.jackrabbit.test.api.NodeTest#testRemoveInvalidItemStateException
-                      org.apache.jackrabbit.test.api.SessionTest#testSaveInvalidStateException
                       <!-- wrong exception: ConstraintViolationEx. instead SAXException/InvalidSerializedDataEx.-->
                       org.apache.jackrabbit.test.api.SerializationTest#testNodeTypeConstraintViolationWorkspace
-                      <!-- not yet debugged : unknown reason -->
-                      org.apache.jackrabbit.test.api.WorkspaceCopySameNameSibsTest#testCopyNodesNodeExistsAtDestPath
-                      org.apache.jackrabbit.test.api.WorkspaceMoveSameNameSibsTest#testMoveNodesNodeExistsAtDestPath
                       <!-- JCR-2538 : impersonation not implemented -->
                       org.apache.jackrabbit.test.api.ImpersonateTest
                       <!-- JCR-2099 : shareable nodes -->

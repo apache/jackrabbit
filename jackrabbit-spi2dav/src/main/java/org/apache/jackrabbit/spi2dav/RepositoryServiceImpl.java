@@ -482,7 +482,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
+            throw ExceptionConverter.generate(e, method);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -1297,7 +1297,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         String uri = getItemUri(srcNodeId, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
-        MoveMethod method = new MoveMethod(uri, destUri, true);
+        MoveMethod method = new MoveMethod(uri, destUri, false);
         execute(method, sessionInfo);
         // need to clear the cache as the move may have affected nodes with uuid.
         clearItemUriCache(sessionInfo);
@@ -1309,7 +1309,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         String uri = uriResolver.getItemUri(srcNodeId, srcWorkspaceName, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
-        CopyMethod method = new CopyMethod(uri, destUri, true, false);
+        CopyMethod method = new CopyMethod(uri, destUri, false, false);
         execute(method, sessionInfo);
     }
 
@@ -2659,7 +2659,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             checkConsumed();
             String uri = getItemUri(srcNodeId, sessionInfo);
             String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
-            MoveMethod method = new MoveMethod(uri, destUri, true);
+            MoveMethod method = new MoveMethod(uri, destUri, false);
 
             methods.add(method);
             clear = true;

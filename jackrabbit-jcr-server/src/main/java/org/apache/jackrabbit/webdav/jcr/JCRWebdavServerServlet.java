@@ -23,6 +23,7 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionManagerImpl;
@@ -241,6 +242,59 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     @Override
     public String getAuthenticateHeaderValue() {
         return authenticate_header;
+    }
+
+    /**
+     * Modified variant needed for JCR move and copy that isn't compliant to
+     * WebDAV. The latter requires both methods to fail if the destination already
+     * exists and Overwrite is set to F (false); in JCR however this depends on
+     * the node type characteristics of the parent (SNSiblings allowed or not).
+     *
+     * @param destResource destination resource to be validated.
+     * @param request
+     * @param checkHeader flag indicating if the destination header must be present.
+     * @return status code indicating whether the destination is valid.
+     */
+    @Override
+    protected int validateDestination(DavResource destResource, WebdavRequest request, boolean checkHeader)
+            throws DavException {
+
+        if (checkHeader) {
+            String destHeader = request.getHeader(HEADER_DESTINATION);
+            if (destHeader == null || "".equals(destHeader)) {
+                return DavServletResponse.SC_BAD_REQUEST;
+            }
+        }
+        if (destResource.getLocator().equals(request.getRequestLocator())) {
+            return DavServletResponse.SC_FORBIDDEN;
+        }
+
+        int status;
+        if (destResource.exists()) {
+            if (request.isOverwrite()) {
+                // matching if-header required for existing resources
+                if (!request.matchesIfHeader(destResource)) {
+                    return DavServletResponse.SC_PRECONDITION_FAILED;
+                } else {
+                    // overwrite existing resource
+                    destResource.getCollection().removeMember(destResource);
+                    status = DavServletResponse.SC_NO_CONTENT;
+                }
+            } else {
+              /* NO overwrite header:
+
+                 but, instead of return the 412 Precondition-Failed code required
+                 by the WebDAV specification(s) leave the validation to the
+                 JCR repository.
+               */
+                status = DavServletResponse.SC_CREATED;
+            }
+
+        } else {
+            // destination does not exist >> copy/move can be performed
+            status = DavServletResponse.SC_CREATED;
+        }
+        return status;
     }
 
     /**
