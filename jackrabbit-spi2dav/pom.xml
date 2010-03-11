@@ -113,18 +113,10 @@
                   org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
                   org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
                   
-                  <!-- known issue!? -->                        
+                  <!-- Known, general issue of the Jcr2Spi - SPI setup.
+                       No notification about changes to registered namespace(s) -->                         
                   org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
                   org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
-                  
-                  <!-- JCR-2547: Setting a property which has been transiently removed fails with a PathNotFoundException -->
-                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty
-                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testReplacingProperty2
-                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty
-                  org.apache.jackrabbit.jcr2spi.AddPropertyTest#testAddingProperty2
-                  
-                  <!-- JCR-2548: Node#unlock sometimes fails with LockException: Precondition Failed -->                    
-                  org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
               </value>
             </property>
           </systemProperties>
