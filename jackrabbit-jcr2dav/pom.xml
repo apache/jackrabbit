@@ -119,9 +119,6 @@
                            No notification about changes to registered namespace(s) -->                        
                       org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
                       org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
-                      
-                      <!-- JCR-2548: Node#unlock sometimes fails with LockException: Precondition Failed -->
-                      org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
                   </value>
                 </property>
                 <property>
