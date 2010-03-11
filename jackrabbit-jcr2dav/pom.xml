@@ -110,7 +110,7 @@
                       <!-- known issue!? -->                        
                       org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest#testReorder2
                                             
-                      <!-- isSame should compare paths instead of ids !? -->
+                      <!-- JCR-2560 -->
                       org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty3
                       org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
                       org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
