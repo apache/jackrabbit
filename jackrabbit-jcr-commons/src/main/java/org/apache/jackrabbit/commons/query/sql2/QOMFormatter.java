@@ -178,7 +178,7 @@ public class QOMFormatter implements QueryObjectModelConstants {
                 constraint.getConstraint2())) {
             append(and);
             and = " AND ";
-            boolean paren = c instanceof Or;
+            boolean paren = c instanceof Or || c instanceof Not;
             if (paren) {
                 append("(");
             }
