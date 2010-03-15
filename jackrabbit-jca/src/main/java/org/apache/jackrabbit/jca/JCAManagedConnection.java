@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jca;
 
 import org.apache.jackrabbit.api.XASession;
-import org.apache.jackrabbit.core.RepositoryImpl;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -64,12 +63,12 @@ public final class JCAManagedConnection
     /**
      * Listeners.
      */
-    private final LinkedList listeners;
+    private final LinkedList<ConnectionEventListener> listeners;
 
     /**
      * Handles.
      */
-    private final LinkedList handles;
+    private final LinkedList<JCASessionHandle> handles;
 
     /**
      * Log writer.
@@ -83,8 +82,8 @@ public final class JCAManagedConnection
         this.mcf = mcf;
         this.cri = cri;
         this.session = session;
-        this.listeners = new LinkedList();
-        this.handles = new LinkedList();
+        this.listeners = new LinkedList<ConnectionEventListener>();
+        this.handles = new LinkedList<JCASessionHandle>();
         if (this.mcf.getBindSessionToTransaction().booleanValue()) {
             this.xaResource =  new TransactionBoundXAResource(this, session.getXAResource());
         } else {
@@ -95,7 +94,7 @@ public final class JCAManagedConnection
     /**
      * Return the repository.
      */
-    private RepositoryImpl getRepository() {
+    private Repository getRepository() {
         return mcf.getRepository();
     }
 
@@ -306,8 +305,8 @@ public final class JCAManagedConnection
      */
     private void sendEvent(ConnectionEvent event) {
         synchronized (listeners) {
-            for (Iterator i = listeners.iterator(); i.hasNext();) {
-                ConnectionEventListener listener = (ConnectionEventListener) i.next();
+            for (Iterator<ConnectionEventListener> i = listeners.iterator(); i.hasNext();) {
+                ConnectionEventListener listener = i.next();
 
                 switch (event.getId()) {
                     case ConnectionEvent.CONNECTION_CLOSED:
