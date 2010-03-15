@@ -16,13 +16,18 @@
  */
 package org.apache.jackrabbit.jca;
 
-import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.config.RepositoryConfig;
-
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.JcrUtils;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,7 +50,7 @@ public final class JCARepositoryManager {
     /**
      * References.
      */
-    private final Map references;
+    private final Map<Reference, Reference> references;
 
     /**
      * Flag indicating that the life cycle
@@ -58,7 +63,7 @@ public final class JCARepositoryManager {
      * Construct the manager.
      */
     private JCARepositoryManager() {
-        this.references = new HashMap();
+        this.references = new HashMap<Reference, Reference>();
     }
 
     /**
@@ -70,7 +75,7 @@ public final class JCARepositoryManager {
      *                   JCARepositoryManager.CLASSPATH_CONFIG_PREFIX.
      * @return repository instance
      */
-    public RepositoryImpl createRepository(String homeDir, String configFile)
+    public Repository createRepository(String homeDir, String configFile)
             throws RepositoryException {
         Reference ref = getReference(homeDir, configFile);
         return ref.create();
@@ -80,10 +85,10 @@ public final class JCARepositoryManager {
      * Shutdown all the repositories.
      */
     public void shutdown() {
-        Collection references = this.references.values();
-        Iterator iter = references.iterator();
+        Collection<Reference> references = this.references.values();
+        Iterator<Reference> iter = references.iterator();
         while (iter.hasNext()) {
-            Reference ref = (Reference) iter.next();
+            Reference ref = iter.next();
             ref.shutdown();
         }
         this.references.clear();
@@ -97,7 +102,7 @@ public final class JCARepositoryManager {
      */
     private synchronized Reference getReference(String homeDir, String configFile) {
         Reference ref = new Reference(homeDir, configFile);
-        Reference other = (Reference) references.get(ref);
+        Reference other = references.get(ref);
 
         if (other == null) {
             references.put(ref, ref);
@@ -134,7 +139,7 @@ public final class JCARepositoryManager {
         /**
          * Repository instance.
          */
-        private RepositoryImpl repository;
+        private Repository repository;
 
         /**
          * Construct the manager.
@@ -148,45 +153,68 @@ public final class JCARepositoryManager {
         /**
          * Return the repository.
          */
-        public RepositoryImpl create()
-                throws RepositoryException {
+        public Repository create() throws RepositoryException {
             if (repository == null) {
-                RepositoryConfig config = null;
+                Map<String, String> parameters = new HashMap<String, String>();
+
+                parameters.put("org.apache.jackrabbit.repository.home", homeDir);
 
                 if (configFile.startsWith(CLASSPATH_CONFIG_PREFIX)) {
-                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                    if (cl == null) {
-                        cl = this.getClass().getClassLoader();
-                    }
-
-                    InputStream configInputStream = cl.getResourceAsStream(
-                        configFile.substring(CLASSPATH_CONFIG_PREFIX.length()));
-                    try {
-                        config = RepositoryConfig.create(configInputStream, homeDir);
-                    } finally {
-                        if (configInputStream != null) {
-                            try {
-                                configInputStream.close();
-                            } catch (IOException e) {
-                                // ignore
-                            }
-                        }
-                    }
+                    String source =
+                        configFile.substring(CLASSPATH_CONFIG_PREFIX.length());
+                    File target = new File(homeDir, "repository.xml");
+                    copyConfigFile(source, target);
+                    parameters.put(
+                            "org.apache.jackrabbit.repository.conf",
+                            target.getPath());
                 } else {
-                    config = RepositoryConfig.create(configFile, homeDir);
+                    parameters.put(
+                            "org.apache.jackrabbit.repository.conf",
+                            configFile);
                 }
-                repository = RepositoryImpl.create(config);
+
+                repository = JcrUtils.getRepository(parameters);
             }
 
             return repository;
+        }
+
+        private void copyConfigFile(String source, File target)
+                throws RepositoryException {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            if (cl == null) {
+                cl = this.getClass().getClassLoader();
+            }
+
+            InputStream input = cl.getResourceAsStream(source);
+            if (input != null) {
+                try {
+                    try {
+                        OutputStream output = new FileOutputStream(target);
+                        try {
+                            IOUtils.copy(input, output);
+                        } finally {
+                            output.close();
+                        }
+                    } finally {
+                        input.close();
+                    }
+                } catch (IOException e) {
+                    throw new RepositoryException(
+                            "Failed to copy configuration to " + target, e);
+                }
+            } else {
+                throw new RepositoryException(
+                        "Repository configuration not found: " + source);
+            }
         }
 
         /**
          * Shutdown the repository.
          */
         public void shutdown() {
-            if (repository != null) {
-                repository.shutdown();
+            if (repository instanceof JackrabbitRepository) {
+                ((JackrabbitRepository) repository).shutdown();
             }
         }
 
@@ -257,5 +285,3 @@ public final class JCARepositoryManager {
     }
 
 }
-
-

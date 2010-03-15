@@ -16,20 +16,21 @@
  */
 package org.apache.jackrabbit.jca;
 
-import org.apache.jackrabbit.api.XASession;
-import org.apache.jackrabbit.core.RepositoryImpl;
+import java.io.PrintWriter;
+import java.util.Set;
 
 import javax.jcr.Credentials;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.security.auth.Subject;
-import java.io.PrintWriter;
-import java.util.Iterator;
-import java.util.Set;
+
+import org.apache.jackrabbit.api.XASession;
 
 /**
  * Implements the JCA ManagedConnectionFactory contract.
@@ -58,7 +59,7 @@ public final class JCAManagedConnectionFactory
     /**
      * Repository.
      */
-    private transient RepositoryImpl repository;
+    private transient Repository repository;
 
     /**
      * Log writer.
@@ -137,9 +138,9 @@ public final class JCAManagedConnectionFactory
         String workspace = cri.getWorkspace();
 
         try {
-            XASession session = (XASession) getRepository().login(creds, workspace);
+            Session session = getRepository().login(creds, workspace);
             log("Created session (" + session + ")");
-            return session;
+            return (XASession) session;
         } catch (RepositoryException e) {
             log("Failed to create session", e);
             ResourceException exception = new ResourceException(
@@ -179,13 +180,13 @@ public final class JCAManagedConnectionFactory
     /**
      * Returns a matched connection from the candidate set of connections.
      */
-    public ManagedConnection matchManagedConnections(Set set, Subject subject, ConnectionRequestInfo cri)
+    @SuppressWarnings("unchecked")
+    public ManagedConnection matchManagedConnections(
+            Set set, Subject subject, ConnectionRequestInfo cri)
             throws ResourceException {
-        for (Iterator i = set.iterator(); i.hasNext();) {
-            Object next = i.next();
-
-            if (next instanceof JCAManagedConnection) {
-                JCAManagedConnection mc = (JCAManagedConnection) next;
+        for (Object connection : set) {
+            if (connection instanceof JCAManagedConnection) {
+                JCAManagedConnection mc = (JCAManagedConnection) connection;
                 if (equals(mc.getManagedConnectionFactory())) {
                     JCAConnectionRequestInfo otherCri = mc.getConnectionRequestInfo();
                     if (equals(cri, otherCri)) {
@@ -201,7 +202,7 @@ public final class JCAManagedConnectionFactory
     /**
      * Return the repository.
      */
-    public RepositoryImpl getRepository() {
+    public Repository getRepository() {
         return repository;
     }
 

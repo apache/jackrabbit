@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.jca;
 
-import org.apache.jackrabbit.api.XASession;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.AccessControlException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -46,11 +47,9 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import javax.transaction.xa.XAResource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.AccessControlException;
-import java.util.Map;
+import org.apache.jackrabbit.api.XASession;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 /**
  * This class implements the JCA implementation of session.
@@ -144,6 +143,7 @@ public final class JCASessionHandle implements XASession {
     /**
      * Return node by UUID.
      */
+    @SuppressWarnings("deprecation")
     public Node getNodeByUUID(String uuid)
             throws ItemNotFoundException, RepositoryException {
         return getSession().getNodeByUUID(uuid);
@@ -316,6 +316,7 @@ public final class JCASessionHandle implements XASession {
     /**
      * Add lock token.
      */
+    @SuppressWarnings("deprecation")
     public void addLockToken(String arg0) {
         getSession().addLockToken(arg0);
     }
@@ -323,6 +324,7 @@ public final class JCASessionHandle implements XASession {
     /**
      * Return the lock tokens.
      */
+    @SuppressWarnings("deprecation")
     public String[] getLockTokens() {
         return getSession().getLockTokens();
     }
@@ -330,6 +332,7 @@ public final class JCASessionHandle implements XASession {
     /**
      * Remove lock token.
      */
+    @SuppressWarnings("deprecation")
     public void removeLockToken(String arg0) {
         getSession().removeLockToken(arg0);
     }
