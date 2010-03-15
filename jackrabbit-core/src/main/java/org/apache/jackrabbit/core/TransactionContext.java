@@ -23,7 +23,6 @@ import org.apache.jackrabbit.util.Timer;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -338,18 +337,5 @@ public class TransactionContext extends Timer.Task {
      */
     public static Xid getCurrentXid() {
         return CURRENT_XID.get();
-    }
-
-    /**
-     * Helper Method to check if the given {@link Xid} has the same globalTransactionId
-     * as the current {@link Xid} bind to the {@link #CURRENT_XID} ThreadLocal
-     * @param xid Xid to check
-     * @param fallback if either the given {@link Xid} or the current {@link Xid} is null we can not check if they
-     *        are same, the fallback value will be returned
-     * @return true if the same otherwise false
-     */
-    public static boolean isCurrentXid(Xid xid, boolean fallback) {
-        Xid currentXid = CURRENT_XID.get();
-        return fallback ? true : (currentXid == null || xid == null) ? fallback : Arrays.equals(xid.getGlobalTransactionId(), currentXid.getGlobalTransactionId());
     }
 }
