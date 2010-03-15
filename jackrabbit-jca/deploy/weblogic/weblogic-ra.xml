@@ -41,11 +41,11 @@
           <properties>
             <property>
               <name>HomeDir</name>
-              <value>/temp/jackrabbit</value>
+              <value>./jackrabbit</value>
             </property>
             <property>
               <name>ConfigFile</name>
-              <value>/temp/jackrabbit/repository.xml</value>
+              <value>classpath:org/apache/jackrabbit/core/repository.xml</value>
             </property>
           </properties>
         </connection-properties>

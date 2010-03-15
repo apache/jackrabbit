@@ -44,7 +44,7 @@ public abstract class AbstractTestCase
      * Repository configuration file.
      */
     public static final String JCR_CONFIG_FILE =
-        "target/repository/repository.xml";
+        "classpath:org/apache/jackrabbit/core/repository.xml";
 
     /**
      * Default credentials.
@@ -75,27 +75,6 @@ public abstract class AbstractTestCase
         File home = new File(JCR_HOME_DIR);
         if (!home.exists()) {
             home.mkdirs();
-        }
-
-        File conf = new File(JCR_CONFIG_FILE);
-        if (!conf.exists()) {
-            InputStream input =
-                RepositoryImpl.class.getResourceAsStream("repository.xml");
-            try {
-                OutputStream output = new FileOutputStream(conf);
-                try {
-                    byte[] buffer = new byte[1024];
-                    int n = input.read(buffer);
-                    while (n != -1) {
-                        output.write(buffer, 0, n);
-                        n = input.read(buffer);
-                    }
-                } finally {
-                    output.close();
-                }
-            } finally {
-                input.close();
-            }
         }
 
         // Construct the managed connection factory
