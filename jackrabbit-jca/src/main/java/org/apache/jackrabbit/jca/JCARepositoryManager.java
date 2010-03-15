@@ -155,24 +155,26 @@ public final class JCARepositoryManager {
          */
         public Repository create() throws RepositoryException {
             if (repository == null) {
-                Map<String, String> parameters = new HashMap<String, String>();
+                File dir = new File(homeDir);
+                dir.mkdirs();
 
-                parameters.put("org.apache.jackrabbit.repository.home", homeDir);
-
+                File xml;
                 if (configFile.startsWith(CLASSPATH_CONFIG_PREFIX)) {
                     String source =
                         configFile.substring(CLASSPATH_CONFIG_PREFIX.length());
-                    File target = new File(homeDir, "repository.xml");
-                    copyConfigFile(source, target);
-                    parameters.put(
-                            "org.apache.jackrabbit.repository.conf",
-                            target.getPath());
+                    xml = new File(homeDir, "repository.xml");
+                    copyConfigFile(source, xml);
                 } else {
-                    parameters.put(
-                            "org.apache.jackrabbit.repository.conf",
-                            configFile);
+                    xml = new File(configFile);
                 }
 
+                Map<String, String> parameters = new HashMap<String, String>();
+                parameters.put(
+                        "org.apache.jackrabbit.repository.home",
+                        dir.getPath());
+                parameters.put(
+                        "org.apache.jackrabbit.repository.conf",
+                        xml.getPath());
                 repository = JcrUtils.getRepository(parameters);
             }
 
