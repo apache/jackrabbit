@@ -171,7 +171,8 @@ public class RepositoryConfig
             throws IOException, ConfigurationException {
         installRepositorySkeleton(
                 dir, xml,
-                RepositoryImpl.class.getClassLoader(), REPOSITORY_XML);
+                RepositoryImpl.class.getClassLoader(),
+                "org/apache/jackrabbit/core/" + REPOSITORY_XML);
         return create(xml, dir);
     }
 
