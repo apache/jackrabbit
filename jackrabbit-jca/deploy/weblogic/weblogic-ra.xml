@@ -40,12 +40,8 @@
           </pool-params>
           <properties>
             <property>
-              <name>HomeDir</name>
-              <value>./jackrabbit</value>
-            </property>
-            <property>
-              <name>ConfigFile</name>
-              <value>classpath:org/apache/jackrabbit/core/repository.xml</value>
+              <name>RepositoryURI</name>
+              <value>jcr-jackrabbit://jackrabbit</value>
             </property>
           </properties>
         </connection-properties>

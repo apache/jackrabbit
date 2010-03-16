@@ -21,8 +21,7 @@
     <xa-transaction/>
     <rar-name>jackrabbit-jca.rar</rar-name>
     <connection-definition>javax.jcr.Repository</connection-definition>
-    <config-property name="homeDir" type="java.lang.String">./jackrabbit</config-property>
-    <config-property name="configFile" type="java.lang.String">classpath:org/apache/jackrabbit/core/repository.xml</config-property>
+    <config-property name="repositoryURI" type="java.lang.String">jcr-jackrabbit://jackrabbit</config-property>
     <config-property name="bindSessionToTransaction" type="java.lang.Boolean">true</config-property>
   </tx-connection-factory>
 </connection-factories>

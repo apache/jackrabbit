@@ -37,6 +37,10 @@
         </managedconnectionfactory-class>
 
         <config-property>
+          <config-property-name>RepositoryURI</config-property-name>
+          <config-property-type>java.lang.String</config-property-type>
+        </config-property>
+        <config-property>
           <config-property-name>HomeDir</config-property-name>
           <config-property-type>java.lang.String</config-property-type>
         </config-property>
