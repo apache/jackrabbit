@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.jca;
 
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Credentials;
@@ -31,6 +33,7 @@ import javax.resource.spi.ManagedConnectionFactory;
 import javax.security.auth.Subject;
 
 import org.apache.jackrabbit.api.XASession;
+import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
  * Implements the JCA ManagedConnectionFactory contract.
@@ -39,14 +42,9 @@ public final class JCAManagedConnectionFactory
         implements ManagedConnectionFactory {
 
     /**
-     * Home directory.
+     * Repository parameters.
      */
-    private String homeDir;
-
-    /**
-     * Config file.
-     */
-    private String configFile;
+    private final Map<String, String> parameters = new HashMap<String, String>();
 
     /**
      * Flag indicating whether the session should be bound to the
@@ -67,31 +65,45 @@ public final class JCAManagedConnectionFactory
     private transient PrintWriter logWriter;
 
     /**
+     * Return the repository URI.
+     */
+    public String getRepositoryURI() {
+        return parameters.get(JcrUtils.REPOSITORY_URI);
+    }
+
+    /**
+     * Set the repository URI.
+     */
+    public void setRepositoryURI(String uri) {
+        parameters.put(JcrUtils.REPOSITORY_URI, uri);
+    }
+
+    /**
      * Return the repository home directory.
      */
     public String getHomeDir() {
-        return homeDir;
+        return parameters.get("org.apache.jackrabbit.repository.home");
     }
 
     /**
      * Set the repository home directory.
      */
-    public void setHomeDir(String homeDir) {
-        this.homeDir = homeDir;
+    public void setHomeDir(String home) {
+        parameters.put("org.apache.jackrabbit.repository.home", home);
     }
 
     /**
      * Return the repository configuration file.
      */
     public String getConfigFile() {
-        return configFile;
+        return parameters.get("org.apache.jackrabbit.repository.conf");
     }
 
     /**
      * Set the repository configuration file.
      */
-    public void setConfigFile(String configFile) {
-        this.configFile = configFile;
+    public void setConfigFile(String conf) {
+        parameters.put("org.apache.jackrabbit.repository.conf", conf);
     }
 
     /**
@@ -189,7 +201,7 @@ public final class JCAManagedConnectionFactory
                 JCAManagedConnection mc = (JCAManagedConnection) connection;
                 if (equals(mc.getManagedConnectionFactory())) {
                     JCAConnectionRequestInfo otherCri = mc.getConnectionRequestInfo();
-                    if (equals(cri, otherCri)) {
+                    if (cri == otherCri || (cri != null && cri.equals(otherCri))) {
                         return mc;
                     }
                 }
@@ -230,9 +242,7 @@ public final class JCAManagedConnectionFactory
      * Return the hash code.
      */
     public int hashCode() {
-        int result = homeDir != null ? homeDir.hashCode() : 0;
-        result = 37 * result + (configFile != null ? configFile.hashCode() : 0);
-        return result;
+        return parameters.hashCode();
     }
 
     /**
@@ -252,21 +262,7 @@ public final class JCAManagedConnectionFactory
      * Return true if equals.
      */
     private boolean equals(JCAManagedConnectionFactory o) {
-        return equals(homeDir, o.homeDir)
-            && equals(configFile, o.configFile);
-    }
-
-    /**
-     * Return true if equals.
-     */
-    private boolean equals(Object o1, Object o2) {
-        if (o1 == o2) {
-            return true;
-        } else if ((o1 == null) || (o2 == null)) {
-            return false;
-        } else {
-            return o1.equals(o2);
-        }
+        return parameters.equals(o.parameters);
     }
 
     /**
@@ -275,19 +271,9 @@ public final class JCAManagedConnectionFactory
     private void createRepository()
             throws ResourceException {
         if (repository == null) {
-            // Check the home directory
-            if ((homeDir == null) || homeDir.equals("")) {
-                throw new ResourceException("Property 'homeDir' not set");
-            }
-
-            // Check the config file
-            if ((configFile == null) || configFile.equals("")) {
-                throw new ResourceException("Property 'configFile' not set");
-            }
-
             try {
                 JCARepositoryManager mgr = JCARepositoryManager.getInstance();
-                repository = mgr.createRepository(homeDir, configFile);
+                repository = mgr.createRepository(parameters);
                 log("Created repository (" + repository + ")");
             } catch (RepositoryException e) {
                 log("Failed to create repository", e);
@@ -304,7 +290,7 @@ public final class JCAManagedConnectionFactory
      */
     protected void finalize() {
         JCARepositoryManager mgr = JCARepositoryManager.getInstance();
-        mgr.autoShutdownRepository(homeDir, configFile);
+        mgr.autoShutdownRepository(parameters);
     }
 
     public Boolean getBindSessionToTransaction() {
