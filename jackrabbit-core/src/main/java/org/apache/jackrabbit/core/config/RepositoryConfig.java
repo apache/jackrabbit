@@ -157,6 +157,15 @@ public class RepositoryConfig
         return create(new InputSource(xml.toURI().toString()), copy);
     }
 
+    public static File getRepositoryHome(Properties variables) {
+        String home = variables.getProperty(REPOSITORY_HOME_VARIABLE);
+        if (home == null) {
+            home = variables.getProperty(
+                    RepositoryFactoryImpl.REPOSITORY_HOME, "jackrabbit");
+        }
+        return new File(home);
+    }
+
     /**
      * Returns the configuration of a repository with the given configuration
      * file and repository home directory.
