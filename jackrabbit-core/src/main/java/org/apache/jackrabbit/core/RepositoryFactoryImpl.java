@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
@@ -68,29 +69,27 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
     public Repository getRepository(Map parameters) throws RepositoryException {
         synchronized (REPOSITORY_INSTANCES) {
             if (parameters == null) {
-                return getOrCreateRepository(null, null, parameters);
-            } else if (parameters.containsKey(REPOSITORY_CONF)
-                    && parameters.containsKey(REPOSITORY_HOME)) {
-                String conf = parameters.get(REPOSITORY_CONF).toString();
+                return getOrCreateRepository(null, Collections.emptyMap());
+            } else if (parameters.containsKey(REPOSITORY_HOME)) {
                 String home = parameters.get(REPOSITORY_HOME).toString();
-                return getOrCreateRepository(conf, home, parameters);
+                return getOrCreateRepository(home, parameters);
             } else if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
                 Object parameter = parameters.get(JcrUtils.REPOSITORY_URI);
                 try {
                     URI uri = new URI(parameter.toString().trim());
-                    if ("file".equalsIgnoreCase(uri.getScheme())) {
-                        File file = new File(uri);
-                        String home, conf;
+                    String scheme = uri.getScheme();
+                    if (("file".equalsIgnoreCase(scheme)
+                            || "jcr-jackrabbit".equalsIgnoreCase(scheme))
+                            && uri.getAuthority() == null) {
+                        File file = new File(uri.getPath());
                         if (file.isFile()) {
-                            home = file.getParentFile().getPath();
-                            conf = file.getPath();
+                            return null; // Not a (possibly missing) directory
                         } else {
-                            home = file.getPath();
-                            conf = new File(file, "repository.xml").getPath();
+                            return getOrCreateRepository(
+                                    file.getPath(), parameters);
                         }
-                        return getOrCreateRepository(conf, home, parameters);
                     } else {
-                        return null; // not a file: URI
+                        return null; // not a file: or jcr-jackrabbit: URI
                     }
                 } catch (URISyntaxException e) {
                     return null; // not a valid URI
@@ -105,15 +104,13 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
      * Either returns a cached repository or creates a repository instance and
      * puts it into the {@link #REPOSITORY_INSTANCES} cache.
      *
-     * @param conf path to the repository configuration file.
      * @param home path to the repository home.
      * @return the repository instance.
      * @throws RepositoryException if an error occurs while creating the
      *          repository instance.
      */
     private JackrabbitRepository getOrCreateRepository(
-            String conf, String home, Map<?, ?> parameters)
-            throws RepositoryException {
+            String home, Map<?, ?> parameters) throws RepositoryException {
         JackrabbitRepository repo = REPOSITORY_INSTANCES.get(home);
         if (repo == null) {
             // Prepare the repository properties
@@ -131,9 +128,6 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
                 }
             }
 
-            properties.put(
-                    RepositoryConfigurationParser.REPOSITORY_CONF_VARIABLE,
-                    conf);
             properties.put(
                     RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE,
                     home);
