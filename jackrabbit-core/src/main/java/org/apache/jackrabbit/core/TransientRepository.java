@@ -241,6 +241,11 @@ public class TransientRepository extends AbstractRepository
         }, dir.getAbsolutePath());
     }
 
+    public TransientRepository(Properties properties)
+            throws ConfigurationException, IOException {
+        this(RepositoryConfig.install(properties));
+    }
+
     /**
      * @return the path to the repository home directory.
      */

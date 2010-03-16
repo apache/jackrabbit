@@ -16,7 +16,11 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import static org.apache.jackrabbit.core.config.RepositoryConfigurationParser.REPOSITORY_CONF_VARIABLE;
+import static org.apache.jackrabbit.core.config.RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE;
+
 import org.apache.commons.io.IOUtils; 
+import org.apache.jackrabbit.core.RepositoryFactoryImpl;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreFactory;
@@ -105,6 +109,45 @@ public class RepositoryConfig
     }
 
     /**
+     * Returns the configuration of a repository with the home directory,
+     * configuration file, and other options as specified in the given
+     * configuration parser variables. 
+     * <p>
+     * The directory is created if it does not exist. If the repository
+     * configuration file does not exist, then it is created using the
+     * default Jackrabbit configuration settings.
+     *
+     * @since Apache Jackrabbit 2.1
+     * @param variables parser variables
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
+    public static RepositoryConfig install(Properties variables)
+            throws IOException, ConfigurationException {
+        Properties copy = new Properties(variables);
+
+        String home = copy.getProperty(REPOSITORY_HOME_VARIABLE);
+        if (home == null) {
+            home = copy.getProperty(
+                    RepositoryFactoryImpl.REPOSITORY_HOME, "jackrabbit");
+            copy.setProperty(REPOSITORY_HOME_VARIABLE, home);
+        }
+        File dir = new File(home);
+
+        String conf = copy.getProperty(REPOSITORY_CONF_VARIABLE);
+        if (conf == null) {
+            conf = copy.getProperty(RepositoryFactoryImpl.REPOSITORY_CONF);
+        }
+        if (conf == null) {
+            conf = new File(dir, REPOSITORY_XML).getPath();
+        }
+        File xml = new File(conf);
+
+        installRepositorySkeleton(xml, dir);
+        return create(new InputSource(xml.toURI().toString()), copy);
+    }
+
+    /**
      * Returns the configuration of a repository with the given configuration
      * file and repository home directory.
      * <p>
@@ -119,6 +162,12 @@ public class RepositoryConfig
      */
     public static RepositoryConfig install(File xml, File dir)
             throws IOException, ConfigurationException {
+        installRepositorySkeleton(xml, dir);
+        return create(xml, dir);
+    }
+
+    private static void installRepositorySkeleton(File xml, File dir)
+            throws IOException {
         if (!dir.exists()) {
             log.info("Creating repository directory {}", dir);
             dir.mkdirs();
@@ -139,8 +188,6 @@ public class RepositoryConfig
                 output.close();
             }
         }
-
-        return create(xml, dir);
     }
 
     /**
@@ -238,14 +285,10 @@ public class RepositoryConfig
     }
 
     /**
-     * Parses the given repository configuration document and returns the
-     * parsed and initialized repository configuration. The given repository
-     * home directory path will be used as the ${rep.home} parser variable.
-     * <p>
-     * Note that in addition to parsing the repository configuration, this
-     * method also initializes the configuration (creates the configured
-     * directories, etc.). The {@link ConfigurationParser} class should be
-     * used directly to just parse the configuration.
+     * Convenience method that invokes the
+     * {@link #create(InputSource, Properties)} method with the given
+     * repository home home directory path set as the ${rep.home} parser
+     * variable. Also all system properties are used as parser variables.
      *
      * @param xml repository configuration document
      * @param home repository home directory
@@ -255,8 +298,28 @@ public class RepositoryConfig
     public static RepositoryConfig create(InputSource xml, String home)
             throws ConfigurationException {
         Properties variables = new Properties(System.getProperties());
-        variables.setProperty(
-                RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE, home);
+        variables.setProperty(REPOSITORY_HOME_VARIABLE, home);
+        return create(xml, variables);
+    }
+
+    /**
+     * Parses the given repository configuration document using the given
+     * parser variables. Note that the ${rep.home} variable should be set
+     * by the caller!
+     * <p>
+     * Note that in addition to parsing the repository configuration, this
+     * method also initializes the configuration (creates the configured
+     * directories, etc.). The {@link ConfigurationParser} class should be
+     * used directly to just parse the configuration.
+     *
+     * @since Apache Jackrabbit 2.1
+     * @param xml repository configuration document
+     * @param variables parser variables
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
+    public static RepositoryConfig create(InputSource xml, Properties variables)
+            throws ConfigurationException {
         RepositoryConfigurationParser parser =
             new RepositoryConfigurationParser(variables, new ConnectionFactory());
 

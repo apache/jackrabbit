@@ -17,11 +17,13 @@
 package org.apache.jackrabbit.core;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.jcr.Repository;
@@ -31,6 +33,7 @@ import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.JackrabbitRepositoryFactory;
 import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.core.config.RepositoryConfigurationParser;
 
 /**
  * <code>RepositoryFactoryImpl</code> implements a repository factory that
@@ -65,12 +68,12 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
     public Repository getRepository(Map parameters) throws RepositoryException {
         synchronized (REPOSITORY_INSTANCES) {
             if (parameters == null) {
-                return getOrCreateRepository(null, null);
+                return getOrCreateRepository(null, null, parameters);
             } else if (parameters.containsKey(REPOSITORY_CONF)
                     && parameters.containsKey(REPOSITORY_HOME)) {
                 String conf = parameters.get(REPOSITORY_CONF).toString();
                 String home = parameters.get(REPOSITORY_HOME).toString();
-                return getOrCreateRepository(conf, home);
+                return getOrCreateRepository(conf, home, parameters);
             } else if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
                 Object parameter = parameters.get(JcrUtils.REPOSITORY_URI);
                 try {
@@ -85,7 +88,7 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
                             home = file.getPath();
                             conf = new File(file, "repository.xml").getPath();
                         }
-                        return getOrCreateRepository(conf, home);
+                        return getOrCreateRepository(conf, home, parameters);
                     } else {
                         return null; // not a file: URI
                     }
@@ -108,22 +111,49 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
      * @throws RepositoryException if an error occurs while creating the
      *          repository instance.
      */
-    private JackrabbitRepository getOrCreateRepository(String conf,
-                                                       String home)
+    private JackrabbitRepository getOrCreateRepository(
+            String conf, String home, Map<?, ?> parameters)
             throws RepositoryException {
         JackrabbitRepository repo = REPOSITORY_INSTANCES.get(home);
         if (repo == null) {
-            TransientRepository tr;
-            if (home == null) {
-                tr = new TransientRepository();
-                // also remember this instance as the default repository
-                REPOSITORY_INSTANCES.put(null, tr);
-            } else {
-                tr = new TransientRepository(conf, home);
+            // Prepare the repository properties
+            Properties properties = new Properties(System.getProperties());
+            for (Map.Entry<?, ?> entry : parameters.entrySet()) {
+                Object key = entry.getKey();
+                if (key != null) {
+                    Object value = entry.getValue();
+                    if (value != null) {
+                        properties.setProperty(
+                                key.toString(), value.toString());
+                    } else {
+                        properties.remove(key.toString());
+                    }
+                }
             }
-            REPOSITORY_INSTANCES.put(tr.getHomeDir(), tr);
-            ownRepositories.add(tr);
-            repo = tr;
+
+            properties.put(
+                    RepositoryConfigurationParser.REPOSITORY_CONF_VARIABLE,
+                    conf);
+            properties.put(
+                    RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE,
+                    home);
+
+            try {
+                TransientRepository tr;
+                if (home == null) {
+                    tr = new TransientRepository(properties);
+                    // also remember this instance as the default repository
+                    REPOSITORY_INSTANCES.put(null, tr);
+                } else {
+                    tr = new TransientRepository(properties);
+                }
+                REPOSITORY_INSTANCES.put(tr.getHomeDir(), tr);
+                ownRepositories.add(tr);
+                repo = tr;
+            } catch (IOException e) {
+                throw new RepositoryException(
+                        "Failed to install repository configuration", e);
+            }
         }
         return repo;
     }
