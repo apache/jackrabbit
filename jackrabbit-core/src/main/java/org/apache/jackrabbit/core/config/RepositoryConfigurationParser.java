@@ -74,6 +74,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the repository home directory parser variable. */
     public static final String REPOSITORY_HOME_VARIABLE = "rep.home";
 
+    /** Name of the repository configuration file parser variable. */
+    public static final String REPOSITORY_CONF_VARIABLE = "rep.conf";
+
     /** Name of the workspace home directory parser variable. */
     public static final String WORKSPACE_HOME_VARIABLE = "wsp.home";
 
