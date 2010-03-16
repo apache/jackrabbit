@@ -241,9 +241,24 @@ public class TransientRepository extends AbstractRepository
         }, dir.getAbsolutePath());
     }
 
-    public TransientRepository(Properties properties)
+    public TransientRepository(final Properties properties)
             throws ConfigurationException, IOException {
-        this(RepositoryConfig.install(properties));
+        this(new RepositoryFactory() {
+            public RepositoryImpl getRepository() throws RepositoryException {
+                try {
+                    return RepositoryImpl.create(
+                            RepositoryConfig.install(properties));
+                } catch (IOException e) {
+                    throw new RepositoryException(
+                            "Automatic repository configuration failed: "
+                            + RepositoryConfig.getRepositoryHome(properties), e);
+                } catch (ConfigurationException e) {
+                    throw new RepositoryException(
+                            "Invalid repository configuration: "
+                            + properties, e);
+                }
+            }
+        }, RepositoryConfig.getRepositoryHome(properties).getAbsolutePath());
     }
 
     /**

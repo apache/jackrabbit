@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import static org.apache.jackrabbit.core.config.RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -34,7 +36,6 @@ import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.JackrabbitRepositoryFactory;
 import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.core.config.RepositoryConfigurationParser;
 
 /**
  * <code>RepositoryFactoryImpl</code> implements a repository factory that
@@ -55,101 +56,106 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
             = "org.apache.jackrabbit.repository.conf";
 
     /**
-     * Map of repository instances. Key = repository home, value = repository
-     * instance.
+     * Map of repository instances.
+     * Key = repository parameters, value = repository instance.
      */
-    private static final Map<String, JackrabbitRepository> REPOSITORY_INSTANCES = new HashMap<String, JackrabbitRepository>();
+    private static final Map<Properties, TransientRepository> REPOSITORIES =
+        new HashMap<Properties, TransientRepository>();
 
     /**
      * The repository instances that were created by this factory.
      */
-    private final Set<TransientRepository> ownRepositories = new HashSet<TransientRepository>();
+    private final Set<TransientRepository> ownRepositories =
+        new HashSet<TransientRepository>();
 
     @SuppressWarnings("unchecked")
     public Repository getRepository(Map parameters) throws RepositoryException {
-        synchronized (REPOSITORY_INSTANCES) {
-            if (parameters == null) {
-                return getOrCreateRepository(null, Collections.emptyMap());
-            } else if (parameters.containsKey(REPOSITORY_HOME)) {
-                String home = parameters.get(REPOSITORY_HOME).toString();
-                return getOrCreateRepository(home, parameters);
-            } else if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
-                Object parameter = parameters.get(JcrUtils.REPOSITORY_URI);
-                try {
-                    URI uri = new URI(parameter.toString().trim());
-                    String scheme = uri.getScheme();
-                    if (("file".equalsIgnoreCase(scheme)
-                            || "jcr-jackrabbit".equalsIgnoreCase(scheme))
-                            && uri.getAuthority() == null) {
-                        File file = new File(uri.getPath());
-                        if (file.isFile()) {
-                            return null; // Not a (possibly missing) directory
-                        } else {
-                            return getOrCreateRepository(
-                                    file.getPath(), parameters);
-                        }
+        if (parameters == null) {
+            return getRepository(null, Collections.emptyMap());
+        } else if (parameters.containsKey(REPOSITORY_HOME)) {
+            String home = parameters.get(REPOSITORY_HOME).toString();
+            return getRepository(home, parameters);
+        } else if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
+            Object parameter = parameters.get(JcrUtils.REPOSITORY_URI);
+            try {
+                URI uri = new URI(parameter.toString().trim());
+                String scheme = uri.getScheme();
+                if (("file".equalsIgnoreCase(scheme)
+                        || "jcr-jackrabbit".equalsIgnoreCase(scheme))
+                        && uri.getAuthority() == null) {
+                    File file = new File(uri.getPath());
+                    if (file.isFile()) {
+                        return null; // Not a (possibly missing) directory
                     } else {
-                        return null; // not a file: or jcr-jackrabbit: URI
+                        return getRepository(file.getPath(), parameters);
                     }
-                } catch (URISyntaxException e) {
-                    return null; // not a valid URI
+                } else {
+                    return null; // not a file: or jcr-jackrabbit: URI
                 }
-            } else {
-                return null; // unknown or insufficient parameters
+            } catch (URISyntaxException e) {
+                return null; // not a valid URI
             }
+        } else {
+            return null; // unknown or insufficient parameters
         }
+    }
+
+    private Repository getRepository(String home, Map<?, ?> parameters)
+            throws RepositoryException {
+        TransientRepository repository =
+            getOrCreateRepository(home, parameters);
+        ownRepositories.add(repository);
+        return repository;
     }
 
     /**
      * Either returns a cached repository or creates a repository instance and
-     * puts it into the {@link #REPOSITORY_INSTANCES} cache.
+     * puts it into the {@link #REPOSITORIES} cache.
      *
      * @param home path to the repository home.
      * @return the repository instance.
      * @throws RepositoryException if an error occurs while creating the
      *          repository instance.
      */
-    private JackrabbitRepository getOrCreateRepository(
+    private static synchronized TransientRepository getOrCreateRepository(
             String home, Map<?, ?> parameters) throws RepositoryException {
-        JackrabbitRepository repo = REPOSITORY_INSTANCES.get(home);
-        if (repo == null) {
-            // Prepare the repository properties
-            Properties properties = new Properties(System.getProperties());
-            for (Map.Entry<?, ?> entry : parameters.entrySet()) {
-                Object key = entry.getKey();
-                if (key != null) {
-                    Object value = entry.getValue();
-                    if (value != null) {
-                        properties.setProperty(
-                                key.toString(), value.toString());
-                    } else {
-                        properties.remove(key.toString());
-                    }
+        // Prepare the repository properties
+        Properties properties = new Properties(System.getProperties());
+        for (Map.Entry<?, ?> entry : parameters.entrySet()) {
+            Object key = entry.getKey();
+            if (key != null) {
+                Object value = entry.getValue();
+                if (value != null) {
+                    properties.setProperty(
+                            key.toString(), value.toString());
+                } else {
+                    properties.remove(key.toString());
                 }
             }
+        }
+        if (home != null) {
+            properties.put(REPOSITORY_HOME_VARIABLE, home);
+        }
 
-            properties.put(
-                    RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE,
-                    home);
-
+        TransientRepository repository = REPOSITORIES.get(properties);
+        if (repository == null) {
             try {
                 TransientRepository tr;
                 if (home == null) {
                     tr = new TransientRepository(properties);
                     // also remember this instance as the default repository
-                    REPOSITORY_INSTANCES.put(null, tr);
+                    REPOSITORIES.put(null, tr);
                 } else {
                     tr = new TransientRepository(properties);
                 }
-                REPOSITORY_INSTANCES.put(tr.getHomeDir(), tr);
-                ownRepositories.add(tr);
-                repo = tr;
+                REPOSITORIES.put(properties, tr);
+                repository = tr;
             } catch (IOException e) {
                 throw new RepositoryException(
                         "Failed to install repository configuration", e);
             }
         }
-        return repo;
+        return repository;
     }
 
     public RepositoryManager getRepositoryManager(JackrabbitRepository repo) throws RepositoryException {
@@ -161,4 +167,5 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
         }
         return new RepositoryManagerImpl((TransientRepository) repo);
     }
+
 }
