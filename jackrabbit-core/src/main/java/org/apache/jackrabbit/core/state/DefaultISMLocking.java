@@ -36,8 +36,9 @@ public class DefaultISMLocking implements ISMLocking {
 
     /**
      * The internal read-write lock.
+	 * Thread concerning ReentrantWriterPreferenceReadWriteLock
      */
-    private final ReadWriteLock rwLock = new RWLock();
+    private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock();
     
     /**
      * The internal Xid aware read-write lock.
@@ -110,20 +111,6 @@ public class DefaultISMLocking implements ISMLocking {
     }
 
 	/**
-	 * Thread concerning ReentrantWriterPreferenceReadWriteLock
-	 */
-    private static final class RWLock extends ReentrantWriterPreferenceReadWriteLock {
-
-    	/**
-         * Allow reader when there is no active writer, or current thread owns
-         * the write lock (reentrant).
-         */
-        protected boolean allowReader() {
-            return activeWriter_ == null || activeWriter_ == Thread.currentThread();
-        }
-    }
-
-	/**
 	 * Xid concerning ReentrantWriterPreferenceReadWriteLock
 	 */
     private static final class XidRWLock extends ReentrantWriterPreferenceReadWriteLock {
@@ -145,7 +132,7 @@ public class DefaultISMLocking implements ISMLocking {
          */
         protected boolean allowReader() {
         	Xid currentXid = TransactionContext.getCurrentXid();
-        	return activeXid == null || isSameGlobalTx(currentXid);
+        	return (activeXid == null && waitingWriters_ == 0) || isSameGlobalTx(currentXid);
         }
 
         /**
