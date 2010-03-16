@@ -61,6 +61,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -139,18 +140,20 @@ public class RepositoryConfig
             conf = copy.getProperty(RepositoryFactoryImpl.REPOSITORY_CONF);
         }
 
-        ClassLoader loader = RepositoryImpl.class.getClassLoader();
-        String resource = REPOSITORY_XML;
+        URL resource = RepositoryImpl.class.getResource(REPOSITORY_XML);
         if (conf == null) {
             conf = new File(dir, REPOSITORY_XML).getPath();
         } else if (conf.startsWith("classpath:")) {
-            loader = Thread.currentThread().getContextClassLoader();
-            resource = conf.substring("classpath:".length());
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            if (loader == null) {
+                loader = RepositoryImpl.class.getClassLoader();
+            }
+            resource = loader.getResource(conf.substring("classpath:".length()));
             conf = new File(dir, REPOSITORY_XML).getPath();
         }
 
         File xml = new File(conf);
-        installRepositorySkeleton(dir, xml, loader, resource);
+        installRepositorySkeleton(dir, xml, resource);
         return create(new InputSource(xml.toURI().toString()), copy);
     }
 
@@ -170,14 +173,12 @@ public class RepositoryConfig
     public static RepositoryConfig install(File xml, File dir)
             throws IOException, ConfigurationException {
         installRepositorySkeleton(
-                dir, xml,
-                RepositoryImpl.class.getClassLoader(),
-                "org/apache/jackrabbit/core/" + REPOSITORY_XML);
+                dir, xml, RepositoryImpl.class.getResource(REPOSITORY_XML));
         return create(xml, dir);
     }
 
     private static void installRepositorySkeleton(
-            File dir, File xml, ClassLoader loader, String resource)
+            File dir, File xml, URL resource)
             throws IOException {
         if (!dir.exists()) {
             log.info("Creating repository directory {}", dir);
@@ -185,10 +186,10 @@ public class RepositoryConfig
         }
 
         if (!xml.exists()) {
-            log.info("Installing default repository configuration to {}", xml);
+            log.info("Copying configuration from {} to {}", resource, xml);
             OutputStream output = new FileOutputStream(xml);
             try {
-                InputStream input = loader.getResourceAsStream(resource);
+                InputStream input = resource.openStream();
                 try {
                     IOUtils.copy(input, output);
                 } finally {
