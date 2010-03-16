@@ -138,12 +138,19 @@ public class RepositoryConfig
         if (conf == null) {
             conf = copy.getProperty(RepositoryFactoryImpl.REPOSITORY_CONF);
         }
+
+        ClassLoader loader = RepositoryImpl.class.getClassLoader();
+        String resource = REPOSITORY_XML;
         if (conf == null) {
             conf = new File(dir, REPOSITORY_XML).getPath();
+        } else if (conf.startsWith("classpath:")) {
+            loader = Thread.currentThread().getContextClassLoader();
+            resource = conf.substring("classpath:".length());
+            conf = new File(dir, REPOSITORY_XML).getPath();
         }
-        File xml = new File(conf);
 
-        installRepositorySkeleton(xml, dir);
+        File xml = new File(conf);
+        installRepositorySkeleton(dir, xml, loader, resource);
         return create(new InputSource(xml.toURI().toString()), copy);
     }
 
@@ -162,11 +169,14 @@ public class RepositoryConfig
      */
     public static RepositoryConfig install(File xml, File dir)
             throws IOException, ConfigurationException {
-        installRepositorySkeleton(xml, dir);
+        installRepositorySkeleton(
+                dir, xml,
+                RepositoryImpl.class.getClassLoader(), REPOSITORY_XML);
         return create(xml, dir);
     }
 
-    private static void installRepositorySkeleton(File xml, File dir)
+    private static void installRepositorySkeleton(
+            File dir, File xml, ClassLoader loader, String resource)
             throws IOException {
         if (!dir.exists()) {
             log.info("Creating repository directory {}", dir);
@@ -177,8 +187,7 @@ public class RepositoryConfig
             log.info("Installing default repository configuration to {}", xml);
             OutputStream output = new FileOutputStream(xml);
             try {
-                InputStream input =
-                    RepositoryImpl.class.getResourceAsStream(REPOSITORY_XML);
+                InputStream input = loader.getResourceAsStream(resource);
                 try {
                     IOUtils.copy(input, output);
                 } finally {
