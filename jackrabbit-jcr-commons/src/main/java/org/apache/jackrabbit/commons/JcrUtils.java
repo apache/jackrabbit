@@ -16,7 +16,12 @@
  */
 package org.apache.jackrabbit.commons;
 
+import static java.net.URLDecoder.decode;
+
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -160,11 +165,15 @@ public class JcrUtils {
     }
 
     /**
-     * Returns the repository identified by the given URI. See the
-     * documentation of the repository implementation you want to use for
-     * whether it supports this repository URI convention and for what
-     * the repository URI should look like. For example, Jackrabbit 2.0
-     * supports the following types of repository URIs:
+     * Returns the repository identified by the given URI. This feature
+     * is implemented by calling the {@link #getRepository(Map)} method
+     * with the {@link #REPOSITORY_URI} parameter set to the given URI.
+     * Any query parameters are moved from the URI to the parameter map.
+     * <p>
+     * See the documentation of the repository implementation you want
+     * to use for whether it supports this repository URI convention and
+     * for what the repository URI should look like. For example,
+     * Jackrabbit 2.0 supports the following types of repository URIs:
      * <dl>
      *   <dt>http(s)://...</dt>
      *   <dd>
@@ -190,9 +199,37 @@ public class JcrUtils {
      */
     public static Repository getRepository(String uri)
             throws RepositoryException {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put(JcrUtils.REPOSITORY_URI, uri);
-        return getRepository(parameters);
+        try {
+            Map<String, String> parameters = new HashMap<String, String>();
+            URI u = new URI(uri);
+            String query = u.getRawQuery();
+            if (query != null) {
+                for (String entry : query.split("&")) {
+                    int i = entry.indexOf('=');
+                    if (i != -1) {
+                        parameters.put(
+                                decode(entry.substring(0, i), "UTF-8"),
+                                decode(entry.substring(i + 1), "UTF-8"));
+                    } else {
+                        parameters.put(
+                                decode(entry, "UTF-8"),
+                                Boolean.TRUE.toString());
+                    }
+                }
+                parameters.put(
+                        JcrUtils.REPOSITORY_URI,
+                        new URI(u.getScheme(), u.getRawAuthority(),
+                                u.getRawPath(), null, u.getRawFragment()
+                                ).toASCIIString());
+            } else {
+                parameters.put(JcrUtils.REPOSITORY_URI, uri);
+            }
+            return getRepository(parameters);
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException("Unable to decode URI: " + uri, e);
+        } catch (URISyntaxException e) {
+            throw new RepositoryException("Invalid repository URI: " + uri, e);
+        }
     }
 
     /**
