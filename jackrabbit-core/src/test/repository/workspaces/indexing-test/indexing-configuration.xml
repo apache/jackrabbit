@@ -48,6 +48,7 @@
     </aggregate>
 
     <aggregate primaryType="nt:unstructured">
+        <include>aggregated-node</include>
         <include-property>child/property</include-property>
     </aggregate>
 

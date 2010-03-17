@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1348,6 +1349,18 @@ public class SearchIndex extends AbstractQueryHandler {
                                 doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, aggregate.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
                             }
                         }
+                        // make sure that fulltext fields are aligned properly
+                        // first all stored fields, then remaining
+                        List<Fieldable> fulltextFields = new ArrayList<Fieldable>();
+                        fulltextFields.addAll(removeFields(doc, FieldNames.FULLTEXT));
+                        Collections.sort(fulltextFields, new Comparator<Fieldable>() {
+                            public int compare(Fieldable o1, Fieldable o2) {
+                                return Boolean.valueOf(o2.isStored()).compareTo(o1.isStored());
+                            }
+                        });
+                        for (Fieldable f : fulltextFields) {
+                            doc.add(f);
+                        }
                     }
                     // property includes
                     PropertyState[] propStates = aggregateRule.getAggregatedPropertyStates(state);
@@ -1394,6 +1407,22 @@ public class SearchIndex extends AbstractQueryHandler {
                         + " node with id: " + state.getNodeId(), e);
             }
         }
+    }
+
+    /**
+     * Removes the fields with the given <code>name</code> from the
+     * <code>document</code> and returns them in a collection.
+     *
+     * @param document the document.
+     * @param name     the name of the fields to remove.
+     * @return the removed fields.
+     */
+    protected final Collection<Fieldable> removeFields(Document document,
+                                                 String name) {
+        List<Fieldable> fields = new ArrayList<Fieldable>();
+        fields.addAll(Arrays.asList(document.getFieldables(name)));
+        document.removeFields(FieldNames.FULLTEXT);
+        return fields;
     }
 
     /**
