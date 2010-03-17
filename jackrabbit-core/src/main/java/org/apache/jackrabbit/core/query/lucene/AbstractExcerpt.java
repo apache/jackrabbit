@@ -98,7 +98,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
                 tDocs.close();
             }
             Fieldable[] fields = doc.getFieldables(FieldNames.FULLTEXT);
-            if (fields == null) {
+            if (fields.length == 0) {
                 log.debug("Fulltext field not stored, using {}",
                         SimpleExcerptProvider.class.getName());
                 SimpleExcerptProvider exProvider = new SimpleExcerptProvider();

@@ -20,6 +20,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Value;
+import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -121,5 +122,18 @@ public class IndexingRuleTest extends AbstractIndexingTest {
         assertNotNull("No excerpt created", excerpt);
         assertTrue("Title must not be present in excerpt",
                 excerpt.getString().indexOf("Apache") == -1);
+    }
+
+    public void testExcerptOnExcludedProperty() throws RepositoryException {
+        Node node = testRootNode.addNode(nodeName1, NT_UNSTRUCTURED);
+        node.setProperty("rule", "excerpt");
+        node.setProperty("title", TEXT);
+        testRootNode.save();
+        String stmt = "/jcr:root" + testRootNode.getPath() +
+                "/*[jcr:contains(., 'quick')]/rep:excerpt(.)";
+        QueryResult result = executeQuery(stmt);
+        checkResult(result, new Node[]{node});
+        Value excerpt = result.getRows().nextRow().getValue("rep:excerpt(.)");
+        assertNotNull("No excerpt created", excerpt);
     }
 }
