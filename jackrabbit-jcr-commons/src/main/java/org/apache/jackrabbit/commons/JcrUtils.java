@@ -108,8 +108,9 @@ public class JcrUtils {
     public static Repository getRepository(Map<String, String> parameters)
             throws RepositoryException {
         // Use the query part of a repository URI as additional parameters
-        String uri = parameters.get(JcrUtils.REPOSITORY_URI);
-        if (uri != null) {
+        if (parameters != null
+                && parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
+            String uri = parameters.get(JcrUtils.REPOSITORY_URI);
             Map<String, String> copy = new HashMap<String, String>(parameters);
             try {
                 URI u = new URI(uri);
@@ -135,9 +136,9 @@ public class JcrUtils {
                     parameters = copy;
                 }
             } catch (URISyntaxException e) {
-                throw new RepositoryException(e);
+                // Ignore invalid URIs
             } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(e);
+                throw new RepositoryException("UTF-8 is not supported!", e);
             }
         }
 
