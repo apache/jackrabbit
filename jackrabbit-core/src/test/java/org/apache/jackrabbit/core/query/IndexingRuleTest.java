@@ -21,6 +21,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Value;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -135,5 +136,52 @@ public class IndexingRuleTest extends AbstractIndexingTest {
         checkResult(result, new Node[]{node});
         Value excerpt = result.getRows().nextRow().getValue("rep:excerpt(.)");
         assertNotNull("No excerpt created", excerpt);
+    }
+
+    public void testUseInExcerptWithAggregate() throws RepositoryException {
+        Node node = testRootNode.addNode(nodeName1, NT_UNSTRUCTURED);
+        node.setProperty("rule", "excerpt");
+        node.setProperty("title", "Apache Jackrabbit");
+        node.setProperty("text", "Jackrabbit is a JCR implementation");
+        Node aggregated = node.addNode("aggregated-node", NT_UNSTRUCTURED);
+        aggregated.setProperty("rule", "excerpt");
+        aggregated.setProperty("title", "Apache Jackrabbit");
+        aggregated.setProperty("text", "Jackrabbit is a JCR implementation");
+        testRootNode.save();
+
+        String stmt = "/jcr:root" + testRootNode.getPath() +
+                "/*[jcr:contains(., 'jackrabbit')]/rep:excerpt(.)";
+        RowIterator rows = executeQuery(stmt).getRows();
+        assertTrue("No results returned", rows.hasNext());
+        Value excerpt;
+        while (rows.hasNext()) {
+            excerpt = rows.nextRow().getValue("rep:excerpt(.)");
+            assertNotNull("No excerpt created", excerpt);
+            assertTrue("Title must not be present in excerpt",
+                    excerpt.getString().indexOf("Apache") == -1);
+            int idx = 0;
+            int numHighlights = 0;
+            for (;;) {
+                idx = excerpt.getString().indexOf("<strong>", idx);
+                if (idx == -1) {
+                    break;
+                }
+                numHighlights++;
+                int endIdx = excerpt.getString().indexOf("</strong>", idx);
+                assertEquals("wrong highlight", "Jackrabbit",
+                        excerpt.getString().substring(idx + "<strong>".length(), endIdx));
+                idx = endIdx;
+            }
+            assertTrue("Missing highlight", numHighlights > 0);
+        }
+
+        stmt = "/jcr:root" + testRootNode.getPath() +
+                "/*[jcr:contains(., 'apache')]/rep:excerpt(.)";
+        rows = executeQuery(stmt).getRows();
+        assertTrue("No results returned", rows.hasNext());
+        excerpt = rows.nextRow().getValue("rep:excerpt(.)");
+        assertNotNull("No excerpt created", excerpt);
+        assertTrue("Title must not be present in excerpt",
+                excerpt.getString().indexOf("Apache") == -1);
     }
 }
