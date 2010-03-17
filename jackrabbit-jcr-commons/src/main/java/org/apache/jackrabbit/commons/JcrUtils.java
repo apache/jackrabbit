@@ -107,6 +107,40 @@ public class JcrUtils {
      */
     public static Repository getRepository(Map<String, String> parameters)
             throws RepositoryException {
+        // Use the query part of a repository URI as additional parameters
+        String uri = parameters.get(JcrUtils.REPOSITORY_URI);
+        if (uri != null) {
+            Map<String, String> copy = new HashMap<String, String>(parameters);
+            try {
+                URI u = new URI(uri);
+                String query = u.getRawQuery();
+                if (query != null) {
+                    for (String entry : query.split("&")) {
+                        int i = entry.indexOf('=');
+                        if (i != -1) {
+                            copy.put(
+                                    decode(entry.substring(0, i), "UTF-8"),
+                                    decode(entry.substring(i + 1), "UTF-8"));
+                        } else {
+                            copy.put(
+                                    decode(entry, "UTF-8"),
+                                    Boolean.TRUE.toString());
+                        }
+                    }
+                    copy.put(
+                            JcrUtils.REPOSITORY_URI,
+                            new URI(u.getScheme(), u.getRawAuthority(),
+                                    u.getRawPath(), null, u.getRawFragment()
+                                    ).toASCIIString());
+                    parameters = copy;
+                }
+            } catch (URISyntaxException e) {
+                throw new RepositoryException(e);
+            } catch (UnsupportedEncodingException e) {
+                throw new RepositoryException(e);
+            }
+        }
+
         String newline = System.getProperty("line.separator");
 
         // Prepare the potential error message (JCR-2459)
@@ -199,37 +233,9 @@ public class JcrUtils {
      */
     public static Repository getRepository(String uri)
             throws RepositoryException {
-        try {
-            Map<String, String> parameters = new HashMap<String, String>();
-            URI u = new URI(uri);
-            String query = u.getRawQuery();
-            if (query != null) {
-                for (String entry : query.split("&")) {
-                    int i = entry.indexOf('=');
-                    if (i != -1) {
-                        parameters.put(
-                                decode(entry.substring(0, i), "UTF-8"),
-                                decode(entry.substring(i + 1), "UTF-8"));
-                    } else {
-                        parameters.put(
-                                decode(entry, "UTF-8"),
-                                Boolean.TRUE.toString());
-                    }
-                }
-                parameters.put(
-                        JcrUtils.REPOSITORY_URI,
-                        new URI(u.getScheme(), u.getRawAuthority(),
-                                u.getRawPath(), null, u.getRawFragment()
-                                ).toASCIIString());
-            } else {
-                parameters.put(JcrUtils.REPOSITORY_URI, uri);
-            }
-            return getRepository(parameters);
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("Unable to decode URI: " + uri, e);
-        } catch (URISyntaxException e) {
-            throw new RepositoryException("Invalid repository URI: " + uri, e);
-        }
+        Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put(JcrUtils.REPOSITORY_URI, uri);
+        return getRepository(parameters);
     }
 
     /**
