@@ -251,7 +251,7 @@ public class TransientRepository extends AbstractRepository
                 } catch (IOException e) {
                     throw new RepositoryException(
                             "Automatic repository configuration failed: "
-                            + RepositoryConfig.getRepositoryHome(properties), e);
+                            + properties, e);
                 } catch (ConfigurationException e) {
                     throw new RepositoryException(
                             "Invalid repository configuration: "
