@@ -32,6 +32,17 @@ abstract class DocId {
     static final int[] EMPTY = new int[0];
 
     /**
+     * All DocIds with a value smaller than {@link Short#MAX_VALUE}.
+     */
+    private static final PlainDocId[] LOW_DOC_IDS = new PlainDocId[Short.MAX_VALUE];
+
+    static {
+        for (int i = 0; i < LOW_DOC_IDS.length; i++) {
+            LOW_DOC_IDS[i] = new PlainDocId(i);
+        }
+    }
+
+    /**
      * Indicates a null DocId. Will be returned if the root node is asked for
      * its parent.
      */
@@ -112,7 +123,12 @@ abstract class DocId {
      * @return a <code>DocId</code> based on a document number.
      */
     static DocId create(int docNumber) {
-        return new PlainDocId(docNumber);
+        if (docNumber < Short.MAX_VALUE) {
+            // use cached values for docNumbers up to 32k
+            return LOW_DOC_IDS[docNumber];
+        } else {
+            return new PlainDocId(docNumber);
+        }
     }
 
     /**
