@@ -28,18 +28,26 @@ package org.apache.jackrabbit.spi.commons.name;
 public class HashCache {
 
     /**
-     * Size of the cache (must be a power of two). Note that this is the
-     * maximum number of objects kept in the cache, but due to hashing it
-     * can well be that only a part of the cache array is filled even if
-     * many more distinct objects are being accessed.
-     */
-    private static final int SIZE_POWER_OF_2 = 1024;
-
-    /**
      * Array of cached objects, indexed by their hash codes
      * (module size of the array).
      */
-    private final Object[] array = new Object[SIZE_POWER_OF_2];
+    private final Object[] array;
+
+    /**
+     * Creates a hash cache with 1024 slots.
+     */
+    public HashCache() {
+        this(10);
+    }
+
+    /**
+     * Creates a hash cache with 2^<code>exponent</code> slots.
+     *
+     * @param exponent the exponent.
+     */
+    public HashCache(int exponent) {
+        this.array = new Object[2 << exponent];
+    }
 
     /**
      * If a cached copy of the given object already exists, then returns
@@ -49,7 +57,7 @@ public class HashCache {
      * @return the given object or a previously cached copy
      */
     public Object get(Object object) {
-        int position = object.hashCode() & (SIZE_POWER_OF_2 - 1);
+        int position = object.hashCode() & (array.length - 1);
         Object previous = array[position];
         if (object.equals(previous)) {
             return previous;

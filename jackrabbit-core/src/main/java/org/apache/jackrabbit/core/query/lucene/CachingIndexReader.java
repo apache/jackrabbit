@@ -31,11 +31,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.text.NumberFormat;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implements an <code>IndexReader</code> that maintains caches to resolve
@@ -61,14 +63,20 @@ class CachingIndexReader extends FilterIndexReader {
     private final BitSet shareableNodes;
 
     /**
-     * Cache of nodes parent relation. If an entry in the array is not null,
-     * that means the node with the document number = array-index has the node
-     * with <code>DocId</code> as parent.
+     * Cache of nodes parent relation. If an entry in the array is >= 0,
+     * then that means the node with the document number = array-index has the
+     * node with the value at that position as parent.
      */
-    private final DocId[] parents;
+    private final int[] inSegmentParents;
 
     /**
-     * Initializes the {@link #parents} cache.
+     * Cache of nodes parent relation that point to a foreign index segment.
+     */
+    private final Map<Integer, DocId> foreignParentDocIds = new ConcurrentHashMap<Integer, DocId>();
+
+    /**
+     * Initializes the {@link #inSegmentParents} and {@link #foreignParentDocIds}
+     * caches.
      */
     private CacheInitializer cacheInitializer;
 
@@ -99,7 +107,7 @@ class CachingIndexReader extends FilterIndexReader {
      * @param delegatee the base <code>IndexReader</code>.
      * @param cache     a document number cache, or <code>null</code> if not
      *                  available to this reader.
-     * @param initCache if the {@link #parents} cache should be initialized
+     * @param initCache if the parent caches should be initialized
      *                  when this index reader is constructed.
      * @throws IOException if an error occurs while reading from the index.
      */
@@ -110,7 +118,8 @@ class CachingIndexReader extends FilterIndexReader {
             throws IOException {
         super(delegatee);
         this.cache = cache;
-        this.parents = new DocId[delegatee.maxDoc()];
+        this.inSegmentParents = new int[delegatee.maxDoc()];
+        Arrays.fill(this.inSegmentParents, -1);
         this.shareableNodes = new BitSet();
         TermDocs tDocs = delegatee.termDocs(
                 new Term(FieldNames.SHAREABLE_NODE, ""));
@@ -144,7 +153,12 @@ class CachingIndexReader extends FilterIndexReader {
     DocId getParent(int n, BitSet deleted) throws IOException {
         DocId parent;
         boolean existing = false;
-        parent = parents[n];
+        int parentDocNum = inSegmentParents[n];
+        if (parentDocNum != -1) {
+            parent = DocId.create(parentDocNum);
+        } else {
+            parent = foreignParentDocIds.get(n);
+        }
 
         if (parent != null) {
             existing = true;
@@ -159,6 +173,7 @@ class CachingIndexReader extends FilterIndexReader {
         }
 
         if (parent == null) {
+            int plainDocId = -1;
             Document doc = document(n, FieldSelectors.UUID_AND_PARENT);
             String[] parentUUIDs = doc.getValues(FieldNames.PARENT);
             if (parentUUIDs.length == 0 || parentUUIDs[0].length() == 0) {
@@ -174,7 +189,8 @@ class CachingIndexReader extends FilterIndexReader {
                         try {
                             while (docs.next()) {
                                 if (!deleted.get(docs.doc())) {
-                                    parent = DocId.create(docs.doc());
+                                    plainDocId = docs.doc();
+                                    parent = DocId.create(plainDocId);
                                     break;
                                 }
                             }
@@ -191,7 +207,20 @@ class CachingIndexReader extends FilterIndexReader {
             }
 
             // finally put to cache
-            parents[n] = parent;
+            if (plainDocId != -1) {
+                // PlainDocId
+                inSegmentParents[n] = plainDocId;
+            } else {
+                // UUIDDocId
+                foreignParentDocIds.put(n, parent);
+                if (existing) {
+                    // there was an existing parent reference in
+                    // inSegmentParents, which was invalid and is replaced
+                    // with a UUIDDocId (points to a foreign segment).
+                    // mark as unknown
+                    inSegmentParents[n] = -1;
+                }
+            }
         }
         return parent;
     }
@@ -313,7 +342,8 @@ class CachingIndexReader extends FilterIndexReader {
     }
 
     /**
-     * Initializes the {@link CachingIndexReader#parents} cache.
+     * Initializes the {@link CachingIndexReader#inSegmentParents} and
+     * {@link CachingIndexReader#foreignParentDocIds} caches.
      */
     private class CacheInitializer implements Runnable {
 
@@ -382,8 +412,8 @@ class CachingIndexReader extends FilterIndexReader {
         }
 
         /**
-         * Initializes the {@link CachingIndexReader#parents} <code>DocId</code>
-         * array.
+         * Initializes the {@link CachingIndexReader#inSegmentParents} and
+         * {@link CachingIndexReader#foreignParentDocIds} caches.
          *
          * @param reader the underlying index reader.
          * @throws IOException if an error occurs while reading from the index.
@@ -432,28 +462,28 @@ class CachingIndexReader extends FilterIndexReader {
             for (NodeInfo info : docs.values()) {
                 NodeInfo parent = docs.get(info.parent);
                 if (parent != null) {
-                    parents[info.docId] = DocId.create(parent.docId);
+                    inSegmentParents[info.docId] = parent.docId;
                 } else if (info.parent != null) {
                     foreignParents++;
-                    parents[info.docId] = DocId.create(info.parent);
+                    foreignParentDocIds.put(info.docId, DocId.create(info.parent));
                 } else if (shareableNodes.get(info.docId)) {
                     Document doc = reader.document(info.docId, FieldSelectors.UUID_AND_PARENT);
-                    parents[info.docId] = DocId.create(doc.getValues(FieldNames.PARENT));
+                    foreignParentDocIds.put(info.docId, DocId.create(doc.getValues(FieldNames.PARENT)));
                 } else {
                     // no parent -> root node
-                    parents[info.docId] = DocId.NULL;
+                    foreignParentDocIds.put(info.docId, DocId.NULL);
                 }
             }
             if (log.isDebugEnabled()) {
                 NumberFormat nf = NumberFormat.getPercentInstance();
                 nf.setMaximumFractionDigits(1);
                 time = System.currentTimeMillis() - time;
-                if (parents.length > 0) {
-                    foreignParents /= parents.length;
+                if (inSegmentParents.length > 0) {
+                    foreignParents /= inSegmentParents.length;
                 }
                 log.debug("initialized {} DocIds in {} ms, {} foreign parents",
                         new Object[]{
-                            parents.length,
+                            inSegmentParents.length,
                             time,
                             nf.format(foreignParents)
                         });

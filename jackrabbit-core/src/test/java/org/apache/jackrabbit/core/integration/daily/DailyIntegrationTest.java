@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.ConcurrentVersioningTest;
 import org.apache.jackrabbit.core.ConcurrentVersioningWithTransactionsTest;
 import org.apache.jackrabbit.core.LockTest;
 import org.apache.jackrabbit.core.ReadVersionsWhileModified;
+import org.apache.jackrabbit.core.integration.ConcurrentQueriesWithUpdatesTest;
 import org.apache.jackrabbit.core.query.LargeResultSetTest;
 import org.apache.jackrabbit.core.lock.ConcurrentLockingTest;
 import org.apache.jackrabbit.core.lock.ConcurrentLockingWithTransactionsTest;
@@ -58,6 +59,7 @@ public class DailyIntegrationTest extends TestCase {
         suite.addTestSuite(ConcurrentLockingTest.class);
         suite.addTestSuite(ConcurrentLockingWithTransactionsTest.class);
         suite.addTestSuite(LargeResultSetTest.class);
+        suite.addTestSuite(ConcurrentQueriesWithUpdatesTest.class);
 
         return suite;
     }
