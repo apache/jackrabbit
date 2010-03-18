@@ -24,29 +24,27 @@ import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.util.db.DbUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class represents an input stream backed by a database. The database
  * objects are only acquired when reading from the stream, and stay open until
  * the stream is closed, fully read, or garbage collected.
+ * <p>
+ * This class does not support mark/reset. It is always to be wrapped
+ * using a BufferedInputStream.
  */
 public class DbInputStream extends AutoCloseInputStream {
-
-    private static Logger log = LoggerFactory.getLogger(DbInputStream.class);
 
     protected DbDataStore store;
     protected DataIdentifier identifier;
     protected boolean endOfStream;
 
     protected ResultSet rs;
-    
 
     /**
      * Create a database input stream for the given identifier.
      * Database access is delayed until the first byte is read from the stream.
-     * 
+     *
      * @param store the database data store
      * @param identifier the data identifier
      */
@@ -58,7 +56,7 @@ public class DbInputStream extends AutoCloseInputStream {
 
     /**
      * Open the stream if required.
-     * 
+     *
      * @throws IOException
      */
     protected void openStream() throws IOException {
@@ -126,7 +124,7 @@ public class DbInputStream extends AutoCloseInputStream {
         if (in != null) {
             in.close();
             in = null;
-            // some additional database objects 
+            // some additional database objects
             // may need to be closed
             if (rs != null) {
                 DbUtility.close(rs);
@@ -141,7 +139,7 @@ public class DbInputStream extends AutoCloseInputStream {
     public long skip(long n) throws IOException {
         if (endOfStream) {
             return -1;
-        }        
+        }
         openStream();
         return in.skip(n);
     }
@@ -152,57 +150,38 @@ public class DbInputStream extends AutoCloseInputStream {
     public int available() throws IOException {
         if (endOfStream) {
             return 0;
-        }        
+        }
         openStream();
         return in.available();
     }
 
     /**
-     * {@inheritDoc}
+     * This method does nothing.
      */
     public void mark(int readlimit) {
-        if (endOfStream) {
-            return;
-        } 
-        try {
-            openStream();
-        } catch (IOException e) {
-            log.info("Error getting underlying stream: ", e);
-        }
-        in.mark(readlimit);
+        // do nothing
     }
 
     /**
-     * {@inheritDoc}
+     * This method does nothing.
      */
     public void reset() throws IOException {
-        if (endOfStream) {
-            throw new EOFException();
-        }         
-        openStream();
-        in.reset();
+        // do nothing
     }
 
     /**
-     * {@inheritDoc}
+     * Check whether mark and reset are supported.
+     *
+     * @return false
      */
     public boolean markSupported() {
-        if (endOfStream) {
-            return false;
-        }      
-        try {
-            openStream();
-        } catch (IOException e) {
-            log.info("Error getting underlying stream: ", e);
-            return false;
-        }
-        return in.markSupported();
+        return false;
     }
 
     /**
      * Set the result set of this input stream. This object must be closed once
      * the stream is closed.
-     * 
+     *
      * @param rs the result set
      */
     void setResultSet(ResultSet rs) {
