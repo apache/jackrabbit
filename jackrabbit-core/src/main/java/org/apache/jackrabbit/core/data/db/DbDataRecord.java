@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.data.AbstractDataRecord;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 
 /**
@@ -33,7 +34,7 @@ public class DbDataRecord extends AbstractDataRecord {
 
     /**
      * Creates a data record based on the given identifier and length.
-     * 
+     *
      * @param identifier data identifier
      * @param length the length
      * @param lastModified
@@ -58,7 +59,7 @@ public class DbDataRecord extends AbstractDataRecord {
      */
     public InputStream getStream() throws DataStoreException {
         lastModified = store.touch(getIdentifier(), lastModified);
-        return new DbInputStream(store, getIdentifier());
+        return new BufferedInputStream(new DbInputStream(store, getIdentifier()));
     }
 
     /**

@@ -31,6 +31,9 @@ import org.apache.commons.io.input.AutoCloseInputStream;
 /**
  * An input stream from a temporary file. The file is deleted when the stream is
  * closed, fully read, or garbage collected.
+ * <p>
+ * This class does not support mark/reset. It is always to be wrapped
+ * using a BufferedInputStream.
  */
 public class TempFileInputStream extends AutoCloseInputStream {
 
@@ -83,12 +86,20 @@ public class TempFileInputStream extends AutoCloseInputStream {
         return in.available();
     }
 
+    /**
+     * This method does nothing.
+     */
     public void mark(int readlimit) {
-        in.mark(readlimit);
+        // do nothing
     }
 
+    /**
+     * Check whether mark and reset are supported.
+     *
+     * @return false
+     */
     public boolean markSupported() {
-        return in.markSupported();
+        return false;
     }
 
     public long skip(long n) throws IOException {

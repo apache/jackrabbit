@@ -118,12 +118,12 @@ public class DbDataStore implements DataStore, DatabaseAware {
      * Call PreparedStatement.setBinaryStream(..., Integer.MAX_VALUE)
      */
     public static final String STORE_SIZE_MAX = "max";
-    
+
     /**
      * The digest algorithm used to uniquely identify records.
      */
     protected static final String DIGEST = "SHA-1";
-    
+
     /**
      * The prefix used for temporary objects.
      */
@@ -195,7 +195,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
      * in the [databaseType].properties file, initialized with the default value.
      */
     protected String tableSQL = "DATASTORE";
-    
+
     /**
      * This is the property 'createTable'
      * in the [databaseType].properties file, initialized with the default value.
@@ -281,9 +281,9 @@ public class DbDataStore implements DataStore, DatabaseAware {
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse = 
+    protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse =
         Collections.synchronizedMap(new WeakHashMap<DataIdentifier, WeakReference<DataIdentifier>>());
-    
+
     /**
      * The temporary identifiers that are currently in use.
      */
@@ -311,11 +311,11 @@ public class DbDataStore implements DataStore, DatabaseAware {
      */
     public DataRecord addRecord(InputStream stream) throws DataStoreException {
         ResultSet rs = null;
-        TempFileInputStream fileInput = null;
+        InputStream fileInput = null;
         String id = null, tempId = null;
         try {
             long now;
-            while(true) {
+            while (true) {
                 try {
                     now = System.currentTimeMillis();
                     id = UUID.randomUUID().toString();
@@ -351,7 +351,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
                 wrapper = new StreamWrapper(in, Integer.MAX_VALUE);
             } else if (STORE_TEMP_FILE.equals(storeStream)) {
                 File temp = moveToTempFile(in);
-                fileInput = new TempFileInputStream(temp);
+                fileInput = new BufferedInputStream(new TempFileInputStream(temp));
                 long length = temp.length();
                 wrapper = new StreamWrapper(fileInput, length);
             } else {
@@ -512,7 +512,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
             DbUtility.close(rs);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -523,16 +523,16 @@ public class DbDataStore implements DataStore, DatabaseAware {
         }
         return record;
     }
-    
+
     /**
      * Open the input stream. This method sets those fields of the caller
      * that need to be closed once the input stream is read.
-     * 
+     *
      * @param inputStream the database input stream object
      * @param identifier data identifier
-     * @throws DataStoreException if the data store could not be accessed, 
+     * @throws DataStoreException if the data store could not be accessed,
      *          or if the given identifier is invalid
-     */    
+     */
     InputStream openStream(DbInputStream inputStream, DataIdentifier identifier) throws DataStoreException {
         ResultSet rs = null;
         try {
@@ -548,7 +548,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
             } else if (copyWhenReading) {
                 // If we copy while reading, create a temp file and close the stream
                 File temp = moveToTempFile(stream);
-                stream = new TempFileInputStream(temp);
+                stream = new BufferedInputStream(new TempFileInputStream(temp));
                 DbUtility.close(rs);
             } else {
                 stream = new BufferedInputStream(stream);
@@ -560,7 +560,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
             throw convert("Retrieving database resource ", e);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -574,7 +574,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
                 createCheckSchemaOperation().run();
             }
         } catch (Exception e) {
-            throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user + 
+            throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user +
                     " schemaObjectPrefix=" + schemaObjectPrefix + " tableSQL=" + tableSQL + " createTableSQL=" + createTableSQL, e);
         }
     }
@@ -591,7 +591,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
      * This method is called from the {@link #init(String)} method of this class and returns a
      * {@link ConnectionHelper} instance which is assigned to the {@code conHelper} field. Subclasses may
      * override it to return a specialized connection helper.
-     * 
+     *
      * @param dataSrc the {@link DataSource} of this persistence manager
      * @return a {@link ConnectionHelper}
      * @throws Exception on error
@@ -603,7 +603,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
     /**
      * This method is called from {@link #init(String)} after the
      * {@link #createConnectionHelper(DataSource)} method, and returns a default {@link CheckSchemaOperation}.
-     * 
+     *
      * @return a new {@link CheckSchemaOperation} instance
      */
     protected final CheckSchemaOperation createCheckSchemaOperation() {
@@ -688,7 +688,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
     /**
      * Get the expanded property value. The following placeholders are supported:
      * ${table}: the table name (the default is DATASTORE) and
-     * ${tablePrefix}: tablePrefix plus schemaObjectPrefix as set in the configuration 
+     * ${tablePrefix}: tablePrefix plus schemaObjectPrefix as set in the configuration
      *
      * @param prop the properties object
      * @param key the key
@@ -927,7 +927,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
     }
 
     /**
-     * Get the table prefix. 
+     * Get the table prefix.
      *
      * @return the table prefix.
      */
@@ -945,10 +945,10 @@ public class DbDataStore implements DataStore, DatabaseAware {
     public void setTablePrefix(String tablePrefix) {
         this.tablePrefix = tablePrefix;
     }
-    
+
     /**
      * Get the schema prefix.
-     * 
+     *
      * @return the schema object prefix
      */
     public String getSchemaObjectPrefix() {
@@ -959,12 +959,12 @@ public class DbDataStore implements DataStore, DatabaseAware {
      * Set the schema object prefix. The default is empty.
      * The table name is constructed like this:
      * ${tablePrefix}${schemaObjectPrefix}${tableName}
-     * 
+     *
      * @param schemaObjectPrefix the new prefix
      */
     public void setSchemaObjectPrefix(String schemaObjectPrefix) {
         this.schemaObjectPrefix = schemaObjectPrefix;
-    }    
+    }
 
     public String getDataSourceName() {
         return dataSourceName;

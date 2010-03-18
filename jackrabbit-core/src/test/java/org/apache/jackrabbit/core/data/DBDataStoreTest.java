@@ -16,20 +16,22 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Random;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.data.db.DbDataStore;
+import org.apache.jackrabbit.core.data.db.DbInputStream;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
+import org.apache.jackrabbit.test.JUnitTest;
 
 /**
  * Test the Database Data Store.
  */
-public class DBDataStoreTest extends TestCase {
+public class DBDataStoreTest extends JUnitTest {
 
     private DbDataStore store = new DbDataStore();
 
@@ -41,6 +43,7 @@ public class DBDataStoreTest extends TestCase {
         FileUtils.deleteQuietly(new File("target/test-db-datastore"));
 
         // Initialize the data store
+        store.setConnectionFactory(new ConnectionFactory());
         store.setUrl("jdbc:derby:target/test-db-datastore/db;create=true");
         store.setDriver("org.apache.derby.jdbc.EmbeddedDriver");
         store.init("target/test-db-datastore");
@@ -82,6 +85,89 @@ public class DBDataStoreTest extends TestCase {
         }
     }
 
+    public void testDbInputStreamReset() throws Exception {
+        DataRecord record = store.getRecord(identifier);
+        InputStream in = record.getStream();
+        try {
+            // test whether mark and reset works
+            assertTrue(in instanceof DbInputStream);
+            in = new BufferedInputStream(in);
+            assertTrue(in.markSupported());
+            in.mark(data.length);
+            while (-1 != in.read()) {
+                // loop
+            }
+            assertTrue(in.markSupported());
+            try {
+                in.reset();
+            } catch (Exception e) {
+                fail("Unexpected exception while resetting input stream: " + e.getMessage());
+            }
+
+            // test integrity of replayed bytes
+            byte[] replayedBytes = new byte[data.length];
+            int length = in.read(replayedBytes);
+            assertEquals(length, data.length);
+
+            for (int i = 0; i < data.length; i++) {
+                log.append(i + " data: " + data[i] + " replayed: " + replayedBytes[i] + "\n");
+                assertEquals(data[i], replayedBytes[i]);
+            }
+
+            assertEquals(-1, in.read());
+
+
+        } finally {
+            in.close();
+            log.flush();
+        }
+    }
+
+    /*
+    public void testDbInputStreamMarkTwice() throws Exception {
+        DataRecord record = store.getRecord(identifier);
+        InputStream in = record.getStream();
+        try {
+            // test whether mark and reset works
+            assertTrue(in instanceof DbInputStream);
+            assertTrue(in.markSupported());
+            in.mark(data.length);
+
+            // read first 100 bytes
+            for (int i = 0; i < 100; i++) {
+                in.read();
+            }
+
+            in.mark(data.length - 100);
+
+            // read next 150 bytes
+            for (int i = 0; i < 150; i++) {
+                in.read();
+            }
+
+            try {
+                log.append("attempting a reset()\n");
+                in.reset();
+            } catch (Exception e) {
+                fail("Unexpected exception while resetting input stream: " + e.getMessage());
+            }
+
+            // test integrity of replayed bytes
+            byte[] replayedBytes = new byte[data.length];
+            int length = in.read(replayedBytes);
+            assertEquals(length, data.length - 100 - 150);
+
+            for (int i = 0; i < length; i++) {
+                assertEquals(data[i + 100 + 150] & 0xff, replayedBytes[i] & 0xff);
+            }
+
+            assertTrue(-1 == in.read());
+        } finally {
+            in.close();
+        }
+    }
+    */
+
     public void testConcurrentRead() throws Exception {
         InputStream[] streams = new InputStream[10];
 
@@ -103,5 +189,4 @@ public class DBDataStoreTest extends TestCase {
             streams[i].close();
         }
     }
-
 }

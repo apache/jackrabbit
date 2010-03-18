@@ -19,9 +19,11 @@ package org.apache.jackrabbit.core.data;
 import org.apache.jackrabbit.core.data.db.TempFileInputStream;
 import org.apache.jackrabbit.test.JUnitTest;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Tests the class TempFileInputStream
@@ -35,6 +37,23 @@ public class TempFileInputStreamTest extends JUnitTest {
         assertEquals(0, in.read());
         assertEquals(-1, in.read());
         assertEquals(-1, in.read());
+        assertEquals(-1, in.read());
+        in.close();
+    }
+
+    public void testMarkReset() throws IOException {
+        File temp = File.createTempFile("test", null);
+        TempFileInputStream.writeToFileAndClose(new ByteArrayInputStream(new byte[10]), temp);
+        InputStream in = new BufferedInputStream(new TempFileInputStream(temp));
+        in.mark(100);
+        for (int i = 0; i < 10; i++) {
+            assertEquals(0, in.read());
+        }
+        assertEquals(-1, in.read());
+        in.reset();
+        for (int i = 0; i < 10; i++) {
+            assertEquals(0, in.read());
+        }
         assertEquals(-1, in.read());
         in.close();
     }
