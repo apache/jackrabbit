@@ -66,7 +66,6 @@ public class ConcurrentQueriesWithUpdatesTest extends AbstractConcurrencyTest {
                             QueryManager qm = session.getWorkspace().getQueryManager();
                             while (running.get()) {
                                 Query q = qm.createQuery(testPath + "//element(*, nt:unstructured) order by @jcr:score descending", Query.XPATH);
-                                System.out.println(Thread.currentThread().getName() + " executed query");
                                 NodeIterator nodes = q.execute().getNodes();
                                 assertEquals("wrong result set size", numNodes, nodes.getSize());
                                 queryExecuted.offer(new Object());
@@ -99,7 +98,6 @@ public class ConcurrentQueriesWithUpdatesTest extends AbstractConcurrencyTest {
                                 if (nodes.hasNext()) {
                                     Node n = nodes.nextNode();
                                     n.setProperty("foo", "bar");
-                                    System.out.println("updated " + n.getPath());
                                     session.save();
                                 }
                             }
