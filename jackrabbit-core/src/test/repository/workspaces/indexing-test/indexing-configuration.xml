@@ -37,6 +37,11 @@
         <property>text</property>
     </index-rule>
 
+    <index-rule nodeType="nt:unstructured"
+                condition="ancestor::*/@rule = 'ancestor-axis'">
+      <property>Text</property>
+    </index-rule>
+
     <index-rule nodeType="nt:hierarchyNode">
         <!-- do not index any properties -->
     </index-rule>
