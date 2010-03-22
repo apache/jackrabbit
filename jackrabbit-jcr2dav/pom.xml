@@ -34,7 +34,7 @@
 
   <profiles>
     <profile>
-      <id>integration</id>
+      <id>integrationTesting</id>
       <build>
         <plugins>
           <plugin>
