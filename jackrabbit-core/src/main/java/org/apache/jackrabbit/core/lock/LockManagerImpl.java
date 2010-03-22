@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
@@ -56,6 +57,7 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
+import javax.transaction.xa.Xid;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -64,6 +66,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -91,9 +94,66 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     private final PathMap<LockInfo> lockMap = new PathMap<LockInfo>();
 
     /**
-     * Lock to path map.
+     * Thread aware lock to path map.
      */
     private final ReentrantLock lockMapLock = new ReentrantLock();
+    
+    /**
+     * Xid aware lock to path map.
+     */
+    private final ReentrantLock xidlockMapLock = new ReentrantLock(){
+
+    	/**
+    	 * The actice Xid of this {@link ReentrantLock}
+    	 */
+        private Xid activeXid;
+
+        /**
+         * Check if the given Xid comes from the same globalTX
+         * @param otherXid
+         * @return true if same globalTX otherwise false
+         */
+        boolean isSameGlobalTx(Xid otherXid) {
+    	    return (activeXid == otherXid) || Arrays.equals(activeXid.getGlobalTransactionId(), otherXid.getGlobalTransactionId());
+    	}
+        
+        /**
+         * {@inheritDoc}
+         */
+        public void acquire() throws InterruptedException {
+        	if (Thread.interrupted()) throw new InterruptedException();
+        	Xid currentXid = TransactionContext.getCurrentXid();
+            synchronized(this) {
+            	if (currentXid == activeXid || (activeXid != null && isSameGlobalTx(currentXid))) { 
+                ++holds_;
+            	} else {
+            		try {  
+            			while (activeXid != null) 
+            				wait(); 
+            			activeXid = currentXid;
+            			holds_ = 1;
+            		} catch (InterruptedException ex) {
+            			notify();
+            			throw ex;
+            		}
+            	}
+            }
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public synchronized void release()  {
+        	Xid currentXid = TransactionContext.getCurrentXid();
+            if (activeXid != null && !isSameGlobalTx(currentXid))
+                throw new Error("Illegal Lock usage"); 
+
+              if (--holds_ == 0) {
+                activeXid = null;
+                notify(); 
+              }
+        }
+    };
 
     /**
      * The periodically invoked lock timeout handler.
@@ -802,7 +862,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     private void acquire() {
         for (;;) {
             try {
-                lockMapLock.acquire();
+            	if (TransactionContext.getCurrentXid() == null) {
+            		lockMapLock.acquire();
+            	} else {
+            		xidlockMapLock.acquire();
+            	}
                 break;
             } catch (InterruptedException e) {
                 // ignore
@@ -814,7 +878,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * Release lock on the lock map.
      */
     private void release() {
-        lockMapLock.release();
+    	if (TransactionContext.getCurrentXid() == null) {
+    		lockMapLock.release();
+    	} else {
+    		xidlockMapLock.release();
+    	}
     }
 
     /**
