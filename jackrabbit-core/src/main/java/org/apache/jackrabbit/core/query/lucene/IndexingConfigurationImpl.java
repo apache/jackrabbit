@@ -950,7 +950,7 @@ public class IndexingConfigurationImpl
                 try {
                     nodeStates = new Iterator() {
 
-                        private NodeState next =
+                        private NodeState next = context.getParentId() == null ? null :
                                 (NodeState) ism.getItemState(context.getParentId());
 
                         public void remove() {
