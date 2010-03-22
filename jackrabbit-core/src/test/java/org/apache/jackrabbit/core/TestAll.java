@@ -56,6 +56,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ConcurrentModificationWithSNSTest.class);
         suite.addTestSuite(ConcurrentMoveTest.class);
         suite.addTestSuite(ConcurrentReorderTest.class);
+        suite.addTestSuite(ConcurrentAddRemoveNodeTest.class);
 
         suite.addTestSuite(UserPerWorkspaceSecurityManagerTest.class);
 
