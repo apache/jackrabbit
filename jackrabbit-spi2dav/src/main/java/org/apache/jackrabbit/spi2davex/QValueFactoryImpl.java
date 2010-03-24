@@ -316,10 +316,9 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
             if (file != null) {
                 // this instance is backed by a temp file
                 file.delete();
-            } else if (buffer != null) {
-                // this instance is backed by an in-memory buffer
-                buffer = EMPTY_BYTE_ARRAY;
             }
+            file = null;
+            buffer = null;
         }
 
         //-----------------------------------------------< java.lang.Object >---

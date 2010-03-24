@@ -481,6 +481,14 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         private void dispose() {
             method = null;
             isConsumed = true;
+            // discard binary parts (JCR-2582)
+            if (parts != null) {
+                for (Part part : parts) {
+                    if (part instanceof BinaryPart) {
+                        ((BinaryPart) part).dispose();
+                    }
+                }
+            }
         }
 
         private void checkConsumed() {

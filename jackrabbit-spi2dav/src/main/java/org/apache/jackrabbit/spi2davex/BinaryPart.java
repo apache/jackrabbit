@@ -50,4 +50,11 @@ class BinaryPart extends FilePart {
             out.write(QUOTE_BYTES);
         }
     }
+
+    public void dispose() {
+        PartSource src = getSource();
+        if (src instanceof BinaryPartSource) {
+            ((BinaryPartSource) src).dispose();
+        }
+    }
 }
