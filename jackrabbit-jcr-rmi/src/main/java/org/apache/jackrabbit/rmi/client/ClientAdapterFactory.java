@@ -26,6 +26,7 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -51,6 +52,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
+import org.apache.jackrabbit.rmi.remote.RemoteLockManager;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
@@ -235,7 +237,7 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      *
      * {@inheritDoc}
      */
-    public Lock getLock(Session session, Node node, RemoteLock remote) {
+    public Lock getLock(Session session, RemoteLock remote) {
         return new ClientLock(session, remote, this);
     }
 
@@ -318,6 +320,11 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      */
     public RowIterator getRowIterator(RemoteIterator remote) {
         return new ClientRowIterator(remote, this);
+    }
+
+    public LockManager getLockManager(
+            Session session, RemoteLockManager remote) {
+        return new ClientLockManager(session, remote, this);
     }
 
 }

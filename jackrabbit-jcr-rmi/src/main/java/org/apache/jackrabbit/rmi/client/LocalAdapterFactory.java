@@ -26,6 +26,7 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
@@ -46,6 +47,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
+import org.apache.jackrabbit.rmi.remote.RemoteLockManager;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
@@ -233,11 +235,10 @@ public interface LocalAdapterFactory {
      * Factory method for creating a local adapter for a remote lock.
      *
      * @param session current session
-     * @param node current node
      * @param remote remote lock
      * @return local lock adapter
      */
-    Lock getLock(Session session, Node node, RemoteLock remote);
+    Lock getLock(Session session, RemoteLock remote);
 
     /**
      * Factory method for creating a local adapter for a remote query manager.
@@ -317,5 +318,7 @@ public interface LocalAdapterFactory {
      * @return local row iterator adapter
      */
     RowIterator getRowIterator(RemoteIterator remote);
+
+    LockManager getLockManager(Session session, RemoteLockManager lockManager);
 
 }
