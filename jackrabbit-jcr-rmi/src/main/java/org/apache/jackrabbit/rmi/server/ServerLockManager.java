@@ -37,40 +37,72 @@ public class ServerLockManager extends ServerObject
     }
 
     public String[] getLockTokens() throws RepositoryException {
-        return manager.getLockTokens();
+        try {
+            return manager.getLockTokens();
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
     public void addLockToken(String lockToken) throws RepositoryException {
-        manager.addLockToken(lockToken);
+        try {
+            manager.addLockToken(lockToken);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
     public void removeLockToken(String lockToken) throws RepositoryException {
-        manager.removeLockToken(lockToken);
+        try {
+            manager.removeLockToken(lockToken);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
     public boolean isLocked(String absPath) throws RepositoryException {
-        return manager.isLocked(absPath);
+        try {
+            return manager.isLocked(absPath);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
     public boolean holdsLock(String absPath) throws RepositoryException {
-        return manager.holdsLock(absPath);
+        try {
+            return manager.holdsLock(absPath);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
     public RemoteLock getLock(String absPath)
             throws RepositoryException, RemoteException {
-        return getFactory().getRemoteLock(manager.getLock(absPath));
+        try {
+            return getFactory().getRemoteLock(manager.getLock(absPath));
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
     public RemoteLock lock(
             String absPath, boolean isDeep, boolean isSessionScoped,
             long timeoutHint, String ownerInfo)
             throws RepositoryException, RemoteException {
-        return getFactory().getRemoteLock(manager.lock(
-                absPath, isDeep, isSessionScoped, timeoutHint, ownerInfo));
+        try {
+            return getFactory().getRemoteLock(manager.lock(
+                    absPath, isDeep, isSessionScoped, timeoutHint, ownerInfo));
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
     public void unlock(String absPath) throws RepositoryException {
-        manager.unlock(absPath);
+        try {
+            manager.unlock(absPath);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
     }
 
 }
