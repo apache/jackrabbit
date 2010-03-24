@@ -53,4 +53,8 @@ public class BinaryPartSource implements PartSource {
             throw new IOException(e.getMessage());
         }
     }
+
+    public void dispose() {
+        value.discard();
+    }
 }
