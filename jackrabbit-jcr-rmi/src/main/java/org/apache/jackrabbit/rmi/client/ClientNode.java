@@ -678,7 +678,7 @@ public class ClientNode extends ClientItem implements Node {
             throws RepositoryException {
         try {
             RemoteLock lock = remote.lock(isDeep, isSessionScoped);
-            return getFactory().getLock(getSession(), this, lock);
+            return getFactory().getLock(getSession(), lock);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -687,7 +687,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public Lock getLock() throws RepositoryException {
         try {
-            return getFactory().getLock(getSession(), this, remote.getLock());
+            return getFactory().getLock(getSession(), remote.getLock());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
