@@ -27,12 +27,14 @@ import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
+import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteLockManager;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
@@ -59,6 +61,8 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
     private RemoteObservationManager remoteObservationManager;
 
     private RemoteLockManager remoteLockManager;
+
+    private RemoteVersionManager remoteVersionManager;
 
     /**
      * Creates a remote adapter for the given local workspace.
@@ -214,6 +218,20 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
                     getFactory().getRemoteLockManager(lockManager);
             }
             return remoteLockManager;
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    public RemoteVersionManager getVersionManager()
+            throws RepositoryException, RemoteException {
+        try {
+            if (remoteVersionManager == null) {
+                VersionManager versionManager = workspace.getVersionManager();
+                remoteVersionManager =
+                    getFactory().getRemoteVersionManager(versionManager);
+            }
+            return remoteVersionManager;
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
