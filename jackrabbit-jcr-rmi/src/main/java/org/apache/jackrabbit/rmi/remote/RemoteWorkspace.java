@@ -192,4 +192,7 @@ public interface RemoteWorkspace extends Remote {
     RemoteLockManager getLockManager()
         throws RepositoryException, RemoteException;
 
+    RemoteVersionManager getVersionManager()
+        throws RepositoryException, RemoteException;
+
 }

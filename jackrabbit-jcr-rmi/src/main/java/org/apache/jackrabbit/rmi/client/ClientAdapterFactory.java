@@ -42,6 +42,7 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.rmi.client.iterator.ClientNodeIterator;
 import org.apache.jackrabbit.rmi.client.iterator.ClientNodeTypeIterator;
@@ -69,6 +70,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 import org.apache.jackrabbit.rmi.remote.RemoteXASession;
 
@@ -325,6 +327,11 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
     public LockManager getLockManager(
             Session session, RemoteLockManager remote) {
         return new ClientLockManager(session, remote, this);
+    }
+
+    public VersionManager getVersionManager(
+            Session session, RemoteVersionManager remote) {
+        return new ClientVersionManager(session, remote, this);
     }
 
 }

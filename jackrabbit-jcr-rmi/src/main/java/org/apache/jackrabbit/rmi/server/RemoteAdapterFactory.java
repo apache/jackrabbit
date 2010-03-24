@@ -45,6 +45,7 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
@@ -68,6 +69,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
@@ -364,6 +366,9 @@ public interface RemoteAdapterFactory {
         throws RemoteException;
 
     RemoteLockManager getRemoteLockManager(LockManager lockManager)
+        throws RemoteException;
+
+    RemoteVersionManager getRemoteVersionManager(VersionManager versionManager)
         throws RemoteException;
 
 }
