@@ -1775,7 +1775,7 @@ public class BatchedItemOperations extends ItemValidator {
                 QPropertyDefinition def = ent.getApplicablePropertyDef(
                         srcChildState.getName(), srcChildState.getType(),
                         srcChildState.isMultiValued());
-                if (def.getDeclaringNodeType().equals(NameConstants.MIX_LOCKABLE)) {
+                if (NameConstants.MIX_LOCKABLE.equals(def.getDeclaringNodeType())) {
                     // skip properties defined by mix:lockable
                     continue;
                 }
