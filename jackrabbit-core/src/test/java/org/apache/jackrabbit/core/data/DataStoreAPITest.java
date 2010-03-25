@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.data;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
@@ -66,12 +67,12 @@ public class DataStoreAPITest extends TestCase {
         rm.stop();
     }
 
-    public void tearDown() {
+    public void tearDown() throws IOException {
         setUp();
     }
 
-    public void setUp() {
-        FileUtils.deleteQuietly(new File(TEST_DIR));
+    public void setUp() throws IOException {
+        FileUtils.deleteDirectory(new File(TEST_DIR));
     }
 
 }
