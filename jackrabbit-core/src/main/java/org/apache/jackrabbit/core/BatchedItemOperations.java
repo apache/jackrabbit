@@ -1831,7 +1831,7 @@ public class BatchedItemOperations extends ItemValidator {
                  */
                 PropDefId defId = srcChildState.getDefinitionId();
                 PropDef def = ntReg.getPropDef(defId);
-                if (def.getDeclaringNodeType().equals(NameConstants.MIX_LOCKABLE)) {
+                if (NameConstants.MIX_LOCKABLE.equals(def.getDeclaringNodeType())) {
                     // skip properties defined by mix:lockable
                     continue;
                 }
