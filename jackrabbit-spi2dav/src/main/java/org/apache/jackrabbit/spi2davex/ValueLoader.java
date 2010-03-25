@@ -102,5 +102,11 @@ class ValueLoader {
          * @throws IOException
          */
         void setStream(InputStream in) throws IOException;
+
+        /**
+         * Resets (clears) the state and this target is in the state as
+         * prior to setStream()
+         */
+        void reset();
     }
 }

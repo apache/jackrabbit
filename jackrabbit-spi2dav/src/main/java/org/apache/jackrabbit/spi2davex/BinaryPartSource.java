@@ -55,6 +55,8 @@ public class BinaryPartSource implements PartSource {
     }
 
     public void dispose() {
-        value.discard();
+        if (value instanceof ValueLoader.Target) {
+            ((ValueLoader.Target) value).reset();
+        }
     }
 }

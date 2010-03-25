@@ -316,9 +316,33 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
             if (file != null) {
                 // this instance is backed by a temp file
                 file.delete();
+            } else if (buffer != null) {
+                // this instance is backed by an in-memory buffer
+                buffer = EMPTY_BYTE_ARRAY;
+            }
+        }
+
+        /**
+         * Resets the state of this value. a subsequent call to init() can be
+         * used to load the binary again.
+         *
+         * If this <code>BinaryQValue</code> is backed by a persistent resource
+         * calling this method will have no effect.
+         * @see QValue#discard()
+         */
+        public void reset() {
+            if (!temp) {
+                // do nothing if this instance is not backed by temporarily
+                // allocated resource/buffer
+                return;
+            }
+            if (file != null) {
+                // this instance is backed by a temp file
+                file.delete();
             }
             file = null;
             buffer = null;
+            initialized = false;
         }
 
         //-----------------------------------------------< java.lang.Object >---
