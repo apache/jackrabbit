@@ -19,41 +19,41 @@ package org.apache.jackrabbit.commons.json;
 import java.io.IOException;
 
 /**
- * The <code>JSONHandler</code> interface recieves notifications from the
+ * The <code>JSONHandler</code> interface receives notifications from the
  * <code>JsonParser</code>.
  */
 public interface JsonHandler {
 
     /**
-     * Recieve notification about the start of an JSON object.
+     * Receive notification about the start of an JSON object.
      *
      * @throws IOException If an error occurs.
      */
     void object() throws IOException;
 
     /**
-     * Recieve notification about the end of an JSON object.
+     * Receive notification about the end of an JSON object.
      *
      * @throws IOException If an error occurs.
      */
     void endObject() throws IOException;
 
     /**
-     * Recieve notification about the start of an JSON array.
+     * Receive notification about the start of an JSON array.
      *
      * @throws IOException If an error occurs.
      */
     void array() throws IOException;
 
     /**
-     * Recieve notification about the end of an JSON array.
+     * Receive notification about the end of an JSON array.
      *
      * @throws IOException If an error occurs.
      */
     void endArray() throws IOException;
 
     /**
-     * Recieve notification about the given JSON key.
+     * Receive notification about the given JSON key.
      *
      * @param key The key.
      * @throws IOException If an error occurs.
@@ -61,7 +61,7 @@ public interface JsonHandler {
     void key(String key) throws IOException;
 
     /**
-     * Recieve notification about the given JSON String value.
+     * Receive notification about the given JSON String value.
      *
      * @param value The value.
      * @throws IOException If an error occurs.
@@ -69,7 +69,7 @@ public interface JsonHandler {
     void value(String value) throws IOException;
 
     /**
-     * Recieve notification about the given JSON boolean value.
+     * Receive notification about the given JSON boolean value.
      *
      * @param value The value.
      * @throws IOException If an error occurs.
@@ -77,7 +77,7 @@ public interface JsonHandler {
     void value(boolean value) throws IOException;
 
     /**
-     * Recieve notification about the given JSON number value (long).
+     * Receive notification about the given JSON number value (long).
      *
      * @param value The value.
      * @throws IOException If an error occurs.
@@ -85,7 +85,7 @@ public interface JsonHandler {
     void value(long value) throws IOException;
 
     /**
-     * Recieve notification about the given JSON number value (double).
+     * Receive notification about the given JSON number value (double).
      *
      * @param value The value.
      * @throws IOException If an error occurs.
