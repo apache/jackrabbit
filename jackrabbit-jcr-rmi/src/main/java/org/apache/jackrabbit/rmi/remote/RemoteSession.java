@@ -19,10 +19,11 @@ package org.apache.jackrabbit.rmi.remote;
 import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.security.AccessControlException;
-
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+
+import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
 
 /**
  * Remote version of the JCR {@link javax.jcr.Session Session} interface.
@@ -445,4 +446,17 @@ public interface RemoteSession extends Remote {
     byte[] exportDocumentView(String path, boolean skipBinary, boolean noRecurse)
         throws IOException, RepositoryException, RemoteException;
 
+    /**
+     * Remote version of the {@link javax.jcr.Session#getAccessControlManager()
+     * Session.getAccessControlManager()} method.
+     *
+     * @throws UnsupportedRepositoryOperationException if the remote session
+     *             does not support this method
+     * @throws RepositoryException if an error occurred getting the access
+     *             control manager
+     * @throws RemoteException on RMI errors
+     */
+    RemoteAccessControlManager getAccessControlManager()
+            throws UnsupportedRepositoryOperationException,
+            RepositoryException, RemoteException;
 }

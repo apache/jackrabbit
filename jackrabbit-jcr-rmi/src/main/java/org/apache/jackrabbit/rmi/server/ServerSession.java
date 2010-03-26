@@ -24,12 +24,14 @@ import java.rmi.RemoteException;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.Session Session} interface.
@@ -335,4 +337,15 @@ public class ServerSession extends ServerObject implements RemoteSession {
         }
     }
 
+    /** {@inheritDoc} */
+    public RemoteAccessControlManager getAccessControlManager()
+            throws UnsupportedRepositoryOperationException,
+            RepositoryException, RemoteException {
+        try {
+            return getFactory().getRemoteAccessControlManager(
+                session.getAccessControlManager());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
 }

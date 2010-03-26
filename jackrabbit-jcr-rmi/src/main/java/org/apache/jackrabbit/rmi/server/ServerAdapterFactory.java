@@ -17,7 +17,10 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
+import java.security.Principal;
+import java.security.acl.Group;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.Item;
@@ -46,6 +49,12 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.Privilege;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
@@ -78,22 +87,35 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
+import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlEntry;
+import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
+import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy;
+import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
 import org.apache.jackrabbit.rmi.server.iterator.ServerNodeIterator;
 import org.apache.jackrabbit.rmi.server.iterator.ServerNodeTypeIterator;
 import org.apache.jackrabbit.rmi.server.iterator.ServerPropertyIterator;
 import org.apache.jackrabbit.rmi.server.iterator.ServerRowIterator;
 import org.apache.jackrabbit.rmi.server.iterator.ServerVersionIterator;
+import org.apache.jackrabbit.rmi.server.principal.ServerGroup;
+import org.apache.jackrabbit.rmi.server.principal.ServerPrincipal;
+import org.apache.jackrabbit.rmi.server.principal.ServerPrincipalIterator;
+import org.apache.jackrabbit.rmi.server.security.ServerAccessControlEntry;
+import org.apache.jackrabbit.rmi.server.security.ServerAccessControlList;
+import org.apache.jackrabbit.rmi.server.security.ServerAccessControlPolicyIterator;
+import org.apache.jackrabbit.rmi.server.security.ServerAccessControlManager;
+import org.apache.jackrabbit.rmi.server.security.ServerAccessControlPolicy;
+import org.apache.jackrabbit.rmi.server.security.ServerPrivilege;
 
 /**
- * Default implementation of the
- * {@link RemoteAdapterFactory RemoteAdapterFactory} interface.
- * This factory uses the server adapters defined in this package as
- * the default adapter implementations. Subclasses can override or extend
- * the default adapters by implementing the corresponding factory methods.
+ * Default implementation of the {@link RemoteAdapterFactory
+ * RemoteAdapterFactory} interface. This factory uses the server adapters
+ * defined in this package as the default adapter implementations. Subclasses
+ * can override or extend the default adapters by implementing the corresponding
+ * factory methods.
  * <p>
- * The <code>bufferSize</code> property can be used to configure the
- * size of the buffer used by iterators to speed up iterator traversal
- * over the network.
+ * The <code>bufferSize</code> property can be used to configure the size of the
+ * buffer used by iterators to speed up iterator traversal over the network.
  */
 public class ServerAdapterFactory implements RemoteAdapterFactory {
 
@@ -104,13 +126,13 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     private int bufferSize = DEFAULT_BUFFER_SIZE;
 
     /**
-     * The port number for server objects. Initializes to the value of
-     * the <code>org.apache.jackrabbit.rmi.port</code> system property,
-     * or to 0 if the property is not set. Value 0 means that the server
-     * objects should use a random anonymous port.
+     * The port number for server objects. Initializes to the value of the
+     * <code>org.apache.jackrabbit.rmi.port</code> system property, or to 0 if
+     * the property is not set. Value 0 means that the server objects should use
+     * a random anonymous port.
      */
-    private int portNumber =
-        Integer.getInteger("org.apache.jackrabbit.rmi.port", 0).intValue();
+    private int portNumber = Integer.getInteger(
+        "org.apache.jackrabbit.rmi.port", 0).intValue();
 
     /**
      * Returns the iterator buffer size.
@@ -158,11 +180,9 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates a {@link ServerSession ServerSession} instance.
-     * In case the underlying session is transaction enabled, the
-     * remote interface is will be transaction enabled too through
-     * the {@link ServerXASession}.
-     *
+     * Creates a {@link ServerSession ServerSession} instance. In case the
+     * underlying session is transaction enabled, the remote interface is will
+     * be transaction enabled too through the {@link ServerXASession}.
      * {@inheritDoc}
      */
     public RemoteSession getRemoteSession(Session session)
@@ -175,8 +195,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates a {@link ServerWorkspace ServerWorkspace} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerWorkspace ServerWorkspace} instance. {@inheritDoc}
      */
     public RemoteWorkspace getRemoteWorkspace(Workspace workspace)
             throws RemoteException {
@@ -185,22 +204,19 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
      * Creates a {@link ServerObservationManager ServerObservationManager}
-     * instance.
-     * {@inheritDoc}
+     * instance. {@inheritDoc}
      */
     public RemoteObservationManager getRemoteObservationManager(
-        ObservationManager observationManager) throws RemoteException {
+            ObservationManager observationManager) throws RemoteException {
         return new ServerObservationManager(observationManager, this);
     }
 
     /**
      * Creates a {@link ServerNamespaceRegistry ServerNamespaceRegistry}
-     * instance.
-     * {@inheritDoc}
+     * instance. {@inheritDoc}
      */
     public RemoteNamespaceRegistry getRemoteNamespaceRegistry(
-            NamespaceRegistry registry)
-            throws RemoteException {
+            NamespaceRegistry registry) throws RemoteException {
         return new ServerNamespaceRegistry(registry, this);
     }
 
@@ -209,22 +225,19 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * {@inheritDoc}
      */
     public RemoteNodeTypeManager getRemoteNodeTypeManager(
-            NodeTypeManager manager)
-            throws RemoteException {
+            NodeTypeManager manager) throws RemoteException {
         return new ServerNodeTypeManager(manager, this);
     }
 
     /**
-     * Creates a {@link ServerItem ServerItem} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerItem ServerItem} instance. {@inheritDoc}
      */
     public RemoteItem getRemoteItem(Item item) throws RemoteException {
         return new ServerItem(item, this);
     }
 
     /**
-     * Creates a {@link ServerProperty ServerProperty} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerProperty ServerProperty} instance. {@inheritDoc}
      */
     public RemoteProperty getRemoteProperty(Property property)
             throws RemoteException {
@@ -232,18 +245,17 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates a {@link ServerNode ServerNode} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerNode ServerNode} instance. {@inheritDoc}
      */
     public RemoteNode getRemoteNode(Node node) throws RemoteException {
         return new ServerNode(node, this);
     }
 
     /**
-     * Creates a {@link ServerVersion ServerVersion} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerVersion ServerVersion} instance. {@inheritDoc}
      */
-    public RemoteVersion getRemoteVersion(Version version) throws RemoteException {
+    public RemoteVersion getRemoteVersion(Version version)
+            throws RemoteException {
         return new ServerVersion(version, this);
     }
 
@@ -251,14 +263,13 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * Creates a {@link ServerVersionHistory ServerVersionHistory} instance.
      * {@inheritDoc}
      */
-    public RemoteVersionHistory getRemoteVersionHistory(VersionHistory versionHistory)
-            throws RemoteException {
+    public RemoteVersionHistory getRemoteVersionHistory(
+            VersionHistory versionHistory) throws RemoteException {
         return new ServerVersionHistory(versionHistory, this);
     }
 
     /**
-     * Creates a {@link ServerNodeType ServerNodeType} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerNodeType ServerNodeType} instance. {@inheritDoc}
      */
     public RemoteNodeType getRemoteNodeType(NodeType type)
             throws RemoteException {
@@ -284,17 +295,16 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates a {@link ServerPropertyDefinition ServerPropertyDefinition} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerPropertyDefinition ServerPropertyDefinition}
+     * instance. {@inheritDoc}
      */
-    public RemotePropertyDefinition getRemotePropertyDefinition(PropertyDefinition def)
-            throws RemoteException {
+    public RemotePropertyDefinition getRemotePropertyDefinition(
+            PropertyDefinition def) throws RemoteException {
         return new ServerPropertyDefinition(def, this);
     }
 
     /**
-     * Creates a {@link ServerLock ServerLock} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerLock ServerLock} instance. {@inheritDoc}
      */
     public RemoteLock getRemoteLock(Lock lock) throws RemoteException {
         return new ServerLock(lock, this);
@@ -304,14 +314,13 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * Creates a {@link ServerQueryManager ServerQueryManager} instance.
      * {@inheritDoc}
      */
-    public RemoteQueryManager getRemoteQueryManager(
-            Session session, QueryManager manager) throws RemoteException {
+    public RemoteQueryManager getRemoteQueryManager(Session session,
+            QueryManager manager) throws RemoteException {
         return new ServerQueryManager(session, manager, this);
     }
 
     /**
-     * Creates a {@link ServerQuery ServerQuery} instance.
-     * {@inheritDoc}
+     * Creates a {@link ServerQuery ServerQuery} instance. {@inheritDoc}
      */
     public RemoteQuery getRemoteQuery(Query query) throws RemoteException {
         return new ServerQuery(query, this);
@@ -338,8 +347,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * Creates a {@link ServerEventCollection ServerEventCollection} instances.
      * {@inheritDoc}
      */
-    public RemoteEventCollection getRemoteEvent(long listenerId, EventIterator events)
-            throws RemoteException {
+    public RemoteEventCollection getRemoteEvent(long listenerId,
+            EventIterator events) throws RemoteException {
         RemoteEventCollection.RemoteEvent[] remoteEvents;
         if (events != null) {
             List eventList = new ArrayList();
@@ -347,32 +356,32 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
                 try {
                     Event event = events.nextEvent();
                     eventList.add(new ServerEventCollection.ServerEvent(
-                            event.getType(), event.getPath(), event.getUserID(), this));
+                        event.getType(), event.getPath(), event.getUserID(),
+                        this));
                 } catch (RepositoryException re) {
                     throw new RemoteException(re.getMessage(), re);
                 }
             }
-            remoteEvents = (RemoteEventCollection.RemoteEvent[])
-                eventList.toArray(new RemoteEventCollection.RemoteEvent[eventList.size()]);
+            remoteEvents = (RemoteEventCollection.RemoteEvent[]) eventList.toArray(new RemoteEventCollection.RemoteEvent[eventList.size()]);
         } else {
-            remoteEvents = new RemoteEventCollection.RemoteEvent[0]; // for safety
+            remoteEvents = new RemoteEventCollection.RemoteEvent[0]; // for
+            // safety
         }
 
         return new ServerEventCollection(listenerId, remoteEvents, this);
     }
 
     /**
-     * Optimizes the given remote iterator for transmission across the
-     * network. This method retrieves the first set of elements from
-     * the iterator by calling {@link RemoteIterator#nextObjects()} and
-     * then asks for the total size of the iterator. If the size is unkown
-     * or greater than the length of the retrieved array, then the elements,
-     * the size, and the remote iterator reference are wrapped into a
-     * {@link BufferIterator} instance that gets passed over the network.
-     * If the retrieved array of elements contains all the elements in the
-     * iterator, then the iterator instance is discarded and just the elements
-     * are wrapped into a {@link ArrayIterator} instance to be passed to the
-     * client.
+     * Optimizes the given remote iterator for transmission across the network.
+     * This method retrieves the first set of elements from the iterator by
+     * calling {@link RemoteIterator#nextObjects()} and then asks for the total
+     * size of the iterator. If the size is unkown or greater than the length of
+     * the retrieved array, then the elements, the size, and the remote iterator
+     * reference are wrapped into a {@link BufferIterator} instance that gets
+     * passed over the network. If the retrieved array of elements contains all
+     * the elements in the iterator, then the iterator instance is discarded and
+     * just the elements are wrapped into a {@link ArrayIterator} instance to be
+     * passed to the client.
      * <p>
      * Subclasses can override this method to provide alternative optimizations.
      *
@@ -396,8 +405,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      */
     public RemoteIterator getRemoteNodeIterator(NodeIterator iterator)
             throws RemoteException {
-        return optimizeIterator(
-                new ServerNodeIterator(iterator, this, bufferSize));
+        return optimizeIterator(new ServerNodeIterator(iterator, this,
+            bufferSize));
     }
 
     /**
@@ -405,8 +414,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      */
     public RemoteIterator getRemotePropertyIterator(PropertyIterator iterator)
             throws RemoteException {
-        return optimizeIterator(
-                new ServerPropertyIterator(iterator, this, bufferSize));
+        return optimizeIterator(new ServerPropertyIterator(iterator, this,
+            bufferSize));
     }
 
     /**
@@ -414,8 +423,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      */
     public RemoteIterator getRemoteVersionIterator(VersionIterator iterator)
             throws RemoteException {
-        return optimizeIterator(
-                new ServerVersionIterator(iterator, this, bufferSize));
+        return optimizeIterator(new ServerVersionIterator(iterator, this,
+            bufferSize));
     }
 
     /**
@@ -423,8 +432,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      */
     public RemoteIterator getRemoteNodeTypeIterator(NodeTypeIterator iterator)
             throws RemoteException {
-        return optimizeIterator(
-                new ServerNodeTypeIterator(iterator, this, bufferSize));
+        return optimizeIterator(new ServerNodeTypeIterator(iterator, this,
+            bufferSize));
     }
 
     /**
@@ -432,8 +441,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      */
     public RemoteIterator getRemoteRowIterator(RowIterator iterator)
             throws RemoteException {
-        return optimizeIterator(
-                new ServerRowIterator(iterator, this, bufferSize));
+        return optimizeIterator(new ServerRowIterator(iterator, this,
+            bufferSize));
     }
 
     public RemoteLockManager getRemoteLockManager(LockManager lockManager)
@@ -444,6 +453,84 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteVersionManager getRemoteVersionManager(
             VersionManager versionManager) throws RemoteException {
         return new ServerVersionManager(versionManager, this);
+    }
+
+    /**
+     * Creates a
+     * {@link org.apache.jackrabbit.rmi.server.security.ServerAccessControlManager}
+     * instance. {@inheritDoc}
+     */
+    public RemoteAccessControlManager getRemoteAccessControlManager(
+            AccessControlManager acm) throws RemoteException {
+        return new ServerAccessControlManager(acm, this);
+    }
+
+    public RemotePrivilege getRemotePrivilege(final Privilege local)
+            throws RemoteException {
+        return new ServerPrivilege(local, this);
+    }
+
+    public RemotePrivilege[] getRemotePrivilege(final Privilege[] local)
+            throws RemoteException {
+        RemotePrivilege[] remote = new RemotePrivilege[local.length];
+        for (int i = 0; i < remote.length; i++) {
+            remote[i] = getRemotePrivilege(local[i]);
+        }
+        return remote;
+    }
+
+    public RemoteAccessControlPolicy getRemoteAccessControlPolicy(
+            final AccessControlPolicy local) throws RemoteException {
+        if (local instanceof AccessControlList) {
+            return new ServerAccessControlList((AccessControlList) local, this);
+        }
+        return new ServerAccessControlPolicy(local, this);
+    }
+
+    public RemoteAccessControlPolicy[] getRemoteAccessControlPolicy(
+            final AccessControlPolicy[] local) throws RemoteException {
+        RemoteAccessControlPolicy[] remote = new RemoteAccessControlPolicy[local.length];
+        for (int i = 0; i < remote.length; i++) {
+            remote[i] = getRemoteAccessControlPolicy(local[i]);
+        }
+        return remote;
+    }
+
+    /**
+     * Creates a {@link ServerNodeIterator} instance. {@inheritDoc}
+     */
+    public RemoteIterator getRemoteAccessControlPolicyIterator(
+            AccessControlPolicyIterator iterator) throws RemoteException {
+        return optimizeIterator(new ServerAccessControlPolicyIterator(iterator,
+            this, bufferSize));
+    }
+
+    public RemoteAccessControlEntry getRemoteAccessControlEntry(
+            final AccessControlEntry local) throws RemoteException {
+        return new ServerAccessControlEntry(local, this);
+    }
+
+    public RemoteAccessControlEntry[] getRemoteAccessControlEntry(
+            final AccessControlEntry[] local) throws RemoteException {
+        RemoteAccessControlEntry[] remote = new RemoteAccessControlEntry[local.length];
+        for (int i = 0; i < remote.length; i++) {
+            remote[i] = getRemoteAccessControlEntry(local[i]);
+        }
+        return remote;
+    }
+
+    public RemotePrincipal getRemotePrincipal(final Principal principal) throws RemoteException {
+        if (principal instanceof Group) {
+            return new ServerGroup((Group) principal, this);
+        }
+
+        return new ServerPrincipal(principal, this);
+    }
+
+    public RemoteIterator getRemotePrincipalIterator(
+            Iterator<Principal> principals) throws RemoteException {
+        return optimizeIterator(new ServerPrincipalIterator(principals, this,
+            bufferSize));
     }
 
 }

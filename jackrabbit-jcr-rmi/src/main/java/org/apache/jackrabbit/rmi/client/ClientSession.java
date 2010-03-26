@@ -70,7 +70,7 @@ public class ClientSession extends ClientObject implements Session {
         LoggerFactory.getLogger(ClientSession.class);
 
     /** The current repository. */
-    private Repository repository;
+    private final Repository repository;
 
     /**
      * Flag indicating whether the session is to be considered live of not.
@@ -81,7 +81,7 @@ public class ClientSession extends ClientObject implements Session {
     private boolean live = true;
 
     /** The adapted remote session. */
-    private RemoteSession remote;
+    protected final RemoteSession remote;
 
     /**
      * The adapted workspace of this session. This field is set on the first
@@ -561,8 +561,13 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     public AccessControlManager getAccessControlManager()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        try {
+            return getFactory().getAccessControlManager(
+                remote.getAccessControlManager());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     public RetentionManager getRetentionManager()
