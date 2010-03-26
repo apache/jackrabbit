@@ -45,6 +45,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.security.AccessControlException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
@@ -138,6 +139,8 @@ public class ServerObject extends UnicastRemoteObject {
             return new ValueFormatException(ex.getMessage());
         } else if (ex instanceof VersionException) {
             return new VersionException(ex.getMessage());
+        } else if (ex instanceof AccessControlException) {
+            return new AccessControlException(ex.getMessage());
         } else {
             return new RepositoryException(ex.getMessage());
         }

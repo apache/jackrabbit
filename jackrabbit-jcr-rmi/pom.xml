@@ -81,6 +81,10 @@
             <Import-Package>
               javax.transaction.xa;resolution:=optional,*
             </Import-Package>
+            <!-- inline RangeIterator adapt to not add library dependency -->
+            <Embed-Dependency>
+              jackrabbit-jcr-commons;inline=org/apache/jackrabbit/commons/iterator/RangeIteratorAdapter*
+            </Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>
@@ -112,7 +116,7 @@
                   <value>true</value>
                 </property>
                 <property>
-                  <name>known.issues</name>
+                  <name>unknown.issues</name>
                   <value>
 org.apache.jackrabbit.test.api.LifecycleTest#testFollowLifecycleTransition
 org.apache.jackrabbit.test.api.LifecycleTest#testGetAllowedLifecycleTransitions
@@ -486,6 +490,27 @@ org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testMultiValueSearch
 org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testPathColumn
 org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testRange
 org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testScoreColumn
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAbstractPrivilege
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntry
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAgain
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAndSetPolicy
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryEmptyPrivilegeArray
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrincipal
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrivilege
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryIsTransient
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryTwice
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAggregatedPrivilegesSeparately
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAggregatePrivilege
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddPrivilegesPresentInEntries
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testExtendPrivileges
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testGetAccessControlEntries
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAccessControlEntry
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAccessControlEntryAndSetPolicy
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAccessControlEntryIsTransient
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAddedAccessControlEntry
+org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveIllegalAccessControlEntry
+org.apache.jackrabbit.test.api.security.AccessControlPolicyTest#testSetIllegalPolicy
+org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testSetInvalidPolicy
 org.apache.jackrabbit.test.api.SerializationTest#testLockExceptionSessionWithHandler
 org.apache.jackrabbit.test.api.SerializationTest#testLockExceptionWorkspaceWithHandler
 org.apache.jackrabbit.test.api.SerializationTest#testVersioningExceptionFileChildSessionContentHandler
@@ -641,6 +666,25 @@ org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest#testWorkspaceRestore
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <!--
+      We use the RangeIteratorAdapter but include it in the library thus
+      users of the jackrabbit-jcr-rmi library do not need to get the
+      jackrabbit-jcr-commons library
+    -->
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-commons</artifactId>
+      <version>2.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <!-- Jackrabbit API extensions -->
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-api</artifactId>
+      <version>2.0.0</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Test dependencies -->
