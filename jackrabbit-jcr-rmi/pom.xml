@@ -116,7 +116,7 @@
                   <value>true</value>
                 </property>
                 <property>
-                  <name>unknown.issues</name>
+                  <name>known.issues</name>
                   <value>
 org.apache.jackrabbit.test.api.LifecycleTest#testFollowLifecycleTransition
 org.apache.jackrabbit.test.api.LifecycleTest#testGetAllowedLifecycleTransitions
@@ -490,25 +490,6 @@ org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testMultiValueSearch
 org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testPathColumn
 org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testRange
 org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test#testScoreColumn
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAbstractPrivilege
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntry
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAgain
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAndSetPolicy
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryEmptyPrivilegeArray
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrincipal
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrivilege
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryIsTransient
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryTwice
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAggregatedPrivilegesSeparately
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAggregatePrivilege
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddPrivilegesPresentInEntries
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testExtendPrivileges
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testGetAccessControlEntries
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAccessControlEntry
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAccessControlEntryAndSetPolicy
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAccessControlEntryIsTransient
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveAddedAccessControlEntry
-org.apache.jackrabbit.test.api.security.AccessControlListTest#testRemoveIllegalAccessControlEntry
 org.apache.jackrabbit.test.api.security.AccessControlPolicyTest#testSetIllegalPolicy
 org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testSetInvalidPolicy
 org.apache.jackrabbit.test.api.SerializationTest#testLockExceptionSessionWithHandler

@@ -21,11 +21,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.rmi.server.RemoteObject;
+import java.security.Principal;
+import java.security.acl.Group;
 import java.util.Properties;
 
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
 import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
@@ -34,6 +40,11 @@ import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
 public class RepositoryStubImpl extends JackrabbitRepositoryStub {
+
+    /**
+     * A known principal used for access control tests.
+     */
+    private Principal principal;
 
     private RemoteRepository remote;
 
@@ -48,6 +59,19 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             throws RepositoryStubException {
         if (repository == null) {
             try {
+                Repository repo = super.getRepository();
+                SessionImpl session = (SessionImpl) repo.login(
+                        new SimpleCredentials("admin", "admin".toCharArray()));
+                try {
+                    for (Principal p : session.getSubject().getPrincipals()) {
+                        if (!(p instanceof Group)) {
+                            principal = p;
+                        }
+                    }
+                } finally {
+                    session.logout();
+                }
+
                 RemoteAdapterFactory raf = new ServerAdapterFactory();
                 remote = raf.getRemoteRepository(super.getRepository());
 
@@ -67,6 +91,16 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             }
         }
         return repository;
+    }
+
+    @Override
+    public Principal getKnownPrincipal(Session ignored)
+            throws RepositoryException {
+        if (principal != null) {
+            return principal;
+        } else {
+            throw new RepositoryException("no applicable principal found");
+        }
     }
 
 }
