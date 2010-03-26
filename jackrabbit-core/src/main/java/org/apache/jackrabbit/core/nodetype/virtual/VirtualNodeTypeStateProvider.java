@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.nodetype.virtual;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -33,10 +34,10 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
@@ -131,7 +132,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     /**
      * {@inheritDoc}
      */
-    public void onNodeTypeRemoved(Name ntName) throws RepositoryException {
+    public void onNodeTypesRemoved(Collection<Name> names)
+            throws RepositoryException {
         // todo: do more efficient reloading
         try {
             getRootState().discard();

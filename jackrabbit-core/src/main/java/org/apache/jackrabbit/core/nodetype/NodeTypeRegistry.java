@@ -258,14 +258,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws RepositoryException if another error occurs
      * @see #unregisterNodeType(Name)
      */
-    public void unregisterNodeTypes(Collection<Name> ntNames)
+    public void unregisterNodeTypes(Set<Name> ntNames)
             throws NoSuchNodeTypeException, RepositoryException {
-
         unregisterNodeTypes(ntNames, false);
     }
 
     /**
-     * Internal implementation of {@link #unregisterNodeTypes(Collection)}
+     * Internal implementation of {@link #unregisterNodeTypes(Set)}
      *
      * @param ntNames a collection of <code>Name</code> objects denoting the
      *                node types to be unregistered
@@ -274,7 +273,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *                                 denote a registered node type.
      * @throws RepositoryException if another error occurs
      */
-    private synchronized void unregisterNodeTypes(Collection<Name> ntNames, boolean external)
+    private synchronized void unregisterNodeTypes(
+            Collection<Name> ntNames, boolean external)
             throws NoSuchNodeTypeException, RepositoryException {
 
         // do some preliminary checks
@@ -317,8 +317,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // persist removal of node type definitions & notify listeners
         for (Name ntName : ntNames) {
             customNTDefs.remove(ntName);
-            notifyUnregistered(ntName);
         }
+        notifyUnregistered(ntNames);
+
         persistCustomNodeTypeDefs(customNTDefs);
     }
 
@@ -687,7 +688,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     public void externalUnregistered(Collection<Name> ntNames)
             throws RepositoryException, NoSuchNodeTypeException {
-
         unregisterNodeTypes(ntNames, true);
     }
 
@@ -950,7 +950,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      */
     protected void checkForReferencesInContent(Name nodeTypeName)
             throws RepositoryException {
-        throw new RepositoryException("not yet implemented");
+        // throw new RepositoryException("not yet implemented");
     }
 
     //-------------------------------------------------------< implementation >
@@ -1827,13 +1827,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * Notify the listeners that a node type <code>ntName</code> has been unregistered.
      * @param ntName node type name
      */
-    private void notifyUnregistered(Name ntName) {
+    private void notifyUnregistered(Collection<Name> names) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la = listeners.values().toArray(
                         new NodeTypeRegistryListener[listeners.size()]);
         for (NodeTypeRegistryListener aLa : la) {
             if (aLa != null) {
-                aLa.nodeTypeUnregistered(ntName);
+                aLa.nodeTypesUnregistered(names);
             }
         }
     }

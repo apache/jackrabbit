@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
+import java.util.Collection;
+
 import org.apache.jackrabbit.spi.Name;
 
 /**
@@ -42,9 +44,10 @@ public interface NodeTypeRegistryListener {
     void nodeTypeReRegistered(Name ntName);
 
     /**
-     * Called when a node type has been deregistered.
+     * Called when a set of node types has been unregistered.
      *
-     * @param ntName name of the node type that has been unregistered
+     * @param names names of the types that have been unregistered
      */
-    void nodeTypeUnregistered(Name ntName);
+    void nodeTypesUnregistered(Collection<Name> names);
+
 }

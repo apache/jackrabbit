@@ -54,17 +54,17 @@ import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
-import org.apache.jackrabbit.spi.commons.nodetype.*;
+import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
-import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -73,8 +73,8 @@ import org.xml.sax.SAXException;
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements JackrabbitNodeTypeManager,
-        Dumpable, NodeTypeRegistryListener {
+public class NodeTypeManagerImpl extends AbstractNodeTypeManager
+        implements JackrabbitNodeTypeManager, Dumpable, NodeTypeRegistryListener {
 
     /**
      * The wrapped node type registry.
@@ -354,23 +354,25 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeUnregistered(Name ntName) {
+    public void nodeTypesUnregistered(Collection<Name> names) {
         // flush all affected cache entries
-        ntCache.remove(ntName);
+        for (Name name : names) {
+            ntCache.remove(name);
+        }
         synchronized (pdCache) {
-            Iterator iter = pdCache.values().iterator();
+            Iterator<PropertyDefinitionImpl> iter = pdCache.values().iterator();
             while (iter.hasNext()) {
-                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) iter.next();
-                if (ntName.equals(pd.unwrap().getDeclaringNodeType())) {
+                PropertyDefinitionImpl pd = iter.next();
+                if (names.contains(pd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
             }
         }
         synchronized (ndCache) {
-            Iterator iter = ndCache.values().iterator();
+            Iterator<NodeDefinitionImpl> iter = ndCache.values().iterator();
             while (iter.hasNext()) {
-                NodeDefinitionImpl nd = (NodeDefinitionImpl) iter.next();
-                if (ntName.equals(nd.unwrap().getDeclaringNodeType())) {
+                NodeDefinitionImpl nd = iter.next();
+                if (names.contains(nd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
             }
