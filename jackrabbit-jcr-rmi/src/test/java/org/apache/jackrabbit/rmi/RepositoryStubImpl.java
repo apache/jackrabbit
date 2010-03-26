@@ -60,20 +60,10 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
         if (repository == null) {
             try {
                 Repository repo = super.getRepository();
-                SessionImpl session = (SessionImpl) repo.login(
-                        new SimpleCredentials("admin", "admin".toCharArray()));
-                try {
-                    for (Principal p : session.getSubject().getPrincipals()) {
-                        if (!(p instanceof Group)) {
-                            principal = p;
-                        }
-                    }
-                } finally {
-                    session.logout();
-                }
+                principal = findKnownPrincipal(repo);
 
                 RemoteAdapterFactory raf = new ServerAdapterFactory();
-                remote = raf.getRemoteRepository(super.getRepository());
+                remote = raf.getRemoteRepository(repo);
 
                 // Make sure that the remote reference survives serialization
                 ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -93,14 +83,26 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
         return repository;
     }
 
+    private static Principal findKnownPrincipal(Repository repo)
+            throws RepositoryException {
+        SessionImpl session = (SessionImpl) repo.login(
+                new SimpleCredentials("admin", "admin".toCharArray()));
+        try {
+            for (Principal principal : session.getSubject().getPrincipals()) {
+                if (!(principal instanceof Group)) {
+                    return principal;
+                }
+            }
+            throw new RepositoryException("Known principal not found");
+        } finally {
+            session.logout();
+        }
+    }
+
     @Override
     public Principal getKnownPrincipal(Session ignored)
             throws RepositoryException {
-        if (principal != null) {
-            return principal;
-        } else {
-            throw new RepositoryException("no applicable principal found");
-        }
+        return principal;
     }
 
 }
