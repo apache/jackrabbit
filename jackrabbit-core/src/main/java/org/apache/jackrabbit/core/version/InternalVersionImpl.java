@@ -244,7 +244,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * Clear the list of predecessors/successors and the label cache.
      */
-    void clear() {
+    synchronized void clear() {
         labelCache = null;
     }
 
@@ -367,7 +367,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label label to add
      * @return <code>true</code> if the label was added
      */
-    boolean internalAddLabel(Name label) {
+    synchronized boolean internalAddLabel(Name label) {
         if (labelCache == null) {
             labelCache = new HashSet<Name>();
         }
@@ -380,7 +380,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label label to remove
      * @return <code>true</code> if the label was removed
      */
-    boolean internalRemoveLabel(Name label) {
+    synchronized boolean internalRemoveLabel(Name label) {
         return labelCache != null && labelCache.remove(label);
     }
 
@@ -390,7 +390,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label label to check
      * @return <code>true</code> if the label exists
      */
-    boolean internalHasLabel(Name label) {
+    synchronized boolean internalHasLabel(Name label) {
         return labelCache != null && labelCache.contains(label);
     }
 
@@ -399,7 +399,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @return the internal labels
      */
-    Name[] internalGetLabels() {
+    synchronized Name[] internalGetLabels() {
         if (labelCache == null) {
             return new Name[0];
         } else {
