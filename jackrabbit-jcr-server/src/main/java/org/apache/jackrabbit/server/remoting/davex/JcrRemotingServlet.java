@@ -377,7 +377,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         for (String cloneArg : cloneArgs) {
             String[] args = cloneArg.split(",");
             if (args.length == 4) {
-                wsp.clone(args[0], args[1], args[2], new Boolean(args[3]));
+                wsp.clone(args[0], args[1], args[2], Boolean.valueOf(args[3]));
                 destPath = args[2];
             } else {
                 throw new RepositoryException(":clone parameter must have a value consisting of the 4 args needed for a Workspace.clone() call.");
