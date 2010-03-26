@@ -28,6 +28,8 @@ import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -113,11 +115,11 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
     }
 
     public void nodeTypeReRegistered(Name ntName) {
-        nodeTypeUnregistered(ntName);
+        nodeTypesUnregistered(Collections.singleton(ntName));
         nodeTypeRegistered(ntName);
     }
 
-    public void nodeTypeUnregistered(Name ntName) {
+    public void nodeTypesUnregistered(Collection<Name> names) {
         // remove all TypeMapping instances refering to this ntName
         synchronized (typeMapping) {
             Map<Name, TypeMapping[]> modified = new HashMap<Name, TypeMapping[]>();
@@ -126,7 +128,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                 TypeMapping[] mapping = typeMapping.get(propName);
                 List<TypeMapping> remove = null;
                 for (TypeMapping tm : mapping) {
-                    if (tm.ntName.equals(ntName)) {
+                    if (names.contains(tm.ntName)) {
                         if (remove == null) {
                             // not yet created
                             remove = new ArrayList<TypeMapping>(mapping.length);

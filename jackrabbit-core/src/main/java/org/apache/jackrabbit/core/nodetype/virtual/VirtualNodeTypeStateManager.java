@@ -16,10 +16,19 @@
  */
 package org.apache.jackrabbit.core.nodetype.virtual;
 
-import org.apache.jackrabbit.core.id.NodeId;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import javax.jcr.NodeIterator;
+import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
@@ -28,17 +37,11 @@ import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.NodeIterator;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This Class implements a workaround helper for populating observation
@@ -168,30 +171,35 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      */
     public void nodeTypeReRegistered(Name ntName) {
         // lazy implementation
-        nodeTypeUnregistered(ntName);
+        nodeTypesUnregistered(Collections.singleton(ntName));
         nodeTypeRegistered(ntName);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeUnregistered(Name ntName) {
+    public void nodeTypesUnregistered(Collection<Name> names) {
         try {
             if (systemSession != null) {
                 // generated observation events
-                NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(rootNodeId);
-                NodeImpl child = root.getNode(ntName);
-                List events = new ArrayList();
-                recursiveRemove(events, root, child);
+                List<EventState> events = new ArrayList<EventState>();
+
+                NodeImpl root = (NodeImpl)
+                    systemSession.getItemManager().getItem(rootNodeId);
+                for (Name name : names) {
+                    NodeImpl child = root.getNode(name);
+                    recursiveRemove(events, root, child);
+                }
+
                 obsDispatcher.dispatch(events, systemSession,
                         NODE_TYPES_PATH, null);
             }
             if (virtProvider != null) {
                 // allow provider to update
-                virtProvider.onNodeTypeRemoved(ntName);
+                virtProvider.onNodeTypesRemoved(names);
             }
         } catch (RepositoryException e) {
-            log.error("Unable to index removed nodetype: " + e.toString());
+            log.error("Unable to index removed nodetypes: " + names, e);
         }
     }
 
@@ -203,7 +211,8 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      * @param node
      * @throws RepositoryException
      */
-    private void recursiveAdd(List events, NodeImpl parent, NodeImpl node)
+    private void recursiveAdd(
+            List<EventState> events, NodeImpl parent, NodeImpl node)
             throws RepositoryException {
 
         events.add(EventState.childNodeAdded(
@@ -243,7 +252,8 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      * @param node
      * @throws RepositoryException
      */
-    private void recursiveRemove(List events, NodeImpl parent, NodeImpl node)
+    private void recursiveRemove(
+            List<EventState> events, NodeImpl parent, NodeImpl node)
             throws RepositoryException {
 
         events.add(EventState.childNodeRemoved(

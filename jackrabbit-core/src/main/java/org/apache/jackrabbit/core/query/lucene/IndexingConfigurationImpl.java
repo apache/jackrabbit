@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -322,7 +323,7 @@ public class IndexingConfigurationImpl
         // not interested
     }
 
-    public void nodeTypeUnregistered(Name ntName) {
+    public void nodeTypesUnregistered(Collection<Name> names) {
         // not interested
     }
 
