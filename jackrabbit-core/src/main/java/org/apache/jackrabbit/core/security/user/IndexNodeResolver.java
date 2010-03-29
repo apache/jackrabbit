@@ -139,7 +139,7 @@ class IndexNodeResolver extends NodeResolver {
                 stmt.append(ISO9075.encode(pName));
                 if (exact) {
                     stmt.append("='");
-                    stmt.append(value);
+                    stmt.append(value.replaceAll("'", "''"));
                     stmt.append("'");
                 } else {
                     stmt.append(",'%");
@@ -164,7 +164,7 @@ class IndexNodeResolver extends NodeResolver {
             if (c == '\\') {
                 ret.append("\\\\");
             } else if (c == '\'') {
-                ret.append("\\'");
+                ret.append("''");
             } else {
                 ret.append(c);
             }

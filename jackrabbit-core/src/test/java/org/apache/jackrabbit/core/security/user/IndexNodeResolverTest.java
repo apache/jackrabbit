@@ -62,4 +62,47 @@ public class IndexNodeResolverTest extends NodeResolverTest {
             save();
         }
     }
+
+    public void testFindNodesNonExactWithApostrophe()
+            throws NotExecutableException, RepositoryException {
+        UserImpl currentUser = getCurrentUser();
+        Value vs = superuser.getValueFactory().createValue("value ' with apostrophe");
+        currentUser.setProperty(propertyName1, vs);
+        save();
+
+        Name propName = ((SessionImpl) superuser).getQName(propertyName1);
+        try {
+            NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
+
+            NodeIterator result = nr.findNodes(propName, "value ' with apostrophe", UserConstants.NT_REP_USER, false);
+            assertTrue("expected result", result.hasNext());
+            assertEquals(currentUser.getNode().getPath(), result.nextNode().getPath());
+            assertFalse("expected no more results", result.hasNext());
+        } finally {
+            currentUser.removeProperty(propertyName1);
+            save();
+        }
+    }
+
+
+    public void testFindNodesExactWithApostrophe()
+            throws NotExecutableException, RepositoryException {
+        UserImpl currentUser = getCurrentUser();
+        Value vs = superuser.getValueFactory().createValue("value ' with apostrophe");
+        currentUser.setProperty(propertyName1, vs);
+        save();
+
+        Name propName = ((SessionImpl) superuser).getQName(propertyName1);
+        try {
+            NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
+
+            NodeIterator result = nr.findNodes(propName, "value ' with apostrophe", UserConstants.NT_REP_USER, true);
+            assertTrue("expected result", result.hasNext());
+            assertEquals(currentUser.getNode().getPath(), result.nextNode().getPath());
+            assertFalse("expected no more results", result.hasNext());
+        } finally {
+            currentUser.removeProperty(propertyName1);
+            save();
+        }
+    }
 }
