@@ -306,6 +306,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see javax.jcr.security.AccessControlManager#getPolicies(String)
      */
+    @Override
     public AccessControlPolicy[] getPolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
         checkPermission(absPath, Permission.READ_AC);
@@ -332,6 +333,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see javax.jcr.security.AccessControlManager#getApplicablePolicies(String)
      */
+    @Override
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
         checkPermission(absPath, Permission.READ_AC);
@@ -351,6 +353,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see javax.jcr.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
      */
+    @Override
     public void setPolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
         checkPermission(absPath, Permission.MODIFY_AC);
@@ -363,6 +366,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see javax.jcr.security.AccessControlManager#removePolicy(String, AccessControlPolicy)
      */
+    @Override
     public void removePolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
         checkPermission(absPath, Permission.MODIFY_AC);
@@ -376,6 +380,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(Principal)
      */
+    @Override
     public JackrabbitAccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
         checkInitialized();
         if (editor == null) {
@@ -387,6 +392,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(Principal)
      */
+    @Override
     public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
         checkInitialized();
         if (editor == null) {
@@ -436,6 +442,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see AbstractAccessControlManager#checkInitialized()
      */
+    @Override
     protected void checkInitialized() {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -445,6 +452,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see AbstractAccessControlManager#checkValidNodePath(String)
      */
+    @Override
     protected void checkValidNodePath(String absPath) throws PathNotFoundException, RepositoryException {
         Path p = resolver.getQPath(absPath);
         if (!p.isAbsolute()) {
@@ -458,6 +466,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see AbstractAccessControlManager#checkPermission(String,int)
      */
+    @Override
     protected void checkPermission(String absPath, int permission) throws AccessDeniedException, RepositoryException {
         checkValidNodePath(absPath);
         Path p = resolver.getQPath(absPath);
@@ -469,6 +478,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see AbstractAccessControlManager#getPrivilegeRegistry()
      */
+    @Override
     protected PrivilegeRegistry getPrivilegeRegistry() throws RepositoryException {
         checkInitialized();
         return privilegeRegistry;
