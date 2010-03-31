@@ -19,17 +19,12 @@ package org.apache.jackrabbit.jcr2spi;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.apache.jackrabbit.jcr2spi.observation.ObservationTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>TestAll</code>...
  */
 public class TestAll extends TestCase {
-
-    private static Logger log = LoggerFactory.getLogger(TestAll.class);
 
     public static Test suite() {
 
@@ -42,6 +37,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SNSIndexTest.class);
         suite.addTestSuite(NodeOrderTest.class);
 
+        // add nodes
+        suite.addTestSuite(AddNodeTest.class);
+        
         // set/add property
         suite.addTestSuite(GetPropertyTest.class);
         suite.addTestSuite(AddPropertyTest.class);
