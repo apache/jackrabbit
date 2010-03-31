@@ -540,6 +540,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         // shortcut: mkcol is only allowed on deleted/non-existing resources
         if (resource.exists()) {
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
         }
 
         if (request.getContentLength() > 0 || request.getHeader("Transfer-Encoding") != null) {
