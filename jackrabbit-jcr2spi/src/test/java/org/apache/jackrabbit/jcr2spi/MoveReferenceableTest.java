@@ -99,4 +99,24 @@ public class MoveReferenceableTest extends AbstractMoveTest {
         Node n = superuser.getNodeByUUID(uuid);
         assertTrue("After successful moving a referenceable node node, accessing the node by uuid must return the same node.", n.isSame(moveNode));
     }
+
+    /**
+     * Move a versionable (referenceable) node twice
+     * 
+     * @throws RepositoryException
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2572">JCR-2572</a>
+     */
+    public void testMoveTwice() throws RepositoryException {
+        moveNode.addMixin(mixVersionable);
+        superuser.save();
+        
+        // move the node
+        doMove(moveNode.getPath(), destinationPath);
+        superuser.save();
+
+        // move second time
+        String destinationPath2 = destParentNode.getPath() + "/" + nodeName3;
+        doMove(destinationPath, destinationPath2);
+        superuser.save();
+    }
 }
