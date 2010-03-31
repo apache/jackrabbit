@@ -16,16 +16,26 @@
  */
 package org.apache.jackrabbit.server.remoting.davex;
 
+import java.io.IOException;
+
 /**
  * <code>DiffException</code>...
  */
-class DiffException extends Exception {
+class DiffException extends IOException {
+
+    private Throwable cause;
 
     public DiffException(String message) {
         super(message);
     }
 
     public DiffException(String message, Throwable cause) {
-        super(message, cause);
+        super(message);
+        this.cause = cause;
+    }
+
+    @Override
+    public Throwable getCause() {
+        return cause;
     }
 }

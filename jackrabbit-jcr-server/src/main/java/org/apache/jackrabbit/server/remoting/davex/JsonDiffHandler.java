@@ -145,7 +145,11 @@ class JsonDiffHandler implements DiffHandler {
         } catch (RepositoryException e) {
             throw new DiffException(e.getMessage(), e);
         } catch (IOException e) {
-            throw new DiffException(e.getMessage(), e);
+            if (e instanceof DiffException) {
+                throw (DiffException) e;
+            } else {
+                throw new DiffException(e.getMessage(), e);
+            }
         }
     }
 
@@ -264,7 +268,11 @@ class JsonDiffHandler implements DiffHandler {
             NodeHandler hndlr = new NodeHandler(parent, nodeName);            
             new JsonParser(hndlr).parse(diffValue);
         } catch (IOException e) {
-            throw new DiffException(e.getMessage());
+            if (e instanceof DiffException) {
+                throw (DiffException) e;
+            } else {
+                throw new DiffException(e.getMessage(), e);
+            }
         }
     }
 
@@ -552,7 +560,7 @@ class JsonDiffHandler implements DiffHandler {
                 if (obj instanceof ImportNode) {
                     ((ImportNode) obj).addNode(n);
                 } else {
-                    throw new IOException("Invalid DIFF format: The JSONArray may only contain simple values.");
+                    throw new DiffException("Invalid DIFF format: The JSONArray may only contain simple values.");
                 }
             }
             st.push(n);
@@ -563,7 +571,7 @@ class JsonDiffHandler implements DiffHandler {
             // contain simple values, no arrays/objects are allowed.
             ImportItem obj = st.pop();
             if (!((obj instanceof ImportNode))) {
-                throw new IOException("Invalid DIFF format.");
+                throw new DiffException("Invalid DIFF format.");
             }
             if (st.isEmpty()) {
                 // everything parsed -> start adding all nodes and properties
@@ -571,7 +579,7 @@ class JsonDiffHandler implements DiffHandler {
                     obj.createItem(parent);                    
                 } catch (RepositoryException e) {
                     log.error(e.getMessage());
-                    throw new IOException("Invalid DIFF format");
+                    throw new DiffException(e.getMessage(), e);
                 }
             }
         }
@@ -582,7 +590,7 @@ class JsonDiffHandler implements DiffHandler {
             if (obj instanceof ImportNode) {
                 ((ImportNode)obj).addProp(prop);
             } else {
-                throw new IOException("Invalid DIFF format: The JSONArray may only contain simple values.");
+                throw new DiffException("Invalid DIFF format: The JSONArray may only contain simple values.");
             }
             st.push(prop);
         }
@@ -592,7 +600,7 @@ class JsonDiffHandler implements DiffHandler {
             // contain simple values, no arrays/objects are allowed.
             ImportItem obj = st.pop();
             if (!((obj instanceof ImportMvProp))) {
-                throw new IOException("Invalid DIFF format: The JSONArray may only contain simple values.");                
+                throw new DiffException("Invalid DIFF format: The JSONArray may only contain simple values.");
             }
         }
 
@@ -632,7 +640,7 @@ class JsonDiffHandler implements DiffHandler {
         final String name;
         private ImportItem(String name) throws IOException {
             if (name == null) {
-                throw new IOException("Invalid DIFF format: NULL key.");
+                throw new DiffException("Invalid DIFF format: NULL key.");
             }
             this.name = name;
         }
