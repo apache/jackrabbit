@@ -37,11 +37,6 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 import org.apache.jackrabbit.standalone.cli.JcrClient;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.NCSARequestLog;
 import org.mortbay.jetty.Server;
@@ -206,24 +201,15 @@ public class Main {
 
     private void prepareServerLog(File log)
             throws IOException {
-        Layout layout =
-            new PatternLayout("%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n");
-
-        Logger jackrabbitLog = Logger.getRootLogger();
-        jackrabbitLog.addAppender(new FileAppender(
-                layout, new File(log, "jackrabbit.log").getPath()));
-
-        Logger jettyLog = Logger.getLogger("org.mortbay.log");
-        jettyLog.addAppender(new FileAppender(
-                layout, new File(log, "jetty.log").getPath()));
-        jettyLog.setAdditivity(false);
+        System.setProperty(
+                "jackrabbit.log", new File(log, "jackrabbit.log").getPath());
+        System.setProperty(
+                "jetty.log", new File(log, "jetty.log").getPath());
 
         if (command.hasOption("debug")) {
-            jackrabbitLog.setLevel(Level.DEBUG);
-            jettyLog.setLevel(Level.DEBUG);
+            System.setProperty("log.level", "DEBUG");
         } else {
-            jackrabbitLog.setLevel(Level.INFO);
-            jettyLog.setLevel(Level.INFO);
+            System.setProperty("log.level", "INFO");
         }
 
         System.setProperty(
