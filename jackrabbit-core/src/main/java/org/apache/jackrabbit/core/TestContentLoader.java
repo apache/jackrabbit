@@ -42,17 +42,10 @@ import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
  */
 public class TestContentLoader {
 
-    private String encoding;
-    private ClassLoader classLoader;
-
-    public TestContentLoader(String encoding, ClassLoader classLoader) {
-        this.encoding = encoding;
-        this.classLoader = classLoader;
-    }
-
-    private InputStream getResource(String name) {
-        return classLoader.getResourceAsStream(name);
-    }
+    /**
+     * The encoding of the test resources.
+     */
+    private static final String ENCODING = "UTF-8";
 
     public void loadTestContent(Session session) throws RepositoryException, IOException {
         JackrabbitWorkspace workspace =
@@ -66,7 +59,8 @@ public class TestContentLoader {
         JackrabbitNodeTypeManager manager =
             (JackrabbitNodeTypeManager) workspace.getNodeTypeManager();
         if (!manager.hasNodeType("test:versionable")) {
-            InputStream xml = getResource("test-nodetypes.xml");
+            InputStream xml =
+                TestContentLoader.class.getResourceAsStream("test-nodetypes.xml");
             try {
                 manager.registerNodeTypes(xml, JackrabbitNodeTypeManager.TEXT_XML);
             } finally {
@@ -156,11 +150,11 @@ public class TestContentLoader {
         Node resource = node.addNode("myResource", "nt:resource");
         // nt:resource not longer referenceable since JCR 2.0
         resource.addMixin("mix:referenceable");
-        resource.setProperty("jcr:encoding", encoding);
+        resource.setProperty("jcr:encoding", ENCODING);
         resource.setProperty("jcr:mimeType", "text/plain");
         resource.setProperty(
                 "jcr:data",
-                new ByteArrayInputStream("Hello w\u00F6rld.".getBytes(encoding)));
+                new ByteArrayInputStream("Hello w\u00F6rld.".getBytes(ENCODING)));
         resource.setProperty("jcr:lastModified", Calendar.getInstance());
 
         Node resReference = getOrAddNode(node, "reference");
@@ -243,7 +237,7 @@ public class TestContentLoader {
         getOrAddNode(node, prefix + "MultiNoBin").setProperty(name, texts);
 
         Node resource = getOrAddNode(node, prefix + "MultiBin");
-        resource.setProperty("jcr:encoding", encoding);
+        resource.setProperty("jcr:encoding", ENCODING);
         resource.setProperty("jcr:mimeType", "text/plain");
         String[] values =
             new String[] { "SGVsbG8gd8O2cmxkLg==", "SGVsbG8gd8O2cmxkLg==" };
@@ -253,9 +247,9 @@ public class TestContentLoader {
         getOrAddNode(node, prefix + "NoBin").setProperty(name,  "text 1");
 
         resource = getOrAddNode(node, "invalidBin");
-        resource.setProperty("jcr:encoding", encoding);
+        resource.setProperty("jcr:encoding", ENCODING);
         resource.setProperty("jcr:mimeType", "text/plain");
-        byte[] bytes = "Hello w\u00F6rld.".getBytes(encoding);
+        byte[] bytes = "Hello w\u00F6rld.".getBytes(ENCODING);
         resource.setProperty(name, new ByteArrayInputStream(bytes));
         resource.setProperty("jcr:lastModified", Calendar.getInstance());
     }

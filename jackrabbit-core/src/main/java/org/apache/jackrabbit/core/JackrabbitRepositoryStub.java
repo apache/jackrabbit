@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,29 +23,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Properties;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.PropertyType;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.retention.RetentionPolicy;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
@@ -71,11 +57,6 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
      */
     public static final String PROP_REPOSITORY_HOME =
         "org.apache.jackrabbit.repository.home";
-
-    /**
-     * The encoding of the test resources.
-     */
-    private static final String ENCODING = "UTF-8";
 
     /**
      * Repository settings.
@@ -200,7 +181,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                 repo = createRepository(dir, xml);
                 Session session = repo.login(superuser);
                 try {
-                    TestContentLoader loader = new TestContentLoader(ENCODING, JackrabbitRepositoryStub.class.getClassLoader());
+                    TestContentLoader loader = new TestContentLoader();
                     loader.loadTestContent(session);
                 } finally {
                     session.logout();
