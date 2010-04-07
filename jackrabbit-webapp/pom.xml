@@ -43,6 +43,17 @@
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
       <version>2.2-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
@@ -60,8 +71,8 @@
       <version>2.2-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
