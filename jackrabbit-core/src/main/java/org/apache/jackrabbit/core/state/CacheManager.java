@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
  * distributing the memory in this way, there might be some unused memory (if
  * one or more caches did not use some of the allocated memory). This unused
  * memory is distributed evenly across the full caches.
- *
  */
 public class CacheManager implements CacheAccessListener {
 
@@ -58,20 +57,29 @@ public class CacheManager implements CacheAccessListener {
     /** The size of a big object, to detect if a cache is full or not. */
     private static final int BIG_OBJECT_SIZE = 16 * 1024;
 
-    /** The amount of memory to distribute accross the caches. */
-    private long maxMemory = DEFAULT_MAX_MEMORY;
+    /** The amount of memory to distribute across the caches. */
+    private long maxMemory = Long.getLong(
+            "org.apache.jackrabbit.maxCacheMemory",
+            DEFAULT_MAX_MEMORY);
 
     /** The minimum size of a cache. */
-    private long minMemoryPerCache = DEFAULT_MIN_MEMORY_PER_CACHE;
+    private long minMemoryPerCache = Long.getLong(
+            "org.apache.jackrabbit.minMemoryPerCache",
+            DEFAULT_MIN_MEMORY_PER_CACHE);
 
     /** The maximum memory per cache (unless, there is some unused memory). */
-    private long maxMemoryPerCache = DEFAULT_MAX_MEMORY_PER_CACHE;
+    private long maxMemoryPerCache = Long.getLong(
+            "org.apache.jackrabbit.maxMemoryPerCache",
+            DEFAULT_MAX_MEMORY_PER_CACHE);
 
     /** The minimum resize interval time */
-    private long minResizeInterval = DEFAULT_MIN_RESIZE_INTERVAL;
+    private long minResizeInterval = Long.getLong(
+            "org.apache.jackrabbit.cacheResizeInterval",
+            DEFAULT_MIN_RESIZE_INTERVAL);
 
         /** The last time the caches where resized. */
-    private volatile long nextResize = System.currentTimeMillis() + DEFAULT_MIN_RESIZE_INTERVAL;
+    private volatile long nextResize =
+        System.currentTimeMillis() + DEFAULT_MIN_RESIZE_INTERVAL;
 
 
     public long getMaxMemory() {
