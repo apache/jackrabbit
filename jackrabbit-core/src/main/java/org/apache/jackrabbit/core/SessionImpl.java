@@ -428,11 +428,9 @@ public class SessionImpl extends AbstractSession
         if (workspaceName == null) {
             workspaceName = rep.getConfig().getDefaultWorkspaceName();
         }
-        if (loginContext != null) {
-            return rep.createSession(loginContext, workspaceName);
-        } else {
-            return rep.createSession(getSubject(), workspaceName);
-        }
+        Subject old = getSubject();
+        Subject newSubject = new Subject(old.isReadOnly(), old.getPrincipals(), old.getPublicCredentials(), old.getPrivateCredentials());
+        return rep.createSession(newSubject, workspaceName);
     }
 
     /**
@@ -804,6 +802,7 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
+    @Override
     public Session impersonate(Credentials otherCredentials)
             throws LoginException, RepositoryException {
         // check sanity of this session
@@ -864,6 +863,7 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
+    @Override
     public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
         // check sanity of this session
         sanityCheck();
@@ -886,6 +886,7 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean itemExists(String absPath) throws RepositoryException {
         // check sanity of this session
         sanityCheck();
@@ -1206,6 +1207,7 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void logout() {
         if (!alive) {
             // ignore
@@ -1294,6 +1296,7 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException {
         super.setNamespacePrefix(prefix, uri);
@@ -1386,6 +1389,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#getNode(String)
      * @since JCR 2.0
      */
+    @Override
     public Node getNode(String absPath)
             throws PathNotFoundException, RepositoryException {
         // check sanity of this session
@@ -1410,6 +1414,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#getProperty(String)
      * @since JCR 2.0
      */
+    @Override
     public Property getProperty(String absPath)
             throws PathNotFoundException, RepositoryException {
         // check sanity of this session
@@ -1434,6 +1439,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#nodeExists(String)
      * @since JCR 2.0
      */
+    @Override
     public boolean nodeExists(String absPath) throws RepositoryException {
         // check sanity of this session
         sanityCheck();
@@ -1455,6 +1461,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#propertyExists(String)
      * @since JCR 2.0
      */
+    @Override
     public boolean propertyExists(String absPath) throws RepositoryException {
         // check sanity of this session
         sanityCheck();
@@ -1476,6 +1483,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#removeItem(String)
      * @since JCR 2.0
      */
+    @Override
     public void removeItem(String absPath) throws VersionException,
             LockException, ConstraintViolationException, RepositoryException {
         // check sanity of this session
@@ -1662,6 +1670,7 @@ public class SessionImpl extends AbstractSession
      * the session is closed automatically; however a warning is written to the log file,
      * together with the stack trace of where the session was opened.
      */
+    @Override
     public void finalize() {
         if (alive) {
             log.warn("Unclosed session detected. The session was opened here: ", openStackTrace);

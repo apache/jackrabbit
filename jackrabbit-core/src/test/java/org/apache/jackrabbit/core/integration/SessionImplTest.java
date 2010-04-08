@@ -22,8 +22,12 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.security.auth.Subject;
 
+import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * Integration tests for the Session implementation in Jackrabbit core.
@@ -70,4 +74,60 @@ public class SessionImplTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * JCR-2595: SessionImpl.createSession uses same Subject/LoginContext
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2595">JCR-2595</a>
+     */
+    public void testCreateSession() throws RepositoryException, NotExecutableException {
+        if (!(superuser instanceof SessionImpl)) {
+            throw new NotExecutableException();
+        }
+
+        String currentWsp = superuser.getWorkspace().getName();
+        String otherWsp = null;
+        for (String wsp : superuser.getWorkspace().getAccessibleWorkspaceNames()) {
+            if (!wsp.equals(currentWsp)) {
+                otherWsp = wsp;
+                break;
+            }
+        }
+
+        SessionImpl sImpl = (SessionImpl) superuser;
+        Subject subject = sImpl.getSubject();
+
+        Session s1 = sImpl.createSession(currentWsp);
+        try {
+            assertFalse(s1 == sImpl);
+            assertFalse(subject == ((SessionImpl) s1).getSubject());
+            assertEquals(subject, ((SessionImpl) s1).getSubject());
+            assertEquals(currentWsp, s1.getWorkspace().getName());
+        } finally {
+            s1.logout();
+            assertFalse(subject.getPrincipals().isEmpty());
+        }
+
+
+        Session s2 = sImpl.createSession(otherWsp);
+        try {
+            assertFalse(s2 == sImpl);
+            assertFalse(subject == ((SessionImpl) s2).getSubject());
+            assertEquals(subject, ((SessionImpl) s2).getSubject());
+            assertEquals(otherWsp, s2.getWorkspace().getName());
+        } finally {
+            s2.logout();
+            assertFalse(subject.getPrincipals().isEmpty());
+        }
+
+        Session s3 = sImpl.createSession(null);
+        try {
+            assertFalse(s3 == sImpl);
+            assertFalse(subject == ((SessionImpl) s3).getSubject());
+            assertEquals(subject, ((SessionImpl) s3).getSubject());
+            assertEquals(((RepositoryImpl) sImpl.getRepository()).getConfig().getDefaultWorkspaceName(), s3.getWorkspace().getName());
+        } finally {
+            s3.logout();
+            assertFalse(subject.getPrincipals().isEmpty());
+        }
+    }
 }
