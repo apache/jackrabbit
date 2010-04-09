@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.InputStream;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -355,7 +357,8 @@ public class SearchIndex extends AbstractQueryHandler {
     private Class<?> excerptProviderClass = DefaultHTMLExcerpt.class;
 
     /**
-     * The path to the indexing configuration file.
+     * The path to the indexing configuration file (can be an absolute path to a
+     * file or a classpath resource).
      */
     private String indexingConfigPath;
 
@@ -1291,9 +1294,17 @@ public class SearchIndex extends AbstractQueryHandler {
             return null;
         }
         File config = new File(indexingConfigPath);
+        InputStream configStream = null;
+
         if (!config.exists()) {
-            log.warn("File does not exist: " + indexingConfigPath);
-            return null;
+            // check if it's a classpath resource
+            configStream = getClass().getResourceAsStream(indexingConfigPath);
+
+            if (configStream == null) {
+                // only warn if not available also in the classpath
+                log.warn("File does not exist: " + indexingConfigPath);
+                return null;
+            }
         } else if (!config.canRead()) {
             log.warn("Cannot read file: " + indexingConfigPath);
             return null;
@@ -1303,13 +1314,28 @@ public class SearchIndex extends AbstractQueryHandler {
                     DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             builder.setEntityResolver(new IndexingConfigurationEntityResolver());
-            indexingConfiguration = builder.parse(config).getDocumentElement();
+
+            if (configStream != null) {
+                indexingConfiguration = builder
+                    .parse(configStream).getDocumentElement();
+            } else {
+                indexingConfiguration = builder
+                    .parse(config).getDocumentElement();
+            }
         } catch (ParserConfigurationException e) {
             log.warn("Unable to create XML parser", e);
         } catch (IOException e) {
             log.warn("Exception parsing " + indexingConfigPath, e);
         } catch (SAXException e) {
             log.warn("Exception parsing " + indexingConfigPath, e);
+        } finally {
+            if (configStream != null) {
+                try {
+                    configStream.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
         }
         return indexingConfiguration;
     }
