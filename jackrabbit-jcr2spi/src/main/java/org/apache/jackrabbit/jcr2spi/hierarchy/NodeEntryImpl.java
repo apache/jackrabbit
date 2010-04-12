@@ -1620,7 +1620,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     //--------------------------------------------------------< inner class >---
     /**
      * Upon move or reorder of this entry the original hierarchy information is
-     * store in the RevertInfo for later operation undo and in order to be able
+     * stored in the RevertInfo for later operation undo and in order to be able
      * to build the workspace id / path.
      */
     private class RevertInfo {
