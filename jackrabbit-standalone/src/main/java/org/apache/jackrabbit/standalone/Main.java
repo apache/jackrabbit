@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Context;
@@ -36,6 +37,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.RepositoryCopier;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
+import org.apache.jackrabbit.standalone.cli.CommandException;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 import org.apache.jackrabbit.standalone.cli.JcrClient;
 import org.mortbay.jetty.Connector;
@@ -119,12 +121,26 @@ public class Main {
         } else if (command.hasOption("cli")) {
             System.setProperty("logback.configurationFile", "logback-cli.xml");
 
-            Context context = new ContextBase();
             String uri = command.getOptionValue("cli");
             Repository repository = JcrUtils.getRepository(uri);
+
+            Context context = new ContextBase();
             CommandHelper.setRepository(context, repository, uri);
+            try {
+                Session session = repository.login();
+                CommandHelper.setSession(context, session);
+                CommandHelper.setCurrentNode(context, session.getRootNode());
+            } catch (RepositoryException ignore) {
+                // anonymous login not possible
+            }
 
             new JcrClient(context).runInteractive();
+
+            try {
+                CommandHelper.getSession(context).logout();
+            } catch (CommandException ignore) {
+                // already logged out
+            }
         } else {
             message("Welcome to Apache Jackrabbit!");
             message("-------------------------------");
