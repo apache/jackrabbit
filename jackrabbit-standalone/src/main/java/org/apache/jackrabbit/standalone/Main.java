@@ -117,13 +117,13 @@ public class Main {
         } else if (command.hasOption("license")) {
             copyToOutput("/META-INF/LICENSE.txt");
         } else if (command.hasOption("cli")) {
+            System.setProperty("logback.configurationFile", "logback-cli.xml");
+
             Context context = new ContextBase();
             String uri = command.getOptionValue("cli");
             Repository repository = JcrUtils.getRepository(uri);
-            Session session = repository.login();
             CommandHelper.setRepository(context, repository, uri);
-            CommandHelper.setSession(context, session);
-            CommandHelper.setCurrentNode(context, session.getRootNode());
+
             new JcrClient(context).runInteractive();
         } else {
             message("Welcome to Apache Jackrabbit!");
