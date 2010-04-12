@@ -296,7 +296,7 @@ public abstract class AbstractLoginModule implements LoginModule {
         // check the availability of Credentials
         Credentials creds = getCredentials();
         if (creds == null) {
-            log.warn("No credentials available -> try default (anonymous) authentication.");
+            log.debug("No credentials available -> try default (anonymous) authentication.");
         }
         try {
             Principal userPrincipal = getPrincipal(creds);

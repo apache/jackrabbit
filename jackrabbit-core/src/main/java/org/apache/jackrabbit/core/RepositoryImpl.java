@@ -1504,6 +1504,9 @@ public class RepositoryImpl extends AbstractRepository
                     session.setAttribute(name, sc.getAttribute(name));
                 }
             }
+
+            log.info("User {} logged in to workspace {}",
+                    session.getUserID(), workspaceName);
             return session;
         } catch (SecurityException se) {
             throw new LoginException("Unable to access authentication information", se);
