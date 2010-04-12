@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import javax.jcr.Repository;
+import javax.jcr.Session;
 
 import org.apache.commons.chain.Context;
 import org.apache.commons.chain.impl.ContextBase;
@@ -119,7 +120,10 @@ public class Main {
             Context context = new ContextBase();
             String uri = command.getOptionValue("cli");
             Repository repository = JcrUtils.getRepository(uri);
+            Session session = repository.login();
             CommandHelper.setRepository(context, repository, uri);
+            CommandHelper.setSession(context, session);
+            CommandHelper.setCurrentNode(context, session.getRootNode());
             new JcrClient(context).runInteractive();
         } else {
             message("Welcome to Apache Jackrabbit!");

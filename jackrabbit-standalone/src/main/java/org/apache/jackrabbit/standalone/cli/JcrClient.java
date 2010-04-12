@@ -314,8 +314,9 @@ public class JcrClient {
             return bundle.getString("phrase.not.connected");
         }
 
+        boolean unsaved = false;
         try {
-            CommandHelper.getSession(ctx);
+            unsaved = CommandHelper.getSession(ctx).hasPendingChanges();
         } catch (CommandException e) {
             return bundle.getString("phrase.not.logged.in");
         }
@@ -323,12 +324,18 @@ public class JcrClient {
         try {
             Node n = CommandHelper.getCurrentNode(ctx);
             // the current node might be Invalid
+            String path;
             try {
-                return n.getPath();
+                path = n.getPath();
             } catch (InvalidItemStateException e) {
                 CommandHelper.setCurrentNode(ctx, CommandHelper.getSession(ctx)
                     .getRootNode());
-                return CommandHelper.getCurrentNode(ctx).getPath();
+                path = CommandHelper.getCurrentNode(ctx).getPath();
+            }
+            if (unsaved) {
+                return path + "*";
+            } else {
+                return path;
             }
         } catch (CommandException e) {
             return bundle.getString("phrase.not.logged.in");
