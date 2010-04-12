@@ -67,7 +67,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     protected NodeEntryImpl parent;
 
     /**
-     * The item state factory to create the the item state.
+     * The item state factory to create the item state.
      */
     protected final EntryFactory factory;
 
