@@ -48,7 +48,7 @@ public final class PathBuilder {
     /**
      * Creates a new PathBuilder to create a Path using the
      * {@link PathFactoryImpl default PathFactory}. See
-     * {@link PathBuilder#PathBuilder(PathFactory)} for a constructor explicitely
+     * {@link PathBuilder#PathBuilder(PathFactory)} for a constructor explicitly
      * specifying the factory to use.
      */
     public PathBuilder() {

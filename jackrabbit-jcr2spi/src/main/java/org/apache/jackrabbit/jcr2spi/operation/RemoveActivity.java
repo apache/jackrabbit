@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <code>RemoveVersion</code>...
+ * <code>RemoveActivity</code>...
  */
 public class RemoveActivity extends Remove {
 
