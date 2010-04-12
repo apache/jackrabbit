@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import javax.jcr.Repository;
+import javax.jcr.Session;
 
 import org.apache.commons.chain.Context;
 import org.apache.commons.chain.impl.ContextBase;
@@ -121,10 +122,13 @@ public class Main {
         } else if (command.hasOption("license")) {
             copyToOutput("/META-INF/LICENSE.txt");
         } else if (command.hasOption("cli")) {
+            System.setProperty("logback.configurationFile", "logback-cli.xml");
+
             Context context = new ContextBase();
             String uri = command.getOptionValue("cli");
             Repository repository = JcrUtils.getRepository(uri);
             CommandHelper.setRepository(context, repository, uri);
+
             new JcrClient(context).runInteractive();
         } else {
             message("Welcome to Apache Jackrabbit!");
