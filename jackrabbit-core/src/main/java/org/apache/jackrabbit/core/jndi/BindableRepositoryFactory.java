@@ -16,15 +16,16 @@
  */
 package org.apache.jackrabbit.core.jndi;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
-import java.util.Hashtable;
-import java.util.Map;
+
+import org.apache.commons.collections.map.ReferenceMap;
 
 /**
  * <code>BindableRepositoryFactory</code> is an object factory that when given
@@ -42,7 +43,7 @@ public class BindableRepositoryFactory implements ObjectFactory {
     /**
      * {@inheritDoc}
      */
-    public synchronized Object getObjectInstance(
+    public Object getObjectInstance(
             Object obj, Name name, Context nameCtx, Hashtable environment)
             throws RepositoryException {
         synchronized (cache) {
@@ -52,6 +53,19 @@ public class BindableRepositoryFactory implements ObjectFactory {
                 cache.put(obj, instance);
             }
             return instance;
+        }
+    }
+
+
+    /**
+     * Invalidates the given reference in this factory's cache. Called by
+     * {@link BindableRepository#shutdown()} to remove the old reference.
+     *
+     * @param reference repository reference
+     */
+    static void removeReference(Reference reference) {
+        synchronized (cache) {
+            cache.remove(reference);
         }
     }
 
