@@ -143,7 +143,7 @@ public final class JCAManagedConnectionFactory
     /**
      * Create a new session.
      */
-    private XASession openSession(JCAConnectionRequestInfo cri)
+    private Session openSession(JCAConnectionRequestInfo cri)
             throws ResourceException {
         createRepository();
         Credentials creds = cri.getCredentials();
@@ -152,7 +152,7 @@ public final class JCAManagedConnectionFactory
         try {
             Session session = getRepository().login(creds, workspace);
             log("Created session (" + session + ")");
-            return (XASession) session;
+            return session;
         } catch (RepositoryException e) {
             log("Failed to create session", e);
             ResourceException exception = new ResourceException(

@@ -59,7 +59,7 @@ public class UserTransactionImpl implements UserTransaction {
     /**
      * Create a new instance of this class. Takes a session as parameter.
      * @param session session. If session is not of type
-     * {@link XASession}, an <code>IllegalArgumentException</code>
+     * {@link XAResource}, an <code>IllegalArgumentException</code>
      * is thrown
      */
     public UserTransactionImpl(Session session) {
@@ -69,16 +69,16 @@ public class UserTransactionImpl implements UserTransaction {
     /**
      * Create a new instance of this class. Takes a session as parameter.
      * @param session session. If session is not of type
-     * {@link XASession}, an <code>IllegalArgumentException</code>
+     * {@link XAResource}, an <code>IllegalArgumentException</code>
      * is thrown
      */
     public UserTransactionImpl(Session session, boolean distributedThreadAccess) {
-        if (session instanceof XASession) {
+        if (session instanceof XAResource) {
             counter++;
-            xaResources.put(((XASession) session).getXAResource(), new XidImpl(counter));
+            xaResources.put((XAResource) session, new XidImpl(counter));
             this.distributedThreadAccess = distributedThreadAccess; 
         } else {
-            throw new IllegalArgumentException("Session not of type XASession");
+            throw new IllegalArgumentException("Session not of type XAResource");
         }
     }
 
