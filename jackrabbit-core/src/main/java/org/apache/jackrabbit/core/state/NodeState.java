@@ -345,9 +345,12 @@ public class NodeState extends ItemState {
      * @param id the id the new entry is refering to.
      * @return the newly added <code>ChildNodeEntry</code>
      */
-    public synchronized ChildNodeEntry addChildNodeEntry(Name nodeName,
+    public ChildNodeEntry addChildNodeEntry(Name nodeName,
                                                          NodeId id) {
-        ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
+        ChildNodeEntry entry = null;
+        synchronized (this) {
+            entry = childNodeEntries.add(nodeName, id);
+        }
         notifyNodeAdded(entry);
         return entry;
     }
@@ -361,12 +364,18 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the entry was sucessfully renamed;
      *         otherwise <code>false</code>
      */
-    public synchronized boolean renameChildNodeEntry(Name oldName, int index,
+    public boolean renameChildNodeEntry(Name oldName, int index,
                                                      Name newName) {
-        ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
-        if (oldEntry != null) {
-            ChildNodeEntry newEntry =
+        ChildNodeEntry oldEntry = null;
+        ChildNodeEntry newEntry = null;
+        synchronized (this) {
+            oldEntry = childNodeEntries.remove(oldName, index);
+            if (oldEntry != null) {
+                newEntry =
                     childNodeEntries.add(newName, oldEntry.getId());
+            }
+        }
+        if (oldEntry != null) {
             notifyNodeAdded(newEntry);
             notifyNodeRemoved(oldEntry);
             return true;
@@ -382,8 +391,11 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the specified child node entry was found
      *         in the list of child node entries and could be removed.
      */
-    public synchronized boolean removeChildNodeEntry(Name nodeName, int index) {
-        ChildNodeEntry entry = childNodeEntries.remove(nodeName, index);
+    public boolean removeChildNodeEntry(Name nodeName, int index) {
+        ChildNodeEntry entry = null;
+        synchronized (this) {
+            entry = childNodeEntries.remove(nodeName, index);
+        }
         if (entry != null) {
             notifyNodeRemoved(entry);
         }
@@ -397,8 +409,11 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the specified child node entry was found
      *         in the list of child node entries and could be removed.
      */
-    public synchronized boolean removeChildNodeEntry(NodeId id) {
-        ChildNodeEntry entry = childNodeEntries.remove(id);
+    public boolean removeChildNodeEntry(NodeId id) {
+        ChildNodeEntry entry = null;
+        synchronized (this) {
+            entry = childNodeEntries.remove(id);    
+        }
         if (entry != null) {
             notifyNodeRemoved(entry);
         }
@@ -408,8 +423,10 @@ public class NodeState extends ItemState {
     /**
      * Removes all <code>ChildNodeEntry</code>s.
      */
-    public synchronized void removeAllChildNodeEntries() {
-        childNodeEntries.removeAll();
+    public void removeAllChildNodeEntries() {
+        synchronized (this) {
+            childNodeEntries.removeAll();
+        }
         notifyNodesReplaced();
     }
 
@@ -419,15 +436,16 @@ public class NodeState extends ItemState {
      * @param nodeEntries list of {@link ChildNodeEntry} or
      * a {@link ChildNodeEntries} list.
      */
-    public synchronized void setChildNodeEntries(List nodeEntries) {
-        if (nodeEntries instanceof ChildNodeEntries) {
-            // optimization
-            ChildNodeEntries entries = (ChildNodeEntries) nodeEntries;
-            childNodeEntries = (ChildNodeEntries) entries.clone();
-        } else {
-            childNodeEntries.removeAll();
-            childNodeEntries.addAll(nodeEntries);
-
+    public void setChildNodeEntries(List nodeEntries) {
+        synchronized (this) {
+            if (nodeEntries instanceof ChildNodeEntries) {
+                // optimization
+                ChildNodeEntries entries = (ChildNodeEntries) nodeEntries;
+                childNodeEntries = (ChildNodeEntries) entries.clone();
+            } else {
+                childNodeEntries.removeAll();
+                childNodeEntries.addAll(nodeEntries);
+            }
         }
         notifyNodesReplaced();
     }
