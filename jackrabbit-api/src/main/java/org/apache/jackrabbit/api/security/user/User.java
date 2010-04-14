@@ -34,7 +34,10 @@ public interface User extends Authorizable {
     boolean isAdmin();
 
     /**
-     * Returns <code>Credentials</code> for this user.
+     * Returns the internal <code>Credentials</code> representation for this
+     * user. This method is expected to be used for validation during the
+     * login process. However, the return value should neither be usable nor
+     * used for {@link javax.jcr.Repository#login}.
      *
      * @return <code>Credentials</code> for this user.
      * @throws javax.jcr.RepositoryException If an error occurs.
