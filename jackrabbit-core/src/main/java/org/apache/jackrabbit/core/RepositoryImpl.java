@@ -1505,7 +1505,7 @@ public class RepositoryImpl extends AbstractRepository
                 }
             }
 
-            log.info("User {} logged in to workspace {}",
+            log.debug("User {} logged in to workspace {}",
                     session.getUserID(), workspaceName);
             return session;
         } catch (SecurityException se) {
