@@ -297,13 +297,9 @@ public abstract class AbstractLoginModule implements LoginModule {
         Credentials creds = getCredentials();
         if (creds == null) {
             log.debug("No credentials available -> try default (anonymous) authentication.");
-        } else {
-            if (supportsCredentials(creds)) {
-                sharedState.put(KEY_CREDENTIALS, credentials);
-            } else {
-                log.debug("Unsupported credentials implementation : " + creds.getClass().getName());
-                return false;
-            }
+        } else if (!supportsCredentials(creds)) {
+            log.debug("Unsupported credentials implementation : " + creds.getClass().getName());
+            return false;
         }
         
         try {
@@ -551,6 +547,9 @@ public abstract class AbstractLoginModule implements LoginModule {
                 CredentialsCallback callback = new CredentialsCallback();
                 callbackHandler.handle(new Callback[]{callback});
                 credentials = callback.getCredentials();
+                if (credentials != null && supportsCredentials(credentials)) {
+                    sharedState.put(KEY_CREDENTIALS, credentials);                    
+                }
             } catch (UnsupportedCallbackException e) {
                 log.warn("Credentials-Callback not supported try Name-Callback");
             } catch (IOException e) {
