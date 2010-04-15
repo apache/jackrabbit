@@ -201,13 +201,31 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         } catch (DavException e) {
             if (e.getErrorCode() == HttpServletResponse.SC_UNAUTHORIZED) {
-                webdavResponse.setHeader("WWW-Authenticate", getAuthenticateHeaderValue());
-                webdavResponse.sendError(e.getErrorCode(), e.getStatusPhrase());
+                sendUnauthorized(webdavRequest, webdavResponse, e);
             } else {
                 webdavResponse.sendError(e);
             }
         } finally {
             getDavSessionProvider().releaseSession(webdavRequest);
+        }
+    }
+
+    /**
+     * Sets the "WWW-Authenticate" header and writes the appropriate error
+     * to the given webdav response.
+     *
+     * @param request The webdav request.
+     * @param response The webdav response.
+     * @param error The DavException that leads to the unauthorized response.
+     * @throws IOException
+     */
+    protected void sendUnauthorized(WebdavRequest request,
+                                    WebdavResponse response, DavException error) throws IOException {
+        response.setHeader("WWW-Authenticate", getAuthenticateHeaderValue());
+        if (error == null || error.getErrorCode() != HttpServletResponse.SC_UNAUTHORIZED) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        } else {
+            response.sendError(error.getErrorCode(), error.getStatusPhrase());
         }
     }
 
