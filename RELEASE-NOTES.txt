@@ -1,57 +1,31 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-beta5
+Release Notes -- Apache Jackrabbit -- Version 2.1.0
 
 Introduction
 ------------
 
-This is a beta release of Apache Jackrabbit 2.0. This release is a fully
-compliant implementation of the JCR 2.0 API that was specified by the
-Java Specification Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
-However, the beta status of this release means that some parts of the
-implementation are not yet ready for normal production use.
+This is Apache Jackrabbit 2.1.0, a fully compliant and production-ready
+implementation of the Content Repository for Java Technology API, version 2.0
+(JCR 2.0, http://jcp.org/en/jsr/summary?id=283).
 
 Changes in this release
 -----------------------
 
-Jackrabbit 2.0 is a major upgrade from the earlier 1.x releases. The most
-notable changes in this release are:
+Jackrabbit 2.1 is an incremental feature release based on the earlier
+2.0 release. The most notable changes in this release are:
 
-  * Upgrade to JCR 2.0. This Jackrabbit release implements and is based
-    on the official JCR 2.0 API. All of the features required by the
-    JSR 283 specification have been implemented. Note that the remote
-    access layers (RMI and WebDAV) only support a subset of JCR 2.0.
+  * Remoting improvements. Both the WebDAV and RMI remoting layers have
+    been extended to support a wider subset of JCR 2.0 functionality
+    and include numerous other improvements and bug fixes over previous
+    releases. We recommend the WebDAV layer as the primary remoting option,
+    with the RMI layer as a secondary option if more functionality is needed.
 
-  * Upgrade to Java 5. All of Jackrabbit (except the jcr-tests component)
-    now requires Java 5 as the base platform. Java 1.4 environments are no
-    longer supported.
+  * Command line repository access. The jackrabbit-standalone jar now
+    contains a simple command line tool for browsing and modifying both
+    local and remote repositories.
 
-  * Removal of deprecated classes and features. Jackrabbit 2.0 is not
-    backwards compatible with client code that used any classes or features
-    that had been deprecated during the 1.x release cycle.
-
-  * Separate JCR Commons components. Many of the general-purpose JCR
-    components like OCM are now developed and released separately from
-    the Jackrabbit content repository. See the individual components
-    for their most recent releases.
-
-  * Database connection pooling is now available for all database backends.
-
-  * Data store feature enabled in the default repository configuration.
-
-  * Full text indexing with Apache Tika. Jackrabbit can now extract and
-    index the full text content of many new types of documents, including
-    the Office Open XML files produced by Microsoft Office 2007 and higher.
-
-  * Apache Commons Collections, Apache Derby, Jetty, SLF4J and Apache Xerces
-    have been upgraded to a more recent version.
-
-  * OracleFileSystem class does not use special blob handling anymore and is
-    required for 10R1 and earlier anymore. If you need that use the new
-    Oracle9FileSystem.
-
-  * Modified support of XA transactions over RMI. Instead of implementing
-    the org.apache.jackrabbit.api.XASession interface, JCR-RMI now makes the
-    client session implement the javax.transaction.xa.XAResource interface
-    directly whenever the server session does so.
+  * Improved JCA packaging. The jackrabbit-jca package can now be used to
+    enable JCA-based access to any JCR repository that supports the JCR 2.0
+    RepositoryFactory interface.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
