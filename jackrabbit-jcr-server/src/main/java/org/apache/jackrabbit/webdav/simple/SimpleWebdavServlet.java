@@ -43,11 +43,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * WebdavServlet provides WebDAV support (level
- * {@link org.apache.jackrabbit.webdav.DavCompliance#_1_ 1},
- * {@link org.apache.jackrabbit.webdav.DavCompliance#_2_ 2},
- * {@link org.apache.jackrabbit.webdav.DavCompliance#_3_ 3} and
- * {@link org.apache.jackrabbit.webdav.DavCompliance#BIND bind} compliant) for
+ * WebdavServlet provides webdav support (level 1 and 2 complient) for
  * repository resources.
  * <p>
  * Implementations of this abstract class must implement the
@@ -235,7 +231,6 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Returns the configured path prefix
      *
-     * @param ctx The servlet context.
      * @return resourcePathPrefix
      * @see #INIT_PARAM_RESOURCE_PATH_PREFIX
      */
@@ -262,7 +257,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Sets the <code>DavLocatorFactory</code>.
      *
-     * @param locatorFactory The <code>DavLocatorFactory</code> to use.
+     * @param locatorFactory
      * @see AbstractWebdavServlet#setLocatorFactory(DavLocatorFactory)
      */
     @Override
@@ -287,7 +282,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Sets the <code>LockManager</code>.
      *
-     * @param lockManager The <code>LockManager</code> to be used.
+     * @param lockManager
      */
     public void setLockManager(LockManager lockManager) {
         this.lockManager = lockManager;
@@ -312,7 +307,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Sets the <code>DavResourceFactory</code>.
      *
-     * @param resourceFactory The <code>DavResourceFactory</code> to use.
+     * @param resourceFactory
      * @see AbstractWebdavServlet#setResourceFactory(org.apache.jackrabbit.webdav.DavResourceFactory)
      */
     @Override
@@ -323,7 +318,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Returns the <code>SessionProvider</code>. If no session provider has been
      * set or created a new instance of {@link SessionProviderImpl} that extracts
-     * credentials from the <code>Authorization</code> request header is
+     * credentials from the request's <code>Authorization</code> header is
      * returned.
      *
      * @return the session provider
@@ -342,7 +337,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * but subclasses can override this method to add support for other
      * types of credentials.
      *
-     * @return the credentials provider
+     * @return the credentilas provider
      * @since 1.3
      */
     protected CredentialsProvider getCredentialsProvider() {
@@ -352,7 +347,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Sets the <code>SessionProvider</code>.
      *
-     * @param sessionProvider The <code>SessionProvider</code> to use.
+     * @param sessionProvider
      */
     public synchronized void setSessionProvider(SessionProvider sessionProvider) {
         this.sessionProvider = sessionProvider;
@@ -378,7 +373,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Sets the <code>DavSessionProvider</code>.
      *
-     * @param sessionProvider The <code>DavSessionProvider</code> to use.
+     * @param sessionProvider
      * @see AbstractWebdavServlet#setDavSessionProvider(org.apache.jackrabbit.webdav.DavSessionProvider)
      */
     @Override
@@ -412,7 +407,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Set the resource configuration
      *
-     * @param config The resource configuration.
+     * @param config
      */
     public void setResourceConfig(ResourceConfig config) {
         this.config = config;

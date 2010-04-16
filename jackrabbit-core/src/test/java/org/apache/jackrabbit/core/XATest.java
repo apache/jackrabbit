@@ -36,7 +36,7 @@ import java.util.StringTokenizer;
 
 /**
  * <code>XATest</code> contains the test cases for the methods
- * inside {@link XASessionImpl}.
+ * inside {@link org.apache.jackrabbit.api.XASession}.
  */
 public class XATest extends AbstractJCRTest {
 

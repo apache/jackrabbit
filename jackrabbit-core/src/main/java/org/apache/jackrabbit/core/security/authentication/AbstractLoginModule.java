@@ -293,15 +293,11 @@ public abstract class AbstractLoginModule implements LoginModule {
             return false;
         }
 
-        // check the availability and validity of Credentials
+        // check the availability of Credentials
         Credentials creds = getCredentials();
         if (creds == null) {
             log.debug("No credentials available -> try default (anonymous) authentication.");
-        } else if (!supportsCredentials(creds)) {
-            log.debug("Unsupported credentials implementation : " + creds.getClass().getName());
-            return false;
         }
-        
         try {
             Principal userPrincipal = getPrincipal(creds);
             if (userPrincipal == null) {
@@ -524,7 +520,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * authentication-extension of an already authenticated {@link Subject} into
      * accout.
      * <p/>
-     * Therefore the credentials are retrieved as follows:
+     * Therefore the credentials are searchred as follows:
      * <ol>
      * <li>Test if the shared state contains credentials.</li>
      * <li>Ask CallbackHandler for Credentials with using a {@link
@@ -546,9 +542,14 @@ public abstract class AbstractLoginModule implements LoginModule {
             try {
                 CredentialsCallback callback = new CredentialsCallback();
                 callbackHandler.handle(new Callback[]{callback});
-                credentials = callback.getCredentials();
-                if (credentials != null && supportsCredentials(credentials)) {
-                    sharedState.put(KEY_CREDENTIALS, credentials);                    
+                Credentials creds = callback.getCredentials();
+                if (null != creds) {
+                    if (supportsCredentials(creds)) {
+                       credentials = creds;
+                    }
+                    if (credentials != null) {
+                        sharedState.put(KEY_CREDENTIALS, credentials);
+                    }
                 }
             } catch (UnsupportedCallbackException e) {
                 log.warn("Credentials-Callback not supported try Name-Callback");

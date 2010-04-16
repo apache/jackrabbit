@@ -40,6 +40,12 @@ import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
 import org.apache.jackrabbit.standalone.cli.CommandException;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 import org.apache.jackrabbit.standalone.cli.JcrClient;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Layout;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.NCSARequestLog;
 import org.mortbay.jetty.Server;
@@ -119,7 +125,9 @@ public class Main {
         } else if (command.hasOption("license")) {
             copyToOutput("/META-INF/LICENSE.txt");
         } else if (command.hasOption("cli")) {
-            System.setProperty("logback.configurationFile", "logback-cli.xml");
+            Logger logger = Logger.getRootLogger();
+            logger.addAppender(new ConsoleAppender(new PatternLayout("%p %m%n")));
+            logger.setLevel(Level.WARN);
 
             String uri = command.getOptionValue("cli");
             Repository repository = JcrUtils.getRepository(uri);
@@ -221,15 +229,24 @@ public class Main {
 
     private void prepareServerLog(File log)
             throws IOException {
-        System.setProperty(
-                "jackrabbit.log", new File(log, "jackrabbit.log").getPath());
-        System.setProperty(
-                "jetty.log", new File(log, "jetty.log").getPath());
+        Layout layout =
+            new PatternLayout("%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n");
+
+        Logger jackrabbitLog = Logger.getRootLogger();
+        jackrabbitLog.addAppender(new FileAppender(
+                layout, new File(log, "jackrabbit.log").getPath()));
+
+        Logger jettyLog = Logger.getLogger("org.mortbay.log");
+        jettyLog.addAppender(new FileAppender(
+                layout, new File(log, "jetty.log").getPath()));
+        jettyLog.setAdditivity(false);
 
         if (command.hasOption("debug")) {
-            System.setProperty("log.level", "DEBUG");
+            jackrabbitLog.setLevel(Level.DEBUG);
+            jettyLog.setLevel(Level.DEBUG);
         } else {
-            System.setProperty("log.level", "INFO");
+            jackrabbitLog.setLevel(Level.INFO);
+            jettyLog.setLevel(Level.INFO);
         }
 
         System.setProperty(

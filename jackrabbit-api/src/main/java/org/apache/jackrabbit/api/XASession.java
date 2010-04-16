@@ -31,8 +31,6 @@ import javax.transaction.xa.XAResource;
  * use it directly.
  *
  * @since 1.4
- * @deprecated An XA-enabled session should directly implement the
- *             {@link javax.transaction.xa.XAResource} interface
  */
 public interface XASession extends Session {
 

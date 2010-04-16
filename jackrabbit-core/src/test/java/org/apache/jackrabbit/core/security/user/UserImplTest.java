@@ -27,7 +27,6 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.value.StringValue;
 
 import javax.jcr.Credentials;
-import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -180,21 +179,6 @@ public class UserImplTest extends AbstractUserTest {
             u.changePassword(null);
             fail("invalid pw null");
         } catch (Exception e) {
-            // success
-        }
-    }
-
-    public void testLoginWithCryptedCredentials() throws RepositoryException {
-        User u = (User) uMgr.getAuthorizable(uID);
-
-        Credentials creds = u.getCredentials();
-        assertTrue(creds instanceof CryptedSimpleCredentials);
-
-        try {
-            Session s = getHelper().getRepository().login(u.getCredentials());
-            s.logout();
-            fail("Login using CryptedSimpleCredentials must fail.");
-        } catch (LoginException e) {
             // success
         }
     }

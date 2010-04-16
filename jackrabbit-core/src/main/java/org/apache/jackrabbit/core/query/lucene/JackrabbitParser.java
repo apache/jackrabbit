@@ -20,13 +20,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
@@ -178,13 +176,6 @@ class JackrabbitParser implements Parser {
         }
 
         parser.setParsers(parsers);
-    }
-
-    /**
-     * Delegates the call to the configured {@link AutoDetectParser}.
-     */
-    public Set<MediaType> getSupportedTypes(ParseContext context) {
-        return parser.getSupportedTypes(context);
     }
 
     /**

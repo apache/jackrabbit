@@ -45,17 +45,16 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.retention.RetentionManager;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
-import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
 
+import org.apache.jackrabbit.api.XASession;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
  * This class implements the JCA implementation of session.
  */
-public final class JCASessionHandle implements Session, XAResource {
+public final class JCASessionHandle implements XASession {
 
     /**
      * Managed connection.
@@ -86,7 +85,7 @@ public final class JCASessionHandle implements Session, XAResource {
     /**
      * Return the session.
      */
-    private Session getSession() {
+    private XASession getSession() {
         return mc.getSession(this);
     }
 
@@ -382,59 +381,15 @@ public final class JCASessionHandle implements Session, XAResource {
         getSession().removeItem(path);
     }
 
-    //--------------------------------------------------------< XAResource >--
+    //---------------------------------------------------------< XASession >--
 
-    private XAResource getXAResource() throws XAException {
-        Session session = getSession();
-        if (session instanceof XAResource) {
-            return (XAResource) session;
-        } else {
-            throw new XAException(
-                    "XA transactions are not supported with " + session);
-        }
-    }
-
-    public void start(Xid xid, int flags) throws XAException {
-        getXAResource().start(xid, flags);
-    }
-
-    public void end(Xid xid, int flags) throws XAException {
-        getXAResource().end(xid, flags);
-    }
-
-    public int prepare(Xid xid) throws XAException {
-        return getXAResource().prepare(xid);
-    }
-
-    public void rollback(Xid xid) throws XAException {
-        getXAResource().rollback(xid);
-    }
-
-    public void commit(Xid xid, boolean onePhase) throws XAException {
-        getXAResource().commit(xid, onePhase);
-    }
-
-    public void forget(Xid xid) throws XAException {
-        getXAResource().forget(xid);
-    }
-
-    public Xid[] recover(int flag) throws XAException {
-        return getXAResource().recover(flag);
-    }
-
-    public boolean isSameRM(XAResource xares) throws XAException {
-        if (xares instanceof JCASessionHandle) {
-            xares = ((JCASessionHandle) xares).getXAResource();
-        }
-        return getXAResource().isSameRM(xares);
-    }
-
-    public int getTransactionTimeout() throws XAException {
-        return getXAResource().getTransactionTimeout();
-    }
-
-    public boolean setTransactionTimeout(int seconds) throws XAException {
-        return getXAResource().setTransactionTimeout(seconds);
+    /**
+     * Returns the XAResource associated with this session.
+     *
+     * @return XA resource
+     */
+    public XAResource getXAResource() {
+        return getSession().getXAResource();
     }
 
 }

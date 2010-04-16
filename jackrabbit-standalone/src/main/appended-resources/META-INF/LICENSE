@@ -265,7 +265,7 @@ ASM bytecode manipulation library (asm)
     ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
     THE POSSIBILITY OF SUCH DAMAGE.
 
-SLF4J libraries (slf4j-api, log4j-over-slf4j, jcl-over-slf4j)
+SLF4J libraries (slf4j-api, slf4j-log4j12, jcl1104-over-slf4j)
 
     Copyright (c) 2004-2008 QOS.ch
     All rights reserved.
@@ -288,20 +288,6 @@ SLF4J libraries (slf4j-api, log4j-over-slf4j, jcl-over-slf4j)
     LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Logback library (logback-core, logback-classic)
-
-    Logback: the reliable, generic, fast and flexible logging framework.
-    Copyright (C) 1999-2009, QOS.ch. All rights reserved. 
-
-    This program and the accompanying materials are dual-licensed under
-    either the terms of the Eclipse Public License v1.0 as published by
-    the Eclipse Foundation
-
-      or (per the licensee's choosing)
-
-    under the terms of the GNU Lesser General Public License version 2.1
-    as published by the Free Software Foundation.
 
 XML API library, org.w3c classes (xml-apis)
 
