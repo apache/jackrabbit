@@ -307,7 +307,8 @@ public class DefaultHighlighter {
                     cbuf = new char[nextStart - pos];
                     int charsRead = reader.read(cbuf, 0, nextStart - pos);
                     pos += (nextStart - pos);
-                    sb.append(cbuf, 0, charsRead);
+                    sb.append(Text.encodeIllegalXMLCharacters(
+                            new String(cbuf, 0, charsRead)));
                 }
                 sb.append(hlStart);
                 nextStart = ti.getEndOffset();
@@ -315,7 +316,8 @@ public class DefaultHighlighter {
                 cbuf = new char[nextStart - pos];
                 reader.read(cbuf, 0, nextStart - pos);
                 pos += (nextStart - pos);
-                sb.append(cbuf);
+                sb.append(Text.encodeIllegalXMLCharacters(
+                        new String(cbuf)));
                 sb.append(hlEnd);
             }
         }
