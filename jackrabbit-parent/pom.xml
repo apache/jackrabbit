@@ -305,11 +305,6 @@
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
-        <groupId>xerces</groupId>
-        <artifactId>xercesImpl</artifactId>
-        <version>2.9.0</version>
-      </dependency>
-      <dependency>
         <groupId>cglib</groupId>
         <artifactId>cglib</artifactId>
         <version>2.1_3</version>

@@ -156,10 +156,6 @@
       <version>2.2-SNAPSHOT</version>
       <exclusions>
         <exclusion>
-          <groupId>xerces</groupId>
-          <artifactId>xercesImpl</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>org.apache.tika</groupId>
           <artifactId>tika-core</artifactId>
         </exclusion>
