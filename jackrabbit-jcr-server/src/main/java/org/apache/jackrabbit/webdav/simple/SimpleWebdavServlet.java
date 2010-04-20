@@ -174,7 +174,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
             try {
                 config.parse(getServletContext().getResource(configParam));
             } catch (MalformedURLException e) {
-                log.debug("Unable to build resource filter provider.");
+                log.debug("Unable to build resource filter provider", e);
             }
         }
     }
