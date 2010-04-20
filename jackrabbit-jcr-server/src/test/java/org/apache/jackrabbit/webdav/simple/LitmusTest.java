@@ -79,7 +79,7 @@ public class LitmusTest extends TestCase {
                     ProcessBuilder builder =
                         new ProcessBuilder(litmus, url, "admin", "admin");
                     builder.environment().put(
-                            "TESTS", "basic props http"); // copymove locks
+                            "TESTS", "basic http"); // props copymove locks
                     builder.directory(dir);
                     builder.redirectErrorStream();
 
