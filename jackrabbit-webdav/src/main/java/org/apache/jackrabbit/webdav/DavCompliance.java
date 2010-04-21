@@ -53,7 +53,7 @@ public final class DavCompliance {
     // RFC 3744
     public static final String ACCESS_CONTROL = "access-control";
 
-    // draft-ietf-webdav-bind
+    // RFC 5842
     public static final String BIND = "bind";
     
     // no RFC
