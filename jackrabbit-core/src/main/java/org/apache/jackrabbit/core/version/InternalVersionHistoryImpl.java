@@ -409,6 +409,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 parentNode.removeNode(node.getName());
                 // store changes for this node and his children
                 parentNode.store();
+            } else {
+                node.store();
             }
         } else {
             log.debug("Current version history has at least one reference");
