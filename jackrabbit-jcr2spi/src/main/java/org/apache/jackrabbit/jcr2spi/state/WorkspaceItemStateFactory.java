@@ -439,10 +439,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     }
 
     /**
-     * Returns true iff <code>cache</code> is not <code>null</code> and
+     * Returns true if <code>cache</code> is not <code>null</code> and
      * the cached entry is up to date.
      * @param cacheEntry
-     * @param generation
+     * @param entry
      * @return
      * @throws RepositoryException
      */
@@ -453,10 +453,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     }
 
     /**
-     * Returns true iff <code>cache</code> is not <code>null</code> and
+     * Returns true if <code>cache</code> is not <code>null</code> and
      * the cached entry is not up to date.
      * @param cacheEntry
-     * @param generation
+     * @param entry
      * @return
      * @throws RepositoryException
      */
