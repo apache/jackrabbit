@@ -44,7 +44,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private NodeId id;
     private String uniqueID;
     private Name primaryNodeTypeName;
-    private Name[] mixinNodeTypeNames = new Name[0];
+    private Name[] mixinNodeTypeNames = Name.EMPTY_ARRAY;
 
     private final Set<PropertyInfo> propertyInfos = new LinkedHashSet<PropertyInfo>();
     private Set<ChildInfo> childInfos = null;

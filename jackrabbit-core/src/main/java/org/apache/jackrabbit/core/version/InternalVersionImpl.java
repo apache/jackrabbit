@@ -401,7 +401,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     synchronized Name[] internalGetLabels() {
         if (labelCache == null) {
-            return new Name[0];
+            return Name.EMPTY_ARRAY;
         } else {
             return labelCache.toArray(new Name[labelCache.size()]);
         }

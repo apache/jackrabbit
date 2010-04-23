@@ -63,7 +63,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         // TODO: see https://jsr-283.dev.java.net/issues/show_bug.cgi?id=798
         queryable = true;
         // TODO see https://jsr-283.dev.java.net/issues/show_bug.cgi?id=797
-        superTypeNames = new Name[0];
+        superTypeNames = Name.EMPTY_ARRAY;
         this.resolver = resolver;
     }
 
