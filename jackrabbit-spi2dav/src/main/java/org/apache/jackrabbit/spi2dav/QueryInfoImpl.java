@@ -96,7 +96,7 @@ public class QueryInfoImpl implements QueryInfo {
     public Name[] getSelectorNames() {
         if (results.isEmpty()) {
             // TODO: this is not correct
-            return new Name[0];
+            return Name.EMPTY_ARRAY;
         } else {
             Set<Name> uniqueNames = new HashSet<Name>();
             QueryResultRowImpl row = (QueryResultRowImpl) results.get(0);

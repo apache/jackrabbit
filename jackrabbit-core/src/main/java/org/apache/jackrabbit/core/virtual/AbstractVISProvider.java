@@ -279,7 +279,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
         if (id == null) {
             id = new NodeId();
         }
-        state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, new Name[0]);
+        state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, Name.EMPTY_ARRAY);
 
         cache(state);
         return state;
