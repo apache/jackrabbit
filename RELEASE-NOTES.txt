@@ -1,29 +1,22 @@
-Release Notes -- Apache Jackrabbit -- Version 1.6.1
+Release Notes -- Apache Jackrabbit -- Version 1.6.2
 
 Introduction
 ------------
 
-Apache Jackrabbit 1.6.1 is a bug fix release that fixes issues reported
+Apache Jackrabbit 1.6.2 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
-earlier 1.6.0 release.
+earlier 1.6.x releases.
 
 Changes in this release
 -----------------------
 
 This release fixes the following issues:
 
-  JCR-769  Unable to login with two different Credentials to same ...
-  JCR-2250 Base64 bug - last buffer not flushed
-  JCR-2297 Registering multiple node types with the same name in a single ...
-  JCR-2299 Bad check for sv:name attribute presence in system view import
-  JCR-2323 InputStream.read return value is ignored.
-  JCR-2332 Unable to delete a non session-scoped locked node in XA Environment
-  JCR-2356 Session holds LockToken after removeLockToken in XA Environment
-  JCR-2364 NullPointerException when accessing the about.jsp page ...
-  JCR-2367 RepositoryCopier does not copy open-scoped Locks
-  JCR-2369 Problem importing node with binary property in a repository ...
-  JCR-2421 Unable to create repository using jackrabbit-webapp because ...
-  JCR-2443 AbstractSession should not synchronize on the session instance
+  JCR-2433 NPE when copying nodes with Workspace.copy()
+  JCR-2525 NodeState and NodeStateListener deadlock
+  JCR-2554 Deadlock inside XASession on Weblogic
+  JCR-2611 DefaultHighlighter.java does not encode illegal XML characters
+  JCR-2613 NoSuchItemStateException on checkin after removeVersion in XA ...
 
 See the Jackrabbit issue tracker for more details about these changes:
 
@@ -49,10 +42,10 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Bart van der Schans     Dominique Pfister        Sascha Theves
-    Claus Köll              Jukka Zitting            Sébastien Launay
-    Dave Brosius            Luca Tagliani            Stefan Guggisberg
-    Dave Marion             Marcel Reutegger         Thomas Mueller
+    Antonio Martinez        Peter Krokavec           Stephan Huttenhuis
+    Claus Köll              Robert Sauer             The Dong
+    Frederic Guilbeault     Sascha Theves            Tobias Bocanegra
+    Jukka Zitting           Stefan Guggisberg        Tom Quellenberg
 
 Thank you to everyone involved!
 
