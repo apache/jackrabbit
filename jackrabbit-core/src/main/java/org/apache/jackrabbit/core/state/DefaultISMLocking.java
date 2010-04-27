@@ -20,11 +20,10 @@ import java.util.Arrays;
 
 import javax.transaction.xa.Xid;
 
-import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.TransactionContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.ItemId;
 
+import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
@@ -36,54 +35,65 @@ import EDU.oswego.cs.dl.util.concurrent.Sync;
 public class DefaultISMLocking implements ISMLocking {
 
     /**
-     * Logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(DefaultISMLocking.class);
-
-    /**
      * The internal read-write lock.
+	 * Thread concerning ReentrantWriterPreferenceReadWriteLock
      */
-    private final RWLock rwLock = new RWLock();
-
+    private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock();
+    
+    /**
+     * The internal Xid aware read-write lock.
+     */
+    private final ReadWriteLock xidRwLock = new XidRWLock();
+    
     /**
      * {@inheritDoc}
      */
-    public ReadLock acquireReadLock(ItemId id)
-            throws InterruptedException {
-        return new ReadLockImpl(rwLock.readLock());
+    public ReadLock acquireReadLock(ItemId id) throws InterruptedException {
+    	if (TransactionContext.getCurrentXid() == null) {
+            return new ReadLockImpl(rwLock.readLock());
+    	} else {
+            return new ReadLockImpl(xidRwLock.readLock());
+    	}
     }
 
     /**
      * {@inheritDoc}
      */
-    public WriteLock acquireWriteLock(ChangeLog changeLog)
-            throws InterruptedException {
-        return new WriteLock() {
-
-            {
-                rwLock.writeLock().acquire();
-                rwLock.setActiveXid(TransactionContext.getCurrentXid());
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public void release() {
-                rwLock.writeLock().release();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public ReadLock downgrade() throws InterruptedException {
-                ReadLock rLock = new ReadLockImpl(rwLock.readLock());
-                release();
-                return rLock;
-            }
-        };
+    public WriteLock acquireWriteLock(ChangeLog changeLog) throws InterruptedException {
+    	if (TransactionContext.getCurrentXid() == null) {
+    		return new WriteLockImpl(rwLock);
+    	} else {
+    		return new WriteLockImpl(xidRwLock);
+    	}
     }
 
-    private static final class ReadLockImpl implements ReadLock {
+    private static final class WriteLockImpl implements WriteLock {
+    	
+    	private ReadWriteLock readWriteLock;
+    	
+    	private WriteLockImpl(ReadWriteLock readWriteLock) throws InterruptedException {
+    		this.readWriteLock = readWriteLock;
+    		this.readWriteLock.writeLock().acquire();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public void release() {
+		    this.readWriteLock.writeLock().release();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public ReadLock downgrade() throws InterruptedException {
+		    ReadLock rLock = new ReadLockImpl(this.readWriteLock.readLock());
+		    release();
+		    return rLock;
+		}
+	}
+
+	private static final class ReadLockImpl implements ReadLock {
 
         private final Sync readLock;
 
@@ -100,45 +110,61 @@ public class DefaultISMLocking implements ISMLocking {
         }
     }
 
-    private static final class RWLock extends ReentrantWriterPreferenceReadWriteLock {
+	/**
+	 * Xid concerning ReentrantWriterPreferenceReadWriteLock
+	 */
+    private static final class XidRWLock extends ReentrantWriterPreferenceReadWriteLock {
 
         private Xid activeXid;
 
         /**
-         * Allow reader when there is no active writer, or current thread owns
+         * Check if the given Xid comes from the same globalTX
+         * @param otherXid
+         * @return true if same globalTX otherwise false
+         */
+        boolean isSameGlobalTx(Xid otherXid) {
+    	    return (activeXid == otherXid) || Arrays.equals(activeXid.getGlobalTransactionId(), otherXid.getGlobalTransactionId());
+    	}
+
+        /**
+         * Allow reader when there is no active Xid, or current Xid owns
          * the write lock (reentrant).
          */
         protected boolean allowReader() {
-            return TransactionContext.isCurrentXid(activeXid, (activeWriter_ == null || activeWriter_ == Thread.currentThread()));
-        }
-
-        /**
-         * Sets the active Xid
-         * @param xid
-         */
-        synchronized void setActiveXid(Xid xid) {
-            if (activeXid != null && xid != null) {
-                boolean sameGTI = Arrays.equals(activeXid.getGlobalTransactionId(), xid.getGlobalTransactionId());
-                if (!sameGTI) {
-                    log.warn("Unable to set the ActiveXid while a other one is associated with a different GloalTransactionId with this RWLock.");
-                    return;
-                }
-            }
-            activeXid = xid;
+        	Xid currentXid = TransactionContext.getCurrentXid();
+        	return (activeXid == null && waitingWriters_ == 0) || isSameGlobalTx(currentXid);
         }
 
         /**
          * {@inheritDoc}
-         * 
-         * If there are no more writeHolds the activeXid will be set to null
+         */  
+        protected synchronized boolean startWrite() {
+        	Xid currentXid = TransactionContext.getCurrentXid();
+            if (activeXid != null && isSameGlobalTx(currentXid)) { // already held; re-acquire
+            	++writeHolds_;
+                return true;
+            } else if (writeHolds_ == 0) {
+            	if (activeReaders_ == 0 || (readers_.size() == 1 && readers_.get(currentXid) != null)) {
+            		activeXid = currentXid;
+            		writeHolds_ = 1;
+            		return true;
+            	} else {
+            		return false;
+            	}
+            } else {
+            	return false;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
          */
         protected synchronized Signaller endWrite() {
             --writeHolds_;
             if (writeHolds_ > 0) {  // still being held
-                return null;
+            	return null;
             } else {
-                activeXid = null;
-                activeWriter_ = null;
+            	activeXid = null;
                 if (waitingReaders_ > 0 && allowReader()) {
                     return readerLock_;
                 } else if (waitingWriters_ > 0) {
@@ -148,5 +174,52 @@ public class DefaultISMLocking implements ISMLocking {
                 }
             }
         }
+
+        /**
+         * {@inheritDoc}
+         */
+		protected synchronized boolean startRead() {
+			Xid currentXid = TransactionContext.getCurrentXid();
+		    Object c = readers_.get(currentXid);
+		    if (c != null) { // already held -- just increment hold count
+		    	readers_.put(currentXid, new Integer(((Integer)(c)).intValue()+1));
+		    	++activeReaders_;
+		    	return true;
+		    } else if (allowReader()) {
+		    	readers_.put(currentXid, IONE);
+		    	++activeReaders_;
+		    	return true;
+		    } else {
+		    	return false;
+		    }
+		}
+
+        /**
+         * {@inheritDoc}
+         */
+		protected synchronized Signaller endRead() {
+			Xid currentXid = TransactionContext.getCurrentXid();
+		    Object c = readers_.get(currentXid);
+		    if (c == null) {
+		    	throw new IllegalStateException();
+		    }
+		    --activeReaders_;
+		    if (c != IONE) { // more than one hold; decrement count
+		    	int h = ((Integer)(c)).intValue()-1;
+		    	Integer ih = (h == 1)? IONE : new Integer(h);
+		    	readers_.put(currentXid, ih);
+		    	return null;
+		    } else {
+		    	readers_.remove(currentXid);
+		    
+		    	if (writeHolds_ > 0) { // a write lock is still held
+		    		return null;
+		    	} else if (activeReaders_ == 0 && waitingWriters_ > 0) {
+		    		return writerLock_;
+		    	} else  {
+		    		return null;
+		    	}
+		    }
+		}
     }
 }
