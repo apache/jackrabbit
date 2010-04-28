@@ -64,6 +64,11 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
         private static final long serialVersionUID = -5667366239976271493L;
     };
 
+    /**
+     * empty array
+     */
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
     private final ValueLoader loader;
     private final ValueFactory vf;
 
@@ -114,11 +119,6 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
     private class BinaryQValue extends AbstractQValue implements ValueLoader.Target {
 
         private static final long serialVersionUID = 2736654000266713469L;
-
-        /**
-         * empty array
-         */
-        private final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
         /**
          * max size for keeping tmp data in memory

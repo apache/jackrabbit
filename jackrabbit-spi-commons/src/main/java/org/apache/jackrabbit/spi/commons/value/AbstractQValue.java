@@ -122,7 +122,8 @@ public abstract class AbstractQValue implements QValue, Serializable {
      * is <code>null</code>.
      */
     protected AbstractQValue(Calendar value) {
-        this(value, PropertyType.DATE);
+        val = ISO8601.format(value);
+        type = PropertyType.DATE;
     }
 
     /**
@@ -204,7 +205,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
      */
     public Calendar getCalendar() throws RepositoryException {
         if (type == PropertyType.DATE) {
-            return (Calendar) ((Calendar) val).clone();
+            return ISO8601.parse(getString());
         } else if (type == PropertyType.DOUBLE) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
             cal.setTimeInMillis(((Double) val).longValue());
@@ -272,7 +273,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
         } else if (type == PropertyType.LONG) {
             return ((Long) val).doubleValue();
         } else if (type == PropertyType.DATE) {
-            return ((Calendar) val).getTimeInMillis();
+            return getCalendar().getTimeInMillis();
         } else if (type == PropertyType.DECIMAL) {
             return ((BigDecimal) val).doubleValue();
         } else {
@@ -295,7 +296,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
         } else if (type == PropertyType.DECIMAL) {
             return ((BigDecimal) val).longValue();
         } else if (type == PropertyType.DATE) {
-            return ((Calendar) val).getTimeInMillis();
+            return getCalendar().getTimeInMillis();
         } else {
             try {
                 return Long.parseLong(getString());
@@ -346,7 +347,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
                 IOUtils.closeQuietly(stream);
             }
         } else if (type == PropertyType.DATE) {
-            return ISO8601.format(((Calendar) val));
+            return (String) val;
         } else {
             return val.toString();
         }
@@ -407,7 +408,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
     @Override
     public String toString() {
         if (type == PropertyType.DATE) {
-            return ISO8601.format((Calendar) val);
+            return (String) val;
         } else {
             return val.toString();
         }
@@ -430,11 +431,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
             if (type != other.type) {
                 return false;
             }
-            if (PropertyType.DATE == type) {
-                return ISO8601.format((Calendar) val).equals(ISO8601.format((Calendar) other.val));
-            } else {
-                return val.equals(other.val);
-            }
+            return val.equals(other.val);
         }
         return false;
     }
@@ -448,10 +445,6 @@ public abstract class AbstractQValue implements QValue, Serializable {
      */
     @Override
     public int hashCode() {
-        if (PropertyType.DATE == type) {
-            return ISO8601.format((Calendar) val).hashCode();
-        } else {
-            return val.hashCode();
-        }
+        return val.hashCode();
     }
 }
