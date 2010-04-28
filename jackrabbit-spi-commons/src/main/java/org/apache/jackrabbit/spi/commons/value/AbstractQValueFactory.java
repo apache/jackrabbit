@@ -129,8 +129,7 @@ public abstract class AbstractQValueFactory implements QValueFactory {
         if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
-        // Calendar is not constant, must create a clone
-        return new DefaultQValue((Calendar) value.clone());
+        return new DefaultQValue(value);
     }
 
     /**
