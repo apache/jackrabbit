@@ -25,6 +25,9 @@
     <fileSet>
       <directory>${project.build.testOutputDirectory}</directory>
       <outputDirectory></outputDirectory>
+      <excludes>
+        <exclude>logback-test.xml</exclude>
+      </excludes>
     </fileSet>
   </fileSets>
 </assembly>
