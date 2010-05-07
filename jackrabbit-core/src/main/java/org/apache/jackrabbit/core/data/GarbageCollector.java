@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
@@ -40,7 +41,6 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -312,14 +312,14 @@ public class GarbageCollector {
             callback.beforeScanning(n);
         }
         for (PropertyIterator it = n.getProperties(); it.hasNext();) {
-            Property p = it.nextProperty();
+            PropertyImpl p = (PropertyImpl) it.nextProperty();
             if (p.getType() == PropertyType.BINARY) {
                 if (n.hasProperty("jcr:uuid")) {
                     rememberNode(n.getProperty("jcr:uuid").getString());
                 } else {
                     rememberNode(n.getPath());
                 }
-                if (p.getDefinition().isMultiple()) {
+                if (p.isMultiple()) {
                     p.getLengths();
                 } else {
                     p.getLength();

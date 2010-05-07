@@ -27,6 +27,7 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Provide AuthContext interface, for a JAAS-LoginModule not running in

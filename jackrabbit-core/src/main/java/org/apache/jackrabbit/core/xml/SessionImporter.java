@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
@@ -32,7 +33,6 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -280,12 +280,12 @@ public class SessionImporter implements Importer {
          */
         Iterator iter = refTracker.getProcessedReferences();
         while (iter.hasNext()) {
-            Property prop = (Property) iter.next();
+            PropertyImpl prop = (PropertyImpl) iter.next();
             // being paranoid...
             if (prop.getType() != PropertyType.REFERENCE) {
                 continue;
             }
-            if (prop.getDefinition().isMultiple()) {
+            if (prop.isMultiple()) {
                 Value[] values = prop.getValues();
                 Value[] newVals = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {

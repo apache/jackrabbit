@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 
 /**
@@ -105,12 +106,12 @@ public class PropertyValueOperand extends DynamicOperand {
      */
     public Value[] getValues(ScoreNode sn, EvaluationContext context)
             throws IOException {
-        Property prop = getProperty(sn, context);
+        PropertyImpl prop = (PropertyImpl) getProperty(sn, context);
         if (prop == null) {
             return EMPTY;
         } else {
             try {
-                if (prop.getDefinition().isMultiple()) {
+                if (prop.isMultiple()) {
                     return prop.getValues();
                 } else {
                     return new Value[]{prop.getValue()};

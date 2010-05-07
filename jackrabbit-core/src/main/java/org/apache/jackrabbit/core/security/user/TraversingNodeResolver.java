@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -28,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -227,8 +227,9 @@ class TraversingNodeResolver extends NodeResolver {
                         while (!match && pItr.hasNext()) {
                             Name propertyName = (Name) pItr.next();
                             if (node.hasProperty(propertyName)) {
-                                Property prop = node.getProperty(propertyName);
-                                if (prop.getDefinition().isMultiple()) {
+                                PropertyImpl prop = (PropertyImpl)
+                                    node.getProperty(propertyName);
+                                if (prop.isMultiple()) {
                                     Value[] values = prop.getValues();
                                     for (int i = 0; i < values.length && !match; i++) {
                                         match = matches(value, values[i].getString(), exact);

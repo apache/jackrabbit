@@ -189,9 +189,9 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      */
     public Value[] getProperty(String name) throws RepositoryException {
         if (hasProperty(name)) {
-            Property prop = node.getProperty(name);
+            PropertyImpl prop = (PropertyImpl) node.getProperty(name);
             if (isAuthorizableProperty(prop)) {
-                if (prop.getDefinition().isMultiple()) {
+                if (prop.isMultiple()) {
                     return prop.getValues();
                 } else {
                     return new Value[] {prop.getValue()};
@@ -254,8 +254,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         try {
             if (node.hasProperty(name)) {
                 // 'node' is protected -> use setValue instead of Property.remove()
-                Property p = node.getProperty(name);
-                if (p.getDefinition().isMultiple()) {
+                PropertyImpl p = (PropertyImpl) node.getProperty(name);
+                if (p.isMultiple()) {
                     p.setValue((Value[]) null);
                 } else {
                     p.setValue((Value) null);

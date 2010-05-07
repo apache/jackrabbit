@@ -365,8 +365,12 @@ class RowIteratorImpl implements RowIterator {
                     QValue p = QVALUE_FACTORY.create(hmgr.getPath(sn[0].getNodeId()));
                     return valueFactory.createValue(p);
                 } else if (getNodeImpl().hasProperty(prop)) {
-                    Property p = getNodeImpl().getProperty(prop);
-                    if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
+                    PropertyImpl p = (PropertyImpl)
+                        getNodeImpl().getProperty(prop);
+                    if (p.isMultiple()) {
+                        // mvp values cannot be returned
+                        return null;
+                    } else if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
                         return valueFactory.createValue(p.getString());
                     } else {
                         return p.getValue();
