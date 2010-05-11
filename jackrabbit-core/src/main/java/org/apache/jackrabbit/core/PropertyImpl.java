@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Path;
@@ -131,7 +131,6 @@ public class PropertyImpl extends ItemImpl implements Property {
                 throw new InvalidItemStateException(msg);
             }
             // copy state from transient state
-            persistentState.setDefinitionId(transientState.getDefinitionId());
             persistentState.setType(transientState.getType());
             persistentState.setMultiValued(transientState.isMultiValued());
             persistentState.setValues(transientState.getValues());
@@ -156,19 +155,14 @@ public class PropertyImpl extends ItemImpl implements Property {
             stateMgr.disconnectTransientItemState(thisState);
         }
         // reapply transient changes
-        thisState.setDefinitionId(transientState.getDefinitionId());
         thisState.setType(transientState.getType());
         thisState.setMultiValued(transientState.isMultiValued());
         thisState.setValues(transientState.getValues());
     }
 
-    protected void onRedefine(PropDefId defId) throws RepositoryException {
+    protected void onRedefine(PropDef def) throws RepositoryException {
         PropertyDefinitionImpl newDef =
-                session.getNodeTypeManager().getPropertyDefinition(defId);
-        // modify the state of 'this', i.e. the target property
-        PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
-        // set id of new definition
-        thisState.setDefinitionId(defId);
+                session.getNodeTypeManager().getPropertyDefinition(def);
         data.setDefinition(newDef);
     }
 

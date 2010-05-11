@@ -20,10 +20,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -263,9 +261,6 @@ public class NodeStateEx {
             propState.setType(type);
             propState.setMultiValued(multiValued);
 
-            PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(name, type, multiValued);
-            propState.setDefinitionId(pd.getId());
-
             // need to store nodestate
             nodeState.addPropertyName(name);
             if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
@@ -450,10 +445,6 @@ public class NodeStateEx {
             id = new NodeId(UUID.randomUUID());
         }
         NodeState state = stateMgr.createNew(id, nodeTypeName, parentId);
-
-        NodeDef cnd =
-                getEffectiveNodeType().getApplicableChildNodeDef(name, nodeTypeName, ntReg);
-        state.setDefinitionId(cnd.getId());
 
         // create Node instance wrapping new node state
         NodeStateEx node = new NodeStateEx(stateMgr, ntReg, state, name);

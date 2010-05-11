@@ -84,7 +84,7 @@ public final class Serializer {
             out.write(state.getParentId().getUUID().getRawBytes());
         }
         // definitionId
-        out.writeUTF(state.getDefinitionId().toString());
+        out.writeUTF("");
         // mixin types
         Collection c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count
@@ -133,8 +133,7 @@ public final class Serializer {
             state.setParentId(new NodeId(new UUID(uuidBytes)));
         }
         // definitionId
-        s = in.readUTF();
-        state.setDefinitionId(NodeDefId.valueOf(s));
+        in.readUTF();
         // mixin types
         int count = in.readInt();   // count
         Set set = new HashSet(count);
@@ -185,7 +184,7 @@ public final class Serializer {
         // multiValued
         out.writeBoolean(state.isMultiValued());
         // definitionId
-        out.writeUTF(state.getDefinitionId().toString());
+        out.writeUTF("");
         // modCount
         out.writeShort(state.getModCount());
         // values
@@ -262,8 +261,7 @@ public final class Serializer {
         boolean multiValued = in.readBoolean();
         state.setMultiValued(multiValued);
         // definitionId
-        String s = in.readUTF();
-        state.setDefinitionId(PropDefId.valueOf(s));
+        in.readUTF();
         // modCount
         short modCount = in.readShort();
         state.setModCount(modCount);
@@ -273,7 +271,7 @@ public final class Serializer {
         for (int i = 0; i < count; i++) {
             InternalValue val;
             if (type == PropertyType.BINARY) {
-                s = in.readUTF();   // value (i.e. blobId)
+                String s = in.readUTF();   // value (i.e. blobId)
                 // special handling required for binary value:
                 // the value stores the id of the BLOB data
                 // in the BLOB store
@@ -305,7 +303,7 @@ public final class Serializer {
                 int len = in.readInt(); // lenght of byte[]
                 byte[] bytes = new byte[len];
                 in.readFully(bytes); // byte[]
-                s = new String(bytes, ENCODING);
+                String s = new String(bytes, ENCODING);
                 val = InternalValue.valueOf(s, type);
             }
             values[i] = val;

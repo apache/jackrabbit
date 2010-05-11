@@ -622,20 +622,30 @@ public class SharedItemStateManager
                                         }
 
                                         public boolean allowsSameNameSiblings(NodeId id) {
-                                            NodeState ns;
                                             try {
-                                                if (local.has(id)) {
-                                                    ns = (NodeState) local.get(id);
-                                                } else {
-                                                    ns = (NodeState) getItemState(id);
-                                                }
-                                            } catch (ItemStateException e) {
+                                                NodeState ns = getNodeState(id);
+                                                NodeState parent = getNodeState(ns.getParentId());
+                                                Name name = parent.getChildNodeEntry(id).getName();
+                                                EffectiveNodeType ent = ntReg.getEffectiveNodeType(
+                                                        parent.getNodeTypeName(),
+                                                        parent.getMixinTypeNames());
+                                                NodeDef def = ent.getApplicableChildNodeDef(name, ns.getNodeTypeName(), ntReg);
+                                                return def != null ? def.allowsSameNameSiblings() : false;
+                                            } catch (Exception e) {
+                                                log.warn("Unable to get node definition", e);
                                                 return false;
                                             }
-                                            NodeDef def = ntReg.getNodeDef(ns.getDefinitionId());
-                                            return def != null ? def.allowsSameNameSiblings() : false;
                                         }
-                                    };
+
+                                        protected NodeState getNodeState(NodeId id)
+                                                throws ItemStateException {
+                                            if (local.has(id)) {
+                                                return (NodeState) local.get(id);
+                                            } else {
+                                                return (NodeState) getItemState(id);
+                                            }
+                                        }
+                            };
 
                             merged = NodeStateMerger.merge((NodeState) state, context);
                         }
@@ -1286,8 +1296,6 @@ public class SharedItemStateManager
             log.error(msg, cve);
             throw new ItemStateException(msg, cve);
         }
-        rootState.setDefinitionId(nodeDefId);
-        jcrSystemState.setDefinitionId(jcrSystemDefId);
 
         // create jcr:primaryType property on root node state
         rootState.addPropertyName(propDef.getName());
@@ -1296,7 +1304,6 @@ public class SharedItemStateManager
         prop.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_ROOT)});
         prop.setType(propDef.getRequiredType());
         prop.setMultiValued(propDef.isMultiple());
-        prop.setDefinitionId(propDef.getId());
 
         // create jcr:primaryType property on jcr:system node state
         jcrSystemState.addPropertyName(propDef.getName());
@@ -1305,7 +1312,6 @@ public class SharedItemStateManager
         primaryTypeProp.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_SYSTEM)});
         primaryTypeProp.setType(propDef.getRequiredType());
         primaryTypeProp.setMultiValued(propDef.isMultiple());
-        primaryTypeProp.setDefinitionId(propDef.getId());
 
         // add child node entry for jcr:system node
         rootState.addChildNodeEntry(NameConstants.JCR_SYSTEM, RepositoryImpl.SYSTEM_ROOT_NODE_ID);

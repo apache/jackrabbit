@@ -17,8 +17,13 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
@@ -82,12 +87,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
-    private final NodeDefinition rootNodeDef;
+    private final NodeDefinitionImpl rootNodeDef;
     private final NodeId rootNodeId;
 
     protected final SessionImpl session;
 
-    private final ItemStateManager itemStateProvider;
+    private final SessionItemStateManager sism;
     private final HierarchyManager hierMgr;
 
     /**
@@ -103,17 +108,18 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
-     * @param itemStateProvider the item state provider associated with
+     * @param sism              the item state manager associated with
      *                          the new instance
      * @param hierMgr           the hierarchy manager
      * @param session           the session associated with the new instance
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeId        the id of the root node
      */
-    protected ItemManager(SessionItemStateManager itemStateProvider, HierarchyManager hierMgr,
-                          SessionImpl session, NodeDefinition rootNodeDef,
-                          NodeId rootNodeId) {
-        this.itemStateProvider = itemStateProvider;
+    protected ItemManager(
+            SessionItemStateManager sism, HierarchyManager hierMgr,
+            SessionImpl session, NodeDefinitionImpl rootNodeDef,
+            NodeId rootNodeId) {
+        this.sism = sism;
         this.hierMgr = hierMgr;
         this.session = session;
         this.rootNodeDef = rootNodeDef;
@@ -141,7 +147,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             SessionItemStateManager itemStateProvider,
             HierarchyManager hierMgr,
             SessionImpl session,
-            NodeDefinition rootNodeDef,
+            NodeDefinitionImpl rootNodeDef,
             NodeId rootNodeId) {
         ItemManager mgr = new ItemManager(itemStateProvider, hierMgr,
                 session, rootNodeDef, rootNodeId);
@@ -159,47 +165,81 @@ public class ItemManager implements Dumpable, ItemStateListener {
         shareableNodesCache.clear();
     }
 
-    private NodeDefinition getDefinition(NodeState state)
+    NodeDefinitionImpl getDefinition(NodeState state)
             throws RepositoryException {
-        NodeDefId defId = state.getDefinitionId();
-        NodeDefinitionImpl def = session.getNodeTypeManager().getNodeDefinition(defId);
-        if (def == null) {
-            /**
-             * todo need proper way of handling inconsistent/corrupt definition
-             * e.g. 'flag' items that refer to non-existent definitions
-             */
-            log.warn("node at " + safeGetJCRPath(state.getNodeId())
-                    + " has invalid definitionId (" + defId + ")");
-
-            // fallback: try finding applicable definition
-            NodeImpl parent = (NodeImpl) getItem(state.getParentId());
-            NodeState parentState = (NodeState) parent.getItemState();
-            ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
-            def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
-            state.setDefinitionId(def.unwrap().getId());
+        if (state.getNodeId().equals(rootNodeId)) {
+            // special handling required for root node
+            return rootNodeDef;
         }
-        return def;
+
+        NodeId parentId = state.getParentId();
+        if (parentId == null) {
+            // removed state has parentId set to null
+            // get from overlayed state
+            parentId = state.getOverlayedState().getParentId();
+        }
+
+        NodeState parentState = null;
+        try {
+            NodeImpl parent = (NodeImpl) getItem(parentId);
+            parentState = parent.getNodeState();
+            if (state.getParentId() == null) {
+                // indicates state has been removed, must use
+                // overlayed state of parent, otherwise child node entry
+                // cannot be found
+                parentState = (NodeState) parentState.getOverlayedState();
+            }
+        } catch (ItemNotFoundException e) {
+            // parent probably removed, get it from attic. see below
+        }
+
+        if (parentState == null) {
+            try {
+                // use overlayed state if available
+                parentState = (NodeState) sism.getAttic().getItemState(
+                        parentId).getOverlayedState();
+            } catch (ItemStateException ex) {
+                throw new RepositoryException(ex);
+            }
+        }
+
+        // get child node entry
+        ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
+        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        try {
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(
+                    parentState.getNodeTypeName(), parentState.getMixinTypeNames());
+            NodeDef def = ent.getApplicableChildNodeDef(
+                    cne.getName(), state.getNodeTypeName(), ntReg);
+            return session.getNodeTypeManager().getNodeDefinition(def);
+        } catch (NodeTypeConflictException e) {
+            throw new RepositoryException(e);
+        }
     }
 
-    private PropertyDefinition getDefinition(PropertyState state)
+    PropertyDefinitionImpl getDefinition(PropertyState state)
             throws RepositoryException {
-        PropDefId defId = state.getDefinitionId();
-        PropertyDefinitionImpl def = session.getNodeTypeManager().getPropertyDefinition(defId);
-        if (def == null) {
-            /**
-             * todo need proper way of handling inconsistent/corrupt definition
-             * e.g. 'flag' items that refer to non-existent definitions
-             */
-            log.warn("property at " + safeGetJCRPath(state.getPropertyId())
-                    + " has invalid definitionId (" + defId + ")");
-
-            // fallback: try finding applicable definition
+        try {
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
-            def = parent.getApplicablePropertyDefinition(
+            return parent.getApplicablePropertyDefinition(
                     state.getName(), state.getType(), state.isMultiValued(), true);
-            state.setDefinitionId(def.unwrap().getId());
+        } catch (ItemNotFoundException e) {
+            // parent probably removed, get it from attic
         }
-        return def;
+        try {
+            NodeState parent = (NodeState) sism.getAttic().getItemState(
+                    state.getParentId()).getOverlayedState();
+            NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(
+                    parent.getNodeTypeName(), parent.getMixinTypeNames());
+            PropDef def = ent.getApplicablePropertyDef(
+                    state.getName(), state.getType(), state.isMultiValued());
+            return session.getNodeTypeManager().getPropertyDefinition(def);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } catch (NodeTypeConflictException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -219,7 +259,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             session.sanityCheck();
 
             // shortcut: check if state exists for the given item
-            if (!itemStateProvider.hasItemState(itemId)) {
+            if (!sism.hasItemState(itemId)) {
                 return false;
             }
             ItemData data = getItemData(itemId, path, true);
@@ -301,7 +341,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             // NOTE: permission check & caching within createItemData
             ItemState state;
             try {
-                state = itemStateProvider.getItemState(itemId);
+                state = sism.getItemState(itemId);
             } catch (NoSuchItemStateException nsise) {
                 throw new ItemNotFoundException(itemId.toString());
             } catch (ItemStateException ise) {
@@ -339,8 +379,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         if (state == null) {
             throw new InvalidItemStateException(data.getId() + ": the item does not exist anymore");
         }
-        if (state.getStatus() == ItemState.STATUS_NEW &&
-                !data.getDefinition().isProtected()) {
+        if (state.getStatus() == ItemState.STATUS_NEW) {
             // NEW items can always be read as long they have been added
             // through the API and NOT by the system (i.e. protected props).
             return true;
@@ -706,13 +745,13 @@ public class ItemManager implements Dumpable, ItemStateListener {
         ItemId id = state.getId();
         if (id.equals(rootNodeId)) {
             // special handling required for root node
-            data = new NodeData((NodeState) state, rootNodeDef);
+            data = new NodeData((NodeState) state, this);
         } else if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
-            data = new NodeData(nodeState, getDefinition(nodeState));
+            data = new NodeData(nodeState, this);
         } else {
             PropertyState propertyState = (PropertyState) state;
-            data = new PropertyData(propertyState, getDefinition(propertyState));
+            data = new PropertyData(propertyState, this);
         }
         // make sure read-perm. is granted before returning the data.
         if (permissionCheck && !canRead(data, path)) {

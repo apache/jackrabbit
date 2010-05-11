@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -104,7 +103,9 @@ public class BatchedItemOperations extends ItemValidator {
                                  LockManager lockMgr,
                                  SessionImpl session,
                                  HierarchyManager hierMgr) throws RepositoryException {
-        super(ntReg, hierMgr, session, lockMgr, session.getAccessManager(), session.getRetentionRegistry());
+        super(ntReg, hierMgr, session, lockMgr,
+                session.getAccessManager(), session.getRetentionRegistry(),
+                session.getItemManager());
         this.stateMgr = stateMgr;
         this.session = session;
     }
@@ -426,12 +427,6 @@ public class BatchedItemOperations extends ItemValidator {
         // add to new parent
         destParentState.addChildNodeEntry(destName.getName(), newState.getNodeId());
 
-        // change definition (id) of new node
-        NodeDef newNodeDef =
-                findApplicableNodeDefinition(destName.getName(),
-                        srcState.getNodeTypeName(), destParentState);
-        newState.setDefinitionId(newNodeDef.getId());
-
         // adjust references that refer to uuid's which have been mapped to
         // newly generated uuid's on copy/clone
         Iterator iter = refTracker.getProcessedReferences();
@@ -584,12 +579,6 @@ public class BatchedItemOperations extends ItemValidator {
             destParent.addChildNodeEntry(destName.getName(), target.getNodeId());
         }
 
-        // change definition (id) of target node
-        NodeDef newTargetDef =
-                findApplicableNodeDefinition(destName.getName(),
-                        target.getNodeTypeName(), destParent);
-        target.setDefinitionId(newTargetDef.getId());
-
         // store states
         stateMgr.store(target);
         if (renameOnly) {
@@ -720,7 +709,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 4. node type constraints
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
-            NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+            NodeDef parentDef = itemMgr.getDefinition(parentState).unwrap();
             // make sure parent node is not protected
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(
@@ -752,7 +741,7 @@ public class BatchedItemOperations extends ItemValidator {
                     throw new RepositoryException(msg, ise);
                 }
                 NodeDef conflictingTargetDef =
-                        ntReg.getNodeDef(conflictingState.getDefinitionId());
+                        itemMgr.getDefinition(conflictingState).unwrap();
                 // check same-name sibling setting of both target and existing node
                 if (!conflictingTargetDef.allowsSameNameSiblings()
                         || !newNodeDef.allowsSameNameSiblings()) {
@@ -895,12 +884,12 @@ public class BatchedItemOperations extends ItemValidator {
         // 4. node type constraints
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
-            NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+            NodeDef parentDef = itemMgr.getDefinition(parentState).unwrap();
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(safeGetJCRPath(parentId)
                         + ": cannot remove child node of protected parent node");
             }
-            NodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
+            NodeDef targetDef = itemMgr.getDefinition(targetState).unwrap();
             if (targetDef.isMandatory()) {
                 throw new ConstraintViolationException(safeGetJCRPath(targetPath)
                         + ": cannot remove mandatory node");
@@ -1123,7 +1112,6 @@ public class BatchedItemOperations extends ItemValidator {
         if (mixinNames != null && mixinNames.length > 0) {
             node.setMixinTypeNames(new HashSet(Arrays.asList(mixinNames)));
         }
-        node.setDefinitionId(def.getId());
 
         // now add new child node entry to parent
         parent.addChildNodeEntry(nodeName, id);
@@ -1248,7 +1236,6 @@ public class BatchedItemOperations extends ItemValidator {
         // create property
         PropertyState prop = stateMgr.createNew(propName, parent.getNodeId());
 
-        prop.setDefinitionId(def.getId());
         if (def.getRequiredType() != PropertyType.UNDEFINED) {
             prop.setType(def.getRequiredType());
         } else if (type != PropertyType.UNDEFINED) {
@@ -1441,7 +1428,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws PathNotFoundException, ConstraintViolationException,
             RepositoryException {
         NodeState node = getNodeState(nodePath);
-        NodeDef parentDef = ntReg.getNodeDef(node.getDefinitionId());
+        NodeDef parentDef = itemMgr.getDefinition(node).unwrap();
         if (parentDef.isProtected()) {
             throw new ConstraintViolationException(safeGetJCRPath(nodePath)
                     + ": node is protected");
@@ -1751,7 +1738,6 @@ public class BatchedItemOperations extends ItemValidator {
             newState = stateMgr.createNew(id, srcState.getNodeTypeName(), destParentId);
             // copy node state
             newState.setMixinTypeNames(srcState.getMixinTypeNames());
-            newState.setDefinitionId(srcState.getDefinitionId());
             if (shareable) {
                 // initialize shared set
                 newState.addShare(destParentId);
@@ -1829,15 +1815,16 @@ public class BatchedItemOperations extends ItemValidator {
                  *
                  * todo FIXME delegate to 'node type instance handler'
                  */
-                PropDefId defId = srcChildState.getDefinitionId();
-                PropDef def = ntReg.getPropDef(defId);
+                PropDef def = ent.getApplicablePropertyDef(
+                        srcChildState.getName(), srcChildState.getType(),
+                        srcChildState.isMultiValued());
                 if (NameConstants.MIX_LOCKABLE.equals(def.getDeclaringNodeType())) {
                     // skip properties defined by mix:lockable
                     continue;
                 }
 
                 PropertyState newChildState =
-                        copyPropertyState(srcChildState, id, propName);
+                        copyPropertyState(srcChildState, id, propName, def);
 
                 if (versionable && flag == COPY) {
                     /**
@@ -1899,20 +1886,17 @@ public class BatchedItemOperations extends ItemValidator {
      * @param srcState
      * @param parentId
      * @param propName
+     * @param def property definition
      * @return
      * @throws RepositoryException
      */
     private PropertyState copyPropertyState(PropertyState srcState,
                                             NodeId parentId,
-                                            Name propName)
+                                            Name propName,
+                                            PropDef def)
             throws RepositoryException {
-
-        PropDefId defId = srcState.getDefinitionId();
-        PropDef def = ntReg.getPropDef(defId);
-
         PropertyState newState = stateMgr.createNew(propName, parentId);
 
-        newState.setDefinitionId(defId);
         newState.setType(srcState.getType());
         newState.setMultiValued(srcState.isMultiValued());
         InternalValue[] values = srcState.getValues();
@@ -1924,8 +1908,8 @@ public class BatchedItemOperations extends ItemValidator {
              *
              * todo FIXME delegate to 'node type instance handler'
              */
-            if (def.getDeclaringNodeType().equals(NameConstants.MIX_REFERENCEABLE)
-                    && propName.equals(NameConstants.JCR_UUID)) {
+            if (propName.equals(NameConstants.JCR_UUID)
+                    && def.getDeclaringNodeType().equals(NameConstants.MIX_REFERENCEABLE)) {
                 // set correct value of jcr:uuid property
                 newState.setValues(new InternalValue[]{InternalValue.create(parentId.getUUID().toString())});
             } else {

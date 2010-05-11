@@ -21,7 +21,6 @@ import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -140,6 +139,15 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     + state.getNodeTypeName() + "' of " + this);
             data.getNodeState().setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         }
+    }
+
+    /**
+     * Returns the node-state associated with this node.
+     *
+     * @return state associated with this node
+     */
+    NodeState getNodeState() {
+        return data.getNodeState();
     }
 
     /**
@@ -466,7 +474,6 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                             ItemState.STATUS_NEW);
             propState.setType(type);
             propState.setMultiValued(def.isMultiple());
-            propState.setDefinitionId(def.unwrap().getId());
             // compute system generated values if necessary
             InternalValue[] genValues =
                     computeSystemGeneratedPropertyValues(name, def);
@@ -499,7 +506,6 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     }
 
     protected synchronized NodeImpl createChildNode(Name name,
-                                                    NodeDefinitionImpl def,
                                                     NodeTypeImpl nodeType,
                                                     NodeId id)
             throws RepositoryException {
@@ -512,7 +518,6 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             nodeState =
                     stateMgr.createTransientNodeState(id, nodeType.getQName(),
                             getNodeId(), ItemState.STATUS_NEW);
-            nodeState.setDefinitionId(def.unwrap().getId());
         } catch (ItemStateException ise) {
             String msg = "failed to add child node " + name + " to " + this;
             log.debug(msg);
@@ -551,8 +556,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         NodeDefinition[] nda = nodeType.getAutoCreatedNodeDefinitions();
         for (int i = 0; i < nda.length; i++) {
             NodeDefinitionImpl nd = (NodeDefinitionImpl) nda[i];
-            node.createChildNode(nd.getQName(), nd,
-                    (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+            node.createChildNode(
+                    nd.getQName(),
+                    (NodeTypeImpl) nd.getDefaultPrimaryType(),
+                    null);
         }
 
         return node;
@@ -619,13 +626,12 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         }
     }
 
-    protected void onRedefine(NodeDefId defId) throws RepositoryException {
+    protected void onRedefine(NodeDef def) throws RepositoryException {
         NodeDefinitionImpl newDef =
-                session.getNodeTypeManager().getNodeDefinition(defId);
+                session.getNodeTypeManager().getNodeDefinition(def);
         // modify the state of 'this', i.e. the target node
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        // set id of new definition
-        thisState.setDefinitionId(defId);
+        getOrCreateTransientItemState();
+        // set new definition
         data.setDefinition(newDef);
     }
 
@@ -799,7 +805,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // now do create the child node
-        return createChildNode(nodeName, def, nodeType, id);
+        return createChildNode(nodeName, nodeType, id);
     }
 
     private void setMixinTypesProperty(Set mixinNames) throws RepositoryException {
@@ -879,7 +885,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(
                 nodeName, nodeTypeName, ntMgr.getNodeTypeRegistry());
-        return ntMgr.getNodeDefinition(cnd.getId());
+        return ntMgr.getNodeDefinition(cnd);
     }
 
     /**
@@ -915,7 +921,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                         propertyName, PropertyType.UNDEFINED, multiValued);
             }
         }
-        return session.getNodeTypeManager().getPropertyDefinition(pd.getId());
+        return session.getNodeTypeManager().getPropertyDefinition(pd);
     }
 
     protected void makePersistent() throws InvalidItemStateException {
@@ -948,8 +954,6 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             persistentState.setNodeTypeName(transientState.getNodeTypeName());
             // mixin types
             persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
-            // id of definition
-            persistentState.setDefinitionId(transientState.getDefinitionId());
             // child node entries
             persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
             // property entries
@@ -985,7 +989,6 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         thisState.setParentId(transientState.getParentId());
         thisState.setNodeTypeName(transientState.getNodeTypeName());
         thisState.setMixinTypeNames(transientState.getMixinTypeNames());
-        thisState.setDefinitionId(transientState.getDefinitionId());
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
         thisState.setPropertyNames(transientState.getPropertyNames());
         thisState.setSharedSet(transientState.getSharedSet());
@@ -1083,7 +1086,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 // or existing mixin's
                 NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
                 if (!entExisting.includesNodeType(declaringNT.getQName())) {
-                    createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+                    createChildNode(nd.getQName(), (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
                 }
             }
         } catch (RepositoryException re) {
@@ -1191,7 +1194,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 Name propName = (Name) iter.next();
                 PropertyState propState = (PropertyState) stateMgr.getItemState(new PropertyId(thisState.getNodeId(), propName));
                 // check if property has been defined by mixin type (or one of its supertypes)
-                PropertyDefinition def = ntMgr.getPropertyDefinition(propState.getDefinitionId());
+                PropertyDefinition def = itemMgr.getDefinition(propState);
                 NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
                 if (!entResulting.includesNodeType(declaringNT.getQName())) {
                     // the resulting effective node type doesn't include the
@@ -1220,7 +1223,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(values);
                             } else {
@@ -1231,13 +1234,13 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(value);
                             }
                         } else {
                             // redefine property
-                            prop.onRedefine(pdi.unwrap().getId());
+                            prop.onRedefine(pdi.unwrap());
                         }
                     } catch (ValueFormatException vfe) {
                         // value conversion failed, remove it
@@ -1255,7 +1258,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             for (int i = list.size() - 1; i >= 0; i--) {
                 ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
-                NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
+                NodeDefinition def = itemMgr.getDefinition(nodeState);
                 // check if node has been defined by mixin type (or one of its supertypes)
                 NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
                 if (!entResulting.includesNodeType(declaringNT.getQName())) {
@@ -1273,7 +1276,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                                 entry.getName(),
                                 nodeState.getNodeTypeName());
                         // redefine node
-                        node.onRedefine(ndi.unwrap().getId());
+                        node.onRedefine(ndi.unwrap());
                     } catch (ConstraintViolationException cve) {
                         // no suitable definition found for this child node,
                         // remove it
@@ -4757,18 +4760,18 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         }
 
         // get applicable definition for this node using new primary type
-        NodeDefId defId;
+        NodeDef nodeDef;
         try {
             NodeImpl parent = (NodeImpl) getParent();
-            defId = parent.getApplicableChildNodeDefinition(getQName(), ntName).unwrap().getId();
+            nodeDef = parent.getApplicableChildNodeDefinition(getQName(), ntName).unwrap();
         } catch (RepositoryException re) {
             String msg = this + ": no applicable definition found in parent node's node type";
             log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
 
-        if (!defId.equals(state.getDefinitionId())) {
-            onRedefine(defId);
+        if (!nodeDef.equals(itemMgr.getDefinition(state).unwrap())) {
+            onRedefine(nodeDef);
         }
 
         Set oldDefs = new HashSet(Arrays.asList(entOld.getAllItemDefs()));
@@ -4813,7 +4816,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 PropertyState propState =
                         (PropertyState) stateMgr.getItemState(
                                 new PropertyId(thisState.getNodeId(), propName));
-                if (!allDefs.contains(ntReg.getPropDef(propState.getDefinitionId()))) {
+                if (!allDefs.contains(itemMgr.getDefinition(propState))) {
                     // try to find new applicable definition first and
                     // redefine property if possible
                     try {
@@ -4837,7 +4840,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(values);
                             } else {
@@ -4848,13 +4851,13 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                                                 pdi.getRequiredType(),
                                                 session.getValueFactory());
                                 // redefine property
-                                prop.onRedefine(pdi.unwrap().getId());
+                                prop.onRedefine(pdi.unwrap());
                                 // set converted values
                                 prop.setValue(value);
                             }
                         } else {
                             // redefine property
-                            prop.onRedefine(pdi.unwrap().getId());
+                            prop.onRedefine(pdi.unwrap());
                         }
                         // update collection of added definitions
                         addedDefs.remove(pdi.unwrap());
@@ -4881,7 +4884,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             try {
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
-                if (!allDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
+                if (!allDefs.contains(itemMgr.getDefinition(nodeState).unwrap())) {
                     // try to find new applicable definition first and
                     // redefine node if possible
                     try {
@@ -4895,7 +4898,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                                 entry.getName(),
                                 nodeState.getNodeTypeName());
                         // redefine node
-                        node.onRedefine(ndi.unwrap().getId());
+                        node.onRedefine(ndi.unwrap());
                         // update collection of added definitions
                         addedDefs.remove(ndi.unwrap());
                     } catch (ConstraintViolationException cve) {
@@ -4917,10 +4920,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             ItemDef def = (ItemDef) iter.next();
             if (def.isAutoCreated()) {
                 if (def.definesNode()) {
-                    NodeDefinitionImpl ndi = ntMgr.getNodeDefinition(((NodeDef) def).getId());
-                    createChildNode(ndi.getQName(), ndi, (NodeTypeImpl) ndi.getDefaultPrimaryType(), null);
+                    NodeDefinitionImpl ndi = ntMgr.getNodeDefinition((NodeDef) def);
+                    createChildNode(ndi.getQName(), (NodeTypeImpl) ndi.getDefaultPrimaryType(), null);
                 } else {
-                    PropertyDefinitionImpl pdi = ntMgr.getPropertyDefinition(((PropDef) def).getId());
+                    PropertyDefinitionImpl pdi = ntMgr.getPropertyDefinition((PropDef) def);
                     createChildProperty(pdi.getQName(), pdi.getRequiredType(), pdi);
                 }
             }

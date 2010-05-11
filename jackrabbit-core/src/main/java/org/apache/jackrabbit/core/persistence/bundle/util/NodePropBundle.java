@@ -32,8 +32,6 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
@@ -74,11 +72,6 @@ public class NodePropBundle {
      * the mixintype names
      */
     private Set mixinTypeNames;
-
-    /**
-     * the nodedef id
-     */
-    private NodeDefId nodeDefId;
 
     /**
      * the child node entries
@@ -148,7 +141,6 @@ public class NodePropBundle {
         parentId = state.getParentId();
         nodeTypeName = state.getNodeTypeName();
         mixinTypeNames = state.getMixinTypeNames();
-        nodeDefId = state.getDefinitionId();
         isReferenceable = state.hasPropertyName(NameConstants.JCR_UUID);
         modCount = state.getModCount();
         List list = state.getChildNodeEntries();
@@ -171,7 +163,6 @@ public class NodePropBundle {
         state.setParentId(parentId);
         state.setNodeTypeName(nodeTypeName);
         state.setMixinTypeNames(mixinTypeNames);
-        state.setDefinitionId(nodeDefId);
         state.setModCount(modCount);
         Iterator iter = childNodeEntries.iterator();
         while (iter.hasNext()) {
@@ -208,7 +199,6 @@ public class NodePropBundle {
             return null;
         }
         PropertyState ps = pMgr.createNew(new PropertyId(id, name));
-        ps.setDefinitionId(p.getPropDefId());
         ps.setMultiValued(p.isMultiValued());
         ps.setType(p.getType());
         ps.setValues(p.getValues());
@@ -286,22 +276,6 @@ public class NodePropBundle {
      */
     public void setMixinTypeNames(Set mixinTypeNames) {
         this.mixinTypeNames = mixinTypeNames;
-    }
-
-    /**
-     * Returns the node def id of this bundle.
-     * @return the node def id.
-     */
-    public NodeDefId getNodeDefId() {
-        return nodeDefId;
-    }
-
-    /**
-     * Sets the node def id.
-     * @param nodeDefId the node def id.
-     */
-    public void setNodeDefId(NodeDefId nodeDefId) {
-        this.nodeDefId = nodeDefId;
     }
 
     /**
@@ -554,11 +528,6 @@ public class NodePropBundle {
         private boolean multiValued;
 
         /**
-         * the propedef id
-         */
-        private PropDefId propDefId;
-
-        /**
          * the blob ids
          */
         private String[] blobIds = null;
@@ -586,7 +555,6 @@ public class NodePropBundle {
             values = state.getValues();
             type = state.getType();
             multiValued = state.isMultiValued();
-            propDefId = state.getDefinitionId();
             modCount = state.getModCount();
             if (type == PropertyType.BINARY) {
                 blobIds = new String[values.length];
@@ -655,22 +623,6 @@ public class NodePropBundle {
          */
         public void setMultiValued(boolean multiValued) {
             this.multiValued = multiValued;
-        }
-
-        /**
-         * Returns the propdef id.
-         * @return the propdef id.
-         */
-        public PropDefId getPropDefId() {
-            return propDefId;
-        }
-
-        /**
-         * Sets the propdef id
-         * @param propDefId the propdef id
-         */
-        public void setPropDefId(PropDefId propDefId) {
-            this.propDefId = propDefId;
         }
 
         /**

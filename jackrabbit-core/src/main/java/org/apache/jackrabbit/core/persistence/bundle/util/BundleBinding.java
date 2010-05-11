@@ -27,8 +27,6 @@ import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -102,7 +100,7 @@ public class BundleBinding extends ItemStateBinding {
         bundle.setParentId(readID(in));
 
         // definitionId
-        bundle.setNodeDefId(NodeDefId.valueOf(in.readUTF()));
+        in.readUTF();
 
         // mixin types
         Set mixinTypeNames = new HashSet();
@@ -275,7 +273,7 @@ public class BundleBinding extends ItemStateBinding {
         writeID(out, bundle.getParentId());
 
         // definitionId
-        out.writeUTF(bundle.getNodeDefId().toString());
+        out.writeUTF("");
 
         // mixin types
         Iterator iter = bundle.getMixinTypeNames().iterator();
@@ -350,7 +348,7 @@ public class BundleBinding extends ItemStateBinding {
         // multiValued
         entry.setMultiValued(in.readBoolean());
         // definitionId
-        entry.setPropDefId(PropDefId.valueOf(in.readUTF()));
+        in.readUTF();
         // values
         int count = in.readInt();   // count
         InternalValue[] values = new InternalValue[count];
@@ -592,7 +590,7 @@ public class BundleBinding extends ItemStateBinding {
         // multiValued
         out.writeBoolean(state.isMultiValued());
         // definitionId
-        out.writeUTF(state.getPropDefId().toString());
+        out.writeUTF("");
         // values
         InternalValue[] values = state.getValues();
         out.writeInt(values.length); // count

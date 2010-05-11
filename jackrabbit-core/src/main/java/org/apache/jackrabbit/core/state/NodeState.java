@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.ArrayList;
@@ -54,11 +53,6 @@ public class NodeState extends ItemState {
      * represents the root node
      */
     private NodeId parentId;
-
-    /**
-     * id of this node's definition
-     */
-    private NodeDefId defId;
 
     /**
      * insertion-ordered collection of ChildNodeEntry objects
@@ -127,7 +121,6 @@ public class NodeState extends ItemState {
             parentId = nodeState.parentId;
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = (NameSet) nodeState.mixinTypeNames.clone();
-            defId = nodeState.defId;
             propertyNames = (NameSet) nodeState.propertyNames.clone();
             childNodeEntries = (ChildNodeEntries) nodeState.childNodeEntries.clone();
             if (syncModCount) {
@@ -208,24 +201,6 @@ public class NodeState extends ItemState {
      */
     public synchronized void setMixinTypeNames(Set names) {
         mixinTypeNames.replaceAll(names);
-    }
-
-    /**
-     * Returns the id of the definition applicable to this node state.
-     *
-     * @return the id of the definition
-     */
-    public NodeDefId getDefinitionId() {
-        return defId;
-    }
-
-    /**
-     * Sets the id of the definition applicable to this node state.
-     *
-     * @param defId the id of the definition
-     */
-    public void setDefinitionId(NodeDefId defId) {
-        this.defId = defId;
     }
 
     /**

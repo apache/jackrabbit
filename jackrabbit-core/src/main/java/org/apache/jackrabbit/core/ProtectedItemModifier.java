@@ -89,7 +89,7 @@ public abstract class ProtectedItemModifier {
             }
         }
 
-        return parentImpl.createChildNode(name, def, nodeType, null);
+        return parentImpl.createChildNode(name, nodeType, null);
     }
 
     protected Property setProperty(NodeImpl parentImpl, Name name, Value value) throws RepositoryException {

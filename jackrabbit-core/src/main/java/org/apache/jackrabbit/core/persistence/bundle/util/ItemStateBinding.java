@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -200,7 +199,7 @@ public class ItemStateBinding {
         // parentUUID
         state.setParentId(readID(in));
         // definitionId
-        state.setDefinitionId(NodeDefId.valueOf(in.readUTF()));
+        in.readUTF();
 
         // mixin types
         int count = in.readInt();   // count
@@ -252,7 +251,7 @@ public class ItemStateBinding {
         // parentUUID
         writeID(out, state.getParentId());
         // definitionId
-        out.writeUTF(state.getDefinitionId().toString());
+        out.writeUTF("");
         // mixin types
         Collection c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count

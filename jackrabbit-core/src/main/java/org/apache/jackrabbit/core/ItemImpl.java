@@ -371,9 +371,9 @@ public abstract class ItemImpl implements Item {
             ItemState itemState = (ItemState) dirtyIter.next();
             ItemDefinition def;
             if (itemState.isNode()) {
-                def = ntMgr.getNodeDefinition(((NodeState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((NodeState) itemState);
             } else {
-                def = ntMgr.getPropertyDefinition(((PropertyState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((PropertyState) itemState);
             }
             /* check permissions for non-protected items. protected items are
                only added through API methods which need to assert that
@@ -572,9 +572,9 @@ public abstract class ItemImpl implements Item {
             ItemState itemState = (ItemState) removedIter.next();
             ItemDefinition def;
             if (itemState.isNode()) {
-                def = ntMgr.getNodeDefinition(((NodeState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((NodeState) itemState);
             } else {
-                def = ntMgr.getPropertyDefinition(((PropertyState) itemState).getDefinitionId());
+                def = itemMgr.getDefinition((PropertyState) itemState);
             }
             if (!def.isProtected()) {
                 Path path = stateMgr.getAtticAwareHierarchyMgr().getPath(itemState.getId());

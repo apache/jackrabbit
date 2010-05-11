@@ -170,7 +170,8 @@ public class PropInfo {
             // a property with that name already exists...
             PropertyId idExisting = new PropertyId(node.getNodeId(), name);
             prop = (PropertyState) itemOps.getItemState(idExisting);
-            def = ntReg.getPropDef(prop.getDefinitionId());
+            def = itemOps.findApplicablePropertyDefinition(
+                    prop.getName(), prop.getType(), prop.isMultiValued(), node);
             if (def.isProtected()) {
                 // skip protected property
                 log.debug("skipping protected property "

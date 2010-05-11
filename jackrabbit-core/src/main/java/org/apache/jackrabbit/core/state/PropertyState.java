@@ -51,11 +51,6 @@ public class PropertyState extends ItemState {
     private boolean multiValued;
 
     /**
-     * the property definition id
-     */
-    private PropDefId defId;
-
-    /**
      * Constructs a new property state that is initially connected to an
      * overlayed state.
      *
@@ -92,7 +87,6 @@ public class PropertyState extends ItemState {
             PropertyState propState = (PropertyState) state;
             id = propState.id;
             type = propState.type;
-            defId = propState.defId;
             values = propState.values;
             multiValued = propState.multiValued;
             if (syncModCount) {
@@ -180,24 +174,6 @@ public class PropertyState extends ItemState {
      */
     public boolean isMultiValued() {
         return multiValued;
-    }
-
-    /**
-     * Returns the id of the definition applicable to this property state.
-     *
-     * @return the id of the definition
-     */
-    public PropDefId getDefinitionId() {
-        return defId;
-    }
-
-    /**
-     * Sets the id of the definition applicable to this property state.
-     *
-     * @param defId the id of the definition
-     */
-    public void setDefinitionId(PropDefId defId) {
-        this.defId = defId;
     }
 
     /**

@@ -20,7 +20,6 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;
@@ -34,7 +33,6 @@ import org.apache.jackrabbit.core.cluster.LockEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -822,7 +820,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         SessionImpl editingSession = (SessionImpl) node.getSession();
         WorkspaceImpl wsp = (WorkspaceImpl) editingSession.getWorkspace();
         UpdatableItemStateManager stateMgr = wsp.getItemStateManager();
-        ItemValidator helper = new ItemValidator(editingSession.getNodeTypeManager().getNodeTypeRegistry(), wsp.getHierarchyManager(), editingSession);
 
         synchronized (stateMgr) {
             if (stateMgr.inEditMode()) {
@@ -836,9 +833,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
                 PropertyState propState;
                 if (!nodeState.hasPropertyName(NameConstants.JCR_LOCKOWNER)) {
-                    PropDef def = helper.findApplicablePropertyDefinition(NameConstants.JCR_LOCKOWNER, PropertyType.STRING, false, nodeState);
                     propState = stateMgr.createNew(NameConstants.JCR_LOCKOWNER, nodeId);
-                    propState.setDefinitionId(def.getId());
                     propState.setType(PropertyType.STRING);
                     propState.setMultiValued(false);
                 } else {
@@ -849,9 +844,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                 stateMgr.store(nodeState);
 
                 if (!nodeState.hasPropertyName(NameConstants.JCR_LOCKISDEEP)) {
-                    PropDef def = helper.findApplicablePropertyDefinition(NameConstants.JCR_LOCKISDEEP, PropertyType.BOOLEAN, false, nodeState);
                     propState = stateMgr.createNew(NameConstants.JCR_LOCKISDEEP, nodeId);
-                    propState.setDefinitionId(def.getId());
                     propState.setType(PropertyType.BOOLEAN);
                     propState.setMultiValued(false);
                 } else {

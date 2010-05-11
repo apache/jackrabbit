@@ -567,14 +567,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param id
-     * @return the property definition for the given id.
-     */
-    public PropDef getPropDef(PropDefId id) {
-        return (PropDef) propDefs.get(id);
-    }
-
-    /**
      * Add a <code>NodeTypeRegistryListener</code>
      *
      * @param listener the new listener to be informed on (un)registration
@@ -619,7 +611,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             PropDef[] pd = ntd.getPropertyDefs();
             for (int i = 0; i < pd.length; i++) {
                 ps.print("\tPropertyDefinition");
-                ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + pd[i].getId());
+                ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ")");
                 ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
                 String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
                 ps.println("\t\tRequiredType\t" + type);
@@ -658,7 +650,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             NodeDef[] nd = ntd.getChildNodeDefs();
             for (int i = 0; i < nd.length; i++) {
                 ps.print("\tNodeDefinition");
-                ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + nd[i].getId());
+                ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ")");
                 ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
                 Name[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
                 if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
@@ -748,7 +740,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // setup definition of root node
         rootNodeDef = createRootNodeDef();
-        nodeDefs.put(rootNodeDef.getId(), rootNodeDef);
+        nodeDefs.put(new NodeDefId(rootNodeDef), rootNodeDef);
 
         // load and register pre-defined (i.e. built-in) node types
         builtInNTDefs = new NodeTypeDefStore();
@@ -1235,11 +1227,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // store property & child node definitions of new node type by id
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
-            propDefs.put(pda[i].getId(), pda[i]);
+            propDefs.put(new PropDefId(pda[i]), pda[i]);
         }
         NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
-            nodeDefs.put(nda[i].getId(), nda[i]);
+            nodeDefs.put(new NodeDefId(nda[i]), nda[i]);
         }
 
         return ent;
@@ -1321,11 +1313,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             // store property & child node definitions of new node type by id
             PropDef[] pda = ntd.getPropertyDefs();
             for (int i = 0; i < pda.length; i++) {
-                propDefs.put(pda[i].getId(), pda[i]);
+                propDefs.put(new PropDefId(pda[i]), pda[i]);
             }
             NodeDef[] nda = ntd.getChildNodeDefs();
             for (int i = 0; i < nda.length; i++) {
-                nodeDefs.put(nda[i].getId(), nda[i]);
+                nodeDefs.put(new NodeDefId(nda[i]), nda[i]);
             }
         }
 
@@ -1344,11 +1336,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // remove property & child node definitions
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
-            propDefs.remove(pda[i].getId());
+            propDefs.remove(new PropDefId(pda[i]));
         }
         NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
-            nodeDefs.remove(nda[i].getId());
+            nodeDefs.remove(new NodeDefId(nda[i]));
         }
     }
 

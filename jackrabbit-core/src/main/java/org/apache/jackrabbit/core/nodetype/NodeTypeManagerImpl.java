@@ -137,7 +137,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
         rootNodeDef =
             new NodeDefinitionImpl(ntReg.getRootNodeDef(), this, session);
-        ndCache.put(rootNodeDef.unwrap().getId(), rootNodeDef);
+        ndCache.put(rootNodeDef.unwrap(), rootNodeDef);
     }
 
     /**
@@ -148,36 +148,30 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     }
 
     /**
-     * @param id
+     * @param def internal node definition
      * @return the node definition
      */
-    public NodeDefinitionImpl getNodeDefinition(NodeDefId id) {
+    public NodeDefinitionImpl getNodeDefinition(NodeDef def) {
         synchronized (ndCache) {
-            NodeDefinitionImpl ndi = (NodeDefinitionImpl) ndCache.get(id);
+            NodeDefinitionImpl ndi = (NodeDefinitionImpl) ndCache.get(def);
             if (ndi == null) {
-                NodeDef nd = ntReg.getNodeDef(id);
-                if (nd != null) {
-                    ndi = new NodeDefinitionImpl(nd, this, session);
-                    ndCache.put(id, ndi);
-                }
+                ndi = new NodeDefinitionImpl(def, this, session);
+                ndCache.put(def, ndi);
             }
             return ndi;
         }
     }
 
     /**
-     * @param id
+     * @param def internal property definition
      * @return the property definition
      */
-    public PropertyDefinitionImpl getPropertyDefinition(PropDefId id) {
+    public PropertyDefinitionImpl getPropertyDefinition(PropDef def) {
         synchronized (pdCache) {
-            PropertyDefinitionImpl pdi = (PropertyDefinitionImpl) pdCache.get(id);
+            PropertyDefinitionImpl pdi = (PropertyDefinitionImpl) pdCache.get(def);
             if (pdi == null) {
-                PropDef pd = ntReg.getPropDef(id);
-                if (pd != null) {
-                    pdi = new PropertyDefinitionImpl(pd, this, session);
-                    pdCache.put(id, pdi);
-                }
+                pdi = new PropertyDefinitionImpl(def, this, session);
+                pdCache.put(def, pdi);
             }
             return pdi;
         }

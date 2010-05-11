@@ -28,9 +28,11 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -94,16 +96,16 @@ public class EffectiveNodeType implements Cloneable {
         ent.mergedNodeTypes.add(ntName);
         ent.allNodeTypes.add(ntName);
 
-        // map of all item definitions (maps id to definition)
+        // all item definitions
         // used to effectively detect ambiguous child definitions where
         // ambiguity is defined in terms of definition identity
-        HashMap itemDefIds = new HashMap();
+        Set itemDefs = new HashSet();
 
         NodeDef[] cnda = ntd.getChildNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
             // check if child node definition would be ambiguous within
             // this node type definition
-            if (itemDefIds.containsKey(cnda[i].getId())) {
+            if (itemDefs.contains(cnda[i])) {
                 // conflict
                 String msg;
                 if (cnda[i].definesResidual()) {
@@ -115,7 +117,7 @@ public class EffectiveNodeType implements Cloneable {
                 log.debug(msg);
                 throw new NodeTypeConflictException(msg);
             } else {
-                itemDefIds.put(cnda[i].getId(), cnda[i]);
+                itemDefs.add(cnda[i]);
             }
             if (cnda[i].definesResidual()) {
                 // residual node definition
@@ -151,7 +153,7 @@ public class EffectiveNodeType implements Cloneable {
         for (int i = 0; i < pda.length; i++) {
             // check if property definition would be ambiguous within
             // this node type definition
-            if (itemDefIds.containsKey(pda[i].getId())) {
+            if (itemDefs.contains(pda[i])) {
                 // conflict
                 String msg;
                 if (pda[i].definesResidual()) {
@@ -163,7 +165,7 @@ public class EffectiveNodeType implements Cloneable {
                 log.debug(msg);
                 throw new NodeTypeConflictException(msg);
             } else {
-                itemDefIds.put(pda[i].getId(), pda[i]);
+                itemDefs.add(pda[i]);
             }
             if (pda[i].definesResidual()) {
                 // residual property definition

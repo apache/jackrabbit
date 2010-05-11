@@ -1127,7 +1127,7 @@ public class SessionImpl extends AbstractSession
         }
 
         // change definition of target
-        targetNode.onRedefine(newTargetDef.unwrap().getId());
+        targetNode.onRedefine(newTargetDef.unwrap());
     }
 
     /**

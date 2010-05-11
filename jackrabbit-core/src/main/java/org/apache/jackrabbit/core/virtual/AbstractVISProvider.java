@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
@@ -37,7 +36,6 @@ import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -257,12 +255,10 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
                                                     Name name, int type,
                                                     boolean multiValued)
             throws RepositoryException {
-        PropDef def = getApplicablePropertyDef(parent, name, type, multiValued);
         PropertyId id = new PropertyId(parent.getNodeId(), name);
         VirtualPropertyState prop = new VirtualPropertyState(id);
         prop.setType(type);
         prop.setMultiValued(multiValued);
-        prop.setDefinitionId(def.getId());
         return prop;
     }
 
@@ -272,26 +268,12 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     public VirtualNodeState createNodeState(VirtualNodeState parent, Name name,
                                             NodeId id, Name nodeTypeName)
             throws RepositoryException {
-
-        NodeDefId def;
-        try {
-            def = getApplicableChildNodeDef(parent, name, nodeTypeName).getId();
-        } catch (RepositoryException re) {
-            // hack, use nt:unstructured as parent
-            NodeTypeRegistry ntReg = getNodeTypeRegistry();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NameConstants.NT_UNSTRUCTURED);
-            NodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName, ntReg);
-            ntReg.getNodeDef(cnd.getId());
-            def = cnd.getId();
-        }
-
         // create a new node state
         VirtualNodeState state;
         if (id == null) {
             id = new NodeId(UUID.randomUUID());
         }
         state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, new Name[0]);
-        state.setDefinitionId(def);
 
         cache(state);
         return state;

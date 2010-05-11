@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
@@ -109,15 +108,6 @@ public abstract class AbstractBundlePersistenceManager implements
 
     /** the cache of non-existent bundles */
     private LRUNodeIdCache missing;
-
-    /** definition id of the jcr:uuid property */
-    private PropDefId idJcrUUID;
-
-    /** definition id of the jcr:primaryType property */
-    private PropDefId idJcrPrimaryType;
-
-    /** definition id of the jcr:mixinTypes property */
-    private PropDefId idJcrMixinTypes;
 
     /** the persistence manager context */
     protected PMContext context;
@@ -410,18 +400,6 @@ public abstract class AbstractBundlePersistenceManager implements
         // init bundle cache
         bundles = new BundleCache(bundleCacheSize);
         missing = new LRUNodeIdCache();
-
-        // init property definitions
-        if (context.getNodeTypeRegistry() != null) {
-            idJcrUUID = context.getNodeTypeRegistry()
-                .getEffectiveNodeType(NameConstants.MIX_REFERENCEABLE)
-                .getApplicablePropertyDef(NameConstants.JCR_UUID, PropertyType.STRING, false)
-                .getId();
-            idJcrPrimaryType = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.NT_BASE).getApplicablePropertyDef(
-                    NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId();
-            idJcrMixinTypes = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.NT_BASE).getApplicablePropertyDef(
-                    NameConstants.JCR_MIXINTYPES, PropertyType.NAME, true).getId();
-        }
     }
     
     /**
@@ -466,20 +444,17 @@ public abstract class AbstractBundlePersistenceManager implements
             if (id.getName().equals(NameConstants.JCR_UUID)) {
                 state = createNew(id);
                 state.setType(PropertyType.STRING);
-                state.setDefinitionId(idJcrUUID);
                 state.setMultiValued(false);
                 state.setValues(new InternalValue[]{InternalValue.create(id.getParentId().getUUID().toString())});
             } else if (id.getName().equals(NameConstants.JCR_PRIMARYTYPE)) {
                 state = createNew(id);
                 state.setType(PropertyType.NAME);
-                state.setDefinitionId(idJcrPrimaryType);
                 state.setMultiValued(false);
                 state.setValues(new InternalValue[]{InternalValue.create(bundle.getNodeTypeName())});
             } else if (id.getName().equals(NameConstants.JCR_MIXINTYPES)) {
                 Set mixins = bundle.getMixinTypeNames();
                 state = createNew(id);
                 state.setType(PropertyType.NAME);
-                state.setDefinitionId(idJcrMixinTypes);
                 state.setMultiValued(true);
                 state.setValues(InternalValue.create((Name[]) mixins.toArray(new Name[mixins.size()])));
             } else {

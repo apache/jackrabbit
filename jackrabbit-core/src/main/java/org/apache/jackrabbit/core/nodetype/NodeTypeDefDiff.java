@@ -236,13 +236,13 @@ public class NodeTypeDefDiff {
         PropDef[] pda1 = oldDef.getPropertyDefs();
         HashMap defs1 = new HashMap();
         for (int i = 0; i < pda1.length; i++) {
-            defs1.put(pda1[i].getId(), pda1[i]);
+            defs1.put(new PropDefId(pda1[i]), pda1[i]);
         }
 
         PropDef[] pda2 = newDef.getPropertyDefs();
         HashMap defs2 = new HashMap();
         for (int i = 0; i < pda2.length; i++) {
-            defs2.put(pda2[i].getId(), pda2[i]);
+            defs2.put(new PropDefId(pda2[i]), pda2[i]);
         }
 
         /**
@@ -295,13 +295,13 @@ public class NodeTypeDefDiff {
         NodeDef[] cnda1 = oldDef.getChildNodeDefs();
         HashMap defs1 = new HashMap();
         for (int i = 0; i < cnda1.length; i++) {
-            defs1.put(cnda1[i].getId(), cnda1[i]);
+            defs1.put(new NodeDefId(cnda1[i]), cnda1[i]);
         }
 
         NodeDef[] cnda2 = newDef.getChildNodeDefs();
         HashMap defs2 = new HashMap();
         for (int i = 0; i < cnda2.length; i++) {
-            defs2.put(cnda2[i].getId(), cnda2[i]);
+            defs2.put(new NodeDefId(cnda2[i]), cnda2[i]);
         }
 
         /**

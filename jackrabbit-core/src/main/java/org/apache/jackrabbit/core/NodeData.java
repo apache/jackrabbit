@@ -30,9 +30,9 @@ class NodeData extends AbstractNodeData {
      * Create a new instance of this class.
      *
      * @param state node state
-     * @param definition node definition
+     * @param itemMgr item manager
      */
-    NodeData(NodeState state, NodeDefinition definition) {
-        super(state, definition);
+    NodeData(NodeState state, ItemManager itemMgr) {
+        super(state, itemMgr);
     }
 }

@@ -425,7 +425,8 @@ public class WorkspaceImporter implements Importer {
                         parent.getChildNodeEntry(nodeName, 1);
                 NodeId idExisting = entry.getId();
                 NodeState existing = (NodeState) itemOps.getItemState(idExisting);
-                NodeDef def = ntReg.getNodeDef(existing.getDefinitionId());
+                NodeDef def = itemOps.findApplicableNodeDefinition(
+                        nodeName, existing.getNodeTypeName(), parent);
 
                 if (!def.allowsSameNameSiblings()) {
                     // existing doesn't allow same-name siblings,

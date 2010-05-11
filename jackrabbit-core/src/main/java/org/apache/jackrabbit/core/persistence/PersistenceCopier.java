@@ -136,7 +136,6 @@ public class PersistenceCopier {
             // Copy the node state
             NodeState targetNode = target.createNew(sourceNode.getNodeId());
             targetNode.setParentId(sourceNode.getParentId());
-            targetNode.setDefinitionId(sourceNode.getDefinitionId());
             targetNode.setNodeTypeName(sourceNode.getNodeTypeName());
             targetNode.setMixinTypeNames(sourceNode.getMixinTypeNames());
             targetNode.setPropertyNames(sourceNode.getPropertyNames());
@@ -154,7 +153,6 @@ public class PersistenceCopier {
                 PropertyId id = new PropertyId(sourceNode.getNodeId(), name);
                 PropertyState sourceState = source.load(id);
                 PropertyState targetState = target.createNew(id);
-                targetState.setDefinitionId(sourceState.getDefinitionId());
                 targetState.setType(sourceState.getType());
                 targetState.setMultiValued(sourceState.isMultiValued());
                 InternalValue[] values = sourceState.getValues();

@@ -128,6 +128,8 @@ public class ItemValidator {
 
     protected final RetentionRegistry retentionReg;
 
+    protected final ItemManager itemMgr;
+
     /**
      * Creates a new <code>ItemValidator</code> instance.
      *
@@ -138,7 +140,9 @@ public class ItemValidator {
     public ItemValidator(NodeTypeRegistry ntReg,
                          HierarchyManager hierMgr,
                          SessionImpl session) throws RepositoryException {
-        this(ntReg, hierMgr, session, session.getLockManager(), session.getAccessManager(), session.getRetentionRegistry());
+        this(ntReg, hierMgr, session, session.getLockManager(),
+                session.getAccessManager(), session.getRetentionRegistry(),
+                session.getItemManager());
     }
 
     /**
@@ -150,19 +154,22 @@ public class ItemValidator {
      * @param lockMgr    lockMgr
      * @param accessMgr  accessMgr
      * @param retentionReg
+     * @param itemMgr    the item manager
      */
     public ItemValidator(NodeTypeRegistry ntReg,
                          HierarchyManager hierMgr,
                          PathResolver resolver,
                          LockManager lockMgr,
                          AccessManager accessMgr,
-                         RetentionRegistry retentionReg) {
+                         RetentionRegistry retentionReg,
+                         ItemManager itemMgr) {
         this.ntReg = ntReg;
         this.hierMgr = hierMgr;
         this.resolver = resolver;
         this.lockMgr = lockMgr;
         this.accessMgr = accessMgr;
         this.retentionReg = retentionReg;
+        this.itemMgr = itemMgr;
     }
 
     /**
@@ -188,7 +195,7 @@ public class ItemValidator {
                 ntReg.getEffectiveNodeType(nodeState.getNodeTypeName());
         // effective node type (primary type incl. mixins)
         EffectiveNodeType entPrimaryAndMixins = getEffectiveNodeType(nodeState);
-        NodeDef def = ntReg.getNodeDef(nodeState.getDefinitionId());
+        NodeDef def = itemMgr.getDefinition(nodeState).unwrap();
 
         // check if primary type satisfies the 'required node types' constraint
         Name[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
@@ -244,7 +251,7 @@ public class ItemValidator {
      */
     public void validate(PropertyState propState)
             throws ConstraintViolationException, RepositoryException {
-        PropDef def = ntReg.getPropDef(propState.getDefinitionId());
+        PropDef def = itemMgr.getDefinition(propState).unwrap();
         InternalValue[] values = propState.getValues();
         int type = PropertyType.UNDEFINED;
         for (int i = 0; i < values.length; i++) {
