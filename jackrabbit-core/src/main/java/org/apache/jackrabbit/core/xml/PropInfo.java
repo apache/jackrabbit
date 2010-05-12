@@ -56,7 +56,13 @@ public class PropInfo {
     private final TextValue[] values;
 
     /**
-     * Creates a proprety information instance.
+     * Hint indicating whether the property is multi- or single-value
+     */
+    public enum MultipleStatus { UNKNOWN, SINGLE, MULTIPLE };
+    private MultipleStatus multipleStatus;
+
+    /**
+     * Creates a property information instance.
      *
      * @param name name of the property being imported
      * @param type type of the property being imported
@@ -66,6 +72,26 @@ public class PropInfo {
         this.name = name;
         this.type = type;
         this.values = values;
+        multipleStatus =
+                values.length == 1
+                        ? MultipleStatus.UNKNOWN : MultipleStatus.MULTIPLE;
+    }
+
+    /**
+     * Creates a property information instance.
+     *
+     * @param name name of the property being imported
+     * @param type type of the property being imported
+     * @param values value(s) of the property being imported
+     * @param multipleStatus Hint indicating whether the property is
+     *                       multi- or single-value
+     */
+    public PropInfo(Name name, int type, TextValue[] values,
+                    MultipleStatus multipleStatus) {
+        this.name = name;
+        this.type = type;
+        this.values = values;
+        this.multipleStatus = multipleStatus;
     }
 
     /**
@@ -90,12 +116,13 @@ public class PropInfo {
 
     public QPropertyDefinition getApplicablePropertyDef(EffectiveNodeType ent)
             throws ConstraintViolationException {
-        if (values.length == 1) {
-            // could be single- or multi-valued (n == 1)
-            return ent.getApplicablePropertyDef(name, type);
-        } else {
-            // can only be multi-valued (n == 0 || n > 1)
+        if (multipleStatus == MultipleStatus.MULTIPLE) {
             return ent.getApplicablePropertyDef(name, type, true);
+        } else if (multipleStatus == MultipleStatus.SINGLE) {
+            return ent.getApplicablePropertyDef(name, type, false);
+        } else {
+            // could be single- or multi-valued
+            return ent.getApplicablePropertyDef(name, type);
         }
     }
 
@@ -105,6 +132,10 @@ public class PropInfo {
 
     public int getType() {
         return type;
+    }
+
+    public MultipleStatus getMultipleStatus() {
+        return multipleStatus;
     }
 
     public TextValue[] getTextValues() {

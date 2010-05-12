@@ -167,7 +167,7 @@ public abstract class Exporter {
             throws RepositoryException, SAXException;
 
     /**
-     * Called by {@link #processProperties(Node)} to process a single-valued
+     * Called by {@link #exportProperties(Node)} to process a single-valued
      * property.
      *
      * @param uri property namespace
@@ -181,13 +181,13 @@ public abstract class Exporter {
             throws RepositoryException, SAXException;
 
     /**
-     * Called by {@link #processProperties(Node)} to process a multivalued
+     * Called by {@link #exportProperties(Node)} to process a multivalued
      * property.
      *
      * @param uri property namespace
      * @param local property name
      * @param type property type
-     * @param value property values
+     * @param values property values
      * @throws RepositoryException if a repository error occurs
      * @throws SAXException if a SAX error occurs
      */
