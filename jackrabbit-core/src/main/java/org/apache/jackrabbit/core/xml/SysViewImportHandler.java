@@ -294,6 +294,10 @@ class SysViewImportHandler extends TargetImportHandler {
                     throw new SAXException("error while retrieving value", ioe);
                 }
             } else {
+                if (currentPropMultipleStatus == MultipleStatus.UNKNOWN
+                        && currentPropValues.size() != 1) {
+                    currentPropMultipleStatus = MultipleStatus.MULTIPLE;
+                }
                 PropInfo prop = new PropInfo(
                         currentPropName,
                         currentPropType,
