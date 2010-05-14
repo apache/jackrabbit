@@ -4,8 +4,11 @@ Introduction
 ------------
 
 Apache Jackrabbit 1.6.2 is a bug fix release that fixes issues reported
-against previous releases. This release is fully compatible with the
-earlier 1.6.x releases.
+against previous releases. This release is backwards-compatible with the
+earlier 1.6.x releases, but contains a change in persistence format that
+makes it impossible to downgrade to an earlier release after a repository
+has been upgraded to the 1.6.2 version. A full backup of the repository
+is recommended before this upgrade.
 
 Changes in this release
 -----------------------
@@ -13,6 +16,7 @@ Changes in this release
 This release fixes the following issues:
 
   JCR-2433 NPE when copying nodes with Workspace.copy()
+  JCR-2503 inconsistent session and persistent state after ...
   JCR-2525 NodeState and NodeStateListener deadlock
   JCR-2554 Deadlock inside XASession on Weblogic
   JCR-2611 DefaultHighlighter.java does not encode illegal XML characters
@@ -42,10 +46,12 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Antonio Martinez        Peter Krokavec           Stephan Huttenhuis
-    Claus Köll              Robert Sauer             The Dong
-    Frederic Guilbeault     Sascha Theves            Tobias Bocanegra
-    Jukka Zitting           Stefan Guggisberg        Tom Quellenberg
+    Antonio Martinez        Marcel Reutegger        Stefan Guggisberg
+    Bram de Kruijff         Martijn Hendriks        Stephan Huttenhuis
+    Claus Köll              Paul Jara               The Dong
+    Frederic Guilbeault     Peter Krokavec          Tobias Bocanegra
+    Grégory Joseph          Robert Sauer            Tom Quellenberg
+    Jukka Zitting           Sascha Theves
 
 Thank you to everyone involved!
 
