@@ -58,7 +58,7 @@ public class PropInfo {
     /**
      * Hint indicating whether the property is multi- or single-value
      */
-    public enum MultipleStatus { UNKNOWN, SINGLE, MULTIPLE };
+    public enum MultipleStatus { UNKNOWN, SINGLE, MULTIPLE }
     private MultipleStatus multipleStatus;
 
     /**
@@ -121,8 +121,14 @@ public class PropInfo {
         } else if (multipleStatus == MultipleStatus.SINGLE) {
             return ent.getApplicablePropertyDef(name, type, false);
         } else {
-            // could be single- or multi-valued
-            return ent.getApplicablePropertyDef(name, type);
+            // multipleStatus == MultipleStatus.UNKNOWN
+            if (values.length == 1) {
+                // one value => could be single- or multi-valued
+                return ent.getApplicablePropertyDef(name, type);
+            } else {
+                // zero or more than one values => must be multi-valued
+                return ent.getApplicablePropertyDef(name, type, true);
+            }
         }
     }
 
@@ -132,10 +138,6 @@ public class PropInfo {
 
     public int getType() {
         return type;
-    }
-
-    public MultipleStatus getMultipleStatus() {
-        return multipleStatus;
     }
 
     public TextValue[] getTextValues() {
