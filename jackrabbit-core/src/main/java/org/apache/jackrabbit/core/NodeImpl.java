@@ -979,15 +979,35 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
     protected void restoreTransient(NodeState transientState)
             throws RepositoryException {
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        if (transientState.getStatus() == ItemState.STATUS_NEW
-                && thisState.getStatus() != ItemState.STATUS_NEW) {
-            thisState.setStatus(ItemState.STATUS_NEW);
-            stateMgr.disconnectTransientItemState(thisState);
+        NodeState thisState = null;
+
+        if (!isTransient()) {
+            thisState = (NodeState) getOrCreateTransientItemState();
+            if (transientState.getStatus() == ItemState.STATUS_NEW
+                    && thisState.getStatus() != ItemState.STATUS_NEW) {
+                thisState.setStatus(ItemState.STATUS_NEW);
+                stateMgr.disconnectTransientItemState(thisState);
+            }
+            thisState.setParentId(transientState.getParentId());
+            thisState.setNodeTypeName(transientState.getNodeTypeName());
+        } else {
+            // JCR-2503: Re-create transient state in the state manager,
+            // because it was removed
+            synchronized (data) {
+                try {
+                    thisState = stateMgr.createTransientNodeState(
+                            (NodeId) transientState.getId(),
+                            transientState.getNodeTypeName(),
+                            transientState.getParentId(),
+                            NodeState.STATUS_NEW);
+                    data.setState(thisState);
+                } catch (ItemStateException e) {
+                    throw new RepositoryException(e);
+                }
+            }
         }
+
         // re-apply transient changes
-        thisState.setParentId(transientState.getParentId());
-        thisState.setNodeTypeName(transientState.getNodeTypeName());
         thisState.setMixinTypeNames(transientState.getMixinTypeNames());
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
         thisState.setPropertyNames(transientState.getPropertyNames());

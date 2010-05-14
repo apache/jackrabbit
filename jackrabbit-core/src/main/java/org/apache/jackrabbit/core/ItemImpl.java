@@ -648,15 +648,14 @@ public abstract class ItemImpl implements Item {
                         itemState.setStatus(ItemState.STATUS_NEW);
                     }
                 }
-                if (!item.isTransient()) {
-                    // re-apply transient changes (i.e. undo effect of item.makePersistent())
-                    if (item.isNode()) {
-                        NodeImpl node = (NodeImpl) item;
-                        node.restoreTransient((NodeState) itemState);
-                    } else {
-                        PropertyImpl prop = (PropertyImpl) item;
-                        prop.restoreTransient((PropertyState) itemState);
-                    }
+                // re-apply transient changes
+                // for persistent nodes undo effect of item.makePersistent()
+                if (item.isNode()) {
+                    NodeImpl node = (NodeImpl) item;
+                    node.restoreTransient((NodeState) itemState);
+                } else {
+                    PropertyImpl prop = (PropertyImpl) item;
+                    prop.restoreTransient((PropertyState) itemState);
                 }
             } catch (RepositoryException re) {
                 // something went wrong, log exception and carry on

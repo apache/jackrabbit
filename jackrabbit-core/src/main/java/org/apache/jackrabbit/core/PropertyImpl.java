@@ -148,12 +148,31 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     protected void restoreTransient(PropertyState transientState)
             throws RepositoryException {
-        PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
-        if (transientState.getStatus() == ItemState.STATUS_NEW
-                && thisState.getStatus() != ItemState.STATUS_NEW) {
-            thisState.setStatus(ItemState.STATUS_NEW);
-            stateMgr.disconnectTransientItemState(thisState);
+        PropertyState thisState = null;
+
+        if (!isTransient()) {
+            thisState = (PropertyState) getOrCreateTransientItemState();
+            if (transientState.getStatus() == ItemState.STATUS_NEW
+                    && thisState.getStatus() != ItemState.STATUS_NEW) {
+                thisState.setStatus(ItemState.STATUS_NEW);
+                stateMgr.disconnectTransientItemState(thisState);
+            }
+        } else {
+            // JCR-2503: Re-create transient state in the state manager,
+            // because it was removed
+            synchronized (data) {
+                try {
+                    thisState = stateMgr.createTransientPropertyState(
+                            transientState.getParentId(),
+                            transientState.getName(),
+                            PropertyState.STATUS_NEW);
+                    data.setState(thisState);
+                } catch (ItemStateException e) {
+                    throw new RepositoryException(e);
+                }
+            }
         }
+
         // reapply transient changes
         thisState.setType(transientState.getType());
         thisState.setMultiValued(transientState.isMultiValued());
