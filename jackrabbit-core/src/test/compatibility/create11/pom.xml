@@ -24,18 +24,18 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.jackrabbit.harness</groupId>
-    <artifactId>compatibility</artifactId>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit-bc</artifactId>
     <version>SNAPSHOT</version>
   </parent>
 
-  <artifactId>compatibility-create11</artifactId>
+  <artifactId>jackrabbit-bc-create11</artifactId>
   <name>Create Jackrabbit 1.1 Repository</name>
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.jackrabbit.harness</groupId>
-      <artifactId>compatibility-base</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>jackrabbit-bc-base</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
