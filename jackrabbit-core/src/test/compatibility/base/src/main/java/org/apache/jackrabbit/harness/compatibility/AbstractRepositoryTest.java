@@ -16,29 +16,20 @@
  */
 package org.apache.jackrabbit.harness.compatibility;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Random;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
@@ -47,7 +38,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.xml.sax.InputSource;
 
 public class AbstractRepositoryTest {
 
@@ -107,7 +97,6 @@ public class AbstractRepositoryTest {
                         new SimpleCredentials("admin", "admin".toCharArray()));
                 try {
                     createTestData(session);
-                    verifyTestData(session);
                 } finally {
                     session.logout();
                 }
@@ -117,36 +106,6 @@ public class AbstractRepositoryTest {
         } catch (RepositoryException e) {
             e.printStackTrace();
             fail("Create repository " + name);
-        }
-    }
-
-    /**
-     * Verifies that the given test repository can be opened and accessed.
-     *
-     * @param directory the repository directory
-     * @throws Exception if the repository could not be created
-     */
-    protected void doVerifyRepository(File directory) throws Exception {
-        File configuration = new File(directory, "repository.xml");
-
-        try {
-            RepositoryConfig config = RepositoryConfig.create(
-                    configuration.getPath(), directory.getPath());
-            RepositoryImpl repository = RepositoryImpl.create(config);
-            try {
-                Session session = repository.login(
-                        new SimpleCredentials("admin", "admin".toCharArray()));
-                try {
-                    verifyTestData(session);
-                } finally {
-                    session.logout();
-                }
-            } finally {
-                repository.shutdown();
-            }
-        } catch (RepositoryException e) {
-            e.printStackTrace();
-            fail("Access repository " + directory.getName());
         }
     }
 
@@ -170,18 +129,6 @@ public class AbstractRepositoryTest {
         createUsers(session);
     }
 
-    protected void verifyTestData(Session session) throws Exception {
-        Node root = session.getRootNode();
-
-        assertTrue(root.hasNode("test"));
-        Node test = root.getNode("test");
-
-        Node versionable = verifyVersionable(test);
-        verifyProperties(test, versionable);
-        verifyVersionableCopy(test, versionable);
-        verifyUsers(session);
-    }
-
     protected Node createVersionable(Node parent) throws RepositoryException {
         Node versionable = parent.addNode("versionable", "nt:myversionable");
         versionable.setProperty("foo", "A");
@@ -195,27 +142,6 @@ public class AbstractRepositoryTest {
         parent.save();
         Version versionB = versionable.checkin();
         history.addVersionLabel(versionB.getName(), "labelB", false);
-        return versionable;
-    }
-
-    protected Node verifyVersionable(Node test) throws RepositoryException {
-        assertTrue(test.hasNode("versionable"));
-        Node versionable = test.getNode("versionable");
-        assertTrue(versionable.isNodeType("nt:myversionable"));
-        assertTrue(versionable.isNodeType("nt:unstructured"));
-        assertTrue(versionable.isNodeType("mix:versionable"));
-        assertFalse(versionable.isCheckedOut());
-
-        VersionHistory history = versionable.getVersionHistory();
-        Version versionB = versionable.getBaseVersion();
-        String[] labels = history.getVersionLabels(versionB);
-        assertEquals(1, labels.length);
-        assertEquals("labelB", labels[0]);
-        Version versionA = history.getVersionByLabel("labelA");
-        versionable.restore(versionA, true);
-        assertEquals("A", versionable.getProperty("foo").getString());
-        versionable.restore(versionB, true);
-        assertEquals("B", versionable.getProperty("foo").getString());
         return versionable;
     }
 
@@ -241,55 +167,7 @@ public class AbstractRepositoryTest {
         parent.save();
     }
 
-    protected void verifyProperties(Node test, Node versionable)
-            throws RepositoryException, PathNotFoundException,
-            ValueFormatException, IOException {
-        assertTrue(test.hasNode("properties"));
-        Node properties = test.getNode("properties");
-        assertTrue(properties.isNodeType("nt:unstructured"));
-
-        assertEquals(true, properties.getProperty("boolean").getBoolean());
-        assertEquals(0.123456789, properties.getProperty("double").getDouble());
-        assertEquals(1234567890, properties.getProperty("long").getLong());
-        Node reference = properties.getProperty("reference").getNode();
-        assertTrue(reference.isSame(versionable));
-        assertEquals("test", properties.getProperty("string").getString());
-
-        Value[] multiple = properties.getProperty("multiple").getValues();
-        assertEquals(3, multiple.length);
-        assertEquals("a", multiple[0].getString());
-        assertEquals("b", multiple[1].getString());
-        assertEquals("c", multiple[2].getString());
-
-        Calendar calendar = properties.getProperty("date").getDate();
-        assertEquals(1234567890, calendar.getTimeInMillis());
-
-        InputStream stream = properties.getProperty("binary").getStream();
-        try {
-            byte[] binary = new byte[100 * 1000];
-            new Random(1234567890).nextBytes(binary);
-            assertEquals(binary, IOUtils.toByteArray(stream));
-        } finally {
-            stream.close();
-        }
-    }
-
-    protected void verifyVersionableCopy(Node test, Node versionable)
-            throws RepositoryException, IOException {
-        // System.out.println(versionable.getProperty("jcr:isCheckedOut").getDefinition().getDeclaringNodeType().getName());
-        test.getSession().getWorkspace().copy(
-                versionable.getPath(),
-                versionable.getPath() + "-copy");
-        Node copy = test.getNode(versionable.getName() + "-copy");
-        // System.out.println(copy.getProperty("jcr:isCheckedOut").getDefinition().getDeclaringNodeType().getName());
-        copy.remove();
-        test.save();
-    }
-
     protected void createUsers(Session session) throws RepositoryException {
     }
 
-    protected void verifyUsers(Session session) throws RepositoryException {
-    }
 }
-

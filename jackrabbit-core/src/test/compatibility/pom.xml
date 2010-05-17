@@ -29,16 +29,17 @@
 
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>parent</artifactId>
-    <version>5</version>
+    <artifactId>jackrabbit-bc-parent</artifactId>
+    <version>SNAPSHOT</version>
+    <relativePath>parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>jackrabbit-bc</artifactId>
   <name>Jackrabbit Backwards Compatibility Tests</name>
-  <version>SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
+    <module>parent</module>
     <module>base</module>
     <module>create10</module>
     <module>create11</module>
@@ -72,6 +73,25 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>assembly.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
 </project>
