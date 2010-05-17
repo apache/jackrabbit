@@ -24,13 +24,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.jackrabbit.harness</groupId>
-    <artifactId>compatibility</artifactId>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit-bc</artifactId>
     <version>SNAPSHOT</version>
   </parent>
 
-  <artifactId>compatibility-base</artifactId>
-  <name>Backwards Compatibility Test Utilities</name>
+  <artifactId>jackrabbit-bc-base</artifactId>
+  <name>Jackrabbit Backwards Compatibility Test Utilities</name>
 
   <dependencies>
     <dependency>

@@ -28,14 +28,13 @@
   <!-- =================================================================== -->
 
   <parent>
-    <groupId>org.apache</groupId>
-    <artifactId>apache</artifactId>
-    <version>4</version>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>parent</artifactId>
+    <version>5</version>
   </parent>
 
-  <groupId>org.apache.jackrabbit.harness</groupId>
-  <artifactId>compatibility</artifactId>
-  <name>Compatibility Test</name>
+  <artifactId>jackrabbit-bc</artifactId>
+  <name>Jackrabbit Backwards Compatibility Tests</name>
   <version>SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -48,8 +47,6 @@
     <module>create14</module>
     <module>create15</module>
     <module>create16</module>
-    <module>verify16</module>
-    <module>verify</module>
   </modules>
 
   <build>
