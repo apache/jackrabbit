@@ -322,8 +322,7 @@ public class NodeImplTest extends AbstractJCRTest {
 
         try {
             root = testRootNode.getNode("testReferentialIntegrityCorruption");
-            for (@SuppressWarnings("unused") Node ignore
-                    : JcrUtils.getChildNodes(root)) {
+            for (Node ignore : JcrUtils.getChildNodes(root)) {
             }
         } catch (Exception e) {
             String msg = "JCR-2503: Failed to scan empty node. Corrupt session?";
