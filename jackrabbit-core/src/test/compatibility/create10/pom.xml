@@ -25,12 +25,13 @@
 
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit-bc</artifactId>
+    <artifactId>jackrabbit-bc-parent</artifactId>
     <version>SNAPSHOT</version>
+    <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>jackrabbit-bc-create10</artifactId>
-  <name>Create Jackrabbit 1.0 Repository</name>
+  <name>Jackrabbit 1.0 Repositories</name>
 
   <dependencies>
     <dependency>
@@ -52,28 +53,6 @@
       </exclusions>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <descriptors>
-            <descriptor>../assembly.xml</descriptor>
-          </descriptors>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>
 
