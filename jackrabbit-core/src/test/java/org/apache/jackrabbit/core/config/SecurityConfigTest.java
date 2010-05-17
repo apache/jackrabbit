@@ -21,6 +21,9 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
+import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
+import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager;
 import org.apache.jackrabbit.core.security.authentication.DefaultLoginModule;
@@ -56,11 +59,13 @@ public class SecurityConfigTest extends AbstractJCRTest {
 
     private RepositoryConfigurationParser parser;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         parser = new RepositoryConfigurationParser(new Properties());
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -147,7 +152,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
 
         // assignable from same class as configured
         UserManager um = umc.getUserManager(UserManagerImpl.class, new Class[] {
-            SessionImpl.class, String.class}, (SessionImpl) superuser, "admin");
+            SessionImpl.class, String.class}, superuser, "admin");
         assertNotNull(um);
         assertTrue(um instanceof UserManagerImpl);
         assertTrue(um.isAutoSave());
@@ -163,7 +168,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
         umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
         try {
             um = umc.getUserManager(UserPerWorkspaceUserManager.class, new Class[] {
-                    SessionImpl.class, String.class}, (SessionImpl) superuser, "admin");
+                    SessionImpl.class, String.class}, superuser, "admin");
             fail("UserManagerImpl is not assignable from derived class");
         } catch (ConfigurationException e) {
             // success
@@ -174,7 +179,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
         umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
         try {
             um = umc.getUserManager(UserManagerImpl.class, new Class[] {
-                    Session.class}, (SessionImpl) superuser, "admin");
+                    Session.class}, superuser, "admin");
             fail("Invalid parameter types -> must fail.");
         } catch (ConfigurationException e) {
             // success
@@ -195,7 +200,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
         umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
         // assignable from defines base class
         um = umc.getUserManager(UserManagerImpl.class, new Class[] {
-            SessionImpl.class, String.class}, (SessionImpl) superuser, "admin");
+            SessionImpl.class, String.class}, superuser, "admin");
         assertNotNull(um);
         assertTrue(um instanceof UserPerWorkspaceUserManager);
         // but: configured class creates a umgr that requires session.save
@@ -204,8 +209,42 @@ public class SecurityConfigTest extends AbstractJCRTest {
         um.autoSave(false);
     }
 
+    /**
+     * 
+     * @throws Exception
+     */
+    public void testPrincipalProviderConfig() throws Exception {
+        PrincipalProviderRegistry ppr = new ProviderRegistryImpl(null);
+
+        // standard config
+        Element xml = parseXML(new InputSource(new StringReader(PRINCIPAL_PROVIDER_CONFIG)), true);
+        LoginModuleConfig lmc = parser.parseSecurityConfig(xml).getLoginModuleConfig();        
+        PrincipalProvider pp = ppr.registerProvider(lmc.getParameters());
+        assertEquals(pp, ppr.getProvider(pp.getClass().getName()));
+        assertEquals("org.apache.jackrabbit.core.security.principal.FallbackPrincipalProvider", pp.getClass().getName());
+
+        // config specifying an extra name
+        xml = parseXML(new InputSource(new StringReader(PRINCIPAL_PROVIDER_CONFIG1)), true);
+        lmc = parser.parseSecurityConfig(xml).getLoginModuleConfig();
+        pp = ppr.registerProvider(lmc.getParameters());
+        assertEquals(pp, ppr.getProvider("test"));
+        assertEquals("org.apache.jackrabbit.core.security.principal.FallbackPrincipalProvider", pp.getClass().getName());
+
+        // use alternative class config
+        xml = parseXML(new InputSource(new StringReader(PRINCIPAL_PROVIDER_CONFIG2)), true);
+        lmc = parser.parseSecurityConfig(xml).getLoginModuleConfig();
+        pp = ppr.registerProvider(lmc.getParameters());
+        assertEquals(pp, ppr.getProvider("test2"));
+        assertEquals("org.apache.jackrabbit.core.security.principal.FallbackPrincipalProvider", pp.getClass().getName());
+
+        // all 3 providers must be registered despite the fact the all configs
+        // specify the same provider class
+        assertEquals(3, ppr.getProviders().length);
+
+    }
+
     public void testInvalidConfig() {
-        List<InputSource> invalid = new ArrayList();
+        List<InputSource> invalid = new ArrayList<InputSource>();
         invalid.add(new InputSource(new StringReader(INVALID_CONFIG_1)));
         invalid.add(new InputSource(new StringReader(INVALID_CONFIG_2)));
         invalid.add(new InputSource(new StringReader(INVALID_CONFIG_3)));
@@ -316,4 +355,45 @@ public class SecurityConfigTest extends AbstractJCRTest {
                     "           <UserManager class=\"org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager\" />" +
                     "        </SecurityManager>" +
                     "    </Security>";
+
+    private static final String PRINCIPAL_PROVIDER_CONFIG =
+            "    <Security appName=\"Jackrabbit\">" +
+            "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+            "        </SecurityManager>" +
+            "        <AccessManager class=\"org.apache.jackrabbit.core.security.DefaultAccessManager\">" +
+            "        </AccessManager>" +
+            "        <LoginModule class=\"org.apache.jackrabbit.core.security.authentication.DefaultLoginModule\">" +
+            "           <param name=\"anonymousId\" value=\"anonymous\"/>" +
+            "           <param name=\"adminId\" value=\"admin\"/>" +
+            "           <param name=\"principalProvider\" value=\"org.apache.jackrabbit.core.security.principal.FallbackPrincipalProvider\"/>" +
+            "        </LoginModule>\n" +
+            "    </Security>";
+
+    private static final String PRINCIPAL_PROVIDER_CONFIG1 =
+            "    <Security appName=\"Jackrabbit\">" +
+            "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+            "        </SecurityManager>" +
+            "        <AccessManager class=\"org.apache.jackrabbit.core.security.DefaultAccessManager\">" +
+            "        </AccessManager>" +
+            "        <LoginModule class=\"org.apache.jackrabbit.core.security.authentication.DefaultLoginModule\">" +
+            "           <param name=\"anonymousId\" value=\"anonymous\"/>" +
+            "           <param name=\"adminId\" value=\"admin\"/>" +
+            "           <param name=\"principalProvider\" value=\"org.apache.jackrabbit.core.security.principal.FallbackPrincipalProvider\"/>" +
+            "           <param name=\"principal_provider.name\" value=\"test\"/>" +
+            "        </LoginModule>\n" +
+            "    </Security>";
+
+    private static final String PRINCIPAL_PROVIDER_CONFIG2 =
+            "    <Security appName=\"Jackrabbit\">" +
+            "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+            "        </SecurityManager>" +
+            "        <AccessManager class=\"org.apache.jackrabbit.core.security.DefaultAccessManager\">" +
+            "        </AccessManager>" +
+            "        <LoginModule class=\"org.apache.jackrabbit.core.security.authentication.DefaultLoginModule\">" +
+            "           <param name=\"anonymousId\" value=\"anonymous\"/>" +
+            "           <param name=\"adminId\" value=\"admin\"/>" +
+            "           <param name=\"principal_provider.class\" value=\"org.apache.jackrabbit.core.security.principal.FallbackPrincipalProvider\"/>" +
+            "           <param name=\"principal_provider.name\" value=\"test2\"/>" +
+            "        </LoginModule>\n" +
+            "    </Security>";
 }
