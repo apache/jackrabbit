@@ -23,34 +23,33 @@ import org.apache.jackrabbit.spi.QValue;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <code>PropertyInfoImpl</code>...
  */
 public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
 
-    private final boolean isMultiValued;
+    private final boolean multiValued;
 
     private PropertyId id;
     private int propertyType;
-    private List<QValue> values = new ArrayList<QValue>();
+    private QValue[] values = QValue.EMPTY_ARRAY;
 
     public PropertyInfoImpl(PropertyId id, Path path, int propertyType,
-                            QValue singleValue) throws RepositoryException {
+                            QValue value) throws RepositoryException {
         super(path, false);
         this.id = id;
         this.propertyType = propertyType;
-        isMultiValued = false;
-        values.add(singleValue);
+        multiValued = false;
+        values = new QValue[]{value};
     }
 
-    public PropertyInfoImpl(PropertyId id, Path path, int propertyType) throws RepositoryException {
+    public PropertyInfoImpl(PropertyId id, Path path, int propertyType, QValue[] values) throws RepositoryException {
         super(path, false);
         this.id = id;
         this.propertyType = propertyType;
-        isMultiValued = true;
+        this.values = values;
+        multiValued = true;
     }
 
     //-------------------------------------------------------< PropertyInfo >---
@@ -68,41 +67,24 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
     }
 
     public boolean isMultiValued() {
-        return isMultiValued;
+        return multiValued;
     }
 
     public QValue[] getValues() {
-        return values.toArray(new QValue[values.size()]);
+        return values;
     }
 
     //--------------------------------------------------------------------------
-    int numberOfValues() {
-        return values.size();
-    }
-
     void setId(PropertyId id) {
         this.id = id;
-    }
-
-    void addValue(QValue value) throws RepositoryException {
-        if (values == null) {
-            values = new ArrayList<QValue>();
-        } else if (!isMultiValued && !values.isEmpty()) {
-            throw new RepositoryException("Attempt to add multiple values to a single valued PropertyInfo");
-        }
-        values.add(value);
-    }
-
-    void setType(int propertyType) {
-        this.propertyType = propertyType;
     }
 
     void checkCompleted() throws RepositoryException {
         if (id == null) {
             throw new RepositoryException("Incomplete PropertyInfo: id missing.");
         }
-        if (values.size() == 0 && propertyType == PropertyType.UNDEFINED) {
-            throw new RepositoryException("Incomplete PropertyInfo: missing type of multivalued property.");
+        if (propertyType == PropertyType.UNDEFINED) {
+            throw new RepositoryException("Incomplete PropertyInfo: missing type of property.");
         }
     }
 }

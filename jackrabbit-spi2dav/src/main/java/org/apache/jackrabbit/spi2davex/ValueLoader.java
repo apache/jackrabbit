@@ -94,7 +94,7 @@ class ValueLoader {
 
     //--------------------------------------------------------------------------
     /**
-     * Internal inteface
+     * Internal interface
      */
     interface Target {
         /**
