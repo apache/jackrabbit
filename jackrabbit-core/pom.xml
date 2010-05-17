@@ -129,6 +129,9 @@
             <exclude>src/test/resources/**/*.txt</exclude>
             <exclude>src/test/resources/**/*.rtf</exclude>
             <exclude>src/test/resources/**/*.cnd</exclude>
+            <exclude>src/test/compatibility/**/target/**</exclude>
+            <exclude>src/test/compatibility/**/.*/**</exclude>
+            <exclude>src/test/compatibility/repositories.zip</exclude>
             <exclude>repository/**</exclude>
             <exclude>*.log</exclude>
           </excludes>
