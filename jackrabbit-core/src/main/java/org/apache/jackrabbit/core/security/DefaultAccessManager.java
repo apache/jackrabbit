@@ -76,21 +76,6 @@ import java.util.Set;
 public class DefaultAccessManager extends AbstractAccessControlManager implements AccessManager {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAccessManager.class);
-    private static final CompiledPermissions NO_PERMISSION = new CompiledPermissions() {
-        public void close() {
-            //nop
-        }
-        public boolean grants(Path absPath, int permissions) {
-            // deny everything
-            return false;
-        }
-        public int getPrivileges(Path absPath) {
-            return PrivilegeRegistry.NO_PRIVILEGE;
-        }
-        public boolean canReadAll() {
-            return false;
-        }
-    };
 
     private boolean initialized;
 
@@ -161,7 +146,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         } else {
             log.warn("No AccessControlProvider defined -> no access is granted.");
             editor = null;
-            compiledPermissions = NO_PERMISSION;
+            compiledPermissions = CompiledPermissions.NO_PERMISSION;
         }
 
         initialized = true;

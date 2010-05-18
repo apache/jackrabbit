@@ -72,4 +72,24 @@ public interface CompiledPermissions {
      * @throws RepositoryException if an error occurs
      */
     boolean canReadAll() throws RepositoryException;
+
+    /**
+     * Static implementation of a <code>CompiledPermissions</code> that doesn't
+     * grant any permissions at all.
+     */
+    public static final CompiledPermissions NO_PERMISSION = new CompiledPermissions() {
+        public void close() {
+            //nop
+        }
+        public boolean grants(Path absPath, int permissions) {
+            // deny everything
+            return false;
+        }
+        public int getPrivileges(Path absPath) {
+            return PrivilegeRegistry.NO_PRIVILEGE;
+        }
+        public boolean canReadAll() {
+            return false;
+        }
+    };
 }
