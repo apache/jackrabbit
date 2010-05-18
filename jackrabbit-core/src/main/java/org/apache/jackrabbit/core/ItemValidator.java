@@ -201,20 +201,17 @@ public class ItemValidator {
         QNodeDefinition def = itemMgr.getDefinition(nodeState).unwrap();
 
         // check if primary type satisfies the 'required node types' constraint
-        Name[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
-        for (int i = 0; i < requiredPrimaryTypes.length; i++) {
-            if (!entPrimary.includesNodeType(requiredPrimaryTypes[i])) {
+        for (Name requiredPrimaryType : def.getRequiredPrimaryTypes()) {
+            if (!entPrimary.includesNodeType(requiredPrimaryType)) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": missing required primary type "
-                        + requiredPrimaryTypes[i];
+                        + requiredPrimaryType;
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
             }
         }
         // mandatory properties
-        QPropertyDefinition[] pda = entPrimaryAndMixins.getMandatoryPropDefs();
-        for (int i = 0; i < pda.length; i++) {
-            QPropertyDefinition pd = pda[i];
+        for (QPropertyDefinition pd : entPrimaryAndMixins.getMandatoryPropDefs()) {
             if (!nodeState.hasPropertyName(pd.getName())) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory property " + pd.getName()
@@ -224,9 +221,7 @@ public class ItemValidator {
             }
         }
         // mandatory child nodes
-        QItemDefinition[] cnda = entPrimaryAndMixins.getMandatoryNodeDefs();
-        for (int i = 0; i < cnda.length; i++) {
-            QItemDefinition cnd = cnda[i];
+        for (QItemDefinition cnd : entPrimaryAndMixins.getMandatoryNodeDefs()) {
             if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory child node " + cnd.getName()
@@ -257,10 +252,10 @@ public class ItemValidator {
         QPropertyDefinition def = itemMgr.getDefinition(propState).unwrap();
         InternalValue[] values = propState.getValues();
         int type = PropertyType.UNDEFINED;
-        for (int i = 0; i < values.length; i++) {
+        for (InternalValue value : values) {
             if (type == PropertyType.UNDEFINED) {
-                type = values[i].getType();
-            } else if (type != values[i].getType()) {
+                type = value.getType();
+            } else if (type != value.getType()) {
                 throw new ConstraintViolationException(safeGetJCRPath(propState.getPropertyId())
                         + ": inconsistent value types");
             }
