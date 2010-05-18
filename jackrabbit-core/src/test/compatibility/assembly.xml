@@ -52,5 +52,13 @@
       <directory>create16/target/repository</directory>
       <outputDirectory></outputDirectory>
     </fileSet>
+    <fileSet>
+      <directory>create20/target/repository</directory>
+      <outputDirectory></outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>create21/target/repository</directory>
+      <outputDirectory></outputDirectory>
+    </fileSet>
   </fileSets>
 </assembly>
