@@ -98,7 +98,7 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
      * @return <code>true</code> if the session has the specified privileges;
      *         <code>false</code> otherwise.
      * @throws javax.jcr.PathNotFoundException if no node at <code>absPath</code> exists
-     * or the session does not have sufficent access to retrieve a node at that location.
+     * or the session does not have sufficient access to retrieve a node at that location.
      * @throws AccessDeniedException if the session lacks
      * <code>READ_ACCESS_CONTROL</code> privilege for the <code>absPath</code> node.
      * @throws RepositoryException  if another error occurs.
