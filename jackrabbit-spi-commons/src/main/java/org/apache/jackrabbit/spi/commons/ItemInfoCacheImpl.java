@@ -29,13 +29,15 @@ import org.apache.jackrabbit.spi.RepositoryService;
 /**
  * This implementation of {@link ItemInfoCache} has a default size of 5000 items.
  * Item infos are put into the cache after they have been read from the {@link RepositoryService}.
- * If the cache is full, the oldest item is discared. Reading items removes the from the cache.
+ * If the cache is full, the oldest item is discarded. Reading items removes the
+ * from the cache.
  *
  * The underlying idea here is, that {@link ItemInfo}s which are supplied by the
- * <code>RepositoryService</code> but not immediately needed are put into the cache to avoid further
- * round trips to <code>RepositoryService</code>. When they are needed later, they are read
- * from the cache. There is no need to keep them in this cache after that point since they are
- * present in the hierarchy from then on.
+ * <code>RepositoryService</code> but not immediately needed are put into the
+ * cache to avoid further round trips to <code>RepositoryService</code>.
+ * When they are needed later, they are read from the cache. There is no need to
+ * keep them in this cache after that point since they are present in the
+ * hierarchy from then on.
  */
 public class ItemInfoCacheImpl implements ItemInfoCache {
 
