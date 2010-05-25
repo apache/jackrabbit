@@ -40,12 +40,35 @@ public class LitmusTest extends TestCase {
      */
     private static final Logger log = LoggerFactory.getLogger(LitmusTest.class);
 
-    public void testLitmus() throws Exception {
+    private static String litmus = System.getProperty("litmus", "litmus");
+
+    private static boolean litmusIsAvailable = isLitmusAvailable(litmus);
+
+    public void testBasic() throws Exception {
+        assertLitmus("basic", 0);
+    }
+
+    public void testHttp() throws Exception {
+        assertLitmus("http", 0);
+    }
+
+    public void testProps() throws Exception {
+        assertLitmus("props", 0);
+    }
+
+    public void testCopyMove() throws Exception {
+        assertLitmus("copymove", 1); // FIXME: Currently expected to fail!
+    }
+
+    public void testLocks() throws Exception {
+        assertLitmus("locks", 1); // FIXME: Currently expected to fail!
+    }
+
+    private void assertLitmus(String tests, int exit) throws Exception {
         File dir = new File("target", "litmus");
-        String litmus = System.getProperty("litmus", "litmus");
 
         if (Boolean.getBoolean("jackrabbit.test.integration")
-                && litmusIsAvailable(litmus)) {
+                && litmusIsAvailable) {
             final Repository repository = JcrUtils.getRepository(
                     "jcr-jackrabbit://" + dir.getCanonicalPath());
             Session session = repository.login(); // for the TransientRepository
@@ -78,14 +101,13 @@ public class LitmusTest extends TestCase {
 
                     ProcessBuilder builder =
                         new ProcessBuilder(litmus, url, "admin", "admin");
-                    builder.environment().put(
-                            "TESTS", "basic http props"); // copymove locks
+                    builder.environment().put("TESTS", tests);
                     builder.directory(dir);
                     builder.redirectErrorStream();
 
                     Process process = builder.start();
                     IOUtils.copy(process.getInputStream(), System.out);
-                    assertEquals(0, process.waitFor());
+                    assertEquals(exit, process.waitFor());
                 } finally {
                     server.stop();
                 }
@@ -95,7 +117,7 @@ public class LitmusTest extends TestCase {
         }
     }
 
-    private boolean litmusIsAvailable(String litmus) {
+    private static boolean isLitmusAvailable(String litmus) {
         try {
             ProcessBuilder builder = new ProcessBuilder(litmus, "--version");
             builder.redirectErrorStream();
