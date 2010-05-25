@@ -52,7 +52,7 @@ public class LitmusTest extends TestCase {
             try {
                 SocketConnector connector = new SocketConnector();
                 connector.setHost("localhost");
-                connector.setPort(0);
+                connector.setPort(12345);
 
                 Server server = new Server();
                 server.addConnector(connector);
@@ -79,7 +79,7 @@ public class LitmusTest extends TestCase {
                     ProcessBuilder builder =
                         new ProcessBuilder(litmus, url, "admin", "admin");
                     builder.environment().put(
-                            "TESTS", "basic http"); // props copymove locks
+                            "TESTS", "basic http props"); // copymove locks
                     builder.directory(dir);
                     builder.redirectErrorStream();
 
