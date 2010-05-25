@@ -45,7 +45,9 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXResult;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Locale;
 
 /**
@@ -158,12 +160,18 @@ public class WebdavResponseImpl implements WebdavResponse {
                 Document doc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
                 doc.appendChild(serializable.toXml(doc));
 
+                // JCR-2636: Need to use an explicit OutputStreamWriter
+                // instead of relying on the built-in UTF-8 serialisation
+                // to avoid problems with surrogate pairs on Sun JRE 1.5.
+                Writer writer = new OutputStreamWriter(
+                        out, SerializingContentHandler.ENCODING);
                 ContentHandler handler =
-                    SerializingContentHandler.getSerializer(out);
+                    SerializingContentHandler.getSerializer(writer);
                 TransformerFactory factory = TransformerFactory.newInstance();
                 Transformer transformer = factory.newTransformer();
                 transformer.transform(
                         new DOMSource(doc), new SAXResult(handler));
+                writer.flush();
 
                 // TODO: Should this be application/xml? See JCR-1621
                 httpResponse.setContentType(
