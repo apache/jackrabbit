@@ -52,7 +52,7 @@ public class LitmusTest extends TestCase {
             try {
                 SocketConnector connector = new SocketConnector();
                 connector.setHost("localhost");
-                connector.setPort(12345);
+                connector.setPort(Integer.getInteger("litmus.port", 0));
 
                 Server server = new Server();
                 server.addConnector(connector);
