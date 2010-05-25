@@ -40,37 +40,12 @@ public class LitmusTest extends TestCase {
      */
     private static final Logger log = LoggerFactory.getLogger(LitmusTest.class);
 
-    private static String litmus = System.getProperty("litmus", "litmus");
-
-    private static boolean litmusIsAvailable = isLitmusAvailable(litmus);
-
-    public void testBasic() throws Exception {
-        assertLitmus("basic", 0);
-    }
-
-    public void testHttp() throws Exception {
-        assertLitmus("http", 0);
-    }
-
-    public void testProps() throws Exception {
-        assertLitmus("props", 0);
-    }
-
-    public void testCopyMove() throws Exception {
-        // FIXME: JCR-2637: WebDAV shallow copy test failure
-        assertLitmus("copymove", 1);
-    }
-
-    public void testLocks() throws Exception {
-        // FIXME: JCR-2638: Litmus locks test failures
-        assertLitmus("locks", 1);
-    }
-
-    private void assertLitmus(String tests, int exit) throws Exception {
+    public void testLitmus() throws Exception {
         File dir = new File("target", "litmus");
+        String litmus = System.getProperty("litmus", "litmus");
 
         if (Boolean.getBoolean("jackrabbit.test.integration")
-                && litmusIsAvailable) {
+                && isLitmusAvailable(litmus)) {
             final Repository repository = JcrUtils.getRepository(
                     "jcr-jackrabbit://" + dir.getCanonicalPath());
             Session session = repository.login(); // for the TransientRepository
@@ -103,13 +78,20 @@ public class LitmusTest extends TestCase {
 
                     ProcessBuilder builder =
                         new ProcessBuilder(litmus, url, "admin", "admin");
-                    builder.environment().put("TESTS", tests);
                     builder.directory(dir);
                     builder.redirectErrorStream();
 
-                    Process process = builder.start();
-                    IOUtils.copy(process.getInputStream(), System.out);
-                    assertEquals(exit, process.waitFor());
+                    assertLitmus(builder, "basic", 0);
+
+                    assertLitmus(builder, "http", 0);
+
+                    assertLitmus(builder, "props", 0);
+
+                    // FIXME: JCR-2637: WebDAV shallow copy test failure
+                    assertLitmus(builder, "copymove", 1);
+
+                    // FIXME: JCR-2638: Litmus locks test failures
+                    assertLitmus(builder, "locks", 1);
                 } finally {
                     server.stop();
                 }
@@ -117,6 +99,14 @@ public class LitmusTest extends TestCase {
                 session.logout();
             }
         }
+    }
+
+    private void assertLitmus(
+            ProcessBuilder builder, String tests, int exit) throws Exception {
+        builder.environment().put("TESTS", tests);
+        Process process = builder.start();
+        IOUtils.copy(process.getInputStream(), System.out);
+        assertEquals(exit, process.waitFor());
     }
 
     private static boolean isLitmusAvailable(String litmus) {
