@@ -57,11 +57,13 @@ public class LitmusTest extends TestCase {
     }
 
     public void testCopyMove() throws Exception {
-        assertLitmus("copymove", 1); // FIXME: Currently expected to fail!
+        // FIXME: JCR-2637: WebDAV shallow copy test failure
+        assertLitmus("copymove", 1);
     }
 
     public void testLocks() throws Exception {
-        assertLitmus("locks", 1); // FIXME: Currently expected to fail!
+        // FIXME: JCR-2638: Litmus locks test failures
+        assertLitmus("locks", 1);
     }
 
     private void assertLitmus(String tests, int exit) throws Exception {
