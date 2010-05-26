@@ -577,8 +577,6 @@ public class SharedItemStateManager
                     checkReferentialIntegrity();
                 }
 
-                checkAddedChildNodes();
-
                 /**
                  * prepare the events. this needs to be after the referential
                  * integrity check, since another transaction could have modified
@@ -704,6 +702,8 @@ public class SharedItemStateManager
                         shared.modified(refs);
                     }
                 }
+
+                checkAddedChildNodes();
 
                 /* create event states */
                 events.createEventStates(rootNodeId, local, SharedItemStateManager.this);
