@@ -792,9 +792,23 @@ public class SessionItemStateManager
             // local state was created
             ItemState transientState = transientStore.get(created.getId());
             if (transientState != null) {
-                // underlying state has been permanently created
-                transientState.pull();
-                transientState.setStatus(ItemState.STATUS_EXISTING);
+                if (transientState.hasOverlayedState()) {
+                    // underlying state has been permanently created
+                    transientState.pull();
+                    transientState.setStatus(ItemState.STATUS_EXISTING);
+                } else {
+                    // this is a notification from another session
+                    try {
+                        ItemState local = stateMgr.getItemState(created.getId());
+                        transientState.connect(local);
+                        // update mod count
+                        transientState.setModCount(local.getModCount());
+                        transientState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                    } catch (ItemStateException e) {
+                        // something went wrong, mark as stale
+                        transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
+                    }
+                }
                 visibleState = transientState;
             }
         }
@@ -826,6 +840,12 @@ public class SessionItemStateManager
 
                                 public boolean isDeleted(ItemId id) {
                                     return atticStore.contains(id);
+                                }
+
+                                public boolean isModified(ItemId id) {
+                                    ItemState is = transientStore.get(id);
+                                    return is != null
+                                            && is.getStatus() == ItemState.STATUS_EXISTING_MODIFIED;
                                 }
 
                                 public boolean allowsSameNameSiblings(NodeId id) {
@@ -872,6 +892,13 @@ public class SessionItemStateManager
             if (transientState != null) {
                 transientState.setStatus(ItemState.STATUS_STALE_DESTROYED);
                 visibleState = transientState;
+            } else {
+                // check attic
+                transientState = atticStore.get(destroyed.getId());
+                if (transientState != null) {
+                    atticStore.remove(destroyed.getId());
+                    transientState.onDisposed();
+                }
             }
         }
         dispatcher.notifyStateDestroyed(visibleState);

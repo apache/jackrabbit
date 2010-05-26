@@ -106,7 +106,7 @@ class NodeStateMerger {
                         NodeState.ChildNodeEntry cne =
                                 (NodeState.ChildNodeEntry) iter.next();
 
-                        if (context.isAdded(cne.getId())) {
+                        if (context.isAdded(cne.getId()) || context.isModified(cne.getId())) {
                             // a new child node entry has been added to this state;
                             // check for name collisions with other state
                             if (overlayedState.hasChildNodeEntry(cne.getName())) {
@@ -121,6 +121,8 @@ class NodeStateMerger {
                             }
 
                             added.add(cne);
+                        } else {
+                            // externally added
                         }
                     }
 
@@ -128,9 +130,11 @@ class NodeStateMerger {
                          iter.hasNext();) {
                         NodeState.ChildNodeEntry cne =
                                 (NodeState.ChildNodeEntry) iter.next();
-                        if (context.isDeleted(cne.getId())) {
+                        if (context.isDeleted(cne.getId()) || context.isModified(cne.getId())) {
                             // a child node entry has been removed from this node state
                             removed.add(cne);
+                        } else {
+                            // externally removed
                         }
                     }
 
@@ -161,14 +165,6 @@ class NodeStateMerger {
                         PropertyId propId =
                                 new PropertyId(state.getNodeId(), name);
                         if (context.isAdded(propId)) {
-                            // a new property name has been added to this state;
-                            // check for name collisions
-                            if (overlayedState.hasPropertyName(name)
-                                    || overlayedState.hasChildNodeEntry(name)) {
-                                // conflicting names
-                                return false;
-                            }
-
                             added.add(name);
                         }
                     }
@@ -209,6 +205,7 @@ class NodeStateMerger {
     static interface MergeContext {
         boolean isAdded(ItemId id);
         boolean isDeleted(ItemId id);
+        boolean isModified(ItemId id);
         boolean allowsSameNameSiblings(NodeId id);
     }
 }

@@ -596,6 +596,10 @@ public class SharedItemStateManager
                                             return local.deleted(id);
                                         }
 
+                                        public boolean isModified(ItemId id) {
+                                            return local.isModified(id);
+                                        }
+
                                         public boolean allowsSameNameSiblings(NodeId id) {
                                             NodeState ns;
                                             try {
