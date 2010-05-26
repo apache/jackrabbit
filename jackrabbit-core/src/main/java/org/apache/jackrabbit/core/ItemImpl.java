@@ -67,6 +67,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.VersionException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -935,12 +936,21 @@ public abstract class ItemImpl implements Item {
              * build list of transient (i.e. new & modified) states that
              * should be persisted
              */
-            Collection dirty = getTransientStates();
+            
+            Collection dirty;
+            try {
+                dirty = getTransientStates();
+            } catch (ConcurrentModificationException e) {
+                String msg = "Concurrent modification; session is closed";
+                log.error(msg, e);
+                session.logout();
+                throw e;
+            }
+            
             if (dirty.size() == 0) {
                 // no transient items, nothing to do here
                 return;
             }
-
             /**
              * build list of transient descendants in the attic
              * (i.e. those marked as 'removed')

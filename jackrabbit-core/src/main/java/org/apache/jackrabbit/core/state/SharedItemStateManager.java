@@ -577,6 +577,8 @@ public class SharedItemStateManager
                     checkReferentialIntegrity();
                 }
 
+                checkAddedChildNodes();
+
                 /**
                  * prepare the events. this needs to be after the referential
                  * integrity check, since another transaction could have modified
@@ -738,8 +740,8 @@ public class SharedItemStateManager
                 long t0 = System.currentTimeMillis();
                 persistMgr.store(shared);
                 succeeded = true;
-                long t1 = System.currentTimeMillis();
                 if (log.isDebugEnabled()) {
+                    long t1 = System.currentTimeMillis();
                     log.debug("persisting change log " + shared + " took " + (t1 - t0) + "ms");
                 }
             } finally {
@@ -977,6 +979,39 @@ public class SharedItemStateManager
                     refs.removeReference(id);
                     // update change log
                     local.modified(refs);
+                }
+            }
+        }
+
+        /**
+         * Verify the added child nodes of the added or modified states exist.
+         * If they don't exist, most likely the problem is that the same session
+         * is used concurrently.
+         */
+        private void checkAddedChildNodes() throws ItemStateException {
+            for (Iterator iter = local.addedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                checkAddedChildNode(state);
+            }
+            for (Iterator iter = local.modifiedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                checkAddedChildNode(state);
+            }
+        }
+
+        private void checkAddedChildNode(ItemState state) throws ItemStateException {
+            if (state.isNode()) {
+                NodeState nodeState = (NodeState) state;
+                for (Iterator cneIt = nodeState.getAddedChildNodeEntries().iterator(); cneIt.hasNext();) {
+                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
+                    NodeId id = cne.getId();
+                    if (local.get(id) == null && !id.equals(RepositoryImpl.VERSION_STORAGE_NODE_ID)
+                            && !id.equals(RepositoryImpl.NODETYPES_NODE_ID) && !cache.isCached(id)
+                            && !persistMgr.exists(id)) {
+                        String msg = "Trying to add a non-existing child node: " + id;
+                        log.debug(msg);
+                        throw new ItemStateException(msg);
+                    }
                 }
             }
         }
