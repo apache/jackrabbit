@@ -142,6 +142,18 @@ public class ChangeLog {
     }
 
     /**
+     * Returns a flag indicating whether a given item state is marked as
+     * modified in this log.
+     *
+     * @param id the id of the item.
+     * @return <code>true</code> if the item state is marked as modified in this
+     *         log; <code>false</code> otherwise.
+     */
+    public boolean isModified(ItemId id) {
+        return modifiedStates.containsKey(id);
+    }
+
+    /**
      * Return a node references object given its id. Returns
      * <code>null</code> if the node reference is not in the modified
      * section.
