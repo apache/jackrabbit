@@ -363,6 +363,11 @@ public final class EventStateCollection {
                 NodeId parentId = n.getParentId();
                 // the parent of an added item is always modified or new
                 NodeState parent = (NodeState) changes.get(parentId);
+                if (parent == null) {
+                    String msg = "Parent " + parentId + " must be changed as well.";
+                    log.error(msg);
+                    throw new ItemStateException(msg);
+                }
                 NodeTypeImpl nodeType = getNodeType(parent, session);
                 Set mixins = parent.getMixinTypeNames();
                 Path path = getPath(n.getNodeId(), hmgr);
@@ -376,6 +381,11 @@ public final class EventStateCollection {
             } else {
                 // property created / set
                 NodeState n = (NodeState) changes.get(state.getParentId());
+                if (n == null) {
+                    String msg = "Node " + state.getParentId() + " must be changed as well.";
+                    log.error(msg);
+                    throw new ItemStateException(msg);
+                }
                 NodeTypeImpl nodeType = getNodeType(n, session);
                 Set mixins = n.getMixinTypeNames();
                 Path path = getPath(state.getId(), hmgr);
@@ -473,7 +483,12 @@ public final class EventStateCollection {
         } catch (Exception e) {
             // also catch eventual runtime exceptions here
             // should never happen actually
-            String msg = "Item " + node.getNodeId() + " has unknown node type: " + node.getNodeTypeName();
+            String msg;
+            if (node == null) {
+                msg = "Node state is null";
+            } else {
+                msg = "Item " + node.getNodeId() + " has unknown node type: " + node.getNodeTypeName();
+            }
             log.error(msg);
             throw new ItemStateException(msg, e);
         }

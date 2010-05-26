@@ -556,6 +556,8 @@ public class SharedItemStateManager
                  */
                 checkReferentialIntegrity(local);
 
+                checkAddedChildNodes();
+
                 /**
                  * prepare the events. this needs to be after the referential
                  * integrity check, since another transaction could have modified
@@ -691,6 +693,40 @@ public class SharedItemStateManager
                 }
             }
         }
+
+        /**
+         * Verify the added child nodes of the added or modified states exist.
+         * If they don't exist, most likely the problem is that the same session
+         * is used concurrently.
+         */
+        private void checkAddedChildNodes() throws ItemStateException {
+            for (Iterator iter = local.addedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                checkAddedChildNode(state);
+            }
+            for (Iterator iter = local.modifiedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                checkAddedChildNode(state);
+            }
+        }
+
+        private void checkAddedChildNode(ItemState state) throws ItemStateException {
+            if (state.isNode()) {
+                NodeState nodeState = (NodeState) state;
+                for (Iterator cneIt = nodeState.getAddedChildNodeEntries().iterator(); cneIt.hasNext();) {
+                    NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) cneIt.next();
+                    NodeId id = cne.getId();
+                    if (local.get(id) == null && !id.equals(RepositoryImpl.VERSION_STORAGE_NODE_ID)
+                            && !id.equals(RepositoryImpl.NODETYPES_NODE_ID) && !cache.isCached(id)
+                            && !persistMgr.exists(id)) {
+                        String msg = "Trying to add a non-existing child node: " + id;
+                        log.debug(msg);
+                        throw new ItemStateException(msg);
+                    }
+                }
+            }
+        }
+
 
         /**
          * End update operation. This will store the changes to the associated
