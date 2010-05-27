@@ -301,7 +301,8 @@ public class SessionImpl extends AbstractSession
      * @return the userID.
      */
     protected String retrieveUserId(Subject subject, String workspaceName) throws RepositoryException {
-        return rep.getSecurityManager().getUserID(subject, workspaceName);
+        return repositoryContext.getSecurityManager().getUserID(
+                subject, workspaceName);
     }
 
     /**
@@ -373,7 +374,7 @@ public class SessionImpl extends AbstractSession
                 hierarchyManager,
                 this,
                 wspName);
-        return rep.getSecurityManager().getAccessManager(this, ctx);
+        return repositoryContext.getSecurityManager().getAccessManager(this, ctx);
     }
 
     /**
@@ -746,7 +747,8 @@ public class SessionImpl extends AbstractSession
      */
     public PrincipalManager getPrincipalManager() throws RepositoryException, AccessDeniedException {
         if (principalManager == null) {
-            principalManager = rep.getSecurityManager().getPrincipalManager(this);
+            principalManager =
+                repositoryContext.getSecurityManager().getPrincipalManager(this);
         }
         return principalManager;
     }
@@ -756,7 +758,8 @@ public class SessionImpl extends AbstractSession
      */
     public UserManager getUserManager() throws AccessDeniedException, RepositoryException {
         if (userManager == null) {
-            userManager = rep.getSecurityManager().getUserManager(this);
+            userManager =
+                repositoryContext.getSecurityManager().getUserManager(this);
         }
         return userManager;
     }
