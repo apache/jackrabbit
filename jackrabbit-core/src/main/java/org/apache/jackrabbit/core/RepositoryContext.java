@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -62,9 +63,14 @@ public class RepositoryContext {
     private FileSystem fileSystem;
 
     /**
-     * The data store of this repository, can be <code>null</code>.
+     * The data store of this repository, or <code>null</code>.
      */
     private DataStore dataStore;
+
+    /**
+     * The cluster node instance of this repository, or <code>null</code>.
+     */
+    private ClusterNode clusterNode;
 
     /**
      * Creates a component context for the given repository.
@@ -204,6 +210,26 @@ public class RepositoryContext {
     public void setDataStore(DataStore dataStore) {
         assert dataStore != null;
         this.dataStore = dataStore;
+    }
+
+    /**
+     * Returns the cluster node instance of this repository, or
+     * <code>null</code> if clustering is not enabled.
+     *
+     * @return cluster node
+     */
+    public ClusterNode getClusterNode() {
+        return clusterNode;
+    }
+
+    /**
+     * Sets the cluster node instance of this repository.
+     *
+     * @param clusterNode cluster node
+     */
+    public void setClusterNode(ClusterNode clusterNode) {
+        assert clusterNode != null;
+        this.clusterNode = clusterNode;
     }
 
 }
