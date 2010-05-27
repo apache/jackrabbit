@@ -289,7 +289,8 @@ public class SessionImpl extends AbstractSession
 
         namePathResolver = new DefaultNamePathResolver(this, this, true);
         ntMgr = new NodeTypeManagerImpl(
-                repositoryContext.getNodeTypeRegistry(), this, rep.getDataStore());
+                repositoryContext.getNodeTypeRegistry(), this,
+                repositoryContext.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(
                 wspConfig, rep.getWorkspaceStateManager(wspName));
@@ -344,7 +345,8 @@ public class SessionImpl extends AbstractSession
         return ItemManager.createInstance(
                 itemStateMgr, hierMgr, this,
                 ntMgr.getRootNodeDefinition(),
-                repositoryContext.getRootNodeId());
+                repositoryContext.getRootNodeId(),
+                repositoryContext.getDataStore());
     }
 
     /**
@@ -694,7 +696,8 @@ public class SessionImpl extends AbstractSession
             }
             ipmList[i] = (IterablePersistenceManager) pm;
         }
-        GarbageCollector gc = new GarbageCollector(rep, this, ipmList, sessions);
+        GarbageCollector gc = new GarbageCollector(
+                repositoryContext.getDataStore(), this, ipmList, sessions);
         return gc;
     }
 
@@ -1278,7 +1281,8 @@ public class SessionImpl extends AbstractSession
      */
     public ValueFactory getValueFactory() {
         if (valueFactory == null) {
-            valueFactory = new ValueFactoryImpl(this, rep.getDataStore());
+            valueFactory =
+                new ValueFactoryImpl(this, repositoryContext.getDataStore());
         }
         return valueFactory;
     }

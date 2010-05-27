@@ -253,7 +253,7 @@ public class RepositoryCopier {
         PersistenceCopier copier = new PersistenceCopier(
                 source.getInternalVersionManager().getPersistenceManager(),
                 target.getInternalVersionManager().getPersistenceManager(),
-                target.getRepository().getDataStore());
+                target.getDataStore());
         copier.copy(RepositoryImpl.VERSION_STORAGE_NODE_ID);
         copier.copy(RepositoryImpl.ACTIVITIES_NODE_ID);
     }
@@ -272,7 +272,7 @@ public class RepositoryCopier {
             PersistenceCopier copier = new PersistenceCopier(
                     source.getRepository().getWorkspaceInfo(name).getPersistenceManager(),
                     target.getRepository().getWorkspaceInfo(name).getPersistenceManager(),
-                    target.getRepository().getDataStore());
+                    target.getDataStore());
             copier.excludeNode(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
             copier.copy(RepositoryImpl.ROOT_NODE_ID);
 

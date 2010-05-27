@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.MarkEventListener;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
@@ -45,11 +44,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
     public void testCloseSessionWhileRunningGc() throws Exception {
         final Session session = getHelper().getReadWriteSession();
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-        if (rep.getDataStore() == null) {
-            LOG.info("testConcurrentClose skipped. Data store is not used.");
-            return;
-        }
+
         final DataStoreGarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
         final Exception[] ex = new Exception[1];
         gc.setMarkEventListener(new MarkEventListener() {
@@ -83,11 +78,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     public void testConcurrentGC() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-        if (rep.getDataStore() == null) {
-            LOG.info("testConcurrentGC skipped. Data store is not used.");
-            return;
-        }
+
         final SynchronousChannel sync = new SynchronousChannel();
         final Node node = root.addNode("slowBlob");
         final int blobLength = 1000;
@@ -140,12 +131,6 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     public void testGC() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();
-
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-        if (rep.getDataStore() == null) {
-            LOG.info("testGC skipped. Data store is not used.");
-            return;
-        }
 
         deleteMyNodes();
         runGC(session, true);
@@ -217,12 +202,6 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         Node root = testRootNode;
         Session session = root.getSession();
-
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-        if (rep.getDataStore() == null) {
-            LOG.info("testTransientObjects skipped. Data store is not used.");
-            return;
-        }
 
         deleteMyNodes();
 

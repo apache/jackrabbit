@@ -32,6 +32,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -96,6 +97,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
     private final HierarchyManager hierMgr;
 
     /**
+     * The data store of this repository, or <code>null</code>
+     */
+    private final DataStore dataStore;
+
+    /**
      * A cache for item instances created by this <code>ItemManager</code>
      */
     private final Map<ItemId, ItemData> itemCache;
@@ -114,17 +120,20 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @param session     the session associated with the new instance
      * @param rootNodeDef the definition of the root node
      * @param rootNodeId  the id of the root node
+     * @param dataStore   the data store of this repository, or <code>null</code>
      */
     protected ItemManager(SessionItemStateManager sism,
                           HierarchyManager hierMgr,
                           SessionImpl session,
-                          org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef,
-                          NodeId rootNodeId) {
+                          NodeDefinitionImpl rootNodeDef,
+                          NodeId rootNodeId,
+                          DataStore dataStore) {
         this.sism = sism;
         this.hierMgr = hierMgr;
         this.session = session;
         this.rootNodeDef = rootNodeDef;
         this.rootNodeId = rootNodeId;
+        this.dataStore = dataStore;
 
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
@@ -142,16 +151,19 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @param session           the session associated with the new instance
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeId        the id of the root node
+     * @param dataStore   the data store of this repository, or <code>null</code>
      * @return the item manager instance.
      */
     public static ItemManager createInstance(
             SessionItemStateManager itemStateProvider,
             HierarchyManager hierMgr,
             SessionImpl session,
-            org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef,
-            NodeId rootNodeId) {
-        ItemManager mgr = new ItemManager(itemStateProvider, hierMgr,
-                session, rootNodeDef, rootNodeId);
+            NodeDefinitionImpl rootNodeDef,
+            NodeId rootNodeId,
+            DataStore dataStore) {
+        ItemManager mgr = new ItemManager(
+                itemStateProvider, hierMgr, session, rootNodeDef,
+                rootNodeId, dataStore);
         itemStateProvider.addListener(mgr);
         return mgr;
     }
@@ -841,7 +853,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     private PropertyImpl createPropertyInstance(PropertyData data) {
         // check special nodes
-        return new PropertyImpl(this, session, data);
+        return new PropertyImpl(this, session, data, dataStore);
     }
 
     //---------------------------------------------------< item cache methods >

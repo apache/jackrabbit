@@ -95,11 +95,6 @@ public abstract class ItemImpl implements Item {
     protected final SessionImpl session;
 
     /**
-     * the <code>Repository</code> object
-     */
-    protected final RepositoryImpl rep;
-
-    /**
      * Item data associated with this item.
      */
     protected final ItemData data;
@@ -123,7 +118,6 @@ public abstract class ItemImpl implements Item {
      */
     ItemImpl(ItemManager itemMgr, SessionImpl session, ItemData data) {
         this.session = session;
-        rep = (RepositoryImpl) session.getRepository();
         stateMgr = session.getItemStateManager();
         this.id = data.getId();
         this.itemMgr = itemMgr;

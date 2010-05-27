@@ -37,6 +37,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -65,15 +66,24 @@ public class PropertyImpl extends ItemImpl implements Property {
     private final PropertyData data;
 
     /**
+     * The data store of this repository, or <code>null</code>
+     */
+    private final DataStore dataStore;
+
+    /**
      * Package private constructor.
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Property</code>
      * @param session    the <code>Session</code> through which this <code>Property</code> is acquired
      * @param data       the property data
+     * @param dataStore  the data store of this repository, or <code>null</code>
      */
-    PropertyImpl(ItemManager itemMgr, SessionImpl session, PropertyData data) {
+    PropertyImpl(
+            ItemManager itemMgr, SessionImpl session, PropertyData data,
+            DataStore dataStore) {
         super(itemMgr, session, data);
         this.data = data;
+        this.dataStore = dataStore;
         // value will be read on demand
     }
 
@@ -348,7 +358,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetValue = ValueHelper.convert(
                     ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                     reqType, session.getValueFactory());
-            internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
+            internalValue = InternalValue.create(targetValue, session, dataStore);
         } else {
             // no type conversion required
             internalValue = InternalValue.create(name);
@@ -399,7 +409,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                         Value targetValue = ValueHelper.convert(
                                 ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                                 reqType, session.getValueFactory());
-                        internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
+                        internalValue = InternalValue.create(targetValue, session, dataStore);
                     } else {
                         // no type conversion required
                         internalValue = InternalValue.create(name);
@@ -674,10 +684,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             // type conversion required
             Value targetVal = ValueHelper.convert(
                     value, reqType, session.getValueFactory());
-            internalValue = InternalValue.create(targetVal, session, rep.getDataStore());
+            internalValue = InternalValue.create(targetVal, session, dataStore);
         } else {
             // no type conversion required
-            internalValue = InternalValue.create(value, session, rep.getDataStore());
+            internalValue = InternalValue.create(value, session, dataStore);
         }
         internalSetValue(new InternalValue[]{internalValue}, reqType);
     }
@@ -746,8 +756,8 @@ public class PropertyImpl extends ItemImpl implements Property {
                         value = ValueHelper.convert(
                                 value, reqType, session.getValueFactory());
                     }
-                    internalValues[i] = InternalValue.create(
-                            value, session, rep.getDataStore());
+                    internalValues[i] =
+                        InternalValue.create(value, session, dataStore);
                 } else {
                     internalValues[i] = null;
                 }

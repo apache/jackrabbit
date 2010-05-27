@@ -20,7 +20,6 @@ import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
@@ -107,13 +106,15 @@ public class GarbageCollector implements DataStoreGarbageCollector {
      * This method is usually not called by the application, it is called
      * by SessionImpl.createDataStoreGarbageCollector().
      *
-     * @param rep the repository
+     * @param dataStore the data store to be garbage-collected
      * @param session the session that created this object (optional)
      * @param list the persistence managers
      * @param sessionList the sessions to access the workspaces
      */
-    public GarbageCollector(RepositoryImpl rep, SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
-        store = rep.getDataStore();
+    public GarbageCollector(
+            DataStore dataStore, SessionImpl session,
+            IterablePersistenceManager[] list, Session[] sessionList) {
+        this.store = dataStore;
         this.pmList = list;
         this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;

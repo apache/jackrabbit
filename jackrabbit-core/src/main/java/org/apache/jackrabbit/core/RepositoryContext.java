@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -59,6 +60,11 @@ public class RepositoryContext {
      * The repository file system.
      */
     private FileSystem fileSystem;
+
+    /**
+     * The data store of this repository, can be <code>null</code>.
+     */
+    private DataStore dataStore;
 
     /**
      * Creates a component context for the given repository.
@@ -178,6 +184,26 @@ public class RepositoryContext {
     public void setFileSystem(FileSystem fileSystem) {
         assert fileSystem != null;
         this.fileSystem = fileSystem;
+    }
+
+    /**
+     * Returns the data store of this repository, or <code>null</code>
+     * if a data store is not configured.
+     *
+     * @return data store
+     */
+    public DataStore getDataStore() {
+        return dataStore;
+    }
+
+    /**
+     * Sets the data store of this repository.
+     *
+     * @param dataStore data store
+     */
+    public void setDataStore(DataStore dataStore) {
+        assert dataStore != null;
+        this.dataStore = dataStore;
     }
 
 }

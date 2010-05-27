@@ -20,12 +20,10 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.api.JackrabbitValue;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,20 +37,10 @@ public class TestTwoGetStreams extends AbstractJCRTest {
 
     private static final int STREAM_LENGTH = 256 * 1024;
 
-    private boolean isDataStoreEnabled() throws RepositoryException {
-        RepositoryImpl rep = (RepositoryImpl) superuser.getRepository();
-        return rep.getDataStore() != null;
-    }
-
     /**
      * Test the JackrabbitValue.getContentIdentity feature.
      */
     public void testContentIdentity() throws Exception {
-        if (!isDataStoreEnabled()) {
-            log.info("testContentIdentity skipped. Data store is not used.");
-            return;
-        }
-
         Node root = superuser.getRootNode();
         ValueFactory vf = superuser.getValueFactory();
 
@@ -94,11 +82,6 @@ public class TestTwoGetStreams extends AbstractJCRTest {
      * Test reading from two concurrently opened streams.
      */
     public void testTwoGetStreams() throws Exception {
-        if (!isDataStoreEnabled()) {
-            log.info("testContentIdentity skipped. Data store is not used.");
-            return;
-        }
-
         Node root = superuser.getRootNode();
         ValueFactory vf = superuser.getValueFactory();
         root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
@@ -125,11 +108,6 @@ public class TestTwoGetStreams extends AbstractJCRTest {
      * Tests reading concurrently from two different streams.
      */
     public void testTwoStreamsConcurrently() throws Exception {
-        if (!isDataStoreEnabled()) {
-            log.info("testContentIdentity skipped. Data store is not used.");
-            return;
-        }
-
         Node root = superuser.getRootNode();
         ValueFactory vf = superuser.getValueFactory();
         root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
@@ -156,11 +134,6 @@ public class TestTwoGetStreams extends AbstractJCRTest {
      * same property.
      */
     public void testTwoStreamsFromSamePropertyConcurrently() throws Exception {
-        if (!isDataStoreEnabled()) {
-            log.info("testContentIdentity skipped. Data store is not used.");
-            return;
-        }
-
         Node root = superuser.getRootNode();
         ValueFactory vf = superuser.getValueFactory();
         root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
