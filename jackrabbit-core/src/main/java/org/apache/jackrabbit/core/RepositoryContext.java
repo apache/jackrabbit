@@ -73,6 +73,11 @@ public class RepositoryContext {
     private ClusterNode clusterNode;
 
     /**
+     * Workspace manager of this repository.
+     */
+    private WorkspaceManager workspaceManager;
+
+    /**
      * Creates a component context for the given repository.
      *
      * @param repository repository instance
@@ -230,6 +235,26 @@ public class RepositoryContext {
     public void setClusterNode(ClusterNode clusterNode) {
         assert clusterNode != null;
         this.clusterNode = clusterNode;
+    }
+
+    /**
+     * Returns the workspace manager of this repository.
+     *
+     * @return workspace manager
+     */
+    public WorkspaceManager getWorkspaceManager() {
+        assert workspaceManager != null;
+        return workspaceManager;
+    }
+
+    /**
+     * Sets the workspace manager of this repository.
+     *
+     * @param workspaceManager workspace manager
+     */
+    public void setWorkspaceManager(WorkspaceManager workspaceManager) {
+        assert workspaceManager != null;
+        this.workspaceManager = workspaceManager;
     }
 
 }

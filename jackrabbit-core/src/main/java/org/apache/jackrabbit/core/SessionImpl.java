@@ -22,7 +22,6 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.AbstractSession;
-import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
 import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
@@ -31,8 +30,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AMContext;
@@ -47,7 +44,6 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.spi.Name;
@@ -293,12 +289,13 @@ public class SessionImpl extends AbstractSession
                 repositoryContext.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(
-                wspConfig, rep.getWorkspaceStateManager(wspName));
+                wspConfig,
+                repositoryContext.getWorkspaceManager().getWorkspaceStateManager(wspName));
         itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(subject, itemStateMgr.getHierarchyMgr());
-        versionMgr = createVersionManager(rep);
+        versionMgr = createVersionManager();
         ntInstanceHandler = new NodeTypeInstanceHandler(userId);
     }
 
@@ -354,7 +351,7 @@ public class SessionImpl extends AbstractSession
      * the repository version manager.
      * @return version manager
      */
-    protected InternalVersionManager createVersionManager(RepositoryImpl rep)
+    protected InternalVersionManager createVersionManager()
             throws RepositoryException {
         return repositoryContext.getInternalVersionManager();
     }
@@ -436,9 +433,9 @@ public class SessionImpl extends AbstractSession
       */
     public Session createSession(String workspaceName)
             throws AccessDeniedException, NoSuchWorkspaceException, RepositoryException {
-
         if (workspaceName == null) {
-            workspaceName = rep.getConfig().getDefaultWorkspaceName();
+            workspaceName =
+                repositoryContext.getWorkspaceManager().getDefaultWorkspaceName();
         }
         Subject old = getSubject();
         Subject newSubject = new Subject(old.isReadOnly(), old.getPrincipals(), old.getPublicCredentials(), old.getPrivateCredentials());
@@ -566,7 +563,7 @@ public class SessionImpl extends AbstractSession
     protected String[] getWorkspaceNames() throws RepositoryException {
         // filter workspaces according to access rights
         List<String> names = new ArrayList<String>();
-        for (String name : rep.getWorkspaceNames()) {
+        for (String name : repositoryContext.getWorkspaceManager().getWorkspaceNames()) {
             try {
                 if (getAccessManager().canAccess(name)) {
                     names.add(name);
@@ -590,7 +587,7 @@ public class SessionImpl extends AbstractSession
     protected void createWorkspace(String workspaceName)
             throws AccessDeniedException, RepositoryException {
         // @todo verify that this session has the right privileges for this operation
-        rep.createWorkspace(workspaceName);
+        repositoryContext.getWorkspaceManager().createWorkspace(workspaceName);
     }
 
     /**
@@ -604,11 +601,12 @@ public class SessionImpl extends AbstractSession
      * @throws RepositoryException   if a workspace with the given name already
      *                               exists or if another error occurs
      */
-    protected void createWorkspace(String workspaceName,
-                                   InputSource configTemplate)
+    protected void createWorkspace(
+            String workspaceName, InputSource configTemplate)
             throws AccessDeniedException, RepositoryException {
         // @todo verify that this session has the right privileges for this operation
-        rep.createWorkspace(workspaceName, configTemplate);
+        repositoryContext.getWorkspaceManager().createWorkspace(
+                workspaceName, configTemplate);
     }
 
     /**
@@ -665,39 +663,15 @@ public class SessionImpl extends AbstractSession
      * @throws RepositoryException
      */
     public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
-        ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
-        InternalVersionManagerImpl vm = repositoryContext.getInternalVersionManager();
-        PersistenceManager pm = vm.getPersistenceManager();
-        pmList.add(pm);
-        String[] wspNames = rep.getWorkspaceNames();
-        Session[] sessions = new Session[wspNames.length];
-        for (int i = 0; i < wspNames.length; i++) {
-            String wspName = wspNames[i];
-            WorkspaceInfo wspInfo = rep.getWorkspaceInfo(wspName);
-            // this will initialize the workspace if required
-            SessionImpl session =
-                SystemSession.create(repositoryContext, wspInfo.getConfig());
-            // mark this session as 'active' so the workspace does not get disposed
-            // by the workspace-janitor until the garbage collector is done
-            rep.onSessionCreated(session);
-            // the workspace could be disposed again, so re-initialize if required
-            // afterwards it will not be disposed because a session is registered
-            wspInfo.initialize();
-            sessions[i] = session;
-            pm = wspInfo.getPersistenceManager();
-            pmList.add(pm);
-        }
-        IterablePersistenceManager[] ipmList = new IterablePersistenceManager[pmList.size()];
-        for (int i = 0; i < pmList.size(); i++) {
-            pm = pmList.get(i);
-            if (!(pm instanceof IterablePersistenceManager)) {
-                ipmList = null;
-                break;
+        final GarbageCollector gc = rep.createDataStoreGarbageCollector();
+        // Auto-close if the main session logs out
+        addListener(new SessionListener() {
+            public void loggedOut(SessionImpl session) {
             }
-            ipmList[i] = (IterablePersistenceManager) pm;
-        }
-        GarbageCollector gc = new GarbageCollector(
-                repositoryContext.getDataStore(), this, ipmList, sessions);
+            public void loggingOut(SessionImpl session) {
+                gc.close();
+            }
+        });
         return gc;
     }
 
@@ -834,7 +808,8 @@ public class SessionImpl extends AbstractSession
         creds.setAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE, subject);
 
         try {
-            return rep.login(otherCredentials, getWorkspace().getName());
+            return getRepository().login(
+                    otherCredentials, getWorkspace().getName());
         } catch (NoSuchWorkspaceException nswe) {
             // should never get here...
             String msg = "impersonate failed";
