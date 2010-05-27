@@ -946,7 +946,7 @@ public class SessionImpl extends AbstractSession
         sanityCheck();
 
         // JCR-1753: Ensure that we are up to date with cluster changes
-        ClusterNode cluster = rep.getClusterNode();
+        ClusterNode cluster = repositoryContext.getClusterNode();
         if (cluster != null && clusterSyncOnRefresh()) {
             try {
                 cluster.sync();

@@ -73,7 +73,6 @@ import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -208,11 +207,6 @@ public class RepositoryImpl extends AbstractRepository
     private RepositoryLockMechanism repLock;
 
     /**
-     * Clustered node used, <code>null</code> if clustering is not configured.
-     */
-    private ClusterNode clusterNode;
-
-    /**
      * Shutdown lock for guaranteeing that no new sessions are started during
      * repository shutdown and that a repository shutdown is not initiated
      * during a login. Each session login acquires a read lock while the
@@ -318,8 +312,10 @@ public class RepositoryImpl extends AbstractRepository
             // initialize optional clustering
             // put here before setting up any other external event source that a cluster node
             // will be interested in
+            ClusterNode clusterNode = null;
             if (repConfig.getClusterConfig() != null) {
                 clusterNode = createClusterNode();
+                context.setClusterNode(clusterNode);
                 context.getNamespaceRegistry().setEventChannel(clusterNode);
                 context.getNodeTypeRegistry().setEventChannel(clusterNode);
 
@@ -427,16 +423,6 @@ public class RepositoryImpl extends AbstractRepository
      */
     public ItemStateCacheFactory getItemStateCacheFactory() {
         return cacheFactory;
-    }
-
-    /**
-     * Get the cluster node. Returns <code>null</code> if this repository
-     * is not running clustered.
-     *
-     * @return cluster node
-     */
-    public ClusterNode getClusterNode() {
-        return clusterNode;
     }
 
     /**
@@ -710,7 +696,10 @@ public class RepositoryImpl extends AbstractRepository
             }
 
             // needed to get newly created workspace config file content when runnin in clustered environment
-            StringBuffer workspaceConfigContent = clusterNode != null ? new StringBuffer() : null;
+            StringBuffer workspaceConfigContent = null;
+            if (context.getClusterNode() != null) {
+                workspaceConfigContent = new StringBuffer();
+            }
 
             // create the workspace configuration
             WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, workspaceConfigContent);
@@ -1044,6 +1033,7 @@ public class RepositoryImpl extends AbstractRepository
         log.info("Shutting down repository...");
 
         // stop optional cluster node
+        ClusterNode clusterNode = context.getClusterNode();
         if (clusterNode != null) {
             clusterNode.stop();
         }
@@ -1785,6 +1775,7 @@ public class RepositoryImpl extends AbstractRepository
                 if (lockMgr == null) {
                     lockMgr =
                         new LockManagerImpl(getSystemSession(), fs, executor);
+                    ClusterNode clusterNode = context.getClusterNode();
                     if (clusterNode != null && config.isClustered()) {
                         lockChannel = clusterNode.createLockChannel(getName());
                         lockMgr.setEventChannel(lockChannel);
@@ -1926,6 +1917,7 @@ public class RepositoryImpl extends AbstractRepository
                 } catch (Exception e) {
                     log.error("Unable to add vmgr: " + e.toString(), e);
                 }
+                ClusterNode clusterNode = context.getClusterNode();
                 if (clusterNode != null && config.isClustered()) {
                     updateChannel = clusterNode.createUpdateChannel(getName());
                     itemStateMgr.setEventChannel(updateChannel);

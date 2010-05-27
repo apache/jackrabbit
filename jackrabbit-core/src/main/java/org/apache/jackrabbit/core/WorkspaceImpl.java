@@ -755,7 +755,7 @@ public class WorkspaceImpl extends AbstractWorkspace
                         rep.getObservationDispatcher(wspConfig.getName()),
                         session,
                         session.getItemManager(),
-                        rep.getClusterNode());
+                        repositoryContext.getClusterNode());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";
