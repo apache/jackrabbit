@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
@@ -53,6 +54,11 @@ public class RepositoryContext {
      * The root node identifier of this repository.
      */
     private NodeId rootNodeId;
+
+    /**
+     * The repository file system.
+     */
+    private FileSystem fileSystem;
 
     /**
      * Creates a component context for the given repository.
@@ -152,6 +158,26 @@ public class RepositoryContext {
     void setRootNodeId(NodeId rootNodeId) {
         assert rootNodeId != null;
         this.rootNodeId = rootNodeId;
+    }
+
+    /**
+     * Returns the repository file system.
+     *
+     * @return repository file system
+     */
+    public FileSystem getFileSystem() {
+        assert fileSystem != null;
+        return fileSystem;
+    }
+
+    /**
+     * Sets the repository file system.
+     *
+     * @param fileSystem repository file system
+     */
+    public void setFileSystem(FileSystem fileSystem) {
+        assert fileSystem != null;
+        this.fileSystem = fileSystem;
     }
 
 }

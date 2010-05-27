@@ -102,7 +102,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
-import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -183,12 +182,6 @@ public class RepositoryImpl extends AbstractRepository
 
     // configuration of the repository
     protected final RepositoryConfig repConfig;
-
-    // the virtual repository file system
-    private final FileSystem repStore;
-
-    // sub file system where the repository stores meta data such as uuid of root node, etc.
-    private final FileSystem metaDataStore;
 
     /**
      * Data store for binary properties.
@@ -304,21 +297,11 @@ public class RepositoryImpl extends AbstractRepository
             this.repConfig = repConfig;
 
             // setup file systems
-            repStore = repConfig.getFileSystem();
-            String fsRootPath = "/meta";
-            try {
-                if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
-                    repStore.createFolder(fsRootPath);
-                }
-            } catch (FileSystemException fse) {
-                String msg = "failed to create folder for repository meta data";
-                log.error(msg, fse);
-                throw new RepositoryException(msg, fse);
-            }
-            metaDataStore = new BasedFileSystem(repStore, fsRootPath);
+            FileSystem repStore = repConfig.getFileSystem();
+            context.setFileSystem(repStore);
 
             // init root node uuid
-            context.setRootNodeId(loadRootNodeId(metaDataStore));
+            context.setRootNodeId(loadRootNodeId(repStore));
 
             // initialize repository descriptors
             initRepositoryDescriptors();
@@ -563,6 +546,18 @@ public class RepositoryImpl extends AbstractRepository
      * @throws RepositoryException
      */
     protected NodeId loadRootNodeId(FileSystem fs) throws RepositoryException {
+        String fsRootPath = "/meta";
+        try {
+            if (!fs.exists(fsRootPath) || !fs.isFolder(fsRootPath)) {
+                fs.createFolder(fsRootPath);
+            }
+        } catch (FileSystemException fse) {
+            String msg = "failed to create folder for repository meta data";
+            log.error(msg, fse);
+            throw new RepositoryException(msg, fse);
+        }
+        fs = new BasedFileSystem(fs, fsRootPath);
+
         FileSystemResource uuidFile = new FileSystemResource(fs, "rootUUID");
         try {
             if (uuidFile.exists()) {
@@ -1189,13 +1184,11 @@ public class RepositoryImpl extends AbstractRepository
             }
         }
 
-        if (repStore != null) {
-            try {
-                // close repository file system
-                repStore.close();
-            } catch (FileSystemException e) {
-                log.error("error while closing repository file system", e);
-            }
+        try {
+            // close repository file system
+            context.getFileSystem().close();
+        } catch (FileSystemException e) {
+            log.error("error while closing repository file system", e);
         }
 
         // make sure this instance is not used anymore
@@ -1236,14 +1229,6 @@ public class RepositoryImpl extends AbstractRepository
      */
     public RepositoryConfig getConfig() {
         return repConfig;
-    }
-
-    /**
-     * Returns the repository file system.
-     * @return repository file system
-     */
-    protected FileSystem getFileSystem() {
-        return repStore;
     }
 
     /**

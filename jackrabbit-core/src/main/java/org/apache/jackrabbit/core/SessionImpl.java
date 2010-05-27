@@ -372,7 +372,7 @@ public class SessionImpl extends AbstractSession
             throws AccessDeniedException, RepositoryException {
         String wspName = getWorkspace().getName();
         AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
-                rep.getFileSystem(),
+                repositoryContext.getFileSystem(),
                 this,
                 getSubject(),
                 hierarchyManager,
