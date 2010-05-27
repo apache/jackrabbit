@@ -295,9 +295,7 @@ public class RepositoryImpl extends AbstractRepository
         try {
             this.repConfig = repConfig;
 
-            // setup file systems
-            FileSystem repStore = repConfig.getFileSystem();
-            context.setFileSystem(repStore);
+            context.setFileSystem(repConfig.getFileSystem());
 
             // Load root node identifier
             context.setRootNodeId(loadRootNodeId());
@@ -306,10 +304,10 @@ public class RepositoryImpl extends AbstractRepository
             initRepositoryDescriptors();
 
             // create registries
-            context.setNamespaceRegistry(createNamespaceRegistry(
-                    new BasedFileSystem(repStore, "/namespaces")));
-            context.setNodeTypeRegistry(createNodeTypeRegistry(
-                    new BasedFileSystem(repStore, "/nodetypes")));
+            context.setNamespaceRegistry(
+                    new NamespaceRegistryImpl(context.getFileSystem()));
+            context.setNodeTypeRegistry(new NodeTypeRegistry(
+                    context.getNamespaceRegistry(), context.getFileSystem()));
 
             dataStore = repConfig.getDataStore();
 
@@ -584,30 +582,6 @@ public class RepositoryImpl extends AbstractRepository
             throw new RepositoryException(
                     "Failed to access the root node identifier", fse);
         }
-    }
-
-    /**
-     * Creates the <code>NamespaceRegistry</code> instance.
-     *
-     * @param fs
-     * @return
-     * @throws RepositoryException
-     */
-    protected NamespaceRegistryImpl createNamespaceRegistry(FileSystem fs)
-            throws RepositoryException {
-        return new NamespaceRegistryImpl(fs);
-    }
-
-    /**
-     * Creates the <code>NodeTypeRegistry</code> instance.
-     *
-     * @param fs
-     * @return
-     * @throws RepositoryException
-     */
-    protected NodeTypeRegistry createNodeTypeRegistry(FileSystem fs)
-            throws RepositoryException {
-        return NodeTypeRegistry.create(context.getNamespaceRegistry(), fs);
     }
 
     /**

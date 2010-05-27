@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.cluster.NamespaceEventChannel;
 import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
+import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.StringIndex;
@@ -91,12 +92,11 @@ public class NamespaceRegistryImpl implements
     /**
      * Protected constructor: Constructs a new instance of this class.
      *
-     * @param nsRegStore
+     * @param fs repository file system
      * @throws RepositoryException
      */
-    protected NamespaceRegistryImpl(FileSystem nsRegStore)
-            throws RepositoryException {
-        this.nsRegStore = nsRegStore;
+    public NamespaceRegistryImpl(FileSystem fs) throws RepositoryException {
+        this.nsRegStore = new BasedFileSystem(fs, "/namespaces");
         load();
     }
 
