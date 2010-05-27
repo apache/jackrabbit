@@ -418,6 +418,19 @@ public class RepositoryImpl extends AbstractRepository
         }
     }
 
+    /**
+     * Returns the internal component context of this repository.
+     * This package-private method should only be used when there is
+     * no other reasonable way to access the repository context.
+     * A better design would be to access the repository instance
+     * through the repository context.
+     *
+     * @return repository context
+     */
+    RepositoryContext getRepositoryContext() { // TODO: Get rid of this method
+        return context;
+    }
+
     public DataStore getDataStore() {
         return dataStore;
     }
