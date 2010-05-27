@@ -183,11 +183,6 @@ public class RepositoryImpl extends AbstractRepository
     protected final RepositoryConfig repConfig;
 
     /**
-     * Data store for binary properties.
-     */
-    private final DataStore dataStore;
-
-    /**
      * the delegating observation dispatcher for all workspaces
      */
     private final DelegatingObservationDispatcher delegatingDispatcher =
@@ -309,7 +304,10 @@ public class RepositoryImpl extends AbstractRepository
             context.setNodeTypeRegistry(new NodeTypeRegistry(
                     context.getNamespaceRegistry(), context.getFileSystem()));
 
-            dataStore = repConfig.getDataStore();
+            DataStore dataStore = repConfig.getDataStore();
+            if (dataStore != null) {
+                context.setDataStore(dataStore);
+            }
 
             // init workspace configs
             for (WorkspaceConfig config : repConfig.getWorkspaceConfigs()) {
@@ -411,10 +409,6 @@ public class RepositoryImpl extends AbstractRepository
         return context;
     }
 
-    public DataStore getDataStore() {
-        return dataStore;
-    }
-
     /**
      * Get the cache manager of this repository, useful
      * for setting its memory parameters.
@@ -494,7 +488,7 @@ public class RepositoryImpl extends AbstractRepository
         FileSystem fs = vConfig.getFileSystem();
         PersistenceManager pm = createPersistenceManager(
                 vConfig.getHomeDir(), fs,
-                vConfig.getPersistenceManagerConfig(), dataStore);
+                vConfig.getPersistenceManagerConfig());
 
         ISMLocking ismLocking = vConfig.getISMLocking();
 
@@ -1095,6 +1089,7 @@ public class RepositoryImpl extends AbstractRepository
 
         repDescriptors.clear();
 
+        DataStore dataStore = context.getDataStore();
         if (dataStore != null) {
             try {
                 // close the datastore
@@ -1312,8 +1307,8 @@ public class RepositoryImpl extends AbstractRepository
      *                             not be instantiated/initialized
      */
     private PersistenceManager createPersistenceManager(
-            File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig,
-            DataStore dataStore) throws RepositoryException {
+            File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig)
+            throws RepositoryException {
         try {
             PersistenceManager pm = pmConfig.newInstance(PersistenceManager.class);
             pm.init(new PMContext(
@@ -1321,7 +1316,7 @@ public class RepositoryImpl extends AbstractRepository
                     context.getRootNodeId(),
                     context.getNamespaceRegistry(),
                     context.getNodeTypeRegistry(),
-                    dataStore));
+                    context.getDataStore()));
             return pm;
         } catch (Exception e) {
             String msg = "Cannot instantiate persistence manager " + pmConfig.getClassName();
@@ -1906,10 +1901,8 @@ public class RepositoryImpl extends AbstractRepository
             fs = config.getFileSystem();
 
             persistMgr = createPersistenceManager(
-                    new File(config.getHomeDir()),
-                    fs,
-                    config.getPersistenceManagerConfig(),
-                    dataStore);
+                    new File(config.getHomeDir()), fs,
+                    config.getPersistenceManagerConfig());
 
             // JCR-2551: Recovery from a lost version history
             if (Boolean.getBoolean("org.apache.jackrabbit.version.recovery")) {
@@ -2295,12 +2288,6 @@ public class RepositoryImpl extends AbstractRepository
             getWorkspaceInfo(workspace).getLockManager();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public DataStore getDataStore() {
-            return RepositoryImpl.this.getDataStore();
-        }
     }
 
     /**

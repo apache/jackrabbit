@@ -77,7 +77,9 @@ public class RepositoryManagerImpl implements RepositoryManager {
             }
             ipmList[i] = (IterablePersistenceManager) pm;
         }
-        GarbageCollector gc = new GarbageCollector(rep, null, ipmList, sessions);
+        GarbageCollector gc = new GarbageCollector(
+                rep.getRepositoryContext().getDataStore(),
+                null, ipmList, sessions);
         return gc;
     }
 

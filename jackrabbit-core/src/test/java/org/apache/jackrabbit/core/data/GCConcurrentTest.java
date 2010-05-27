@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.MarkEventListener;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
@@ -46,11 +45,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
     public void testConcurrentDelete() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-        if (rep.getDataStore() == null) {
-            LOG.info("testGC skipped. Data store is not used.");
-            return;
-        }
+
         final String testNodeName = "testConcurrentDelete";
         node(root, testNodeName);
         session.save();
@@ -72,11 +67,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
     public void testGC() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-        if (rep.getDataStore() == null) {
-            LOG.info("testGC skipped. Data store is not used.");
-            return;
-        }
+
         GCThread gc = new GCThread(session);
         Thread gcThread = new Thread(gc, "Datastore Garbage Collector");
 

@@ -2840,6 +2840,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            RepositoryImpl rep = (RepositoryImpl) session.getRepository();
             srcSession = rep.createSession(session.getSubject(), workspaceName);
 
             // search nearest ancestor that is referenceable
