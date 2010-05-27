@@ -143,12 +143,12 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @param session   The session
      */
     protected WorkspaceImpl(
-            WorkspaceConfig wspConfig, SharedItemStateManager stateMgr,
-            RepositoryContext repositoryContext, SessionImpl session) {
+            WorkspaceConfig wspConfig, RepositoryContext repositoryContext,
+            SessionImpl session) throws RepositoryException {
         this.wspConfig = wspConfig;
         this.repositoryContext = repositoryContext;
         this.rep = repositoryContext.getRepository();
-        this.stateMgr = createItemStateManager(stateMgr);
+        this.stateMgr = createItemStateManager();
         this.hierMgr = new CachingHierarchyManager(
                 repositoryContext.getRootNodeId(), this.stateMgr);
         this.stateMgr.addListener(hierMgr);
@@ -848,13 +848,27 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
+     * Returns the shared item state manager of this workspace.
+     *
+     * @return shared item state manager
+     * @throws RepositoryException if the workspace can not be accessed
+     */
+    protected SharedItemStateManager getSharedItemStateManager()
+            throws RepositoryException {
+        WorkspaceManager manager = repositoryContext.getWorkspaceManager();
+        return manager.getWorkspaceStateManager(getName());
+    }
+
+    /**
      * Create the persistent item state manager on top of the shared item
      * state manager. May be overridden by subclasses.
      * @param shared shared item state manager
      * @return local item state manager
      */
-    protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
-        return LocalItemStateManager.createInstance(shared, this, rep.getItemStateCacheFactory());
+    protected LocalItemStateManager createItemStateManager()
+            throws RepositoryException {
+        return LocalItemStateManager.createInstance(
+                getSharedItemStateManager(), this, rep.getItemStateCacheFactory());
     }
 
     //------------------------------------------< EventStateCollectionFactory >

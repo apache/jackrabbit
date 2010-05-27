@@ -40,7 +40,6 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
@@ -287,10 +286,7 @@ public class SessionImpl extends AbstractSession
         ntMgr = new NodeTypeManagerImpl(
                 repositoryContext.getNodeTypeRegistry(), this,
                 repositoryContext.getDataStore());
-        String wspName = wspConfig.getName();
-        wsp = createWorkspaceInstance(
-                wspConfig,
-                repositoryContext.getWorkspaceManager().getWorkspaceStateManager(wspName));
+        wsp = createWorkspaceInstance(wspConfig);
         itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
@@ -324,13 +320,13 @@ public class SessionImpl extends AbstractSession
      * Creates the workspace instance backing this session.
      *
      * @param wspConfig The workspace configuration
-     * @param stateMgr  The shared item state manager
      * @return An instance of the {@link WorkspaceImpl} class or an extension
      *         thereof.
+     * @throws RepositoryException if the workspace can not be accessed
      */
-    protected WorkspaceImpl createWorkspaceInstance(
-            WorkspaceConfig wspConfig, SharedItemStateManager stateMgr) {
-        return new WorkspaceImpl(wspConfig, stateMgr, repositoryContext, this);
+    protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig)
+            throws RepositoryException {
+        return new WorkspaceImpl(wspConfig, repositoryContext, this);
     }
 
     /**
