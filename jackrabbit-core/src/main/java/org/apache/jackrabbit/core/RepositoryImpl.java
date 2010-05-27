@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -300,8 +299,8 @@ public class RepositoryImpl extends AbstractRepository
             FileSystem repStore = repConfig.getFileSystem();
             context.setFileSystem(repStore);
 
-            // init root node uuid
-            context.setRootNodeId(loadRootNodeId(repStore));
+            // Load root node identifier
+            context.setRootNodeId(loadRootNodeId());
 
             // initialize repository descriptors
             initRepositoryDescriptors();
@@ -540,103 +539,50 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
-     * Returns the root node uuid.
-     * @param fs
-     * @return
-     * @throws RepositoryException
+     * Returns the root node identifier. The identifier is loaded from
+     * the <code>meta/rootUUID</code> file within the repository file system.
+     * If such a file does not yet exist, the hardcoded default root node
+     * identifier ({@link #ROOT_NODE_ID}) is used and written to that file.
+     * <p>
+     * This utility method should only be used by the constructor after the
+     * repository file system has been initialised.
+     *
+     * @return root node identifier
+     * @throws RepositoryException if the identifier can not be loaded or saved
      */
-    protected NodeId loadRootNodeId(FileSystem fs) throws RepositoryException {
-        String fsRootPath = "/meta";
+    private NodeId loadRootNodeId() throws RepositoryException {
         try {
-            if (!fs.exists(fsRootPath) || !fs.isFolder(fsRootPath)) {
-                fs.createFolder(fsRootPath);
-            }
-        } catch (FileSystemException fse) {
-            String msg = "failed to create folder for repository meta data";
-            log.error(msg, fse);
-            throw new RepositoryException(msg, fse);
-        }
-        fs = new BasedFileSystem(fs, fsRootPath);
-
-        FileSystemResource uuidFile = new FileSystemResource(fs, "rootUUID");
-        try {
+            FileSystemResource uuidFile = new FileSystemResource(
+                    context.getFileSystem(), "meta/rootUUID");
             if (uuidFile.exists()) {
+                // Load uuid of the repository's root node. It is stored in
+                // text format (36 characters) for better readability.
+                InputStream in = uuidFile.getInputStream();
                 try {
-                    // load uuid of the repository's root node
-                    InputStream in = uuidFile.getInputStream();
-/*
-                   // uuid is stored in binary format (16 bytes)
-                   byte[] bytes = new byte[16];
-                   try {
-                       in.read(bytes);
-                   } finally {
-                       try {
-                           in.close();
-                       } catch (IOException ioe) {
-                           // ignore
-                       }
-                   }
-                   rootNodeUUID = new UUID(bytes).toString();            // uuid is stored in binary format (16 bytes)
-*/
-                    // uuid is stored in text format (36 characters) for better readability
-
-                    char[] chars;
-                    try {
-                        chars = IOUtils.toCharArray(in);
-                    } finally {
-                        IOUtils.closeQuietly(in);
-                    }
-                    return NodeId.valueOf(new String(chars));
-                } catch (Exception e) {
-                    String msg = "failed to load persisted repository state";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, e);
+                    return NodeId.valueOf(IOUtils.toString(in, "US-ASCII"));
+                } finally {
+                    IOUtils.closeQuietly(in);
                 }
             } else {
-                // create new uuid
-/*
-                UUID rootUUID = UUID.randomUUID();     // version 4 uuid
-                rootNodeUUID = rootUUID.toString();
-*/
-                /**
-                 * use hard-coded uuid for root node rather than generating
-                 * a different uuid per repository instance; using a
-                 * hard-coded uuid makes it easier to copy/move entire
-                 * workspaces from one repository instance to another.
-                 */
+                // Use hard-coded uuid for root node rather than generating
+                // a different uuid per repository instance; using a
+                // hard-coded uuid makes it easier to copy/move entire
+                // workspaces from one repository instance to another.
+                uuidFile.makeParentDirs();
+                OutputStream out = uuidFile.getOutputStream();
                 try {
-                    // persist uuid of the repository's root node
-                    OutputStream out = uuidFile.getOutputStream();
-/*
-                    // store uuid in binary format
-                    try {
-                        out.write(rootUUID.getBytes());
-                    } finally {
-                        try {
-                            out.close();
-                        } catch (IOException ioe) {
-                            // ignore
-                        }
-                    }
-*/
-                    // store uuid in text format for better readability
-                    OutputStreamWriter writer = new OutputStreamWriter(out);
-                    try {
-                        writer.write(ROOT_NODE_ID.toString());
-                    } finally {
-                        IOUtils.closeQuietly(writer);
-                    }
+                    out.write(ROOT_NODE_ID.toString().getBytes("US-ASCII"));
                     return ROOT_NODE_ID;
-                } catch (Exception e) {
-                    String msg = "failed to persist repository state";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, e);
+                } finally {
+                    IOUtils.closeQuietly(out);
                 }
             }
+        } catch (IOException e) {
+            throw new RepositoryException(
+                    "Failed to load or persist the root node identifier", e);
         } catch (FileSystemException fse) {
-            String msg = "failed to access repository state";
-            log.debug(msg);
-            throw new RepositoryException(msg, fse);
+            throw new RepositoryException(
+                    "Failed to access the root node identifier", fse);
         }
     }
 
