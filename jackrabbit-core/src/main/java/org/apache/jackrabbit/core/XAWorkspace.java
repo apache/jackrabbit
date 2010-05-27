@@ -31,14 +31,13 @@ public class XAWorkspace extends WorkspaceImpl {
      *
      * @param wspConfig The workspace configuration
      * @param stateMgr  The shared item state manager
-     * @param rep       The repository
+     * @param repositoryContext repository context
      * @param session   The session
      */
-    protected XAWorkspace(WorkspaceConfig wspConfig,
-                          SharedItemStateManager stateMgr, RepositoryImpl rep,
-                          SessionImpl session) {
-
-        super(wspConfig, stateMgr, rep, session);
+    protected XAWorkspace(
+            WorkspaceConfig wspConfig, SharedItemStateManager stateMgr,
+            RepositoryContext repositoryContext, SessionImpl session) {
+        super(wspConfig, stateMgr, repositoryContext, session);
     }
 
     /**

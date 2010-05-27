@@ -133,6 +133,11 @@ public class SessionImpl extends AbstractSession
     protected boolean alive;
 
     /**
+     * The component context of the repository that issued this session.
+     */
+    protected final RepositoryContext repositoryContext;
+
+    /**
      * the repository that issued this session
      */
     protected final RepositoryImpl rep;
@@ -245,7 +250,7 @@ public class SessionImpl extends AbstractSession
     /**
      * Protected constructor.
      *
-     * @param rep
+     * @param repositoryContext repository context
      * @param loginContext
      * @param wspConfig
      * @throws AccessDeniedException if the subject of the given login context
@@ -253,37 +258,41 @@ public class SessionImpl extends AbstractSession
      *                               workspace
      * @throws RepositoryException   if another error occurs
      */
-    protected SessionImpl(RepositoryImpl rep, AuthContext loginContext,
-                          WorkspaceConfig wspConfig)
+    protected SessionImpl(
+            RepositoryContext repositoryContext, AuthContext loginContext,
+            WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-        this(rep, loginContext.getSubject(), wspConfig);
+        this(repositoryContext, loginContext.getSubject(), wspConfig);
         this.loginContext = loginContext;
     }
 
     /**
      * Protected constructor.
      *
-     * @param rep
+     * @param repositoryContext repository context
      * @param subject
      * @param wspConfig
      * @throws AccessDeniedException if the given subject is not granted access
      *                               to the specified workspace
      * @throws RepositoryException   if another error occurs
      */
-    protected SessionImpl(RepositoryImpl rep, Subject subject,
-                          WorkspaceConfig wspConfig)
+    protected SessionImpl(
+            RepositoryContext repositoryContext, Subject subject,
+            WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
         alive = true;
-        this.rep = rep;
+        this.repositoryContext = repositoryContext;
+        this.rep = repositoryContext.getRepository();
         this.subject = subject;
 
         userId = retrieveUserId(subject, wspConfig.getName());
 
         namePathResolver = new DefaultNamePathResolver(this, this, true);
-        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), this, rep.getDataStore());
+        ntMgr = new NodeTypeManagerImpl(
+                repositoryContext.getNodeTypeRegistry(), this, rep.getDataStore());
         String wspName = wspConfig.getName();
-        wsp = createWorkspaceInstance(wspConfig,
-                rep.getWorkspaceStateManager(wspName), rep, this);
+        wsp = createWorkspaceInstance(
+                wspConfig, rep.getWorkspaceStateManager(wspName));
         itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
@@ -308,7 +317,9 @@ public class SessionImpl extends AbstractSession
      */
     protected SessionItemStateManager createSessionItemStateManager(LocalItemStateManager manager) {
         return SessionItemStateManager.createInstance(
-                rep.getRootNodeId(), manager, rep.getNodeTypeRegistry());
+                repositoryContext.getRootNodeId(),
+                manager,
+                repositoryContext.getNodeTypeRegistry());
     }
 
     /**
@@ -316,16 +327,12 @@ public class SessionImpl extends AbstractSession
      *
      * @param wspConfig The workspace configuration
      * @param stateMgr  The shared item state manager
-     * @param rep       The repository
-     * @param session   The session
      * @return An instance of the {@link WorkspaceImpl} class or an extension
      *         thereof.
      */
-    protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig,
-                                                    SharedItemStateManager stateMgr,
-                                                    RepositoryImpl rep,
-                                                    SessionImpl session) {
-        return new WorkspaceImpl(wspConfig, stateMgr, rep, session);
+    protected WorkspaceImpl createWorkspaceInstance(
+            WorkspaceConfig wspConfig, SharedItemStateManager stateMgr) {
+        return new WorkspaceImpl(wspConfig, stateMgr, repositoryContext, this);
     }
 
     /**
@@ -334,8 +341,10 @@ public class SessionImpl extends AbstractSession
      */
     protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
                                             HierarchyManager hierMgr) {
-        return ItemManager.createInstance(itemStateMgr, hierMgr, this,
-                ntMgr.getRootNodeDefinition(), rep.getRootNodeId());
+        return ItemManager.createInstance(
+                itemStateMgr, hierMgr, this,
+                ntMgr.getRootNodeDefinition(),
+                repositoryContext.getRootNodeId());
     }
 
     /**
@@ -345,8 +354,7 @@ public class SessionImpl extends AbstractSession
      */
     protected InternalVersionManager createVersionManager(RepositoryImpl rep)
             throws RepositoryException {
-
-        return rep.getVersionManager();
+        return repositoryContext.getInternalVersionManager();
     }
 
     /**
@@ -393,7 +401,9 @@ public class SessionImpl extends AbstractSession
      */
     public synchronized ItemValidator getValidator() throws RepositoryException {
         if (validator == null) {
-            validator = new ItemValidator(rep.getNodeTypeRegistry(), getHierarchyManager(), this);
+            validator = new ItemValidator(
+                    repositoryContext.getNodeTypeRegistry(),
+                    getHierarchyManager(), this);
         }
         return validator;
     }
@@ -654,7 +664,7 @@ public class SessionImpl extends AbstractSession
      */
     public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
         ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
-        InternalVersionManagerImpl vm = (InternalVersionManagerImpl) rep.getVersionManager();
+        InternalVersionManagerImpl vm = repositoryContext.getInternalVersionManager();
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);
         String[] wspNames = rep.getWorkspaceNames();
@@ -663,7 +673,8 @@ public class SessionImpl extends AbstractSession
             String wspName = wspNames[i];
             WorkspaceInfo wspInfo = rep.getWorkspaceInfo(wspName);
             // this will initialize the workspace if required
-            SessionImpl session = SystemSession.create(rep, wspInfo.getConfig());
+            SessionImpl session =
+                SystemSession.create(repositoryContext, wspInfo.getConfig());
             // mark this session as 'active' so the workspace does not get disposed
             // by the workspace-janitor until the garbage collector is done
             rep.onSessionCreated(session);

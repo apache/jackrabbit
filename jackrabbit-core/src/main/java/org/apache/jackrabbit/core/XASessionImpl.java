@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.version.InternalXAVersionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +91,7 @@ public class XASessionImpl extends SessionImpl
     /**
      * Create a new instance of this class.
      *
-     * @param rep          repository
+     * @param repositoryContext repository context
      * @param loginContext login context containing authenticated subject
      * @param wspConfig    workspace configuration
      * @throws AccessDeniedException if the subject of the given login context
@@ -100,31 +99,29 @@ public class XASessionImpl extends SessionImpl
      *                               workspace
      * @throws RepositoryException   if another error occurs
      */
-    protected XASessionImpl(RepositoryImpl rep, AuthContext loginContext,
-                            WorkspaceConfig wspConfig)
+    protected XASessionImpl(
+            RepositoryContext repositoryContext, AuthContext loginContext,
+            WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-
-        super(rep, loginContext, wspConfig);
-
+        super(repositoryContext, loginContext, wspConfig);
         init();
     }
 
     /**
      * Create a new instance of this class.
      *
-     * @param rep       repository
+     * @param repositoryContext repository context
      * @param subject   authenticated subject
      * @param wspConfig workspace configuration
      * @throws AccessDeniedException if the given subject is not granted access
      *                               to the specified workspace
      * @throws RepositoryException   if another error occurs
      */
-    protected XASessionImpl(RepositoryImpl rep, Subject subject,
-                            WorkspaceConfig wspConfig)
+    protected XASessionImpl(
+            RepositoryContext repositoryContext, Subject subject,
+            WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-
-        super(rep, subject, wspConfig);
-
+        super(repositoryContext, subject, wspConfig);
         init();
     }
 
@@ -160,11 +157,10 @@ public class XASessionImpl extends SessionImpl
     /**
      * {@inheritDoc}
      */
-    protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig,
-                                                    SharedItemStateManager stateMgr,
-                                                    RepositoryImpl rep,
-                                                    SessionImpl session) {
-        return new XAWorkspace(wspConfig, stateMgr, rep, session);
+    @Override
+    protected WorkspaceImpl createWorkspaceInstance(
+            WorkspaceConfig wspConfig, SharedItemStateManager stateMgr) {
+        return new XAWorkspace(wspConfig, stateMgr, repositoryContext, this);
     }
 
     /**
@@ -172,9 +168,10 @@ public class XASessionImpl extends SessionImpl
      */
     protected InternalVersionManager createVersionManager(RepositoryImpl rep)
             throws RepositoryException {
-
-        InternalVersionManagerImpl vMgr = (InternalVersionManagerImpl) rep.getVersionManager();
-        return new InternalXAVersionManager(vMgr, rep.getNodeTypeRegistry(), this, rep.getItemStateCacheFactory());
+        return new InternalXAVersionManager(
+                repositoryContext.getInternalVersionManager(),
+                repositoryContext.getNodeTypeRegistry(),
+                this, rep.getItemStateCacheFactory());
     }
 
     /**
