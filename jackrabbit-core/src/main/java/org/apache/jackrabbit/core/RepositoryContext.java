@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
+import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 
 /**
@@ -82,6 +83,11 @@ public class RepositoryContext {
      * Security manager of this repository;
      */
     private JackrabbitSecurityManager securityManager;
+
+    /**
+     * Item state cache factory of this repository.
+     */
+    private ItemStateCacheFactory itemStateCacheFactory;
 
     /**
      * Creates a component context for the given repository.
@@ -281,6 +287,26 @@ public class RepositoryContext {
     void setSecurityManager(JackrabbitSecurityManager securityManager) {
         assert securityManager != null;
         this.securityManager = securityManager;
+    }
+
+    /**
+     * Returns the item state cache factory of this repository.
+     *
+     * @return item state cache factory
+     */
+    public ItemStateCacheFactory getItemStateCacheFactory() {
+        assert itemStateCacheFactory != null;
+        return itemStateCacheFactory;
+    }
+
+    /**
+     * Sets the item state cache factory of this repository.
+     *
+     * @param itemStateCacheFactory item state cache factory
+     */
+    void setItemStateCacheFactory(ItemStateCacheFactory itemStateCacheFactory) {
+        assert itemStateCacheFactory != null;
+        this.itemStateCacheFactory = itemStateCacheFactory;
     }
 
 }

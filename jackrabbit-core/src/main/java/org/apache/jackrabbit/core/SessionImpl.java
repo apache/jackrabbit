@@ -133,11 +133,6 @@ public class SessionImpl extends AbstractSession
     protected final RepositoryContext repositoryContext;
 
     /**
-     * the repository that issued this session
-     */
-    protected final RepositoryImpl rep;
-
-    /**
      * the AuthContext of this session (can be null if this
      * session was not instantiated through a login process)
      */
@@ -277,7 +272,6 @@ public class SessionImpl extends AbstractSession
             throws AccessDeniedException, RepositoryException {
         alive = true;
         this.repositoryContext = repositoryContext;
-        this.rep = repositoryContext.getRepository();
         this.subject = subject;
 
         userId = retrieveUserId(subject, wspConfig.getName());
@@ -367,7 +361,8 @@ public class SessionImpl extends AbstractSession
                                                 HierarchyManager hierarchyManager)
             throws AccessDeniedException, RepositoryException {
         String wspName = getWorkspace().getName();
-        AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
+        AMContext ctx = new AMContext(
+                new File(repositoryContext.getRepository().getConfig().getHomeDir()),
                 repositoryContext.getFileSystem(),
                 this,
                 getSubject(),
@@ -436,7 +431,8 @@ public class SessionImpl extends AbstractSession
         }
         Subject old = getSubject();
         Subject newSubject = new Subject(old.isReadOnly(), old.getPrincipals(), old.getPublicCredentials(), old.getPrivateCredentials());
-        return rep.createSession(newSubject, workspaceName);
+        return repositoryContext.getWorkspaceManager().createSession(
+                newSubject, workspaceName);
     }
 
     /**
@@ -660,7 +656,8 @@ public class SessionImpl extends AbstractSession
      * @throws RepositoryException
      */
     public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
-        final GarbageCollector gc = rep.createDataStoreGarbageCollector();
+        final GarbageCollector gc =
+            repositoryContext.getRepository().createDataStoreGarbageCollector();
         // Auto-close if the main session logs out
         addListener(new SessionListener() {
             public void loggedOut(SessionImpl session) {
@@ -1247,7 +1244,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public Repository getRepository() {
-        return rep;
+        return repositoryContext.getRepository();
     }
 
     /**

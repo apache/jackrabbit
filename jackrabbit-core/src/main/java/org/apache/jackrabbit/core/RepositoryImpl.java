@@ -226,11 +226,6 @@ public class RepositoryImpl extends AbstractRepository
     private final CacheManager cacheMgr = new CacheManager();
 
     /**
-     * There is only one item state cache factory
-     */
-    private final ItemStateCacheFactory cacheFactory = new ManagedMLRUItemStateCacheFactory(cacheMgr);
-
-    /**
      * Chanel for posting create workspace messages.
      */
     private WorkspaceEventChannel createWorkspaceEventChannel;
@@ -300,6 +295,10 @@ public class RepositoryImpl extends AbstractRepository
                     new NamespaceRegistryImpl(context.getFileSystem()));
             context.setNodeTypeRegistry(new NodeTypeRegistry(
                     context.getNamespaceRegistry(), context.getFileSystem()));
+
+            // Create item state cache manager
+            context.setItemStateCacheFactory(
+                    new ManagedMLRUItemStateCacheFactory(cacheMgr));
 
             DataStore dataStore = repConfig.getDataStore();
             if (dataStore != null) {
@@ -425,15 +424,6 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
-     * Get the item state cache factory of this repository.
-     *
-     * @return the cache factory
-     */
-    public ItemStateCacheFactory getItemStateCacheFactory() {
-        return cacheFactory;
-    }
-
-    /**
      * Creates the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
      * of this <code>Repository</code>
      *
@@ -490,7 +480,7 @@ public class RepositoryImpl extends AbstractRepository
                 SYSTEM_ROOT_NODE_ID,
                 VERSION_STORAGE_NODE_ID,
                 ACTIVITIES_NODE_ID,
-                cacheFactory,
+                context.getItemStateCacheFactory(),
                 ismLocking);
     }
 
@@ -1329,19 +1319,19 @@ public class RepositoryImpl extends AbstractRepository
      * @param usesReferences <code>true</code> if the item state manager should use
      *                       node references to verify integrity of its reference properties;
      *                       <code>false</code> otherwise
-     * @param cacheFactory   cache factory
      * @return item state manager
      * @throws ItemStateException if an error occurs
      */
     protected SharedItemStateManager createItemStateManager(
             PersistenceManager persistMgr, boolean usesReferences,
-            ItemStateCacheFactory cacheFactory, ISMLocking locking)
-            throws ItemStateException {
+            ISMLocking locking) throws ItemStateException {
         return new SharedItemStateManager(
                 persistMgr,
                 context.getRootNodeId(),
                 context.getNodeTypeRegistry(),
-                true, cacheFactory, locking);
+                true,
+                context.getItemStateCacheFactory(),
+                locking);
     }
 
     /**
@@ -1961,8 +1951,8 @@ public class RepositoryImpl extends AbstractRepository
 
             // create item state manager
             try {
-                itemStateMgr = createItemStateManager(
-                        persistMgr, true, cacheFactory, ismLocking);
+                itemStateMgr =
+                    createItemStateManager(persistMgr, true, ismLocking);
                 try {
                     itemStateMgr.addVirtualItemStateProvider(
                             context.getInternalVersionManager().getVirtualItemStateProvider());
