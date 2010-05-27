@@ -53,7 +53,8 @@ class SystemSession extends SessionImpl {
      * @return
      * @throws RepositoryException
      */
-    static SystemSession create(RepositoryImpl rep, WorkspaceConfig wspConfig)
+    static SystemSession create(
+            RepositoryContext repositoryContext, WorkspaceConfig wspConfig)
             throws RepositoryException {
         // create subject with SystemPrincipal
         Set<SystemPrincipal> principals = new HashSet<SystemPrincipal>();
@@ -61,19 +62,19 @@ class SystemSession extends SessionImpl {
         Subject subject =
                 new Subject(true, principals, Collections.EMPTY_SET,
                         Collections.EMPTY_SET);
-        return new SystemSession(rep, subject, wspConfig);
+        return new SystemSession(repositoryContext, subject, wspConfig);
     }
 
     /**
      * private constructor
      *
-     * @param rep
+     * @param repositoryContext repository context
      * @param wspConfig
      */
-    private SystemSession(RepositoryImpl rep, Subject subject,
-                          WorkspaceConfig wspConfig)
-            throws RepositoryException {
-        super(rep, subject, wspConfig);
+    private SystemSession(
+            RepositoryContext repositoryContext, Subject subject,
+            WorkspaceConfig wspConfig) throws RepositoryException {
+        super(repositoryContext, subject, wspConfig);
     }
 
     /**

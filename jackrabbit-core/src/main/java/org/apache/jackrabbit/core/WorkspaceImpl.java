@@ -75,6 +75,11 @@ public class WorkspaceImpl extends AbstractWorkspace
     protected final WorkspaceConfig wspConfig;
 
     /**
+     * The component context of the repository that created this workspace.
+     */
+    protected final RepositoryContext repositoryContext;
+
+    /**
      * The repository that created this workspace instance
      */
     protected final RepositoryImpl rep;
@@ -137,14 +142,15 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @param rep       The repository
      * @param session   The session
      */
-    protected WorkspaceImpl(WorkspaceConfig wspConfig,
-                            SharedItemStateManager stateMgr, RepositoryImpl rep,
-                            SessionImpl session) {
+    protected WorkspaceImpl(
+            WorkspaceConfig wspConfig, SharedItemStateManager stateMgr,
+            RepositoryContext repositoryContext, SessionImpl session) {
         this.wspConfig = wspConfig;
-        this.rep = rep;
+        this.repositoryContext = repositoryContext;
+        this.rep = repositoryContext.getRepository();
         this.stateMgr = createItemStateManager(stateMgr);
-        this.hierMgr =
-            new CachingHierarchyManager(rep.getRootNodeId(), this.stateMgr);
+        this.hierMgr = new CachingHierarchyManager(
+                repositoryContext.getRootNodeId(), this.stateMgr);
         this.stateMgr.addListener(hierMgr);
         this.session = session;
     }
@@ -387,8 +393,8 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         BatchedItemOperations ops = new BatchedItemOperations(
-                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
-                session, hierMgr);
+                stateMgr, repositoryContext.getNodeTypeRegistry(),
+                session.getLockManager(), session, hierMgr);
 
         try {
             ops.edit();
@@ -463,8 +469,8 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         BatchedItemOperations ops = new BatchedItemOperations(
-                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
-                session, hierMgr);
+                stateMgr, repositoryContext.getNodeTypeRegistry(),
+                session.getLockManager(), session, hierMgr);
 
         try {
             ops.edit();
@@ -545,7 +551,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         // check state of this instance
         sanityCheck();
 
-        return rep.getNamespaceRegistry();
+        return repositoryContext.getNamespaceRegistry();
     }
 
     /**
@@ -706,8 +712,8 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         BatchedItemOperations ops = new BatchedItemOperations(
-                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
-                session, hierMgr);
+                stateMgr, repositoryContext.getNodeTypeRegistry(),
+                session.getLockManager(), session, hierMgr);
 
         try {
             ops.edit();
@@ -834,8 +840,10 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + parentAbsPath);
         }
 
-        Importer importer = new WorkspaceImporter(parentPath, this,
-                rep.getNodeTypeRegistry(), uuidBehavior, wspConfig.getImportConfig());
+        Importer importer = new WorkspaceImporter(
+                parentPath, this,
+                repositoryContext.getNodeTypeRegistry(),
+                uuidBehavior, wspConfig.getImportConfig());
         return new ImportHandler(importer, session);
     }
 

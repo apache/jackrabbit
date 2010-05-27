@@ -209,8 +209,8 @@ public class RepositoryCopier {
     }
 
     private void copyNamespaces() throws RepositoryException {
-        NamespaceRegistry sourceRegistry = source.getNamespaceRegistry();
-        NamespaceRegistry targetRegistry = target.getNamespaceRegistry();
+        NamespaceRegistry sourceRegistry = source.context.getNamespaceRegistry();
+        NamespaceRegistry targetRegistry = target.context.getNamespaceRegistry();
 
         logger.info("Copying registered namespaces");
         Collection<String> existing = Arrays.asList(targetRegistry.getURIs());
@@ -224,8 +224,8 @@ public class RepositoryCopier {
     }
 
     private void copyNodeTypes() throws RepositoryException {
-        NodeTypeRegistry sourceRegistry = source.getNodeTypeRegistry();
-        NodeTypeRegistry targetRegistry = target.getNodeTypeRegistry();
+        NodeTypeRegistry sourceRegistry = source.context.getNodeTypeRegistry();
+        NodeTypeRegistry targetRegistry = target.context.getNodeTypeRegistry();
 
         logger.info("Copying registered node types");
         Collection<Name> existing =
@@ -247,8 +247,8 @@ public class RepositoryCopier {
     private void copyVersionStore() throws RepositoryException {
         logger.info("Copying version histories");
         PersistenceCopier copier = new PersistenceCopier(
-                source.getVersionManagerImpl().getPersistenceManager(),
-                target.getVersionManagerImpl().getPersistenceManager(),
+                source.context.getInternalVersionManager().getPersistenceManager(),
+                target.context.getInternalVersionManager().getPersistenceManager(),
                 target.getDataStore());
         copier.copy(RepositoryImpl.VERSION_STORAGE_NODE_ID);
         copier.copy(RepositoryImpl.ACTIVITIES_NODE_ID);
