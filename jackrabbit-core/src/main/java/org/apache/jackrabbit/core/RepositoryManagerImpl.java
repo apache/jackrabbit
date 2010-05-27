@@ -46,7 +46,8 @@ public class RepositoryManagerImpl implements RepositoryManager {
             throw new RepositoryException("Repository is stopped");
         }
         ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
-        InternalVersionManagerImpl vm = rep.context.getInternalVersionManager();
+        InternalVersionManagerImpl vm =
+            rep.getRepositoryContext().getInternalVersionManager();
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);
         String[] wspNames = rep.getWorkspaceNames();
@@ -55,8 +56,8 @@ public class RepositoryManagerImpl implements RepositoryManager {
             String wspName = wspNames[i];
             WorkspaceInfo wspInfo = rep.getWorkspaceInfo(wspName);
             // this will initialize the workspace if required
-            SessionImpl session =
-                SystemSession.create(rep.context, wspInfo.getConfig());
+            SessionImpl session = SystemSession.create(
+                    rep.getRepositoryContext(), wspInfo.getConfig());
             // mark this session as 'active' so the workspace does not get disposed
             // by the workspace-janitor until the garbage collector is done
             rep.onSessionCreated(session);
