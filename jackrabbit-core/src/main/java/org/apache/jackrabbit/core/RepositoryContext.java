@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 
 /**
@@ -76,6 +77,11 @@ public class RepositoryContext {
      * Workspace manager of this repository.
      */
     private WorkspaceManager workspaceManager;
+
+    /**
+     * Security manager of this repository;
+     */
+    private JackrabbitSecurityManager securityManager;
 
     /**
      * Creates a component context for the given repository.
@@ -192,7 +198,7 @@ public class RepositoryContext {
      *
      * @param fileSystem repository file system
      */
-    public void setFileSystem(FileSystem fileSystem) {
+    void setFileSystem(FileSystem fileSystem) {
         assert fileSystem != null;
         this.fileSystem = fileSystem;
     }
@@ -212,7 +218,7 @@ public class RepositoryContext {
      *
      * @param dataStore data store
      */
-    public void setDataStore(DataStore dataStore) {
+    void setDataStore(DataStore dataStore) {
         assert dataStore != null;
         this.dataStore = dataStore;
     }
@@ -232,7 +238,7 @@ public class RepositoryContext {
      *
      * @param clusterNode cluster node
      */
-    public void setClusterNode(ClusterNode clusterNode) {
+    void setClusterNode(ClusterNode clusterNode) {
         assert clusterNode != null;
         this.clusterNode = clusterNode;
     }
@@ -252,9 +258,29 @@ public class RepositoryContext {
      *
      * @param workspaceManager workspace manager
      */
-    public void setWorkspaceManager(WorkspaceManager workspaceManager) {
+    void setWorkspaceManager(WorkspaceManager workspaceManager) {
         assert workspaceManager != null;
         this.workspaceManager = workspaceManager;
+    }
+
+    /**
+     * Returns the security manager of this repository.
+     *
+     * @return security manager
+     */
+    public JackrabbitSecurityManager getSecurityManager() {
+        assert securityManager != null;
+        return securityManager;
+    }
+
+    /**
+     * Sets the security manager of this repository.
+     *
+     * @param securityManager security manager
+     */
+    void setSecurityManager(JackrabbitSecurityManager securityManager) {
+        assert securityManager != null;
+        this.securityManager = securityManager;
     }
 
 }

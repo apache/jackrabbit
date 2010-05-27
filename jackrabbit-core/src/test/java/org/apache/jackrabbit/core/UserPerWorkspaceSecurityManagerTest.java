@@ -49,7 +49,7 @@ public class UserPerWorkspaceSecurityManagerTest extends AbstractJCRTest {
         super.setUp();
 
         RepositoryImpl repo = (RepositoryImpl) superuser.getRepository();
-        secMgr = repo.getSecurityManager();
+        secMgr = repo.getRepositoryContext().getSecurityManager();
         if (!(secMgr instanceof UserPerWorkspaceSecurityManager)) {
             throw new NotExecutableException();
         }

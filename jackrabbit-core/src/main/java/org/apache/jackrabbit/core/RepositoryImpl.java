@@ -347,6 +347,9 @@ public class RepositoryImpl extends AbstractRepository
             // initialize system search manager
             getSystemSearchManager(repConfig.getDefaultWorkspaceName());
 
+            // Initialise the security manager;
+            context.setSecurityManager(createSecurityManager());
+            
             // after the workspace is initialized we pass a system session to
             // the virtual node type manager
 
@@ -431,36 +434,35 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
-     * Returns the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
+     * Creates the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
      * of this <code>Repository</code>
      *
      * @return the security manager
      * @throws RepositoryException if an error occurs.
      */
-    protected synchronized JackrabbitSecurityManager getSecurityManager()
+    private synchronized JackrabbitSecurityManager createSecurityManager()
             throws RepositoryException {
-
-        if (securityMgr == null) {
-            SecurityManagerConfig smc = getConfig().getSecurityConfig().getSecurityManagerConfig();
-            String workspaceName = getConfig().getDefaultWorkspaceName();
-            if (smc != null && smc.getWorkspaceName() != null) {
-                workspaceName = smc.getWorkspaceName();
-            }
-            SystemSession securitySession = getSystemSession(workspaceName);
-            // mark system session as 'active' for that the system workspace does
-            // not get disposed by workspace-janitor
-            onSessionCreated(securitySession);
-
-            if (smc == null) {
-                log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
-                securityMgr = new SimpleSecurityManager();
-            } else {
-                securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
-            }
-
-            securityMgr.init(this, securitySession);
-            log.info("SecurityManager = " + securityMgr.getClass());
+        SecurityManagerConfig smc =
+            getConfig().getSecurityConfig().getSecurityManagerConfig();
+        String workspaceName = getConfig().getDefaultWorkspaceName();
+        if (smc != null && smc.getWorkspaceName() != null) {
+            workspaceName = smc.getWorkspaceName();
         }
+        SystemSession securitySession = getSystemSession(workspaceName);
+        // mark system session as 'active' for that the system workspace does
+        // not get disposed by workspace-janitor
+        onSessionCreated(securitySession);
+
+        if (smc == null) {
+            log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
+            securityMgr = new SimpleSecurityManager();
+        } else {
+            securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
+        }
+
+        securityMgr.init(this, securitySession);
+        log.info("SecurityManager = " + securityMgr.getClass());
+
         return securityMgr;
     }
 
@@ -993,7 +995,8 @@ public class RepositoryImpl extends AbstractRepository
         } else {
             log.debug("Found preauthenticated Subject, try to extend authentication");
             // login either using JAAS or custom LoginModule
-            AuthContext authCtx = getSecurityManager().getAuthContext(null, subject, workspaceName);
+            AuthContext authCtx = context.getSecurityManager().getAuthContext(
+                    null, subject, workspaceName);
             try {
                 authCtx.login();
                 s = createSession(authCtx, workspaceName);
@@ -1421,7 +1424,8 @@ public class RepositoryImpl extends AbstractRepository
                 }
             }
             // not preauthenticated -> try login with credentials
-            AuthContext authCtx = getSecurityManager().getAuthContext(credentials, new Subject(), workspaceName);
+            AuthContext authCtx = context.getSecurityManager().getAuthContext(
+                    credentials, new Subject(), workspaceName);
             authCtx.login();
 
             // create session, and add SimpleCredentials attributes (JCR-1932)
