@@ -20,8 +20,6 @@ import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -95,7 +93,6 @@ public class GarbageCollector implements DataStoreGarbageCollector {
     private final IterablePersistenceManager[] pmList;
 
     private final Session[] sessionList;
-    private SessionListener sessionListener;
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -107,29 +104,16 @@ public class GarbageCollector implements DataStoreGarbageCollector {
      * by SessionImpl.createDataStoreGarbageCollector().
      *
      * @param dataStore the data store to be garbage-collected
-     * @param session the session that created this object (optional)
      * @param list the persistence managers
      * @param sessionList the sessions to access the workspaces
      */
     public GarbageCollector(
-            DataStore dataStore, SessionImpl session,
-            IterablePersistenceManager[] list, Session[] sessionList) {
+            DataStore dataStore, IterablePersistenceManager[] list,
+            Session[] sessionList) {
         this.store = dataStore;
         this.pmList = list;
         this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;
-
-        if (session != null) {
-            // Auto-close if the main session logs out
-            this.sessionListener = new SessionListener() {
-                public void loggedOut(SessionImpl session) {
-                }
-                public void loggingOut(SessionImpl session) {
-                    close();
-                }
-            };
-            session.addListener(sessionListener);
-        }
     }
 
     public void setSleepBetweenNodes(long millis) {

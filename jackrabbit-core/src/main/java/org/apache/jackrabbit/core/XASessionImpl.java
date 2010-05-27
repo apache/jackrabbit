@@ -166,7 +166,8 @@ public class XASessionImpl extends SessionImpl
     /**
      * {@inheritDoc}
      */
-    protected InternalVersionManager createVersionManager(RepositoryImpl rep)
+    @Override
+    protected InternalVersionManager createVersionManager()
             throws RepositoryException {
         return new InternalXAVersionManager(
                 repositoryContext.getInternalVersionManager(),

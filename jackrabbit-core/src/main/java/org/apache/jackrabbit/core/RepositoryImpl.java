@@ -56,6 +56,7 @@ import javax.security.auth.Subject;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
 import org.apache.jackrabbit.core.cluster.ClusterException;
@@ -73,6 +74,7 @@ import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
+import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -85,6 +87,7 @@ import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
+import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
@@ -302,6 +305,8 @@ public class RepositoryImpl extends AbstractRepository
             if (dataStore != null) {
                 context.setDataStore(dataStore);
             }
+
+            context.setWorkspaceManager(new WorkspaceManager(this));
 
             // init workspace configs
             for (WorkspaceConfig config : repConfig.getWorkspaceConfigs()) {
@@ -1335,6 +1340,51 @@ public class RepositoryImpl extends AbstractRepository
                 context.getNodeTypeRegistry(),
                 true, cacheFactory, locking);
     }
+
+    /**
+     * Creates a data store garbage collector for this repository.
+     * <p>
+     * Note that you should use the {@link RepositoryManager} interface
+     * to access this functionality. This RepositoryImpl method may be
+     * removed in future Jackrabbit versions. 
+     */
+    public GarbageCollector createDataStoreGarbageCollector()
+            throws RepositoryException {
+        ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
+        InternalVersionManagerImpl vm = context.getInternalVersionManager();
+        PersistenceManager pm = vm.getPersistenceManager();
+        pmList.add(pm);
+        String[] wspNames = getWorkspaceNames();
+        Session[] sessions = new Session[wspNames.length];
+        for (int i = 0; i < wspNames.length; i++) {
+            String wspName = wspNames[i];
+            WorkspaceInfo wspInfo = getWorkspaceInfo(wspName);
+            // this will initialize the workspace if required
+            SessionImpl systemSession =
+                SystemSession.create(context, wspInfo.getConfig());
+            // mark this session as 'active' so the workspace does not get disposed
+            // by the workspace-janitor until the garbage collector is done
+            onSessionCreated(systemSession);
+            // the workspace could be disposed again, so re-initialize if required
+            // afterwards it will not be disposed because a session is registered
+            wspInfo.initialize();
+            sessions[i] = systemSession;
+            pm = wspInfo.getPersistenceManager();
+            pmList.add(pm);
+        }
+        IterablePersistenceManager[] ipmList =
+            new IterablePersistenceManager[pmList.size()];
+        for (int i = 0; i < pmList.size(); i++) {
+            pm = pmList.get(i);
+            if (!(pm instanceof IterablePersistenceManager)) {
+                ipmList = null;
+                break;
+            }
+            ipmList[i] = (IterablePersistenceManager) pm;
+        }
+        return new GarbageCollector(context.getDataStore(), ipmList, sessions);
+    }
+
 
     //-----------------------------------------------------------< Repository >
     /**
