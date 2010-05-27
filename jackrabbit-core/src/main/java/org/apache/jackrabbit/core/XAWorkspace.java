@@ -45,6 +45,6 @@ public class XAWorkspace extends WorkspaceImpl {
             throws RepositoryException {
         return XAItemStateManager.createInstance(
                 getSharedItemStateManager(), this, null,
-                rep.getItemStateCacheFactory());
+                repositoryContext.getItemStateCacheFactory());
     }
 }

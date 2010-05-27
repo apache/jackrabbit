@@ -172,7 +172,8 @@ public class XASessionImpl extends SessionImpl
         return new InternalXAVersionManager(
                 repositoryContext.getInternalVersionManager(),
                 repositoryContext.getNodeTypeRegistry(),
-                this, rep.getItemStateCacheFactory());
+                this,
+                repositoryContext.getItemStateCacheFactory());
     }
 
     /**

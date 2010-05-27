@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
+import javax.security.auth.Subject;
 
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.xml.sax.InputSource;
@@ -83,6 +85,12 @@ public class WorkspaceManager {
     public SharedItemStateManager getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         return repository.getWorkspaceStateManager(workspaceName);
+    }
+
+    // FIXME: There should be a better place for this. Refactor...
+    public SessionImpl createSession(Subject subject, String workspaceName)
+        throws RepositoryException {
+        return repository.createSession(subject, workspaceName);
     }
 
 }
