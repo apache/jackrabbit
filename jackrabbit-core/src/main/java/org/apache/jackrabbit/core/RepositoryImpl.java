@@ -98,7 +98,6 @@ import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
 import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ISMLocking;
-import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
@@ -291,10 +290,8 @@ public class RepositoryImpl extends AbstractRepository
             initRepositoryDescriptors();
 
             // create registries
-            context.setNamespaceRegistry(
-                    new NamespaceRegistryImpl(context.getFileSystem()));
-            context.setNodeTypeRegistry(new NodeTypeRegistry(
-                    context.getNamespaceRegistry(), context.getFileSystem()));
+            context.setNamespaceRegistry(createNamespaceRegistry());
+            context.setNodeTypeRegistry(createNodeTypeRegistry());
 
             // Create item state cache manager
             context.setItemStateCacheFactory(
@@ -397,6 +394,33 @@ public class RepositoryImpl extends AbstractRepository
                 }
             }
         }
+    }
+
+    /**
+     * Protected factory method for creating the namespace registry.
+     * Called by the constructor after the repository file system has
+     * been initialised.
+     *
+     * @return namespace registry
+     * @throws RepositoryException if the namespace registry can not be created
+     */
+    protected NamespaceRegistryImpl createNamespaceRegistry()
+            throws RepositoryException {
+        return new NamespaceRegistryImpl(context.getFileSystem());
+    }
+
+    /**
+     * Protected factory method for creating the node type registry.
+     * Called by the constructor after the repository file system and
+     * namespace registry have been initialised.
+     *
+     * @return node type registry
+     * @throws RepositoryException if the node type registry can not be created
+     */
+    protected NodeTypeRegistry createNodeTypeRegistry()
+            throws RepositoryException {
+        return new NodeTypeRegistry(
+                context.getNamespaceRegistry(), context.getFileSystem());
     }
 
     /**
@@ -528,7 +552,7 @@ public class RepositoryImpl extends AbstractRepository
     private NodeId loadRootNodeId() throws RepositoryException {
         try {
             FileSystemResource uuidFile = new FileSystemResource(
-                    context.getFileSystem(), "meta/rootUUID");
+                    context.getFileSystem(), "/meta/rootUUID");
             if (uuidFile.exists()) {
                 // Load uuid of the repository's root node. It is stored in
                 // text format (36 characters) for better readability.
