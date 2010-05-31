@@ -344,7 +344,7 @@ public class RepositoryImpl extends AbstractRepository
             getSystemSearchManager(repConfig.getDefaultWorkspaceName());
 
             // Initialise the security manager;
-            context.setSecurityManager(createSecurityManager());
+            initSecurityManager();
             
             // after the workspace is initialized we pass a system session to
             // the virtual node type manager
@@ -449,15 +449,24 @@ public class RepositoryImpl extends AbstractRepository
 
     /**
      * Creates the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
-     * of this <code>Repository</code>
+     * of this <code>Repository</code> and adds it to the repository context.
      *
-     * @return the security manager
      * @throws RepositoryException if an error occurs.
      */
-    private synchronized JackrabbitSecurityManager createSecurityManager()
-            throws RepositoryException {
+    private synchronized void initSecurityManager() throws RepositoryException {
         SecurityManagerConfig smc =
             getConfig().getSecurityConfig().getSecurityManagerConfig();
+        if (smc == null) {
+            log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
+            securityMgr = new SimpleSecurityManager();
+        } else {
+            securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
+        }
+
+        log.info("SecurityManager = " + securityMgr.getClass());
+
+        context.setSecurityManager(securityMgr);
+
         String workspaceName = getConfig().getDefaultWorkspaceName();
         if (smc != null && smc.getWorkspaceName() != null) {
             workspaceName = smc.getWorkspaceName();
@@ -467,17 +476,11 @@ public class RepositoryImpl extends AbstractRepository
         // not get disposed by workspace-janitor
         onSessionCreated(securitySession);
 
-        if (smc == null) {
-            log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
-            securityMgr = new SimpleSecurityManager();
-        } else {
-            securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
-        }
-
+        // FIXME: Note that this call must be done *after* the security
+        // manager has been added to the repository context, since the
+        // initialisation code may invoke code that depends on the presence
+        // of a security manager. It would be better if this was not the case.
         securityMgr.init(this, securitySession);
-        log.info("SecurityManager = " + securityMgr.getClass());
-
-        return securityMgr;
     }
 
     /**
