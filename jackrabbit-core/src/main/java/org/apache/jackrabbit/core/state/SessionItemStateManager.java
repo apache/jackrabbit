@@ -337,8 +337,6 @@ public class SessionItemStateManager
         removeListener(hierMgr);
         // discard all transient changes
         disposeAllTransientItemStates();
-        // dispose our (i.e. 'local') state manager
-        stateMgr.dispose();
     }
 
     //< more methods for listing and retrieving transient ItemState instances >
