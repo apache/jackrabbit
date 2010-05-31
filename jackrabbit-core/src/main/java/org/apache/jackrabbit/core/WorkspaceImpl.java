@@ -178,6 +178,9 @@ public class WorkspaceImpl extends AbstractWorkspace
             obsMgr.dispose();
             obsMgr = null;
         }
+        // remove hierarchy manager as listener to avoid
+        // unnecessary work during stateMgr.dispose()
+        stateMgr.removeListener(hierMgr);
         stateMgr.dispose();
     }
 
