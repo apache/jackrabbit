@@ -1,15 +1,15 @@
-Release Notes -- Apache Jackrabbit Core -- Version 1.4.11
+Release Notes -- Apache Jackrabbit Core -- Version 1.4.12
 
 Introduction
 ------------
 
-This is the 1.4.11 patch release of the jackrabbit-core component of
+This is the 1.4.12 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
 This release is targeted to users who are not yet ready to upgrade to
-the more recent Jackrabbit releases, but who still need the XPath
-formatting fix from issue JCR-2052.
+the more recent Jackrabbit releases, but who still need fixes to
+reported inconsistency problems.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -23,7 +23,9 @@ issues for more details in the Jackrabbit issue tracker at
 http://issues.apache.org/jira/browse/JCR
 
   Bug fixes
-  [JCR-2052] XPath QueryFormat may produce malformed XPath statement
+  [JCR-2129] Prevent data inconsistencies due to incorrect or missed ...
+  [JCR-2456] Repository is corrupt after concurrent changes with the ...
+  [JCR-2577] SISM.checkAddedChildNodes() prevents merging of concurrent ...
 
 Release Contents
 ----------------
@@ -32,18 +34,18 @@ Like the previous jackrabbit-core 1.4.x releases this patch release only
 contains the jackrabbit-core component. The component is distributed both
 as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.11-src.jar)
+    * Source archive (jackrabbit-core-1.4.12-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.11" directory. Use the following commands
+        in a "jackrabbit-core-1.4.12" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.11-src.jar
-          $ cd jackrabbit-core-1.4.11
+          $ jar xf jackrabbit-core-1.4.12-src.jar
+          $ cd jackrabbit-core-1.4.12
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.11.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.12.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
