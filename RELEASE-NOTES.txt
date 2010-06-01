@@ -24,6 +24,7 @@ This release fixes the following issues:
   JCR-2577 SISM.checkAddedChildNodes() prevents merging of concurrent changes
   JCR-2611 DefaultHighlighter.java does not encode illegal XML characters
   JCR-2613 NoSuchItemStateException on checkin after removeVersion in XA ...
+  JCR-2645 XML text extraction in Jackrabbit 1.x accesses external resources
 
 See the Jackrabbit issue tracker for more details about these changes:
 
@@ -49,13 +50,13 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Antonio Martinez        Marcel Reutegger        Stephan Huttenhuis
-    Bart van der Schans     Martijn Hendriks        The Dong
-    Bram de Kruijff         Paul Jara               Thomas Müller
-    Claus Köll              Peter Krokavec          Tobias Bocanegra
-    Frederic Guilbeault     Robert Sauer            Tom Quellenberg
-    Grégory Joseph          Sascha Theves
-    Jukka Zitting           Stefan Guggisberg
+    Antonio Martinez        Marcel Reutegger        Stefan Guggisberg
+    Bart van der Schans     Martijn Hendriks        Stephan Huttenhuis
+    Bram de Kruijff         Maxime Bégnis           The Dong
+    Claus Köll              Paul Jara               Thomas Müller
+    Frederic Guilbeault     Peter Krokavec          Tobias Bocanegra
+    Grégory Joseph          Robert Sauer            Tom Quellenberg
+    Jukka Zitting           Sascha Theves
 
 Thank you to everyone involved!
 
