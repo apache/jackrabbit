@@ -16,11 +16,13 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -117,6 +119,15 @@ class ExtractorHandler extends DefaultHandler implements ErrorHandler {
         } catch (IOException e) {
             throw new SAXException(e.getMessage());
         }
+    }
+
+    //------------------------------------------------------< EntityResolver >
+
+    /**
+     * Disables loading of external entities.
+     */
+    public InputSource resolveEntity(String publicId, String systemId) { 
+        return new InputSource(new ByteArrayInputStream(new byte[0])); 
     }
 
     //--------------------------------------------------------< ErrorHandler >
