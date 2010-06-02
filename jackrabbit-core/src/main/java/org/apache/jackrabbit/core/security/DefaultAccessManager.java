@@ -215,6 +215,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             if ((actions & REMOVE) == REMOVE) {
                 perm |= (id.denotesNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
             }
+            
             Path path = hierMgr.getPath(id);
             return isGranted(path, perm);
         }
@@ -240,13 +241,14 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessManager#canRead(Path)
+     * @see AccessManager#canRead(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.id.ItemId)
      */
-    public boolean canRead(Path itemPath) throws RepositoryException {
+    public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
+        checkInitialized();
         if (compiledPermissions.canReadAll()) {
             return true;
         } else {
-            return isGranted(itemPath, Permission.READ);
+            return compiledPermissions.canRead(itemPath, itemId);
         }
     }
 
