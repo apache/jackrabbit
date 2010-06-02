@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -242,7 +241,6 @@ public class UserManagerImpl extends ProtectedItemModifier
      *
      * @param session The editing/reading session.
      * @param adminId The user ID of the administrator.
-     * @throws RepositoryException If an error occurs.
      */
     public UserManagerImpl(SessionImpl session, String adminId) {
         this(session, adminId, null);
@@ -265,7 +263,6 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param session The editing/reading session.
      * @param adminId The user ID of the administrator.
      * @param config The configuration parameters.
-     * @throws RepositoryException If an error occurs.
      */
     public UserManagerImpl(SessionImpl session, String adminId, Properties config) {
         this.session = session;
@@ -356,14 +353,18 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public Authorizable getAuthorizable(Principal principal) throws RepositoryException {
         NodeImpl n = null;
-        // shortcut that avoids executing a query.
-        if (principal instanceof ItemBasedPrincipal) {
+        // shortcuts that avoids executing a query.
+        if (principal instanceof AuthorizableImpl.NodeBasedPrincipal) {
+            NodeId nodeId = ((AuthorizableImpl.NodeBasedPrincipal) principal).getNodeId();
+            try {
+                n = session.getNodeById(nodeId);
+            } catch (ItemNotFoundException e) {
+                // no such authorizable -> null
+            }
+        } else if (principal instanceof ItemBasedPrincipal) {
             String authPath = ((ItemBasedPrincipal) principal).getPath();
-            if (session.itemExists(authPath)) {
-                Item authItem = session.getItem(authPath);
-                if (authItem.isNode()) {
-                    n = (NodeImpl) authItem;
-                }
+            if (session.nodeExists(authPath)) {
+                n = (NodeImpl) session.getNode(authPath);
             }
         } else {
             // another Principal implementation.
@@ -379,7 +380,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             } catch (RepositoryException e) {
                 // ignore and execute the query.
             }
-            // shortcut didn't work -> search.
+            // authorizable whose ID matched the principal name -> search.
             n = (NodeImpl) authResolver.findNode(P_PRINCIPAL_NAME, name, NT_REP_AUTHORIZABLE);
         }
         // build the corresponding authorizable object
@@ -758,7 +759,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * </ul>
      *
      * @return The admin user.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     private User createAdmin() throws RepositoryException {
         User admin;
