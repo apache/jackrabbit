@@ -377,7 +377,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(Principal)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getPolicies(Principal)
      */
     @Override
     public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
