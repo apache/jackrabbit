@@ -434,10 +434,12 @@ public final class PrivilegeRegistry {
         }
 
         //---------------------------------------------------------< Object >---
+        @Override
         public int hashCode() {
             return bits;
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;
@@ -508,10 +510,13 @@ public final class PrivilegeRegistry {
             }
         }
 
+        //---------------------------------------------------------< Object >---
+        @Override
         public int hashCode() {
             return internalPrivilege.hashCode();
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;
