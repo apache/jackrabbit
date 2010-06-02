@@ -26,13 +26,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
@@ -102,65 +99,16 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void onNodeTypeAdded(Name ntName) throws RepositoryException {
-        try {
-            VirtualNodeState root = (VirtualNodeState) getRootState();
-            QNodeTypeDefinition ntDef = ntReg.getNodeTypeDef(ntName);
-            VirtualNodeState ntState = createNodeTypeState(root, ntDef);
-            root.addChildNodeEntry(ntName, ntState.getNodeId());
-
-            // add as hard reference
-            root.addStateReference(ntState);
-            root.notifyStateUpdated();
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+    public void onNodeTypeAdded(Name ntName) {
+        discardAll(); // TODO: More efficient reloading
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void onNodeTypeModified(Name ntName) throws RepositoryException {
-        // todo: do more efficient reloading
-        try {
-            discardTree(getRootState());
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+    public void onNodeTypeModified(Name ntName) {
+        discardAll(); // TODO: More efficient reloading
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void onNodeTypesRemoved(Collection<Name> names)
-            throws RepositoryException {
-        // todo: do more efficient reloading
-        try {
-            discardTree(getRootState());
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
-    }
-
-    /**
-     * Recursively discards all the properties and nodes in the subtree
-     * rooted at the given node state.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-2617">JCR-2617</a>
-     * @param state root of the subtree to be discarded
-     * @throws ItemStateException if items in the subtree can not be accessed
-     */
-    private void discardTree(NodeState state) throws ItemStateException {
-        for (Name name : state.getPropertyNames()) {
-            getItemState(new PropertyId(state.getNodeId(), name)).discard();
-        }
-        for (ChildNodeEntry entry : state.getChildNodeEntries()) {
-            discardTree((NodeState) getItemState(entry.getId()));
-        }
-        state.discard();
+    public void onNodeTypesRemoved(Collection<Name> names) {
+        discardAll(); // TODO: More efficient reloading
     }
 
     /**
