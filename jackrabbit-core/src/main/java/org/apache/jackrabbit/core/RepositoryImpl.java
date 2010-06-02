@@ -719,7 +719,8 @@ public class RepositoryImpl extends AbstractRepository
                         + workspaceName + "' already exists.");
             }
 
-            // needed to get newly created workspace config file content when runnin in clustered environment
+            // needed to get newly created workspace config file content when
+            // running in clustered environment
             StringBuffer workspaceConfigContent = null;
             if (context.getClusterNode() != null) {
                 workspaceConfigContent = new StringBuffer();
