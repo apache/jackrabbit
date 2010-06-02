@@ -3026,7 +3026,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return parent id
      */
-    NodeId getParentId() {
+    public NodeId getParentId() {
         return data.getParentId();
     }
 

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.principalbased.ACLProvider;
 import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import javax.jcr.security.AccessControlPolicy;
@@ -241,6 +242,14 @@ public class CombinedProvider extends AbstractAccessControlProvider {
                 it.remove();
             }
             super.close();
+        }
+
+        /**
+         * @see CompiledPermissions#canRead(Path, ItemId)
+         */
+        public boolean canRead(Path path, ItemId itemId) throws RepositoryException {
+            Path p = (path == null) ? session.getItemManager().getItem(itemId).getPrimaryPath() : path;
+            return grants(p, Permission.READ);
         }
     }
 }

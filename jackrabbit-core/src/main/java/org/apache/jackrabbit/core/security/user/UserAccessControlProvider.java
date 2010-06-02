@@ -24,6 +24,7 @@ import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
@@ -460,6 +461,13 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             // for consistency with 'grants(Path, int) this method only returns
             // true if there exists a node for 'userNodePath'
             return session.nodeExists(userNodePath);
+        }
+
+        /**
+         * @see CompiledPermissions#canRead(Path, ItemId)
+         */
+        public boolean canRead(Path path, ItemId itemId) throws RepositoryException {
+            return canReadAll();
         }
 
         //--------------------------------------------------< EventListener >---

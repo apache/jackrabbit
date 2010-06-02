@@ -44,7 +44,6 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.NodeIterator;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
@@ -87,7 +86,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @return the control list
      * @throws RepositoryException if an error occurs
      */
-    AccessControlList getACL(NodeImpl aclNode) throws RepositoryException {
+    ACLTemplate getACL(NodeImpl aclNode) throws RepositoryException {
         return new ACLTemplate(aclNode, privilegeRegistry);
     }
 
