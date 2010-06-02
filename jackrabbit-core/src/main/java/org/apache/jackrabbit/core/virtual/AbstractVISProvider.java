@@ -192,6 +192,43 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     }
 
     /**
+     * Discards all virtual item states and prepares for the root state
+     * to be recreated when next accessed.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2617">JCR-2617</a>
+     */
+    protected synchronized void discardAll() {
+        if (root != null) {
+            discardTree(root);
+            root = null;
+        }
+    }
+
+    /**
+     * Recursively discards all the properties and nodes in the subtree
+     * rooted at the given node state.
+     *
+     * @param state root of the subtree to be discarded
+     */
+    private void discardTree(NodeState state) {
+        for (Name name : state.getPropertyNames()) {
+            try {
+                getItemState(new PropertyId(state.getNodeId(), name)).discard();
+            } catch (ItemStateException e) {
+                log.warn("Unable to discard virtual property " + name, e);
+            }
+        }
+        for (ChildNodeEntry entry : state.getChildNodeEntries()) {
+            try {
+                discardTree((NodeState) getItemState(entry.getId()));
+            } catch (ItemStateException e) {
+                log.warn("Unable to discard virtual node " + entry.getId(), e);
+            }
+        }
+        state.discard();
+    }
+
+    /**
      * Checks if this provide has the node state of the given node id
      *
      * @param id
