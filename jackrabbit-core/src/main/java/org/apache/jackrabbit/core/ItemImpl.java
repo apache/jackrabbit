@@ -1175,7 +1175,7 @@ public abstract class ItemImpl implements Item {
 
         if (keepChanges) {
             /** todo FIXME should reset Item#status field to STATUS_NORMAL
-             * of all descendent non-transient instances; maybe also
+             * of all descendant non-transient instances; maybe also
              * have to reset stale ItemState instances */
             return;
         }
