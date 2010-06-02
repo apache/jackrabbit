@@ -200,6 +200,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     protected synchronized void discardAll() {
         if (root != null) {
             discardTree(root);
+            nodes.clear();
             root = null;
         }
     }
