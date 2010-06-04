@@ -965,7 +965,7 @@ public class SessionItemStateManager
                                                 parent.getNodeTypeName(),
                                                 parent.getMixinTypeNames());
                                         QNodeDefinition def = ent.getApplicableChildNodeDef(name, ns.getNodeTypeName(), ntReg);
-                                        return def != null ? def.allowsSameNameSiblings() : false;
+                                        return def != null && def.allowsSameNameSiblings();
                                     } catch (Exception e) {
                                         log.warn("Unable to get node definition", e);
                                         return false;
