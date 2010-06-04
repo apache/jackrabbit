@@ -1096,6 +1096,8 @@ public class SessionImpl extends AbstractSession
         }
 
         if (srcParentNode.isSame(destParentNode)) {
+            // change definition of target
+            targetNode.onRedefine(newTargetDef.unwrap());
             // do rename
             destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
         } else {
@@ -1105,6 +1107,8 @@ public class SessionImpl extends AbstractSession
                 log.debug(msg);
                 throw new UnsupportedRepositoryOperationException(msg);
             }
+              // change definition of target
+            targetNode.onRedefine(newTargetDef.unwrap());
 
             // do move:
             // 1. remove child node entry from old parent
@@ -1120,9 +1124,6 @@ public class SessionImpl extends AbstractSession
                     (NodeState) destParentNode.getOrCreateTransientItemState();
             destParentState.addChildNodeEntry(destName.getName(), targetId);
         }
-
-        // change definition of target
-        targetNode.onRedefine(newTargetDef.unwrap());
     }
 
     /**
