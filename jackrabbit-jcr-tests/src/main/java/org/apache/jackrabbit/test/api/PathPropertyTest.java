@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 
 /**
@@ -148,10 +148,8 @@ public class PathPropertyTest extends AbstractPropertyTest {
 
             // relative node path
             prop.getParent().setProperty(propName, ".", PropertyType.PATH);
-            value = prop.getString();
             n = prop.getNode();
-            assertEquals("The path of the dereferenced property must be equal to the value", ".", value);
-            assertTrue("The property value must be resolved to the correct node.", prop.getParent().isSame(n));
+            assertTrue("The property value must be resolved to the correct node.", prop.getParent().getNode(".").isSame(n));
 
             // non-existing property path
             while (session.nodeExists(nodePath)) {
@@ -159,9 +157,9 @@ public class PathPropertyTest extends AbstractPropertyTest {
             }
             prop.getParent().setProperty(propName, nodePath, PropertyType.PATH);
             try {
-                prop.getProperty();
-                fail("Calling Property.getNode() for a PATH value that doesn't have a corresponding Node, PathNotFoundException is expected");
-            } catch (PathNotFoundException e) {
+                prop.getNode();
+                fail("Calling Property.getNode() for a PATH value that doesn't have a corresponding Node, ItemNotFoundException is expected");
+            } catch (ItemNotFoundException e) {
                 //ok
             }
         } else {
@@ -197,7 +195,7 @@ public class PathPropertyTest extends AbstractPropertyTest {
             path = prop.getString();
             p = prop.getProperty();
             assertEquals("The path of the dereferenced property must be equal to the value", path, p.getName());
-            assertTrue("The property value must be resolved to the correct property.", prop.isSame(p));
+            assertTrue("The property value must be resolved to the correct property.", prop.getParent().getProperty(path).isSame(p));
 
             // non-existing property path
             while (session.propertyExists(propPath)) {
@@ -206,8 +204,8 @@ public class PathPropertyTest extends AbstractPropertyTest {
             prop.getParent().setProperty(propName, propPath, PropertyType.PATH);
             try {
                 prop.getProperty();
-                fail("Calling Property.getNode() for a PATH value that doesn't have a corresponding Property, PathNotFoundException is expected");
-            } catch (PathNotFoundException e) {
+                fail("Calling Property.getProperty() for a PATH value that doesn't have a corresponding Property, ItemNotFoundException is expected");
+            } catch (ItemNotFoundException e) {
                 //ok
             }
         } else {

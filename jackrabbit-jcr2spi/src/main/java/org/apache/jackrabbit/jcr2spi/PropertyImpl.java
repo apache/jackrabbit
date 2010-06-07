@@ -22,8 +22,10 @@ import java.util.Calendar;
 
 import javax.jcr.Binary;
 import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -358,29 +360,36 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Node getNode() throws ValueFormatException, RepositoryException {
         Value value = getValue();
-        int type = value.getType();
-        switch (type) {
+        switch (value.getType()) {
             case PropertyType.REFERENCE:
             case PropertyType.WEAKREFERENCE:
-                return session.getNodeByUUID(value.getString());
+                return session.getNodeByIdentifier(value.getString());
 
             case PropertyType.PATH:
             case PropertyType.NAME:
                 String path = value.getString();
                 Path p = session.getPathResolver().getQPath(path);
-                boolean absolute = p.isAbsolute();
-                return (absolute) ? session.getNode(path) : getParent().getNode(path);
+                try {
+                    return (p.isAbsolute()) ? session.getNode(path) : getParent().getNode(path);
+                } catch (PathNotFoundException e) {
+                    throw new ItemNotFoundException(path);
+                }
 
             case PropertyType.STRING:
                 try {
                     Value refValue = ValueHelper.convert(value, PropertyType.REFERENCE, session.getValueFactory());
-                    return session.getNodeByUUID(refValue.getString());
+                    return session.getNodeByIdentifier(refValue.getString());
+                } catch (ItemNotFoundException e) {
+                    throw e;
                 } catch (RepositoryException e) {
                     // try if STRING value can be interpreted as PATH value
                     Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
                     p = session.getPathResolver().getQPath(pathValue.getString());
-                    absolute = p.isAbsolute();
-                    return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
+                    try {
+                        return (p.isAbsolute()) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
+                    } catch (PathNotFoundException e1) {
+                        throw new ItemNotFoundException(pathValue.getString());
+                    }
                 }
 
             default:
@@ -402,7 +411,11 @@ public class PropertyImpl extends ItemImpl implements Property {
         } catch (RepositoryException e) {
             throw new ValueFormatException("Property value cannot be converted to a PATH");
         }
-        return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
+        try {
+            return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
+        } catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(path);
+        }
     }
 
     /**

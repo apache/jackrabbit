@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
 import javax.jcr.Property;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Node;
 
 /**
@@ -151,12 +151,12 @@ public class NamePropertyTest extends AbstractPropertyTest {
             String path = prop.getString();
             if (prop.getParent().hasNode(path)) {
                 Node n = prop.getNode();
-                assertEquals("The path of the dereferenced property must be equal to the value", path, n.getPath());
+                assertEquals("The name of the dereferenced property must be equal to the value", path, n.getName());
             } else {
                 try {
                     prop.getNode();
-                    fail("Calling Property.getNode() for a PATH value that doesn't have a corresponding Node, PathNotFoundException is expected");
-                } catch (PathNotFoundException e) {
+                    fail("Calling Property.getNode() for a NAME value that doesn't have a corresponding Node, ItemNotFoundException is expected");
+                } catch (ItemNotFoundException e) {
                     // success.
                 }
             }
@@ -181,12 +181,12 @@ public class NamePropertyTest extends AbstractPropertyTest {
             String path = prop.getString();
             if (prop.getParent().hasProperty(path)) {
                 Property p = prop.getProperty();
-                assertEquals("The path of the dereferenced property must be equal to the value", path, p.getPath());
+                assertEquals("The name of the dereferenced property must be equal to the value", path, p.getName());
             } else {
                 try {
                     prop.getProperty();
-                    fail("Calling Property.getProperty() for a PATH value that doesn't have a corresponding Node, PathNotFoundException is expected");
-                } catch (PathNotFoundException e) {
+                    fail("Calling Property.getProperty() for a NAME value that doesn't have a corresponding Node, ItemNotFoundException is expected");
+                } catch (ItemNotFoundException e) {
                     // success.
                 }
             }

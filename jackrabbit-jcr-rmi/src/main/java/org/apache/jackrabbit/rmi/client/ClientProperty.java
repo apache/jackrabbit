@@ -335,22 +335,50 @@ public class ClientProperty extends ClientItem implements Property {
      */
     public Node getNode() throws RepositoryException {
         String value = getString();
-        try {
-            if (getType() != PropertyType.PATH) {
+
+        switch (getType()) {
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
                 return getSession().getNodeByIdentifier(value);
-            } else if (value.startsWith("/")) {
-                return getSession().getNode(value);
-            } else {
-                return getParent().getNode(value);
-            }
-        } catch (RepositoryException e) {
-            // JCRRMI-15: Throw ValueFormatException where appropriate
-            if (e instanceof ItemNotFoundException
-                    || getType() == PropertyType.REFERENCE) {
-                throw e;
-            } else {
-                throw new ValueFormatException("Invalid identifier: " + value, e);
-            }
+
+            case PropertyType.PATH:
+                try {
+                    if (value.startsWith("/")) {
+                        return getSession().getNode(value);
+                    } else {
+                        return getParent().getNode(value);
+                    }
+                } catch (PathNotFoundException e) {
+                    throw new ItemNotFoundException(value);
+                }
+
+            case PropertyType.NAME:
+                try {
+                    return getParent().getNode(value);
+                } catch (PathNotFoundException e) {
+                    throw new ItemNotFoundException(value);
+                }
+
+            case PropertyType.STRING:
+                try {
+                    // interpret as identifier
+                    Value refValue = getSession().getValueFactory().createValue(value, PropertyType.REFERENCE);
+                    return getSession().getNodeByIdentifier(refValue.getString());
+                } catch (ItemNotFoundException e) {
+                    throw e;
+                } catch (RepositoryException e) {
+                    // try if STRING value can be interpreted as PATH value
+                    Value pathValue = getSession().getValueFactory().createValue(value, PropertyType.PATH);
+                    boolean absolute = value.startsWith("/");
+                    try {
+                        return (absolute) ? getSession().getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
+                    } catch (PathNotFoundException e1) {
+                        throw new ItemNotFoundException(pathValue.getString());
+                    }
+                }
+
+            default:
+                throw new ValueFormatException("Property value cannot be converted to a PATH, REFERENCE or WEAKREFERENCE: " + value);
         }
     }
 
@@ -360,10 +388,14 @@ public class ClientProperty extends ClientItem implements Property {
             throw new ValueFormatException("Not a path property");
         } else {
             String value = getString();
-            if (value.startsWith("/")) {
-                return getSession().getProperty(value);
-            } else {
-                return getParent().getProperty(value);
+            try {
+                if (value.startsWith("/")) {
+                    return getSession().getProperty(value);
+                } else {
+                    return getParent().getProperty(value);
+                }
+            } catch (PathNotFoundException e) {
+                throw new ItemNotFoundException(value);
             }
         }
     }
