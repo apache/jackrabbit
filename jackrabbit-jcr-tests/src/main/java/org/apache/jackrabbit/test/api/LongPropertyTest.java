@@ -206,7 +206,7 @@ public class LongPropertyTest extends AbstractPropertyTest {
         } else {
             try {
                 prop.getProperty();
-                fail("Property.getNode() called on a multivalue property " +
+                fail("Property.getProperty() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
                 // ok
