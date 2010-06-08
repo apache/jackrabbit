@@ -312,7 +312,7 @@ public class MultiIndex {
         flushTask = new Timer.Task() {
             public void run() {
                 // check if there are any indexing jobs finished
-                checkIndexingQueue();
+                checkIndexingQueue(false);
                 // check if volatile index should be flushed
                 checkFlush();
             }
@@ -1178,17 +1178,6 @@ public class MultiIndex {
 
     /**
      * Checks the indexing queue for finished text extrator jobs and updates the
-     * index accordingly if there are any new ones. This method is synchronized
-     * and should only be called by the timer task that periodically checks if
-     * there are documents ready in the indexing queue. A new transaction is
-     * used when documents are transfered from the indexing queue to the index.
-     */
-    private synchronized void checkIndexingQueue() {
-        checkIndexingQueue(false);
-    }
-
-    /**
-     * Checks the indexing queue for finished text extrator jobs and updates the
      * index accordingly if there are any new ones.
      *
      * @param transactionPresent whether a transaction is in progress and the
@@ -1217,13 +1206,15 @@ public class MultiIndex {
 
             try {
                 if (transactionPresent) {
-                    for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
-                        executeAndLog(new DeleteNode(getTransactionId(), (UUID) it.next()));
-                    }
-                    for (Iterator it = finished.values().iterator(); it.hasNext(); ) {
-                        executeAndLog(new AddNode(
-                                getTransactionId(), (Document) it.next()));
-                    }
+                	synchronized (this) {
+	                    for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
+	                        executeAndLog(new DeleteNode(getTransactionId(), (UUID) it.next()));
+	                    }
+	                    for (Iterator it = finished.values().iterator(); it.hasNext(); ) {
+	                        executeAndLog(new AddNode(
+	                                getTransactionId(), (Document) it.next()));
+	                    }
+                	}
                 } else {
                     update(finished.keySet(), finished.values());
                 }
