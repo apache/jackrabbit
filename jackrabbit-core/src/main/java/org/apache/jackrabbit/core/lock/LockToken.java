@@ -51,11 +51,11 @@ class LockToken {
 
         int sep = s.lastIndexOf('-');
         if (sep == -1 || sep == s.length() - 1) {
-            throw new IllegalArgumentException("Separator not found.");
+            throw new IllegalArgumentException("Separator not found. Token [" + s + "]");
         }
         String uuid = s.substring(0, sep);
         if (getCheckDigit(uuid) != s.charAt(s.length() - 1)) {
-            throw new IllegalArgumentException("Bad check digit.");
+            throw new IllegalArgumentException("Bad check digit. Token [" + s + "]");
         }
         return new LockToken(NodeId.valueOf(uuid));
     }
