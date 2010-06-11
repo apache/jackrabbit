@@ -66,11 +66,36 @@ public abstract class OnWorkspaceInconsistency {
         }
     };
 
+    /**
+     * An handler that simply logs the path of the parent node and the name
+     * of the missing child node
+     */
+    public static final OnWorkspaceInconsistency LOG = new OnWorkspaceInconsistency("log") {
+
+        public void handleMissingChildNode(NoSuchItemStateException exception,
+                                           QueryHandler handler,
+                                           Path path,
+                                           NodeState node,
+                                           ChildNodeEntry child)
+                throws RepositoryException, ItemStateException {
+            NamePathResolver resolver = new DefaultNamePathResolver(
+                    handler.getContext().getNamespaceRegistry());
+            log.error("Node {} ({}) has missing child '{}' ({})",
+                    new Object[]{
+                        resolver.getJCRPath(path),
+                        node.getNodeId(),
+                        resolver.getJCRName(child.getName()),
+                        child.getId()
+                    } + ". Please run a consistency check on this workspace!");
+        }
+    };
+
     protected static final Map<String, OnWorkspaceInconsistency> INSTANCES
             = new HashMap<String, OnWorkspaceInconsistency>();
 
     static {
         INSTANCES.put(FAIL.name, FAIL);
+        INSTANCES.put(LOG.name, LOG);
     }
 
     /**
