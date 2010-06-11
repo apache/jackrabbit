@@ -19,18 +19,15 @@ package org.apache.jackrabbit.core;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -53,8 +50,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.PropertyDefinition;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -222,7 +217,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         try {
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
             return parent.getApplicablePropertyDefinition(
-                    state.getName(), state.getType(), state.isMultiValued(), true);
+                    state.getName(), state.getType(), state.isMultiValued(), false);
         } catch (ItemNotFoundException e) {
             // parent probably removed, get it from attic
         }

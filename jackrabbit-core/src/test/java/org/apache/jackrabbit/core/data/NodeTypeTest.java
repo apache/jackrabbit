@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -26,6 +27,8 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 public class NodeTypeTest extends AbstractJCRTest {
 
@@ -67,5 +70,26 @@ public class NodeTypeTest extends AbstractJCRTest {
         assertEquals(PropertyType.BINARY, value.getType());
         assertEquals(def, value.getString());
     }
+    
+    /**
+     * Tests if it is possible to set a Long Value to a Date property
+     * @see JCR-2652
+     */
+	public void testSetNonExactTypedPropertyValue() throws RepositoryException {
+		Node node = testRootNode.addNode("foo", JcrConstants.NT_RESOURCE);
+		ValueFactory vf = superuser.getValueFactory();
+		Value value = vf.createValue("1234", 3);
+		// Attempt to use the LongValue to set a Date property
+		try {
+			node.setProperty(JcrConstants.JCR_LASTMODIFIED, value);
+			// Mandatory Properties will be set for JcrConstants.NT_RESOURCE
+			node.setProperty(JcrConstants.JCR_DATA, "value");
+			node.setProperty(JcrConstants.JCR_MIMETYPE, "text/plain");
+		} catch (ConstraintViolationException e) {
+            fail("No ConstraintViolation should happen if a LongValue is set to a Date property");
+		}
+		superuser.save();
+		assertNotNull(node.getProperty(JcrConstants.JCR_LASTMODIFIED));
+	}
 
 }
