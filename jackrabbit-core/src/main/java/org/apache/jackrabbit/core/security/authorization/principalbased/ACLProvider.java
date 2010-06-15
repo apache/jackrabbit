@@ -32,26 +32,36 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlModificati
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,9 +72,6 @@ import java.util.Set;
 public class ACLProvider extends AbstractAccessControlProvider implements AccessControlConstants {
 
     private static Logger log = LoggerFactory.getLogger(ACLProvider.class);
-
-    // TODO: add means to show effective-policy to a user.
-    private static final AccessControlPolicy effectivePolicy = EffectivePrincipalBasedPolicy.getInstance();
 
     private NodeImpl acRoot;    
     private ACLEditor editor;
@@ -157,20 +164,89 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.security.authorization.CompiledPermissions)
      */
-    public AccessControlPolicy[] getEffectivePolicies(Path absPath)
-            throws ItemNotFoundException, RepositoryException {
-        /*
-           since the per-node effect of the policies is defined by the
-           rep:nodePath restriction present with the individual access control
-           entries, returning the principal-based policy at 'absPath' (which for
-           most nodes in the repository isn't available anyway) doesn't
-           provide the desired information.
-           As tmp. solution some default policy is returned instead.
-           TODO: add proper evaluation and return a set of ACLs that take effect on the node at abs path
-        */
-        return new AccessControlPolicy[] {effectivePolicy};
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException {
+        String jcrPath = session.getJCRPath(absPath);
+        String pName = ISO9075.encode(session.getJCRName(ACLTemplate.P_NODE_PATH));
+        int ancestorCnt = absPath.getAncestorCount();
+
+        // search all ACEs whose rep:nodePath property equals the specified
+        // absPath or any of it's ancestors
+        StringBuilder stmt = new StringBuilder("/jcr:root");
+        stmt.append(acRoot.getPath());
+        stmt.append("//element(*,");
+        stmt.append(session.getJCRName(NT_REP_ACE));
+        stmt.append(")[");
+        for (int i = 0; i <= ancestorCnt; i++) {
+            String path = Text.getRelativeParent(jcrPath, i);
+            if (i > 0) {
+                stmt.append(" or ");
+            }
+            stmt.append("@");
+            stmt.append(pName);
+            stmt.append("='");
+            stmt.append(path.replaceAll("'", "''"));
+            stmt.append("'");
+        }
+        stmt.append("]");
+        
+        QueryResult result;
+        try {
+            QueryManager qm = session.getWorkspace().getQueryManager();
+            Query q = qm.createQuery(stmt.toString(), Query.XPATH);
+            result = q.execute();
+        } catch (RepositoryException e) {
+            log.error("Unexpected error while searching effective policies.", e.getMessage());
+            throw new UnsupportedOperationException("Retrieve effective policies at absPath '" +jcrPath+ "' not supported.", e);
+        }
+
+        /**
+         * Loop over query results and verify that
+         * - the corresponding ACE really takes effect on the specified absPath.
+         * - the corresponding ACL can be read by the editing session.
+         */
+        Set<AccessControlPolicy> acls = new LinkedHashSet<AccessControlPolicy>();
+        for (NodeIterator it = result.getNodes(); it.hasNext();) {
+            Node aceNode = it.nextNode();
+            String accessControlledNodePath = Text.getRelativeParent(aceNode.getPath(), 2);
+            Path acPath = session.getQPath(accessControlledNodePath);
+
+            AccessControlPolicy[] policies = editor.getPolicies(accessControlledNodePath);
+            if (policies.length > 0) {
+                ACLTemplate acl = (ACLTemplate) policies[0];
+                for (AccessControlEntry ace : acl.getAccessControlEntries()) {
+                    ACLTemplate.Entry entry = (ACLTemplate.Entry) ace;
+                    if (entry.matches(jcrPath)) {
+                        if (permissions.grants(acPath, Permission.READ_AC)) {
+                            acls.add(new UnmodifiableAccessControlList(acl));
+                            break;
+                        } else {
+                            throw new AccessDeniedException("Access denied at " + accessControlledNodePath);
+                        }
+                    }
+                }
+            }
+        }
+        return acls.toArray(new AccessControlPolicy[acls.size()]);
+    }
+
+    /**
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(java.util.Set, CompiledPermissions)
+     */
+    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals, CompiledPermissions permissions) throws RepositoryException {
+        List<AccessControlPolicy> acls = new ArrayList<AccessControlPolicy>(principals.size());
+        for (Principal principal : principals) {
+            ACLTemplate acl = editor.getACL(principal);
+            if (acl != null) {
+                if (permissions.grants(session.getQPath(acl.getPath()), Permission.READ_AC)) {
+                    acls.add(new UnmodifiableAccessControlList(acl));
+                } else {
+                    throw new AccessDeniedException("Access denied at " + acl.getPath());
+                }
+            }
+        }
+        return acls.toArray(new AccessControlPolicy[acls.size()]);
     }
 
     /**
@@ -423,21 +499,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 // should never get here
                 log.warn("Internal error: ", e.getMessage());
             }
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    /**
-     * Dummy effective policy 
-     */
-    private static final class EffectivePrincipalBasedPolicy implements AccessControlPolicy {
-
-        private static EffectivePrincipalBasedPolicy INSTANCE = new EffectivePrincipalBasedPolicy();
-        private EffectivePrincipalBasedPolicy() {
-        }
-
-        private static EffectivePrincipalBasedPolicy getInstance() {
-            return INSTANCE;
         }
     }
 }

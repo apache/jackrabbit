@@ -22,6 +22,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Set;
@@ -68,6 +69,23 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
      * @throws RepositoryException If another error occurs.
      */
     JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Returns the <code>AccessControlPolicy</code> objects that are in effect
+     * for the given <code>Principal</code>s. This may be policies set through
+     * this API or some implementation specific (default) policies.
+     *
+     * @param principals A set of valid principals.
+     * @return The policies defined for the given principal or an empty array.
+     * @throws AccessDeniedException if the session lacks
+     * <code>READ_ACCESS_CONTROL</code> privilege.
+     * @throws AccessControlException  if the specified principal does not exist
+     * or if another access control related exception occurs.
+     * @throws UnsupportedRepositoryOperationException if editing access control
+     * policies by principal is not supported.
+     * @throws RepositoryException If another error occurs.
+     */
+    AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * Returns whether the given set of <code>Principal</code>s has the specified

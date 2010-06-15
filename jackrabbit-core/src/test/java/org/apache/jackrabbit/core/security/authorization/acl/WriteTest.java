@@ -96,8 +96,7 @@ public class WriteTest extends AbstractWriteTest {
         // test if testuser can READ access control on the path and on the
         // entire subtree that gets the policy inherited.
         AccessControlPolicy[] policies = testAcMgr.getPolicies(path);
-        testAcMgr.getEffectivePolicies(path);
-        testAcMgr.getEffectivePolicies(childNPath);
+        testAcMgr.getPolicies(childNPath);
 
         // test: READ_AC privilege does not apply outside of the tree.
         try {
@@ -243,7 +242,7 @@ public class WriteTest extends AbstractWriteTest {
         withdrawPrivileges(childNPath, EveryonePrincipal.getInstance(), privileges, getRestrictions(superuser, path));
 
         // result at 'child path' must be deny
-        assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));    
+        assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
     }
 
     public void testInheritedGroupPermissions2() throws NotExecutableException, RepositoryException {
@@ -395,7 +394,7 @@ public class WriteTest extends AbstractWriteTest {
             /* after reordering the permissions must be denied */
             assertFalse(getTestSession().hasPermission(path, actions));
             assertFalse(testAcMgr.hasPrivileges(path, privs));
-            
+
         } finally {
             group2.remove();
         }

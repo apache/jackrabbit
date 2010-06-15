@@ -39,12 +39,19 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
@@ -54,6 +61,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -133,10 +141,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
-     * @param absPath absolute path
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.security.authorization.CompiledPermissions)
      */
-    public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
 
         NodeImpl targetNode = (NodeImpl) session.getNode(session.getJCRPath(absPath));
@@ -144,15 +151,66 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         List<AccessControlList> acls = new ArrayList<AccessControlList>();
 
         // collect all ACLs effective at node
-        collectAcls(node, acls);
+        collectAcls(node, permissions, acls);
         // if no effective ACLs are present -> add a default, empty acl.
         if (acls.isEmpty()) {
             // no access control information can be retrieved for the specified
             // node, since neither the node nor any of its parents is access
-            // controlled.
+            // controlled. TODO: there should be a default policy in this case (see JCR-2331)
             log.warn("No access controlled node present in item hierarchy starting from " + targetNode.getPath());
         }
         return acls.toArray(new AccessControlList[acls.size()]);
+    }
+
+    /**
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(java.util.Set, CompiledPermissions)
+     */
+    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals, CompiledPermissions permissions) throws RepositoryException {
+        String propName = ISO9075.encode(session.getJCRName(P_PRINCIPAL_NAME));
+
+        StringBuilder stmt = new StringBuilder("/jcr:root");
+        stmt.append("//element(*,");
+        stmt.append(session.getJCRName(NT_REP_ACE));
+        stmt.append(")[");
+        int i = 0;
+        for (Principal principal : principals) {
+            if (i > 0) {
+                stmt.append(" or ");
+            }
+            stmt.append("@");
+            stmt.append(propName);
+            stmt.append("='");
+            stmt.append(principal.getName().replaceAll("'", "''"));
+            stmt.append("'");
+            i++;
+        }
+        stmt.append("]");
+        
+        QueryResult result;
+        try {
+            QueryManager qm = session.getWorkspace().getQueryManager();
+            Query q = qm.createQuery(stmt.toString(), Query.XPATH);
+            result = q.execute();
+        } catch (RepositoryException e) {
+            log.error("Unexpected error while searching effective policies.", e.getMessage());            
+            throw new UnsupportedOperationException("Retrieve effective policies for set of principals not supported.", e);
+        }
+
+        Set<AccessControlPolicy> acls = new LinkedHashSet<AccessControlPolicy>();
+        for (NodeIterator it = result.getNodes(); it.hasNext();) {
+            NodeImpl aclNode = (NodeImpl) it.nextNode().getParent();
+            NodeImpl accessControlledNode = (NodeImpl) aclNode.getParent();
+            
+            if (isAccessControlled(accessControlledNode)) {
+                if (permissions.canRead(aclNode.getPrimaryPath(), aclNode.getNodeId())) {
+                    acls.add(new UnmodifiableAccessControlList(entryCollector.getEntries(accessControlledNode), accessControlledNode.getPath(), Collections.<String, Integer>emptyMap()));
+                } else {
+                    throw new AccessDeniedException("Access denied at " + Text.getRelativeParent(aclNode.getPath(), 1));
+                }
+            }
+        }
+
+        return acls.toArray(new AccessControlPolicy[acls.size()]);
     }
 
     /**
@@ -255,17 +313,21 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * @param acls List used to collect the effective acls.
      * @throws RepositoryException if an error occurs
      */
-    private void collectAcls(NodeImpl node, List<AccessControlList> acls) throws RepositoryException {
+    private void collectAcls(NodeImpl node, CompiledPermissions permissions, List<AccessControlList> acls) throws RepositoryException {
         // if the given node is access-controlled, construct a new ACL and add
         // it to the list
         if (isAccessControlled(node)) {
-            // retrieve the entries for the access controlled node
-            acls.add(new UnmodifiableAccessControlList(entryCollector.getEntries(node), node.getPath(), Collections.<String, Integer>emptyMap()));
+            if (permissions.grants(node.getPrimaryPath(), Permission.READ_AC)) {
+                // retrieve the entries for the access controlled node
+                acls.add(new UnmodifiableAccessControlList(entryCollector.getEntries(node), node.getPath(), Collections.<String, Integer>emptyMap()));
+            } else {
+                throw new AccessDeniedException("Access denied at " + node.getPath());
+            }
         }
         // then, recursively look for access controlled parents up the hierarchy.
         if (!rootNodeId.equals(node.getId())) {
             NodeImpl parentNode = (NodeImpl) node.getParent();
-            collectAcls(parentNode, acls);
+            collectAcls(parentNode, permissions, acls);
         }
     }
 

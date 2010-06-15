@@ -24,6 +24,8 @@ import java.security.Principal;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import javax.security.auth.Subject;
@@ -279,8 +281,16 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
-     */
+         * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getEffectivePolicies(Set)
+         */
+        public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+            // cannot determine the effective policies for the system session.
+            return new AccessControlPolicy[0];
+        }
+
+        /**
+         * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
+         */
         public boolean hasPrivileges(String absPath, Set<Principal> principals, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
             throw new UnsupportedOperationException("not implemented");
         }
