@@ -314,7 +314,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkInitialized();
         checkPermission(absPath, Permission.READ_AC);
 
-        return acProvider.getEffectivePolicies(getPath(absPath));
+        return acProvider.getEffectivePolicies(getPath(absPath), compiledPermissions);
     }
 
     /**
@@ -389,6 +389,14 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getEffectivePolicies(Set)
+     */
+    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        checkInitialized();
+        return acProvider.getEffectivePolicies(principals, compiledPermissions);
+    }
+
+    /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
      */
     public boolean hasPrivileges(String absPath, Set<Principal> principals, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
@@ -403,7 +411,12 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         } else {
             int privs = PrivilegeRegistry.getBits(privileges);
             Path p = resolver.getQPath(absPath);
-            return (acProvider.compilePermissions(principals).getPrivileges(p) | ~privs) == -1;
+            CompiledPermissions perms = acProvider.compilePermissions(principals);
+            try {
+                return (perms.getPrivileges(p) | ~privs) == -1;
+            } finally {
+                perms.close();
+            }
         }
     }
 
@@ -414,6 +427,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkInitialized();
         checkValidNodePath(absPath);
         checkPermission(absPath, Permission.READ_AC);
+
         CompiledPermissions perms = acProvider.compilePermissions(principals);
         try {
             int bits = perms.getPrivileges(resolver.getQPath(absPath));

@@ -117,13 +117,24 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     }
 
     /**
-     * @see AccessControlProvider#getEffectivePolicies(Path)
+     * @see AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.security.authorization.CompiledPermissions)
      */
-    public AccessControlPolicy[] getEffectivePolicies(Path absPath)
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions)
             throws ItemNotFoundException, RepositoryException {
         List<AccessControlPolicy> l = new ArrayList<AccessControlPolicy>();
         for (AccessControlProvider provider : providers) {
-            l.addAll(Arrays.asList(provider.getEffectivePolicies(absPath)));
+            l.addAll(Arrays.asList(provider.getEffectivePolicies(absPath, permissions)));
+        }
+        return l.toArray(new AccessControlPolicy[l.size()]);
+    }
+
+    /**
+     * @see AccessControlProvider#getEffectivePolicies(java.util.Set, CompiledPermissions)
+     */
+    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals, CompiledPermissions permissions) throws RepositoryException {
+        List<AccessControlPolicy> l = new ArrayList<AccessControlPolicy>();
+        for (AccessControlProvider provider : providers) {
+            l.addAll(Arrays.asList(provider.getEffectivePolicies(principals, permissions)));
         }
         return l.toArray(new AccessControlPolicy[l.size()]);
     }

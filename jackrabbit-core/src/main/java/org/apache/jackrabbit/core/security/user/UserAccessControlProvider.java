@@ -163,9 +163,17 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.security.authorization.CompiledPermissions)
      */
-    public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException {
+        checkInitialized();
+        return new AccessControlPolicy[] {policy};
+    }
+
+    /**
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(java.util.Set, CompiledPermissions)
+     */
+    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals, CompiledPermissions permission) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
         return new AccessControlPolicy[] {policy};
     }

@@ -46,6 +46,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(LockTest.class);
         suite.addTestSuite(VersionTest.class);
         suite.addTestSuite(NodeTypeTest.class);
+        suite.addTestSuite(EffectivePolicyTest.class);
 
         return suite;
     }
