@@ -565,29 +565,24 @@ public class NodeImpl extends ItemImpl implements Node {
         itemMgr.getItem(propId).setRemoved();
     }
 
-    protected void removeChildNode(Name nodeName, int index)
-            throws RepositoryException {
+    protected void removeChildNode(NodeId childId) throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        if (index == 0) {
-            index = 1;
-        }
         ChildNodeEntry entry =
-                thisState.getChildNodeEntry(nodeName, index);
+                thisState.getChildNodeEntry(childId);
         if (entry == null) {
-            String msg = "failed to remove child " + nodeName + " of " + this;
+            String msg = "failed to remove child " + childId + " of " + this;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         // notify target of removal
-        NodeId childId = entry.getId();
         NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
         childNode.onRemove(getNodeId());
 
         // remove the child node entry
-        if (!thisState.removeChildNodeEntry(nodeName, index)) {
-            String msg = "failed to remove child " + nodeName + " of " + this;
+        if (!thisState.removeChildNodeEntry(childId)) {
+            String msg = "failed to remove child " + childId + " of " + this;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -635,7 +630,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
                 childNode.onRemove(thisState.getNodeId());
                 // remove the child node entry
-                thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
+                thisState.removeChildNodeEntry(childId);
             }
         }
 
@@ -1146,7 +1141,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
                 if (oldDef.isProtected()) {
                     // remove 'orphaned' protected child node immediately
-                    removeChildNode(entry.getName(), entry.getIndex());
+                    removeChildNode(entry.getId());
                     continue;
                 }
 
@@ -1161,7 +1156,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 } catch (ConstraintViolationException cve) {
                     // no suitable definition found for this child node,
                     // remove it
-                    removeChildNode(entry.getName(), entry.getIndex());
+                    removeChildNode(entry.getId());
                 }
             }
             success = true;
@@ -3686,7 +3681,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
                         if (node.getDefinition().isProtected()) {
                             // remove 'orphaned' protected child node immediately
-                            removeChildNode(entry.getName(), entry.getIndex());
+                            removeChildNode(entry.getId());
                             continue;
                         }
                         NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
@@ -3699,7 +3694,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     } catch (ConstraintViolationException cve) {
                         // no suitable definition found for this child node,
                         // remove it
-                        removeChildNode(entry.getName(), entry.getIndex());
+                        removeChildNode(entry.getId());
                     }
                 }
             } catch (ItemStateException ise) {

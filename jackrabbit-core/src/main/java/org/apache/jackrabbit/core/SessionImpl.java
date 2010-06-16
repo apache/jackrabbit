@@ -1107,22 +1107,25 @@ public class SessionImpl extends AbstractSession
                 log.debug(msg);
                 throw new UnsupportedRepositoryOperationException(msg);
             }
-              // change definition of target
+            // change definition of target
             targetNode.onRedefine(newTargetDef.unwrap());
+
+            // Get the transient states
+            NodeState srcParentState =
+                    (NodeState) srcParentNode.getOrCreateTransientItemState();
+            NodeState targetState =
+                    (NodeState) targetNode.getOrCreateTransientItemState();
+            NodeState destParentState =
+                    (NodeState) destParentNode.getOrCreateTransientItemState();
 
             // do move:
             // 1. remove child node entry from old parent
-            NodeState srcParentState =
-                    (NodeState) srcParentNode.getOrCreateTransientItemState();
-            srcParentState.removeChildNodeEntry(srcName.getName(), index);
-            // 2. re-parent target node
-            NodeState targetState =
-                    (NodeState) targetNode.getOrCreateTransientItemState();
-            targetState.setParentId(destParentNode.getNodeId());
-            // 3. add child node entry to new parent
-            NodeState destParentState =
-                    (NodeState) destParentNode.getOrCreateTransientItemState();
-            destParentState.addChildNodeEntry(destName.getName(), targetId);
+            if (srcParentState.removeChildNodeEntry(targetId)) {
+                // 2. re-parent target node
+                targetState.setParentId(destParentNode.getNodeId());
+                // 3. add child node entry to new parent
+                destParentState.addChildNodeEntry(destName.getName(), targetId);
+            }
         }
     }
 
