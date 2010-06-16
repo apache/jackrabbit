@@ -882,10 +882,10 @@ public abstract class ItemImpl implements Item {
         }
 
         // delegate the removal of the child item to the parent node
-        Path.Element thisName = getPrimaryPath().getNameElement();
         if (isNode()) {
-            parentNode.removeChildNode(thisName.getName(), thisName.getIndex());
+            parentNode.removeChildNode((NodeId) getId());
         } else {
+            Path.Element thisName = getPrimaryPath().getNameElement();
             parentNode.removeChildProperty(thisName.getName());
         }
     }
