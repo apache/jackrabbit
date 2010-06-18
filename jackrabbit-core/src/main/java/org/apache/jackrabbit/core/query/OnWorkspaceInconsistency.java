@@ -80,13 +80,13 @@ public abstract class OnWorkspaceInconsistency {
                 throws RepositoryException, ItemStateException {
             NamePathResolver resolver = new DefaultNamePathResolver(
                     handler.getContext().getNamespaceRegistry());
-            log.error("Node {} ({}) has missing child '{}' ({})",
+            log.error("Node {} ({}) has missing child '{}' ({}). Please run a consistency check on this workspace!",
                     new Object[]{
                         resolver.getJCRPath(path),
                         node.getNodeId(),
                         resolver.getJCRName(child.getName()),
                         child.getId()
-                    } + ". Please run a consistency check on this workspace!");
+                    });
         }
     };
 
