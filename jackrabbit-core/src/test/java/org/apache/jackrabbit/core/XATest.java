@@ -1874,6 +1874,61 @@ public class XATest extends AbstractJCRTest {
         other.save();
         utx.commit();
     }
+
+    /**
+     * Tests if it is possible to add-lock a node and unlock-remove it with
+     * a shared session in different transactions
+     * (see JCR-2341)  
+     * @throws Exception
+     */
+    public void testAddLockTokenRemoveNode2() throws Exception {
+        // create new node and lock it
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        // add node that is both lockable and referenceable, save
+        Node rootNode = superuser.getRootNode(); 
+        Node n = rootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        rootNode.save();
+
+        String uuid = n.getUUID();
+        
+        // lock this new node
+        Lock lock = n.lock(true, false);
+        String lockToken = lock.getLockToken();
+        
+        // commit
+        utx.commit();
+        
+        
+        // refresh Lock Info
+        lock = n.getLock();
+
+        // start new Transaction and try to add lock token unlock the node and then remove it
+        utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        
+        Node otherNode = superuser.getNodeByUUID(uuid); 
+        assertTrue("Node not locked", otherNode.isLocked());
+        // add lock token
+        superuser.addLockToken(lockToken);
+      
+        // refresh Lock Info
+        lock = otherNode.getLock();
+
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));        
+        
+        otherNode.unlock();
+        
+        assertFalse("Node is locked", otherNode.isLocked());
+        
+        otherNode.remove();
+        superuser.save();
+        utx.commit();
+    }
     
     /**
      * Test setting the same property multiple times. Exposes an issue where
