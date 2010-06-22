@@ -39,6 +39,8 @@ import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.ActiveSessionState;
 import org.apache.jackrabbit.core.session.ClosedSessionState;
+import org.apache.jackrabbit.core.session.SanityCheck;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.session.SessionState;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -382,7 +384,7 @@ public class SessionImpl extends AbstractSession
      *                             been closed explicitly or if it has expired)
      */
     protected void sanityCheck() throws RepositoryException {
-        state.checkAlive();
+        state.perform(SanityCheck.INSTANCE);
     }
 
     /**
@@ -896,16 +898,17 @@ public class SessionImpl extends AbstractSession
             ConstraintViolationException, InvalidItemStateException,
             VersionException, LockException, NoSuchNodeTypeException,
             RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        // /JCR-2425: check whether session is allowed to read root node
-        if (hasPermission("/", ACTION_READ)) {
-            getItemManager().getRootNode().save();
-        } else {
-            NodeId id = getItemStateManager().getIdOfRootTransientNodeState();
-            getItemManager().getItem(id).save();
-        }
+        state.perform(new SessionOperation() {
+            public void perform() throws RepositoryException {
+                // JCR-2425: check whether session is allowed to read root node
+                if (hasPermission("/", ACTION_READ)) {
+                    getItemManager().getRootNode().save();
+                } else {
+                    NodeId id = getItemStateManager().getIdOfRootTransientNodeState();
+                    getItemManager().getItem(id).save();
+                }
+            }
+        });
     }
 
     /**

@@ -43,10 +43,11 @@ public class ClosedSessionState implements SessionState {
      *
      * @throws RepositoryException always thrown
      */
-    public void checkAlive() throws RepositoryException {
+    public void perform(SessionOperation operation) throws RepositoryException {
         throw new RepositoryException(
-                "This session has been closed; see the chained exception"
-                + " for where the session was closed", exception);
+                "Unable to perform " + operation + " since this session"
+                + " has been closed. See the chained exception for a trace"
+                + " of where the session was closed", exception);
     }
 
 }
