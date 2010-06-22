@@ -35,9 +35,10 @@ public class SessionOperation {
      * Performs this operation. The default implementation does nothing;
      * subclasses should override this method to implement custom operations.
      *
+     * @param context component context of the session
      * @throws RepositoryException if the operation fails
      */
-    public void perform() throws RepositoryException {
+    public void perform(SessionContext context) throws RepositoryException {
     }
 
     /**

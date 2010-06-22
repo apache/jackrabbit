@@ -272,7 +272,7 @@ public class SessionImpl extends AbstractSession
             RepositoryContext repositoryContext, Subject subject,
             WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-        this.context.setSessionState(new ActiveSessionState());
+        this.context.setSessionState(new ActiveSessionState(context));
         this.repositoryContext = repositoryContext;
         this.subject = subject;
 
@@ -899,7 +899,8 @@ public class SessionImpl extends AbstractSession
     public void save() throws RepositoryException {
         perform(new SessionOperation("save") {
             @Override
-            public void perform() throws RepositoryException {
+            public void perform(SessionContext context)
+                    throws RepositoryException {
                 // JCR-2425: check whether session is allowed to read root node
                 if (hasPermission("/", ACTION_READ)) {
                     getItemManager().getRootNode().save();
@@ -917,7 +918,8 @@ public class SessionImpl extends AbstractSession
     public void refresh(final boolean keepChanges) throws RepositoryException {
         perform(new SessionOperation("refresh") {
             @Override
-            public void perform() throws RepositoryException {
+            public void perform(SessionContext context)
+                    throws RepositoryException {
                 // JCR-1753: Ensure that we are up to date with cluster changes
                 ClusterNode cluster = repositoryContext.getClusterNode();
                 if (cluster != null && clusterSyncOnRefresh()) {
