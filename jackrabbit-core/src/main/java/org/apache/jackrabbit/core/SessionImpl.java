@@ -39,8 +39,8 @@ import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.ActiveSessionState;
 import org.apache.jackrabbit.core.session.ClosedSessionState;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
-import org.apache.jackrabbit.core.session.SessionState;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
@@ -66,7 +66,6 @@ import org.xml.sax.InputSource;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -86,7 +85,6 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.retention.RetentionManager;
@@ -127,9 +125,9 @@ public class SessionImpl extends AbstractSession
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
-     * The state of this session.
+     * The component context of this session.
      */
-    protected volatile SessionState state = new ActiveSessionState();
+    protected final SessionContext context = new SessionContext(this);
 
     /**
      * The component context of the repository that issued this session.
@@ -274,6 +272,7 @@ public class SessionImpl extends AbstractSession
             RepositoryContext repositoryContext, Subject subject,
             WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
+        this.context.setSessionState(new ActiveSessionState());
         this.repositoryContext = repositoryContext;
         this.subject = subject;
 
@@ -334,7 +333,7 @@ public class SessionImpl extends AbstractSession
     protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
                                             HierarchyManager hierMgr) {
         return ItemManager.createInstance(
-                itemStateMgr, hierMgr, this,
+                itemStateMgr, hierMgr, context,
                 ntMgr.getRootNodeDefinition(),
                 repositoryContext.getRootNodeId(),
                 repositoryContext.getDataStore());
@@ -375,6 +374,11 @@ public class SessionImpl extends AbstractSession
         return repositoryContext.getSecurityManager().getAccessManager(this, ctx);
     }
 
+    private void perform(SessionOperation operation)
+            throws RepositoryException {
+        context.getSessionState().perform(operation);
+    }
+
     /**
      * Performs a sanity check on this session.
      *
@@ -383,7 +387,7 @@ public class SessionImpl extends AbstractSession
      *                             been closed explicitly or if it has expired)
      */
     protected void sanityCheck() throws RepositoryException {
-        state.perform(new SessionOperation("sanity check"));
+        perform(new SessionOperation("sanity check"));
     }
 
     /**
@@ -893,7 +897,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void save() throws RepositoryException {
-        state.perform(new SessionOperation("save") {
+        perform(new SessionOperation("save") {
             @Override
             public void perform() throws RepositoryException {
                 // JCR-2425: check whether session is allowed to read root node
@@ -911,7 +915,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void refresh(final boolean keepChanges) throws RepositoryException {
-        state.perform(new SessionOperation("refresh") {
+        perform(new SessionOperation("refresh") {
             @Override
             public void perform() throws RepositoryException {
                 // JCR-1753: Ensure that we are up to date with cluster changes
@@ -1168,7 +1172,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public boolean isLive() {
-        return state.isAlive();
+        return context.getSessionState().isAlive();
     }
 
     /**
@@ -1222,7 +1226,7 @@ public class SessionImpl extends AbstractSession
         wsp.dispose();
 
         // invalidate session
-        state = new ClosedSessionState();
+        context.setSessionState(new ClosedSessionState());
 
         // logout JAAS subject
         if (loginContext != null) {

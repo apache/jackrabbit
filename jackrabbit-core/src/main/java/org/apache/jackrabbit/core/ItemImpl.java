@@ -56,6 +56,8 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -90,7 +92,12 @@ public abstract class ItemImpl implements Item {
     protected final ItemId id;
 
     /**
-     * <code>Session</code> through which this <code>Item</code> was acquired
+     * The component context of the session to which this item is associated.
+     */
+    protected final SessionContext sessionContext;
+
+    /**
+     * The session to which this item is associated.
      */
     protected final SessionImpl session;
 
@@ -113,15 +120,21 @@ public abstract class ItemImpl implements Item {
      * Package private constructor.
      *
      * @param itemMgr   the <code>ItemManager</code> that created this <code>Item</code>
-     * @param session   the <code>Session</code> through which this <code>Item</code> is acquired
+     * @param sessionContext the component context of the associated session
      * @param data      ItemData of this <code>Item</code>
      */
-    ItemImpl(ItemManager itemMgr, SessionImpl session, ItemData data) {
-        this.session = session;
-        stateMgr = session.getItemStateManager();
+    ItemImpl(ItemManager itemMgr, SessionContext sessionContext, ItemData data) {
+        this.sessionContext = sessionContext;
+        this.session = sessionContext.getSessionImpl();
+        this.stateMgr = session.getItemStateManager();
         this.id = data.getId();
         this.itemMgr = itemMgr;
         this.data = data;
+    }
+
+    protected void perform(SessionOperation operation)
+            throws RepositoryException {
+        sessionContext.getSessionState().perform(operation);
     }
 
     /**
@@ -131,7 +144,7 @@ public abstract class ItemImpl implements Item {
      */
     protected void sanityCheck() throws RepositoryException {
         // check session status
-        session.sanityCheck();
+        perform(new SessionOperation("sanity check"));
 
         // check status of this item for read operation
         final int status = data.getStatus();
@@ -955,16 +968,21 @@ public abstract class ItemImpl implements Item {
     /**
      * {@inheritDoc}
      */
-    public void save()
-            throws AccessDeniedException, ItemExistsException,
-            ConstraintViolationException, InvalidItemStateException,
-            ReferentialIntegrityException, VersionException, LockException,
-            NoSuchNodeTypeException, RepositoryException {
+    public void save() throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        // synchronize on this session
-        synchronized (session) {
+        perform(new SaveOperation());
+    }
+
+    private class SaveOperation extends SessionOperation {
+
+        public SaveOperation() {
+            super("item save");
+        }
+
+        @Override
+        public void perform() throws RepositoryException {
             /**
              * build list of transient (i.e. new & modified) states that
              * should be persisted

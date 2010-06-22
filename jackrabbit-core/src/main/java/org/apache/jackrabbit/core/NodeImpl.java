@@ -80,6 +80,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -123,11 +124,13 @@ public class NodeImpl extends ItemImpl implements Node {
      * Protected constructor.
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Node</code> instance
-     * @param session    the <code>Session</code> through which this <code>Node</code> is acquired
+     * @param sessionContext the component context of the associated session
      * @param data       the node data
      */
-    protected NodeImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
-        super(itemMgr, session, data);
+    protected NodeImpl(
+            ItemManager itemMgr, SessionContext sessionContext,
+            AbstractNodeData data) {
+        super(itemMgr, sessionContext, data);
         this.data = data;
         // paranoid sanity check
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();

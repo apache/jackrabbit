@@ -52,6 +52,7 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -92,6 +93,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
     private final org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef;
     private final NodeId rootNodeId;
 
+    /**
+     * Component context of the associated session.
+     */
+    protected final SessionContext sessionContext;
+
     protected final SessionImpl session;
 
     private final SessionItemStateManager sism;
@@ -118,20 +124,19 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @param sism        the item state manager associated with the new
      *                    instance
      * @param hierMgr     the hierarchy manager
-     * @param session     the session associated with the new instance
+     * @param sessionContext component context of the associated session
      * @param rootNodeDef the definition of the root node
      * @param rootNodeId  the id of the root node
      * @param dataStore   the data store of this repository, or <code>null</code>
      */
-    protected ItemManager(SessionItemStateManager sism,
-                          HierarchyManager hierMgr,
-                          SessionImpl session,
-                          NodeDefinitionImpl rootNodeDef,
-                          NodeId rootNodeId,
-                          DataStore dataStore) {
+    protected ItemManager(
+            SessionItemStateManager sism, HierarchyManager hierMgr,
+            SessionContext sessionContext, NodeDefinitionImpl rootNodeDef,
+            NodeId rootNodeId, DataStore dataStore) {
         this.sism = sism;
         this.hierMgr = hierMgr;
-        this.session = session;
+        this.sessionContext = sessionContext;
+        this.session = sessionContext.getSessionImpl();
         this.rootNodeDef = rootNodeDef;
         this.rootNodeId = rootNodeId;
         this.dataStore = dataStore;
@@ -149,7 +154,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @param itemStateProvider the item state provider associated with
      *                          the new instance
      * @param hierMgr           the hierarchy manager
-     * @param session           the session associated with the new instance
+     * @param sessionContext component context of the associated session
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeId        the id of the root node
      * @param dataStore   the data store of this repository, or <code>null</code>
@@ -158,12 +163,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
     public static ItemManager createInstance(
             SessionItemStateManager itemStateProvider,
             HierarchyManager hierMgr,
-            SessionImpl session,
+            SessionContext sessionContext,
             NodeDefinitionImpl rootNodeDef,
             NodeId rootNodeId,
             DataStore dataStore) {
         ItemManager mgr = new ItemManager(
-                itemStateProvider, hierMgr, session, rootNodeDef,
+                itemStateProvider, hierMgr, sessionContext, rootNodeDef,
                 rootNodeId, dataStore);
         itemStateProvider.addListener(mgr);
         return mgr;
@@ -865,18 +870,18 @@ public class ItemManager implements Dumpable, ItemStateListener {
         // check special nodes
         final NodeState state = data.getNodeState();
         if (state.getNodeTypeName().equals(NameConstants.NT_VERSION)) {
-            return new VersionImpl(this, session, data);
+            return new VersionImpl(this, sessionContext, data);
         } else if (state.getNodeTypeName().equals(NameConstants.NT_VERSIONHISTORY)) {
-            return new VersionHistoryImpl(this, session, data);
+            return new VersionHistoryImpl(this, sessionContext, data);
         } else {
             // create node object
-            return new NodeImpl(this, session, data);
+            return new NodeImpl(this, sessionContext, data);
         }
     }
 
     private PropertyImpl createPropertyInstance(PropertyData data) {
         // check special nodes
-        return new PropertyImpl(this, session, data, dataStore);
+        return new PropertyImpl(this, sessionContext, data, dataStore);
     }
 
     //---------------------------------------------------< item cache methods >

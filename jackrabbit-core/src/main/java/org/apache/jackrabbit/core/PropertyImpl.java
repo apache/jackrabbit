@@ -42,6 +42,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -76,14 +77,14 @@ public class PropertyImpl extends ItemImpl implements Property {
      * Package private constructor.
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Property</code>
-     * @param session    the <code>Session</code> through which this <code>Property</code> is acquired
+     * @param sessionContext the component context of the associated session
      * @param data       the property data
      * @param dataStore  the data store of this repository, or <code>null</code>
      */
     PropertyImpl(
-            ItemManager itemMgr, SessionImpl session, PropertyData data,
-            DataStore dataStore) {
-        super(itemMgr, session, data);
+            ItemManager itemMgr, SessionContext sessionContext,
+            PropertyData data, DataStore dataStore) {
+        super(itemMgr, sessionContext, data);
         this.data = data;
         this.dataStore = dataStore;
         // value will be read on demand
