@@ -41,6 +41,15 @@ public class ActiveSessionState implements SessionState {
     private final Lock lock = new ReentrantLock();
 
     /**
+     * Component context of this session.
+     */
+    private final SessionContext context;
+
+    public ActiveSessionState(SessionContext context) {
+        this.context = context;
+    }
+
+    /**
      * Returns <code>true</code>; the session is alive.
      *
      * @return <code>true</code>
@@ -63,8 +72,8 @@ public class ActiveSessionState implements SessionState {
             lock.lock();
         }
         try {
-            log.debug("Performing {} on {}", operation, this);
-            operation.perform();
+            log.debug("Performing {} on {}", operation, context);
+            operation.perform(context);
         } finally {
             lock.unlock();
         }
