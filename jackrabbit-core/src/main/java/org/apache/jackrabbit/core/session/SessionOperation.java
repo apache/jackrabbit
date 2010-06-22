@@ -18,25 +18,18 @@ package org.apache.jackrabbit.core.session;
 
 import javax.jcr.RepositoryException;
 
-public class ActiveSessionState implements SessionState {
+/**
+ * An operation that is performed on a JCR session. Used by the
+ * {@link SessionState} interface to implement generic controls like
+ * synchronization and liveness checks on all session operation.
+ */
+public interface SessionOperation {
 
     /**
-     * Returns <code>true</code>; the session is alive.
-     *
-     * @return <code>true</code>
-     */
-    public boolean isAlive() {
-        return true;
-    }
-
-    /**
-     * Performs the given operation within a synchronized block.
+     * Performs this operation.
      *
      * @throws RepositoryException if the operation fails
      */
-    public synchronized void perform(SessionOperation operation)
-            throws RepositoryException {
-        operation.perform();
-    }
+    void perform() throws RepositoryException;
 
 }

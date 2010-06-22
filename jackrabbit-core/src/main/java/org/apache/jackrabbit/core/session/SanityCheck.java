@@ -16,27 +16,22 @@
  */
 package org.apache.jackrabbit.core.session;
 
-import javax.jcr.RepositoryException;
 
-public class ActiveSessionState implements SessionState {
+/**
+ * Dummy session operation for doing a sanity check on the session state.
+ */
+public class SanityCheck implements SessionOperation {
+
+    public static final SanityCheck INSTANCE = new SanityCheck();
 
     /**
-     * Returns <code>true</code>; the session is alive.
-     *
-     * @return <code>true</code>
+     * Does nothing.
      */
-    public boolean isAlive() {
-        return true;
+    public void perform() {
     }
 
-    /**
-     * Performs the given operation within a synchronized block.
-     *
-     * @throws RepositoryException if the operation fails
-     */
-    public synchronized void perform(SessionOperation operation)
-            throws RepositoryException {
-        operation.perform();
+    public String toString() {
+        return "sanity check";
     }
 
 }
