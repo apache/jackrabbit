@@ -16,9 +16,29 @@
  */
 package org.apache.jackrabbit.core.session;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import javax.jcr.RepositoryException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ActiveSessionState implements SessionState {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger log =
+        LoggerFactory.getLogger(ActiveSessionState.class);
+
+    /**
+     * The lock used to guarantee synchronized execution of repository
+     * operations. An explicit lock is used instead of normal Java
+     * synchronization in order to be able to log attempts to concurrently
+     * use a session. TODO: Check if this is a performance issue!
+     */
+    private final Lock lock = new ReentrantLock();
 
     /**
      * Returns <code>true</code>; the session is alive.
@@ -34,9 +54,16 @@ public class ActiveSessionState implements SessionState {
      *
      * @throws RepositoryException if the operation fails
      */
-    public synchronized void perform(SessionOperation operation)
-            throws RepositoryException {
-        operation.perform();
+    public void perform(SessionOperation operation) throws RepositoryException {
+        if (!lock.tryLock()) {
+            log.warn("Attempt to concurrently access a single session");
+            lock.lock();
+        }
+        try {
+            operation.perform();
+        } finally {
+            lock.unlock();
+        }
     }
 
 }
