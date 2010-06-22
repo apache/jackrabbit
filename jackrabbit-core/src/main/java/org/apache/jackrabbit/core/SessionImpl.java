@@ -37,6 +37,9 @@ import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.ActiveSessionState;
+import org.apache.jackrabbit.core.session.ClosedSessionState;
+import org.apache.jackrabbit.core.session.SessionState;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
@@ -123,9 +126,9 @@ public class SessionImpl extends AbstractSession
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
-     * flag indicating whether this session is alive
+     * The state of this session.
      */
-    protected boolean alive;
+    protected volatile SessionState state = new ActiveSessionState();
 
     /**
      * The component context of the repository that issued this session.
@@ -270,7 +273,6 @@ public class SessionImpl extends AbstractSession
             RepositoryContext repositoryContext, Subject subject,
             WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-        alive = true;
         this.repositoryContext = repositoryContext;
         this.subject = subject;
 
@@ -380,10 +382,7 @@ public class SessionImpl extends AbstractSession
      *                             been closed explicitly or if it has expired)
      */
     protected void sanityCheck() throws RepositoryException {
-        // check session status
-        if (!alive) {
-            throw new RepositoryException("this session has been closed");
-        }
+        state.checkAlive();
     }
 
     /**
@@ -1168,7 +1167,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public boolean isLive() {
-        return alive;
+        return state.isAlive();
     }
 
     /**
@@ -1198,7 +1197,7 @@ public class SessionImpl extends AbstractSession
      */
     @Override
     public synchronized void logout() {
-        if (!alive) {
+        if (!isLive()) {
             // ignore
             return;
         }
@@ -1222,7 +1221,7 @@ public class SessionImpl extends AbstractSession
         wsp.dispose();
 
         // invalidate session
-        alive = false;
+        state = new ClosedSessionState();
 
         // logout JAAS subject
         if (loginContext != null) {
@@ -1346,7 +1345,7 @@ public class SessionImpl extends AbstractSession
     public Lock[] getLocks() {
         // check sanity of this session
         //sanityCheck();
-        if (!alive) {
+        if (!isLive()) {
             log.error("failed to retrieve locks: session has been closed");
             return new Lock[0];
         }
@@ -1662,7 +1661,7 @@ public class SessionImpl extends AbstractSession
      */
     @Override
     public void finalize() {
-        if (alive) {
+        if (isLive()) {
             log.warn("Unclosed session detected. The session was opened here: ", openStackTrace);
             logout();
         }
