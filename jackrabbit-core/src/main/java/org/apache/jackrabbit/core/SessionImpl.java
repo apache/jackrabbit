@@ -39,7 +39,6 @@ import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.ActiveSessionState;
 import org.apache.jackrabbit.core.session.ClosedSessionState;
-import org.apache.jackrabbit.core.session.SanityCheck;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.session.SessionState;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -384,7 +383,7 @@ public class SessionImpl extends AbstractSession
      *                             been closed explicitly or if it has expired)
      */
     protected void sanityCheck() throws RepositoryException {
-        state.perform(SanityCheck.INSTANCE);
+        state.perform(new SessionOperation("sanity check"));
     }
 
     /**
@@ -893,12 +892,9 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
-    public void save()
-            throws AccessDeniedException, ItemExistsException,
-            ConstraintViolationException, InvalidItemStateException,
-            VersionException, LockException, NoSuchNodeTypeException,
-            RepositoryException {
-        state.perform(new SessionOperation() {
+    public void save() throws RepositoryException {
+        state.perform(new SessionOperation("save") {
+            @Override
             public void perform() throws RepositoryException {
                 // JCR-2425: check whether session is allowed to read root node
                 if (hasPermission("/", ACTION_READ)) {
@@ -914,28 +910,30 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
-    public void refresh(boolean keepChanges) throws RepositoryException {
-        // check sanity of this session
-        sanityCheck();
+    public void refresh(final boolean keepChanges) throws RepositoryException {
+        state.perform(new SessionOperation("refresh") {
+            @Override
+            public void perform() throws RepositoryException {
+                // JCR-1753: Ensure that we are up to date with cluster changes
+                ClusterNode cluster = repositoryContext.getClusterNode();
+                if (cluster != null && clusterSyncOnRefresh()) {
+                    try {
+                        cluster.sync();
+                    } catch (ClusterException e) {
+                        throw new RepositoryException(
+                                "Unable to synchronize with the cluster", e);
+                    }
+                }
 
-        // JCR-1753: Ensure that we are up to date with cluster changes
-        ClusterNode cluster = repositoryContext.getClusterNode();
-        if (cluster != null && clusterSyncOnRefresh()) {
-            try {
-                cluster.sync();
-            } catch (ClusterException e) {
-                throw new RepositoryException(
-                        "Unable to synchronize with the cluster", e);
+                if (!keepChanges) {
+                    itemStateMgr.disposeAllTransientItemStates();
+                } else {
+                    // FIXME should reset Item#status field to STATUS_NORMAL
+                    // of all non-transient instances; maybe also
+                    // have to reset stale ItemState instances
+                }
             }
-        }
-
-        if (!keepChanges) {
-            itemStateMgr.disposeAllTransientItemStates();
-        } else {
-            /** todo FIXME should reset Item#status field to STATUS_NORMAL
-             * of all non-transient instances; maybe also
-             * have to reset stale ItemState instances */
-        }
+        });
     }
 
     /**

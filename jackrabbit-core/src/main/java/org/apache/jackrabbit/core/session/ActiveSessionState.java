@@ -56,7 +56,8 @@ public class ActiveSessionState implements SessionState {
      */
     public void perform(SessionOperation operation) throws RepositoryException {
         if (!lock.tryLock()) {
-            log.warn("Attempt to concurrently access a single session");
+            log.warn("Attempt to perform a {} operation while another thread"
+                    + " is concurrently accessing the session", operation);
             lock.lock();
         }
         try {
