@@ -22,8 +22,6 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.AbstractSession;
-import org.apache.jackrabbit.core.cluster.ClusterException;
-import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -41,6 +39,8 @@ import org.apache.jackrabbit.core.session.ActiveSessionState;
 import org.apache.jackrabbit.core.session.ClosedSessionState;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionRefreshOperation;
+import org.apache.jackrabbit.core.session.SessionSaveOperation;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
@@ -870,49 +870,14 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void save() throws RepositoryException {
-        perform(new SessionOperation("save") {
-            @Override
-            public void perform(SessionContext context)
-                    throws RepositoryException {
-                // JCR-2425: check whether session is allowed to read root node
-                if (hasPermission("/", ACTION_READ)) {
-                    context.getItemManager().getRootNode().save();
-                } else {
-                    NodeId id = context.getItemStateManager().getIdOfRootTransientNodeState();
-                    context.getItemManager().getItem(id).save();
-                }
-            }
-        });
+        perform(new SessionSaveOperation());
     }
 
     /**
      * {@inheritDoc}
      */
-    public void refresh(final boolean keepChanges) throws RepositoryException {
-        perform(new SessionOperation("refresh") {
-            @Override
-            public void perform(SessionContext context)
-                    throws RepositoryException {
-                // JCR-1753: Ensure that we are up to date with cluster changes
-                ClusterNode cluster = repositoryContext.getClusterNode();
-                if (cluster != null && clusterSyncOnRefresh()) {
-                    try {
-                        cluster.sync();
-                    } catch (ClusterException e) {
-                        throw new RepositoryException(
-                                "Unable to synchronize with the cluster", e);
-                    }
-                }
-
-                if (!keepChanges) {
-                    context.getItemStateManager().disposeAllTransientItemStates();
-                } else {
-                    // FIXME should reset Item#status field to STATUS_NORMAL
-                    // of all non-transient instances; maybe also
-                    // have to reset stale ItemState instances
-                }
-            }
-        });
+    public void refresh(boolean keepChanges) throws RepositoryException {
+        perform(new SessionRefreshOperation(keepChanges, clusterSyncOnRefresh()));
     }
 
     /**
