@@ -167,11 +167,6 @@ public class SessionImpl extends AbstractSession
     protected AccessManager accessMgr;
 
     /**
-     * the item mgr associated with this session
-     */
-    protected final ItemManager itemMgr;
-
-    /**
      * the Workspace associated with this session
      */
     protected final WorkspaceImpl wsp;
@@ -275,7 +270,7 @@ public class SessionImpl extends AbstractSession
         wsp = createWorkspaceInstance(wspConfig);
         context.setItemStateManager(
                 createSessionItemStateManager(wsp.getItemStateManager()));
-        itemMgr = createItemManager();
+        context.setItemManager(createItemManager());
         accessMgr = createAccessManager(subject);
         versionMgr = createVersionManager();
         ntInstanceHandler = new NodeTypeInstanceHandler(userId);
@@ -449,7 +444,7 @@ public class SessionImpl extends AbstractSession
      * @return the <code>ItemManager</code>
      */
     public ItemManager getItemManager() {
-        return itemMgr;
+        return context.getItemManager();
     }
 
     /**
@@ -880,10 +875,10 @@ public class SessionImpl extends AbstractSession
                     throws RepositoryException {
                 // JCR-2425: check whether session is allowed to read root node
                 if (hasPermission("/", ACTION_READ)) {
-                    getItemManager().getRootNode().save();
+                    context.getItemManager().getRootNode().save();
                 } else {
                     NodeId id = context.getItemStateManager().getIdOfRootTransientNodeState();
-                    getItemManager().getItem(id).save();
+                    context.getItemManager().getItem(id).save();
                 }
             }
         });
@@ -1200,7 +1195,7 @@ public class SessionImpl extends AbstractSession
         // dispose session item state manager
         context.getItemStateManager().dispose();
         // dispose item manager
-        itemMgr.dispose();
+        context.getItemManager().dispose();
         // dispose workspace
         wsp.dispose();
 
@@ -1633,7 +1628,7 @@ public class SessionImpl extends AbstractSession
         }
         ps.println(" (" + this + ")");
         ps.println();
-        itemMgr.dump(ps);
+        context.getItemManager().dump(ps);
         ps.println();
         context.getItemStateManager().dump(ps);
     }

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.session;
 
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 
@@ -30,6 +31,12 @@ public class SessionContext {
      * The item state manager associated with this session
      */
     private volatile SessionItemStateManager itemStateManager;
+
+    /**
+     * The item manager associated with this session
+     */
+    private volatile ItemManager itemManager;
+
 
     public SessionContext(SessionImpl session) {
         this.session = session;
@@ -60,6 +67,16 @@ public class SessionContext {
     public HierarchyManager getHierarchyManager() {
         assert itemStateManager != null;
         return itemStateManager.getHierarchyMgr();
+    }
+
+    public ItemManager getItemManager() {
+        assert itemManager != null;
+        return itemManager;
+    }
+
+    public void setItemManager(ItemManager itemManager) {
+        assert itemManager != null;
+        this.itemManager = itemManager;
     }
 
 }
