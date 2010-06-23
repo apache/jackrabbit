@@ -91,7 +91,6 @@ public class ItemManager implements Dumpable, ItemStateListener {
     private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
     private final org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef;
-    private final NodeId rootNodeId;
 
     /**
      * Component context of the associated session.
@@ -102,11 +101,6 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     private final SessionItemStateManager sism;
     private final HierarchyManager hierMgr;
-
-    /**
-     * The data store of this repository, or <code>null</code>
-     */
-    private final DataStore dataStore;
 
     /**
      * A cache for item instances created by this <code>ItemManager</code>
@@ -123,45 +117,20 @@ public class ItemManager implements Dumpable, ItemStateListener {
      *
      * @param sessionContext component context of the associated session
      * @param rootNodeDef the definition of the root node
-     * @param rootNodeId  the id of the root node
-     * @param dataStore   the data store of this repository, or <code>null</code>
      */
     protected ItemManager(
-            SessionContext sessionContext, NodeDefinitionImpl rootNodeDef,
-            NodeId rootNodeId, DataStore dataStore) {
+            SessionContext sessionContext, NodeDefinitionImpl rootNodeDef) {
         this.sism = sessionContext.getItemStateManager();
         this.hierMgr = sessionContext.getHierarchyManager();
         this.sessionContext = sessionContext;
         this.session = sessionContext.getSessionImpl();
         this.rootNodeDef = rootNodeDef;
-        this.rootNodeId = rootNodeId;
-        this.dataStore = dataStore;
 
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
         // setup shareable nodes cache
         shareableNodesCache = new ShareableNodesCache();
-    }
-
-    /**
-     * Creates a new per-session instance <code>ItemManager</code> instance.
-     *
-     * @param sessionContext component context of the associated session
-     * @param rootNodeDef       the definition of the root node
-     * @param rootNodeId        the id of the root node
-     * @param dataStore   the data store of this repository, or <code>null</code>
-     * @return the item manager instance.
-     */
-    public static ItemManager createInstance(
-            SessionContext sessionContext,
-            NodeDefinitionImpl rootNodeDef,
-            NodeId rootNodeId,
-            DataStore dataStore) {
-        ItemManager mgr = new ItemManager(
-                sessionContext, rootNodeDef, rootNodeId, dataStore);
-        sessionContext.getItemStateManager().addListener(mgr);
-        return mgr;
     }
 
     /**
@@ -176,7 +145,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     NodeDefinitionImpl getDefinition(NodeState state)
             throws RepositoryException {
-        if (state.getId().equals(rootNodeId)) {
+        if (state.getId().equals(sessionContext.getRootNodeId())) {
             // special handling required for root node
             return rootNodeDef;
         }
@@ -551,7 +520,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws RepositoryException
      */
     NodeImpl getRootNode() throws RepositoryException {
-        return (NodeImpl) getItem(rootNodeId);
+        return (NodeImpl) getItem(sessionContext.getRootNodeId());
     }
 
     /**
@@ -871,7 +840,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     private PropertyImpl createPropertyInstance(PropertyData data) {
         // check special nodes
-        return new PropertyImpl(this, sessionContext, data, dataStore);
+        return new PropertyImpl(this, sessionContext, data);
     }
 
     //---------------------------------------------------< item cache methods >

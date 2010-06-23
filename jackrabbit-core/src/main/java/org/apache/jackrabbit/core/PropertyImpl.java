@@ -39,7 +39,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
@@ -69,24 +68,17 @@ public class PropertyImpl extends ItemImpl implements Property {
     private final PropertyData data;
 
     /**
-     * The data store of this repository, or <code>null</code>
-     */
-    private final DataStore dataStore;
-
-    /**
      * Package private constructor.
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Property</code>
      * @param sessionContext the component context of the associated session
      * @param data       the property data
-     * @param dataStore  the data store of this repository, or <code>null</code>
      */
     PropertyImpl(
             ItemManager itemMgr, SessionContext sessionContext,
-            PropertyData data, DataStore dataStore) {
+            PropertyData data) {
         super(itemMgr, sessionContext, data);
         this.data = data;
-        this.dataStore = dataStore;
         // value will be read on demand
     }
 
@@ -361,7 +353,8 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetValue = ValueHelper.convert(
                     ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                     reqType, session.getValueFactory());
-            internalValue = InternalValue.create(targetValue, session, dataStore);
+            internalValue = InternalValue.create(
+                    targetValue, session, sessionContext.getDataStore());
         } else {
             // no type conversion required
             internalValue = InternalValue.create(name);
@@ -412,7 +405,9 @@ public class PropertyImpl extends ItemImpl implements Property {
                         Value targetValue = ValueHelper.convert(
                                 ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                                 reqType, session.getValueFactory());
-                        internalValue = InternalValue.create(targetValue, session, dataStore);
+                        internalValue = InternalValue.create(
+                                targetValue, session,
+                                sessionContext.getDataStore());
                     } else {
                         // no type conversion required
                         internalValue = InternalValue.create(name);
@@ -699,10 +694,12 @@ public class PropertyImpl extends ItemImpl implements Property {
             // type conversion required
             Value targetVal = ValueHelper.convert(
                     value, reqType, session.getValueFactory());
-            internalValue = InternalValue.create(targetVal, session, dataStore);
+            internalValue = InternalValue.create(
+                    targetVal, session, sessionContext.getDataStore());
         } else {
             // no type conversion required
-            internalValue = InternalValue.create(value, session, dataStore);
+            internalValue = InternalValue.create(
+                    value, session, sessionContext.getDataStore());
         }
         internalSetValue(new InternalValue[]{internalValue}, reqType);
     }
@@ -771,8 +768,8 @@ public class PropertyImpl extends ItemImpl implements Property {
                         value = ValueHelper.convert(
                                 value, reqType, session.getValueFactory());
                     }
-                    internalValues[i] =
-                        InternalValue.create(value, session, dataStore);
+                    internalValues[i] = InternalValue.create(
+                            value, session, sessionContext.getDataStore());
                 } else {
                     internalValues[i] = null;
                 }
