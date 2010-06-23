@@ -18,10 +18,10 @@ package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -223,15 +223,11 @@ class ItemSaveOperation extends SessionOperation {
         try {
             stateMgr.edit();
         } catch (IllegalStateException e) {
-            String msg = "Unable to start edit operation";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
+            throw new RepositoryException("Unable to start edit operation", e);
         }
 
         boolean succeeded = false;
-
         try {
-
             // process transient items marked as 'removed'
             removeTransientItems(stateMgr, removed);
 
@@ -309,13 +305,11 @@ class ItemSaveOperation extends SessionOperation {
             throws InvalidItemStateException, RepositoryException {
         // list of transient states that should be persisted
         ArrayList<ItemState> dirty = new ArrayList<ItemState>();
-        ItemState transientState;
 
         if (isNode) {
             // build list of 'new' or 'modified' descendants
-            Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStates((NodeId) state.getId());
-            while (iter.hasNext()) {
-                transientState = iter.next();
+            for (ItemState transientState
+                    : stateMgr.getDescendantTransientItemStates(state.getId())) {
                 // fail-fast test: check status of transient state
                 switch (transientState.getStatus()) {
                     case ItemState.STATUS_NEW:
@@ -397,30 +391,29 @@ class ItemSaveOperation extends SessionOperation {
     private Collection<ItemState> getRemovedStates(
             SessionItemStateManager stateMgr)
             throws InvalidItemStateException, RepositoryException {
-        ArrayList<ItemState> removed = new ArrayList<ItemState>();
-        ItemState transientState;
-
         if (isNode) {
-            Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStatesInAttic((NodeId) state.getId());
-            while (iter.hasNext()) {
-                transientState = iter.next();
+            ArrayList<ItemState> removed = new ArrayList<ItemState>();
+            for (ItemState transientState
+                    : stateMgr.getDescendantTransientItemStatesInAttic(state.getId())) {
                 // check if stale
-                if (transientState.getStatus() == ItemState.STATUS_STALE_MODIFIED) {
-                    String msg = transientState.getId()
-                            + ": the item cannot be removed because it has been modified externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-                }
-                if (transientState.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
-                    String msg = transientState.getId()
-                            + ": the item cannot be removed because it has already been deleted externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
+                switch (transientState.getStatus()) {
+                case ItemState.STATUS_STALE_MODIFIED:
+                    throw new InvalidItemStateException(
+                            "Item can't be removed because it has been"
+                            + " modified externally: "
+                            + transientState.getId());
+                case ItemState.STATUS_STALE_DESTROYED:
+                    throw new InvalidItemStateException(
+                            "Item can't be removed because it has already"
+                            + " been deleted externally: "
+                            + transientState.getId());
                 }
                 removed.add(transientState);
             }
+            return removed;
+        } else {
+            return Collections.emptyList();
         }
-        return removed;
     }
 
     /**
@@ -776,10 +769,8 @@ class ItemSaveOperation extends SessionOperation {
     }
 
     /**
-     * Initializes the version history of all new nodes of node type
+     * Initialises the version history of all new nodes of node type
      * <code>mix:versionable</code>.
-     * <p/>
-     * Called by {@link #save()}.
      *
      * @param states
      * @return true if this call generated new transient state; otherwise false

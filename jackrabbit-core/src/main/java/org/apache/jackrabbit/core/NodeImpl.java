@@ -304,8 +304,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (isTransient()) {
             return true;
         }
-        Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
-        return iter.hasNext();
+        return !stateMgr.getDescendantTransientItemStates((NodeId) id).isEmpty();
     }
 
     protected synchronized ItemState getOrCreateTransientItemState()
