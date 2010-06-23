@@ -167,16 +167,6 @@ public class SessionImpl extends AbstractSession
     protected AccessManager accessMgr;
 
     /**
-     * the item state mgr associated with this session
-     */
-    protected final SessionItemStateManager itemStateMgr;
-
-    /**
-     * the HierarchyManager associated with this session
-     */
-    protected final HierarchyManager hierMgr;
-
-    /**
      * the item mgr associated with this session
      */
     protected final ItemManager itemMgr;
@@ -283,10 +273,10 @@ public class SessionImpl extends AbstractSession
                 repositoryContext.getNodeTypeRegistry(), this,
                 repositoryContext.getDataStore());
         wsp = createWorkspaceInstance(wspConfig);
-        itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
-        hierMgr = itemStateMgr.getHierarchyMgr();
-        itemMgr = createItemManager(itemStateMgr, hierMgr);
-        accessMgr = createAccessManager(subject, itemStateMgr.getHierarchyMgr());
+        context.setItemStateManager(
+                createSessionItemStateManager(wsp.getItemStateManager()));
+        itemMgr = createItemManager();
+        accessMgr = createAccessManager(subject);
         versionMgr = createVersionManager();
         ntInstanceHandler = new NodeTypeInstanceHandler(userId);
     }
@@ -330,11 +320,9 @@ public class SessionImpl extends AbstractSession
      * Create the item manager.
      * @return item manager
      */
-    protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
-                                            HierarchyManager hierMgr) {
+    protected ItemManager createItemManager() {
         return ItemManager.createInstance(
-                itemStateMgr, hierMgr, context,
-                ntMgr.getRootNodeDefinition(),
+                context, ntMgr.getRootNodeDefinition(),
                 repositoryContext.getRootNodeId(),
                 repositoryContext.getDataStore());
     }
@@ -353,14 +341,12 @@ public class SessionImpl extends AbstractSession
      * Create the access manager.
      *
      * @param subject
-     * @param hierarchyManager
      * @return access manager
      * @throws AccessDeniedException if the current subject is not granted access
      *                               to the current workspace
      * @throws RepositoryException   if the access manager cannot be instantiated
      */
-    protected AccessManager createAccessManager(Subject subject,
-                                                HierarchyManager hierarchyManager)
+    protected AccessManager createAccessManager(Subject subject)
             throws AccessDeniedException, RepositoryException {
         String wspName = getWorkspace().getName();
         AMContext ctx = new AMContext(
@@ -368,7 +354,7 @@ public class SessionImpl extends AbstractSession
                 repositoryContext.getFileSystem(),
                 this,
                 getSubject(),
-                hierarchyManager,
+                context.getHierarchyManager(),
                 this,
                 wspName);
         return repositoryContext.getSecurityManager().getAccessManager(this, ctx);
@@ -467,21 +453,12 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns the <code>SessionItemStateManager</code> associated with this session.
-     *
-     * @return the <code>SessionItemStateManager</code> associated with this session
-     */
-    protected SessionItemStateManager getItemStateManager() {
-        return itemStateMgr;
-    }
-
-    /**
      * Returns the <code>HierarchyManager</code> associated with this session.
      *
      * @return the <code>HierarchyManager</code> associated with this session
      */
     public HierarchyManager getHierarchyManager() {
-        return hierMgr;
+        return context.getHierarchyManager();
     }
 
     /**
@@ -905,7 +882,7 @@ public class SessionImpl extends AbstractSession
                 if (hasPermission("/", ACTION_READ)) {
                     getItemManager().getRootNode().save();
                 } else {
-                    NodeId id = getItemStateManager().getIdOfRootTransientNodeState();
+                    NodeId id = context.getItemStateManager().getIdOfRootTransientNodeState();
                     getItemManager().getItem(id).save();
                 }
             }
@@ -932,7 +909,7 @@ public class SessionImpl extends AbstractSession
                 }
 
                 if (!keepChanges) {
-                    itemStateMgr.disposeAllTransientItemStates();
+                    context.getItemStateManager().disposeAllTransientItemStates();
                 } else {
                     // FIXME should reset Item#status field to STATUS_NORMAL
                     // of all non-transient instances; maybe also
@@ -965,7 +942,7 @@ public class SessionImpl extends AbstractSession
         // check sanity of this session
         sanityCheck();
 
-        return itemStateMgr.hasAnyTransientItemStates();
+        return context.getItemStateManager().hasAnyTransientItemStates();
     }
 
     /**
@@ -1027,7 +1004,7 @@ public class SessionImpl extends AbstractSession
             throw new RepositoryException(msg, e);
         }
 
-        if (hierMgr.isShareAncestor(targetNode.getNodeId(), destParentNode.getNodeId())) {
+        if (context.getHierarchyManager().isShareAncestor(targetNode.getNodeId(), destParentNode.getNodeId())) {
             String msg = destAbsPath + ": invalid destination path (share cycle detected)";
             log.debug(msg);
             throw new RepositoryException(msg);
@@ -1215,13 +1192,13 @@ public class SessionImpl extends AbstractSession
 
         // discard any pending changes first as those might
         // interfere with subsequent operations
-        itemStateMgr.disposeAllTransientItemStates();
+        context.getItemStateManager().disposeAllTransientItemStates();
 
         // notify listeners that session is about to be closed
         notifyLoggingOut();
 
         // dispose session item state manager
-        itemStateMgr.dispose();
+        context.getItemStateManager().dispose();
         // dispose item manager
         itemMgr.dispose();
         // dispose workspace
@@ -1658,7 +1635,7 @@ public class SessionImpl extends AbstractSession
         ps.println();
         itemMgr.dump(ps);
         ps.println();
-        itemStateMgr.dump(ps);
+        context.getItemStateManager().dump(ps);
     }
 
     /**

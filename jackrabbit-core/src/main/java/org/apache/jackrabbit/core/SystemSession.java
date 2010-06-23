@@ -96,17 +96,12 @@ class SystemSession extends SessionImpl {
      * Overridden in order to create custom access manager
      *
      * @return access manager for system session
-     * @throws AccessDeniedException is never thrown
-     * @throws RepositoryException   is never thrown
      */
-    protected AccessManager createAccessManager(Subject subject,
-                                                HierarchyManager hierMgr)
-            throws AccessDeniedException, RepositoryException {
-        /**
-         * use own AccessManager implementation rather than relying on
-         * configurable AccessManager to handle SystemPrincipal privileges
-         * correctly
-         */
+    @Override
+    protected AccessManager createAccessManager(Subject subject) {
+        // use own AccessManager implementation rather than relying on
+        // configurable AccessManager to handle SystemPrincipal privileges
+        // correctly
         return new SystemAccessManager();
     }
 
@@ -246,7 +241,7 @@ class SystemSession extends SessionImpl {
             if (!p.isAbsolute()) {
                 throw new RepositoryException("Absolute path expected.");
             }
-            if (hierMgr.resolveNodePath(p) == null) {
+            if (context.getHierarchyManager().resolveNodePath(p) == null) {
                 throw new PathNotFoundException("No such node " + absPath);
             }
         }

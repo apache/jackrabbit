@@ -123,7 +123,7 @@ public abstract class ItemImpl implements Item {
     ItemImpl(ItemManager itemMgr, SessionContext sessionContext, ItemData data) {
         this.sessionContext = sessionContext;
         this.session = sessionContext.getSessionImpl();
-        this.stateMgr = session.getItemStateManager();
+        this.stateMgr = sessionContext.getItemStateManager();
         this.id = data.getId();
         this.itemMgr = itemMgr;
         this.data = data;
