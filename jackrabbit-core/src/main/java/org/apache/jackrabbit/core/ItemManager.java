@@ -121,20 +121,16 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
-     * @param sism        the item state manager associated with the new
-     *                    instance
-     * @param hierMgr     the hierarchy manager
      * @param sessionContext component context of the associated session
      * @param rootNodeDef the definition of the root node
      * @param rootNodeId  the id of the root node
      * @param dataStore   the data store of this repository, or <code>null</code>
      */
     protected ItemManager(
-            SessionItemStateManager sism, HierarchyManager hierMgr,
             SessionContext sessionContext, NodeDefinitionImpl rootNodeDef,
             NodeId rootNodeId, DataStore dataStore) {
-        this.sism = sism;
-        this.hierMgr = hierMgr;
+        this.sism = sessionContext.getItemStateManager();
+        this.hierMgr = sessionContext.getHierarchyManager();
         this.sessionContext = sessionContext;
         this.session = sessionContext.getSessionImpl();
         this.rootNodeDef = rootNodeDef;
@@ -151,9 +147,6 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
-     * @param itemStateProvider the item state provider associated with
-     *                          the new instance
-     * @param hierMgr           the hierarchy manager
      * @param sessionContext component context of the associated session
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeId        the id of the root node
@@ -161,16 +154,13 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @return the item manager instance.
      */
     public static ItemManager createInstance(
-            SessionItemStateManager itemStateProvider,
-            HierarchyManager hierMgr,
             SessionContext sessionContext,
             NodeDefinitionImpl rootNodeDef,
             NodeId rootNodeId,
             DataStore dataStore) {
         ItemManager mgr = new ItemManager(
-                itemStateProvider, hierMgr, sessionContext, rootNodeDef,
-                rootNodeId, dataStore);
-        itemStateProvider.addListener(mgr);
+                sessionContext, rootNodeDef, rootNodeId, dataStore);
+        sessionContext.getItemStateManager().addListener(mgr);
         return mgr;
     }
 
@@ -1134,12 +1124,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
                 case ItemState.STATUS_EXISTING_MODIFIED:
                 case ItemState.STATUS_STALE_MODIFIED:
                     ItemState persistentState = discarded.getOverlayedState();
-                    /**
-                     * the state is a transient wrapper for the underlying
-                     * persistent state, therefore restore the persistent state
-                     * and resurrect this item instance if necessary
-                     */
-                    SessionItemStateManager stateMgr = session.getItemStateManager();
+                    // the state is a transient wrapper for the underlying
+                    // persistent state, therefore restore the persistent state
+                    // and resurrect this item instance if necessary
+                    SessionItemStateManager stateMgr =
+                        sessionContext.getItemStateManager();
                     stateMgr.disconnectTransientItemState(discarded);
                     data.setState(persistentState);
                     return;

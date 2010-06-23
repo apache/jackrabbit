@@ -3148,11 +3148,11 @@ public class NodeImpl extends ItemImpl implements Node {
                     return true;
                 }
                 state = (NodeState)
-                    session.getItemStateManager().getItemState(parentId);
+                    sessionContext.getItemStateManager().getItemState(parentId);
             }
             PropertyId id = new PropertyId(state.getNodeId(), JCR_ISCHECKEDOUT);
             PropertyState ps =
-                (PropertyState) session.getItemStateManager().getItemState(id);
+                (PropertyState) sessionContext.getItemStateManager().getItemState(id);
             return ps.getValues()[0].getBoolean();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
