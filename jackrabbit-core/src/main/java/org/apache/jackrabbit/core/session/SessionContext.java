@@ -18,10 +18,15 @@ package org.apache.jackrabbit.core.session;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 
 public class SessionContext {
+
+    private final RepositoryContext repositoryContext;
 
     private final SessionImpl session;
 
@@ -38,8 +43,35 @@ public class SessionContext {
     private volatile ItemManager itemManager;
 
 
-    public SessionContext(SessionImpl session) {
+    public SessionContext(
+            RepositoryContext repositoryContext, SessionImpl session) {
+        assert repositoryContext != null;
+        assert session != null;
+        this.repositoryContext = repositoryContext;
         this.session = session;
+    }
+
+    public RepositoryContext getRepositoryContext() {
+        return repositoryContext;
+    }
+
+    /**
+     * Returns the root node identifier of the repository.
+     *
+     * @return root node identifier
+     */
+    public NodeId getRootNodeId() {
+        return repositoryContext.getRootNodeId();
+    }
+
+    /**
+     * Returns the data store of this repository, or <code>null</code>
+     * if a data store is not configured.
+     *
+     * @return data store, or <code>null</code>
+     */
+    public DataStore getDataStore() {
+        return repositoryContext.getDataStore();
     }
 
     public SessionImpl getSessionImpl() {

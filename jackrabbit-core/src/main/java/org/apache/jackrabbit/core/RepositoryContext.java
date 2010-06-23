@@ -213,7 +213,7 @@ public class RepositoryContext {
      * Returns the data store of this repository, or <code>null</code>
      * if a data store is not configured.
      *
-     * @return data store
+     * @return data store, or <code>null</code>
      */
     public DataStore getDataStore() {
         return dataStore;

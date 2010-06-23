@@ -95,7 +95,7 @@ public class SessionItemStateManager
      * @param stateMgr the local item state manager
      * @param ntReg node type registry
      */
-    protected SessionItemStateManager(NodeId rootNodeId,
+    public SessionItemStateManager(NodeId rootNodeId,
                                    LocalItemStateManager stateMgr,
                                    NodeTypeRegistry ntReg) {
         transientStore = new ItemStateMap();
@@ -108,24 +108,6 @@ public class SessionItemStateManager
         addListener(hierMgr);
 
         this.ntReg = ntReg;
-    }
-
-    /**
-     * Creates a new <code>SessionItemStateManager</code> instance.
-     *
-     * @param rootNodeId the root node id
-     * @param stateMgr the local item state manager
-     * @param ntReg node type registry
-     * @return the session item state manager.
-     */
-    public static SessionItemStateManager createInstance(
-            NodeId rootNodeId,
-            LocalItemStateManager stateMgr,
-            NodeTypeRegistry ntReg) {
-        SessionItemStateManager mgr = new SessionItemStateManager(
-                rootNodeId, stateMgr, ntReg);
-        stateMgr.addListener(mgr);
-        return mgr;
     }
 
     /**

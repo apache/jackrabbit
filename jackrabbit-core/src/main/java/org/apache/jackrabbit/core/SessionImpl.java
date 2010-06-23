@@ -41,7 +41,6 @@ import org.apache.jackrabbit.core.session.ActiveSessionState;
 import org.apache.jackrabbit.core.session.ClosedSessionState;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
@@ -127,7 +126,7 @@ public class SessionImpl extends AbstractSession
     /**
      * The component context of this session.
      */
-    protected final SessionContext context = new SessionContext(this);
+    protected final SessionContext context;
 
     /**
      * The component context of the repository that issued this session.
@@ -257,6 +256,7 @@ public class SessionImpl extends AbstractSession
             RepositoryContext repositoryContext, Subject subject,
             WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
+        this.context = new SessionContext(repositoryContext, this);
         this.context.setSessionState(new ActiveSessionState(context));
         this.repositoryContext = repositoryContext;
         this.subject = subject;
@@ -268,8 +268,7 @@ public class SessionImpl extends AbstractSession
                 repositoryContext.getNodeTypeRegistry(), this,
                 repositoryContext.getDataStore());
         wsp = createWorkspaceInstance(wspConfig);
-        context.setItemStateManager(
-                createSessionItemStateManager(wsp.getItemStateManager()));
+        context.setItemStateManager(createSessionItemStateManager());
         context.setItemManager(createItemManager());
         accessMgr = createAccessManager(subject);
         versionMgr = createVersionManager();
@@ -291,11 +290,13 @@ public class SessionImpl extends AbstractSession
      *
      * @return session item state manager
      */
-    protected SessionItemStateManager createSessionItemStateManager(LocalItemStateManager manager) {
-        return SessionItemStateManager.createInstance(
-                repositoryContext.getRootNodeId(),
-                manager,
+    protected SessionItemStateManager createSessionItemStateManager() {
+        SessionItemStateManager mgr = new SessionItemStateManager(
+                context.getRootNodeId(),
+                wsp.getItemStateManager(),
                 repositoryContext.getNodeTypeRegistry());
+        wsp.getItemStateManager().addListener(mgr);
+        return mgr;
     }
 
     /**
@@ -316,10 +317,10 @@ public class SessionImpl extends AbstractSession
      * @return item manager
      */
     protected ItemManager createItemManager() {
-        return ItemManager.createInstance(
-                context, ntMgr.getRootNodeDefinition(),
-                repositoryContext.getRootNodeId(),
-                repositoryContext.getDataStore());
+        ItemManager mgr =
+            new ItemManager(context, ntMgr.getRootNodeDefinition());
+        context.getItemStateManager().addListener(mgr);
+        return mgr;
     }
 
     /**
@@ -1235,7 +1236,7 @@ public class SessionImpl extends AbstractSession
     public ValueFactory getValueFactory() {
         if (valueFactory == null) {
             valueFactory =
-                new ValueFactoryImpl(this, repositoryContext.getDataStore());
+                new ValueFactoryImpl(this, context.getDataStore());
         }
         return valueFactory;
     }
