@@ -181,7 +181,7 @@ public abstract class ItemImpl implements Item {
      * @return the primary path to this <code>Item</code>
      */
     public Path getPrimaryPath() throws RepositoryException {
-        return session.getHierarchyManager().getPath(id);
+        return sessionContext.getHierarchyManager().getPath(id);
     }
 
     /**
@@ -383,7 +383,7 @@ public abstract class ItemImpl implements Item {
             // shortcut
             return 0;
         }
-        return session.getHierarchyManager().getDepth(id);
+        return sessionContext.getHierarchyManager().getDepth(id);
     }
 
     /**

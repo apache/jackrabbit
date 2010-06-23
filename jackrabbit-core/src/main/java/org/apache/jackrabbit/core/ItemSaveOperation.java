@@ -442,7 +442,7 @@ class ItemSaveOperation extends SessionOperation {
         ItemManager itemMgr = context.getItemManager();
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
-        AccessManager accessMgr = session.getAccessManager();
+        AccessManager accessMgr = context.getAccessManager();
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         // walk through list of dirty transient items and validate each
         for (ItemState itemState : dirty) {

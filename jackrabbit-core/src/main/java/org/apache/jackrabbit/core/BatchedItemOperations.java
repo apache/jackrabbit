@@ -37,12 +37,11 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -100,15 +99,12 @@ public class BatchedItemOperations extends ItemValidator {
      * @param hierMgr    hierarchy manager
      * @throws RepositoryException
      */
-    public BatchedItemOperations(UpdatableItemStateManager stateMgr,
-                                 NodeTypeRegistry ntReg,
-                                 LockManager lockMgr,
-                                 SessionImpl session,
-                                 HierarchyManager hierMgr) throws RepositoryException {
-        super(ntReg, hierMgr, session, lockMgr, session.getAccessManager(),
-                session.getRetentionRegistry(), session.getItemManager());
+    public BatchedItemOperations(
+            UpdatableItemStateManager stateMgr, SessionContext sessionContext)
+            throws RepositoryException {
+        super(sessionContext);
         this.stateMgr = stateMgr;
-        this.session = session;
+        this.session = sessionContext.getSessionImpl();
     }
 
     //-----------------------------------------< controlling batch operations >
@@ -326,19 +322,13 @@ public class BatchedItemOperations extends ItemValidator {
      *                 <li><code>CLONE_REMOVE_EXISTING</code></li>
      *                 </ul>
      * @return the id of the node at its new position
-     * @throws ConstraintViolationException
-     * @throws AccessDeniedException
-     * @throws VersionException
-     * @throws PathNotFoundException
-     * @throws ItemExistsException
-     * @throws LockException
-     * @throws RepositoryException
+     * @throws RepositoryException if the copy operation fails
      */
     public NodeId copy(Path srcPath, Path destPath, int flag)
-            throws ConstraintViolationException, AccessDeniedException,
-            VersionException, PathNotFoundException, ItemExistsException,
-            LockException, RepositoryException {
-        return copy(srcPath, stateMgr, hierMgr, session.getAccessManager(), destPath, flag);
+            throws RepositoryException {
+        return copy(
+                srcPath, stateMgr, hierMgr, sessionContext.getAccessManager(),
+                destPath, flag);
     }
 
     /**
@@ -693,6 +683,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 3. access rights
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
+            AccessManager accessMgr = sessionContext.getAccessManager();
             // make sure current session is granted read access on parent node
             if (!accessMgr.isGranted(parentPath, Permission.READ)) {
                 throw new ItemNotFoundException(safeGetJCRPath(parentState.getNodeId()));
@@ -713,7 +704,8 @@ public class BatchedItemOperations extends ItemValidator {
         // 4. node type constraints
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
-            QItemDefinition parentDef = itemMgr.getDefinition(parentState).unwrap();
+            QItemDefinition parentDef =
+                sessionContext.getItemManager().getDefinition(parentState).unwrap();
             // make sure parent node is not protected
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(
@@ -744,7 +736,8 @@ public class BatchedItemOperations extends ItemValidator {
                     log.debug(msg);
                     throw new RepositoryException(msg, ise);
                 }
-                QNodeDefinition conflictingTargetDef = itemMgr.getDefinition(conflictingState).unwrap();
+                QNodeDefinition conflictingTargetDef =
+                    sessionContext.getItemManager().getDefinition(conflictingState).unwrap();
                 // check same-name sibling setting of both target and existing node
                 if (!conflictingTargetDef.allowsSameNameSiblings()
                         || !newNodeDef.allowsSameNameSiblings()) {
@@ -867,6 +860,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             try {
+                AccessManager accessMgr = sessionContext.getAccessManager();
                 // make sure current session is granted read access on parent node
                 if (!accessMgr.isGranted(targetPath, Permission.READ)) {
                     throw new PathNotFoundException(safeGetJCRPath(targetPath));
@@ -887,12 +881,14 @@ public class BatchedItemOperations extends ItemValidator {
         // 4. node type constraints
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
-            QItemDefinition parentDef = itemMgr.getDefinition(parentState).unwrap();
+            QItemDefinition parentDef =
+                sessionContext.getItemManager().getDefinition(parentState).unwrap();
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(safeGetJCRPath(parentId)
                         + ": cannot remove child node of protected parent node");
             }
-            QItemDefinition targetDef = itemMgr.getDefinition(targetState).unwrap();
+            QItemDefinition targetDef =
+                sessionContext.getItemManager().getDefinition(targetState).unwrap();
             if (targetDef.isMandatory()) {
                 throw new ConstraintViolationException(safeGetJCRPath(targetPath)
                         + ": cannot remove mandatory node");
@@ -974,6 +970,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // access rights
         // make sure current session is granted read access on node
+        AccessManager accessMgr = sessionContext.getAccessManager();
         if (!accessMgr.isGranted(nodePath, Permission.READ)) {
             throw new PathNotFoundException(safeGetJCRPath(node.getNodeId()));
         }
@@ -1019,6 +1016,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws PathNotFoundException, RepositoryException {
         // access rights
         // make sure current session is granted read access on node
+        AccessManager accessMgr = sessionContext.getAccessManager();
         if (!accessMgr.isGranted(nodePath, Permission.READ)) {
             throw new PathNotFoundException(safeGetJCRPath(nodePath));
         }
@@ -1427,7 +1425,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws PathNotFoundException, ConstraintViolationException,
             RepositoryException {
         NodeState node = getNodeState(nodePath);
-        if (itemMgr.getDefinition(node).isProtected()) {
+        if (sessionContext.getItemManager().getDefinition(node).isProtected()) {
             throw new ConstraintViolationException(safeGetJCRPath(nodePath)
                     + ": node is protected");
         }

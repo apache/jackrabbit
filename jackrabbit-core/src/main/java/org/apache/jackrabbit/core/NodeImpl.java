@@ -207,7 +207,7 @@ public class NodeImpl extends ItemImpl implements Node {
              */
             Path p = PathFactoryImpl.getInstance().create(
                     getPrimaryPath(), session.getQPath(relPath), true);
-            return session.getHierarchyManager().resolvePropertyPath(p);
+            return sessionContext.getHierarchyManager().resolvePropertyPath(p);
         } catch (NameException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + this;
             log.debug(msg);
@@ -289,7 +289,7 @@ public class NodeImpl extends ItemImpl implements Node {
          * build and resolve absolute path
          */
         p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-        return session.getHierarchyManager().resolveNodePath(p);
+        return sessionContext.getHierarchyManager().resolveNodePath(p);
     }
 
     /**
@@ -1495,7 +1495,7 @@ public class NodeImpl extends ItemImpl implements Node {
             } else {
                 // adding a node with explicit specifying the node type name
                 // requires the editing session to have nt_management privilege.
-                session.getAccessManager().checkPermission(
+                sessionContext.getAccessManager().checkPermission(
                         nodePath, Permission.NODE_TYPE_MNGMT);
             }
         }
@@ -1622,7 +1622,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see ItemImpl#getQName()
      */
     public Name getQName() throws RepositoryException {
-        HierarchyManager hierMgr = session.getHierarchyManager();
+        HierarchyManager hierMgr = sessionContext.getHierarchyManager();
         Name name;
 
         if (!isShareable()) {
@@ -1717,7 +1717,7 @@ public class NodeImpl extends ItemImpl implements Node {
         i.e. treating reorder similar to a move.
         TODO: properly deal with sns in which case the index would change upon reorder.
         */
-        AccessManager acMgr = session.getAccessManager();
+        AccessManager acMgr = sessionContext.getAccessManager();
         PathBuilder pb = new PathBuilder(getPrimaryPath());
         pb.addLast(srcName.getName(), srcName.getIndex());
         Path childPath = pb.getPath();
@@ -1953,9 +1953,8 @@ public class NodeImpl extends ItemImpl implements Node {
             return "";
         }
 
-        HierarchyManager hierMgr = session.getHierarchyManager();
         Name name;
-
+        HierarchyManager hierMgr = sessionContext.getHierarchyManager();
         if (!isShareable()) {
             name = hierMgr.getName(id);
         } else {
@@ -3059,7 +3058,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // detect share cycle
         NodeId srcId = getNodeId();
-        HierarchyManager hierMgr = session.getHierarchyManager();
+        HierarchyManager hierMgr = sessionContext.getHierarchyManager();
         if (parentId.equals(srcId) || hierMgr.isAncestor(srcId, parentId)) {
             String msg = "This would create a share cycle.";
             log.debug(msg);

@@ -414,12 +414,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
                 need use the path to evaluate the effective permissions.
                 */
                 return (path == null) ?
-                        session.getAccessManager().isGranted(data.getId(), AccessManager.READ) :
-                        session.getAccessManager().isGranted(path, Permission.READ);
+                        sessionContext.getAccessManager().isGranted(data.getId(), AccessManager.READ) :
+                        sessionContext.getAccessManager().isGranted(path, Permission.READ);
             }
         } else {
             /* item is not NEW -> save to call acMgr.canRead(Path,ItemId) */
-            return session.getAccessManager().canRead(path, data.getId());
+            return sessionContext.getAccessManager().canRead(path, data.getId());
         }
     }
 
@@ -432,16 +432,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     private boolean canRead(ItemData parent, ItemId childId) throws RepositoryException {
         if (parent.getStatus() == ItemState.STATUS_EXISTING) {
-            /*
-             child item is for sure not NEW (because then the parent was modified).
-             safe to use AccessManager#canRead(Path, ItemId).
-             */
-            return session.getAccessManager().canRead(null, childId);
+            // child item is for sure not NEW (because then the parent was modified).
+            // safe to use AccessManager#canRead(Path, ItemId).
+            return sessionContext.getAccessManager().canRead(null, childId);
         } else {
-            /*
-             child could be NEW -> don't use AccessManager#canRead(Path, ItemId)
-             */
-            return session.getAccessManager().isGranted(childId, AccessManager.READ);
+            // child could be NEW -> don't use AccessManager#canRead(Path, ItemId)
+            return sessionContext.getAccessManager().isGranted(childId, AccessManager.READ);
         }
     }
 
