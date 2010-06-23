@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -351,11 +350,10 @@ public abstract class ItemImpl implements Item {
 
         // list of transient items that should be discarded
         ArrayList<ItemState> list = new ArrayList<ItemState>();
-        ItemState transientState;
 
         // check status of this item's state
         if (isTransient()) {
-            transientState = getItemState();
+            ItemState transientState = getItemState();
             switch (transientState.getStatus()) {
                 case ItemState.STATUS_STALE_MODIFIED:
                 case ItemState.STATUS_STALE_DESTROYED:
@@ -387,9 +385,8 @@ public abstract class ItemImpl implements Item {
 
         if (isNode()) {
             // build list of 'new', 'modified' or 'stale' descendants
-            Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
-            while (iter.hasNext()) {
-                transientState = iter.next();
+            for (ItemState transientState
+                    : stateMgr.getDescendantTransientItemStates((NodeId) id)) {
                 switch (transientState.getStatus()) {
                     case ItemState.STATUS_STALE_MODIFIED:
                     case ItemState.STATUS_STALE_DESTROYED:
@@ -418,12 +415,10 @@ public abstract class ItemImpl implements Item {
         if (isNode()) {
             // discard all transient descendants in the attic (i.e. those marked
             // as 'removed'); this will resurrect the removed items
-            Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStatesInAttic((NodeId) id);
-            while (iter.hasNext()) {
-                transientState = iter.next();
+            for (ItemState state : stateMgr.getDescendantTransientItemStatesInAttic((NodeId) id)) {
                 // dispose the transient state; this will indirectly (through
                 // stateDiscarded listener method) resurrect the wrapping Item instances
-                stateMgr.disposeTransientItemStateInAttic(transientState);
+                stateMgr.disposeTransientItemStateInAttic(state);
             }
         }
     }
