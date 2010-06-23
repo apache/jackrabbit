@@ -39,7 +39,7 @@ import org.apache.jackrabbit.core.config.ImportConfig;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -103,11 +103,11 @@ public class WorkspaceImporter implements Importer {
      */
     public WorkspaceImporter(Path parentPath,
                              WorkspaceImpl wsp,
-                             NodeTypeRegistry ntReg,
+                             SessionContext sessionContext,
                              int uuidBehavior)
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
-        this(parentPath, wsp, ntReg, uuidBehavior, null);
+        this(parentPath, wsp, sessionContext, uuidBehavior, null);
     }
 
     /**
@@ -131,21 +131,18 @@ public class WorkspaceImporter implements Importer {
      *                                      the subtree
      * @throws RepositoryException          if another error occurs
      */
-    public WorkspaceImporter(Path parentPath,
-                             WorkspaceImpl wsp,
-                             NodeTypeRegistry ntReg,
-                             int uuidBehavior,
-                             ImportConfig config)
+    public WorkspaceImporter(
+            Path parentPath, WorkspaceImpl wsp, SessionContext sessionContext,
+            int uuidBehavior, ImportConfig config)
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
         this.wsp = wsp;
-        this.session = (SessionImpl) wsp.getSession();
+        this.session = sessionContext.getSessionImpl();
         this.versionManager = session.getInternalVersionManager();
         this.uuidBehavior = uuidBehavior;
 
         itemOps = new BatchedItemOperations(
-                wsp.getItemStateManager(), ntReg, session.getLockManager(),
-                session, wsp.getHierarchyManager());
+                wsp.getItemStateManager(), sessionContext);
         hierMgr = wsp.getHierarchyManager();
 
         // perform preliminary checks

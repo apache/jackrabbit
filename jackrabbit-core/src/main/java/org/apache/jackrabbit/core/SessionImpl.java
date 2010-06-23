@@ -161,11 +161,6 @@ public class SessionImpl extends AbstractSession
     protected final NodeTypeManagerImpl ntMgr;
 
     /**
-     * the AccessManager associated with this session
-     */
-    protected AccessManager accessMgr;
-
-    /**
      * the Workspace associated with this session
      */
     protected final WorkspaceImpl wsp;
@@ -270,7 +265,7 @@ public class SessionImpl extends AbstractSession
         wsp = createWorkspaceInstance(wspConfig);
         context.setItemStateManager(createSessionItemStateManager());
         context.setItemManager(createItemManager());
-        accessMgr = createAccessManager(subject);
+        context.setAccessManager(createAccessManager(subject));
         versionMgr = createVersionManager();
         ntInstanceHandler = new NodeTypeInstanceHandler(userId);
     }
@@ -309,7 +304,7 @@ public class SessionImpl extends AbstractSession
      */
     protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig)
             throws RepositoryException {
-        return new WorkspaceImpl(wspConfig, repositoryContext, this);
+        return new WorkspaceImpl(wspConfig, context);
     }
 
     /**
@@ -378,9 +373,7 @@ public class SessionImpl extends AbstractSession
      */
     public synchronized ItemValidator getValidator() throws RepositoryException {
         if (validator == null) {
-            validator = new ItemValidator(
-                    repositoryContext.getNodeTypeRegistry(),
-                    getHierarchyManager(), this);
+            validator = new ItemValidator(context);
         }
         return validator;
     }
@@ -427,7 +420,7 @@ public class SessionImpl extends AbstractSession
      * @return the <code>AccessManager</code> associated with this session
      */
     public AccessManager getAccessManager() {
-        return accessMgr;
+        return context.getAccessManager();
     }
 
     /**
@@ -535,7 +528,7 @@ public class SessionImpl extends AbstractSession
         List<String> names = new ArrayList<String>();
         for (String name : repositoryContext.getWorkspaceManager().getWorkspaceNames()) {
             try {
-                if (getAccessManager().canAccess(name)) {
+                if (context.getAccessManager().canAccess(name)) {
                     names.add(name);
                 }
             } catch (NoSuchWorkspaceException e) {
@@ -698,7 +691,7 @@ public class SessionImpl extends AbstractSession
      */
     public Path getPath(String identifier) throws MalformedPathException {
         try {
-            return getHierarchyManager().getPath(NodeId.valueOf(identifier));
+            return context.getHierarchyManager().getPath(NodeId.valueOf(identifier));
         } catch (RepositoryException e) {
             throw new MalformedPathException("Identifier '" + identifier + "' cannot be resolved.");
         }
@@ -1031,7 +1024,7 @@ public class SessionImpl extends AbstractSession
         }
 
         // check permissions
-        AccessManager acMgr = getAccessManager();
+        AccessManager acMgr = context.getAccessManager();
         if (!(acMgr.isGranted(srcPath, Permission.REMOVE_NODE) &&
                 acMgr.isGranted(destPath, Permission.ADD_NODE | Permission.NODE_TYPE_MNGMT))) {
             String msg = "Not allowed to move node " + srcAbsPath + " to " + destAbsPath;
@@ -1179,7 +1172,7 @@ public class SessionImpl extends AbstractSession
         }
 
         try {
-            accessMgr.close();
+            context.getAccessManager().close();
         } catch (Exception e) {
             log.warn("error while closing AccessManager", e);
         }
@@ -1479,7 +1472,7 @@ public class SessionImpl extends AbstractSession
             throw new IllegalArgumentException("Unknown actions: " + s);
         }
         try {
-            return getAccessManager().isGranted(path, permissions);
+            return context.getAccessManager().isGranted(path, permissions);
         } catch (AccessDeniedException e) {
             return false;
         }
@@ -1557,10 +1550,12 @@ public class SessionImpl extends AbstractSession
      */
     public AccessControlManager getAccessControlManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        AccessManager accessMgr = context.getAccessManager();
         if (accessMgr instanceof AccessControlManager) {
             return (AccessControlManager) accessMgr;
         } else {
-            throw new UnsupportedRepositoryOperationException("Access control discovery is not supported.");
+            throw new UnsupportedRepositoryOperationException(
+                    "Access control discovery is not supported.");
         }
     }
 

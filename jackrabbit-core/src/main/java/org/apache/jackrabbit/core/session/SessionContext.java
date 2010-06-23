@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 
 public class SessionContext {
@@ -33,15 +34,19 @@ public class SessionContext {
     private volatile SessionState state;
 
     /**
-     * The item state manager associated with this session
+     * The item state manager of this session
      */
     private volatile SessionItemStateManager itemStateManager;
 
     /**
-     * The item manager associated with this session
+     * The item manager of this session
      */
     private volatile ItemManager itemManager;
 
+    /**
+     * The access manager of this session
+     */
+    private volatile AccessManager accessManager;
 
     public SessionContext(
             RepositoryContext repositoryContext, SessionImpl session) {
@@ -109,6 +114,16 @@ public class SessionContext {
     public void setItemManager(ItemManager itemManager) {
         assert itemManager != null;
         this.itemManager = itemManager;
+    }
+
+    public AccessManager getAccessManager() {
+        assert accessManager != null;
+        return accessManager;
+    }
+
+    public void setAccessManager(AccessManager accessManager) {
+        assert accessManager != null;
+        this.accessManager = accessManager;
     }
 
 }

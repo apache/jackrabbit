@@ -160,7 +160,7 @@ public class XASessionImpl extends SessionImpl
     @Override
     protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig)
             throws RepositoryException {
-        return new XAWorkspace(wspConfig, repositoryContext, this);
+        return new XAWorkspace(wspConfig, context);
     }
 
     /**

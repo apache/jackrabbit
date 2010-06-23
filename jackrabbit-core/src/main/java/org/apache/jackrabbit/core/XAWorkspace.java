@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
 
@@ -31,13 +32,12 @@ public class XAWorkspace extends WorkspaceImpl {
      * Protected constructor.
      *
      * @param wspConfig The workspace configuration
-     * @param repositoryContext repository context
-     * @param session   The session
+     * @param sessionContext component context of this session
      */
     protected XAWorkspace(
-            WorkspaceConfig wspConfig, RepositoryContext repositoryContext,
-            SessionImpl session) throws RepositoryException {
-        super(wspConfig, repositoryContext, session);
+            WorkspaceConfig wspConfig, SessionContext sessionContext)
+            throws RepositoryException {
+        super(wspConfig, sessionContext);
     }
 
     @Override

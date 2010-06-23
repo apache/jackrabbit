@@ -48,6 +48,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
@@ -78,6 +79,11 @@ public class WorkspaceImpl extends AbstractWorkspace
      * The component context of the repository that created this workspace.
      */
     protected final RepositoryContext repositoryContext;
+
+    /**
+     * The component context of this session.
+     */
+    protected final SessionContext sessionContext;
 
     /**
      * The persistent state mgr associated with the workspace represented by <i>this</i>
@@ -133,20 +139,19 @@ public class WorkspaceImpl extends AbstractWorkspace
      * Protected constructor.
      *
      * @param wspConfig The workspace configuration
-     * @param stateMgr  The shared item state manager
-     * @param rep       The repository
-     * @param session   The session
+     * @param sessionContext component context of this session
      */
     protected WorkspaceImpl(
-            WorkspaceConfig wspConfig, RepositoryContext repositoryContext,
-            SessionImpl session) throws RepositoryException {
+            WorkspaceConfig wspConfig, SessionContext sessionContext)
+            throws RepositoryException {
         this.wspConfig = wspConfig;
-        this.repositoryContext = repositoryContext;
+        this.sessionContext = sessionContext;
+        this.repositoryContext = sessionContext.getRepositoryContext();
         this.stateMgr = createItemStateManager();
         this.hierMgr = new CachingHierarchyManager(
                 repositoryContext.getRootNodeId(), this.stateMgr);
         this.stateMgr.addListener(hierMgr);
-        this.session = session;
+        this.session = sessionContext.getSessionImpl();
     }
 
     /**
@@ -390,9 +395,8 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops = new BatchedItemOperations(
-                stateMgr, repositoryContext.getNodeTypeRegistry(),
-                session.getLockManager(), session, hierMgr);
+        BatchedItemOperations ops =
+            new BatchedItemOperations(stateMgr, sessionContext);
 
         try {
             ops.edit();
@@ -407,7 +411,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         try {
             NodeId id = ops.copy(srcPath, srcWsp.getItemStateManager(),
                     srcWsp.getHierarchyManager(),
-                    ((SessionImpl) srcWsp.getSession()).getAccessManager(),
+                    srcWsp.sessionContext.getAccessManager(),
                     destPath, flag);
             ops.update();
             succeeded = true;
@@ -466,9 +470,8 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops = new BatchedItemOperations(
-                stateMgr, repositoryContext.getNodeTypeRegistry(),
-                session.getLockManager(), session, hierMgr);
+        BatchedItemOperations ops =
+            new BatchedItemOperations(stateMgr, sessionContext);
 
         try {
             ops.edit();
@@ -590,7 +593,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         // check authorization for specified workspace
-        if (!session.getAccessManager().canAccess(srcWorkspace)) {
+        if (!sessionContext.getAccessManager().canAccess(srcWorkspace)) {
             throw new AccessDeniedException("not authorized to access " + srcWorkspace);
         }
 
@@ -652,7 +655,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         // check authorization for specified workspace
-        if (!session.getAccessManager().canAccess(srcWorkspace)) {
+        if (!sessionContext.getAccessManager().canAccess(srcWorkspace)) {
             throw new AccessDeniedException("not authorized to access " + srcWorkspace);
         }
 
@@ -713,9 +716,8 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops = new BatchedItemOperations(
-                stateMgr, repositoryContext.getNodeTypeRegistry(),
-                session.getLockManager(), session, hierMgr);
+        BatchedItemOperations ops =
+            new BatchedItemOperations(stateMgr, sessionContext);
 
         try {
             ops.edit();
@@ -843,8 +845,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         Importer importer = new WorkspaceImporter(
-                parentPath, this,
-                repositoryContext.getNodeTypeRegistry(),
+                parentPath, this, sessionContext,
                 uuidBehavior, wspConfig.getImportConfig());
         return new ImportHandler(importer, session);
     }
