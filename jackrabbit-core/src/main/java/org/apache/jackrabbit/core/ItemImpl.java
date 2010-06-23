@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.ArrayList;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -40,18 +39,11 @@ import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
  */
 public abstract class ItemImpl implements Item {
-
-    /**
-     * Logger instance
-     */
-    private static Logger log = LoggerFactory.getLogger(ItemImpl.class);
 
     protected static final int STATUS_NORMAL = 0;
     protected static final int STATUS_MODIFIED = 1;
@@ -320,106 +312,22 @@ public abstract class ItemImpl implements Item {
     public void save() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        perform(new ItemSaveOperation(isNode(), getItemState()));
+        perform(new ItemSaveOperation(getItemState()));
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized void refresh(boolean keepChanges)
-            throws InvalidItemStateException, RepositoryException {
+    public void refresh(boolean keepChanges) throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
         if (keepChanges) {
-            /** todo FIXME should reset Item#status field to STATUS_NORMAL
-             * of all descendant non-transient instances; maybe also
-             * have to reset stale ItemState instances */
-            return;
-        }
-
-        if (isNode()) {
-            // check if this is the root node
-            if (getDepth() == 0) {
-                // optimization
-                stateMgr.disposeAllTransientItemStates();
-                return;
-            }
-        }
-
-        // list of transient items that should be discarded
-        ArrayList<ItemState> list = new ArrayList<ItemState>();
-
-        // check status of this item's state
-        if (isTransient()) {
-            ItemState transientState = getItemState();
-            switch (transientState.getStatus()) {
-                case ItemState.STATUS_STALE_MODIFIED:
-                case ItemState.STATUS_STALE_DESTROYED:
-                    // add this item's state to the list
-                    list.add(transientState);
-                    break;
-
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    if (!transientState.getParentId().equals(
-                            transientState.getOverlayedState().getParentId())) {
-                        throw new RepositoryException(
-                                "Cannot refresh a moved item: " + this +
-                                " - possible solution: refresh the parent");
-                    }
-                    list.add(transientState);
-                    break;
-
-                case ItemState.STATUS_NEW:
-                    throw new RepositoryException(
-                            "Cannot refresh a new item: " + this);
-
-                default:
-                    log.warn("Unexpected item state status:"
-                            + transientState.getStatus() + " of " + this);
-                    // ignore
-                    break;
-            }
-        }
-
-        if (isNode()) {
-            // build list of 'new', 'modified' or 'stale' descendants
-            for (ItemState transientState
-                    : stateMgr.getDescendantTransientItemStates((NodeId) id)) {
-                switch (transientState.getStatus()) {
-                    case ItemState.STATUS_STALE_MODIFIED:
-                    case ItemState.STATUS_STALE_DESTROYED:
-                    case ItemState.STATUS_NEW:
-                    case ItemState.STATUS_EXISTING_MODIFIED:
-                        // add new or modified state to the list
-                        list.add(transientState);
-                        break;
-
-                    default:
-                        log.debug("unexpected state status (" + transientState.getStatus() + ")");
-                        // ignore
-                        break;
-                }
-            }
-        }
-
-        // process list of 'new', 'modified' or 'stale' transient states
-        for (ItemState state : list) {
-            // dispose the transient state, it is no longer used;
-            // this will indirectly (through stateDiscarded listener method)
-            // either restore or permanently invalidate the wrapping Item instances
-            stateMgr.disposeTransientItemState(state);
-        }
-
-        if (isNode()) {
-            // discard all transient descendants in the attic (i.e. those marked
-            // as 'removed'); this will resurrect the removed items
-            for (ItemState state : stateMgr.getDescendantTransientItemStatesInAttic((NodeId) id)) {
-                // dispose the transient state; this will indirectly (through
-                // stateDiscarded listener method) resurrect the wrapping Item instances
-                stateMgr.disposeTransientItemStateInAttic(state);
-            }
+            // FIXME should reset Item#status field to STATUS_NORMAL
+            // of all descendant non-transient instances; maybe also
+            // have to reset stale ItemState instances
+        } else {
+            perform(new ItemRefreshOperation(getItemState()));
         }
     }
 

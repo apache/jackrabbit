@@ -80,13 +80,10 @@ class ItemSaveOperation extends SessionOperation {
     private static final Logger log =
         LoggerFactory.getLogger(ItemSaveOperation.class);
 
-    private final boolean isNode;
-
     private final ItemState state;
 
-    public ItemSaveOperation(boolean isNode, ItemState state) {
+    public ItemSaveOperation(ItemState state) {
         super("item save");
-        this.isNode = isNode;
         this.state = state;
     }
 
@@ -306,7 +303,7 @@ class ItemSaveOperation extends SessionOperation {
         // list of transient states that should be persisted
         ArrayList<ItemState> dirty = new ArrayList<ItemState>();
 
-        if (isNode) {
+        if (state.isNode()) {
             // build list of 'new' or 'modified' descendants
             for (ItemState transientState
                     : stateMgr.getDescendantTransientItemStates(state.getId())) {
@@ -391,7 +388,7 @@ class ItemSaveOperation extends SessionOperation {
     private Collection<ItemState> getRemovedStates(
             SessionItemStateManager stateMgr)
             throws InvalidItemStateException, RepositoryException {
-        if (isNode) {
+        if (state.isNode()) {
             ArrayList<ItemState> removed = new ArrayList<ItemState>();
             for (ItemState transientState
                     : stateMgr.getDescendantTransientItemStatesInAttic(state.getId())) {
