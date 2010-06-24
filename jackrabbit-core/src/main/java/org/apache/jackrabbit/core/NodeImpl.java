@@ -50,6 +50,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
@@ -81,6 +82,7 @@ import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -96,6 +98,8 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+
+import static javax.jcr.PropertyType.STRING;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.*;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -540,15 +544,6 @@ public class NodeImpl extends ItemImpl implements Node {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         thisState.renameChildNodeEntry(oldName, index, newName);
-    }
-
-    protected void removeChildProperty(String propName) throws RepositoryException {
-        try {
-            removeChildProperty(session.getQName(propName));
-        } catch (NameException e) {
-            throw new RepositoryException(
-                    "invalid property name: " + propName, e);
-        }
     }
 
     protected void removeChildProperty(Name propName) throws RepositoryException {
@@ -1547,37 +1542,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Same as <code>{@link Node#setProperty(String, Value[])}</code> except that
-     * this method takes a <code>Name</code> name argument instead of a
-     * <code>String</code>.
-     *
-     * @param name
-     * @param values
-     * @return
-     * @throws ValueFormatException
-     * @throws VersionException
-     * @throws LockException
-     * @throws ConstraintViolationException
-     * @throws RepositoryException
-     */
-    public PropertyImpl setProperty(Name name, Value[] values)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        int type = PropertyType.UNDEFINED;
-        if (values != null) {
-            for (Value v : values) {
-                // use the type of the first value
-                if (v != null) {
-                    type = v.getType();
-                    break;
-                }
-            }
-        }
-
-        return setProperty(name, values, type, false);
-    }
-
-    /**
      * Same as <code>{@link Node#setProperty(String, Value[], int)}</code> except
      * that this method takes a <code>Name</code> name argument instead of a
      * <code>String</code>.
@@ -1615,7 +1579,10 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyImpl setProperty(Name name, Value value)
             throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
-        return setProperty(name, value, false);
+        SetPropertyOperation operation =
+            new SetPropertyOperation(name, value, false);
+        sessionContext.getSessionState().perform(operation);
+        return operation.getProperty();
     }
 
     /**
@@ -2146,174 +2113,170 @@ public class NodeImpl extends ItemImpl implements Node {
         orderBefore(insertName, beforeName);
     }
 
+    private Name getQName(String name) throws RepositoryException {
+        return session.getQName(name);
+    }
+
+    private ValueFactory getValueFactory() throws RepositoryException {
+        return getSession().getValueFactory();
+    }
+
+    private Value[] getValues(String[] values, int type)
+            throws RepositoryException {
+        if (values != null) {
+            return ValueHelper.convert(values, type, getValueFactory());
+        } else {
+            return null;
+        }
+    }
+
     /**
-     * {@inheritDoc}
+     * Returns the type of the first of the given values, or
+     * {@link PropertyType#UNDEFINED} if no values are given.
+     *
+     * @param values given values, or <code>null</code>
+     * @return value type, or {@link PropertyType#UNDEFINED}
      */
+    private int getType(Value[] values) {
+        if (values != null) {
+            for (Value v : values) {
+                if (v != null) {
+                    return v.getType();
+                }
+            }
+        }
+        return PropertyType.UNDEFINED;
+    }
+
+    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
     public Property setProperty(String name, Value[] values)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        return setProperty(session.getQName(name), values);
+            throws RepositoryException {
+        return setProperty(getQName(name), values, getType(values), false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
     public Property setProperty(String name, Value[] values, int type)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        return setProperty(session.getQName(name), values, type);
+            throws RepositoryException {
+        return setProperty(getQName(name), values, type, true);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Property setProperty(String name, String[] values)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value[] v = null;
-        if (values != null) {
-            v = ValueHelper.convert(values, PropertyType.STRING, session.getValueFactory());
-        }
-        return setProperty(name, v);
+    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
+    public Property setProperty(String name, String[] strings)
+            throws RepositoryException {
+        Value[] values = getValues(strings, STRING);
+        return setProperty(getQName(name), values, STRING, false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(Name, Value[], int, boolean)} */
     public Property setProperty(String name, String[] values, int type)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value[] v = null;
-        if (values != null) {
-            v = ValueHelper.convert(values, type, session.getValueFactory());
-        }
-        return setProperty(session.getQName(name), v, type, true);
+            throws RepositoryException {
+        Value[] converted = getValues(values, type);
+        return setProperty(session.getQName(name), converted, type, true);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value)} */
     public Property setProperty(String name, String value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = null;
+            throws RepositoryException {
         if (value != null) {
-            v = session.getValueFactory().createValue(value);
+            return setProperty(name, getValueFactory().createValue(value));
+        } else {
+            return setProperty(name, (Value) null);
         }
-        return setProperty(name, v);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value, int)} */
     public Property setProperty(String name, String value, int type)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = null;
+            throws RepositoryException {
         if (value != null) {
-            v = session.getValueFactory().createValue(value, type);
+            return setProperty(
+                    name, getValueFactory().createValue(value, type), type);
+        } else {
+            return setProperty(name, (Value) null, type);
         }
-        return setProperty(session.getQName(name), v, true);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link SetPropertyOperation} */
     public Property setProperty(String name, Value value, int type)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        if (value != null) {
-            value = ValueHelper.convert(value, type, session.getValueFactory());
+            throws RepositoryException {
+        if (value != null && value.getType() != type) {
+            value = ValueHelper.convert(value, type, getValueFactory());
         }
-        return setProperty(session.getQName(name), value, true);
+        SetPropertyOperation operation =
+            new SetPropertyOperation(session.getQName(name), value, true);
+        sessionContext.getSessionState().perform(operation);
+        return operation.getProperty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link SetPropertyOperation} */
     public Property setProperty(String name, Value value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        return setProperty(session.getQName(name), value);
+            throws RepositoryException {
+        SetPropertyOperation operation =
+            new SetPropertyOperation(session.getQName(name), value, false);
+        sessionContext.getSessionState().perform(operation);
+        return operation.getProperty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value)} */
     public Property setProperty(String name, InputStream value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = null;
+            throws RepositoryException {
         if (value != null) {
-            v = session.getValueFactory().createValue(value);
+            Binary binary = getValueFactory().createBinary(value);
+            try {
+                return setProperty(name, getValueFactory().createValue(binary));
+            } finally {
+                binary.dispose();
+            }
+        } else {
+            return setProperty(name, (Value) null);
         }
-        return setProperty(name, v);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value)} */
     public Property setProperty(String name, boolean value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = session.getValueFactory().createValue(value);
-        return setProperty(name, v);
+            throws RepositoryException {
+        return setProperty(name, getValueFactory().createValue(value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value)} */
     public Property setProperty(String name, double value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = session.getValueFactory().createValue(value);
-        return setProperty(name, v);
+            throws RepositoryException {
+        return setProperty(name, getValueFactory().createValue(value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value)} */
     public Property setProperty(String name, long value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = session.getValueFactory().createValue(value);
-        return setProperty(name, v);
+            throws RepositoryException {
+        return setProperty(name, getValueFactory().createValue(value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value)} */
     public Property setProperty(String name, Calendar value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = null;
+            throws RepositoryException {
         if (value != null) {
             try {
-                v = session.getValueFactory().createValue(value);
+                return setProperty(name, getValueFactory().createValue(value));
             } catch (IllegalArgumentException e) {
-                // thrown if calendar cannot be formatted as ISO8601
-                throw new ValueFormatException(e.getMessage());
+                throw new ValueFormatException(
+                        "Value is not an ISO8601 date: " + value, e);
             }
+        } else {
+            return setProperty(name, (Value) null);
         }
-        return setProperty(name, v);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #setProperty(String, Value)} */
     public Property setProperty(String name, Node value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        Value v = null;
+            throws RepositoryException {
         if (value != null) {
             try {
-                v = session.getValueFactory().createValue(value);
+                return setProperty(name, getValueFactory().createValue(value));
             } catch (UnsupportedRepositoryOperationException e) {
-                // happens when node is not referenceable
-                throw new ValueFormatException("node is not of type mix:referenceable");
+                throw new ValueFormatException(
+                        "Node is not referenceable: " + value, e);
             }
+        } else {
+            return setProperty(name, (Value) null);
         }
-        return setProperty(name, v);
     }
 
     /**
@@ -2326,59 +2289,82 @@ public class NodeImpl extends ItemImpl implements Node {
      * name and single-valued flag. The resulting type is taken from that
      * definition and the implementation tries to convert the passed value to
      * that type. If that fails, then a {@link ValueFormatException} is thrown.
-     *
-     * @param name        the name of the property to set.
-     * @param value       the value to set. If <code>null</code> the property is
-     *                    removed.
-     * @param enforceType if the type of <code>value</code> is enforced.
-     * @return the <code>Property</code> object set, or <code>null</code> if
-     *         this method was used to remove a property (by setting its value
-     *         to <code>null</code>).
-     * @throws ValueFormatException         if <code>value</code> cannot be
-     *                                      converted to the specified type or
-     *                                      if the property already exists and
-     *                                      is multi-valued.
-     * @throws VersionException             if this node is read-only due to a
-     *                                      checked-in node and this implementation
-     *                                      performs this validation immediately.
-     * @throws LockException                if a lock prevents the setting of
-     *                                      the property and this implementation
-     *                                      performs this validation immediately.
-     * @throws ConstraintViolationException if the change would violate a
-     *                                      node-type or other constraint and
-     *                                      this implementation performs this
-     *                                      validation immediately.
-     * @throws RepositoryException          if another error occurs.
      */
-    protected PropertyImpl setProperty(Name name,
-                                       Value value,
-                                       boolean enforceType) throws
-            ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
+    private class SetPropertyOperation extends SessionOperation {
 
-        // check pre-conditions for setting property
-        checkSetProperty();
+        private final Name name;
 
-        int type = PropertyType.UNDEFINED;
-        if (value != null) {
-            type = value.getType();
+        private final Value value;
+
+        private final boolean enforceType;
+
+        private volatile PropertyImpl property = null;
+
+        /**
+         * @param name  property name
+         * @param value new value of the property,
+         *              or <code>null</code> to remove the property
+         * @param enforceType <code>true</code> to enforce the value type
+         */
+        public SetPropertyOperation(
+                Name name, Value value, boolean enforceType) {
+            super("setProperty()");
+            this.name = name;
+            this.value = value;
+            this.enforceType = enforceType;
         }
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, false, enforceType, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
+        /**
+         * @return the <code>Property</code> object set, or <code>null</code> if
+         *         this method was used to remove a property (by setting its value
+         *         to <code>null</code>).
+         */
+        public PropertyImpl getProperty() {
+            return property;
+        }
+
+        /**
+         * @throws ValueFormatException         if <code>value</code> cannot be
+         *                                      converted to the specified type or
+         *                                      if the property already exists and
+         *                                      is multi-valued.
+         * @throws VersionException             if this node is read-only due to a
+         *                                      checked-in node and this implementation
+         *                                      performs this validation immediately.
+         * @throws LockException                if a lock prevents the setting of
+         *                                      the property and this implementation
+         *                                      performs this validation immediately.
+         * @throws ConstraintViolationException if the change would violate a
+         *                                      node-type or other constraint and
+         *                                      this implementation performs this
+         *                                      validation immediately.
+         * @throws RepositoryException          if another error occurs.
+         */
+        @Override
+        public void perform(SessionContext context) throws RepositoryException {
+            itemSanityCheck();
+            // check pre-conditions for setting property
+            checkSetProperty();
+
+            int type = PropertyType.UNDEFINED;
+            if (value != null) {
+                type = value.getType();
             }
-            // rethrow
-            throw re;
+
+            BitSet status = new BitSet();
+            property =
+                getOrCreateProperty(name, type, false, enforceType, status);
+            try {
+                property.setValue(value);
+            } catch (RepositoryException e) {
+                if (status.get(CREATED)) {
+                    // setting value failed, get rid of newly created property
+                    removeChildProperty(name);
+                }
+                throw e; // rethrow
+            }
         }
-        return prop;
+
     }
 
     /**
