@@ -196,8 +196,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      *                             for some reason
      */
     public void sanityCheck() throws RepositoryException {
-        // check session status
-        session.sanityCheck();
+        sessionContext.getSessionState().checkAlive();
     }
 
     //--------------------------------------------------< new JSR 283 methods >

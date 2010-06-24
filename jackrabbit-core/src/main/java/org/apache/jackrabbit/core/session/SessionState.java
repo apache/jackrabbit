@@ -34,6 +34,13 @@ public interface SessionState {
     boolean isAlive();
 
     /**
+     * Throws an exception if this session is not alive.
+     *
+     * @throws RepositoryException throw if this session is not alive
+     */
+    void checkAlive() throws RepositoryException;
+
+    /**
      * Performs the given session operation.
      *
      * @param operation the session operation

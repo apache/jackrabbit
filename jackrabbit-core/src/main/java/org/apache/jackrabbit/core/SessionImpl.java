@@ -363,8 +363,8 @@ public class SessionImpl extends AbstractSession
      *                             for some reason (e.g. if this session has
      *                             been closed explicitly or if it has expired)
      */
-    protected void sanityCheck() throws RepositoryException {
-        perform(new SessionOperation("sanity check"));
+    private void sanityCheck() throws RepositoryException {
+        context.getSessionState().checkAlive();
     }
 
     /**
