@@ -50,7 +50,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
@@ -2111,41 +2110,6 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         orderBefore(insertName, beforeName);
-    }
-
-    private Name getQName(String name) throws RepositoryException {
-        return session.getQName(name);
-    }
-
-    private ValueFactory getValueFactory() throws RepositoryException {
-        return getSession().getValueFactory();
-    }
-
-    private Value[] getValues(String[] values, int type)
-            throws RepositoryException {
-        if (values != null) {
-            return ValueHelper.convert(values, type, getValueFactory());
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Returns the type of the first of the given values, or
-     * {@link PropertyType#UNDEFINED} if no values are given.
-     *
-     * @param values given values, or <code>null</code>
-     * @return value type, or {@link PropertyType#UNDEFINED}
-     */
-    private int getType(Value[] values) {
-        if (values != null) {
-            for (Value v : values) {
-                if (v != null) {
-                    return v.getType();
-                }
-            }
-        }
-        return PropertyType.UNDEFINED;
     }
 
     /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
