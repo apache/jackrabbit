@@ -24,8 +24,11 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
@@ -39,6 +42,7 @@ import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.value.ValueHelper;
 
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
@@ -260,6 +264,63 @@ public abstract class ItemImpl implements Item {
      * @throws RepositoryException if an error occurs.
      */
     public abstract Name getQName() throws RepositoryException;
+
+    /**
+     * Utility method that converts the given string into a qualified JCR name.
+     *
+     * @param name name string
+     * @return qualified name
+     * @throws RepositoryException if the given name is invalid
+     */
+    protected Name getQName(String name) throws RepositoryException {
+        return session.getQName(name);
+    }
+
+    /**
+     * Utility method that returns the value factory of this session.
+     *
+     * @return value factory
+     * @throws RepositoryException if the value factory is not available
+     */
+    protected ValueFactory getValueFactory() throws RepositoryException {
+        return getSession().getValueFactory();
+    }
+
+    /**
+     * Utility method that converts the given strings into JCR values of the
+     * given type
+     *
+     * @param values value strings
+     * @param type value type
+     * @return JCR values
+     * @throws RepositoryException if the values can not be converted
+     */
+    protected Value[] getValues(String[] values, int type)
+            throws RepositoryException {
+        if (values != null) {
+            return ValueHelper.convert(values, type, getValueFactory());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Utility method that returns the type of the first of the given values,
+     * or {@link PropertyType#UNDEFINED} when given no values.
+     *
+     * @param values given values, or <code>null</code>
+     * @return value type, or {@link PropertyType#UNDEFINED}
+     */
+    protected int getType(Value[] values) {
+        if (values != null) {
+            for (Value value : values) {
+                if (value != null) {
+                    return value.getType();
+                }
+            }
+        }
+        return PropertyType.UNDEFINED;
+    }
 
     //-----------------------------------------------------------------< Item >
 
