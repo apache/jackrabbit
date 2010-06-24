@@ -59,6 +59,12 @@ public class ActiveSessionState implements SessionState {
     }
 
     /**
+     * Does nothing; the session is alive.
+     */
+    public void checkAlive() {
+    }
+
+    /**
      * Performs the given operation within a synchronized block.
      *
      * @throws RepositoryException if the operation fails

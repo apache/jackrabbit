@@ -133,6 +133,15 @@ public class ItemManager implements Dumpable, ItemStateListener {
     }
 
     /**
+     * Checks that this session is alive.
+     *
+     * @throws RepositoryException if the session has been closed
+     */
+    private void sanityCheck() throws RepositoryException {
+        sessionContext.getSessionState().checkAlive();
+    }
+
+    /**
      * Disposes this <code>ItemManager</code> and frees resources.
      */
     void dispose() {
@@ -277,8 +286,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     private boolean itemExists(ItemId itemId, Path path) {
         try {
-            // check sanity of session
-            session.sanityCheck();
+            sanityCheck();
 
             // shortcut: check if state exists for the given item
             if (!sism.hasItemState(itemId)) {
@@ -305,8 +313,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws RepositoryException
      */
     private ItemImpl getItem(ItemId itemId, Path path) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
+        sanityCheck();
 
         boolean permissionCheck = true;
         ItemData data = getItemData(itemId, path, permissionCheck);
@@ -454,8 +461,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public boolean itemExists(Path path) {
         try {
-            // check sanity of session
-            session.sanityCheck();
+            sanityCheck();
 
             ItemId id = hierMgr.resolvePath(path);
             return (id != null) && itemExists(id, path);
@@ -472,8 +478,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public boolean nodeExists(Path path) {
         try {
-            // check sanity of session
-            session.sanityCheck();
+            sanityCheck();
 
             NodeId id = hierMgr.resolveNodePath(path);
             return (id != null) && itemExists(id, path);
@@ -490,8 +495,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public boolean propertyExists(Path path) {
         try {
-            // check sanity of session
-            session.sanityCheck();
+            sanityCheck();
 
             PropertyId id = hierMgr.resolvePropertyPath(path);
             return (id != null) && itemExists(id, path);
@@ -666,8 +670,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized boolean hasChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
+        sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {
@@ -695,8 +698,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized NodeIterator getChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
+        sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {
@@ -726,8 +728,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized boolean hasChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
+        sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {
@@ -757,8 +758,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized PropertyIterator getChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
+        sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {

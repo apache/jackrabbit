@@ -109,13 +109,10 @@ public abstract class ItemImpl implements Item {
      */
     protected void sanityCheck() throws RepositoryException {
         // check session status
-        perform(new SessionOperation("sanity check"));
+        sessionContext.getSessionState().checkAlive();
 
         // check status of this item for read operation
-        final int status = data.getStatus();
-        if (status == STATUS_DESTROYED || status == STATUS_INVALIDATED) {
-            throw new InvalidItemStateException(id + ": the item does not exist anymore");
-        }
+        itemSanityCheck();
     }
 
     /**
