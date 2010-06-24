@@ -185,7 +185,10 @@ public class AuthorizableImplTest extends AbstractUserTest {
         
         try {
             String imperson = "anyimpersonator";
-            n.setProperty(UserConstants.P_IMPERSONATORS, new Value[] {new StringValue(imperson)});
+            n.setProperty(
+                    UserConstants.P_IMPERSONATORS,
+                    new Value[] {new StringValue(imperson)},
+                    PropertyType.STRING);
             fail("Attempt to change protected property rep:impersonators should fail.");
         } catch (ConstraintViolationException e) {
             // ok.

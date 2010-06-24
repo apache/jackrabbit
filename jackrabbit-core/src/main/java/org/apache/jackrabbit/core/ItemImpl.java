@@ -114,6 +114,20 @@ public abstract class ItemImpl implements Item {
         }
     }
 
+    /**
+     * Checks the status of this item.
+     *
+     * @throws RepositoryException if this item no longer exists
+     */
+    protected void itemSanityCheck() throws RepositoryException {
+        // check status of this item for read operation
+        final int status = data.getStatus();
+        if (status == STATUS_DESTROYED || status == STATUS_INVALIDATED) {
+            throw new InvalidItemStateException(
+                    "Item does not exist anymore: " + id);
+        }
+    }
+
     protected boolean isTransient() {
         return getItemState().isTransient();
     }
