@@ -39,6 +39,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
@@ -89,6 +90,8 @@ public class BatchedItemOperations extends ItemValidator {
      */
     protected final SessionImpl session;
 
+    private final HierarchyManager hierMgr;
+
     /**
      * Creates a new <code>BatchedItemOperations</code> instance.
      *
@@ -105,6 +108,7 @@ public class BatchedItemOperations extends ItemValidator {
         super(sessionContext);
         this.stateMgr = stateMgr;
         this.session = sessionContext.getSessionImpl();
+        this.hierMgr = sessionContext.getHierarchyManager();
     }
 
     //-----------------------------------------< controlling batch operations >
@@ -749,6 +753,8 @@ public class BatchedItemOperations extends ItemValidator {
             }
         }
 
+        RetentionRegistry retentionReg =
+            sessionContext.getSessionImpl().getRetentionRegistry();
         if ((options & CHECK_HOLD) == CHECK_HOLD) {
             if (retentionReg.hasEffectiveHold(parentPath, false)) {
                 throw new RepositoryException("Unable to add node. Parent is affected by a hold.");
@@ -922,6 +928,8 @@ public class BatchedItemOperations extends ItemValidator {
             }
         }
 
+        RetentionRegistry retentionReg =
+            sessionContext.getSessionImpl().getRetentionRegistry();
         if ((options & CHECK_HOLD) == CHECK_HOLD) {
             if (retentionReg.hasEffectiveHold(targetPath, true)) {
                 throw new RepositoryException("Unable to perform removal. Node is affected by a hold.");
@@ -989,6 +997,8 @@ public class BatchedItemOperations extends ItemValidator {
         // versioning status
         verifyCheckedOut(nodePath);
 
+        RetentionRegistry retentionReg =
+            sessionContext.getSessionImpl().getRetentionRegistry();
         if (retentionReg.hasEffectiveHold(nodePath, false)) {
             throw new RepositoryException("Unable to write. Node is affected by a hold.");
         }
@@ -1409,7 +1419,7 @@ public class BatchedItemOperations extends ItemValidator {
     protected void verifyUnlocked(Path nodePath)
             throws LockException, RepositoryException {
         // make sure there's no foreign lock on node at nodePath
-        lockMgr.checkLock(nodePath, session);
+        sessionContext.getSessionImpl().getLockManager().checkLock(nodePath, session);
     }
 
     /**

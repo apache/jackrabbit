@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.session;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataStore;
@@ -42,6 +43,11 @@ public class SessionContext {
      * The item manager of this session
      */
     private volatile ItemManager itemManager;
+
+    /**
+     * The item validator of this session
+     */
+    private volatile ItemValidator itemValidator;
 
     /**
      * The access manager of this session
@@ -114,6 +120,16 @@ public class SessionContext {
     public void setItemManager(ItemManager itemManager) {
         assert itemManager != null;
         this.itemManager = itemManager;
+    }
+
+    public ItemValidator getItemValidator() {
+        assert itemValidator != null;
+        return itemValidator;
+    }
+
+    public void setItemValidator(ItemValidator itemValidator) {
+        assert itemValidator != null;
+        this.itemValidator = itemValidator;
     }
 
     public AccessManager getAccessManager() {
