@@ -32,7 +32,10 @@ public class SessionContext {
 
     private final SessionImpl session;
 
-    private volatile SessionState state;
+    /**
+     * The state of this session.
+     */
+    private final SessionState state;
 
     /**
      * The item state manager of this session
@@ -60,6 +63,7 @@ public class SessionContext {
         assert session != null;
         this.repositoryContext = repositoryContext;
         this.session = session;
+        this.state = new SessionState();
     }
 
     public RepositoryContext getRepositoryContext() {
@@ -91,10 +95,6 @@ public class SessionContext {
 
     public SessionState getSessionState() {
         return state;
-    }
-
-    public void setSessionState(SessionState state) {
-        this.state = state;
     }
 
     public SessionItemStateManager getItemStateManager() {

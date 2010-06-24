@@ -34,8 +34,6 @@ import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.session.ActiveSessionState;
-import org.apache.jackrabbit.core.session.ClosedSessionState;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.session.SessionRefreshOperation;
@@ -243,7 +241,6 @@ public class SessionImpl extends AbstractSession
             WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
         this.context = new SessionContext(repositoryContext, this);
-        this.context.setSessionState(new ActiveSessionState(context));
         this.repositoryContext = repositoryContext;
         this.subject = subject;
 
@@ -851,14 +848,15 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void save() throws RepositoryException {
-        perform(new SessionSaveOperation());
+        perform(new SessionSaveOperation(context));
     }
 
     /**
      * {@inheritDoc}
      */
     public void refresh(boolean keepChanges) throws RepositoryException {
-        perform(new SessionRefreshOperation(keepChanges, clusterSyncOnRefresh()));
+        perform(new SessionRefreshOperation(
+                context, keepChanges, clusterSyncOnRefresh()));
     }
 
     /**
@@ -892,7 +890,8 @@ public class SessionImpl extends AbstractSession
      */
     public void move(String srcAbsPath, String destAbsPath)
             throws RepositoryException {
-        perform(new SessionMoveOperation(this, srcAbsPath, destAbsPath));
+        perform(new SessionMoveOperation(
+                context, this, srcAbsPath, destAbsPath));
     }
 
     /**
@@ -960,55 +959,50 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * {@inheritDoc}
+     * Invalidates this session and releases all associated resources.
      */
     @Override
-    public synchronized void logout() {
-        if (!isLive()) {
-            // ignore
-            return;
-        }
+    public void logout() {
+        if (context.getSessionState().close()) {
+            // JCR-798: Remove all registered event listeners to avoid concurrent
+            // access to session internals by the event delivery or even listeners
+            removeRegisteredEventListeners();
 
-        // JCR-798: Remove all registered event listeners to avoid concurrent
-        // access to session internals by the event delivery or even listeners
-        removeRegisteredEventListeners();
+            // discard any pending changes first as those might
+            // interfere with subsequent operations
+            context.getItemStateManager().disposeAllTransientItemStates();
 
-        // discard any pending changes first as those might
-        // interfere with subsequent operations
-        context.getItemStateManager().disposeAllTransientItemStates();
+            // notify listeners that session is about to be closed
+            notifyLoggingOut();
 
-        // notify listeners that session is about to be closed
-        notifyLoggingOut();
+            // dispose session item state manager
+            context.getItemStateManager().dispose();
+            // dispose item manager
+            context.getItemManager().dispose();
+            // dispose workspace
+            wsp.dispose();
 
-        // dispose session item state manager
-        context.getItemStateManager().dispose();
-        // dispose item manager
-        context.getItemManager().dispose();
-        // dispose workspace
-        wsp.dispose();
-
-        // invalidate session
-        context.setSessionState(new ClosedSessionState());
-
-        // logout JAAS subject
-        if (loginContext != null) {
-            try {
-                loginContext.logout();
-            } catch (javax.security.auth.login.LoginException le) {
-                log.warn("failed to logout current subject: " + le.getMessage());
+            // logout JAAS subject
+            if (loginContext != null) {
+                try {
+                    loginContext.logout();
+                } catch (javax.security.auth.login.LoginException le) {
+                    log.warn("failed to logout current subject: " + le.getMessage());
+                }
+                loginContext = null;
             }
-            loginContext = null;
-        }
 
-        try {
-            context.getAccessManager().close();
-        } catch (Exception e) {
-            log.warn("error while closing AccessManager", e);
-        }
+            try {
+                context.getAccessManager().close();
+            } catch (Exception e) {
+                log.warn("error while closing AccessManager", e);
+            }
 
-        // finally notify listeners that session has been closed
-        notifyLoggedOut();
+            // finally notify listeners that session has been closed
+            notifyLoggedOut();
+        }
     }
+
 
     /**
      * {@inheritDoc}

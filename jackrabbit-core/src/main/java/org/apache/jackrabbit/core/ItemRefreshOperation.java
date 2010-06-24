@@ -22,13 +22,13 @@ public class ItemRefreshOperation extends SessionOperation {
 
     private final ItemState state;
 
-    public ItemRefreshOperation(ItemState state) {
-        super("item refresh");
+    public ItemRefreshOperation(SessionContext context, ItemState state) {
+        super("item refresh", context);
         this.state = state;
     }
 
     @Override
-    public void perform(SessionContext context) throws RepositoryException {
+    public void perform() throws RepositoryException {
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
         // Optimisation for the root node

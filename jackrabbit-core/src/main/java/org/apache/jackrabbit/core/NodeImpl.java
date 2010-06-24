@@ -1579,7 +1579,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
         SetPropertyOperation operation =
-            new SetPropertyOperation(name, value, false);
+            new SetPropertyOperation(sessionContext, name, value, false);
         sessionContext.getSessionState().perform(operation);
         return operation.getProperty();
     }
@@ -2165,8 +2165,8 @@ public class NodeImpl extends ItemImpl implements Node {
         if (value != null && value.getType() != type) {
             value = ValueHelper.convert(value, type, getValueFactory());
         }
-        SetPropertyOperation operation =
-            new SetPropertyOperation(session.getQName(name), value, true);
+        SetPropertyOperation operation = new SetPropertyOperation(
+                sessionContext, session.getQName(name), value, true);
         sessionContext.getSessionState().perform(operation);
         return operation.getProperty();
     }
@@ -2174,8 +2174,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /** Wrapper around {@link SetPropertyOperation} */
     public Property setProperty(String name, Value value)
             throws RepositoryException {
-        SetPropertyOperation operation =
-            new SetPropertyOperation(session.getQName(name), value, false);
+        SetPropertyOperation operation = new SetPropertyOperation(
+                sessionContext, session.getQName(name), value, false);
         sessionContext.getSessionState().perform(operation);
         return operation.getProperty();
     }
@@ -2271,8 +2271,9 @@ public class NodeImpl extends ItemImpl implements Node {
          * @param enforceType <code>true</code> to enforce the value type
          */
         public SetPropertyOperation(
+                SessionContext sessionContext,
                 Name name, Value value, boolean enforceType) {
-            super("setProperty()");
+            super("setProperty()", sessionContext);
             this.name = name;
             this.value = value;
             this.enforceType = enforceType;
@@ -2305,7 +2306,7 @@ public class NodeImpl extends ItemImpl implements Node {
          * @throws RepositoryException          if another error occurs.
          */
         @Override
-        public void perform(SessionContext context) throws RepositoryException {
+        public void perform() throws RepositoryException {
             itemSanityCheck();
             // check pre-conditions for setting property
             checkSetProperty();

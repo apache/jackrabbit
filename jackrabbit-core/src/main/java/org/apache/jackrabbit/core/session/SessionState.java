@@ -16,13 +16,35 @@
  */
 package org.apache.jackrabbit.core.session;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The internal state of a session.
  */
-public interface SessionState {
+public class SessionState {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger log =
+        LoggerFactory.getLogger(SessionState.class);
+
+    /**
+     * The lock used to guarantee synchronized execution of repository
+     * operations. An explicit lock is used instead of normal Java
+     * synchronization in order to be able to log attempts to concurrently
+     * use a session. TODO: Check if this is a performance issue!
+     */
+    private final Lock lock = new ReentrantLock();
+
+    private volatile Exception closed = null;
 
     /**
      * Checks whether this session is alive.
@@ -31,22 +53,63 @@ public interface SessionState {
      * @return <code>true</code> if the session is alive,
      *         <code>false</code> otherwise
      */
-    boolean isAlive();
+    public boolean isAlive() {
+        return closed == null;
+    }
 
     /**
      * Throws an exception if this session is not alive.
      *
      * @throws RepositoryException throw if this session is not alive
      */
-    void checkAlive() throws RepositoryException;
+    public void checkAlive() throws RepositoryException {
+        if (!isAlive()) {
+            throw new RepositoryException(
+                    "This session has been closed. See the chained exception"
+                    + " for a trace of where the session was closed", closed);
+        }
+    }
 
     /**
-     * Performs the given session operation.
+     * Performs the given operation within a synchronized block.
      *
-     * @param operation the session operation
-     * @throws RepositoryException if the operation fails or can not
-     *                             for some other reason be performed
+     * @throws RepositoryException if the operation fails
      */
-    void perform(SessionOperation operation) throws RepositoryException;
+    public void perform(SessionOperation operation) throws RepositoryException {
+        if (!lock.tryLock()) {
+            log.warn("Attempt to perform {} while another thread is"
+                    + " concurrently accessing the session. Blocking until"
+                    + " the other thread is finished using this session.",
+                    operation);
+            lock.lock();
+        }
+        try {
+            checkAlive();
+            log.debug("Performing {}", operation);
+            operation.perform();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean close() {
+        if (!lock.tryLock()) {
+            log.warn("Attempt to close a session while another thread is"
+                    + " concurrently accessing the session. Blocking until"
+                    + " the other thread is finished using this session.");
+            lock.lock();
+        }
+        try {
+            if (isAlive()) {
+                closed = new Exception();
+                return true;
+            } else {
+                log.warn("This session has already been closed", closed);
+                return false;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
 
 }

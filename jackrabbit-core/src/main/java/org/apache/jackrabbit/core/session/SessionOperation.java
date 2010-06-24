@@ -23,23 +23,30 @@ import javax.jcr.RepositoryException;
  * {@link SessionState} interface to implement generic controls like
  * synchronization and liveness checks on all session operation.
  */
-public class SessionOperation {
+public abstract class SessionOperation {
 
     private final String name;
 
-    public SessionOperation(String name) {
+    protected final SessionContext context;
+
+    /**
+     * Creates a new session operation.
+     *
+     * @param name operation name
+     * @param context component context of the session
+     */
+    protected SessionOperation(String name, SessionContext context) {
         this.name = name;
+        this.context = context;
     }
 
     /**
      * Performs this operation. The default implementation does nothing;
      * subclasses should override this method to implement custom operations.
      *
-     * @param context component context of the session
      * @throws RepositoryException if the operation fails
      */
-    public void perform(SessionContext context) throws RepositoryException {
-    }
+    public abstract void perform() throws RepositoryException;
 
     /**
      * Returns the name of this operation.
