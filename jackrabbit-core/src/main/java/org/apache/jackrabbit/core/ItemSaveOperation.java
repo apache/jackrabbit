@@ -82,13 +82,13 @@ class ItemSaveOperation extends SessionOperation {
 
     private final ItemState state;
 
-    public ItemSaveOperation(ItemState state) {
-        super("item save");
+    public ItemSaveOperation(SessionContext context, ItemState state) {
+        super("item save", context);
         this.state = state;
     }
 
     @Override
-    public void perform(SessionContext context) throws RepositoryException {
+    public void perform() throws RepositoryException {
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
         /**
@@ -97,7 +97,7 @@ class ItemSaveOperation extends SessionOperation {
          */
         Collection<ItemState> dirty;
         try {
-            dirty = getTransientStates(stateMgr);
+            dirty = getTransientStates();
         } catch (ConcurrentModificationException e) {
             String msg = "Concurrent modification; session is closed";
             log.error(msg, e);
@@ -113,7 +113,7 @@ class ItemSaveOperation extends SessionOperation {
          * build list of transient descendants in the attic
          * (i.e. those marked as 'removed')
          */
-        Collection<ItemState> removed = getRemovedStates(stateMgr);
+        Collection<ItemState> removed = getRemovedStates();
 
         // All affected item states. The keys are used to look up whether
         // an item is affected, and the values are iterated through below
@@ -214,7 +214,7 @@ class ItemSaveOperation extends SessionOperation {
 
         // validate access and node type constraints
         // (this will also validate child removals)
-        validateTransientItems(context, dirty, removed);
+        validateTransientItems(dirty, removed);
 
         // start the update operation
         try {
@@ -226,20 +226,20 @@ class ItemSaveOperation extends SessionOperation {
         boolean succeeded = false;
         try {
             // process transient items marked as 'removed'
-            removeTransientItems(stateMgr, removed);
+            removeTransientItems(removed);
 
             // process transient items that have change in mixins
-            processShareableNodes(context, dirty);
+            processShareableNodes(dirty);
 
             // initialize version histories for new nodes (might generate new transient state)
-            if (initVersionHistories(context, dirty)) {
+            if (initVersionHistories(dirty)) {
                 // re-build the list of transient states because the previous call
                 // generated new transient state
-                dirty = getTransientStates(stateMgr);
+                dirty = getTransientStates();
             }
 
             // process 'new' or 'modified' transient states
-            persistTransientItems(context.getItemManager(), dirty);
+            persistTransientItems(dirty);
 
             // dispose the transient states marked 'new' or 'modified'
             // at this point item state data is pushed down one level,
@@ -272,7 +272,7 @@ class ItemSaveOperation extends SessionOperation {
                 // applied by persistTransientItems() and we need to
                 // restore transient state, i.e. undo the effect of
                 // persistTransientItems()
-                restoreTransientItems(context, dirty);
+                restoreTransientItems(dirty);
             }
         }
 
@@ -297,8 +297,7 @@ class ItemSaveOperation extends SessionOperation {
      * @throws InvalidItemStateException
      * @throws RepositoryException
      */
-    private Collection<ItemState> getTransientStates(
-            SessionItemStateManager stateMgr)
+    private Collection<ItemState> getTransientStates()
             throws InvalidItemStateException, RepositoryException {
         // list of transient states that should be persisted
         ArrayList<ItemState> dirty = new ArrayList<ItemState>();
@@ -306,7 +305,7 @@ class ItemSaveOperation extends SessionOperation {
         if (state.isNode()) {
             // build list of 'new' or 'modified' descendants
             for (ItemState transientState
-                    : stateMgr.getDescendantTransientItemStates(state.getId())) {
+                    : context.getItemStateManager().getDescendantTransientItemStates(state.getId())) {
                 // fail-fast test: check status of transient state
                 switch (transientState.getStatus()) {
                     case ItemState.STATUS_NEW:
@@ -385,13 +384,12 @@ class ItemSaveOperation extends SessionOperation {
      * @throws InvalidItemStateException
      * @throws RepositoryException
      */
-    private Collection<ItemState> getRemovedStates(
-            SessionItemStateManager stateMgr)
+    private Collection<ItemState> getRemovedStates()
             throws InvalidItemStateException, RepositoryException {
         if (state.isNode()) {
             ArrayList<ItemState> removed = new ArrayList<ItemState>();
             for (ItemState transientState
-                    : stateMgr.getDescendantTransientItemStatesInAttic(state.getId())) {
+                    : context.getItemStateManager().getDescendantTransientItemStatesInAttic(state.getId())) {
                 // check if stale
                 switch (transientState.getStatus()) {
                 case ItemState.STATUS_STALE_MODIFIED:
@@ -435,7 +433,6 @@ class ItemSaveOperation extends SessionOperation {
      * and in Property.setValue (for properties to be modified).
      */
     private void validateTransientItems(
-            SessionContext context,
             Iterable<ItemState> dirty, Iterable<ItemState> removed)
             throws RepositoryException {
         SessionImpl session = context.getSessionImpl();
@@ -494,7 +491,7 @@ class ItemSaveOperation extends SessionOperation {
                 // primary type
                 NodeTypeImpl pnt = ntMgr.getNodeType(nodeState.getNodeTypeName());
                 // effective node type (primary type incl. mixins)
-                EffectiveNodeType ent = getEffectiveNodeType(context, nodeState);
+                EffectiveNodeType ent = getEffectiveNodeType(nodeState);
                 /**
                  * if the transient node was added (i.e. if it is 'new') or if
                  * its primary type has changed, check its node type against the
@@ -712,17 +709,13 @@ class ItemSaveOperation extends SessionOperation {
      * walk through list of transient items marked 'removed' and
      * definitively remove each one
      */
-    private void removeTransientItems(
-            SessionItemStateManager stateMgr, Iterable<ItemState> states) {
+    private void removeTransientItems(Iterable<ItemState> states) {
         for (ItemState transientState : states) {
             ItemState persistentState = transientState.getOverlayedState();
-            /**
-             * remove persistent state
-             *
-             * this will indirectly (through stateDestroyed listener method)
-             * permanently invalidate all Item instances wrapping it
-             */
-            stateMgr.destroy(persistentState);
+            // remove persistent state
+            // this will indirectly (through stateDestroyed listener method)
+            // permanently invalidate all Item instances wrapping it
+            context.getItemStateManager().destroy(persistentState);
         }
     }
 
@@ -736,8 +729,7 @@ class ItemSaveOperation extends SessionOperation {
      * has been removed, throw.</li>
      * </ul>
      */
-    private void processShareableNodes(
-            SessionContext context, Iterable<ItemState> states)
+    private void processShareableNodes(Iterable<ItemState> states)
             throws RepositoryException {
         for (ItemState is : states) {
             if (is.isNode()) {
@@ -745,10 +737,10 @@ class ItemSaveOperation extends SessionOperation {
                 boolean wasShareable = false;
                 if (ns.hasOverlayedState()) {
                     NodeState old = (NodeState) ns.getOverlayedState();
-                    EffectiveNodeType ntOld = getEffectiveNodeType(context, old);
+                    EffectiveNodeType ntOld = getEffectiveNodeType(old);
                     wasShareable = ntOld.includesNodeType(NameConstants.MIX_SHAREABLE);
                 }
-                EffectiveNodeType ntNew = getEffectiveNodeType(context, ns);
+                EffectiveNodeType ntNew = getEffectiveNodeType(ns);
                 boolean isShareable = ntNew.includesNodeType(NameConstants.MIX_SHAREABLE);
 
                 if (!wasShareable && isShareable) {
@@ -773,8 +765,7 @@ class ItemSaveOperation extends SessionOperation {
      * @return true if this call generated new transient state; otherwise false
      * @throws RepositoryException
      */
-    private boolean initVersionHistories(
-            SessionContext context, Iterable<ItemState> states)
+    private boolean initVersionHistories(Iterable<ItemState> states)
             throws RepositoryException {
         SessionImpl session = context.getSessionImpl();
         ItemManager itemMgr = context.getItemManager();
@@ -784,7 +775,7 @@ class ItemSaveOperation extends SessionOperation {
         for (ItemState itemState : states) {
             if (itemState.isNode()) {
                 NodeState nodeState = (NodeState) itemState;
-                EffectiveNodeType nt = getEffectiveNodeType(context, nodeState);
+                EffectiveNodeType nt = getEffectiveNodeType(nodeState);
                 if (nt.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                     if (!nodeState.hasPropertyName(NameConstants.JCR_VERSIONHISTORY)) {
                         NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
@@ -839,9 +830,9 @@ class ItemSaveOperation extends SessionOperation {
     /**
      * walk through list of transient items and persist each one
      */
-    private void persistTransientItems(
-            ItemManager itemMgr, Iterable<ItemState> states)
+    private void persistTransientItems(Iterable<ItemState> states)
             throws RepositoryException {
+        ItemManager itemMgr = context.getItemManager();
         for (ItemState state : states) {
             // persist state of transient item
             itemMgr.getItem(state.getId()).makePersistent();
@@ -851,8 +842,7 @@ class ItemSaveOperation extends SessionOperation {
     /**
      * walk through list of transient states and re-apply transient changes
      */
-    private void restoreTransientItems(
-            SessionContext context, Iterable<ItemState> items) {
+    private void restoreTransientItems(Iterable<ItemState> items) {
         ItemManager itemMgr = context.getItemManager();
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
@@ -907,8 +897,7 @@ class ItemSaveOperation extends SessionOperation {
      * @return the effective node type
      * @throws RepositoryException
      */
-    private EffectiveNodeType getEffectiveNodeType(
-            SessionContext context, NodeState state)
+    private EffectiveNodeType getEffectiveNodeType(NodeState state)
             throws RepositoryException {
         try {
             NodeTypeRegistry registry =

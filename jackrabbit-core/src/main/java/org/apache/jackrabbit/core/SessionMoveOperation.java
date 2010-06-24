@@ -54,9 +54,10 @@ public class SessionMoveOperation extends SessionOperation {
     private final Path.Element destName;
 
     public SessionMoveOperation(
+            SessionContext sessionContext,
             PathResolver resolver, String srcAbsPath, String destAbsPath)
             throws RepositoryException {
-        super("move");
+        super("move", sessionContext);
 
         this.srcAbsPath = srcAbsPath;
         this.srcPath = getAbsolutePath(resolver, srcAbsPath);
@@ -104,7 +105,8 @@ public class SessionMoveOperation extends SessionOperation {
         }
     }
 
-    public void perform(SessionContext context) throws RepositoryException {
+    @Override
+    public void perform() throws RepositoryException {
         // Get node instances
         NodeImpl targetNode = getNode(context, srcPath, srcAbsPath);
         NodeImpl srcParentNode =

@@ -30,14 +30,15 @@ public class SessionRefreshOperation extends SessionOperation {
 
     private final boolean clusterSync;
 
-    public SessionRefreshOperation(boolean keepChanges, boolean clusterSync) {
-        super("refresh");
+    public SessionRefreshOperation(
+            SessionContext context, boolean keepChanges, boolean clusterSync) {
+        super("refresh", context);
         this.keepChanges = keepChanges;
         this.clusterSync = clusterSync;
     }
 
     @Override
-    public void perform(SessionContext context) throws RepositoryException {
+    public void perform() throws RepositoryException {
         // JCR-1753: Ensure that we are up to date with cluster changes
         ClusterNode cluster = context.getRepositoryContext().getClusterNode();
         if (cluster != null && clusterSync) {
