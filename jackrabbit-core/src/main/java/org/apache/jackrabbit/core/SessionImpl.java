@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
@@ -41,7 +40,6 @@ import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.session.SessionRefreshOperation;
 import org.apache.jackrabbit.core.session.SessionSaveOperation;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
@@ -66,7 +64,6 @@ import org.xml.sax.InputSource;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.Item;
-import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.LoginException;
 import javax.jcr.NamespaceException;
@@ -213,12 +210,6 @@ public class SessionImpl extends AbstractSession
     private Exception openStackTrace = new Exception("Stack Trace");
 
     /**
-     * Internal helper class for common validation checks (lock status, checkout
-     * status, protection etc. etc.)
-     */
-    private ItemValidator validator;
-
-    /**
      * Protected constructor.
      *
      * @param repositoryContext repository context
@@ -265,6 +256,7 @@ public class SessionImpl extends AbstractSession
         wsp = createWorkspaceInstance(wspConfig);
         context.setItemStateManager(createSessionItemStateManager());
         context.setItemManager(createItemManager());
+        context.setItemValidator(new ItemValidator(context));
         context.setAccessManager(createAccessManager(subject));
         versionMgr = createVersionManager();
         ntInstanceHandler = new NodeTypeInstanceHandler(userId);
@@ -369,13 +361,9 @@ public class SessionImpl extends AbstractSession
 
     /**
      * @return ItemValidator instance for this session.
-     * @throws RepositoryException If an error occurs.
      */
-    public synchronized ItemValidator getValidator() throws RepositoryException {
-        if (validator == null) {
-            validator = new ItemValidator(context);
-        }
-        return validator;
+    public ItemValidator getValidator() {
+        return context.getItemValidator();
     }
 
     /**
@@ -903,167 +891,8 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void move(String srcAbsPath, String destAbsPath)
-            throws ItemExistsException, PathNotFoundException,
-            VersionException, ConstraintViolationException, LockException,
-            RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        // check paths & get node instances
-
-        Path srcPath;
-        Path.Element srcName;
-        Path srcParentPath;
-        NodeImpl targetNode;
-        NodeImpl srcParentNode;
-        try {
-            srcPath = getQPath(srcAbsPath).getNormalizedPath();
-            if (!srcPath.isAbsolute()) {
-                throw new RepositoryException("not an absolute path: " + srcAbsPath);
-            }
-            srcName = srcPath.getNameElement();
-            srcParentPath = srcPath.getAncestor(1);
-            targetNode = getItemManager().getNode(srcPath);
-            srcParentNode = getItemManager().getNode(srcParentPath);
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(srcAbsPath);
-        } catch (NameException e) {
-            String msg = srcAbsPath + ": invalid path";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        Path destPath;
-        Path.Element destName;
-        Path destParentPath;
-        NodeImpl destParentNode;
-        try {
-            destPath = getQPath(destAbsPath).getNormalizedPath();
-            if (!destPath.isAbsolute()) {
-                throw new RepositoryException("not an absolute path: " + destAbsPath);
-            }
-            if (srcPath.isAncestorOf(destPath)) {
-                String msg = destAbsPath + ": invalid destination path (cannot be descendant of source path)";
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-            destName = destPath.getNameElement();
-            destParentPath = destPath.getAncestor(1);
-            destParentNode = getItemManager().getNode(destParentPath);
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(destAbsPath);
-        } catch (NameException e) {
-            String msg = destAbsPath + ": invalid path";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        if (context.getHierarchyManager().isShareAncestor(targetNode.getNodeId(), destParentNode.getNodeId())) {
-            String msg = destAbsPath + ": invalid destination path (share cycle detected)";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        int ind = destName.getIndex();
-        if (ind > 0) {
-            // subscript in name element
-            String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // check for name collisions
-        NodeImpl existing = null;
-        try {
-            existing = getItemManager().getNode(destPath);
-            // there's already a node with that name:
-            // check same-name sibling setting of existing node
-            if (!existing.getDefinition().allowsSameNameSiblings()) {
-                throw new ItemExistsException(
-                        "Same name siblings are not allowed: " + existing);
-            }
-        } catch (AccessDeniedException ade) {
-            // FIXME by throwing ItemExistsException we're disclosing too much information
-            throw new ItemExistsException(destAbsPath);
-        } catch (PathNotFoundException pnfe) {
-            // no name collision, fall through
-        }
-
-        // verify for both source and destination parent nodes that
-        // - they are checked-out
-        // - are not protected neither by node type constraints nor by retention/hold
-        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
-                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
-        getValidator().checkRemove(srcParentNode, options, Permission.NONE);
-        getValidator().checkModify(destParentNode, options, Permission.NONE);
-
-        // check constraints
-        // get applicable definition of target node at new location
-        NodeTypeImpl nt = (NodeTypeImpl) targetNode.getPrimaryNodeType();
-        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl newTargetDef;
-        try {
-            newTargetDef = destParentNode.getApplicableChildNodeDefinition(destName.getName(), nt.getQName());
-        } catch (RepositoryException re) {
-            String msg = destAbsPath + ": no definition found in parent node's node type for new node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg, re);
-        }
-        // if there's already a node with that name also check same-name sibling
-        // setting of new node; just checking same-name sibling setting on
-        // existing node is not sufficient since same-name sibling nodes don't
-        // necessarily have identical definitions
-        if (existing != null && !newTargetDef.allowsSameNameSiblings()) {
-            throw new ItemExistsException(
-                    "Same name siblings not allowed: " + existing);
-        }
-
-        NodeId targetId = targetNode.getNodeId();
-        int index = srcName.getIndex();
-        if (index == 0) {
-            index = 1;
-        }
-
-        // check permissions
-        AccessManager acMgr = context.getAccessManager();
-        if (!(acMgr.isGranted(srcPath, Permission.REMOVE_NODE) &&
-                acMgr.isGranted(destPath, Permission.ADD_NODE | Permission.NODE_TYPE_MNGMT))) {
-            String msg = "Not allowed to move node " + srcAbsPath + " to " + destAbsPath;
-            log.debug(msg);
-            throw new AccessDeniedException(msg);
-        }
-
-        if (srcParentNode.isSame(destParentNode)) {
-            // change definition of target
-            targetNode.onRedefine(newTargetDef.unwrap());
-            // do rename
-            destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
-        } else {
-            // check shareable case
-            if (targetNode.getNodeState().isShareable()) {
-                String msg = "Moving a shareable node is not supported.";
-                log.debug(msg);
-                throw new UnsupportedRepositoryOperationException(msg);
-            }
-            // change definition of target
-            targetNode.onRedefine(newTargetDef.unwrap());
-
-            // Get the transient states
-            NodeState srcParentState =
-                    (NodeState) srcParentNode.getOrCreateTransientItemState();
-            NodeState targetState =
-                    (NodeState) targetNode.getOrCreateTransientItemState();
-            NodeState destParentState =
-                    (NodeState) destParentNode.getOrCreateTransientItemState();
-
-            // do move:
-            // 1. remove child node entry from old parent
-            if (srcParentState.removeChildNodeEntry(targetId)) {
-                // 2. re-parent target node
-                targetState.setParentId(destParentNode.getNodeId());
-                // 3. add child node entry to new parent
-                destParentState.addChildNodeEntry(destName.getName(), targetId);
-            }
-        }
+            throws RepositoryException {
+        perform(new SessionMoveOperation(this, srcAbsPath, destAbsPath));
     }
 
     /**

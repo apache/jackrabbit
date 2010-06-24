@@ -29,11 +29,9 @@ import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -115,24 +113,9 @@ public class ItemValidator {
     protected final NodeTypeRegistry ntReg;
 
     /**
-     * hierarchy manager used for generating error msg's
-     * that contain human readable paths
-     *
-     * @see #safeGetJCRPath(ItemId)
-     */
-    protected final HierarchyManager hierMgr;
-
-    /**
      * Path resolver for outputting user-friendly error messages.
      */
     protected final PathResolver resolver;
-
-    /**
-     *
-     */
-    protected final LockManager lockMgr;
-
-    protected final RetentionRegistry retentionReg;
 
     /**
      * Creates a new <code>ItemValidator</code> instance.
@@ -142,10 +125,7 @@ public class ItemValidator {
     public ItemValidator(SessionContext sessionContext) throws RepositoryException {
         this.sessionContext = sessionContext;
         this.ntReg = sessionContext.getRepositoryContext().getNodeTypeRegistry();
-        this.hierMgr = sessionContext.getHierarchyManager();
         this.resolver = sessionContext.getSessionImpl();
-        this.lockMgr = sessionContext.getSessionImpl().getLockManager();
-        this.retentionReg = sessionContext.getSessionImpl().getRetentionRegistry();
     }
 
     /**
@@ -359,7 +339,7 @@ public class ItemValidator {
             return;
         }
         NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
-        lockMgr.checkLock(node);
+        sessionContext.getSessionImpl().getLockManager().checkLock(node);
     }
 
     private boolean isProtected(ItemImpl item) throws RepositoryException {
@@ -381,7 +361,7 @@ public class ItemValidator {
             path = path.getAncestor(1);
         }
         boolean checkParent = (item.isNode() && isRemoval);
-        return retentionReg.hasEffectiveHold(path, checkParent);
+        return sessionContext.getSessionImpl().getRetentionRegistry().hasEffectiveHold(path, checkParent);
     }
 
     private boolean hasRetention(ItemImpl item, boolean isRemoval) throws RepositoryException {
@@ -393,7 +373,7 @@ public class ItemValidator {
             path = path.getAncestor(1);
         }
         boolean checkParent = (item.isNode() && isRemoval);
-        return retentionReg.hasEffectiveRetention(path, checkParent);
+        return sessionContext.getSessionImpl().getRetentionRegistry().hasEffectiveRetention(path, checkParent);
     }
 
 
@@ -527,7 +507,8 @@ public class ItemValidator {
      */
     public String safeGetJCRPath(ItemId id) {
         try {
-            return safeGetJCRPath(hierMgr.getPath(id));
+            return safeGetJCRPath(
+                    sessionContext.getHierarchyManager().getPath(id));
         } catch (ItemNotFoundException e) {
             // return string representation of id as a fallback
             return id.toString();
