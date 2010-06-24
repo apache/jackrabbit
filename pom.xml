@@ -162,7 +162,7 @@ least three +1 Jackrabbit PMC votes are cast.
                     <echo>
 The release candidate has been prepared in:
 
-    ${basedir}/target/{$project.version}
+    ${basedir}/target/${project.version}
 
 Please deploy it to people.apache.org like this:
 
@@ -180,18 +180,8 @@ A release vote template has been generated for you:
             <dependencies>
               <dependency>
                  <groupId>org.apache.ant</groupId>
-                 <artifactId>ant-optional</artifactId>
-                 <version>1.7.1</version>
-               </dependency>
-              <dependency>
-                 <groupId>org.apache.ant</groupId>
-                 <artifactId>ant-jsch</artifactId>
-                 <version>1.7.1</version>
-               </dependency>
-              <dependency>
-                 <groupId>com.jcraft</groupId>
-                 <artifactId>jsch</artifactId>
-                 <version>0.1.42</version>
+                 <artifactId>ant-nodeps</artifactId>
+                 <version>1.8.1</version>
                </dependency>
             </dependencies>
           </plugin>
