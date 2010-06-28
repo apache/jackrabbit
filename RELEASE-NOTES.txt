@@ -1,85 +1,26 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0.0
+Release Notes -- Apache Jackrabbit -- Version 2.0.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit 2.0.0, a fully compliant and production-ready
-implementation of the Content Repository for Java Technology API, version 2.0
-(JCR 2.0, http://jcp.org/en/jsr/summary?id=283).
+Apache Jackrabbit 2.0.1 is a bug fix release that fixes issues reported
+against previous releases. This release is fully compatible with the
+earlier 2.0.0 release.
 
 Changes in this release
 -----------------------
 
-Jackrabbit 2.0 is a major upgrade from the earlier 1.x releases. The most
-notable changes in this release are:
+This release fixes the following issues:
 
-  * Upgrade to JCR 2.0. This Jackrabbit release implements and is based
-    on the official JCR 2.0 API. All of the features required by the
-    JSR 283 specification have been implemented. Note that the remote
-    access layers (RMI and WebDAV) only support a subset of JCR 2.0.
+  JCR-2475 Test failures when running "mvn cobertura:check"
+  JCR-2577 SISM.checkAddedChildNodes() prevents merging of concurrent changes
+  JCR-2588 UserManager.getAuthorizable() may fail with InvalidQueryException
 
-  * Upgrade to Java 5. All of Jackrabbit (except the jcr-tests component)
-    now requires Java 5 as the base platform. Java 1.4 environments are no
-    longer supported.
+See the Jackrabbit issue tracker for more details about these changes:
 
-  * Separate JCR Commons components. Many of the general-purpose JCR
-    components like OCM are now developed and released separately from
-    the Jackrabbit content repository. See the individual components
-    for their most recent releases.
+  https://issues.apache.org/jira/browse/JCR
 
-  * Database connection pooling is now available for all database backends.
-    Non-pooled versions of the bundle persistence managers are still
-    available in the org.apache.jackrabbit.core.persistence.bundle package.
-    To enable connection pooling in an existing Jackrabbit repository,
-    replace the package name with org.apache.jackrabbit.core.persistence.pool
-    in your repository and workspace configuration files.
-
-  * Data store feature enabled in the default repository configuration.
-
-  * Full text indexing with Apache Tika. Jackrabbit can now extract and
-    index the full text content of many new types of documents, including
-    the Office Open XML files produced by Microsoft Office 2007 and higher.
-
-  * Apache Commons Collections, Apache Derby, Jetty, SLF4J and Apache Xerces
-    dependencies have been upgraded to more recent versions.
-
-  * OracleFileSystem class does not use special blob handling anymore as it
-    is not required for Oracle versions since 10R1. Use the Oracle9FileSystem
-    class if you need support for Oracle 9 or earlier.
-
-For more detailed information about all the changes in this and other
-Jackrabbit releases, please see the Jackrabbit issue tracker at
-
-    https://issues.apache.org/jira/browse/JCR
-
-Backwards compatiblity
-----------------------
-
-Jackrabbit 2.0 is designed to be compatible with existing Jackrabbit
-1.x clients and repositories. The main exceptions to this goal are:
-
-  * Removal of deprecated classes and features. Jackrabbit 2.0 is not
-    backwards compatible with client code that used classes or features
-    that had been deprecated during the 1.x release cycle. Most notably
-    the temporary org.apache.jackrabbit.api.jsr283 interfaces have been
-    removed in favor of the official JCR 2.0 API in javax.jcr.
-
-  * Repositories that have used the new JSR 283 security features included
-    as a development preview in Jackrabbit 1.5 and 1.6 may face problems
-    when upgrading to Jackrabbit 2.0. See especially JCR-1944 and JCR-2313
-    for more details.
-
-  * The JCR-RMI layer no longer implements the Jackrabbit API extensions.
-    Code that uses JCR-RMI with distributed transactions or for administration
-    operations like creating workspaces or registering node types needs to
-    be updated accordingly.
-
-  * The JCR-RMI layer in Jackrabbit 2.0 only supports JCR 2.0 repositories.
-    To access a JCR 1.0 repository implementation like Jackrabbit 1.x over
-    RMI, you need to use the 1.x versions of JCR-RMI.
-
-Please contact the Jackrabbit user mailing list or issue tracker for more
-information on how to handle the upgrade if you face some of these issues.
+The issue tracker also documents all the known issues in this release.
 
 Contributors
 ------------
@@ -87,23 +28,7 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Alexander Klimetschek   Dietmar Gräbner          Marcel Reutegger
-    Alexandre Capt          Dominique Pfister        Martijn Hendriks
-    Angela Schreiber        Esteban Franqueiro       Matej Knopp
-    Attila Király           Felix Meschberger        Matt Johnston
-    Bart van der Schans     Frederic Esnault         Michael Dürig
-    Bertrand Delacretaz     Jared Roberts            Michael Xue
-    Brian Topping           Jeremy Anderson          Philipp Bunge
-    Carsten Ziegeler        Jervis Liu               Philipp Koch
-    Charles Brooking        Johann Sorel             Rory Douglas
-    Christian               Jörg Hoh                 Sascha Theves
-    Christian Trutz         Jukka Zitting            Sébastien Launay
-    Claus Köll              Julian Reschke           Sridhar Raman
-    Dan Diephouse           Kadir Alaca              Stefan Guggisberg
-    Dave Brosius            Lars Michele             Sunil D'Monte
-    Dave Marion             Luca Tagliani            Thomas Müller
-    David Purpura           Lutz Horn                Tobias Bocanegra
-                            Manfred Bädke
+    Jukka Zittingr          Marcel Reutegger         Tobias Bocanegra
 
 Thank you to everyone involved!
 
@@ -142,4 +67,3 @@ the Foundation's intellectual property framework limits the legal exposure
 of its 2,500+ contributors.
 
 For more information, visit http://www.apache.org/
-
