@@ -133,11 +133,6 @@
                         <include name="*.?ar" />
                       </fileset>
                     </checksum>
-                    <scp todir="${username}@people.apache.org:public_html/jackrabbit" keyfile="${keyfile}" passphrase="${passphrase}" sftp="true" verbose="true">
-                      <fileset dir="${basedir}/target">
-                        <include name="${project.version}/*" />
-                      </fileset>
-                    </scp>
                     <checksum file="${basedir}/target/${project.version}/jackrabbit-${project.version}-src.zip" algorithm="SHA1" property="checksum" />
                     <echo file="${basedir}/target/vote.txt">
 From: ${username}@apache.org
@@ -165,7 +160,7 @@ least three +1 Jackrabbit PMC votes are cast.
                     <echo>
 The release candidate has been deployed to:
 
-    http://people.apache.org/~${username}/jackrabbit/${project.version}/
+    file://${basedir}/target/${project.version}/
 
 A release vote template has been generated for you:
 
