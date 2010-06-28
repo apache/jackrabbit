@@ -1,9 +1,9 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0.1
+Release Notes -- Apache Jackrabbit -- Version 2.0.2
 
 Introduction
 ------------
 
-Apache Jackrabbit 2.0.1 is a bug fix release that fixes issues reported
+Apache Jackrabbit 2.0.2 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 2.0.0 release.
 
