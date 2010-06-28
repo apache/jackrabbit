@@ -154,9 +154,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         rootVersion = createVersionInstance(NameConstants.JCR_ROOTVERSION);
 
         // get version entries
-        ChildNodeEntry[] children = (ChildNodeEntry[])
-            node.getState().getChildNodeEntries().toArray();
-        for (ChildNodeEntry child : children) {
+        for (ChildNodeEntry child : node.getState().getChildNodeEntries()) {
             if (child.getName().equals(NameConstants.JCR_VERSIONLABELS)) {
                 continue;
             }

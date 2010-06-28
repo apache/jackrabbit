@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.commons.collections.MapIterator;
-import org.apache.commons.collections.OrderedMapIterator;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.util.EmptyLinkedMap;
 import org.apache.jackrabbit.spi.Name;
@@ -27,20 +25,14 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.ListIterator;
 import java.util.Map;
 
 /**
  * <code>ChildNodeEntries</code> represents an insertion-ordered
  * collection of <code>ChildNodeEntry</code>s that also maintains
  * the index values of same-name siblings on insertion and removal.
- * <p/>
- * <code>ChildNodeEntries</code> also provides an unmodifiable
- * <code>List</code> view.
  */
-class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
+class ChildNodeEntries implements Cloneable {
 
     /**
      * Insertion-ordered map of entries
@@ -261,11 +253,12 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
             return Collections.emptyList();
         }
         if (other.isEmpty()) {
-            return this;
+            return list();
         }
 
         List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (ChildNodeEntry entry : this) {
+        for (Object e : entries.values()) {
+            ChildNodeEntry entry = (ChildNodeEntry) e;
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 continue;
@@ -298,7 +291,8 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         }
 
         List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (ChildNodeEntry entry : this) {
+        for (Object e : entries.values()) {
+            ChildNodeEntry entry = (ChildNodeEntry) e;
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 result.add(entry);
@@ -311,136 +305,35 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
     }
 
     //-----------------------------------------------< unmodifiable List view >
-    public boolean contains(Object o) {
-        if (o instanceof ChildNodeEntry) {
-            return entries.containsKey(((ChildNodeEntry) o).getId());
-        } else {
-            return false;
-        }
-    }
-
-    public boolean containsAll(Collection<?> c) {
-        for (Object entry : c) {
-            if (!contains(entry)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public ChildNodeEntry get(int index) {
-        return (ChildNodeEntry) entries.getValue(index);
-    }
-
-    public int indexOf(Object o) {
-        if (o instanceof ChildNodeEntry) {
-            return entries.indexOf(((ChildNodeEntry) o).getId());
-        } else {
-            return -1;
-        }
-    }
 
     public boolean isEmpty() {
         return entries.isEmpty();
     }
 
-    public int lastIndexOf(Object o) {
-        // entries are unique
-        return indexOf(o);
+    @SuppressWarnings("unchecked")
+    public List<ChildNodeEntry> list() {
+        return new ArrayList<ChildNodeEntry>(entries.values());
     }
 
-    public Iterator<ChildNodeEntry> iterator() {
-        return new EntriesIterator();
-    }
-
-    public ListIterator<ChildNodeEntry> listIterator() {
-        return new EntriesIterator();
-    }
-
-    public ListIterator<ChildNodeEntry> listIterator(int index) {
-        if (index < 0 || index >= entries.size()) {
-            throw new IndexOutOfBoundsException();
+    public List<ChildNodeEntry> getRenamedEntries(ChildNodeEntries that) {
+        List<ChildNodeEntry> renamed = Collections.emptyList();
+        for (Object e : entries.values()) {
+            ChildNodeEntry entry = (ChildNodeEntry) e;
+            ChildNodeEntry other = that.get(entry.getId());
+            if (other != null && !entry.getName().equals(other.getName())) {
+                // child node entry with same id but different name exists in
+                // overlaid and this state => renamed entry detected
+                if (renamed.isEmpty()) {
+                    renamed = new ArrayList<ChildNodeEntry>();
+                }
+                renamed.add(entry);
+            }
         }
-        ListIterator<ChildNodeEntry> iter = new EntriesIterator();
-        while (index-- > 0) {
-            iter.next();
-        }
-        return iter;
+        return renamed;
     }
 
     public int size() {
         return entries.size();
-    }
-
-    public List<ChildNodeEntry> subList(int fromIndex, int toIndex) {
-        // @todo FIXME does not fulfill the contract of List.subList(int,int)
-        return Collections.unmodifiableList(new ArrayList<ChildNodeEntry>(this).subList(fromIndex, toIndex));
-    }
-
-    public Object[] toArray() {
-        ChildNodeEntry[] array = new ChildNodeEntry[size()];
-        return toArray(array);
-    }
-
-    @SuppressWarnings("unchecked")
-    public Object[] toArray(Object[] a) {
-        if (!a.getClass().getComponentType().isAssignableFrom(ChildNodeEntry.class)) {
-            throw new ArrayStoreException();
-        }
-        if (a.length < size()) {
-            a = new ChildNodeEntry[size()];
-        }
-        MapIterator iter = entries.mapIterator();
-        int i = 0;
-        while (iter.hasNext()) {
-            iter.next();
-            a[i] = entries.getValue(i);
-            i++;
-        }
-        while (i < a.length) {
-            a[i++] = null;
-        }
-        return a;
-    }
-
-    public void add(int index, ChildNodeEntry element) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean add(ChildNodeEntry o) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean addAll(Collection<? extends ChildNodeEntry> c) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean addAll(int index, Collection<? extends ChildNodeEntry> c) {
-        throw new UnsupportedOperationException();
-    }
-
-    public void clear() {
-        throw new UnsupportedOperationException();
-    }
-
-    public ChildNodeEntry remove(int index) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean remove(Object o) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean removeAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean retainAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
-    }
-
-    public ChildNodeEntry set(int index, ChildNodeEntry element) {
-        throw new UnsupportedOperationException();
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -524,51 +417,4 @@ class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
         }
     }
 
-    //--------------------------------------------------------< inner classes >
-    class EntriesIterator implements ListIterator<ChildNodeEntry> {
-
-        private final OrderedMapIterator mapIter;
-
-        EntriesIterator() {
-            mapIter = entries.orderedMapIterator();
-        }
-
-        public boolean hasNext() {
-            return mapIter.hasNext();
-        }
-
-        public ChildNodeEntry next() {
-            mapIter.next();
-            return (ChildNodeEntry) mapIter.getValue();
-        }
-
-        public boolean hasPrevious() {
-            return mapIter.hasPrevious();
-        }
-
-        public int nextIndex() {
-            return entries.indexOf(mapIter.getKey()) + 1;
-        }
-
-        public ChildNodeEntry previous() {
-            mapIter.previous();
-            return (ChildNodeEntry) mapIter.getValue();
-        }
-
-        public int previousIndex() {
-            return entries.indexOf(mapIter.getKey()) - 1;
-        }
-
-        public void add(ChildNodeEntry o) {
-            throw new UnsupportedOperationException();
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        public void set(ChildNodeEntry o) {
-            throw new UnsupportedOperationException();
-        }
-    }
 }

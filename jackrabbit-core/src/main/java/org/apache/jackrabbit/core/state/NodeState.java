@@ -23,7 +23,6 @@ import org.apache.jackrabbit.spi.Name;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -298,7 +297,7 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List<ChildNodeEntry> getChildNodeEntries() {
-        return childNodeEntries;
+        return childNodeEntries.list();
     }
 
     /**
@@ -588,7 +587,7 @@ public class NodeState extends ItemState {
      */
     public synchronized List<ChildNodeEntry> getAddedChildNodeEntries() {
         if (!hasOverlayedState()) {
-            return childNodeEntries;
+            return childNodeEntries.list();
         }
 
         NodeState other = (NodeState) getOverlayedState();
@@ -637,32 +636,10 @@ public class NodeState extends ItemState {
      */
     public synchronized List<ChildNodeEntry> getRenamedChildNodeEntries() {
         if (!hasOverlayedState()) {
-            return Collections.emptyList();
-        }
-
-        ChildNodeEntries otherChildNodeEntries =
-                ((NodeState) overlayedState).childNodeEntries;
-
-        // do a lazy init
-        List<ChildNodeEntry> renamed = null;
-
-        for (Iterator<ChildNodeEntry> iter = childNodeEntries.iterator(); iter.hasNext();) {
-            ChildNodeEntry cne = iter.next();
-            ChildNodeEntry cneOther = otherChildNodeEntries.get(cne.getId());
-            if (cneOther != null && !cne.getName().equals(cneOther.getName())) {
-                // child node entry with same id but different name exists in
-                // overlayed and this state => renamed entry detected
-                if (renamed == null) {
-                    renamed = new ArrayList<ChildNodeEntry>();
-                }
-                renamed.add(cne);
-            }
-        }
-
-        if (renamed == null) {
-            return Collections.emptyList();
+            return childNodeEntries.getRenamedEntries(
+                    ((NodeState) overlayedState).childNodeEntries);
         } else {
-            return renamed;
+            return Collections.emptyList();
         }
     }
 
@@ -717,8 +694,8 @@ public class NodeState extends ItemState {
         // both entry lists now contain the set of nodes that have not
         // been removed or added, but they may have changed their position.
         for (int i = 0; i < ours.size();) {
-            ChildNodeEntry entry = (ChildNodeEntry) ours.get(i);
-            ChildNodeEntry other = (ChildNodeEntry) others.get(i);
+            ChildNodeEntry entry = ours.get(i);
+            ChildNodeEntry other = others.get(i);
             if (entry == other || entry.getId().equals(other.getId())) {
                 // no reorder, move to next child entry
                 i++;
@@ -735,10 +712,10 @@ public class NodeState extends ItemState {
                 if (i + 1 < ours.size()) {
                     // if entry is the next in the other list then probably
                     // the other entry at position <code>i</code> was reordered
-                    if (entry.getId().equals(((ChildNodeEntry) others.get(i + 1)).getId())) {
+                    if (entry.getId().equals(others.get(i + 1).getId())) {
                         // scan for the uuid of the other entry in our list
                         for (int j = i; j < ours.size(); j++) {
-                            if (((ChildNodeEntry) ours.get(j)).getId().equals(other.getId())) {
+                            if (ours.get(j).getId().equals(other.getId())) {
                                 // found it
                                 entry = (ChildNodeEntry) ours.get(j);
                                 break;
@@ -751,12 +728,12 @@ public class NodeState extends ItemState {
                 // remove the entry from both lists
                 // entries > i are already cleaned
                 for (int j = i; j < ours.size(); j++) {
-                    if (((ChildNodeEntry) ours.get(j)).getId().equals(entry.getId())) {
+                    if (ours.get(j).getId().equals(entry.getId())) {
                         ours.remove(j);
                     }
                 }
                 for (int j = i; j < ours.size(); j++) {
-                    if (((ChildNodeEntry) others.get(j)).getId().equals(entry.getId())) {
+                    if (others.get(j).getId().equals(entry.getId())) {
                         others.remove(j);
                     }
                 }
