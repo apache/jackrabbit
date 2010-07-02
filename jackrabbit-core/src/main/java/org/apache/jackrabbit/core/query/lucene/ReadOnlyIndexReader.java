@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermPositions;
-
-import java.util.BitSet;
 import java.io.IOException;
+import java.util.BitSet;
+
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.TermPositions;
 
 /**
  * Overwrites the methods that would modify the index and throws an
@@ -240,10 +240,10 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
         /**
          * @inheritDoc
          */
-        public boolean next() throws IOException {
-            boolean hasNext = super.next();
-            while (hasNext && deleted.get(super.doc())) {
-                hasNext = super.next();
+        public final boolean next() throws IOException {
+            boolean hasNext = in.next();
+            while (hasNext && deleted.get(in.doc())) {
+                hasNext = in.next();
             }
             return hasNext;
         }
@@ -251,20 +251,37 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
         /**
          * @inheritDoc
          */
-        public int read(int[] docs, int[] freqs) throws IOException {
-            int count;
-            for (count = 0; count < docs.length && next(); count++) {
-                docs[count] = doc();
-                freqs[count] = freq();
+        public final int read(int[] docs, int[] freqs) throws IOException {
+            for (;;) {
+                int num = in.read(docs, freqs);
+                if (num == 0) {
+                    // no more docs
+                    return 0;
+                }
+                // need to check for deleted docs
+                int numDeleted = 0;
+                for (int i = 0; i < num; i++) {
+                    if (deleted.get(docs[i])) {
+                        numDeleted++;
+                        continue;
+                    }
+                    // check if we need to shift
+                    if (numDeleted > 0) {
+                        docs[i - numDeleted] = docs[i];
+                        freqs[i - numDeleted] = freqs[i];
+                    }
+                }
+                if (num != numDeleted) {
+                    return num - numDeleted;
+                }
             }
-            return count;
         }
 
         /**
          * @inheritDoc
          */
-        public boolean skipTo(int i) throws IOException {
-            boolean exists = super.skipTo(i);
+        public final boolean skipTo(int i) throws IOException {
+            boolean exists = in.skipTo(i);
             while (exists && deleted.get(doc())) {
                 exists = next();
             }
