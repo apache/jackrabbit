@@ -40,7 +40,7 @@ public class NodeTypeUtil {
     public static final int ANY_PROPERTY_TYPE = -1;
 
     /**
-     * Locate a non-protected child node def declarec by a non-abstract node type
+     * Locate a non-protected child node def declared by a non-abstract node type
      * parsing all node types
      *
      * @param session                  the session to access the node types
