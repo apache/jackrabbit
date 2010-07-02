@@ -117,6 +117,11 @@ public class ServerNodeType extends ServerObject implements RemoteNodeType {
     }
 
     /** {@inheritDoc} */
+    public boolean isAbstract() throws RemoteException {
+        return type.isAbstract();
+    }
+
+    /** {@inheritDoc} */
     public boolean hasOrderableChildNodes() throws RemoteException {
         return type.hasOrderableChildNodes();
     }
