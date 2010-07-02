@@ -40,7 +40,8 @@ public class NodeTypeUtil {
     public static final int ANY_PROPERTY_TYPE = -1;
 
     /**
-     * Locate a non-protected child node def parsing all node types
+     * Locate a non-protected child node def declarec by a non-abstract node type
+     * parsing all node types
      *
      * @param session                  the session to access the node types
      * @param regardDefaultPrimaryType if true, the default primary type of the
@@ -92,6 +93,10 @@ public class NodeTypeUtil {
 
             for (int i = 0; i < nodeDefs.length; i++) {
                 NodeDefinition nodeDef = nodeDefs[i];
+
+                if (nodeDef.getDeclaringNodeType().isAbstract()) {
+                    continue;
+                }
 
                 if (nodeDef.isProtected()) {
                     continue;
