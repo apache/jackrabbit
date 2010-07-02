@@ -67,7 +67,7 @@ public class NodeTypeUtil {
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
 
-        boolean overjump = false;
+        boolean skip = false;
 
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
@@ -120,17 +120,17 @@ public class NodeTypeUtil {
 
                 if (!residual) {
                     // if another child node def is a residual definition
-                    // overjump the current node type
+                    // skip the current node type
                     NodeDefinition nodeDefsAll[] = type.getChildNodeDefinitions();
                     for (int j = 0; j < nodeDefsAll.length; j++) {
                         if (nodeDefsAll[j].getName().equals("*")) {
-                            overjump = true;
+                            skip = true;
                             break;
                         }
                     }
-                    if (overjump) {
+                    if (skip) {
                         // break the loop of the current child not defs
-                        overjump = false;
+                        skip = false;
                         break;
                     }
                 }
