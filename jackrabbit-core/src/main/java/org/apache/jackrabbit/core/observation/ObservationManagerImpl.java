@@ -264,11 +264,10 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
                     "access EventJournal");
         }
 
-        ObservationManagerImpl obsMgr = (ObservationManagerImpl) session.getWorkspace().getObservationManager();
-        EventFilter filter = obsMgr.createEventFilter(eventTypes, absPath,
-                isDeep, uuid, nodeTypeName, false);
-        return new EventJournalImpl(filter, clusterNode.getJournal(),
-                clusterNode.getId());
+        EventFilter filter = createEventFilter(
+                eventTypes, absPath, isDeep, uuid, nodeTypeName, false);
+        return new EventJournalImpl(
+                filter, clusterNode.getJournal(), clusterNode.getId());
     }
 
     /**

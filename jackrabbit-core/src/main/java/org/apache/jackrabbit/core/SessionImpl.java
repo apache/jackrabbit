@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AMContext;
@@ -255,6 +256,9 @@ public class SessionImpl extends AbstractSession
         context.setItemManager(createItemManager());
         context.setItemValidator(new ItemValidator(context));
         context.setAccessManager(createAccessManager(subject));
+        context.setObservationManager(
+                createObservationManager(wspConfig.getName()));
+
         versionMgr = createVersionManager();
         ntInstanceHandler = new NodeTypeInstanceHandler(userId);
     }
@@ -307,6 +311,19 @@ public class SessionImpl extends AbstractSession
         return mgr;
     }
 
+    protected ObservationManagerImpl createObservationManager(String wspName)
+            throws RepositoryException {
+        try {
+            return new ObservationManagerImpl(
+                    repositoryContext.getRepository().getObservationDispatcher(wspName),
+                    this, context.getItemManager(),
+                    repositoryContext.getClusterNode());
+        } catch (NoSuchWorkspaceException e) {
+            // should never get here
+            throw new RepositoryException(
+                    "Internal error: failed to create observation manager", e);
+        }
+    }
     /**
      * Create the version manager. If we are not using XA, we may safely use
      * the repository version manager.
