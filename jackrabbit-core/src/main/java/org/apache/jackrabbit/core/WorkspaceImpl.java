@@ -741,32 +741,12 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * Returns the observation manager of this session. The observation manager
-     * is lazily created if it does not exist yet.
+     * Returns the observation manager of this session.
      *
      * @return the observation manager of this session
-     * @throws RepositoryException if a repository error occurs
      */
-    public ObservationManager getObservationManager()
-            throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        if (obsMgr == null) {
-            try {
-                obsMgr = new ObservationManagerImpl(
-                        repositoryContext.getRepository().getObservationDispatcher(wspConfig.getName()),
-                        session,
-                        session.getItemManager(),
-                        repositoryContext.getClusterNode());
-            } catch (NoSuchWorkspaceException nswe) {
-                // should never get here
-                String msg = "internal error: failed to instantiate observation manager";
-                log.debug(msg);
-                throw new RepositoryException(msg, nswe);
-            }
-        }
-        return obsMgr;
+    public ObservationManager getObservationManager() {
+        return sessionContext.getObservationManager();
     }
 
     /**
