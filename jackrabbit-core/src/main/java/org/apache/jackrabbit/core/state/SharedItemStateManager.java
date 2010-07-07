@@ -893,7 +893,9 @@ public class SharedItemStateManager
                 ItemState state = (ItemState) i.next();
                 if (!state.isNode()) {
                     // remove refs from the target which have been added externally (JCR-2138)
-                    if (hasItemState(state.getId())) {
+                    if (hasItemState(state.getId())
+                            // JCR-2667
+                            && !local.deleted(state.getId())) {
                         removeReferences(getItemState(state.getId()));
                     }
                     // add new references to the target
