@@ -356,8 +356,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * LoginModule's own authentication attempted failed, then this method
      * removes/destroys any state that was originally saved.
      * <p/>
-     * The login is considers as succeeded if the credentials field is set. If
-     * there is no principal set the login is considered as ignored.
+     * The login is considered as succeeded if there is a principal set.
      * <p/>
      * The implementation stores the principal associated to the UserID and all
      * the Groups it is member of with the Subject and in addition adds an
@@ -369,10 +368,6 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @see javax.security.auth.spi.LoginModule#commit()
      */
     public boolean commit() throws LoginException {
-        //check login-state
-        if (credentials == null) {
-            abort();
-        }
         if (!isInitialized() || principal == null) {
             return false;
         }
