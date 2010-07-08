@@ -214,6 +214,19 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     PropertyDefinitionImpl getDefinition(PropertyState state)
             throws RepositoryException {
+        // this is a bit ugly
+        // there might be cases where otherwise protected items turn into
+        // non-protected items because a mixin has been removed from the parent
+        // node state.
+        // see also: JCR-2408
+        if (state.getStatus() == ItemState.STATUS_EXISTING_REMOVED
+                && state.getName().equals(NameConstants.JCR_UUID)) {
+            NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+            PropDef def = ntReg.getEffectiveNodeType(
+                    NameConstants.MIX_REFERENCEABLE).getApplicablePropertyDef(
+                    state.getName(), state.getType());
+            return session.getNodeTypeManager().getPropertyDefinition(def);
+        }
         try {
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
             return parent.getApplicablePropertyDefinition(

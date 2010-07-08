@@ -96,6 +96,38 @@ public class NodeImplTest extends AbstractJCRTest {
     }
 
     /**
+     * Test case for JCR-2130 and JCR-2659.
+     *
+     * @throws RepositoryException
+     */
+    public void testAddRemoveMixin() throws RepositoryException {
+        // add mix:title to a nt:folder node and set jcr:title property
+        Node n = testRootNode.addNode(nodeName1, "nt:folder");
+        n.addMixin("mix:referenceable");
+        testRootNode.getSession().save();
+        assertTrue(n.hasProperty("jcr:uuid"));
+
+        // remove mix:title, jcr:title should be gone as there's no matching
+        // definition in nt:folder
+        n.removeMixin("mix:referenceable");
+        testRootNode.getSession().save();
+        assertFalse(n.hasProperty("jcr:uuid"));
+
+        // add mix:referenceable to a nt:unstructured node, jcr:uuid is
+        // automatically added
+        Node n2 = testRootNode.addNode(nodeName3, "nt:unstructured");
+        n2.addMixin(mixReferenceable);
+        testRootNode.getSession().save();
+        assertTrue(n2.hasProperty("jcr:uuid"));
+
+        // remove mix:referenceable, jcr:uuid should always get removed
+        // since it is a protcted property
+        n2.removeMixin(mixReferenceable);
+        testRootNode.getSession().save();
+        assertFalse(n2.hasProperty("jcr:uuid"));
+    }
+
+    /**
      * Test case for #JCR-1729. Note, that test will only be executable with
      * a security configurations that allows to set Deny-ACEs.
      *
