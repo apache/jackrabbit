@@ -1028,7 +1028,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // collect information about properties and nodes which require
         // further action as a result of the mixin removal;
-        // we need to do this *before* actually changing the assigned the mixin types,
+        // we need to do this *before* actually changing the assigned mixin types,
         // otherwise we wouldn't be able to retrieve the current definition
         // of an item.
         Map<PropertyId, PropertyDefinition> affectedProps = new HashMap<PropertyId, PropertyDefinition>();
