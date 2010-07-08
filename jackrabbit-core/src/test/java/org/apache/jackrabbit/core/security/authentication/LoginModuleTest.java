@@ -65,6 +65,10 @@ public class LoginModuleTest extends AbstractJCRTest {
     static class TestConfiguration extends Configuration {
 
         @Override
+        public void refresh() {
+        }
+
+        @Override
         public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
             return new AppConfigurationEntry[] {
                     new TestAppConfigurationEntry(AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, false),
