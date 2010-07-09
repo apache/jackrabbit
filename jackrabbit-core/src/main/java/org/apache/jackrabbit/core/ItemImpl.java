@@ -384,7 +384,7 @@ public abstract class ItemImpl implements Item {
     public void save() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        perform(new ItemSaveOperation(sessionContext, getItemState()));
+        perform(new ItemSaveOperation(getItemState()));
     }
 
     /**
@@ -399,7 +399,7 @@ public abstract class ItemImpl implements Item {
             // of all descendant non-transient instances; maybe also
             // have to reset stale ItemState instances
         } else {
-            perform(new ItemRefreshOperation(sessionContext, getItemState()));
+            perform(new ItemRefreshOperation(getItemState()));
         }
     }
 

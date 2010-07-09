@@ -19,42 +19,18 @@ package org.apache.jackrabbit.core.session;
 import javax.jcr.RepositoryException;
 
 /**
- * An operation that is performed on a JCR session. Used by the
- * {@link SessionState} interface to implement generic controls like
- * synchronization and liveness checks on all session operation.
+ * Session operation. Used by the {@link SessionState} class to implement
+ * generic controls like synchronization and liveness checks on all session
+ * operation.
  */
-public abstract class SessionOperation {
-
-    private final String name;
-
-    protected final SessionContext context;
+public interface SessionOperation {
 
     /**
-     * Creates a new session operation.
+     * Performs the session operation.
      *
-     * @param name operation name
-     * @param context component context of the session
-     */
-    protected SessionOperation(String name, SessionContext context) {
-        this.name = name;
-        this.context = context;
-    }
-
-    /**
-     * Performs this operation. The default implementation does nothing;
-     * subclasses should override this method to implement custom operations.
-     *
+     * @param context component context of this session
      * @throws RepositoryException if the operation fails
      */
-    public abstract void perform() throws RepositoryException;
-
-    /**
-     * Returns the name of this operation.
-     *
-     * @return operation name
-     */
-    public String toString() {
-        return name;
-    }
+    void perform(SessionContext context) throws RepositoryException;
 
 }

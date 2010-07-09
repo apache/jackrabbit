@@ -36,7 +36,7 @@ import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SessionMoveOperation extends SessionOperation {
+public class SessionMoveOperation implements SessionOperation {
 
     private final Logger log =
         LoggerFactory.getLogger(SessionMoveOperation.class);
@@ -54,11 +54,8 @@ public class SessionMoveOperation extends SessionOperation {
     private final Path.Element destName;
 
     public SessionMoveOperation(
-            SessionContext sessionContext,
             PathResolver resolver, String srcAbsPath, String destAbsPath)
             throws RepositoryException {
-        super("move", sessionContext);
-
         this.srcAbsPath = srcAbsPath;
         this.srcPath = getAbsolutePath(resolver, srcAbsPath);
         this.srcName = srcPath.getNameElement();
@@ -105,8 +102,7 @@ public class SessionMoveOperation extends SessionOperation {
         }
     }
 
-    @Override
-    public void perform() throws RepositoryException {
+    public void perform(SessionContext context) throws RepositoryException {
         // Get node instances
         NodeImpl targetNode = getNode(context, srcPath, srcAbsPath);
         NodeImpl srcParentNode =

@@ -49,6 +49,11 @@ public class SessionState {
         LoggerFactory.getLogger(SessionState.class);
 
     /**
+     * Component context of this session.
+     */
+    private final SessionContext context;
+
+    /**
      * The lock used to guarantee synchronized execution of repository
      * operations. An explicit lock is used instead of normal Java
      * synchronization in order to be able to log attempts to concurrently
@@ -64,6 +69,10 @@ public class SessionState {
      * warning logs caused by clients attempting to access a closed session.
      */
     private volatile Exception closed = null;
+
+    public SessionState(SessionContext context) {
+        this.context = context;
+    }
 
     /**
      * Checks whether this session is alive. This method should generally
@@ -109,7 +118,7 @@ public class SessionState {
         try {
             checkAlive();
             log.debug("Performing {}", operation);
-            operation.perform();
+            operation.perform(context);
         } finally {
             lock.unlock();
         }
