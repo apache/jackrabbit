@@ -865,7 +865,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void save() throws RepositoryException {
-        perform(new SessionSaveOperation(context));
+        perform(new SessionSaveOperation());
     }
 
     /**
@@ -873,7 +873,7 @@ public class SessionImpl extends AbstractSession
      */
     public void refresh(boolean keepChanges) throws RepositoryException {
         perform(new SessionRefreshOperation(
-                context, keepChanges, clusterSyncOnRefresh()));
+                keepChanges, clusterSyncOnRefresh()));
     }
 
     /**
@@ -907,8 +907,7 @@ public class SessionImpl extends AbstractSession
      */
     public void move(String srcAbsPath, String destAbsPath)
             throws RepositoryException {
-        perform(new SessionMoveOperation(
-                context, this, srcAbsPath, destAbsPath));
+        perform(new SessionMoveOperation(this, srcAbsPath, destAbsPath));
     }
 
     /**

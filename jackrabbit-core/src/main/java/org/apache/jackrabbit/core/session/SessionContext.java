@@ -66,7 +66,7 @@ public class SessionContext {
         assert session != null;
         this.repositoryContext = repositoryContext;
         this.session = session;
-        this.state = new SessionState();
+        this.state = new SessionState(this);
     }
 
     public RepositoryContext getRepositoryContext() {

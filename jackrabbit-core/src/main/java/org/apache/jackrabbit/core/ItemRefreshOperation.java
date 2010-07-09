@@ -28,7 +28,7 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ItemRefreshOperation extends SessionOperation {
+public class ItemRefreshOperation implements SessionOperation {
 
     /**
      * Logger instance.
@@ -38,13 +38,11 @@ public class ItemRefreshOperation extends SessionOperation {
 
     private final ItemState state;
 
-    public ItemRefreshOperation(SessionContext context, ItemState state) {
-        super("item refresh", context);
+    public ItemRefreshOperation(ItemState state) {
         this.state = state;
     }
 
-    @Override
-    public void perform() throws RepositoryException {
+    public void perform(SessionContext context) throws RepositoryException {
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
         // Optimisation for the root node

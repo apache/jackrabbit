@@ -21,14 +21,9 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.id.NodeId;
 
-public class SessionSaveOperation extends SessionOperation {
+public class SessionSaveOperation implements SessionOperation {
 
-    public SessionSaveOperation(SessionContext context) {
-        super("save", context);
-    }
-
-    @Override
-    public void perform() throws RepositoryException {
+    public void perform(SessionContext context) throws RepositoryException {
         NodeId id;
         // JCR-2425: check whether session is allowed to read root node
         if (context.getSessionImpl().hasPermission("/", Session.ACTION_READ)) {
