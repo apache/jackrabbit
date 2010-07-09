@@ -26,7 +26,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The internal state of a session.
+ * Internal session state. This class keeps track of the lifecycle of
+ * a session and controls concurrent access to the session internals.
+ * <p>
+ * The session lifecycle is pretty simple: there are only two lifecycle
+ * states, "alive" and "closed", and only one possible state transition,
+ * from "alive" to "closed".
+ * <p>
+ * Concurrent access to session internals is controlled by the
+ * {@link #perform(SessionOperation)} method that guarantees that no two
+ * {@link SessionOperation operations} are performed concurrently on the
+ * same session.
+ *
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-890">JCR-890</a>
  */
 public class SessionState {
 
@@ -40,14 +52,24 @@ public class SessionState {
      * The lock used to guarantee synchronized execution of repository
      * operations. An explicit lock is used instead of normal Java
      * synchronization in order to be able to log attempts to concurrently
-     * use a session. TODO: Check if this is a performance issue!
+     * use a session.
      */
     private final Lock lock = new ReentrantLock();
 
+    /**
+     * Flag to indicate a closed session. When <code>null</code>, the session
+     * is still alive. And when the session is closed, this reference is set
+     * to an exception that contains the stack trace of where the session was
+     * closed. The stack trace is used as extra information in possible
+     * warning logs caused by clients attempting to access a closed session.
+     */
     private volatile Exception closed = null;
 
     /**
-     * Checks whether this session is alive.
+     * Checks whether this session is alive. This method should generally
+     * only be called from within a performed {@link SessionOperation}, as
+     * otherwise there's no guarantee against another thread closing the
+     * session right after this method has returned.
      *
      * @see Session#isLive()
      * @return <code>true</code> if the session is alive,
@@ -73,7 +95,8 @@ public class SessionState {
     /**
      * Performs the given operation within a synchronized block.
      *
-     * @throws RepositoryException if the operation fails
+     * @throws RepositoryException if the operation fails or
+     *                             if the session has already been closed
      */
     public void perform(SessionOperation operation) throws RepositoryException {
         if (!lock.tryLock()) {
@@ -92,6 +115,12 @@ public class SessionState {
         }
     }
 
+    /**
+     * Closes this session.
+     *
+     * @return <code>true</code> if the session was closed, or
+     *         <code>false</code> if the session had already been closed
+     */
     public boolean close() {
         if (!lock.tryLock()) {
             log.warn("Attempt to close a session while another thread is"
