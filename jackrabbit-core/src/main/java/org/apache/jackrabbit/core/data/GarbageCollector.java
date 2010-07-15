@@ -82,7 +82,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
 
     private long sleepBetweenNodes;
 
-    private int testDelay;
+    protected int testDelay;
 
     private final DataStore store;
 
@@ -268,7 +268,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
         return store;
     }
 
-    private void recurse(final Node n, long sleep) throws RepositoryException {
+    void recurse(final Node n, long sleep) throws RepositoryException {
         if (sleep > 0) {
             try {
                 Thread.sleep(sleep);
@@ -290,9 +290,9 @@ public class GarbageCollector implements DataStoreGarbageCollector {
                             rememberNode(n.getPath());
                         }
                         if (p.isMultiple()) {
-                            p.getLengths();
+                            checkLengths(p.getLengths());
                         } else {
-                            p.getLength();
+                        	checkLengths(p.getLength());
                         }
                     }
                 } catch (InvalidItemStateException e) {
@@ -345,6 +345,14 @@ public class GarbageCollector implements DataStoreGarbageCollector {
          * date when calling addRecord and that record already exists.
          *
          */
+    }
+
+    private void checkLengths(long... lengths) throws RepositoryException {
+        for (long length : lengths) {
+            if (length == -1) {
+                throw new RepositoryException("mark failed to access a property");
+            }
+        }
     }
 
     public void close() {

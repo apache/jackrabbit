@@ -116,13 +116,6 @@ public class FileDataStore implements DataStore {
         Collections.synchronizedMap(new WeakHashMap<DataIdentifier, WeakReference<DataIdentifier>>());
 
     /**
-     * Creates a uninitialized data store.
-     *
-     */
-    public FileDataStore() {
-    }
-
-    /**
      * Initialized the data store.
      * If the path is not set, &lt;repository home&gt;/repository/datastore is used.
      * This directory is automatically created if it does not yet exist.
@@ -137,10 +130,7 @@ public class FileDataStore implements DataStore {
         directory.mkdirs();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public DataRecord getRecordIfStored(DataIdentifier identifier) {
+    public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
         File file = getFile(identifier);
         synchronized (this) {
             if (!file.exists()) {
@@ -148,7 +138,10 @@ public class FileDataStore implements DataStore {
             }
             if (minModifiedDate != 0 && file.canWrite()) {
                 if (file.lastModified() < minModifiedDate) {
-                    file.setLastModified(System.currentTimeMillis() + ACCESS_TIME_RESOLUTION);
+                	    // The current GC approach depends on this call succeeding
+                    if (!file.setLastModified(System.currentTimeMillis() + ACCESS_TIME_RESOLUTION)) {
+                        throw new DataStoreException("Failed to update record modified date: " + identifier);
+                    }
                 }
             }
             usesIdentifier(identifier);
@@ -228,8 +221,13 @@ public class FileDataStore implements DataStore {
                     }
                 } else {
                     long now = System.currentTimeMillis();
-                    if (file.lastModified() < now) {
-                        file.setLastModified(now);
+                    if (file.lastModified() < now + ACCESS_TIME_RESOLUTION) {
+                        // The current GC approach depends on this call succeeding (for writable files)
+                        if (!file.setLastModified(now + ACCESS_TIME_RESOLUTION)) {
+                            if (file.canWrite()) {
+                                throw new DataStoreException("Failed to update record modified date: " + identifier);
+                            }
+                        }
                     }
                 }
                 // Sanity checks on the record file. These should never fail,
@@ -289,16 +287,10 @@ public class FileDataStore implements DataStore {
         return File.createTempFile(TMP, null, directory);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void updateModifiedDateOnAccess(long before) {
         minModifiedDate = before;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public int deleteAllOlderThan(long min) {
         return deleteOlderRecursive(directory, min);
     }
@@ -350,9 +342,6 @@ public class FileDataStore implements DataStore {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public Iterator<DataIdentifier> getAllIdentifiers() {
         ArrayList<File> files = new ArrayList<File>();
         listRecursive(files, directory);
@@ -367,9 +356,6 @@ public class FileDataStore implements DataStore {
         return identifiers.iterator();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void clearInUse() {
         inUse.clear();
     }
@@ -392,9 +378,6 @@ public class FileDataStore implements DataStore {
         this.path = directoryName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public int getMinRecordLength() {
         return minRecordLength;
     }
@@ -408,10 +391,8 @@ public class FileDataStore implements DataStore {
         this.minRecordLength = minRecordLength;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void close() {
+        // nothing to do
     }
 
 }
