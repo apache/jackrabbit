@@ -14,17 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.principal;
+package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
+import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.security.Principal;
 import java.util.Properties;
 import java.util.Set;
@@ -36,6 +40,7 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
 
     private PrincipalProvider principalProvider;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -43,10 +48,17 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
             throw new NotExecutableException();
         }
 
-        principalProvider = new DefaultPrincipalProvider(superuser, (UserManagerImpl) userMgr);
+        UserManagerImpl umgr = (UserManagerImpl) userMgr;
+        // Workaround for testing cache behaviour that relies on observation:
+        // - retrieve session attached to the userManager implementation.
+        // - using superuser will not work if users are stored in a different workspace.
+        Authorizable a = umgr.getAuthorizable(getPrincipalSetFromSession(superuser).iterator().next());
+        Session s = ((AuthorizableImpl) a).getNode().getSession();
+        principalProvider = new DefaultPrincipalProvider(s, umgr);
         principalProvider.init(new Properties());
     }
 
+    @Override
     protected void tearDown() throws Exception {
         principalProvider.close();
 
@@ -118,6 +130,55 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
 
             assertNotSame(testPrinc, fromProvider);
             assertFalse(fromProvider instanceof TestPrincipal);
+        }
+    }
+
+    /**
+     * Test if cache is properly updated.
+     * 
+     * @throws Exception
+     */
+    public void testPrincipalCache() throws Exception {
+        Principal testPrincipal = getTestPrincipal();
+        String testName = testPrincipal.getName();
+
+        assertNull(principalProvider.getPrincipal(testName));
+        
+        // create a user with the given principal name -> cache must be updated.
+        Authorizable a = userMgr.createUser(testName, "pw");
+        save(superuser);
+        try {
+            assertNotNull(principalProvider.getPrincipal(testName));
+        } finally {
+            a.remove();
+            save(superuser);
+        }
+
+        // after removal -> entry must be removed from the cache.
+        assertNull(principalProvider.getPrincipal(testName));
+
+        // create a group with that name
+        a = userMgr.createGroup(testPrincipal);
+        save(superuser);        
+        try {
+            Principal p = principalProvider.getPrincipal(testName);
+            assertNotNull(p);
+            assertTrue(p instanceof java.security.acl.Group);
+        } finally {
+            a.remove();
+            save(superuser);
+        }
+
+        // recreate user again without filling cache with 'null' value
+        a = userMgr.createUser(testName, "pw");
+        save(superuser);
+        try {
+            Principal p = principalProvider.getPrincipal(testName);
+            assertNotNull(p);
+            assertFalse(p instanceof java.security.acl.Group);
+        } finally {
+            a.remove();
+            save(superuser);
         }
     }
 }
