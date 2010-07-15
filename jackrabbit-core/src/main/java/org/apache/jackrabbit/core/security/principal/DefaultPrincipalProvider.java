@@ -24,6 +24,7 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
@@ -41,6 +42,7 @@ import java.security.Principal;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -50,9 +52,20 @@ import java.util.Set;
  * Principal}s retrieved from those <code>Authorizable</code> objects.
  * <p/>
  * In addition this provider exposes the <i>everyone</i> principal, which has no
- * content (user/group) represention.
+ * content (user/group) representation.
+ * <p/>
+ * Unless explicitly configured (see {@link #NEGATIVE_ENTRY_KEY negative entry
+ * option} this implementation of the <code>PrincipalProvider</code> interface
+ * caches both positive and negative (null) results of the {@link #providePrincipal}
+ * method. The cache is kept up to date by observation listening to creation
+ * and removal of users and groups.
+ * <p/>
+ * Membership cache:<br>
+ * In addition to the caching provided by <code>AbstractPrincipalProvider</code>
+ * this implementation keeps an extra membership cache, which is notified in
+ * case of changes made to the members of any group.
  */
-public class DefaultPrincipalProvider extends AbstractPrincipalProvider implements EventListener {
+public class DefaultPrincipalProvider extends AbstractPrincipalProvider implements SynchronousEventListener {
 
     /**
      * the default logger
@@ -91,22 +104,29 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         membershipCache = new LRUMap();
 
         // listen to modifications of group-membership
-        String[] ntNames = new String[1];
+        String[] ntNames = new String[2];
         if (securitySession instanceof SessionImpl) {
             NameResolver resolver = (NameResolver) securitySession;
             ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_GROUP);
+            ntNames[1] = resolver.getJCRName(UserManagerImpl.NT_REP_AUTHORIZABLE_FOLDER);
             pMembers = resolver.getJCRName(UserManagerImpl.P_MEMBERS);
             pPrincipalName = resolver.getJCRName(UserManagerImpl.P_PRINCIPAL_NAME);
         } else {
             ntNames[0] = "rep:Group";
+            ntNames[1] = "rep:AuthorizableFolder";
             pMembers = "rep:members";
             pPrincipalName = "rep:principalName";
         }
 
         String groupPath = userManager.getGroupsPath();
+        String userPath = userManager.getUsersPath();
+        String targetPath = groupPath;
+        while (!Text.isDescendantOrEqual(targetPath, userPath)) {
+            targetPath = Text.getRelativeParent(targetPath, 1);
+        }
         securitySession.getWorkspace().getObservationManager().addEventListener(this,
-                Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                groupPath,
+                Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
+                targetPath,
                 true,
                 null,
                 ntNames,
@@ -136,6 +156,21 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             log.error("Failed to access Authorizable for Principal " + principalName, e);
         }
         return null;
+    }
+
+    /**
+     * Sets the {@link #NEGATIVE_ENTRY_KEY} option value to <code>true</code> if
+     * it isn't included yet in the passed options, before calling the init
+     * method of the base class.
+     * 
+     * @param options
+     */
+    @Override
+    public void init(Properties options) {
+        if (!options.containsKey(NEGATIVE_ENTRY_KEY)) {
+            options.put(NEGATIVE_ENTRY_KEY, "true");
+        }
+        super.init(options);
     }
 
     //--------------------------------------------------< PrincipalProvider >---

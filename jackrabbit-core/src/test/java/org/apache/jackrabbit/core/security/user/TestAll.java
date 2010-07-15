@@ -49,7 +49,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(UserImporterTest.class);
 
-        suite.addTestSuite(UserAccessControlProviderTest.class);        
+        suite.addTestSuite(UserAccessControlProviderTest.class);
+        suite.addTestSuite(DefaultPrincipalProviderTest.class);        
 
         return suite;
     }
