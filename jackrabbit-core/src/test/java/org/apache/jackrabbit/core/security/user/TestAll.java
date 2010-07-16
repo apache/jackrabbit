@@ -49,6 +49,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(UserImporterTest.class);
 
+        suite.addTestSuite(DefaultPrincipalProviderTest.class);
+
         return suite;
     }
 }
