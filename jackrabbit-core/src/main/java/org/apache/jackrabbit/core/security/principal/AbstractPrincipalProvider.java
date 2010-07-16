@@ -34,9 +34,17 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
 
     /** Option name for the max size of the cache to use */
     public static final String MAXSIZE_KEY = "cacheMaxSize";
+    /** Option name to enable negative cache entries (see JCR-2672) */
+    public static final String NEGATIVE_ENTRY_KEY = "cacheIncludesNegative";
 
     /** flag indicating if the instance has not been {@link #close() closed} */
     private boolean initialized;
+
+    /**
+     * flag indicating if the cache should include 'negative' entries.
+     * @see #NEGATIVE_ENTRY_KEY
+     */
+    private boolean includeNegative;
 
     /** the principal cache */
     private LRUMap cache;
@@ -90,19 +98,23 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
     /**
      * {@inheritDoc}
      *
-     * {@link #providePrincipal(String)} is called, if no principal with the
-     * given name is present in the cache.
+     * {@link #providePrincipal(String)} is called, if no matching entry
+     * is present in the cache.<br>
+     * NOTE: If the cache is enabled to contain negative entries (see
+     * {@link #NEGATIVE_ENTRY_KEY} configuration option), the cache will also
+     * store negative matches (as <code>null</code> values) in the principal cache.
      */
     public synchronized Principal getPrincipal(String principalName) {
         checkInitialized();
-        Principal principal = (Principal) cache.get(principalName);
-        if (principal == null) {
-            principal = providePrincipal(principalName);
-            if (principal != null) {
-                addToCache(principal);
+        if (cache.containsKey(principalName)) {
+            return (Principal) cache.get(principalName);
+        } else {
+            Principal principal = providePrincipal(principalName);
+            if (principal != null || includeNegative) {
+                cache.put(principalName, principal);
             }
+            return principal;
         }
-        return principal;
     }
 
     /**
@@ -115,7 +127,8 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
 
         int maxSize = Integer.parseInt(options.getProperty(MAXSIZE_KEY, "1000"));
         cache = new LRUMap(maxSize);
-
+        includeNegative = Boolean.parseBoolean(options.getProperty(NEGATIVE_ENTRY_KEY, "false"));
+        
         initialized = true;
     }
 
