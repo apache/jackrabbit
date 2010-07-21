@@ -25,7 +25,7 @@ public interface PathFactory {
 
     /**
      * Return a new <code>Path</code> out of the given <code>parent<code> path
-     * string and the given relative path string. If <code>normalize</code> is
+     * and the given relative path. If <code>normalize</code> is
      * <code>true</code>, the returned path will be normalized (or
      * canonicalized, if the parent path is absolute).
      *
@@ -41,7 +41,7 @@ public interface PathFactory {
 
     /**
      * Creates a new <code>Path</code> out of the given <code>parent<code> path
-     * string and the give name. If <code>normalize</code> is <code>true</code>,
+     * and the give name. If <code>normalize</code> is <code>true</code>,
      * the returned path will be normalized (or canonicalized, if the parent
      * path is absolute). Use {@link PathFactory#create(Path, Name, int, boolean)}
      * in order to build a <code>Path</code> having an index with his name element.
