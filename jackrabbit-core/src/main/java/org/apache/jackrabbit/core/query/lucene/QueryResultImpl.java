@@ -455,7 +455,7 @@ public abstract class QueryResultImpl implements QueryResult {
             if (total == -1) {
                 return -1;
             }
-            long size = total - offset;
+            long size = offset > total ? 0 : total - offset;
             if (limit >= 0 && size > limit) {
                 return limit;
             } else {
