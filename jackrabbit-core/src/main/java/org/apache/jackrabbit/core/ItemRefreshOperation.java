@@ -57,7 +57,6 @@ public class ItemRefreshOperation implements SessionOperation {
         // check status of this item's state
         if (state.isTransient()) {
             switch (state.getStatus()) {
-            case ItemState.STATUS_STALE_MODIFIED:
             case ItemState.STATUS_STALE_DESTROYED:
                 // add this item's state to the list
                 transientStates.add(state);
@@ -87,7 +86,6 @@ public class ItemRefreshOperation implements SessionOperation {
             for (ItemState transientState
                     : stateMgr.getDescendantTransientItemStates(state.getId())) {
                 switch (transientState.getStatus()) {
-                case ItemState.STATUS_STALE_MODIFIED:
                 case ItemState.STATUS_STALE_DESTROYED:
                 case ItemState.STATUS_NEW:
                 case ItemState.STATUS_EXISTING_MODIFIED:

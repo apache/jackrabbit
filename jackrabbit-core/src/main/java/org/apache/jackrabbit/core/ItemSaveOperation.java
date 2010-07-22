@@ -290,7 +290,7 @@ class ItemSaveOperation implements SessionOperation {
 
     /**
      * Builds a list of transient (i.e. new or modified) item states that are
-     * within the scope of <code>this.{@link #save()}</code>. The collection
+     * within the scope of <code>this.{@link #perform(SessionContext)}</code>. The collection
      * returned is ordered depth-first, i.e. the item itself (if transient)
      * comes last.
      *
@@ -315,11 +315,6 @@ class ItemSaveOperation implements SessionOperation {
                         // add modified state to the list
                         dirty.add(transientState);
                         break;
-
-                    case ItemState.STATUS_STALE_MODIFIED:
-                        throw new InvalidItemStateException(
-                                "Item cannot be saved because it has been "
-                                + "modified externally: " + this);
 
                     case ItemState.STATUS_STALE_DESTROYED:
                         throw new InvalidItemStateException(
@@ -351,11 +346,6 @@ class ItemSaveOperation implements SessionOperation {
                     throw new RepositoryException(
                             "Cannot save a new item: " + this);
 
-                case ItemState.STATUS_STALE_MODIFIED:
-                    throw new InvalidItemStateException(
-                            "Item cannot be saved because it has been"
-                            + " modified externally: " + this);
-
                 case ItemState.STATUS_STALE_DESTROYED:
                     throw new InvalidItemStateException(
                             "Item cannot be saved because it has been"
@@ -380,7 +370,7 @@ class ItemSaveOperation implements SessionOperation {
     /**
      * Builds a list of transient descendant item states in the attic
      * (i.e. those marked as 'removed') that are within the scope of
-     * <code>this.{@link #save()}</code>.
+     * <code>this.{@link #perform(SessionContext)}</code>.
      *
      * @return list of transient item states
      * @throws InvalidItemStateException
@@ -394,13 +384,7 @@ class ItemSaveOperation implements SessionOperation {
             for (ItemState transientState
                     : sism.getDescendantTransientItemStatesInAttic(state.getId())) {
                 // check if stale
-                switch (transientState.getStatus()) {
-                case ItemState.STATUS_STALE_MODIFIED:
-                    throw new InvalidItemStateException(
-                            "Item can't be removed because it has been"
-                            + " modified externally: "
-                            + transientState.getId());
-                case ItemState.STATUS_STALE_DESTROYED:
+                if (transientState.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
                     throw new InvalidItemStateException(
                             "Item can't be removed because it has already"
                             + " been deleted externally: "

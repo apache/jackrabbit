@@ -1086,7 +1086,6 @@ public class ItemManager implements Dumpable, ItemStateListener {
                  */
                 case ItemState.STATUS_EXISTING_REMOVED:
                 case ItemState.STATUS_EXISTING_MODIFIED:
-                case ItemState.STATUS_STALE_MODIFIED:
                     ItemState persistentState = discarded.getOverlayedState();
                     // the state is a transient wrapper for the underlying
                     // persistent state, therefore restore the persistent state

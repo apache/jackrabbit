@@ -401,7 +401,7 @@ public class SessionItemStateManager
     }
 
     /**
-     * Same as <code>{@link #getDescendantTransientItemStates(NodeId)}</code>
+     * Same as <code>{@link #getDescendantTransientItemStates(ItemId)}</code>
      * except that item state instances in the attic are returned.
      *
      * @param id identifier of the common parent of the transient item state
@@ -819,8 +819,8 @@ public class SessionItemStateManager
                         transientState.setModCount(local.getModCount());
                         transientState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                     } catch (ItemStateException e) {
-                        // something went wrong, mark as stale
-                        transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
+                        // something went wrong
+                        transientState.setStatus(ItemState.STATUS_UNDEFINED);
                     }
                 }
                 visibleState = transientState;
@@ -838,61 +838,7 @@ public class SessionItemStateManager
      */
     public void stateModified(ItemState modified) {
         ItemState visibleState = modified;
-        if (modified.getContainer() != this) {
-            // local state was modified
-            ItemState transientState = transientStore.get(modified.getId());
-            if (transientState != null) {
-                if (transientState.isNode() && !transientState.isStale()) {
-                    // try to silently merge non-conflicting changes (JCR-584)
-                    NodeStateMerger.MergeContext context =
-                            new NodeStateMerger.MergeContext() {
-                                public boolean isAdded(ItemId id) {
-                                    ItemState is = transientStore.get(id);
-                                    return is != null
-                                            && is.getStatus() == ItemState.STATUS_NEW;
-                                }
-
-                                public boolean isDeleted(ItemId id) {
-                                    return atticStore.contains(id);
-                                }
-
-                                public boolean isModified(ItemId id) {
-                                    ItemState is = transientStore.get(id);
-                                    return is != null
-                                            && is.getStatus() == ItemState.STATUS_EXISTING_MODIFIED;
-                                }
-
-                                public boolean allowsSameNameSiblings(NodeId id) {
-                                    try {
-                                        NodeState ns = (NodeState) getItemState(id);
-                                        NodeState parent = (NodeState) getItemState(ns.getParentId());
-                                        Name name = parent.getChildNodeEntry(id).getName();
-                                        EffectiveNodeType ent = ntReg.getEffectiveNodeType(
-                                                parent.getNodeTypeName(),
-                                                parent.getMixinTypeNames());
-                                        QNodeDefinition def = ent.getApplicableChildNodeDef(name, ns.getNodeTypeName(), ntReg);
-                                        return def != null && def.allowsSameNameSiblings();
-                                    } catch (Exception e) {
-                                        log.warn("Unable to get node definition", e);
-                                        return false;
-                                    }
-                                }
-                            };
-                    if (NodeStateMerger.merge((NodeState) transientState, context)) {
-                        // merge succeeded
-                        return;
-                    }
-                }
-                transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
-                visibleState = transientState;
-            }
-            // check attic as well (JCR-1432)
-            transientState = atticStore.get(modified.getId());
-            if (transientState != null) {
-                transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
-                visibleState = transientState;
-            }
-        }
+        // JCR-2650: ignore external changes, they will be considered/merged on save().
         dispatcher.notifyStateModified(visibleState);
     }
 
