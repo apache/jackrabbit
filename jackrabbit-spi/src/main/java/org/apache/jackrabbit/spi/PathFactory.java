@@ -34,8 +34,8 @@ public interface PathFactory {
      * @param normalize
      * @return
      * @throws IllegalArgumentException if <code>relPath</code> is absolute.
-     * @throws RepositoryException if <code>normalize</code> is true but the
-     * created Path cannot be normalized.
+     * @throws RepositoryException If the <code>normalized</code> is
+     * <code>true</code> and the resulting path cannot be normalized.
      */
     public Path create(Path parent, Path relPath, boolean normalize) throws IllegalArgumentException, RepositoryException;
 
@@ -48,9 +48,10 @@ public interface PathFactory {
      *
      * @param parent the parent path
      * @param name the name of the new path element.
-     * @param normalize
+     * @param normalize If true the Path is normalized before being returned.
      * @return
-     * @throws RepositoryException
+     * @throws RepositoryException If the <code>normalized</code> is
+     * <code>true</code> and the resulting path cannot be normalized.
      */
     public Path create(Path parent, Name name, boolean normalize) throws RepositoryException;
 
@@ -67,7 +68,7 @@ public interface PathFactory {
      * @throws IllegalArgumentException If the given index is lower than
      * {@link Path#INDEX_UNDEFINED}.
      * @throws RepositoryException If the <code>normalized</code> is
-     * <code>true</code> and the path cannot be normalized.
+     * <code>true</code> and the resulting path cannot be normalized.
      */
     public Path create(Path parent, Name name, int index, boolean normalize) throws IllegalArgumentException, RepositoryException;
 
@@ -99,7 +100,7 @@ public interface PathFactory {
      * @param elements
      * @return the <code>Path</code> created from the elements.
      * @throws IllegalArgumentException If the given elements are <code>null</code>
-     * or have a length of 0.
+     * or have a length of 0 or would otherwise constitute an invalid path.
      */
     public Path create(Path.Element[] elements) throws IllegalArgumentException;
 

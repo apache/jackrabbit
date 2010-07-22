@@ -189,6 +189,12 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     protected PropertyId resolveRelativePropertyPath(String relPath)
             throws RepositoryException {
+        Path p = resolveRelativePath(relPath);
+        return getPropertyId(p);
+    }
+
+    protected PropertyId resolveRelativePropertyPathOld(String relPath)
+            throws RepositoryException {
         try {
             /**
              * first check if relPath is just a name (in which case we don't
@@ -291,8 +297,52 @@ public class NodeImpl extends ItemImpl implements Node {
         /**
          * build and resolve absolute path
          */
-        p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
+        try {
+            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
+        } catch (RepositoryException re) {
+            // failed to build canonical path
+            return null;
+        }
         return sessionContext.getHierarchyManager().resolveNodePath(p);
+    }
+
+    /**
+     * Returns the id of the property at <code>p</code> or <code>null</code>
+     * if no node exists at <code>p</code>.
+     * <p/>
+     * Note that access rights are not checked.
+     *
+     * @param p relative path of a (possible) node
+     * @return the id of the node at <code>p</code> or
+     *         <code>null</code> if no node exists at <code>p</code>
+     * @throws RepositoryException if <code>relPath</code> is not a valid
+     *                             relative path
+     */
+    private PropertyId getPropertyId(Path p) throws RepositoryException {
+        if (p.getLength() == 1) {
+            Path.Element pe = p.getNameElement();
+            if (pe.denotesName()) {
+                // check if property entry exists
+                NodeState thisState = data.getNodeState();
+                if (pe.getIndex() == Path.INDEX_UNDEFINED
+                        && thisState.hasPropertyName(pe.getName())) {
+                    return new PropertyId(thisState.getNodeId(), pe.getName());
+                } else {
+                    // there's no property with that name
+                    return null;
+                }
+            }
+        }
+        /**
+         * build and resolve absolute path
+         */
+        try {
+            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
+        } catch (RepositoryException re) {
+            // failed to build canonical path
+            return null;
+        }
+        return sessionContext.getHierarchyManager().resolvePropertyPath(p);
     }
 
     /**
