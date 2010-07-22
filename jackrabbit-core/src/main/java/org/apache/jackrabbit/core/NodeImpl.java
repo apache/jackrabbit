@@ -820,48 +820,44 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeState transientState = data.getNodeState();
 
-        NodeState persistentState = (NodeState) transientState.getOverlayedState();
-        if (persistentState == null) {
+        NodeState localState = (NodeState) transientState.getOverlayedState();
+        if (localState == null) {
             // this node is 'new'
-            persistentState = stateMgr.createNew(transientState);
+            localState = stateMgr.createNew(transientState);
         }
 
-        synchronized (persistentState) {
-            // check staleness of transient state first
-            if (transientState.isStale()) {
-                String msg =
-                    this + ": the node cannot be saved because it has been"
-                    + " modified externally.";
-                log.debug(msg);
-                throw new InvalidItemStateException(msg);
-            }
+        synchronized (localState) {
             // copy state from transient state:
             // parent id's
-            persistentState.setParentId(transientState.getParentId());
+            localState.setParentId(transientState.getParentId());
             // primary type
-            persistentState.setNodeTypeName(transientState.getNodeTypeName());
+            localState.setNodeTypeName(transientState.getNodeTypeName());
             // mixin types
-            persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
+            localState.setMixinTypeNames(transientState.getMixinTypeNames());
             // child node entries
-            persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
+            localState.setChildNodeEntries(transientState.getChildNodeEntries());
             // property entries
-            persistentState.setPropertyNames(transientState.getPropertyNames());
+            localState.setPropertyNames(transientState.getPropertyNames());
             // shared set
-            persistentState.setSharedSet(transientState.getSharedSet());
+            localState.setSharedSet(transientState.getSharedSet());
+            // modCount
+            if (localState.getModCount() != transientState.getModCount()) {
+                localState.setModCount(transientState.getModCount());
+            }
 
             // make state persistent
-            stateMgr.store(persistentState);
+            stateMgr.store(localState);
         }
 
         // tell state manager to disconnect item state
         stateMgr.disconnectTransientItemState(transientState);
-        // swap transient state with persistent state
-        data.setState(persistentState);
+        // swap transient state with local state
+        data.setState(localState);
         // reset status
         data.setStatus(STATUS_NORMAL);
 
         if (isShareable() && data.getPrimaryParentId() == null) {
-            data.setPrimaryParentId(persistentState.getParentId());
+            data.setPrimaryParentId(localState.getParentId());
         }
     }
 

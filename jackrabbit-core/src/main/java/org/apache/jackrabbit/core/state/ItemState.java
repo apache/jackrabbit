@@ -53,10 +53,6 @@ public abstract class ItemState {
      */
     public static final int STATUS_NEW = 4;
     /**
-     * 'existing', i.e. persistent state that has been persistently modified by somebody else
-     */
-    public static final int STATUS_STALE_MODIFIED = 5;
-    /**
      * 'existing', i.e. persistent state that has been destroyed by somebody else
      */
     public static final int STATUS_STALE_DESTROYED = 6;
@@ -286,13 +282,8 @@ public abstract class ItemState {
      * @return true if this item state has become stale, false otherwise.
      */
     public boolean isStale() {
-        if (isTransient) {
-            return status == STATUS_STALE_MODIFIED
-                    || status == STATUS_STALE_DESTROYED;
-        } else {
-            return overlayedState != null
-                    && modCount != overlayedState.getModCount();
-        }
+        return overlayedState != null
+                && modCount != overlayedState.getModCount();
     }
 
     /**
@@ -324,7 +315,6 @@ public abstract class ItemState {
             case STATUS_EXISTING:
             case STATUS_EXISTING_REMOVED:
             case STATUS_EXISTING_MODIFIED:
-            case STATUS_STALE_MODIFIED:
             case STATUS_STALE_DESTROYED:
             case STATUS_UNDEFINED:
                 status = newStatus;
