@@ -137,7 +137,11 @@ public class FileDataStore implements DataStore {
                 return null;
             }
             if (minModifiedDate != 0 && file.canWrite()) {
-                if (file.lastModified() < minModifiedDate) {
+                long lastModified = file.lastModified();
+                if (lastModified == 0) {
+                    throw new DataStoreException("Failed to read record modified date: " + identifier);
+                } 
+                if (lastModified < minModifiedDate) {
                 	    // The current GC approach depends on this call succeeding
                     if (!file.setLastModified(System.currentTimeMillis() + ACCESS_TIME_RESOLUTION)) {
                         throw new DataStoreException("Failed to update record modified date: " + identifier);
@@ -220,8 +224,12 @@ public class FileDataStore implements DataStore {
                                 + " (media read only?)");
                     }
                 } else {
+                    long lastModified = file.lastModified();
+                    if (lastModified == 0) {
+                        throw new DataStoreException("Failed to read record modified date: " + identifier);
+                    }
                     long now = System.currentTimeMillis();
-                    if (file.lastModified() < now + ACCESS_TIME_RESOLUTION) {
+                    if (lastModified < now + ACCESS_TIME_RESOLUTION) {
                         // The current GC approach depends on this call succeeding (for writable files)
                         if (!file.setLastModified(now + ACCESS_TIME_RESOLUTION)) {
                             if (file.canWrite()) {
@@ -299,16 +307,21 @@ public class FileDataStore implements DataStore {
         int count = 0;
         if (file.isFile() && file.exists() && file.canWrite()) {
             synchronized (this) {
-                String fileName = file.getName();
-                if (file.lastModified() < min) {
-                    DataIdentifier id = new DataIdentifier(fileName);
+                long lastModified = file.lastModified();
+                if (lastModified == 0) {
+                    // Don't delete the file, since the lastModified date is uncertain!
+                    log.warn("Failed to read modification date for " + file.getAbsolutePath());
+                } else if (lastModified < min) {
+                    DataIdentifier id = new DataIdentifier(file.getName());
                     if (!inUse.containsKey(id)) {
                         if (log.isInfoEnabled()) {
                             log.info("Deleting old file " + file.getAbsolutePath() +
-                                    " modified: " + new Timestamp(file.lastModified()).toString() +
+                                    " modified: " + new Timestamp(lastModified).toString() +
                                     " length: " + file.length());
                         }
-                        file.delete();
+                        if (!file.delete()) {
+                            log.warn("Failed to delete old file " + file.getAbsolutePath());
+                        }
                         count++;
                     }
                 }
