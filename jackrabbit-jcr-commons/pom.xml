@@ -71,6 +71,10 @@
       <artifactId>json</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>commons-collections</groupId>
+    	<artifactId>commons-collections</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
