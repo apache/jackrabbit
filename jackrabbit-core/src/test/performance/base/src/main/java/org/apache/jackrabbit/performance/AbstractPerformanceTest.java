@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Random;
@@ -35,8 +36,10 @@ import javax.jcr.version.VersionHistory;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.math.stat.descriptive.SummaryStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.benchmark.PerformanceTest;
 import org.apache.jackrabbit.benchmark.PerformanceTestSuite;
 import org.apache.jackrabbit.benchmark.LoginTest;
 import org.apache.jackrabbit.benchmark.LoginLogoutTest;
@@ -69,33 +72,58 @@ public abstract class AbstractPerformanceTest {
         }
     }
 
-    protected void testPerformance(String name, InputStream xml)
+    private void testPerformance(String name, InputStream xml)
             throws Exception {
         RepositoryImpl repository = createRepository(name, xml);
         try {
-            System.out.format(
-                    "%-36.36s     avg     std     min     max       n%n",
+            testPerformance(name, repository);
+        } finally {
+            repository.shutdown();
+        }
+    }
+
+    private void testPerformance(String name, RepositoryImpl repository)
+            throws Exception {
+        File report = new File("target", "performance-" + name + ".txt");
+        PrintWriter writer = new PrintWriter(report, "UTF-8");
+        try {
+            writer.format(
+                    "%-36.36s     avg     std     min     max   count%n",
                     name);
-            System.out.println(
+            writer.println(
                     "--------------------------------------"
                     + "--------------------------------------");
 
             PerformanceTestSuite suite = new PerformanceTestSuite(
                     repository,
                     new SimpleCredentials("admin", "admin".toCharArray()));
-            suite.runTest(new LoginTest());
-            suite.runTest(new LoginLogoutTest());
-            suite.runTest(new SmallFileReadTest());
-            suite.runTest(new SmallFileWriteTest());
-            suite.runTest(new BigFileReadTest());
-            suite.runTest(new BigFileWriteTest());
+            runTest(suite, new LoginTest(), writer);
+            runTest(suite, new LoginLogoutTest(), writer);
+            runTest(suite, new SmallFileReadTest(), writer);
+            runTest(suite, new SmallFileWriteTest(), writer);
+            runTest(suite, new BigFileReadTest(), writer);
+            runTest(suite, new BigFileWriteTest(), writer);
 
-            System.out.println(
+            writer.println(
                     "--------------------------------------"
                     + "--------------------------------------");
         } finally {
-            repository.shutdown();
+            writer.close();
         }
+    }
+
+    private void runTest(
+            PerformanceTestSuite suite, PerformanceTest test,
+            PrintWriter writer) throws Exception {
+        SummaryStatistics statistics = suite.runTest(test);
+        writer.format(
+                "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
+                test,
+                statistics.getMean(),
+                statistics.getStandardDeviation(),
+                statistics.getMin(),
+                statistics.getMax(),
+                statistics.getN());
     }
 
     /**
