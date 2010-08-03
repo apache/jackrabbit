@@ -40,6 +40,10 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.benchmark.PerformanceTestSuite;
 import org.apache.jackrabbit.benchmark.LoginTest;
 import org.apache.jackrabbit.benchmark.LoginLogoutTest;
+import org.apache.jackrabbit.benchmark.SmallFileReadTest;
+import org.apache.jackrabbit.benchmark.SmallFileWriteTest;
+import org.apache.jackrabbit.benchmark.BigFileReadTest;
+import org.apache.jackrabbit.benchmark.BigFileWriteTest;
 
 public abstract class AbstractPerformanceTest {
 
@@ -74,6 +78,10 @@ public abstract class AbstractPerformanceTest {
                     new SimpleCredentials("admin", "admin".toCharArray()));
             suite.runTest(new LoginTest());
             suite.runTest(new LoginLogoutTest());
+            suite.runTest(new SmallFileReadTest());
+            suite.runTest(new SmallFileWriteTest());
+            suite.runTest(new BigFileReadTest());
+            suite.runTest(new BigFileWriteTest());
         } finally {
             repository.shutdown();
         }
