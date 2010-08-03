@@ -72,7 +72,7 @@ import org.slf4j.Logger;
 /**
  * The session operation triggered by {@link Item#save()}.
  */
-class ItemSaveOperation implements SessionOperation {
+class ItemSaveOperation implements SessionOperation<Object> {
 
     /**
      * Logger instance.
@@ -86,7 +86,7 @@ class ItemSaveOperation implements SessionOperation {
         this.state = state;
     }
 
-    public void perform(SessionContext context) throws RepositoryException {
+    public Object perform(SessionContext context) throws RepositoryException {
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
         /**
@@ -104,7 +104,7 @@ class ItemSaveOperation implements SessionOperation {
         }
         if (dirty.size() == 0) {
             // no transient items, nothing to do here
-            return;
+            return this;
         }
 
         /**
@@ -286,6 +286,8 @@ class ItemSaveOperation implements SessionOperation {
             // dispose the transient state, it is no longer used
             stateMgr.disposeTransientItemStateInAttic(transientState);
         }
+
+        return this;
     }
 
     /**

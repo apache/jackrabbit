@@ -1611,23 +1611,11 @@ public class NodeImpl extends ItemImpl implements Node {
      * Same as <code>{@link Node#setProperty(String, Value)}</code> except that
      * this method takes a <code>Name</code> name argument instead of a
      * <code>String</code>.
-     *
-     * @param name
-     * @param value
-     * @return
-     * @throws ValueFormatException
-     * @throws VersionException
-     * @throws LockException
-     * @throws ConstraintViolationException
-     * @throws RepositoryException
      */
     public PropertyImpl setProperty(Name name, Value value)
-            throws ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        SetPropertyOperation operation =
-            new SetPropertyOperation(name, value, false);
-        sessionContext.getSessionState().perform(operation);
-        return operation.getProperty();
+            throws RepositoryException {
+        return sessionContext.getSessionState().perform(
+                new SetPropertyOperation(name, value, false));
     }
 
     /**
@@ -2211,19 +2199,15 @@ public class NodeImpl extends ItemImpl implements Node {
         if (value != null && value.getType() != type) {
             value = ValueHelper.convert(value, type, getValueFactory());
         }
-        SetPropertyOperation operation =
-            new SetPropertyOperation(session.getQName(name), value, true);
-        sessionContext.getSessionState().perform(operation);
-        return operation.getProperty();
+        return sessionContext.getSessionState().perform(
+                new SetPropertyOperation(session.getQName(name), value, true));
     }
 
     /** Wrapper around {@link SetPropertyOperation} */
     public Property setProperty(String name, Value value)
             throws RepositoryException {
-        SetPropertyOperation operation =
-            new SetPropertyOperation(session.getQName(name), value, false);
-        sessionContext.getSessionState().perform(operation);
-        return operation.getProperty();
+        return sessionContext.getSessionState().perform(
+                new SetPropertyOperation(session.getQName(name), value, false));
     }
 
     /** Wrapper around {@link #setProperty(String, Value)} */
@@ -2300,15 +2284,13 @@ public class NodeImpl extends ItemImpl implements Node {
      * definition and the implementation tries to convert the passed value to
      * that type. If that fails, then a {@link ValueFormatException} is thrown.
      */
-    private class SetPropertyOperation implements SessionOperation {
+    private class SetPropertyOperation implements SessionOperation<PropertyImpl> {
 
         private final Name name;
 
         private final Value value;
 
         private final boolean enforceType;
-
-        private volatile PropertyImpl property = null;
 
         /**
          * @param name  property name
@@ -2324,15 +2306,9 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         /**
-         * @return the <code>Property</code> object set, or <code>null</code> if
-         *         this method was used to remove a property (by setting its value
-         *         to <code>null</code>).
-         */
-        public PropertyImpl getProperty() {
-            return property;
-        }
-
-        /**
+         * @return the <code>Property</code> object set,
+         *         or <code>null</code> if this operation was used to remove
+         *         a property (by setting its value to <code>null</code>)
          * @throws ValueFormatException         if <code>value</code> cannot be
          *                                      converted to the specified type or
          *                                      if the property already exists and
@@ -2349,7 +2325,8 @@ public class NodeImpl extends ItemImpl implements Node {
          *                                      validation immediately.
          * @throws RepositoryException          if another error occurs.
          */
-        public void perform(SessionContext context) throws RepositoryException {
+        public PropertyImpl perform(SessionContext context)
+                throws RepositoryException {
             itemSanityCheck();
             // check pre-conditions for setting property
             checkSetProperty();
@@ -2360,7 +2337,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
 
             BitSet status = new BitSet();
-            property =
+            PropertyImpl property =
                 getOrCreateProperty(name, type, false, enforceType, status);
             try {
                 property.setValue(value);
@@ -2371,6 +2348,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
                 throw e; // rethrow
             }
+            return property;
         }
 
     }

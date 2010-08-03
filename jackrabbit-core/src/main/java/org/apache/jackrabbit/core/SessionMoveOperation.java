@@ -36,7 +36,7 @@ import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SessionMoveOperation implements SessionOperation {
+public class SessionMoveOperation implements SessionOperation<Object> {
 
     private final Logger log =
         LoggerFactory.getLogger(SessionMoveOperation.class);
@@ -102,7 +102,7 @@ public class SessionMoveOperation implements SessionOperation {
         }
     }
 
-    public void perform(SessionContext context) throws RepositoryException {
+    public Object perform(SessionContext context) throws RepositoryException {
         // Get node instances
         NodeImpl targetNode = getNode(context, srcPath, srcAbsPath);
         NodeImpl srcParentNode =
@@ -209,6 +209,8 @@ public class SessionMoveOperation implements SessionOperation {
                 destParentState.addChildNodeEntry(destName.getName(), targetId);
             }
         }
+
+        return this;
     }
 
 }

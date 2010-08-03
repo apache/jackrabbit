@@ -21,9 +21,9 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.id.NodeId;
 
-public class SessionSaveOperation implements SessionOperation {
+public class SessionSaveOperation implements SessionOperation<Object> {
 
-    public void perform(SessionContext context) throws RepositoryException {
+    public Object perform(SessionContext context) throws RepositoryException {
         NodeId id;
         // JCR-2425: check whether session is allowed to read root node
         if (context.getSessionImpl().hasPermission("/", Session.ACTION_READ)) {
@@ -32,6 +32,7 @@ public class SessionSaveOperation implements SessionOperation {
             id = context.getItemStateManager().getIdOfRootTransientNodeState();
         }
         context.getItemManager().getItem(id).save();
+        return this;
     }
 
 }

@@ -28,7 +28,7 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ItemRefreshOperation implements SessionOperation {
+public class ItemRefreshOperation implements SessionOperation<Object> {
 
     /**
      * Logger instance.
@@ -42,13 +42,13 @@ public class ItemRefreshOperation implements SessionOperation {
         this.state = state;
     }
 
-    public void perform(SessionContext context) throws RepositoryException {
+    public Object perform(SessionContext context) throws RepositoryException {
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
         // Optimisation for the root node
         if (state.getParentId() == null) {
             stateMgr.disposeAllTransientItemStates();
-            return;
+            return this;
         }
 
         // list of transient items that should be discarded
@@ -121,6 +121,8 @@ public class ItemRefreshOperation implements SessionOperation {
                 stateMgr.disposeTransientItemStateInAttic(descendant);
             }
         }
+
+        return this;
     }
 
 }

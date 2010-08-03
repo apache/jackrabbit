@@ -23,7 +23,7 @@ import javax.jcr.RepositoryException;
  * generic controls like synchronization and liveness checks on all session
  * operation.
  */
-public interface SessionOperation {
+public interface SessionOperation<T> {
 
     /**
      * Performs the session operation.
@@ -31,6 +31,6 @@ public interface SessionOperation {
      * @param context component context of this session
      * @throws RepositoryException if the operation fails
      */
-    void perform(SessionContext context) throws RepositoryException;
+    T perform(SessionContext context) throws RepositoryException;
 
 }
