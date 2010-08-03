@@ -29,19 +29,38 @@
 
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit-perf-parent</artifactId>
-    <version>SNAPSHOT</version>
-    <relativePath>parent/pom.xml</relativePath>
+    <artifactId>parent</artifactId>
+    <version>5</version>
   </parent>
 
-  <artifactId>jackrabbit-perf</artifactId>
-  <name>Jackrabbit Performance Tests</name>
+  <artifactId>jackrabbit-perf-parent</artifactId>
+  <name>Jackrabbit Performance Test Parent</name>
+  <version>SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <modules>
-    <module>parent</module>
-    <module>base</module>
-    <module>jackrabbit10</module>
-  </modules>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <source>1.5</source>
+            <target>1.5</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <systemProperties>
+              <property>
+                <name>derby.stream.error.file</name>
+                <value>target/derby.log</value>
+              </property>
+            </systemProperties>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 
 </project>
