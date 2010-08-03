@@ -142,7 +142,7 @@ public abstract class ProtectedItemModifier {
         checkPermission(itemImpl, getPermission(itemImpl.isNode(), true));
         // validation: make sure Node is not locked or checked-in.
         n.checkSetProperty();
-        itemImpl.internalRemove(true);
+        itemImpl.perform(new ItemRemoveOperation(itemImpl, false));
     }
 
     protected void markModified(NodeImpl parentImpl) throws RepositoryException {
