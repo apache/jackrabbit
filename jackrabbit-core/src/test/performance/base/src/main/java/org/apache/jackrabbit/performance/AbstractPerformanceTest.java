@@ -74,7 +74,7 @@ public abstract class AbstractPerformanceTest {
         RepositoryImpl repository = createRepository(name, xml);
         try {
             System.out.format(
-                    "%-36.36s     avg     std     min     max       n",
+                    "%-36.36s     avg     std     min     max       n%n",
                     name);
             System.out.println(
                     "--------------------------------------"
