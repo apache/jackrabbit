@@ -96,7 +96,7 @@ public abstract class AbstractPerformanceTest {
                 Session session = repository.login(
                         new SimpleCredentials("admin", "admin".toCharArray()));
                 try {
-                    createTestData(session);
+                    // createTestData(session);
                 } finally {
                     session.logout();
                 }
