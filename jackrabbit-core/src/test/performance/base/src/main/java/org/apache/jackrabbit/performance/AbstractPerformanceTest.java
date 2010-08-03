@@ -35,15 +35,17 @@ import javax.jcr.version.VersionHistory;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.benchmark.PerformanceTestSuite;
+import org.apache.jackrabbit.benchmark.LoginTest;
+import org.apache.jackrabbit.benchmark.LoginLogoutTest;
 
 public abstract class AbstractPerformanceTest {
 
-    protected void createRepositories(String name) throws Exception {
+    protected void testPerformance(String name) throws Exception {
         // Create a repository using the Jackrabbit default configuration
-        createRepository(
+        testPerformance(
                 name,
                 RepositoryImpl.class.getResourceAsStream("repository.xml"));
 
@@ -55,11 +57,25 @@ public abstract class AbstractPerformanceTest {
             for (File file : files) {
                 String xml = file.getName();
                 if (file.isFile() && xml.endsWith(".xml")) {
-                    createRepository(
+                    testPerformance(
                             name + "-" + xml.substring(0, xml.length() - 4),
                             FileUtils.openInputStream(file));
                 }
             }
+        }
+    }
+
+    protected void testPerformance(String name, InputStream xml)
+            throws Exception {
+        RepositoryImpl repository = createRepository(name, xml);
+        try {
+            PerformanceTestSuite suite = new PerformanceTestSuite(
+                    repository,
+                    new SimpleCredentials("admin", "admin".toCharArray()));
+            suite.runTest(new LoginTest());
+            suite.runTest(new LoginLogoutTest());
+        } finally {
+            repository.shutdown();
         }
     }
 
@@ -70,7 +86,7 @@ public abstract class AbstractPerformanceTest {
      * @param xml input stream for reading the repository configuration
      * @throws Exception if the repository could not be created
      */
-    protected void createRepository(String name, InputStream xml)
+    private RepositoryImpl createRepository(String name, InputStream xml)
             throws Exception {
         File directory = new File(new File("target", "repository"), name);
         File configuration = new File(directory, "repository.xml");
@@ -88,25 +104,8 @@ public abstract class AbstractPerformanceTest {
         }
 
         // Create the repository
-        try {
-            RepositoryConfig config = RepositoryConfig.create(
-                    configuration.getPath(), directory.getPath());
-            RepositoryImpl repository = RepositoryImpl.create(config);
-            try {
-                Session session = repository.login(
-                        new SimpleCredentials("admin", "admin".toCharArray()));
-                try {
-                    // createTestData(session);
-                } finally {
-                    session.logout();
-                }
-            } finally {
-                repository.shutdown();
-            }
-        } catch (RepositoryException e) {
-            e.printStackTrace();
-            fail("Create repository " + name);
-        }
+        return RepositoryImpl.create(RepositoryConfig.create(
+                configuration.getPath(), directory.getPath()));
     }
 
 }
