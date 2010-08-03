@@ -73,6 +73,13 @@ public abstract class AbstractPerformanceTest {
             throws Exception {
         RepositoryImpl repository = createRepository(name, xml);
         try {
+            System.out.format(
+                    "%-36.36s     avg     std     min     max       n",
+                    name);
+            System.out.println(
+                    "--------------------------------------"
+                    + "--------------------------------------");
+
             PerformanceTestSuite suite = new PerformanceTestSuite(
                     repository,
                     new SimpleCredentials("admin", "admin".toCharArray()));
@@ -82,6 +89,10 @@ public abstract class AbstractPerformanceTest {
             suite.runTest(new SmallFileWriteTest());
             suite.runTest(new BigFileReadTest());
             suite.runTest(new BigFileWriteTest());
+
+            System.out.println(
+                    "--------------------------------------"
+                    + "--------------------------------------");
         } finally {
             repository.shutdown();
         }
