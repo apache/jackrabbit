@@ -42,6 +42,12 @@
     <module>parent</module>
     <module>base</module>
     <module>jackrabbit10</module>
+    <module>jackrabbit11</module>
+    <module>jackrabbit12</module>
+    <module>jackrabbit13</module>
+    <module>jackrabbit14</module>
+    <module>jackrabbit15</module>
+    <module>jackrabbit16</module>
   </modules>
 
 </project>
