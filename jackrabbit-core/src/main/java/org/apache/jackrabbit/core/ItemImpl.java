@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
@@ -29,13 +28,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -97,9 +91,10 @@ public abstract class ItemImpl implements Item {
         this.data = data;
     }
 
-    protected void perform(SessionOperation operation)
+    protected <T> T perform(final SessionOperation<T> operation)
             throws RepositoryException {
-        sessionContext.getSessionState().perform(operation);
+        itemSanityCheck();
+        return sessionContext.getSessionState().perform(operation);
     }
 
     /**
@@ -207,49 +202,6 @@ public abstract class ItemImpl implements Item {
      */
     public String safeGetJCRPath() {
         return itemMgr.safeGetJCRPath(id);
-    }
-
-    /**
-     * Same as <code>{@link Item#remove()}</code> except for the
-     * <code>noChecks</code> parameter.
-     *
-     * @param noChecks
-     * @throws VersionException
-     * @throws LockException
-     * @throws RepositoryException
-     */
-    protected void internalRemove(boolean noChecks)
-            throws VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        // check if this is the root node
-        if (getDepth() == 0) {
-            throw new RepositoryException("Cannot remove the root node");
-        }
-
-        NodeImpl parentNode = (NodeImpl) getParent();
-        if (!noChecks) {
-            // check if protected and not under retention/hold
-            int options = ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD |
-                    ItemValidator.CHECK_RETENTION;
-            session.getValidator().checkRemove(this, options, Permission.NONE);
-
-            // parent node: make sure it is checked-out and not protected nor locked.
-            options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT |
-                    ItemValidator.CHECK_CONSTRAINTS;
-            session.getValidator().checkModify(parentNode, options, Permission.NONE);
-        }
-
-        // delegate the removal of the child item to the parent node
-        if (isNode()) {
-            parentNode.removeChildNode((NodeId) getId());
-        } else {
-            Path.Element thisName = getPrimaryPath().getNameElement();
-            parentNode.removeChildProperty(thisName.getName());
-        }
     }
 
     /**
@@ -372,18 +324,14 @@ public abstract class ItemImpl implements Item {
     /**
      * {@inheritDoc}
      */
-    public void remove()
-            throws VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        internalRemove(false);
+    public void remove() throws RepositoryException {
+        perform(new ItemRemoveOperation(this, true));
     }
 
     /**
      * {@inheritDoc}
      */
     public void save() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
         perform(new ItemSaveOperation(getItemState()));
     }
 
@@ -391,71 +339,66 @@ public abstract class ItemImpl implements Item {
      * {@inheritDoc}
      */
     public void refresh(boolean keepChanges) throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        if (keepChanges) {
-            // FIXME should reset Item#status field to STATUS_NORMAL
-            // of all descendant non-transient instances; maybe also
-            // have to reset stale ItemState instances
-        } else {
-            perform(new ItemRefreshOperation(getItemState()));
-        }
+        perform(new ItemRefreshOperation(getItemState(), keepChanges));
     }
 
     /**
      * {@inheritDoc}
      */
-    public Item getAncestor(int degree)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
+    public Item getAncestor(final int degree) throws RepositoryException {
+        return perform(new SessionOperation<Item>() {
+            public Item perform(SessionContext context)
+                    throws RepositoryException {
+                if (degree == 0) {
+                    return context.getItemManager().getRootNode();
+                }
 
-        if (degree == 0) {
-            return itemMgr.getRootNode();
-        }
-
-        try {
-            // Path.getAncestor requires relative degree, i.e. we need
-            // to convert absolute to relative ancestor degree
-            Path path = getPrimaryPath();
-            int relDegree = path.getAncestorCount() - degree;
-            if (relDegree < 0) {
-                throw new ItemNotFoundException();
+                try {
+                    // Path.getAncestor requires relative degree, i.e. we need
+                    // to convert absolute to relative ancestor degree
+                    Path path = getPrimaryPath();
+                    int relDegree = path.getAncestorCount() - degree;
+                    if (relDegree < 0) {
+                        throw new ItemNotFoundException();
+                    } else if (relDegree == 0) {
+                        return ItemImpl.this; // shortcut
+                    }
+                    Path ancestorPath = path.getAncestor(relDegree);
+                    return context.getItemManager().getNode(ancestorPath);
+                } catch (PathNotFoundException e) {
+                    throw new ItemNotFoundException("Ancestor not found", e);
+                }
             }
-            // shortcut
-            if (relDegree == 0) {
-                return this;
-            }
-            Path ancestorPath = path.getAncestor(relDegree);
-            return itemMgr.getNode(ancestorPath);
-        } catch (PathNotFoundException pnfe) {
-            throw new ItemNotFoundException();
-        }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-        return session.getJCRPath(getPrimaryPath());
+        return perform(new SessionOperation<String>() {
+            public String perform(SessionContext context)
+                    throws RepositoryException {
+                return context.getSessionImpl().getJCRPath(getPrimaryPath());
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
     public int getDepth() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        final ItemState state = getItemState();
-        if (state.getParentId() == null) {
-            // shortcut
-            return 0;
-        }
-        return sessionContext.getHierarchyManager().getDepth(id);
+        return perform(new SessionOperation<Integer>() {
+            public Integer perform(SessionContext context)
+                    throws RepositoryException {
+                ItemState state = getItemState();
+                if (state.getParentId() == null) {
+                    return 0; // shortcut
+                } else {
+                    return context.getHierarchyManager().getDepth(id);
+                }
+            }
+        });
     }
 
     /**

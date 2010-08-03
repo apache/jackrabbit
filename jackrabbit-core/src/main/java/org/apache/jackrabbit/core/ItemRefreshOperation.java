@@ -38,11 +38,21 @@ public class ItemRefreshOperation implements SessionOperation<Object> {
 
     private final ItemState state;
 
-    public ItemRefreshOperation(ItemState state) {
+    private final boolean keepChanges;
+
+    public ItemRefreshOperation(ItemState state, boolean keepChanges) {
         this.state = state;
+        this.keepChanges = keepChanges;
     }
 
     public Object perform(SessionContext context) throws RepositoryException {
+        if (keepChanges) {
+            // FIXME When keepChanges is true, should reset Item#status field
+            // to STATUS_NORMAL of all descendant non-transient instances;
+            // maybe also have to reset stale ItemState instances
+            return this;
+        }
+
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
         // Optimisation for the root node
