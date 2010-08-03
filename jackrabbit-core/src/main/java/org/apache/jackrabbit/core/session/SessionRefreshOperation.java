@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.cluster.ClusterNode;
 /**
  * Operation to refresh the state of a session.
  */
-public class SessionRefreshOperation implements SessionOperation {
+public class SessionRefreshOperation implements SessionOperation<Object> {
 
     private final boolean keepChanges;
 
@@ -35,7 +35,7 @@ public class SessionRefreshOperation implements SessionOperation {
         this.clusterSync = clusterSync;
     }
 
-    public void perform(SessionContext context) throws RepositoryException {
+    public Object perform(SessionContext context) throws RepositoryException {
         // JCR-1753: Ensure that we are up to date with cluster changes
         ClusterNode cluster = context.getRepositoryContext().getClusterNode();
         if (cluster != null && clusterSync) {
@@ -54,6 +54,7 @@ public class SessionRefreshOperation implements SessionOperation {
             // of all non-transient instances; maybe also
             // have to reset stale ItemState instances
         }
+        return this;
     }
 
 }

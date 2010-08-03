@@ -107,7 +107,8 @@ public class SessionState {
      * @throws RepositoryException if the operation fails or
      *                             if the session has already been closed
      */
-    public void perform(SessionOperation operation) throws RepositoryException {
+    public <T> T perform(SessionOperation<T> operation)
+            throws RepositoryException {
         if (!lock.tryLock()) {
             log.warn("Attempt to perform {} while another thread is"
                     + " concurrently accessing the session. Blocking until"
@@ -118,7 +119,7 @@ public class SessionState {
         try {
             checkAlive();
             log.debug("Performing {}", operation);
-            operation.perform(context);
+            return operation.perform(context);
         } finally {
             lock.unlock();
         }
