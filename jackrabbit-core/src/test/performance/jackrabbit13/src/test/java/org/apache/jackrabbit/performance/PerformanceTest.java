@@ -22,7 +22,7 @@ public class PerformanceTest extends AbstractPerformanceTest {
 
     @Test
     public void testPerformance() throws Exception {
-        testPerformance("jackrabbit13");
+        testPerformance("1.3");
     }
 
 }

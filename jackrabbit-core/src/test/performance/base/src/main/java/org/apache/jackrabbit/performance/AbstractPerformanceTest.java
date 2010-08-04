@@ -97,12 +97,12 @@ public abstract class AbstractPerformanceTest {
             PerformanceTestSuite suite = new PerformanceTestSuite(
                     repository,
                     new SimpleCredentials("admin", "admin".toCharArray()));
-            runTest(suite, new LoginTest(), writer);
-            runTest(suite, new LoginLogoutTest(), writer);
-            runTest(suite, new SmallFileReadTest(), writer);
-            runTest(suite, new SmallFileWriteTest(), writer);
-            runTest(suite, new BigFileReadTest(), writer);
-            runTest(suite, new BigFileWriteTest(), writer);
+            runTest(suite, new LoginTest(), writer, name);
+            runTest(suite, new LoginLogoutTest(), writer, name);
+            runTest(suite, new SmallFileReadTest(), writer, name);
+            runTest(suite, new SmallFileWriteTest(), writer, name);
+            runTest(suite, new BigFileReadTest(), writer, name);
+            runTest(suite, new BigFileWriteTest(), writer, name);
 
             writer.println(
                     "--------------------------------------"
@@ -114,11 +114,11 @@ public abstract class AbstractPerformanceTest {
 
     private void runTest(
             PerformanceTestSuite suite, PerformanceTest test,
-            PrintWriter writer) throws Exception {
+            PrintWriter writer, String name) throws Exception {
         SummaryStatistics statistics = suite.runTest(test);
         writer.format(
                 "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
-                test,
+                name + " \""+ test + "\"",
                 statistics.getMean(),
                 statistics.getStandardDeviation(),
                 statistics.getMin(),
