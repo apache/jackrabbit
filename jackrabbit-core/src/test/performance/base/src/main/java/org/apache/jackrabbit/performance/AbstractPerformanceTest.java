@@ -47,6 +47,7 @@ import org.apache.jackrabbit.benchmark.SmallFileReadTest;
 import org.apache.jackrabbit.benchmark.SmallFileWriteTest;
 import org.apache.jackrabbit.benchmark.BigFileReadTest;
 import org.apache.jackrabbit.benchmark.BigFileWriteTest;
+import org.apache.jackrabbit.benchmark.ConcurrentReadTest;
 
 public abstract class AbstractPerformanceTest {
 
@@ -103,6 +104,7 @@ public abstract class AbstractPerformanceTest {
             runTest(suite, new SmallFileWriteTest(), writer, name);
             runTest(suite, new BigFileReadTest(), writer, name);
             runTest(suite, new BigFileWriteTest(), writer, name);
+            runTest(suite, new ConcurrentReadTest(), writer, name);
 
             writer.println(
                     "--------------------------------------"
