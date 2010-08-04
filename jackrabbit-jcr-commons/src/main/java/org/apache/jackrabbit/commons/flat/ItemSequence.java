@@ -14,10 +14,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.jackrabbit.flat;
+package org.apache.jackrabbit.commons.flat;
 
-import org.apache.jackrabbit.flat.TreeTraverser.ErrorHandler;
-import org.apache.jackrabbit.flat.TreeTraverser.InclusionPolicy;
+import org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler;
+import org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;

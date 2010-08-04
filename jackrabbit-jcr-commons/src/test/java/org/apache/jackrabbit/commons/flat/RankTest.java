@@ -14,9 +14,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package flat;
+package org.apache.jackrabbit.commons.flat;
 
-import org.apache.jackrabbit.flat.Rank;
+import org.apache.jackrabbit.commons.flat.Rank;
 
 import java.util.ArrayList;
 import java.util.Collections;

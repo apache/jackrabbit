@@ -21,10 +21,10 @@ import static org.apache.jackrabbit.commons.iterator.Iterators.singleton;
 import static org.apache.jackrabbit.commons.iterator.Iterators.transformIterator;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.flat.TreeTraverser;
 import org.apache.jackrabbit.commons.iterator.Iterators;
 import org.apache.jackrabbit.commons.iterator.Predicate;
 import org.apache.jackrabbit.commons.iterator.Transformer;
-import org.apache.jackrabbit.flat.TreeTraverser;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.Item;
