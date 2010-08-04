@@ -1,31 +1,32 @@
-Release Notes -- Apache Jackrabbit -- Version 2.1.0
+Release Notes -- Apache Jackrabbit -- Version 2.1.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit 2.1.0, a fully compliant and production-ready
+This is Apache Jackrabbit 2.1.1, a fully compliant and production-ready
 implementation of the Content Repository for Java Technology API, version 2.0
 (JCR 2.0, http://jcp.org/en/jsr/summary?id=283).
+
+Apache Jackrabbit 2.1.1 is a bug fix release that fixes issues reported
+against previous releases. This release is fully compatible with the
+earlier 2.1.0 release.
 
 Changes in this release
 -----------------------
 
-Jackrabbit 2.1 is an incremental feature release based on the earlier
-2.0 release. The most notable changes in this release are:
+Improvements
 
-  * Remoting improvements. Both the WebDAV and RMI remoting layers have
-    been extended to support a wider subset of JCR 2.0 functionality
-    and include numerous other improvements and bug fixes over previous
-    releases. We recommend the WebDAV layer as the primary remoting option,
-    with the RMI layer as a secondary option if more functionality is needed.
+  [JCR-2672] Cache also failed principal lookups
 
-  * Command line repository access. The jackrabbit-standalone jar now
-    contains a simple command line tool for browsing and modifying both
-    local and remote repositories.
+Bug fixes
 
-  * Improved JCA packaging. The jackrabbit-jca package can now be used to
-    enable JCA-based access to any JCR repository that supports the JCR 2.0
-    RepositoryFactory interface.
+  [JCR-2579] InvalidItemStateException when attempting concurrent, non ...
+  [JCR-2598] Saving concurrent sessions executing random operations ...
+  [JCR-2611] DefaultHighlighter.java does not encode illegal XML characters
+  [JCR-2613] NoSuchItemStateException on checkin after removeVersion in ...
+  [JCR-2616] ItemInfoCacheImpl.getNodeInfo() and .getPropertyInfo() might ...
+  [JCR-2671] AbstractLoginModule must not call abort() in commit()
+  [JCR-2681] XMLPersistanceManager doesn't preserve a property's ...
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
