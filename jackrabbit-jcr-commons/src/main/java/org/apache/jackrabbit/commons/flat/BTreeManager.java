@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.jackrabbit.flat;
+package org.apache.jackrabbit.commons.flat;
 
 import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
 import static org.apache.jackrabbit.commons.iterator.Iterators.nodes;
@@ -151,7 +151,7 @@ public class BTreeManager implements TreeManager {
      * is done such that after the split each of the new child nodes contains at
      * least as many nodes as specified in the constructor.
      *
-     * @see org.apache.jackrabbit.flat.TreeManager#split(org.apache.jackrabbit.flat.ItemSequence,
+     * @see org.apache.jackrabbit.commons.flat.TreeManager#split(org.apache.jackrabbit.commons.flat.ItemSequence,
      *      javax.jcr.Node, javax.jcr.Node)
      */
     public void split(ItemSequence itemSequence, Node node, Node cause) throws RepositoryException {
@@ -170,7 +170,7 @@ public class BTreeManager implements TreeManager {
      * Splitting is done such that after the split each of the new child nodes
      * contains at least as many nodes as specified in the constructor.
      *
-     * @see org.apache.jackrabbit.flat.TreeManager#split(org.apache.jackrabbit.flat.ItemSequence,
+     * @see org.apache.jackrabbit.commons.flat.TreeManager#split(org.apache.jackrabbit.commons.flat.ItemSequence,
      *      javax.jcr.Node, javax.jcr.Property)
      */
     public void split(ItemSequence itemSequence, Node node, Property cause) throws RepositoryException {
@@ -189,7 +189,7 @@ public class BTreeManager implements TreeManager {
      * iterator. It does further recursively delete any parent of
      * <code>node</code> which does not have any child node.
      *
-     * @see org.apache.jackrabbit.flat.TreeManager#join(org.apache.jackrabbit.flat.ItemSequence,
+     * @see org.apache.jackrabbit.commons.flat.TreeManager#join(org.apache.jackrabbit.commons.flat.ItemSequence,
      *      javax.jcr.Node, javax.jcr.Node)
      */
     public void join(ItemSequence itemSequence, Node node, Node cause) throws RepositoryException {
@@ -212,7 +212,7 @@ public class BTreeManager implements TreeManager {
      * iterator. It does further recursively delete any parent of
      * <code>node</code> which does not have any child node.
      *
-     * @see org.apache.jackrabbit.flat.TreeManager#join(org.apache.jackrabbit.flat.ItemSequence,
+     * @see org.apache.jackrabbit.commons.flat.TreeManager#join(org.apache.jackrabbit.commons.flat.ItemSequence,
      *      javax.jcr.Node, javax.jcr.Property)
      */
     public void join(ItemSequence itemSequence, Node node, Property cause) throws RepositoryException {
@@ -237,7 +237,7 @@ public class BTreeManager implements TreeManager {
 
     /**
      * Returns <code>!node.hasNodes()</code>
-     * @see org.apache.jackrabbit.flat.TreeManager#isLeaf(javax.jcr.Node)
+     * @see org.apache.jackrabbit.commons.flat.TreeManager#isLeaf(javax.jcr.Node)
      */
     public boolean isLeaf(Node node) throws RepositoryException {
         return !node.hasNodes() && !isRoot(node);

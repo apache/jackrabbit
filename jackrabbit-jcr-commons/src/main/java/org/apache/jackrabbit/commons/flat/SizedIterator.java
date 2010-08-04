@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.jackrabbit.flat;
+package org.apache.jackrabbit.commons.flat;
 
 import java.util.Iterator;
 

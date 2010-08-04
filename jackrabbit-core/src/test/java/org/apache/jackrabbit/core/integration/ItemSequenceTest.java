@@ -17,13 +17,13 @@
 package org.apache.jackrabbit.core.integration;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.flat.BTreeManager;
-import org.apache.jackrabbit.flat.ItemSequence;
-import org.apache.jackrabbit.flat.NodeSequence;
-import org.apache.jackrabbit.flat.PropertySequence;
-import org.apache.jackrabbit.flat.Rank;
-import org.apache.jackrabbit.flat.TreeManager;
-import org.apache.jackrabbit.flat.TreeTraverser;
+import org.apache.jackrabbit.commons.flat.BTreeManager;
+import org.apache.jackrabbit.commons.flat.ItemSequence;
+import org.apache.jackrabbit.commons.flat.NodeSequence;
+import org.apache.jackrabbit.commons.flat.PropertySequence;
+import org.apache.jackrabbit.commons.flat.Rank;
+import org.apache.jackrabbit.commons.flat.TreeManager;
+import org.apache.jackrabbit.commons.flat.TreeTraverser;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.Node;
