@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.core.integration;
 
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.iterators.EmptyIterator;
-import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.commons.collections.iterators.SingletonIterator;
-import org.apache.commons.collections.iterators.TransformIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.singleton;
+import static org.apache.jackrabbit.commons.iterator.Iterators.transformIterator;
+
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.iterator.Iterators;
+import org.apache.jackrabbit.commons.iterator.Predicate;
+import org.apache.jackrabbit.commons.iterator.Transformer;
 import org.apache.jackrabbit.flat.TreeTraverser;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -125,10 +126,10 @@ public class TreeTraverserTest extends AbstractJCRTest {
     public void testTraversePropertiesEmpty() throws RepositoryException {
         Iterator<Node> nodeIt = TreeTraverser.nodeIterator(testNode);
         Iterator<Property> propertyIt = TreeTraverser.propertyIterator(nodeIt);
-        checkProperties(propertyIt, TreeTraverserTest.<String>empty(), testNode.getPath());
+        checkProperties(propertyIt, Iterators.<String>empty(), testNode.getPath());
 
         addNodes(testNode, nodes);
-        checkProperties(propertyIt, TreeTraverserTest.<String>empty(), testNode.getPath());
+        checkProperties(propertyIt, Iterators.<String>empty(), testNode.getPath());
     }
 
     public void testTraverseProperties() throws RepositoryException {
@@ -192,12 +193,10 @@ public class TreeTraverserTest extends AbstractJCRTest {
         assertEquals(expectedPaths, actualPaths);
     }
 
-    @SuppressWarnings("unchecked")
     private static Iterator<Property> removeIgnored(Iterator<Property> properties) {
-        return new FilterIterator(properties, new Predicate() {
-            public boolean evaluate(Object object) {
+        return filterIterator(properties, new Predicate<Property>() {
+            public boolean evaluate(Property property) {
                 try {
-                    Property property = (Property) object;
                     return !JcrConstants.JCR_PRIMARYTYPE.equals(property.getName());
                 }
                 catch (RepositoryException e) {
@@ -207,12 +206,11 @@ public class TreeTraverserTest extends AbstractJCRTest {
         });
     }
 
-    @SuppressWarnings("unchecked")
     private static Iterator<String> property2Path(Iterator<Property> properties) {
-        return new TransformIterator(properties, new Transformer() {
-            public Object transform(Object input) {
+        return transformIterator(properties, new Transformer<Property, String>() {
+            public String transform(Property property) {
                 try {
-                    return ((Property) input).getPath();
+                    return property.getPath();
                 }
                 catch (RepositoryException e) {
                     throw (AssertionFailedError) new AssertionFailedError().initCause(e);
@@ -238,23 +236,12 @@ public class TreeTraverserTest extends AbstractJCRTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private static Iterator<String> cat(final String s, Iterator<String> strings) {
-        return new TransformIterator(strings, new Transformer() {
-            public Object transform(Object input) {
-                return cat(s, (String) input);
+        return transformIterator(strings, new Transformer<String, String>() {
+            public String transform(String string) {
+                return cat(s, string);
             }
         });
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> singleton(T element) {
-        return new SingletonIterator(element);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> empty() {
-        return EmptyIterator.INSTANCE;
     }
 
 }

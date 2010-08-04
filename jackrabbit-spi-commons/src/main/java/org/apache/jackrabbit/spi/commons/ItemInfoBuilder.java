@@ -16,23 +16,12 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
+import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.transformIterator;
 
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.iterators.EmptyIterator;
-import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.jackrabbit.commons.iterator.Iterators;
+import org.apache.jackrabbit.commons.iterator.Predicate;
+import org.apache.jackrabbit.commons.iterator.Transformer;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Name;
@@ -42,11 +31,25 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Utility class providing a {@link NodeInfoBuilder} for building {@link NodeInfo}.
@@ -265,7 +268,7 @@ public final class ItemInfoBuilder {
                 NodeId id = getId();
 
                 nodeInfo = new NodeInfoImpl(id.getPath(), id, index, primaryTypeName,
-                        mixins.toArray(new Name[mixins.size()]), EmptyIterator.INSTANCE,
+                        mixins.toArray(new Name[mixins.size()]), Iterators.<PropertyId>empty(),
                         getPropertyIds(), includeChildInfos ? getChildInfos() : null);
 
                 if (listener != null) {
@@ -333,9 +336,9 @@ public final class ItemInfoBuilder {
         }
 
         private Iterator<ChildInfo> getChildInfos() {
-            return map(itemInfos.iterator(),
-                    new Function<ItemInfo, ChildInfo>(){
-                        public ChildInfo apply(ItemInfo info) {
+            return transformIterator(itemInfos.iterator(),
+                    new Transformer<ItemInfo, ChildInfo>(){
+                        public ChildInfo transform(ItemInfo info) {
                             Name name = info.getPath().getNameElement().getName();
                             return new ChildInfoImpl(name, null, Path.INDEX_DEFAULT);
                         }
@@ -343,14 +346,14 @@ public final class ItemInfoBuilder {
         }
 
         private Iterator<PropertyId> getPropertyIds() {
-            return map(filter(itemInfos.iterator(),
+            return transformIterator(filterIterator(itemInfos.iterator(),
                     new Predicate<ItemInfo>(){
                         public boolean evaluate(ItemInfo info) {
                             return !info.denotesNode();
                         }
                     }),
-                    new Function<ItemInfo, PropertyId>(){
-                        public PropertyId apply(ItemInfo info) {
+                    new Transformer<ItemInfo, PropertyId>(){
+                        public PropertyId transform(ItemInfo info) {
                             return (PropertyId) info.getId();
                         }
                     });
@@ -629,34 +632,6 @@ public final class ItemInfoBuilder {
             return propertyInfo;
         }
 
-    }
-
-    // -----------------------------------------------------< private >---
-
-    private interface Predicate<T> {
-        public boolean evaluate(T value);
-    }
-
-    private interface Function<S, T> {
-        public T apply(S s);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <S, T> Iterator<T> map(Iterator<S> source, final Function<S, T> f) {
-        return new TransformIterator(source, new Transformer() {
-            public Object transform(Object o) {
-                return f.apply((S) o);
-            }
-        });
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> filter(Iterator<T> source, final Predicate<T> predicate) {
-        return new FilterIterator(source, new org.apache.commons.collections.Predicate() {
-            public boolean evaluate(Object object) {
-                return predicate.evaluate((T) object);
-            }
-        });
     }
 
 }

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.flat;
 
-import org.apache.commons.collections.iterators.ArrayIterator;
-import org.apache.commons.collections.iterators.EmptyIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.arrayIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.empty;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -74,11 +74,9 @@ public class Rank<T> {
      * @param componentType type evidence for the values
      * @param order Ordering for ranking
      */
-    @SuppressWarnings("unchecked")
     public Rank(Collection<T> values, Class<T> componentType, Comparator<? super T> order) {
         super();
-        Object array = Array.newInstance(componentType, values.size());
-        this.values = values.toArray((T[]) array);
+        this.values = toArray(values, componentType);
         this.order = order;
     }
 
@@ -93,13 +91,12 @@ public class Rank<T> {
      * @param count Number of items to include. -1 for all.
      * @param order Ordering for ranking
      */
-    @SuppressWarnings("unchecked")
     public Rank(Iterator<T> values, Class<T> componentType, int count, Comparator<? super T> order) {
         super();
         this.order = order;
 
         if (count >= 0) {
-            this.values = (T[]) Array.newInstance(componentType, count);
+            this.values = createArray(count, componentType);
             for (int k = 0; k < count; k++) {
                 this.values[k] = values.next();
             }
@@ -109,8 +106,7 @@ public class Rank<T> {
             while (values.hasNext()) {
                 l.add(values.next());
             }
-            Object array = Array.newInstance(componentType, l.size());
-            this.values = l.toArray((T[]) array);
+            this.values = toArray(l, componentType);
         }
     }
 
@@ -267,14 +263,15 @@ public class Rank<T> {
         values[hi] = t1;
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> arrayIterator(T[] values, int from, int to) {
-        return new ArrayIterator(values, from, to);
+    // -----------------------------------------------------< utility >---
+
+    private static <S> S[] toArray(Collection<S> collection, Class<S> componentType) {
+        return collection.toArray(createArray(collection.size(), componentType));
     }
 
     @SuppressWarnings("unchecked")
-    private Iterator<T> empty() {
-        return EmptyIterator.INSTANCE;
+    private static <S> S[] createArray(int size, Class<S> componentType) {
+        return (S[]) Array.newInstance(componentType, size);
     }
 
 }

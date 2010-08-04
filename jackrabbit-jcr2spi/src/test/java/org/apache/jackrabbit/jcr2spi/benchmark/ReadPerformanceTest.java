@@ -16,24 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.benchmark;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.Callable;
+import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.iteratorChain;
+import static org.apache.jackrabbit.commons.iterator.Iterators.singleton;
 
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
-import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.collections.iterators.SingletonIterator;
+import org.apache.jackrabbit.commons.iterator.Predicate;
 import org.apache.jackrabbit.jcr2spi.AbstractJCR2SPITest;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
@@ -45,9 +32,24 @@ import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.PropertyInfoBuilder;
+import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
+
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Callable;
 
 /**
  * Utility for testing jcr2spi read performance
@@ -100,7 +102,7 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
     private final Random rnd = new Random(12345);
 
     /**
-     * This implementation ovverides the default cache size with the value of
+     * This implementation overrides the default cache size with the value of
      * {@value #ITEM_INFO_CACHE_SIZE}
      */
     @Override
@@ -302,7 +304,7 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
     }
 
     private Iterator<ItemInfo> getBatch() {
-        return filter(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
+        return filterIterator(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
             public boolean evaluate(ItemInfo value) {
                 return rnd.nextInt(batchRatio) == 0;
             }
@@ -323,7 +325,7 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
 
         roundTripCount++;
         NodeInfo nodeInfo = itemInfoStore.getNodeInfo(nodeId);
-        return chain(singleton(nodeInfo), getBatch());
+        return iteratorChain(singleton(nodeInfo), getBatch());
     }
 
     @Override
@@ -346,31 +348,6 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
 
         roundTripCount++;
         return itemInfoStore.getChildInfos(parentId);
-    }
-
-    // -----------------------------------------------------< private >---
-
-    private interface Predicate<T> {
-        public boolean evaluate(T value);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> chain(Iterator<? extends T> first, Iterator<? extends T> second) {
-        return new IteratorChain(first, second);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> singleton(T value) {
-        return new SingletonIterator(value);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> filter(Iterator<T> source, final Predicate<T> predicate) {
-        return new FilterIterator(source, new org.apache.commons.collections.Predicate() {
-            public boolean evaluate(Object object) {
-                return predicate.evaluate((T) object);
-            }
-        });
     }
 
 }

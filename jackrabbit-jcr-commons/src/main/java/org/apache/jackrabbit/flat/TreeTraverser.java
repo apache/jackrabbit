@@ -16,9 +16,11 @@
  */
 package org.apache.jackrabbit.flat;
 
-import org.apache.commons.collections.iterators.EmptyIterator;
-import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.collections.iterators.SingletonIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.empty;
+import static org.apache.jackrabbit.commons.iterator.Iterators.iteratorChain;
+import static org.apache.jackrabbit.commons.iterator.Iterators.properties;
+import static org.apache.jackrabbit.commons.iterator.Iterators.singleton;
+import static org.apache.jackrabbit.commons.iterator.LazyIteratorChain.chain;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -27,7 +29,6 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  * <p>
@@ -249,7 +250,7 @@ public final class TreeTraverser implements Iterable<Node> {
     private Iterator<Node> iterator(Node node) {
         try {
             if (inclusionPolicy.include(node)) {
-                return chain(singleton(node), childIterators(node));
+                return iteratorChain(singleton(node), chain(childIterators(node)));
             }
             else {
                 return chain(childIterators(node));
@@ -259,14 +260,6 @@ public final class TreeTraverser implements Iterable<Node> {
             errorHandler.call(node, e);
             return empty();
         }
-    }
-
-    /**
-     * Returns an iterator containing the single element <code>element</code>.
-     */
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> singleton(T element) {
-        return new SingletonIterator(element);
     }
 
     /**
@@ -310,11 +303,10 @@ public final class TreeTraverser implements Iterable<Node> {
                 return nodes.hasNext();
             }
 
-            @SuppressWarnings("unchecked")
             public Iterator<Property> next() {
                 Node n = nodes.next();
                 try {
-                    return n.getProperties();
+                    return properties(n.getProperties());
                 }
                 catch (RepositoryException e) {
                     errorHandler.call(n, e);
@@ -326,66 +318,6 @@ public final class TreeTraverser implements Iterable<Node> {
                 throw new UnsupportedOperationException();
             }
         };
-    }
-
-    /**
-     * Returns the concatenation of <code>iterator</code> with the concatenation
-     * of all iterators in <code>iterators</code>.
-     */
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> chain(Iterator<T> iterator, Iterator<Iterator<T>> iterators) {
-        return new IteratorChain(iterator, new LazyIteratorChain<T>(iterators));
-    }
-
-    /**
-     * Returns the concatenation of all iterators in <code>iterators</code>.
-     */
-    private static <T> Iterator<T> chain(Iterator<Iterator<T>> iterators) {
-        return new LazyIteratorChain<T>(iterators);
-    }
-
-    /**
-     * Returns an empty iterator.
-     */
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> empty() {
-        return EmptyIterator.INSTANCE;
-    }
-
-    /**
-     * The class implements the concatenation of iterators. The implementation
-     * is lazy in the sense that advancing off all iterators is deferred as much
-     * as possible. Specifically no iterator is fully unwrapped at one single
-     * point of time.
-     */
-    private static final class LazyIteratorChain<T> implements Iterator<T> {
-        private final Iterator<Iterator<T>> iterators;
-        private Iterator<T> currentIterator;
-
-        private LazyIteratorChain(Iterator<Iterator<T>> iterators) {
-            super();
-            this.iterators = iterators;
-        }
-
-        public boolean hasNext() {
-            while ((currentIterator == null || !currentIterator.hasNext()) && iterators.hasNext()) {
-                currentIterator = iterators.next();
-            }
-            return currentIterator != null && currentIterator.hasNext();
-        }
-
-        public T next() {
-            if (hasNext()) {
-                return currentIterator.next();
-            }
-            else {
-                throw new NoSuchElementException();
-            }
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
     }
 
 }

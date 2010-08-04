@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.flat;
 
+import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.nodes;
+import static org.apache.jackrabbit.commons.iterator.Iterators.properties;
 
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.iterator.Predicate;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -254,10 +256,9 @@ public class BTreeManager implements TreeManager {
     /**
      * Returns a {@link SizedIterator} of the child nodes of <code>node</code>.
      */
-    @SuppressWarnings("unchecked")
     protected SizedIterator<Node> getNodes(Node node) throws RepositoryException {
         NodeIterator nodes = node.getNodes();
-        return getSizedIterator(nodes, nodes.getSize());
+        return getSizedIterator(nodes(nodes), nodes.getSize());
     }
 
     /**
@@ -267,17 +268,14 @@ public class BTreeManager implements TreeManager {
     protected SizedIterator<Property> getProperties(final Node node) throws RepositoryException {
         final PropertyIterator properties = node.getProperties();
 
-        @SuppressWarnings("unchecked")
-        final Iterator<Property> filtered = new FilterIterator(properties, new Predicate() {
-            public boolean evaluate(Object object) {
-                Property p = (Property) object;
+        Iterator<Property> filtered = filterIterator(properties(properties), new Predicate<Property>() {
+            public boolean evaluate(Property property) {
                 try {
-                    return !JcrConstants.JCR_PRIMARYTYPE.equals(p.getName());
+                    return !JcrConstants.JCR_PRIMARYTYPE.equals(property.getName());
                 }
                 catch (RepositoryException ignore) {
                     return true;
                 }
-
             }
         });
 

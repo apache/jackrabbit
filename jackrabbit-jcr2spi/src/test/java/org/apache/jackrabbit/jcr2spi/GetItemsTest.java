@@ -16,19 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.util.Iterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.commons.iterator.Iterators.iteratorChain;
+import static org.apache.jackrabbit.commons.iterator.Iterators.singleton;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
-import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.collections.iterators.SingletonIterator;
+import org.apache.jackrabbit.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -39,6 +31,16 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import java.util.Iterator;
 
 /**
  * Test cases for {@link RepositoryService#getItemInfos(SessionInfo, NodeId)}. Specifically
@@ -151,9 +153,9 @@ public class GetItemsTest extends AbstractJCR2SPITest {
     public Iterator<ItemInfo> getItemInfos(SessionInfo sessionInfo, final NodeId nodeId)
             throws RepositoryException {
 
-        return chain(
+        return iteratorChain(
                 singleton(itemInfoStore.getNodeInfo(nodeId)),
-                filter(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
+                filterIterator(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
                     public boolean evaluate(ItemInfo info) {
                         return !nodeId.equals(info.getId());
                     }
@@ -170,31 +172,6 @@ public class GetItemsTest extends AbstractJCR2SPITest {
             throws ItemNotFoundException {
 
         return itemInfoStore.getPropertyInfo(propertyId);
-    }
-
-    // -----------------------------------------------------< private >---
-
-    private interface Predicate<T> {
-        public boolean evaluate(T value);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> chain(Iterator<? extends T> first, Iterator<? extends T> second) {
-        return new IteratorChain(first, second);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> singleton(T value) {
-        return new SingletonIterator(value);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Iterator<T> filter(Iterator<T> source, final Predicate<T> predicate) {
-        return new FilterIterator(source, new org.apache.commons.collections.Predicate() {
-            public boolean evaluate(Object object) {
-                return predicate.evaluate((T) object);
-            }
-        });
     }
 
 }
