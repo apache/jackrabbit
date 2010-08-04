@@ -315,7 +315,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         // multiValued
         String multiValued = walker.getAttribute(MULTIVALUED_ATTRIBUTE);
-        state.setMultiValued(Boolean.getBoolean(multiValued));
+        state.setMultiValued(Boolean.parseBoolean(multiValued));
 
         // modification count
         String modCount = walker.getAttribute(MODCOUNT_ATTRIBUTE);
