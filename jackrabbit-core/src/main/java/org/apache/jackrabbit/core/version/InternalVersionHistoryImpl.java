@@ -313,6 +313,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * Returns the version from cache, or <code>null</code> if it is not
      * present.
+     * @param id the id of the version
+     * @return the version or <code>null</code> if not cached.
      */
     private synchronized InternalVersion getCachedVersion(NodeId id) {
         InternalVersion v = versionCache.get(id);
@@ -440,6 +442,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 parentNode.removeNode(node.getName());
                 // store changes for this node and his children
                 parentNode.store();
+            } else {
+                node.store();
             }
         } else {
             log.debug("Current version history has at least one reference");
@@ -462,7 +466,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * or <code>null</code> of the label was not moved.
      *
      * @param versionName the name of the version
-     * @param label the label to assgign
+     * @param label the label to assign
      * @param move  flag what to do by collisions
      * @return the version that was previously assigned by this label or <code>null</code>.
      * @throws VersionException if the version does not exist or if the label is already defined.
