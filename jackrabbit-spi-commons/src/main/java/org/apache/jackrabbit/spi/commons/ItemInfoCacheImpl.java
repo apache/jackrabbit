@@ -125,7 +125,6 @@ public class ItemInfoCacheImpl implements ItemInfoCache {
 
     // -----------------------------------------------------< private >---
 
-    @SuppressWarnings("unchecked")
     private void put(Object key, Entry<? extends ItemInfo> entry) {
         entries.remove(key);
         if (entries.size() >= cacheSize) {
