@@ -126,6 +126,9 @@ public class ItemStateMap implements ItemStateStore, Dumpable {
             case ItemState.STATUS_STALE_DESTROYED:
                 ps.print("[stale, destroyed]   ");
                 break;
+            case ItemState.STATUS_STALE_MODIFIED:
+                ps.print("[stale, modified]    ");
+                break;
             case ItemState.STATUS_UNDEFINED:
                 ps.print("[undefined]          ");
                 break;

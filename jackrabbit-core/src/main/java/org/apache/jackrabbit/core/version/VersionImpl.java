@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import org.slf4j.Logger;
@@ -47,13 +47,11 @@ public class VersionImpl extends NodeImpl implements Version {
     /**
      * Create a new instance of this class.
      * @param itemMgr item manager
-     * @param sessionContext component context of the associated session
+     * @param session session
      * @param data node data
      */
-    public VersionImpl(
-            ItemManager itemMgr, SessionContext sessionContext,
-            AbstractNodeData data) {
-        super(itemMgr, sessionContext, data);
+    public VersionImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
+        super(itemMgr, session, data);
     }
 
     /**

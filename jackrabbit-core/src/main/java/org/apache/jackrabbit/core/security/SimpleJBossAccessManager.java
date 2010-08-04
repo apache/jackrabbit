@@ -121,7 +121,7 @@ public class SimpleJBossAccessManager implements AccessManager {
         return internalIsGranted(permissions);
     }
 
-    public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
+    public boolean canRead(Path itemPath) throws RepositoryException {
         return true;
     }
 

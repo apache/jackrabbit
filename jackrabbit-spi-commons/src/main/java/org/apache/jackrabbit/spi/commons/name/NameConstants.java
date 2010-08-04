@@ -633,9 +633,6 @@ public class NameConstants {
      * sv:name
      */
     public static final Name SV_NAME = FACTORY.create(Name.NS_SV_URI, "name");
-    /**
-     * sv:multiple
-     */
-    public static final Name SV_MULTIPLE = FACTORY.create(Name.NS_SV_URI, "multiple");
+
 
 }

@@ -134,14 +134,14 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
                 throw new ItemNotFoundException(
                         "HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
             } else {
-                // Now we can check whether the item info from the cache is up to date
+                // Now we can check wheter the item info from the cache is up to date
                 long generation = entry.getGeneration();
                 if (isOutdated(cached, entry)) {
-                    // if not, retrieve the item info from the service and put the whole batch into the cache
+                    // if not, retreive the item info from the service and put the whole batch into the cache
                     infos = service.getItemInfos(sessionInfo, nodeId);
                     info = first(infos, cache, generation);
                 } else if (infos != null) {
-                    // Otherwise put the whole batch retrieved from the service earlier into the cache
+                    // Otherwise put the whole batch retreived from the service earlier into the cache
                     cache.put(info, generation);
                     first(infos, cache, generation);
                 }
@@ -439,10 +439,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     }
 
     /**
-     * Returns true if <code>cache</code> is not <code>null</code> and
+     * Returns true iff <code>cache</code> is not <code>null</code> and
      * the cached entry is up to date.
      * @param cacheEntry
-     * @param entry
+     * @param generation
      * @return
      * @throws RepositoryException
      */
@@ -453,10 +453,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     }
 
     /**
-     * Returns true if <code>cache</code> is not <code>null</code> and
+     * Returns true iff <code>cache</code> is not <code>null</code> and
      * the cached entry is not up to date.
      * @param cacheEntry
-     * @param entry
+     * @param generation
      * @return
      * @throws RepositoryException
      */

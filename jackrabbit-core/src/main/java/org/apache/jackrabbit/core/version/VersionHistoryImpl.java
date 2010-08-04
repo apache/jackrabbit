@@ -20,8 +20,8 @@ import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.commons.iterator.FrozenNodeIteratorAdapter;
@@ -56,13 +56,11 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * Create a new instance of this class.
      * @param itemMgr item manager
-     * @param sessionContext component context of the associated session
+     * @param session session
      * @param data node data
      */
-    public VersionHistoryImpl(
-            ItemManager itemMgr, SessionContext sessionContext,
-            AbstractNodeData data) {
-        super(itemMgr, sessionContext, data);
+    public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
+        super(itemMgr, session, data);
     }
 
     /**

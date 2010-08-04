@@ -37,7 +37,7 @@ public interface JackrabbitSession extends Session {
      * the principal manager or principals in general.
      * @throws UnsupportedRepositoryOperationException If principal management
      * is not supported.
-     * @throws RepositoryException If another error occurs.
+     * @throws RepositoryException If another error occors.
      * @see PrincipalManager
      */
     PrincipalManager getPrincipalManager() throws AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;

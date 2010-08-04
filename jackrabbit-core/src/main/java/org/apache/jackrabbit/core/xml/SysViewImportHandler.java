@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.xml.PropInfo.MultipleStatus;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,8 +54,7 @@ class SysViewImportHandler extends TargetImportHandler {
      */
     private Name currentPropName;
     private int currentPropType = PropertyType.UNDEFINED;
-    private MultipleStatus currentPropMultipleStatus = MultipleStatus.UNKNOWN;
-    // list of appendable value objects
+    // list of AppendableValue objects
     private ArrayList<BufferedStringValue> currentPropValues =
         new ArrayList<BufferedStringValue>();
     private BufferedStringValue currentPropValue;
@@ -177,13 +174,6 @@ class SysViewImportHandler extends TargetImportHandler {
                 throw new SAXException(new InvalidSerializedDataException(
                         "Unknown property type: " + type, e));
             }
-            // 'multi-value' hint (sv:multiple attribute)
-            String multiple = getAttribute(atts, NameConstants.SV_MULTIPLE);
-            if (multiple != null) {
-                currentPropMultipleStatus = MultipleStatus.MULTIPLE;
-            } else {
-                currentPropMultipleStatus = MultipleStatus.UNKNOWN;
-            }
         } else if (name.equals(NameConstants.SV_VALUE)) {
             // sv:value element
             currentPropValue = new BufferedStringValue(resolver, valueFactory);
@@ -294,15 +284,10 @@ class SysViewImportHandler extends TargetImportHandler {
                     throw new SAXException("error while retrieving value", ioe);
                 }
             } else {
-                if (currentPropMultipleStatus == MultipleStatus.UNKNOWN
-                        && currentPropValues.size() != 1) {
-                    currentPropMultipleStatus = MultipleStatus.MULTIPLE;
-                }
                 PropInfo prop = new PropInfo(
                         currentPropName,
                         currentPropType,
-                        currentPropValues.toArray(new TextValue[currentPropValues.size()]),
-                        currentPropMultipleStatus);
+                        currentPropValues.toArray(new TextValue[currentPropValues.size()]));
                 state.props.add(prop);
             }
             // reset temp fields

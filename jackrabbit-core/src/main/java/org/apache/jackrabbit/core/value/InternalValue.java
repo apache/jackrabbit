@@ -442,12 +442,7 @@ public class InternalValue extends AbstractQValue {
 
     public Calendar getDate() {
         assert val != null && type == PropertyType.DATE;
-        try {
-            return getCalendar();
-        } catch (RepositoryException ignore) {
-            assert false;
-            return null;
-        }
+        return (Calendar) val;
     }
 
     /**
@@ -514,6 +509,21 @@ public class InternalValue extends AbstractQValue {
         }
     }
 
+    //-------------------------------------------< java.lang.Object overrides >
+    /**
+     * Returns the string representation of this internal value.
+     *
+     * @return string representation of this internal value
+     */
+    public String toString() {
+        if (type == PropertyType.DATE) {
+            return ISO8601.format((Calendar) val);
+        } else {
+            return val.toString();
+        }
+    }
+
+
     //-------------------------------------------------------< implementation >
     private InternalValue(String value) {
         super(value, PropertyType.STRING);
@@ -532,7 +542,7 @@ public class InternalValue extends AbstractQValue {
     }
 
     private InternalValue(Calendar value) {
-        super(value);
+        super(value, PropertyType.DATE);
     }
 
     private InternalValue(boolean value) {
@@ -645,6 +655,26 @@ public class InternalValue extends AbstractQValue {
             return ((Binary) val).getSize();
         } else {
             return super.getLength();
+        }
+    }
+
+    /**
+     * @see org.apache.jackrabbit.spi.QValue#getString()
+     */
+    public String getString() throws RepositoryException {
+        if (type == PropertyType.BINARY) {
+            InputStream stream = getStream();
+            try {
+                return IOUtils.toString(stream, "UTF-8");
+            } catch (IOException e) {
+                throw new RepositoryException("conversion from stream to string failed", e);
+            } finally {
+                IOUtils.closeQuietly(stream);
+            }
+        } else if (type == PropertyType.DATE) {
+            return ISO8601.format(((Calendar) val));
+        } else {
+            return toString();
         }
     }
 

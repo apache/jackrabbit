@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import javax.jcr.security.AccessControlPolicy;
-
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.ItemNotFoundException;
@@ -87,8 +86,6 @@ public interface AccessControlProvider {
      * Returns the effective policies for the node at the given absPath.
      *
      * @param absPath an absolute path.
-     * @param permissions The effective permissions of the editing
-     * sessions that attempts to view the effective policies.
      * @return The effective policies that apply at <code>absPath</code> or
      * an empty array if the implementation cannot determine the effective
      * policy at the given path.
@@ -97,19 +94,7 @@ public interface AccessControlProvider {
      * @throws RepositoryException If another error occurs.
      * @see javax.jcr.security.AccessControlManager#getEffectivePolicies(String)
      */
-    AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * Returns the effective policies for the given principals.
-     *
-     * @param principals A set of principal.
-     * @param permissions The effective permissions of the editing
-     * sessions that attempts to view the effective policies.  @return The effective policies that are in effect for the given
-     * <code>principal</code> or an empty array.
-     * @throws RepositoryException If error occurs.
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getEffectivePolicies(Set)
-     */
-    AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals, CompiledPermissions permissions) throws RepositoryException;
+    AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns an <code>AccessControlEditor</code> for the given Session object

@@ -73,9 +73,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.cnd";
-
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME =
-            "nodetypes/custom_nodetypes.xml";
+            "custom_nodetypes.xml";
 
     /**
      * resource holding custom node type definitions which are represented as
@@ -113,6 +112,19 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * Node type event channel.
      */
     private NodeTypeEventChannel eventChannel;
+
+    /**
+     * Create a new <code>NodeTypeRegistry</codes>
+     *
+     * @param nsReg namespace registry
+     * @param ntStore node type store
+     * @return <code>NodeTypeRegistry</codes> object
+     * @throws RepositoryException if an error occurs
+     */
+    public static NodeTypeRegistry create(NamespaceRegistry nsReg, FileSystem ntStore)
+            throws RepositoryException {
+        return new NodeTypeRegistry(nsReg, ntStore);
+    }
 
     //----------------------------------------< public NodeTypeRegistry 'api' >
     /**
@@ -681,18 +693,18 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
     //---------------------------------------------------------< overridables >
     /**
-     * Constructor
+     * Protected constructor
      *
      * @param nsReg name space registry
-     * @param fs repository file system
+     * @param ntStore store
      * @throws RepositoryException if an error occurs
      */
     @SuppressWarnings("unchecked")
-    public NodeTypeRegistry(NamespaceRegistry nsReg, FileSystem fs)
+    protected NodeTypeRegistry(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
         this.nsReg = nsReg;
         customNodeTypesResource =
-            new FileSystemResource(fs, CUSTOM_NODETYPES_RESOURCE_NAME);
+                new FileSystemResource(ntStore, CUSTOM_NODETYPES_RESOURCE_NAME);
         try {
             // make sure path to resource exists
             if (!customNodeTypesResource.exists()) {

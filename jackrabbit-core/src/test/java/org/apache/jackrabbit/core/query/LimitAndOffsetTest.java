@@ -128,7 +128,7 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         QueryResult result = query.execute();
         NodeIterator nodes = result.getNodes();
         nodes.skip(1);
-        assertTrue(node3.isSame(nodes.nextNode()));
+        assertTrue(nodes.nextNode() == node3);
     }
 
     public void testOffsetAndLimitWithGetSize() throws Exception {
@@ -136,14 +136,6 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         QueryResult result = query.execute();
         NodeIterator nodes = result.getNodes();
         assertEquals(2, nodes.getSize());
-        assertEquals(3, ((QueryResultImpl) result).getTotalSize());
-
-        // JCR-2684: offset higher than total result => size == 0
-        query.setOffset(10);
-        result = query.execute();
-        nodes = result.getNodes();
-        assertFalse(nodes.hasNext());
-        assertEquals(0, nodes.getSize());
         assertEquals(3, ((QueryResultImpl) result).getTotalSize());
 
         query.setOffset(1);

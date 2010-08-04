@@ -91,7 +91,7 @@ public class Text {
     /**
      * Digest the plain string using the given algorithm.
      *
-     * @param algorithm The algorithm for the digest. This algorithm must be
+     * @param algorithm The alogrithm for the digest. This algorithm must be
      *                  supported by the MessageDigest class.
      * @param data      the data to digest with the given algorithm
      * @return The digested plain text String represented as Hex digits.
@@ -114,7 +114,7 @@ public class Text {
 
     /**
      * returns an array of strings decomposed of the original string, split at
-     * every occurrence of 'ch'. if 2 'ch' follow each other with no intermediate
+     * every occurance of 'ch'. if 2 'ch' follow each other with no intermediate
      * characters, empty "" entries are avoided.
      *
      * @param str the string to decompose
@@ -139,7 +139,7 @@ public class Text {
             return new String[0];
         }
 
-        ArrayList<String> strings = new ArrayList<String>();
+        ArrayList strings = new ArrayList();
         int pos;
         int lastpos = 0;
 
@@ -157,8 +157,8 @@ public class Text {
             strings.add("");
         }
 
-        // return string array
-        return strings.toArray(new String[strings.size()]);
+        // return stringarray
+        return (String[]) strings.toArray(new String[strings.size()]);
     }
 
     /**
@@ -179,12 +179,12 @@ public class Text {
     }
 
     /**
-     * Replaces all occurrences of <code>oldString</code> in <code>text</code>
+     * Replaces all occurences of <code>oldString</code> in <code>text</code>
      * with <code>newString</code>.
      *
      * @param text
      * @param oldString old substring to be replaced with <code>newString</code>
-     * @param newString new substring to replace occurrences of <code>oldString</code>
+     * @param newString new substring to replace occurences of <code>oldString</code>
      * @return a string
      */
     public static String replace(String text, String oldString, String newString) {
@@ -340,8 +340,8 @@ public class Text {
             BitSet validChars = isPath ? URISaveEx : URISave;
             byte[] bytes = string.getBytes("utf-8");
             StringBuffer out = new StringBuffer(bytes.length);
-            for (byte aByte : bytes) {
-                int c = aByte & 0xff;
+            for (int i = 0; i < bytes.length; i++) {
+                int c = bytes[i] & 0xff;
                 if (validChars.get(c) && c != escape) {
                     out.append((char) c);
                 } else {

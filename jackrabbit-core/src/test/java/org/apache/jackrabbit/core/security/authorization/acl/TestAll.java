@@ -39,14 +39,12 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(ACLTemplateTest.class);
         suite.addTestSuite(EntryTest.class);
-        suite.addTestSuite(EntryCollectorTest.class);
 
         suite.addTestSuite(ReadTest.class);
         suite.addTestSuite(WriteTest.class);
         suite.addTestSuite(LockTest.class);
         suite.addTestSuite(VersionTest.class);
         suite.addTestSuite(NodeTypeTest.class);
-        suite.addTestSuite(EffectivePolicyTest.class);
 
         return suite;
     }

@@ -37,14 +37,11 @@ import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
-import java.rmi.NoSuchObjectException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import javax.jcr.Repository;
@@ -172,8 +169,6 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * the jndi context; created based on configuration
      */
     private InitialContext jndiContext;
-
-    private Registry rmiRegistry = null;
 
     /**
      * Keeps a strong reference to the server side RMI repository instance to
@@ -529,7 +524,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                 // and the server socket factory retrieved above. This also
                 // binds to the server socket to the rmiHost:rmiPort.
                 reg = LocateRegistry.createRegistry(rc.rmiPort(), null, sf);
-                rmiRegistry = reg;
+
             } catch (UnknownHostException uhe) {
                 // thrown if the rmiHost cannot be resolved into an IP-Address
                 // by getRMIServerSocketFactory
@@ -584,13 +579,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      */
     private void unregisterRMI() {
         if (rmiRepository != null) {
-            // Forcibly unexport the repository;
-            try {
-                UnicastRemoteObject.unexportObject(rmiRepository, true);
-            } catch (NoSuchObjectException e) {
-                log.warn("Odd, the RMI repository was not exported", e);
-            }
-            // drop strong reference to remote repository
+            // drop strong referenece to remote repository
             rmiRepository = null;
 
             // unregister repository
@@ -599,15 +588,6 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
             } catch (Exception e) {
                 log("Error while unbinding repository from JNDI: " + e);
             }
-        }
-
-        if (rmiRegistry != null) {
-            try {
-                UnicastRemoteObject.unexportObject(rmiRegistry, true);
-            } catch (NoSuchObjectException e) {
-                log.warn("Odd, the RMI registry was not exported", e);
-            }
-            rmiRegistry = null;
         }
     }
 

@@ -48,7 +48,6 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
-import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
@@ -76,14 +75,9 @@ public class WorkspaceImpl extends AbstractWorkspace
     protected final WorkspaceConfig wspConfig;
 
     /**
-     * The component context of the repository that created this workspace.
+     * The repository that created this workspace instance
      */
-    protected final RepositoryContext repositoryContext;
-
-    /**
-     * The component context of this session.
-     */
-    protected final SessionContext sessionContext;
+    protected final RepositoryImpl rep;
 
     /**
      * The persistent state mgr associated with the workspace represented by <i>this</i>
@@ -139,19 +133,20 @@ public class WorkspaceImpl extends AbstractWorkspace
      * Protected constructor.
      *
      * @param wspConfig The workspace configuration
-     * @param sessionContext component context of this session
+     * @param stateMgr  The shared item state manager
+     * @param rep       The repository
+     * @param session   The session
      */
-    protected WorkspaceImpl(
-            WorkspaceConfig wspConfig, SessionContext sessionContext)
-            throws RepositoryException {
+    protected WorkspaceImpl(WorkspaceConfig wspConfig,
+                            SharedItemStateManager stateMgr, RepositoryImpl rep,
+                            SessionImpl session) {
         this.wspConfig = wspConfig;
-        this.sessionContext = sessionContext;
-        this.repositoryContext = sessionContext.getRepositoryContext();
-        this.stateMgr = createItemStateManager();
-        this.hierMgr = new CachingHierarchyManager(
-                repositoryContext.getRootNodeId(), this.stateMgr);
+        this.rep = rep;
+        this.stateMgr = createItemStateManager(stateMgr);
+        this.hierMgr =
+            new CachingHierarchyManager(rep.getRootNodeId(), this.stateMgr);
         this.stateMgr.addListener(hierMgr);
-        this.session = sessionContext.getSessionImpl();
+        this.session = session;
     }
 
     /**
@@ -183,9 +178,6 @@ public class WorkspaceImpl extends AbstractWorkspace
             obsMgr.dispose();
             obsMgr = null;
         }
-        // remove hierarchy manager as listener to avoid
-        // unnecessary work during stateMgr.dispose()
-        stateMgr.removeListener(hierMgr);
         stateMgr.dispose();
     }
 
@@ -196,7 +188,8 @@ public class WorkspaceImpl extends AbstractWorkspace
      *                             for some reason
      */
     public void sanityCheck() throws RepositoryException {
-        sessionContext.getSessionState().checkAlive();
+        // check session status
+        session.sanityCheck();
     }
 
     //--------------------------------------------------< new JSR 283 methods >
@@ -214,8 +207,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         SessionImpl tmpSession = null;
         try {
             // create a temporary session on new workspace for current subject
-            tmpSession = repositoryContext.getWorkspaceManager().createSession(
-                    session.getSubject(), name);
+            tmpSession = rep.createSession(session.getSubject(), name);
             WorkspaceImpl newWsp = (WorkspaceImpl) tmpSession.getWorkspace();
 
             // Workspace#clone(String, String, String, booelan) doesn't
@@ -246,7 +238,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     public void deleteWorkspace(String name) throws AccessDeniedException,
             UnsupportedRepositoryOperationException, RepositoryException {
         // check if workspace exists (will throw NoSuchWorkspaceException if not)
-        repositoryContext.getRepository().getWorkspaceInfo(name);
+        rep.getWorkspaceInfo(name);
         // todo implement deleteWorkspace
         throw new UnsupportedRepositoryOperationException("not yet implemented");
     }
@@ -394,8 +386,9 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops =
-            new BatchedItemOperations(stateMgr, sessionContext);
+        BatchedItemOperations ops = new BatchedItemOperations(
+                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
+                session, hierMgr);
 
         try {
             ops.edit();
@@ -410,7 +403,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         try {
             NodeId id = ops.copy(srcPath, srcWsp.getItemStateManager(),
                     srcWsp.getHierarchyManager(),
-                    srcWsp.sessionContext.getAccessManager(),
+                    ((SessionImpl) srcWsp.getSession()).getAccessManager(),
                     destPath, flag);
             ops.update();
             succeeded = true;
@@ -469,8 +462,9 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops =
-            new BatchedItemOperations(stateMgr, sessionContext);
+        BatchedItemOperations ops = new BatchedItemOperations(
+                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
+                session, hierMgr);
 
         try {
             ops.edit();
@@ -508,8 +502,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         sanityCheck();
 
         if (lockMgr == null) {
-            lockMgr = repositoryContext.getRepository().getLockManager(
-                    wspConfig.getName());
+            lockMgr = rep.getLockManager(wspConfig.getName());
         }
         return lockMgr;
     }
@@ -525,8 +518,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         // check state of this instance
         sanityCheck();
         if (retentionRegistry == null) {
-            retentionRegistry =
-                repositoryContext.getRepository().getRetentionRegistry(wspConfig.getName());
+            retentionRegistry = rep.getRetentionRegistry(wspConfig.getName());
         }
         return retentionRegistry;
     }
@@ -553,7 +545,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         // check state of this instance
         sanityCheck();
 
-        return repositoryContext.getNamespaceRegistry();
+        return rep.getNamespaceRegistry();
     }
 
     /**
@@ -592,7 +584,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         // check authorization for specified workspace
-        if (!sessionContext.getAccessManager().canAccess(srcWorkspace)) {
+        if (!session.getAccessManager().canAccess(srcWorkspace)) {
             throw new AccessDeniedException("not authorized to access " + srcWorkspace);
         }
 
@@ -603,8 +595,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = repositoryContext.getWorkspaceManager().createSession(
-                    session.getSubject(), srcWorkspace);
+            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
             // do cross-workspace copy
@@ -654,7 +645,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         // check authorization for specified workspace
-        if (!sessionContext.getAccessManager().canAccess(srcWorkspace)) {
+        if (!session.getAccessManager().canAccess(srcWorkspace)) {
             throw new AccessDeniedException("not authorized to access " + srcWorkspace);
         }
 
@@ -665,8 +656,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = repositoryContext.getWorkspaceManager().createSession(
-                    session.getSubject(), srcWorkspace);
+            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
             // do cross-workspace copy
@@ -715,8 +705,9 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops =
-            new BatchedItemOperations(stateMgr, sessionContext);
+        BatchedItemOperations ops = new BatchedItemOperations(
+                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
+                session, hierMgr);
 
         try {
             ops.edit();
@@ -741,12 +732,32 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * Returns the observation manager of this session.
+     * Returns the observation manager of this session. The observation manager
+     * is lazily created if it does not exist yet.
      *
      * @return the observation manager of this session
+     * @throws RepositoryException if a repository error occurs
      */
-    public ObservationManager getObservationManager() {
-        return sessionContext.getObservationManager();
+    public ObservationManager getObservationManager()
+            throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        if (obsMgr == null) {
+            try {
+                obsMgr = new ObservationManagerImpl(
+                        rep.getObservationDispatcher(wspConfig.getName()),
+                        session,
+                        session.getItemManager(),
+                        rep.getClusterNode());
+            } catch (NoSuchWorkspaceException nswe) {
+                // should never get here
+                String msg = "internal error: failed to instantiate observation manager";
+                log.debug(msg);
+                throw new RepositoryException(msg, nswe);
+            }
+        }
+        return obsMgr;
     }
 
     /**
@@ -760,7 +771,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         if (queryManager == null) {
             SearchManager searchManager;
             try {
-                searchManager = repositoryContext.getRepository().getSearchManager(wspConfig.getName());
+                searchManager = rep.getSearchManager(wspConfig.getName());
                 if (searchManager == null) {
                     String msg = "no search manager configured for this workspace";
                     log.debug(msg);
@@ -823,22 +834,9 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new RepositoryException("not an absolute path: " + parentAbsPath);
         }
 
-        Importer importer = new WorkspaceImporter(
-                parentPath, this, sessionContext,
-                uuidBehavior, wspConfig.getImportConfig());
+        Importer importer = new WorkspaceImporter(parentPath, this,
+                rep.getNodeTypeRegistry(), uuidBehavior, wspConfig.getImportConfig());
         return new ImportHandler(importer, session);
-    }
-
-    /**
-     * Returns the shared item state manager of this workspace.
-     *
-     * @return shared item state manager
-     * @throws RepositoryException if the workspace can not be accessed
-     */
-    protected SharedItemStateManager getSharedItemStateManager()
-            throws RepositoryException {
-        WorkspaceManager manager = repositoryContext.getWorkspaceManager();
-        return manager.getWorkspaceStateManager(getName());
     }
 
     /**
@@ -847,11 +845,8 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @param shared shared item state manager
      * @return local item state manager
      */
-    protected LocalItemStateManager createItemStateManager()
-            throws RepositoryException {
-        return LocalItemStateManager.createInstance(
-                getSharedItemStateManager(), this,
-                repositoryContext.getItemStateCacheFactory());
+    protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
+        return LocalItemStateManager.createInstance(shared, this, rep.getItemStateCacheFactory());
     }
 
     //------------------------------------------< EventStateCollectionFactory >

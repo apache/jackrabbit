@@ -145,7 +145,7 @@ public interface PrincipalManager {
     PrincipalIterator getGroupMembership(Principal principal);
 
     /**
-     * Returns the <code>Principal</code> which is implicitly applied to
+     * Returns the <code>Principal</code> which is implicitely is applied to
      * every subject.
      *
      * @return the 'everyone' principal

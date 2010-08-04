@@ -62,12 +62,7 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
         PrincipalProvider provider = createProvider(config);
         if (provider != null) {
             synchronized (providers) {
-                String providerName = (String) config.get(LoginModuleConfig.COMPAT_PRINCIPAL_PROVIDER_NAME);
-                if (null == providerName || "".equals(providerName)) {
-                    // no name param -> use class name instead.
-                    providerName = provider.getClass().getName();
-                }
-                providers.put(providerName, provider);
+                providers.put(provider.getClass().getName(), provider);
             }
         } else {
             log.debug("Could not register principal provider: " +
@@ -119,10 +114,6 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
             throws RepositoryException {
 
         String className = config.getProperty(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS);
-        if (className == null) {
-            // try alternative key (backwards compatibility)
-            className = config.getProperty(LoginModuleConfig.COMPAT_PRINCIPAL_PROVIDER_CLASS);
-        }
         if (className == null) {
             return null;
         }

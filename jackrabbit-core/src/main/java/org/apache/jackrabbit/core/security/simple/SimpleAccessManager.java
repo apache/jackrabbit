@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.simple;
 
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.core.HierarchyManager;
@@ -169,7 +167,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         return internalIsGranted(parentPath, permissions);
     }
 
-    public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
+    public boolean canRead(Path itemPath) throws RepositoryException {
         return true;
     }
 
@@ -298,21 +296,6 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         if (hierMgr.resolveNodePath(path) == null) {
             throw new PathNotFoundException(absPath);
         }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getEffectivePolicies(Set)
-     */
-    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
-        checkInitialized();
-        /*
-         TOBEFIXED:
-         check permissions on the root node as a workaround to only expose
-         effective policies for principals that are allowed to see ac content.
-        */
-        checkPermission(resolver.getQPath("/"), Permission.READ_AC);
-
-        return new AccessControlPolicy[] {POLICY};
     }
 
     /**

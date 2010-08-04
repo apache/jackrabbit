@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -38,27 +37,20 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.xml.serialize.OutputFormat;
+import org.apache.xml.serialize.XMLSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
 
-import javax.jcr.Binary;
 import javax.jcr.Item;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.sax.SAXResult;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -124,55 +116,35 @@ public class DefaultItemResource extends AbstractItemResource {
         // write properties
         super.spool(outputContext);
         // spool content
-        OutputStream out = outputContext.getOutputStream();
-        if (out != null && exists()) {
-            if (isMultiple()) {
-                spoolMultiValued(out);
-            } else {
-                spoolSingleValued(out);
-            }
-        }
-    }
-
-    private void spoolMultiValued(OutputStream out) {
+        InputStream in = null;
         try {
-            Document doc =
-                DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
-            doc.appendChild(getProperty(JCR_VALUES).toXml(doc));
-
-            ContentHandler handler =
-                SerializingContentHandler.getSerializer(out);
-
-            Transformer transformer =
-                TransformerFactory.newInstance().newTransformer();
-            transformer.transform(
-                    new DOMSource(doc), new SAXResult(handler));
-        } catch (SAXException e) {
-            log.error("Failed to set up XML serializer for " + item, e);
-        } catch (TransformerConfigurationException e) {
-            log.error("Failed to set up XML transformer for " + item, e);
-        } catch (ParserConfigurationException e) {
-            log.error("Failed to set up XML document for " + item, e);
-        } catch (TransformerException e) {
-            log.error("Failed to serialize the values of " + item, e);
-        }
-    }
-
-    private void spoolSingleValued(OutputStream out) throws IOException {
-        try {
-            Binary binary = ((Property) item).getBinary();
-            try {
-                InputStream in = binary.getStream();
-                try {
-                    IOUtil.spool(in, out);
-                } finally {
-                    in.close();
+            OutputStream out = outputContext.getOutputStream();
+            if (out != null && exists()) {
+                if (isMultiple()) {
+                    Document doc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+                    doc.appendChild(getProperty(JCR_VALUES).toXml(doc));
+                    OutputFormat format = new OutputFormat("xml", "UTF-8", false);
+                    XMLSerializer serializer = new XMLSerializer(out, format);
+                    serializer.setNamespaces(true);
+                    serializer.asDOMSerializer().serialize(doc);
+                } else {
+                    in = ((Property)item).getStream();
+                    if (in != null) {
+                        IOUtil.spool(in, out);
+                    }
                 }
-            } finally {
-                binary.dispose();
             }
+        } catch (ParserConfigurationException e) {
+            log.error("Error while spooling multivalued resource: " + e.getMessage());
+        } catch (ValueFormatException e) {
+            // should not occur
+            log.error("Cannot obtain stream from resource: " + e.getMessage());
         } catch (RepositoryException e) {
-            log.error("Cannot obtain stream from " + item, e);
+            log.error("Cannot obtain stream from resource: " + e.getMessage());
+        } finally {
+            if (in != null) {
+                in.close();
+            }
         }
     }
 
@@ -256,7 +228,7 @@ public class DefaultItemResource extends AbstractItemResource {
                 // altering any properties fails if an attempt is made to remove
                 // a property
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
-            } else if (propEntry instanceof DavProperty<?>) {
+            } else if (propEntry instanceof DavProperty) {
                 DavProperty<?> prop = (DavProperty<?>) propEntry;
                 internalSetProperty(prop);
             } else {

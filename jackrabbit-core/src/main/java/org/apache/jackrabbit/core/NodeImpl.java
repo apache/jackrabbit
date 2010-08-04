@@ -80,8 +80,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -97,8 +95,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
-import static javax.jcr.PropertyType.STRING;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.*;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -127,13 +123,11 @@ public class NodeImpl extends ItemImpl implements Node {
      * Protected constructor.
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Node</code> instance
-     * @param sessionContext the component context of the associated session
+     * @param session    the <code>Session</code> through which this <code>Node</code> is acquired
      * @param data       the node data
      */
-    protected NodeImpl(
-            ItemManager itemMgr, SessionContext sessionContext,
-            AbstractNodeData data) {
-        super(itemMgr, sessionContext, data);
+    protected NodeImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
+        super(itemMgr, session, data);
         this.data = data;
         // paranoid sanity check
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
@@ -189,12 +183,6 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     protected PropertyId resolveRelativePropertyPath(String relPath)
             throws RepositoryException {
-        Path p = resolveRelativePath(relPath);
-        return getPropertyId(p);
-    }
-
-    protected PropertyId resolveRelativePropertyPathOld(String relPath)
-            throws RepositoryException {
         try {
             /**
              * first check if relPath is just a name (in which case we don't
@@ -216,7 +204,7 @@ public class NodeImpl extends ItemImpl implements Node {
              */
             Path p = PathFactoryImpl.getInstance().create(
                     getPrimaryPath(), session.getQPath(relPath), true);
-            return sessionContext.getHierarchyManager().resolvePropertyPath(p);
+            return session.getHierarchyManager().resolvePropertyPath(p);
         } catch (NameException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + this;
             log.debug(msg);
@@ -297,52 +285,8 @@ public class NodeImpl extends ItemImpl implements Node {
         /**
          * build and resolve absolute path
          */
-        try {
-            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-        } catch (RepositoryException re) {
-            // failed to build canonical path
-            return null;
-        }
-        return sessionContext.getHierarchyManager().resolveNodePath(p);
-    }
-
-    /**
-     * Returns the id of the property at <code>p</code> or <code>null</code>
-     * if no node exists at <code>p</code>.
-     * <p/>
-     * Note that access rights are not checked.
-     *
-     * @param p relative path of a (possible) node
-     * @return the id of the node at <code>p</code> or
-     *         <code>null</code> if no node exists at <code>p</code>
-     * @throws RepositoryException if <code>relPath</code> is not a valid
-     *                             relative path
-     */
-    private PropertyId getPropertyId(Path p) throws RepositoryException {
-        if (p.getLength() == 1) {
-            Path.Element pe = p.getNameElement();
-            if (pe.denotesName()) {
-                // check if property entry exists
-                NodeState thisState = data.getNodeState();
-                if (pe.getIndex() == Path.INDEX_UNDEFINED
-                        && thisState.hasPropertyName(pe.getName())) {
-                    return new PropertyId(thisState.getNodeId(), pe.getName());
-                } else {
-                    // there's no property with that name
-                    return null;
-                }
-            }
-        }
-        /**
-         * build and resolve absolute path
-         */
-        try {
-            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-        } catch (RepositoryException re) {
-            // failed to build canonical path
-            return null;
-        }
-        return sessionContext.getHierarchyManager().resolvePropertyPath(p);
+        p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
+        return session.getHierarchyManager().resolveNodePath(p);
     }
 
     /**
@@ -357,7 +301,8 @@ public class NodeImpl extends ItemImpl implements Node {
         if (isTransient()) {
             return true;
         }
-        return !stateMgr.getDescendantTransientItemStates((NodeId) id).isEmpty();
+        Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
+        return iter.hasNext();
     }
 
     protected synchronized ItemState getOrCreateTransientItemState()
@@ -369,7 +314,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     // make transient (copy-on-write)
                     NodeState transientState =
                             stateMgr.createTransientNodeState(
-                                    (NodeState) stateMgr.getItemState(getId()), ItemState.STATUS_EXISTING_MODIFIED);
+                                    data.getNodeState(), ItemState.STATUS_EXISTING_MODIFIED);
                     // replace persistent with transient state
                     data.setState(transientState);
                 } catch (ItemStateException ise) {
@@ -593,6 +538,15 @@ public class NodeImpl extends ItemImpl implements Node {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         thisState.renameChildNodeEntry(oldName, index, newName);
+    }
+
+    protected void removeChildProperty(String propName) throws RepositoryException {
+        try {
+            removeChildProperty(session.getQName(propName));
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "invalid property name: " + propName, e);
+        }
     }
 
     protected void removeChildProperty(Name propName) throws RepositoryException {
@@ -820,78 +774,62 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeState transientState = data.getNodeState();
 
-        NodeState localState = (NodeState) transientState.getOverlayedState();
-        if (localState == null) {
+        NodeState persistentState = (NodeState) transientState.getOverlayedState();
+        if (persistentState == null) {
             // this node is 'new'
-            localState = stateMgr.createNew(transientState);
+            persistentState = stateMgr.createNew(transientState);
         }
 
-        synchronized (localState) {
+        synchronized (persistentState) {
+            // check staleness of transient state first
+            if (transientState.isStale()) {
+                String msg =
+                    this + ": the node cannot be saved because it has been"
+                    + " modified externally.";
+                log.debug(msg);
+                throw new InvalidItemStateException(msg);
+            }
             // copy state from transient state:
             // parent id's
-            localState.setParentId(transientState.getParentId());
+            persistentState.setParentId(transientState.getParentId());
             // primary type
-            localState.setNodeTypeName(transientState.getNodeTypeName());
+            persistentState.setNodeTypeName(transientState.getNodeTypeName());
             // mixin types
-            localState.setMixinTypeNames(transientState.getMixinTypeNames());
+            persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
             // child node entries
-            localState.setChildNodeEntries(transientState.getChildNodeEntries());
+            persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
             // property entries
-            localState.setPropertyNames(transientState.getPropertyNames());
+            persistentState.setPropertyNames(transientState.getPropertyNames());
             // shared set
-            localState.setSharedSet(transientState.getSharedSet());
-            // modCount
-            if (localState.getModCount() != transientState.getModCount()) {
-                localState.setModCount(transientState.getModCount());
-            }
+            persistentState.setSharedSet(transientState.getSharedSet());
 
             // make state persistent
-            stateMgr.store(localState);
+            stateMgr.store(persistentState);
         }
 
         // tell state manager to disconnect item state
         stateMgr.disconnectTransientItemState(transientState);
-        // swap transient state with local state
-        data.setState(localState);
+        // swap transient state with persistent state
+        data.setState(persistentState);
         // reset status
         data.setStatus(STATUS_NORMAL);
 
         if (isShareable() && data.getPrimaryParentId() == null) {
-            data.setPrimaryParentId(localState.getParentId());
+            data.setPrimaryParentId(persistentState.getParentId());
         }
     }
 
     protected void restoreTransient(NodeState transientState)
             throws RepositoryException {
-        NodeState thisState = null;
-
-        if (!isTransient()) {
-            thisState = (NodeState) getOrCreateTransientItemState();
-            if (transientState.getStatus() == ItemState.STATUS_NEW
-                    && thisState.getStatus() != ItemState.STATUS_NEW) {
-                thisState.setStatus(ItemState.STATUS_NEW);
-                stateMgr.disconnectTransientItemState(thisState);
-            }
-            thisState.setParentId(transientState.getParentId());
-            thisState.setNodeTypeName(transientState.getNodeTypeName());
-        } else {
-            // JCR-2503: Re-create transient state in the state manager,
-            // because it was removed
-            synchronized (data) {
-                try {
-                    thisState = stateMgr.createTransientNodeState(
-                            (NodeId) transientState.getId(),
-                            transientState.getNodeTypeName(),
-                            transientState.getParentId(),
-                            NodeState.STATUS_NEW);
-                    data.setState(thisState);
-                } catch (ItemStateException e) {
-                    throw new RepositoryException(e);
-                }
-            }
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        if (transientState.getStatus() == ItemState.STATUS_NEW
+                && thisState.getStatus() != ItemState.STATUS_NEW) {
+            thisState.setStatus(ItemState.STATUS_NEW);
+            stateMgr.disconnectTransientItemState(thisState);
         }
-
         // re-apply transient changes
+        thisState.setParentId(transientState.getParentId());
+        thisState.setNodeTypeName(transientState.getNodeTypeName());
         thisState.setMixinTypeNames(transientState.getMixinTypeNames());
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
         thisState.setPropertyNames(transientState.getPropertyNames());
@@ -1074,7 +1012,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // collect information about properties and nodes which require
         // further action as a result of the mixin removal;
-        // we need to do this *before* actually changing the assigned mixin types,
+        // we need to do this *before* actually changing the assigned the mixin types,
         // otherwise we wouldn't be able to retrieve the current definition
         // of an item.
         Map<PropertyId, PropertyDefinition> affectedProps = new HashMap<PropertyId, PropertyDefinition>();
@@ -1535,7 +1473,7 @@ public class NodeImpl extends ItemImpl implements Node {
             } else {
                 // adding a node with explicit specifying the node type name
                 // requires the editing session to have nt_management privilege.
-                sessionContext.getAccessManager().checkPermission(
+                session.getAccessManager().checkPermission(
                         nodePath, Permission.NODE_TYPE_MNGMT);
             }
         }
@@ -1587,6 +1525,37 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Same as <code>{@link Node#setProperty(String, Value[])}</code> except that
+     * this method takes a <code>Name</code> name argument instead of a
+     * <code>String</code>.
+     *
+     * @param name
+     * @param values
+     * @return
+     * @throws ValueFormatException
+     * @throws VersionException
+     * @throws LockException
+     * @throws ConstraintViolationException
+     * @throws RepositoryException
+     */
+    public PropertyImpl setProperty(Name name, Value[] values)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        int type = PropertyType.UNDEFINED;
+        if (values != null) {
+            for (Value v : values) {
+                // use the type of the first value
+                if (v != null) {
+                    type = v.getType();
+                    break;
+                }
+            }
+        }
+
+        return setProperty(name, values, type, false);
+    }
+
+    /**
      * Same as <code>{@link Node#setProperty(String, Value[], int)}</code> except
      * that this method takes a <code>Name</code> name argument instead of a
      * <code>String</code>.
@@ -1611,18 +1580,27 @@ public class NodeImpl extends ItemImpl implements Node {
      * Same as <code>{@link Node#setProperty(String, Value)}</code> except that
      * this method takes a <code>Name</code> name argument instead of a
      * <code>String</code>.
+     *
+     * @param name
+     * @param value
+     * @return
+     * @throws ValueFormatException
+     * @throws VersionException
+     * @throws LockException
+     * @throws ConstraintViolationException
+     * @throws RepositoryException
      */
     public PropertyImpl setProperty(Name name, Value value)
-            throws RepositoryException {
-        return sessionContext.getSessionState().perform(
-                new SetPropertyOperation(name, value, false));
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        return setProperty(name, value, false);
     }
 
     /**
      * @see ItemImpl#getQName()
      */
     public Name getQName() throws RepositoryException {
-        HierarchyManager hierMgr = sessionContext.getHierarchyManager();
+        HierarchyManager hierMgr = session.getHierarchyManager();
         Name name;
 
         if (!isShareable()) {
@@ -1717,7 +1695,7 @@ public class NodeImpl extends ItemImpl implements Node {
         i.e. treating reorder similar to a move.
         TODO: properly deal with sns in which case the index would change upon reorder.
         */
-        AccessManager acMgr = sessionContext.getAccessManager();
+        AccessManager acMgr = session.getAccessManager();
         PathBuilder pb = new PathBuilder(getPrimaryPath());
         pb.addLast(srcName.getName(), srcName.getIndex());
         Path childPath = pb.getPath();
@@ -1953,8 +1931,9 @@ public class NodeImpl extends ItemImpl implements Node {
             return "";
         }
 
+        HierarchyManager hierMgr = session.getHierarchyManager();
         Name name;
-        HierarchyManager hierMgr = sessionContext.getHierarchyManager();
+
         if (!isShareable()) {
             name = hierMgr.getName(id);
         } else {
@@ -2146,131 +2125,174 @@ public class NodeImpl extends ItemImpl implements Node {
         orderBefore(insertName, beforeName);
     }
 
-    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, Value[] values)
-            throws RepositoryException {
-        return setProperty(getQName(name), values, getType(values), false);
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        return setProperty(session.getQName(name), values);
     }
 
-    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, Value[] values, int type)
-            throws RepositoryException {
-        return setProperty(getQName(name), values, type, true);
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        return setProperty(session.getQName(name), values, type);
     }
 
-    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
-    public Property setProperty(String name, String[] strings)
-            throws RepositoryException {
-        Value[] values = getValues(strings, STRING);
-        return setProperty(getQName(name), values, STRING, false);
+    /**
+     * {@inheritDoc}
+     */
+    public Property setProperty(String name, String[] values)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value[] v = null;
+        if (values != null) {
+            v = ValueHelper.convert(values, PropertyType.STRING, session.getValueFactory());
+        }
+        return setProperty(name, v);
     }
 
-    /** Wrapper around {@link #setProperty(Name, Value[], int, boolean)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, String[] values, int type)
-            throws RepositoryException {
-        Value[] converted = getValues(values, type);
-        return setProperty(session.getQName(name), converted, type, true);
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value[] v = null;
+        if (values != null) {
+            v = ValueHelper.convert(values, type, session.getValueFactory());
+        }
+        return setProperty(session.getQName(name), v, type, true);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, String value)
-            throws RepositoryException {
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = null;
         if (value != null) {
-            return setProperty(name, getValueFactory().createValue(value));
-        } else {
-            return setProperty(name, (Value) null);
+            v = session.getValueFactory().createValue(value);
         }
+        return setProperty(name, v);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value, int)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, String value, int type)
-            throws RepositoryException {
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = null;
         if (value != null) {
-            return setProperty(
-                    name, getValueFactory().createValue(value, type), type);
-        } else {
-            return setProperty(name, (Value) null, type);
+            v = session.getValueFactory().createValue(value, type);
         }
+        return setProperty(session.getQName(name), v, true);
     }
 
-    /** Wrapper around {@link SetPropertyOperation} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, Value value, int type)
-            throws RepositoryException {
-        if (value != null && value.getType() != type) {
-            value = ValueHelper.convert(value, type, getValueFactory());
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        if (value != null) {
+            value = ValueHelper.convert(value, type, session.getValueFactory());
         }
-        return sessionContext.getSessionState().perform(
-                new SetPropertyOperation(session.getQName(name), value, true));
+        return setProperty(session.getQName(name), value, true);
     }
 
-    /** Wrapper around {@link SetPropertyOperation} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, Value value)
-            throws RepositoryException {
-        return sessionContext.getSessionState().perform(
-                new SetPropertyOperation(session.getQName(name), value, false));
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        return setProperty(session.getQName(name), value);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, InputStream value)
-            throws RepositoryException {
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = null;
         if (value != null) {
-            Binary binary = getValueFactory().createBinary(value);
-            try {
-                return setProperty(name, getValueFactory().createValue(binary));
-            } finally {
-                binary.dispose();
-            }
-        } else {
-            return setProperty(name, (Value) null);
+            v = session.getValueFactory().createValue(value);
         }
+        return setProperty(name, v);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, boolean value)
-            throws RepositoryException {
-        return setProperty(name, getValueFactory().createValue(value));
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = session.getValueFactory().createValue(value);
+        return setProperty(name, v);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, double value)
-            throws RepositoryException {
-        return setProperty(name, getValueFactory().createValue(value));
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = session.getValueFactory().createValue(value);
+        return setProperty(name, v);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, long value)
-            throws RepositoryException {
-        return setProperty(name, getValueFactory().createValue(value));
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = session.getValueFactory().createValue(value);
+        return setProperty(name, v);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, Calendar value)
-            throws RepositoryException {
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = null;
         if (value != null) {
             try {
-                return setProperty(name, getValueFactory().createValue(value));
+                v = session.getValueFactory().createValue(value);
             } catch (IllegalArgumentException e) {
-                throw new ValueFormatException(
-                        "Value is not an ISO8601 date: " + value, e);
+                // thrown if calendar cannot be formatted as ISO8601
+                throw new ValueFormatException(e.getMessage());
             }
-        } else {
-            return setProperty(name, (Value) null);
         }
+        return setProperty(name, v);
     }
 
-    /** Wrapper around {@link #setProperty(String, Value)} */
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, Node value)
-            throws RepositoryException {
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        Value v = null;
         if (value != null) {
             try {
-                return setProperty(name, getValueFactory().createValue(value));
+                v = session.getValueFactory().createValue(value);
             } catch (UnsupportedRepositoryOperationException e) {
-                throw new ValueFormatException(
-                        "Node is not referenceable: " + value, e);
+                // happens when node is not referenceable
+                throw new ValueFormatException("node is not of type mix:referenceable");
             }
-        } else {
-            return setProperty(name, (Value) null);
         }
+        return setProperty(name, v);
     }
 
     /**
@@ -2283,74 +2305,59 @@ public class NodeImpl extends ItemImpl implements Node {
      * name and single-valued flag. The resulting type is taken from that
      * definition and the implementation tries to convert the passed value to
      * that type. If that fails, then a {@link ValueFormatException} is thrown.
+     *
+     * @param name        the name of the property to set.
+     * @param value       the value to set. If <code>null</code> the property is
+     *                    removed.
+     * @param enforceType if the type of <code>value</code> is enforced.
+     * @return the <code>Property</code> object set, or <code>null</code> if
+     *         this method was used to remove a property (by setting its value
+     *         to <code>null</code>).
+     * @throws ValueFormatException         if <code>value</code> cannot be
+     *                                      converted to the specified type or
+     *                                      if the property already exists and
+     *                                      is multi-valued.
+     * @throws VersionException             if this node is read-only due to a
+     *                                      checked-in node and this implementation
+     *                                      performs this validation immediately.
+     * @throws LockException                if a lock prevents the setting of
+     *                                      the property and this implementation
+     *                                      performs this validation immediately.
+     * @throws ConstraintViolationException if the change would violate a
+     *                                      node-type or other constraint and
+     *                                      this implementation performs this
+     *                                      validation immediately.
+     * @throws RepositoryException          if another error occurs.
      */
-    private class SetPropertyOperation implements SessionOperation<PropertyImpl> {
+    protected PropertyImpl setProperty(Name name,
+                                       Value value,
+                                       boolean enforceType) throws
+            ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
 
-        private final Name name;
+        // check pre-conditions for setting property
+        checkSetProperty();
 
-        private final Value value;
-
-        private final boolean enforceType;
-
-        /**
-         * @param name  property name
-         * @param value new value of the property,
-         *              or <code>null</code> to remove the property
-         * @param enforceType <code>true</code> to enforce the value type
-         */
-        public SetPropertyOperation(
-                Name name, Value value, boolean enforceType) {
-            this.name = name;
-            this.value = value;
-            this.enforceType = enforceType;
+        int type = PropertyType.UNDEFINED;
+        if (value != null) {
+            type = value.getType();
         }
 
-        /**
-         * @return the <code>Property</code> object set,
-         *         or <code>null</code> if this operation was used to remove
-         *         a property (by setting its value to <code>null</code>)
-         * @throws ValueFormatException         if <code>value</code> cannot be
-         *                                      converted to the specified type or
-         *                                      if the property already exists and
-         *                                      is multi-valued.
-         * @throws VersionException             if this node is read-only due to a
-         *                                      checked-in node and this implementation
-         *                                      performs this validation immediately.
-         * @throws LockException                if a lock prevents the setting of
-         *                                      the property and this implementation
-         *                                      performs this validation immediately.
-         * @throws ConstraintViolationException if the change would violate a
-         *                                      node-type or other constraint and
-         *                                      this implementation performs this
-         *                                      validation immediately.
-         * @throws RepositoryException          if another error occurs.
-         */
-        public PropertyImpl perform(SessionContext context)
-                throws RepositoryException {
-            itemSanityCheck();
-            // check pre-conditions for setting property
-            checkSetProperty();
-
-            int type = PropertyType.UNDEFINED;
-            if (value != null) {
-                type = value.getType();
+        BitSet status = new BitSet();
+        PropertyImpl prop = getOrCreateProperty(name, type, false, enforceType, status);
+        try {
+            prop.setValue(value);
+        } catch (RepositoryException re) {
+            if (status.get(CREATED)) {
+                // setting value failed, get rid of newly created property
+                removeChildProperty(name);
             }
-
-            BitSet status = new BitSet();
-            PropertyImpl property =
-                getOrCreateProperty(name, type, false, enforceType, status);
-            try {
-                property.setValue(value);
-            } catch (RepositoryException e) {
-                if (status.get(CREATED)) {
-                    // setting value failed, get rid of newly created property
-                    removeChildProperty(name);
-                }
-                throw e; // rethrow
-            }
-            return property;
+            // rethrow
+            throw re;
         }
-
+        return prop;
     }
 
     /**
@@ -2808,7 +2815,6 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            RepositoryImpl rep = (RepositoryImpl) session.getRepository();
             srcSession = rep.createSession(session.getSubject(), workspaceName);
 
             // search nearest ancestor that is referenceable
@@ -2994,7 +3000,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return parent id
      */
-    public NodeId getParentId() {
+    NodeId getParentId() {
         return data.getParentId();
     }
 
@@ -3030,7 +3036,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // detect share cycle
         NodeId srcId = getNodeId();
-        HierarchyManager hierMgr = sessionContext.getHierarchyManager();
+        HierarchyManager hierMgr = session.getHierarchyManager();
         if (parentId.equals(srcId) || hierMgr.isAncestor(srcId, parentId)) {
             String msg = "This would create a share cycle.";
             log.debug(msg);
@@ -3118,11 +3124,11 @@ public class NodeImpl extends ItemImpl implements Node {
                     return true;
                 }
                 state = (NodeState)
-                    sessionContext.getItemStateManager().getItemState(parentId);
+                    session.getItemStateManager().getItemState(parentId);
             }
             PropertyId id = new PropertyId(state.getNodeId(), JCR_ISCHECKEDOUT);
             PropertyState ps =
-                (PropertyState) sessionContext.getItemStateManager().getItemState(id);
+                (PropertyState) session.getItemStateManager().getItemState(id);
             return ps.getValues()[0].getBoolean();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);

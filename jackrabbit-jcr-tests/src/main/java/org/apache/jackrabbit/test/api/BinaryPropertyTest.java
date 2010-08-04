@@ -348,7 +348,7 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
             // not testable since format of ID is implementation specific
         } else {
             try {
-                prop.getProperty();
+                prop.getNode();
                 fail("Property.getProperty() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {

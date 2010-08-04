@@ -32,7 +32,7 @@ import javax.jcr.Value;
  * Please note the difference between <code>Authorizable</code> and
  * {@link java.security.Principal Principal}:<br>
  * An <code>Authorizable</code> is repository object that is neither associated
- * with nor depending from a particular <code>Session</code> and thus independent
+ * with nor depending from a particular <code>Session</code> and thus independant
  * of the login mechanisms creating <code>Session</code>s.<br>
  * <p/>
  * On the other hand <code>Principal</code>s are representations of user
@@ -47,7 +47,7 @@ import javax.jcr.Value;
  * <p/>
  * The interfaces derived from Authorizable are defined as follows:
  * <ul>
- * <li>{@link User}: defined to be an Authorizable that can be authenticated
+ * <li>{@link User}: defined to be an authorizable that can be authenticated
  * (by using Credentials) and impersonated.</li>
  * <li>{@link Group}: defined to be a collection of other
  * <code>Authorizable</code>s.</li>
@@ -59,7 +59,7 @@ import javax.jcr.Value;
 public interface Authorizable {
 
     /**
-     * Return the implementation specific identifier for this
+     * Return the implementation specific identifer for this
      * <code>Authorizable</code>. It could e.g. be a UserID or simply the
      * principal name.
      *
@@ -98,8 +98,8 @@ public interface Authorizable {
      * if it listed as member of a Group or if still has members (this is
      * a Group itself).
      *
-     * @throws RepositoryException If an error occurred and the
-     * <code>Authorizable</code> could not be removed.
+     * @throws RepositoryException If an error occured and the
+     *                             <code>Authorizable</code> could not be removed.
      */
     void remove() throws RepositoryException;
 

@@ -152,8 +152,8 @@ public interface UserManager {
 
     /**
      * Creates a new <code>Group</code> that is based on the given principal
-     * and the specified <code>intermediatePath</code> hint. If the implementation
-     * is not able to deal with the <code>intermediatePath</code> this parameter
+     * and the specified <code>itermediatePath</code> hint. If the implementation
+     * is not able to deal with the <code>itermediatePath</code> this parameter
      * should be ignored.
      *
      * @param principal
@@ -168,7 +168,7 @@ public interface UserManager {
     /**
      * If any write operations executed through the User API are automatically
      * persisted this method returns <code>true</code>. In this case there are
-     * no pending transient changes left and there is no need to explicitly call
+     * no pending transient changes left and there is no need to explicitely call
      * {@link javax.jcr.Session#save()}. If this method returns <code>false</code>
      * any changes must be completed by an extra save call on the
      * <code>Session</code> associated with this <code>UserManager</code>.
@@ -188,7 +188,7 @@ public interface UserManager {
      * is different from the original session accessing the user manager.
      *
      * @param enable If <code>true</code> changes made through this API will
-     * be automatically saved; otherwise an explicit call to
+     * be automatically saved; otherwise an explict call to
      * {@link javax.jcr.Session#save()} is required in order to persist changes.
      * @throws UnsupportedRepositoryOperationException If the implementation
      * does not allow to change the auto save behavior.

@@ -17,39 +17,37 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.Impersonation;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
-import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.xml.DefaultProtectedPropertyImporter;
 import org.apache.jackrabbit.core.xml.PropInfo;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 import javax.jcr.Value;
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.nodetype.ConstraintViolationException;
-
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.security.Principal;
 
 /**
  * <code>UserImporter</code> implements a
@@ -83,7 +81,7 @@ import java.util.Map;
  * inserting the user/group node at some other place in the node hierarchy.</li>
  * <li>While creating user/groups through the API the <code>UserManagerImpl</code> makes
  * sure that authorizables are never nested and are created below a hierarchy
- * of nt:AuthorizableFolder nodes. This isn't enforced by means of node type
+ * of nt:AuthorizableFolder nodes. This isn't efforced by means of node type
  * constraints but only by the API. This importer currently doesn't perform such
  * a validation check.</li>
  * <li>Any attempt to import conflicting data will cause the import to fail
@@ -97,7 +95,7 @@ import java.util.Map;
  * configuration parameter, which can be set to
  * <ul>
  * <li>{@link ImportBehavior#NAME_IGNORE ignore}: A warning is logged.</li>
- * <li>{@link ImportBehavior#NAME_BESTEFFORT best effort}: A warning is logged
+ * <li>{@link ImportBehavior#NAME_BESTEFFORT besteffort}: A warning is logged
  * and the importer tries to fix the problem.</li>
  * <li>{@link ImportBehavior#NAME_ABORT abort}: The import is immediately
  * aborted with a ConstraintViolationException. (<strong>default</strong>)</li>
@@ -105,7 +103,7 @@ import java.util.Map;
  * </li>
  * </ul>
  * Known Issue:<br>
- * Importing <code>rep:impersonators</code> property referring to principals
+ * Importing <code>rep:impersonators</code> property refering to principals
  * that are created during this import AND have principalName different from the
  * ID will no succeed, as the validation in <code>ImpersonationImpl</code> isn't able
  * to find the authorizable with the given principal (reason: query will only

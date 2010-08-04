@@ -20,10 +20,9 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 import javax.jcr.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -50,7 +49,7 @@ import javax.jcr.NodeIterator;
 import java.security.Principal;
 
 /**
- * <code>ACLEditor</code>...
+ * <code>CombinedEditor</code>...
  */
 public class ACLEditor extends ProtectedItemModifier implements AccessControlEditor, AccessControlConstants {
 
@@ -378,44 +377,13 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         return princPath.toString();
     }
 
-    /**
-     * Returns the principal for the given path or null.
-     *
-     * @param pathToACNode
-     * @return
-     * @throws RepositoryException
-     */
-    private Principal getPrincipal(final String pathToACNode) throws RepositoryException {
-        final String id = getPathName(pathToACNode);
-        UserManager uMgr = session.getUserManager();
-        Authorizable authorizable = uMgr.getAuthorizable(id);
-        if (authorizable == null) {
-            // human readable id in node name is different from the hashed id
-            // use workaround to retrieve the principal
-            if (pathToACNode.startsWith(acRootPath)) {
-                final String principalPath = pathToACNode.substring(acRootPath.length());
-                if (principalPath.indexOf('/', 1) > 0) {
-                    // safe to build an item based principal
-                    authorizable = uMgr.getAuthorizable(new ItemBasedPrincipal() {
-                        public String getPath() throws RepositoryException {
-                            return principalPath;
-                        }
-                        public String getName() {
-                            return Text.getName(principalPath);
-                        }
-                    });
-                } else {
-                    // principal name was just appended to the acRootPath prefix
-                    // see getPathToAcNode above -> try to retrieve principal by name.
-                    return session.getPrincipalManager().getPrincipal(Text.getName(principalPath));
-                }
-            } // else: path doesn't start with acRootPath -> return null.
-        }
-
-        return (authorizable == null) ? null : authorizable.getPrincipal();
+    private Principal getPrincipal(String pathToACNode) throws RepositoryException {
+        String name = getPrincipalName(pathToACNode);
+        PrincipalManager pMgr = session.getPrincipalManager();
+        return pMgr.getPrincipal(name);
     }
 
-    private static String getPathName(String pathToACNode) {
+    private static String getPrincipalName(String pathToACNode) {
         return Text.unescapeIllegalJcrChars(Text.getName(pathToACNode));
     }
 
@@ -445,7 +413,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         Principal principal = getPrincipal(acNode.getPath());
         if (principal == null) {
             // use fall back in order to be able to get/remove the policy
-            String principalName = getPathName(acNode.getPath());
+            String principalName = getPrincipalName(acNode.getPath());
             log.warn("Principal with name " + principalName + " unknown to PrincipalManager.");
             principal = new PrincipalImpl(principalName);
         }

@@ -63,16 +63,6 @@ public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeType#isAbstract() NodeType.isAbstract()} method.
-     *
-     * @return <code>true</code> if this is an abstract type,
-     *         <code>false</code> otherwise
-     * @throws RemoteException on RMI errors
-     */
-    boolean isAbstract() throws RemoteException;
-
-    /**
-     * Remote version of the
      * {@link javax.jcr.nodetype.NodeType#hasOrderableChildNodes() NodeType.hasOrderableChildNodes()}
      * method.
      *

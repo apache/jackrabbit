@@ -19,7 +19,9 @@ package org.apache.jackrabbit.spi2davex;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.jcr.RepositoryException;
 
@@ -30,6 +32,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
@@ -38,13 +41,13 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
  */
 public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
-    // data deduced from property values
     private NodeId id;
+    private String uniqueID;
     private Name primaryNodeTypeName;
-    private Name[] mixinNodeTypeNames = Name.EMPTY_ARRAY;
+    private Name[] mixinNodeTypeNames = new Name[0];
 
-    private final List<PropertyId> propertyIds = new ArrayList<PropertyId>(8);
-    private List<ChildInfo> childInfos = null;
+    private final Set<PropertyInfo> propertyInfos = new LinkedHashSet<PropertyInfo>();
+    private Set<ChildInfo> childInfos = null;
 
     /**
      * Creates a new <code>NodeInfo</code>.
@@ -80,7 +83,11 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     }
 
     public Iterator<PropertyId> getPropertyIds() {
-        return propertyIds.iterator();
+        List<PropertyId> l = new ArrayList<PropertyId>();
+        for (PropertyInfo propertyInfo : propertyInfos) {
+            l.add(propertyInfo.getId());
+        }
+        return l.iterator();
     }
 
     public Iterator<ChildInfo> getChildInfos() {
@@ -88,55 +95,58 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     }
 
     //--------------------------------------------------------------------------
-    void setPropertyInfos(PropertyInfoImpl[] propInfos, IdFactory idFactory) throws RepositoryException {
-        boolean resolveUUID = false;
-        for (PropertyInfoImpl propInfo : propInfos) {
-            Name pn = propInfo.getId().getName();
-            if (NameConstants.JCR_UUID.equals(pn)) {
-                id = idFactory.createNodeId(propInfo.getValues()[0].getString());
-                resolveUUID = true;
-            } else if (NameConstants.JCR_PRIMARYTYPE.equals(pn)) {
-                primaryNodeTypeName = propInfo.getValues()[0].getName();
-            } else if (NameConstants.JCR_MIXINTYPES.equals(pn)) {
-                QValue[] vs = propInfo.getValues();
-                Name[] mixins = new Name[vs.length];
-                for (int i = 0; i < vs.length; i++) {
-                    mixins[i] = vs[i].getName();
-                }
-                mixinNodeTypeNames = mixins;
-            }
-        }
+    void addPropertyInfo(PropertyInfoImpl propInfo, IdFactory idFactory) throws RepositoryException {
+        propertyInfos.add(propInfo);
 
-        propertyIds.clear();
-        for (PropertyInfoImpl propInfo : propInfos) {
-            if (resolveUUID) {
+        Name pn = propInfo.getId().getName();
+        if (NameConstants.JCR_UUID.equals(pn)) {
+            uniqueID = propInfo.getValues()[0].getString();
+            id = idFactory.createNodeId(uniqueID);
+        } else if (NameConstants.JCR_PRIMARYTYPE.equals(pn)) {
+            primaryNodeTypeName = propInfo.getValues()[0].getName();
+        } else if (NameConstants.JCR_MIXINTYPES.equals(pn)) {
+            QValue[] vs = propInfo.getValues();
+            Name[] mixins = new Name[vs.length];
+            for (int i = 0; i < vs.length; i++) {
+                mixins[i] = vs[i].getName();
+            }
+            mixinNodeTypeNames = mixins;
+        }
+    }
+
+    void resolveUUID(IdFactory idFactory) {
+        if (uniqueID != null) {
+            for (Object o : propertyInfos) {
+                PropertyInfoImpl propInfo = (PropertyInfoImpl) o;
                 propInfo.setId(idFactory.createPropertyId(id, propInfo.getName()));
             }
-            propertyIds.add(propInfo.getId());
         }
-
     }
 
     void addChildInfo(ChildInfo childInfo) {
         if (childInfos == null) {
-            childInfos = new ArrayList<ChildInfo>();
+            childInfos = new LinkedHashSet<ChildInfo>();
         }
         childInfos.add(childInfo);
     }
 
-    void markAsLeafNode() {
-        childInfos = Collections.emptyList();
+    void setNumberOfChildNodes(long numberOfChildNodes) {
+        if (numberOfChildNodes == 0) {
+            childInfos = Collections.<ChildInfo>emptySet();
+        } // else: wait for calls to #addChildInfo
     }
 
     boolean isCompleted() {
-        return (id != null && primaryNodeTypeName != null && !propertyIds.isEmpty());
+        return !(id == null || primaryNodeTypeName == null || propertyInfos.isEmpty());
+    }
+
+    void checkCompleted() throws RepositoryException {
+        if (!isCompleted()) {
+            throw new RepositoryException("Incomplete NodeInfo");
+        }
     }
 
     String getUniqueID() {
-        if (id.getUniqueID() != null && id.getPath() == null) {
-            return id.getUniqueID();
-        } else {
-            return null;
-        }
+        return uniqueID;
     }
 }

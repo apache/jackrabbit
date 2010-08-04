@@ -16,28 +16,33 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.jackrabbit.core.query.lucene.hits.Hits;
-import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.index.IndexReader;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
+import org.apache.jackrabbit.core.query.lucene.hits.Hits;
+
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
 
 /**
  * <code>ParentAxisQuery</code> selects the parent nodes of a context query.
  */
 class ParentAxisQuery extends Query {
+
+    /**
+     * Default score is 1.0f.
+     */
+    private static final Float DEFAULT_SCORE = 1.0f;
 
     /**
      * The context query
@@ -230,8 +235,8 @@ class ParentAxisQuery extends Query {
 
         /**
          * Map that contains the scores from matching documents from the context
-         * query. To save memory only scores that are not equal to the score
-         * value of the first match are put to this map.
+         * query. To save memory only scores that are not equal to 1.0f are put
+         * to this map.
          * <p/>
          * key=[Integer] id of selected document from context query<br>
          * value=[Float] score for that document
@@ -242,11 +247,6 @@ class ParentAxisQuery extends Query {
          * The next document id to return
          */
         private int nextDoc = -1;
-
-        /**
-         * The score of the first match.
-         */
-        private Float firstScore;
 
         /**
          * Creates a new <code>ParentAxisScorer</code>.
@@ -288,7 +288,7 @@ class ParentAxisQuery extends Query {
         public float score() throws IOException {
             Float score = scores.get(nextDoc);
             if (score == null) {
-                score = firstScore;
+                score = DEFAULT_SCORE;
             }
             return score;
         }
@@ -327,18 +327,14 @@ class ParentAxisQuery extends Query {
                             if (docs.length == 1) {
                                 // optimize single value
                                 hits.set(docs[0]);
-                                if (firstScore == null) {
-                                    firstScore = score;
-                                } else if (firstScore != score) {
-                                    scores.put(doc, score);
+                                if (score != DEFAULT_SCORE) {
+                                    scores.put(docs[0], score);
                                 }
                             } else {
                                 for (int docNum : docs) {
                                     hits.set(docNum);
-                                    if (firstScore == null) {
-                                        firstScore = score;
-                                    } else if (firstScore != score) {
-                                        scores.put(doc, score);
+                                    if (score != DEFAULT_SCORE) {
+                                        scores.put(docNum, score);
                                     }
                                 }
                             }

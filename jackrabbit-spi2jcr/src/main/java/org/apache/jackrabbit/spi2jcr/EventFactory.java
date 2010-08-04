@@ -103,7 +103,7 @@ class EventFactory {
         }
 
         Name nodeTypeName = null;
-        Name[] mixinTypes = Name.EMPTY_ARRAY;
+        Name[] mixinTypes = new Name[0];
         if (node != null) {
             try {
                 parentId = idFactory.createNodeId(node.getUUID(), null);

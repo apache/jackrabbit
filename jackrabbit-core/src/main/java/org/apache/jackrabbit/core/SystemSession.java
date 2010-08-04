@@ -24,8 +24,6 @@ import java.security.Principal;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import javax.security.auth.Subject;
@@ -50,13 +48,12 @@ class SystemSession extends SessionImpl {
     /**
      * Package private factory method
      *
-     * @param repositoryContext The repository context
-     * @param wspConfig The workspace configuration
-     * @return A new instance of <code>SystemSession</code>
-     * @throws RepositoryException If an error occurs
+     * @param rep
+     * @param wspConfig
+     * @return
+     * @throws RepositoryException
      */
-    static SystemSession create(
-            RepositoryContext repositoryContext, WorkspaceConfig wspConfig)
+    static SystemSession create(RepositoryImpl rep, WorkspaceConfig wspConfig)
             throws RepositoryException {
         // create subject with SystemPrincipal
         Set<SystemPrincipal> principals = new HashSet<SystemPrincipal>();
@@ -64,21 +61,19 @@ class SystemSession extends SessionImpl {
         Subject subject =
                 new Subject(true, principals, Collections.EMPTY_SET,
                         Collections.EMPTY_SET);
-        return new SystemSession(repositoryContext, subject, wspConfig);
+        return new SystemSession(rep, subject, wspConfig);
     }
 
     /**
      * private constructor
      *
-     * @param repositoryContext repository context
-     * @param subject The subject
-     * @param wspConfig The workspace configuration
-     * @throws javax.jcr.RepositoryException If an error occurs.
+     * @param rep
+     * @param wspConfig
      */
-    private SystemSession(
-            RepositoryContext repositoryContext, Subject subject,
-            WorkspaceConfig wspConfig) throws RepositoryException {
-        super(repositoryContext, subject, wspConfig);
+    private SystemSession(RepositoryImpl rep, Subject subject,
+                          WorkspaceConfig wspConfig)
+            throws RepositoryException {
+        super(rep, subject, wspConfig);
     }
 
     /**
@@ -96,12 +91,17 @@ class SystemSession extends SessionImpl {
      * Overridden in order to create custom access manager
      *
      * @return access manager for system session
+     * @throws AccessDeniedException is never thrown
+     * @throws RepositoryException   is never thrown
      */
-    @Override
-    protected AccessManager createAccessManager(Subject subject) {
-        // use own AccessManager implementation rather than relying on
-        // configurable AccessManager to handle SystemPrincipal privileges
-        // correctly
+    protected AccessManager createAccessManager(Subject subject,
+                                                HierarchyManager hierMgr)
+            throws AccessDeniedException, RepositoryException {
+        /**
+         * use own AccessManager implementation rather than relying on
+         * configurable AccessManager to handle SystemPrincipal privileges
+         * correctly
+         */
         return new SystemAccessManager();
     }
 
@@ -192,9 +192,10 @@ class SystemSession extends SessionImpl {
         /**
          * Always returns true.
          *
-         * @see AccessManager#canRead(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.id.ItemId)
+         * @see AccessManager#canRead(Path)
+         * @param itemPath
          */
-        public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
+        public boolean canRead(Path itemPath) throws RepositoryException {
             return true;
         }
 
@@ -241,7 +242,7 @@ class SystemSession extends SessionImpl {
             if (!p.isAbsolute()) {
                 throw new RepositoryException("Absolute path expected.");
             }
-            if (context.getHierarchyManager().resolveNodePath(p) == null) {
+            if (hierMgr.resolveNodePath(p) == null) {
                 throw new PathNotFoundException("No such node " + absPath);
             }
         }
@@ -276,16 +277,8 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getEffectivePolicies(Set)
-         */
-        public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
-            // cannot determine the effective policies for the system session.
-            return new AccessControlPolicy[0];
-        }
-
-        /**
-         * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
-         */
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#hasPrivileges(String, Set, Privilege[])
+     */
         public boolean hasPrivileges(String absPath, Set<Principal> principals, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
             throw new UnsupportedOperationException("not implemented");
         }

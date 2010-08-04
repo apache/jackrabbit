@@ -20,6 +20,9 @@ import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -82,7 +85,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
 
     private long sleepBetweenNodes;
 
-    protected int testDelay;
+    private int testDelay;
 
     private final DataStore store;
 
@@ -93,6 +96,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
     private final IterablePersistenceManager[] pmList;
 
     private final Session[] sessionList;
+    private SessionListener sessionListener;
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -103,17 +107,28 @@ public class GarbageCollector implements DataStoreGarbageCollector {
      * This method is usually not called by the application, it is called
      * by SessionImpl.createDataStoreGarbageCollector().
      *
-     * @param dataStore the data store to be garbage-collected
+     * @param rep the repository
+     * @param session the session that created this object (optional)
      * @param list the persistence managers
      * @param sessionList the sessions to access the workspaces
      */
-    public GarbageCollector(
-            DataStore dataStore, IterablePersistenceManager[] list,
-            Session[] sessionList) {
-        this.store = dataStore;
+    public GarbageCollector(RepositoryImpl rep, SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
+        store = rep.getDataStore();
         this.pmList = list;
         this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;
+
+        if (session != null) {
+            // Auto-close if the main session logs out
+            this.sessionListener = new SessionListener() {
+                public void loggedOut(SessionImpl session) {
+                }
+                public void loggingOut(SessionImpl session) {
+                    close();
+                }
+            };
+            session.addListener(sessionListener);
+        }
     }
 
     public void setSleepBetweenNodes(long millis) {
@@ -268,7 +283,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
         return store;
     }
 
-    void recurse(final Node n, long sleep) throws RepositoryException {
+    private void recurse(final Node n, long sleep) throws RepositoryException {
         if (sleep > 0) {
             try {
                 Thread.sleep(sleep);
@@ -290,9 +305,9 @@ public class GarbageCollector implements DataStoreGarbageCollector {
                             rememberNode(n.getPath());
                         }
                         if (p.isMultiple()) {
-                            checkLengths(p.getLengths());
+                            p.getLengths();
                         } else {
-                        	checkLengths(p.getLength());
+                            p.getLength();
                         }
                     }
                 } catch (InvalidItemStateException e) {
@@ -345,14 +360,6 @@ public class GarbageCollector implements DataStoreGarbageCollector {
          * date when calling addRecord and that record already exists.
          *
          */
-    }
-
-    private void checkLengths(long... lengths) throws RepositoryException {
-        for (long length : lengths) {
-            if (length == -1) {
-                throw new RepositoryException("mark failed to access a property");
-            }
-        }
     }
 
     public void close() {

@@ -20,16 +20,16 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
@@ -95,7 +95,7 @@ public class SessionItemStateManager
      * @param stateMgr the local item state manager
      * @param ntReg node type registry
      */
-    public SessionItemStateManager(NodeId rootNodeId,
+    protected SessionItemStateManager(NodeId rootNodeId,
                                    LocalItemStateManager stateMgr,
                                    NodeTypeRegistry ntReg) {
         transientStore = new ItemStateMap();
@@ -108,6 +108,24 @@ public class SessionItemStateManager
         addListener(hierMgr);
 
         this.ntReg = ntReg;
+    }
+
+    /**
+     * Creates a new <code>SessionItemStateManager</code> instance.
+     *
+     * @param rootNodeId the root node id
+     * @param stateMgr the local item state manager
+     * @param ntReg node type registry
+     * @return the session item state manager.
+     */
+    public static SessionItemStateManager createInstance(
+            NodeId rootNodeId,
+            LocalItemStateManager stateMgr,
+            NodeTypeRegistry ntReg) {
+        SessionItemStateManager mgr = new SessionItemStateManager(
+                rootNodeId, stateMgr, ntReg);
+        stateMgr.addListener(mgr);
+        return mgr;
     }
 
     /**
@@ -319,6 +337,8 @@ public class SessionItemStateManager
         removeListener(hierMgr);
         // discard all transient changes
         disposeAllTransientItemStates();
+        // dispose our (i.e. 'local') state manager
+        stateMgr.dispose();
     }
 
     //< more methods for listing and retrieving transient ItemState instances >
@@ -367,99 +387,175 @@ public class SessionItemStateManager
     }
 
     /**
-     * Returns a collection of those transient item state instances that are
-     * direct or indirect descendants of the item state with the given parent.
-     * The transient item state instance with the given identifier itself
-     * (if there is such) will not be included.
-     * <p>
+     * Returns an iterator over those transient item state instances that are
+     * direct or indirect descendants of the item state with the given
+     * <code>parentId</code>. The transient item state instance with the given
+     * <code>parentId</code> itself (if there is such) will not be included.
+     * <p/>
      * The instances are returned in depth-first tree traversal order.
      *
-     * @param id identifier of the common parent of the transient item state
-     *           instances to be returned
-     * @return collection of descendant transient item state instances
+     * @param parentId the id of the common parent of the transient item state
+     *                 instances to be returned.
+     * @return an iterator over descendant transient item state instances
      * @throws InvalidItemStateException if any descendant item state has been
      *                                   deleted externally
      * @throws RepositoryException       if another error occurs
      */
-    public Collection<ItemState> getDescendantTransientItemStates(ItemId id)
+    public Iterator<ItemState> getDescendantTransientItemStates(NodeId parentId)
             throws InvalidItemStateException, RepositoryException {
-        try {
-            return getDescendantItemStates(
-                    id, transientStore, getAtticAwareHierarchyMgr());
-        } catch (ItemNotFoundException e) {
-            // one of the parents of the specified item has been
-            // removed externally; as we don't know its path,
-            // we can't determine if it is a descendant;
-            // InvalidItemStateException should only be thrown if
-            // a descendant is affected;
-            // => throw InvalidItemStateException for now (FIXME)
-            // unable to determine relative depth, assume that the item
-            // (or any of its ancestors) has been removed externally
-            throw new InvalidItemStateException(
-                    "Item seems to have been removed externally", e);
+        if (transientStore.isEmpty()) {
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
         }
+
+        // build ordered collection of descendant transient states
+        // sorted by decreasing relative depth
+
+        // use an array of lists to group the descendants by relative depth;
+        // the depth is used as array index
+        List[] la = new List[10];
+        try {
+            HierarchyManager atticAware = getAtticAwareHierarchyMgr();
+            for (ItemState state : transientStore.values()) {
+                // determine relative depth: > 0 means it's a descendant
+                int depth;
+                try {
+                    depth = atticAware.getShareRelativeDepth(parentId, state.getId());
+                } catch (ItemNotFoundException infe) {
+                    /**
+                     * one of the parents of the specified item has been
+                     * removed externally; as we don't know its path,
+                     * we can't determine if it is a descendant;
+                     * InvalidItemStateException should only be thrown if
+                     * a descendant is affected;
+                     * => throw InvalidItemStateException for now
+                     * todo FIXME
+                     */
+                    // unable to determine relative depth, assume that the item
+                    // (or any of its ancestors) has been removed externally
+                    String msg = state.getId()
+                            + ": the item seems to have been removed externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
+                }
+
+                if (depth < 1) {
+                    // not a descendant
+                    continue;
+                }
+
+                // ensure capacity
+                if (depth > la.length) {
+                    List[] old = la;
+                    la = new List[depth + 10];
+                    System.arraycopy(old, 0, la, 0, old.length);
+                }
+
+                List list = la[depth - 1];
+                if (list == null) {
+                    list = new ArrayList();
+                    la[depth - 1] = list;
+                }
+                list.add(state);
+            }
+        } catch (RepositoryException re) {
+            log.warn("inconsistent hierarchy state", re);
+        }
+        // create an iterator over the collected descendants
+        // in decreasing depth order
+        IteratorChain resultIter = new IteratorChain();
+        for (int i = la.length - 1; i >= 0; i--) {
+            List list = la[i];
+            if (list != null) {
+                resultIter.addIterator(list.iterator());
+            }
+        }
+        /**
+         * if the resulting iterator chain is empty return
+         * EMPTY_LIST.iterator() instead because older versions
+         * of IteratorChain (pre Commons Collections 3.1)
+         * would throw UnsupportedOperationException in this
+         * situation
+         */
+        if (resultIter.getIterators().isEmpty()) {
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
+        }
+        return resultIter;
     }
 
     /**
-     * Same as <code>{@link #getDescendantTransientItemStates(ItemId)}</code>
+     * Same as <code>{@link #getDescendantTransientItemStates(NodeId)}</code>
      * except that item state instances in the attic are returned.
      *
-     * @param id identifier of the common parent of the transient item state
-     *           instances to be returned
-     * @return collection of descendant transient item state instances
-     *         in the attic
+     * @param parentId the id of the common parent of the transient item state
+     *                 instances to be returned.
+     * @return an iterator over descendant transient item state instances in the attic
      */
-    public Iterable<ItemState> getDescendantTransientItemStatesInAttic(
-            ItemId id) throws RepositoryException {
-        return getDescendantItemStates(
-                id, atticStore,
-                new ZombieHierarchyManager(hierMgr, this, getAttic()));
-    }
-
-    /**
-     * Utility method used by the
-     * {@link #getDescendantTransientItemStates(ItemId)} and
-     * {@link #getDescendantTransientItemStatesInAttic(ItemId)} methods
-     * to collect descendant item states from the given item state store.
-     *
-     * @param id identifier of the parent item
-     * @param store item state store
-     * @param hierarchyManager hierarchy manager associated with the store
-     * @return descendants of the identified item
-     * @throws RepositoryException if the descendants could not be accessed
-     */
-    private List<ItemState> getDescendantItemStates(
-            ItemId id, ItemStateStore store, HierarchyManager hierarchyManager)
-            throws RepositoryException {
-        if (id.denotesNode() && !store.isEmpty()) {
-            // Group the descendants by reverse relative depth
-            SortedMap<Integer, Collection<ItemState>> statesByReverseDepth =
-                new TreeMap<Integer, Collection<ItemState>>();
-            for (ItemState state : store.values()) {
-                // determine relative depth: > 0 means it's a descendant
-                int depth = hierarchyManager.getShareRelativeDepth(
-                        (NodeId) id, state.getId());
-                if (depth > 0) {
-                    Collection<ItemState> statesAtDepth =
-                        statesByReverseDepth.get(-depth);
-                    if (statesAtDepth == null) {
-                        statesAtDepth = new ArrayList<ItemState>();
-                        statesByReverseDepth.put(-depth, statesAtDepth);
-                    }
-                    statesAtDepth.add(state);
-                }
-            }
-
-            // Collect the descendants in decreasing depth order
-            List<ItemState> descendants = new ArrayList<ItemState>();
-            for (Collection<ItemState> statesAtDepth
-                    : statesByReverseDepth.values()) {
-                descendants.addAll(statesAtDepth);
-            }
-            return descendants;
-        } else {
-            return Collections.emptyList();
+    public Iterator<ItemState> getDescendantTransientItemStatesInAttic(NodeId parentId) {
+        if (atticStore.isEmpty()) {
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
         }
+
+        // build ordered collection of descendant transient states in attic
+        // sorted by decreasing relative depth
+
+        // use a special attic-aware hierarchy manager
+        ZombieHierarchyManager zombieHierMgr =
+            new ZombieHierarchyManager(hierMgr, this, getAttic());
+
+        // use an array of lists to group the descendants by relative depth;
+        // the depth is used as array index
+        List[] la = new List[10];
+        try {
+            for (ItemState state : atticStore.values()) {
+                // determine relative depth: > 0 means it's a descendant
+                //int depth = zombieHierMgr.getRelativeDepth(parentId, state.getId());
+                int depth = zombieHierMgr.getShareRelativeDepth(parentId, state.getId());
+                if (depth < 1) {
+                    // not a descendant
+                    continue;
+                }
+
+                // ensure capacity
+                if (depth > la.length) {
+                    List[] old = la;
+                    la = new List[depth + 10];
+                    System.arraycopy(old, 0, la, 0, old.length);
+                }
+
+                List list = la[depth - 1];
+                if (list == null) {
+                    list = new ArrayList();
+                    la[depth - 1] = list;
+                }
+                list.add(state);
+            }
+        } catch (RepositoryException re) {
+            log.warn("inconsistent hierarchy state", re);
+        }
+        // create an iterator over the collected descendants
+        // in decreasing depth order
+        IteratorChain resultIter = new IteratorChain();
+        for (int i = la.length - 1; i >= 0; i--) {
+            List list = la[i];
+            if (list != null) {
+                resultIter.addIterator(list.iterator());
+            }
+        }
+        /**
+         * if the resulting iterator chain is empty return
+         * EMPTY_LIST.iterator() instead because older versions
+         * of IteratorChain (pre Commons Collections 3.1)
+         * would throw UnsupportedOperationException in this
+         * situation
+         */
+        if (resultIter.getIterators().isEmpty()) {
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
+        }
+        return resultIter;
     }
 
     /**
@@ -819,8 +915,8 @@ public class SessionItemStateManager
                         transientState.setModCount(local.getModCount());
                         transientState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                     } catch (ItemStateException e) {
-                        // something went wrong
-                        transientState.setStatus(ItemState.STATUS_UNDEFINED);
+                        // something went wrong, mark as stale
+                        transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
                     }
                 }
                 visibleState = transientState;
@@ -838,7 +934,61 @@ public class SessionItemStateManager
      */
     public void stateModified(ItemState modified) {
         ItemState visibleState = modified;
-        // JCR-2650: ignore external changes, they will be considered/merged on save().
+        if (modified.getContainer() != this) {
+            // local state was modified
+            ItemState transientState = transientStore.get(modified.getId());
+            if (transientState != null) {
+                if (transientState.isNode() && !transientState.isStale()) {
+                    // try to silently merge non-conflicting changes (JCR-584)
+                    NodeStateMerger.MergeContext context =
+                            new NodeStateMerger.MergeContext() {
+                                public boolean isAdded(ItemId id) {
+                                    ItemState is = transientStore.get(id);
+                                    return is != null
+                                            && is.getStatus() == ItemState.STATUS_NEW;
+                                }
+
+                                public boolean isDeleted(ItemId id) {
+                                    return atticStore.contains(id);
+                                }
+
+                                public boolean isModified(ItemId id) {
+                                    ItemState is = transientStore.get(id);
+                                    return is != null
+                                            && is.getStatus() == ItemState.STATUS_EXISTING_MODIFIED;
+                                }
+
+                                public boolean allowsSameNameSiblings(NodeId id) {
+                                    try {
+                                        NodeState ns = (NodeState) getItemState(id);
+                                        NodeState parent = (NodeState) getItemState(ns.getParentId());
+                                        Name name = parent.getChildNodeEntry(id).getName();
+                                        EffectiveNodeType ent = ntReg.getEffectiveNodeType(
+                                                parent.getNodeTypeName(),
+                                                parent.getMixinTypeNames());
+                                        QNodeDefinition def = ent.getApplicableChildNodeDef(name, ns.getNodeTypeName(), ntReg);
+                                        return def != null ? def.allowsSameNameSiblings() : false;
+                                    } catch (Exception e) {
+                                        log.warn("Unable to get node definition", e);
+                                        return false;
+                                    }
+                                }
+                            };
+                    if (NodeStateMerger.merge((NodeState) transientState, context)) {
+                        // merge succeeded
+                        return;
+                    }
+                }
+                transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
+                visibleState = transientState;
+            }
+            // check attic as well (JCR-1432)
+            transientState = atticStore.get(modified.getId());
+            if (transientState != null) {
+                transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
+                visibleState = transientState;
+            }
+        }
         dispatcher.notifyStateModified(visibleState);
     }
 

@@ -16,19 +16,16 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.TestPrincipal;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
 
@@ -37,9 +34,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Map;
@@ -49,20 +44,18 @@ import java.util.Map;
  */
 public class WriteTest extends AbstractWriteTest {
 
-    @Override
     protected boolean isExecutable() {
         return EvaluationUtil.isExecutable((SessionImpl) superuser, acMgr);
     }
 
-    @Override
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
         return EvaluationUtil.getPolicy(acM, path, principal);
     }
 
-    @Override
     protected Map<String, Value> getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
         return EvaluationUtil.getRestrictions(s, path);
     }
+
 
     public void testAutocreatedProperties() throws RepositoryException, NotExecutableException {
         givePrivileges(path, testUser.getPrincipal(), privilegesFromName(PrivilegeRegistry.REP_WRITE), getRestrictions(superuser, path));
@@ -161,93 +154,5 @@ public class WriteTest extends AbstractWriteTest {
         }
 
     }
-
-    /**
-     * Test for bug JCR-2621
-     * 
-     * @throws Exception
-     */
-    public void testPrincipalNameDiffersFromID() throws Exception {
-        UserManager uMgr = getUserManager(superuser);
-        User u = null;
-        try {
-            // create a user with different uid vs principal name
-            u = uMgr.createUser("t@foo.org", "t", new PrincipalImpl("t"), null);
-            if (!uMgr.isAutoSave()) {
-                superuser.save();
-            }
-
-            Principal principal = u.getPrincipal();
-            JackrabbitAccessControlList acl = getPolicy(acMgr, path, principal);
-            acl.addEntry(principal, privilegesFromName(Privilege.JCR_READ), true, getRestrictions(superuser, path));
-            acMgr.setPolicy(acl.getPath(), acl);
-
-            AccessControlPolicy[] plcs = acMgr.getPolicies(acl.getPath());
-            assertEquals(1, plcs.length);
-            acl = (JackrabbitAccessControlList) plcs[0];
-            acl.addEntry(principal, privilegesFromName(Privilege.JCR_WRITE), true, getRestrictions(superuser, path));
-            acMgr.setPolicy(acl.getPath(), acl);
-
-        } finally {
-            if (u != null) {
-                u.remove();
-            }
-        }
-    }
-
-    /**
-     * Test for bug JCR-2621
-     *
-     * @throws Exception
-     */
-    public void testNotItemBasedPrincipal() throws Exception {
-        try {
-            Principal everyone = ((JackrabbitSession) superuser).getPrincipalManager().getEveryone();
-            JackrabbitAccessControlList acl = getPolicy(acMgr, path, everyone);
-            acl.addEntry(everyone, privilegesFromName(Privilege.JCR_READ), true, getRestrictions(superuser, path));
-            acMgr.setPolicy(acl.getPath(), acl);
-
-            AccessControlPolicy[] plcs = acMgr.getPolicies(acl.getPath());
-            assertEquals(1, plcs.length);
-            acl = (JackrabbitAccessControlList) plcs[0];
-            acl.addEntry(everyone, privilegesFromName(Privilege.JCR_WRITE), true, getRestrictions(superuser, path));
-            acMgr.setPolicy(acl.getPath(), acl);
-        } finally {
-            // revert all kind of transient modifications
-            superuser.refresh(false);
-        }
-    }
-
-    public void testInvalidPrincipal() throws Exception {
-        PrincipalManager pMgr = ((JackrabbitSession) superuser).getPrincipalManager();
-        String unknown = "unkown";
-        while (pMgr.hasPrincipal(unknown)) {
-            unknown = unknown + "_";
-        }
-        Principal principal = new PrincipalImpl(unknown);
-        
-        if (acMgr instanceof JackrabbitAccessControlManager) {
-            // first try applicable policies
-            try {
-                AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acMgr).getApplicablePolicies(principal);
-                assertNotNull(policies);
-                assertEquals(0, policies.length);
-            } catch (AccessControlException e) {
-                // success
-            }
-            
-            // second existing policies
-            try {
-                AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acMgr).getPolicies(principal);
-                assertNotNull(policies);
-                assertEquals(0, policies.length);
-            } catch (AccessControlException e) {
-                // success
-            }
-        } else {
-            throw new NotExecutableException();
-        }
-    }
-    
     // TODO: add specific tests with other restrictions
 }

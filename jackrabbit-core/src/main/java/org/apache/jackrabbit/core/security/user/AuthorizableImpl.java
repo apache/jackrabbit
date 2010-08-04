@@ -23,7 +23,6 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -448,10 +447,6 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             super(name);
         }
 
-        NodeId getNodeId() {
-            return node.getNodeId();
-        }
-        
         //---------------------------------------------< ItemBasedPrincipal >---
         /**
          * Method revealing the path to the Node that represents the

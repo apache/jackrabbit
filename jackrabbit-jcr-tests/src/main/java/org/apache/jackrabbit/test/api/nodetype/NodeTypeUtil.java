@@ -40,8 +40,7 @@ public class NodeTypeUtil {
     public static final int ANY_PROPERTY_TYPE = -1;
 
     /**
-     * Locate a non-protected child node def declared by a non-abstract node type
-     * parsing all node types
+     * Locate a non-protected child node def parsing all node types
      *
      * @param session                  the session to access the node types
      * @param regardDefaultPrimaryType if true, the default primary type of the
@@ -68,7 +67,7 @@ public class NodeTypeUtil {
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
 
-        boolean skip = false;
+        boolean overjump = false;
 
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
@@ -93,10 +92,6 @@ public class NodeTypeUtil {
 
             for (int i = 0; i < nodeDefs.length; i++) {
                 NodeDefinition nodeDef = nodeDefs[i];
-
-                if (nodeDef.getDeclaringNodeType().isAbstract()) {
-                    continue;
-                }
 
                 if (nodeDef.isProtected()) {
                     continue;
@@ -125,17 +120,17 @@ public class NodeTypeUtil {
 
                 if (!residual) {
                     // if another child node def is a residual definition
-                    // skip the current node type
+                    // overjump the current node type
                     NodeDefinition nodeDefsAll[] = type.getChildNodeDefinitions();
                     for (int j = 0; j < nodeDefsAll.length; j++) {
                         if (nodeDefsAll[j].getName().equals("*")) {
-                            skip = true;
+                            overjump = true;
                             break;
                         }
                     }
-                    if (skip) {
+                    if (overjump) {
                         // break the loop of the current child not defs
-                        skip = false;
+                        overjump = false;
                         break;
                     }
                 }

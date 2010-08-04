@@ -24,7 +24,6 @@ import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
@@ -163,17 +162,9 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.security.authorization.CompiledPermissions)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
      */
-    public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException {
-        checkInitialized();
-        return new AccessControlPolicy[] {policy};
-    }
-
-    /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(java.util.Set, CompiledPermissions)
-     */
-    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals, CompiledPermissions permission) throws ItemNotFoundException, RepositoryException {
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
         return new AccessControlPolicy[] {policy};
     }
@@ -202,9 +193,8 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             ItemBasedPrincipal userPrincipal = getUserPrincipal(principals);
             NodeImpl userNode = getUserNode(userPrincipal);
             if (userNode == null) {
-                // no 'user' within set of principals -> no permissions in the
-                // security workspace.
-                return CompiledPermissions.NO_PERMISSION;
+                // no 'user' within set of principals -> READ-only
+                return getReadOnlyPermissions();
             } else {
                 return new CompiledPermissionsImpl(principals, userNode.getPath());
             }
@@ -347,7 +337,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 // no Node corresponding to user for which the permissions are
                 // calculated -> no permissions/privileges.
                 log.debug("No node at " + userNodePath);
-                return Result.EMPTY;
+                return new Result(Permission.NONE, Permission.NONE, PrivilegeRegistry.NO_PRIVILEGE, PrivilegeRegistry.NO_PRIVILEGE);
             }
 
             // no explicit denied permissions:
@@ -455,7 +445,8 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         @Override
         public boolean grants(Path absPath, int permissions) throws RepositoryException {
             if (permissions == Permission.READ) {
-                return canReadAll();
+                // read is always granted
+                return true;
             }
             // otherwise: retrieve from cache (or build)
             return super.grants(absPath, permissions);
@@ -466,16 +457,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
          */
         @Override
         public boolean canReadAll() throws RepositoryException {
-            // for consistency with 'grants(Path, int) this method only returns
-            // true if there exists a node for 'userNodePath'
-            return session.nodeExists(userNodePath);
-        }
-
-        /**
-         * @see CompiledPermissions#canRead(Path, ItemId)
-         */
-        public boolean canRead(Path path, ItemId itemId) throws RepositoryException {
-            return canReadAll();
+            return true;
         }
 
         //--------------------------------------------------< EventListener >---

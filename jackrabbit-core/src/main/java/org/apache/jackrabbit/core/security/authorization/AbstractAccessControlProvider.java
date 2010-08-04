@@ -25,14 +25,9 @@ import javax.jcr.Session;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.core.ItemImpl;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
@@ -40,7 +35,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
  * <code>AbstractAccessControlProvider</code>...
  */
 public abstract class AbstractAccessControlProvider implements AccessControlProvider,
-        AccessControlUtils, AccessControlConstants {
+        AccessControlUtils {
 
     /**
      * Constant for the name of the configuration option "omit-default-permission".
@@ -103,9 +98,6 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
             public boolean canReadAll() {
                 return true;
             }
-            public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
-                return true;
-            }
         };
     }
 
@@ -139,47 +131,10 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
             public boolean canReadAll() {
                 return false;
             }
-            public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
-                if (itemPath != null) {
-                    return !isAcItem(itemPath);
-                } else {
-                    return !isAcItem(session.getItemManager().getItem(itemId));
-                }
-            }
         };
     }
 
     //-------------------------------------------------< AccessControlUtils >---
-    /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(Path)
-     */
-    public boolean isAcItem(Path absPath) throws RepositoryException {
-        Path.Element[] elems = absPath.getElements();
-        // start looking for a rep:policy name starting from the last element.
-        // NOTE: with the current content structure max. 3 levels must be looked
-        // at as the rep:policy node may only have ACE nodes with a properties.
-        if (elems.length > 1) {
-            for (int index = elems.length-1, j = 1; index >= 0 && j <= 3; index--, j++) {
-                if (N_POLICY.equals(elems[index].getName())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Test if the given node is itself a rep:ACL or a rep:ACE node.
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(org.apache.jackrabbit.core.ItemImpl)
-     */
-    public boolean isAcItem(ItemImpl item) throws RepositoryException {
-        NodeImpl n = ((item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent());
-        Name ntName = ((NodeTypeImpl) n.getPrimaryNodeType()).getQName();
-        return ntName.equals(NT_REP_ACL) ||
-                ntName.equals(NT_REP_GRANT_ACE) ||
-                ntName.equals(NT_REP_DENY_ACE);
-    }
-
     /**
      * @see AccessControlUtils#isAdminOrSystem(Set)
      */

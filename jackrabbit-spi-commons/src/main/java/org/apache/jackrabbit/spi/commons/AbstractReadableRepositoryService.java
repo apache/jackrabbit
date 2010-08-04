@@ -94,12 +94,14 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
         this.defaulWsp = defaultWsp;
     }
 
-    //------------------------------------< may be overwritten by subclasses>---
+    //---------------------< may be overwritten by subclasses>------------------
+
+
     /**
      * Checks whether the <code>workspaceName</code> is valid.
      * @param workspaceName  name of the workspace to check
      * @throws NoSuchWorkspaceException  if <code>workspaceName</code> is neither in the
-     * list of workspace nor null (i.e. default workspace).
+     *   list of workspaces nor null (i.e. default workspace).
      */
     @Override
     protected void checkWorkspace(String workspaceName) throws NoSuchWorkspaceException {
@@ -115,16 +117,14 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
         return super.createSessionInfo(credentials, workspaceName == null? defaulWsp : workspaceName);
     }
 
-    // -------------------------------------------------------------< cache >---
-    /**
-     * @param sessionInfo
-     * @return a new instance of <code>ItemInfoCacheImpl</code>
-     */
+    // -----------------------------------------------------< cache >---
+
     public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) {
         return new ItemInfoCacheImpl();
     }
 
-    //------------------------------------------------------------< reading >---
+    //-----------------------------< reading >----------------------------------
+
     /**
      * This default implementation returns the first item returned by the call to
      * {@link #getItemInfos(SessionInfo, NodeId)}. The underlying assumption here is that
@@ -145,7 +145,8 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
         }
     }
 
-    //----------------------------------------------------< workspace names >---
+    //-------------------------< workspace names >------------------------------
+
     /**
      * This default implementation first calls {@link #checkSessionInfo(SessionInfo)}
      * with the <code>sessionInfo</code>, then returns the workspaces that were
@@ -156,7 +157,8 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
         return wspNames.toArray(new String[wspNames.size()]);
     }
 
-    //-----------------------------------------------------< access control >---
+    //-------------------------< access control >-------------------------------
+
     /**
      * This default implementation first calls {@link #checkSessionInfo(SessionInfo)}
      * with the <code>sessionInfo</code>, then returns <code>false</code> if

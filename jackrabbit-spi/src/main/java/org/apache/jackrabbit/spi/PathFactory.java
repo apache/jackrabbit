@@ -25,7 +25,7 @@ public interface PathFactory {
 
     /**
      * Return a new <code>Path</code> out of the given <code>parent<code> path
-     * and the given relative path. If <code>normalize</code> is
+     * string and the given relative path string. If <code>normalize</code> is
      * <code>true</code>, the returned path will be normalized (or
      * canonicalized, if the parent path is absolute).
      *
@@ -34,24 +34,23 @@ public interface PathFactory {
      * @param normalize
      * @return
      * @throws IllegalArgumentException if <code>relPath</code> is absolute.
-     * @throws RepositoryException If the <code>normalized</code> is
-     * <code>true</code> and the resulting path cannot be normalized.
+     * @throws RepositoryException if <code>normalize</code> is true but the
+     * created Path cannot be normalized.
      */
     public Path create(Path parent, Path relPath, boolean normalize) throws IllegalArgumentException, RepositoryException;
 
     /**
      * Creates a new <code>Path</code> out of the given <code>parent<code> path
-     * and the give name. If <code>normalize</code> is <code>true</code>,
+     * string and the give name. If <code>normalize</code> is <code>true</code>,
      * the returned path will be normalized (or canonicalized, if the parent
      * path is absolute). Use {@link PathFactory#create(Path, Name, int, boolean)}
      * in order to build a <code>Path</code> having an index with his name element.
      *
      * @param parent the parent path
      * @param name the name of the new path element.
-     * @param normalize If true the Path is normalized before being returned.
+     * @param normalize
      * @return
-     * @throws RepositoryException If the <code>normalized</code> is
-     * <code>true</code> and the resulting path cannot be normalized.
+     * @throws RepositoryException
      */
     public Path create(Path parent, Name name, boolean normalize) throws RepositoryException;
 
@@ -68,7 +67,7 @@ public interface PathFactory {
      * @throws IllegalArgumentException If the given index is lower than
      * {@link Path#INDEX_UNDEFINED}.
      * @throws RepositoryException If the <code>normalized</code> is
-     * <code>true</code> and the resulting path cannot be normalized.
+     * <code>true</code> and the path cannot be normalized.
      */
     public Path create(Path parent, Name name, int index, boolean normalize) throws IllegalArgumentException, RepositoryException;
 
@@ -100,7 +99,7 @@ public interface PathFactory {
      * @param elements
      * @return the <code>Path</code> created from the elements.
      * @throws IllegalArgumentException If the given elements are <code>null</code>
-     * or have a length of 0 or would otherwise constitute an invalid path.
+     * or have a length of 0.
      */
     public Path create(Path.Element[] elements) throws IllegalArgumentException;
 

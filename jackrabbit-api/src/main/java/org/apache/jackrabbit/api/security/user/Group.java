@@ -53,7 +53,7 @@ public interface Group extends Authorizable {
      * @param authorizable The <code>Authorizable</code> to be added as
      * member to this group.
      * @return true if the <code>Authorizable</code> has successfully been added
-     * to this Group, false otherwise (e.g. unknown implementation
+     * to this Group, false otherwise (e.g. unknown implemention
      * or if it already is a member or if the passed authorizable is this
      * group itself or for some implementation specific constraint).
      * @throws RepositoryException If an error occurs.

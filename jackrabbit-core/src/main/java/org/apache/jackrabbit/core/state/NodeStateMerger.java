@@ -131,14 +131,14 @@ class NodeStateMerger {
                         }
                     }
 
-                    // copy child node entries from other state and
+                    // copy child node antries from other state and
                     // re-apply changes made on this state
                     state.setChildNodeEntries(overlayedState.getChildNodeEntries());
-                    for (ChildNodeEntry cne : removed) {
-                        state.removeChildNodeEntry(cne.getId());
-                    }
                     for (ChildNodeEntry cne : added) {
                         state.addChildNodeEntry(cne.getName(), cne.getId());
+                    }
+                    for (ChildNodeEntry cne : removed) {
+                        state.removeChildNodeEntry(cne.getId());
                     }
                 }
 

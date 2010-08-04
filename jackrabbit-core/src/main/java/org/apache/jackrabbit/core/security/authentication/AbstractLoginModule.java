@@ -145,14 +145,6 @@ public abstract class AbstractLoginModule implements LoginModule {
                     principalProviderClassName = pcOption.toString();
                 }
             }
-            if (principalProviderClassName == null) {
-                // try compatibility parameters
-                if (options.containsKey(LoginModuleConfig.COMPAT_PRINCIPAL_PROVIDER_NAME)) {
-                    principalProviderClassName = options.get(LoginModuleConfig.COMPAT_PRINCIPAL_PROVIDER_NAME).toString();
-                } else if (options.containsKey(LoginModuleConfig.COMPAT_PRINCIPAL_PROVIDER_CLASS)) {
-                    principalProviderClassName = options.get(LoginModuleConfig.COMPAT_PRINCIPAL_PROVIDER_CLASS).toString();
-                }
-            }
             if (principalProviderClassName != null) {
                 principalProvider = registry.getProvider(principalProviderClassName);
             }
@@ -250,12 +242,13 @@ public abstract class AbstractLoginModule implements LoginModule {
      * known to the system, i.e. if the {@link PrincipalProvider} has a principal
      * for the given ID and the principal can be found via
      * {@link PrincipalProvider#findPrincipals(String)}.<br>
-     * The provider implementation can be set by the LoginModule configuration.
-     * If the option is missing, the system default principal provider will
+     * The provider implemenation can be set by the configuration option with the
+     * name {@link LoginModuleConfig#PARAM_PRINCIPAL_PROVIDER_CLASS principal_provider.class}.
+     * If the option is missing, the system default prinvipal provider will
      * be used.<p/>
      *
      * <b>3) Verification</b><br>
-     * There are four cases, how the User-ID can be verified:
+     * There are four cases, how the User-ID can be verfied:
      * The login is anonymous, preauthenticated or the login is the result of
      * an impersonation request (see {@link javax.jcr.Session#impersonate(Credentials)}
      * or of a login to the Repository ({@link javax.jcr.Repository#login(Credentials)}).
@@ -271,11 +264,11 @@ public abstract class AbstractLoginModule implements LoginModule {
      * Under the following conditions, the login process is aborted and the
      * module is marked to be ignored:
      * <ul>
-     * <li>No User-ID could be resolve, and anonymous access is switched off</li>
+     * <li>No User-ID could be resolve, and anyonymous access is switched off</li>
      * <li>No Principal is found for the User-ID resolved</li>
      * </ul>
      *
-     * Under the following conditions, the login process is marked to be invalid
+     * Under the follwoing conditions, the login process is marked to be invalid
      * by throwing an LoginException:
      * <ul>
      * <li>It is an impersonation request, but the impersonator is not allowed
@@ -284,7 +277,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * </ul>
      * <p/>
      * The LoginModule keeps the Credentials and the Principal as instance fields,
-     * to mark that login has been successful.
+     * to mark that login has been successfull.
      *
      * @return true if the authentication succeeded, or false if this
      *         <code>LoginModule</code> should be ignored.
@@ -300,15 +293,11 @@ public abstract class AbstractLoginModule implements LoginModule {
             return false;
         }
 
-        // check the availability and validity of Credentials
+        // check the availability of Credentials
         Credentials creds = getCredentials();
         if (creds == null) {
             log.debug("No credentials available -> try default (anonymous) authentication.");
-        } else if (!supportsCredentials(creds)) {
-            log.debug("Unsupported credentials implementation : " + creds.getClass().getName());
-            return false;
         }
-        
         try {
             Principal userPrincipal = getPrincipal(creds);
             if (userPrincipal == null) {
@@ -526,7 +515,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * authentication-extension of an already authenticated {@link Subject} into
      * accout.
      * <p/>
-     * Therefore the credentials are retrieved as follows:
+     * Therefore the credentials are searchred as follows:
      * <ol>
      * <li>Test if the shared state contains credentials.</li>
      * <li>Ask CallbackHandler for Credentials with using a {@link
@@ -548,9 +537,14 @@ public abstract class AbstractLoginModule implements LoginModule {
             try {
                 CredentialsCallback callback = new CredentialsCallback();
                 callbackHandler.handle(new Callback[]{callback});
-                credentials = callback.getCredentials();
-                if (credentials != null && supportsCredentials(credentials)) {
-                    sharedState.put(KEY_CREDENTIALS, credentials);                    
+                Credentials creds = callback.getCredentials();
+                if (null != creds) {
+                    if (supportsCredentials(creds)) {
+                       credentials = creds;
+                    }
+                    if (credentials != null) {
+                        sharedState.put(KEY_CREDENTIALS, credentials);
+                    }
                 }
             } catch (UnsupportedCallbackException e) {
                 log.warn("Credentials-Callback not supported try Name-Callback");

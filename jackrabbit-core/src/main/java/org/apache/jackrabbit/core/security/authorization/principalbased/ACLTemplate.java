@@ -155,7 +155,6 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      * @see AbstractACLTemplate#checkValidEntry(java.security.Principal, javax.jcr.security.Privilege[], boolean, java.util.Map)
      */
-    @Override
     protected void checkValidEntry(Principal principal, Privilege[] privileges,
                                  boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException {
@@ -172,7 +171,6 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate#getEntries() 
      */
-    @Override
     protected List<? extends AccessControlEntry> getEntries() {
         return entries;
     }
@@ -196,6 +194,20 @@ class ACLTemplate extends AbstractACLTemplate {
         } else {
             return PropertyType.UNDEFINED;
         }
+    }
+
+    /**
+     * @see JackrabbitAccessControlList#isEmpty()
+     */
+    public boolean isEmpty() {
+        return entries.isEmpty();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
+     */
+    public int size() {
+        return entries.size();
     }
 
     /**
@@ -229,6 +241,14 @@ class ACLTemplate extends AbstractACLTemplate {
 
     //--------------------------------------------------< AccessControlList >---
     /**
+     * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
+     */
+    public AccessControlEntry[] getAccessControlEntries()
+            throws RepositoryException {
+        return entries.toArray(new AccessControlEntry[entries.size()]);
+    }
+
+    /**
      * @see javax.jcr.security.AccessControlList#removeAccessControlEntry(AccessControlEntry)
      */
     public void removeAccessControlEntry(AccessControlEntry ace)
@@ -249,7 +269,6 @@ class ACLTemplate extends AbstractACLTemplate {
      * @return always zero
      * @see Object#hashCode()
      */
-    @Override
     public int hashCode() {
         return 0;
     }
@@ -261,7 +280,6 @@ class ACLTemplate extends AbstractACLTemplate {
      * @return true if the path and the entries are equal; false otherwise.
      * @see Object#equals(Object)
      */
-    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
@@ -287,7 +305,7 @@ class ACLTemplate extends AbstractACLTemplate {
         private final String nodePath;
 
         /**
-         * Globing pattern
+         * Globbing pattern
          */
         private final GlobPattern pattern;
 

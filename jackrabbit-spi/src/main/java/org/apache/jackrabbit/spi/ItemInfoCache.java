@@ -17,21 +17,21 @@
 package org.apache.jackrabbit.spi;
 
 /**
- * <code>ItemInfoCache</code> instances are responsible for caching
- * {@link ItemInfo}s along with an opaque generation counter. Implementations
- * are free on the particular caching policy. That is, how long (if at all) item
- * infos are cached.
+ * <code>ItemInfoCache</code> instances are responsible for caching {@link ItemInfo}s along with an
+ * opaque generation counter. Implementors are free on the particular caching policy. That is, how
+ * long (if at all) item infos are cached.
  *
  * An <code>ItemInfoCache</code> is supplied per session from the {@link RepositoryService}. It is used
  * to cache <code>ItemInfo</code>s read from the <code>RepositoryService</code>.
  *
  * @see RepositoryService#getItemInfos(SessionInfo, NodeId)
+ * @see org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl
  */
 public interface ItemInfoCache {
 
     /**
      * This class represents a cache entry.
-     * @param <T> Either a {@link NodeInfo} or a {@link PropertyInfo}.
+     * @param <T>  Wither a {@link NodeInfo} or a {@link PropertyInfo}.
      */
     class Entry<T extends ItemInfo> {
 
@@ -80,22 +80,20 @@ public interface ItemInfoCache {
     }
 
     /**
-     * Retrieve a cache entry for the given <code>nodeId</code> or <code>null</code>
+     * Retreive a cache entry for the given <code>nodeId</code> or <code>null</code>
      * if no such entry is in the cache.
      *
-     * @param nodeId  id of the entry to lookup.
-     * @return a <code>Entry&lt;NodeInfo&gt;</code> instance or <code>null</code>
-     * if not found.
+     * @param nodeId  id of the entry to lookup
+     * @return  a <code>Entry&lt;NodeInfo&gt;</code> instance or <code>null</code> if not found
      */
     ItemInfoCache.Entry<NodeInfo> getNodeInfo(NodeId nodeId);
 
     /**
-     * Retrieve a cache entry for the given <code>propertyId</code> or <code>null</code>
+     * Retreive a cache entry for the given <code>propertyId</code> or <code>null</code>
      * if no such entry is in the cache.
      *
-     * @param propertyId  id of the entry to lookup.
-     * @return  a <code>Entry&lt;PropertyInfo&gt;</code> instance or
-     * <code>null</code> if not found.
+     * @param propertyId  id of the entry to lookup
+     * @return  a <code>Entry&lt;PropertyInfo&gt;</code> instance or <code>null</code> if not found
      */
     ItemInfoCache.Entry<PropertyInfo> getPropertyInfo(PropertyId propertyId);
 

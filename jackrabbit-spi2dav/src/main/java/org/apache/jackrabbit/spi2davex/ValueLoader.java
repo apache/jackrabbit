@@ -18,7 +18,6 @@ package org.apache.jackrabbit.spi2davex;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
@@ -34,11 +33,8 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <code>ValueLoader</code>...
@@ -59,25 +55,6 @@ class ValueLoader {
                 target.setStream(method.getResponseBodyAsStream());
             } else {
                 throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load binary at " + uri + " - Status line = " + method.getStatusLine().toString())));
-            }
-        } finally {
-            method.releaseConnection();
-        }
-    }
-
-    public Map<String, String> loadHeaders(String uri, String[] headerNames) throws IOException,
-            RepositoryException {
-        HeadMethod method = new HeadMethod(uri);
-        try {
-            int statusCode = client.executeMethod(method);
-            if (statusCode == DavServletResponse.SC_OK) {
-                Map<String, String> headers = new HashMap<String, String>();
-                for (String name : headerNames) {
-                    headers.put(name, method.getResponseHeader(name).getValue());
-                }
-                return headers;
-            } else {
-                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load headers at " + uri + " - Status line = " + method.getStatusLine().toString())));
             }
         } finally {
             method.releaseConnection();
@@ -117,7 +94,7 @@ class ValueLoader {
 
     //--------------------------------------------------------------------------
     /**
-     * Internal interface
+     * Internal inteface
      */
     interface Target {
         /**
@@ -132,5 +109,4 @@ class ValueLoader {
          */
         void reset();
     }
-
 }

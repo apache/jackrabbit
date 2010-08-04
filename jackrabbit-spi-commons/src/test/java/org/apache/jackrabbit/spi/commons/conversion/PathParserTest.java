@@ -194,7 +194,7 @@ public class PathParserTest extends TestCase {
 
         paths.clear();
 
-        // non-canonical paths
+        // not canonical paths
         paths.add(PathParser.parse("/foo/..", resolver, factory));
         paths.add(PathParser.parse("/foo/.", resolver, factory));
         paths.add(PathParser.parse("/foo/../bar", resolver, factory));
@@ -202,6 +202,7 @@ public class PathParserTest extends TestCase {
         paths.add(PathParser.parse("./foo", resolver, factory));
         paths.add(PathParser.parse(".", resolver, factory));
         paths.add(PathParser.parse("/foo/..", resolver, factory));
+        paths.add(PathParser.parse("/../foo/.", resolver, factory));
 
         for (Iterator it = paths.iterator(); it.hasNext(); ) {
             Path path = (Path) it.next();

@@ -308,11 +308,11 @@ public abstract class LockInfo {
             throws IllegalArgumentException {
         int sep = token.lastIndexOf('-');
         if (sep == -1 || sep == token.length() - 1) {
-            throw new IllegalArgumentException("Separator not found. Token [" + token + "]");
+            throw new IllegalArgumentException("Separator not found.");
         }
         String uuid = token.substring(0, sep);
         if (getLockTokenCheckDigit(uuid) != token.charAt(token.length() - 1)) {
-            throw new IllegalArgumentException("Bad check digit. Token [" + token + "]");
+            throw new IllegalArgumentException("Bad check digit.");
         }
         return NodeId.valueOf(uuid);
     }

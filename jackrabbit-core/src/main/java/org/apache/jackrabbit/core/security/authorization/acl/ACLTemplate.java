@@ -36,8 +36,6 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
@@ -78,14 +76,6 @@ class ACLTemplate extends AbstractACLTemplate {
     private final PrivilegeRegistry privilegeRegistry;
 
     /**
-     * The id of the access controlled node or <code>null</code> if this
-     * ACLTemplate isn't created for an existing access controlled node.
-     * Used for the Entry#isLocal(NodeId) call only in order to avoid calls
-     * to {@link javax.jcr.Node#getPath()}.
-     */
-    private final NodeId id;
-
-    /**
      * Construct a new empty {@link ACLTemplate}.
      *
      * @param path path
@@ -98,7 +88,6 @@ class ACLTemplate extends AbstractACLTemplate {
         super(path, valueFactory);
         this.principalMgr = principalMgr;
         this.privilegeRegistry = privilegeRegistry;
-        this.id = null;
     }
 
     /**
@@ -111,14 +100,13 @@ class ACLTemplate extends AbstractACLTemplate {
      */
     ACLTemplate(NodeImpl aclNode, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
         super((aclNode != null) ? aclNode.getParent().getPath() : null, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
-        if (aclNode == null || !AccessControlConstants.NT_REP_ACL.equals(((NodeTypeImpl)aclNode.getPrimaryNodeType()).getQName())) {
+        if (aclNode == null || !aclNode.isNodeType(AccessControlConstants.NT_REP_ACL)) {
             throw new IllegalArgumentException("Node must be of type 'rep:ACL'");
         }
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
         principalMgr = sImpl.getPrincipalManager();
-
+        
         this.privilegeRegistry = privilegeRegistry;
-        this.id = aclNode.getParentId();
 
         // load the entries:
         AccessControlManager acMgr = sImpl.getAccessControlManager();
@@ -142,7 +130,7 @@ class ACLTemplate extends AbstractACLTemplate {
                 Entry ace = createEntry(
                         princ,
                         privs,
-                        AccessControlConstants.NT_REP_GRANT_ACE.equals(((NodeTypeImpl) aceNode.getPrimaryNodeType()).getQName()));
+                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
                 // add the entry
                 internalAdd(ace);
             } catch (RepositoryException e) {
@@ -153,7 +141,7 @@ class ACLTemplate extends AbstractACLTemplate {
 
     /**
      * Create a new entry omitting any validation checks.
-     *
+     * 
      * @param principal
      * @param privileges
      * @param isAllow
@@ -279,6 +267,14 @@ class ACLTemplate extends AbstractACLTemplate {
 
     //--------------------------------------------------< AccessControlList >---
     /**
+     * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
+     */
+    public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {
+        List<? extends AccessControlEntry> l = getEntries();
+        return l.toArray(new AccessControlEntry[l.size()]);
+    }
+
+    /**
      * @see javax.jcr.security.AccessControlList#removeAccessControlEntry(AccessControlEntry)
      */
     public synchronized void removeAccessControlEntry(AccessControlEntry ace)
@@ -314,6 +310,20 @@ class ACLTemplate extends AbstractACLTemplate {
     }
 
     /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#isEmpty()
+     */
+    public boolean isEmpty() {
+        return entries.isEmpty();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
+     */
+    public int size() {
+        return getEntries().size();
+    }
+
+    /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges,
@@ -332,7 +342,6 @@ class ACLTemplate extends AbstractACLTemplate {
      * @return always zero
      * @see Object#hashCode()
      */
-    @Override
     public int hashCode() {
         return 0;
     }
@@ -344,7 +353,6 @@ class ACLTemplate extends AbstractACLTemplate {
      * @return true if the path and the entries are equal; false otherwise.
      * @see Object#equals(Object)
      */
-    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
@@ -369,12 +377,12 @@ class ACLTemplate extends AbstractACLTemplate {
         }
 
         /**
-         * @param nodeId
+         * @param nodePath
          * @return <code>true</code> if this entry is defined on the node
-         * at <code>nodeId</code>
+         * at <code>nodePath</code>
          */
-        boolean isLocal(NodeId nodeId) {
-            return id != null && id.equals(nodeId);
+        boolean isLocal(String nodePath) {
+            return path != null && path.equals(nodePath);
         }
     }
 }

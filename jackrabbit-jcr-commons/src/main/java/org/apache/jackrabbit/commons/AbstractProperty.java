@@ -21,16 +21,13 @@ import java.io.InputStream;
 import java.util.Calendar;
 
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 
 /**
  * Abstract base class for implementing the JCR {@link Property} interface.
@@ -208,138 +205,25 @@ public abstract class AbstractProperty extends AbstractItem
     }
 
     /**
-      * If this property is of type <code>REFERENCE</code>,
-      * <code>WEAKREFERENCE</code> or <code>PATH</code> (or convertible to one of
-      * these types) this method returns the <code>Node</code> to which this
-      * property refers.
-      * <p>
-      * If this property is of type <code>PATH</code> and it contains a relative
-      * path, it is interpreted relative to the parent node of this property. For
-      * example "<code>.</code>" refers to the parent node itself,
-      * "<code>..</code>" to the parent of the parent node and "<code>foo</code>"
-      * to a sibling node of this property.
-      *
-      * @return the referenced Node
-      * @throws ValueFormatException  if this property cannot be converted to a
-      *                               referring type (<code>REFERENCE</code>, <code>WEAKREFERENCE</code> or
-      *                               <code>PATH</code>), if the property is multi-valued or if this property
-      *                               is a referring type but is currently part of the frozen state of a
-      *                               version in version storage.
-      * @throws ItemNotFoundException If this property is of type
-      *                               <code>PATH</code> or <code>WEAKREFERENCE</code> and no target node
-      *                               accessible by the current <code>Session</code> exists in this workspace.
-      *                               Note that this applies even if the property is a <code>PATHS</code> and a
-      *                               <i>property</i> exists at the specified location. To dereference to a
-      *                               target property (as opposed to a target node), the method
-      *                               <code>Property.getProperty</code> is used.
-      * @throws RepositoryException   if another error occurs.
-      */
-    public Node getNode() throws ValueFormatException, RepositoryException {
-        String value = getString();
-
-        switch (getType()) {
-            case PropertyType.REFERENCE:
-            case PropertyType.WEAKREFERENCE:
-                return getSession().getNodeByIdentifier(value);
-
-            case PropertyType.PATH:
-                try {
-                    return (value.startsWith("/")) ? getSession().getNode(value) : getParent().getNode(value);
-                } catch (PathNotFoundException e) {
-                    throw new ItemNotFoundException(value);
-                }
-
-            case PropertyType.NAME:
-                try {
-                    return getParent().getNode(value);
-                } catch (PathNotFoundException e) {
-                    throw new ItemNotFoundException(value);
-                }
-
-            case PropertyType.STRING:
-                try {
-                    // interpret as identifier
-                    Value refValue = getSession().getValueFactory().createValue(value, PropertyType.REFERENCE);
-                    return getSession().getNodeByIdentifier(refValue.getString());
-                } catch (ItemNotFoundException e) {
-                    throw e;
-                } catch (RepositoryException e) {
-                    // try if STRING value can be interpreted as PATH value
-                    Value pathValue = getSession().getValueFactory().createValue(value, PropertyType.PATH);
-                    try {
-                        return (value.startsWith("/")) ? getSession().getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
-                    } catch (PathNotFoundException e1) {
-                        throw new ItemNotFoundException(pathValue.getString());
-                    }
-                }
-
-            default:
-                throw new ValueFormatException("Property value cannot be converted to a PATH, REFERENCE or WEAKREFERENCE: " + value);
-        }
-    }
-
-    /**
-     * If this property is of type <code>PATH</code> (or convertible to this
-     * type) this method returns the <code>Property</code> to which <i>this</i>
-     * property refers.
+     * Returns the node referenced by this property.
      * <p>
-     * If this property contains a relative path, it is interpreted relative to
-     * the parent node of this property. Therefore, when resolving such a
-     * relative path, the segment "<code>.</code>" refers to
-     * the parent node itself, "<code>..</code>" to the parent of the parent
-     * node and "<code>foo</code>" to a sibling property of this property or
-     * this property itself.
-     * <p>
-     * For example, if this property is located at
-     * <code>/a/b/c</code> and it has a value of "<code>../d</code>" then this
-     * method will return the property at <code>/a/d</code> if such exists.
-     * <p>
-     * If this property is multi-valued, this method throws a
-     * <code>ValueFormatException</code>.
-     * <p>
-     * If this property cannot be converted to a <code>PATH</code> then a
-     * <code>ValueFormatException</code> is thrown.
-     * <p>
-     * If this property is currently part of the frozen state of a version in
-     * version storage, this method will throw a <code>ValueFormatException</code>.
+     * The default implementation checks that this property is a reference
+     * property (or tries to convert the property value to a reference) and
+     * uses {@link Session#getNodeByUUID(String)} to retrieve the
+     * referenced node.
      *
-     * @return the referenced property
-     * @throws ValueFormatException  if this property cannot be converted to a
-     *                               <code>PATH</code>, if the property is multi-valued or if this property is
-     *                               a referring type but is currently part of the frozen state of a version
-     *                               in version storage.
-     * @throws ItemNotFoundException If no property accessible by the current
-     *                               <code>Session</code> exists in this workspace at the specified path. Note
-     *                               that this applies even if a <i>node</i> exists at the specified location.
-     *                               To dereference to a target node, the method <code>Property.getNode</code>
-     *                               is used.
-     * @throws RepositoryException   if another error occurs.
+     * @return node referenced by this property
+     * @throws RepositoryException if an error occurs
      */
-    public Property getProperty() throws RepositoryException {
-        String value = getString();
-        switch (getType()) {
-            case PropertyType.PATH:
-                try {
-                    return (value.startsWith("/")) ? getSession().getProperty(value) : getParent().getProperty(value);
-                } catch (PathNotFoundException e) {
-                    throw new ItemNotFoundException(value);
-                }
-
-            case PropertyType.NAME:
-                try {
-                    return getParent().getProperty(value);
-                } catch (PathNotFoundException e) {
-                    throw new ItemNotFoundException(value);
-                }
-
-            default:
-                try {
-                    String path = getSession().getValueFactory().createValue(value, PropertyType.PATH).getString();
-                    return (path.startsWith("/")) ? getSession().getProperty(path) : getParent().getProperty(path);
-                } catch (PathNotFoundException e) {
-                    throw new ItemNotFoundException(value);
-                }
+    public Node getNode() throws RepositoryException {
+        Session session = getSession();
+        Value value = getValue();
+        if (value.getType() != PropertyType.REFERENCE
+                && value.getType() != PropertyType.WEAKREFERENCE) {
+            value = session.getValueFactory().createValue(
+                    value.getString(), PropertyType.REFERENCE);
         }
+        return session.getNodeByUUID(value.getString());
     }
 
     /**

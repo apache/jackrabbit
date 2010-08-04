@@ -75,12 +75,7 @@ public class PathFactoryImpl implements PathFactory {
         l.addAll(Arrays.asList(parent.getElements()));
         l.addAll(Arrays.asList(relPath.getElements()));
 
-        Builder pb;
-        try {
-            pb = new Builder(l);
-        } catch (IllegalArgumentException iae) {
-             throw new RepositoryException(iae.getMessage());
-        }
+        Builder pb = new Builder(l);
         Path path = pb.getPath();
         if (normalize) {
             return path.getNormalizedPath();
@@ -97,12 +92,7 @@ public class PathFactoryImpl implements PathFactory {
         elements.addAll(Arrays.asList(parent.getElements()));
         elements.add(createElement(name));
 
-        Builder pb;
-        try {
-            pb = new Builder(elements);
-        } catch (IllegalArgumentException iae) {
-             throw new RepositoryException(iae.getMessage());
-        }
+        Builder pb = new Builder(elements);
         Path path = pb.getPath();
         if (normalize) {
             return path.getNormalizedPath();
@@ -119,12 +109,7 @@ public class PathFactoryImpl implements PathFactory {
         elements.addAll(Arrays.asList(parent.getElements()));
         elements.add(createElement(name, index));
 
-        Builder pb;
-        try {
-            pb = new Builder(elements);
-        } catch (IllegalArgumentException iae) {
-             throw new RepositoryException(iae.getMessage());
-        }
+        Builder pb = new Builder(elements);
         Path path = pb.getPath();
         if (normalize) {
             return path.getNormalizedPath();
@@ -381,14 +366,18 @@ public class PathFactoryImpl implements PathFactory {
                         "Identifier-based path cannot be normalized: " + this);
             }
             LinkedList<Path.Element> queue = new LinkedList<Path.Element>();
+            Path.Element last = PARENT_ELEMENT;
             for (Element elem : elements) {
-                if (elem.denotesParent() && !queue.isEmpty() && !queue.getLast().denotesParent()) {
-                    if (queue.getLast().denotesRoot()) {
-                        throw new RepositoryException("Path cannot be normalized: " + this);
-                    }
+                if (elem.denotesParent() && !last.denotesParent()) {
                     queue.removeLast();
+                    if (queue.isEmpty()) {
+                        last = PARENT_ELEMENT;
+                    } else {
+                        last = queue.getLast();
+                    }
                 } else if (!elem.denotesCurrent()) {
-                    queue.add(elem);
+                    last = elem;
+                    queue.add(last);
                 }
             }
             if (queue.isEmpty()) {
@@ -1058,9 +1047,9 @@ public class PathFactoryImpl implements PathFactory {
          *
          * @param elemList
          * @throws IllegalArgumentException if the given elements array is null
-         * or has a zero length or would otherwise constitute an invalid path
+         * or has a length less than 1;
          */
-        private Builder(List<Path.Element> elemList) throws IllegalArgumentException {
+        private Builder(List<Path.Element> elemList) {
             this(elemList.toArray(new Path.Element[elemList.size()]));
         }
 
@@ -1070,9 +1059,9 @@ public class PathFactoryImpl implements PathFactory {
          *
          * @param elements
          * @throws IllegalArgumentException if the given elements array is null
-         * or has a zero length or would otherwise constitute an invalid path
+         * or has a length less than 1;
          */
-        private Builder(Path.Element[] elements) throws IllegalArgumentException {
+        private Builder(Path.Element[] elements) {
             if (elements == null || elements.length == 0) {
                 throw new IllegalArgumentException("Cannot build path from null or 0 elements.");
             }
@@ -1083,11 +1072,12 @@ public class PathFactoryImpl implements PathFactory {
             } else {
                 boolean absolute = elements[0].denotesRoot();
                 isNormalized = true;
-                int depth = 0;
+                int parents = 0;
+                int named = 0;
                 for (int i = 0; i < elements.length; i++) {
                     Path.Element elem = elements[i];
                     if (elem.denotesName()) {
-                        depth++;
+                        named++;
                     } else if (elem.denotesRoot()) {
                         if (i > 0) {
                             throw new IllegalArgumentException("Invalid path: The root element may only occur at the beginning.");
@@ -1095,16 +1085,16 @@ public class PathFactoryImpl implements PathFactory {
                     } else if (elem.denotesIdentifier()) {
                         throw new IllegalArgumentException("Invalid path: The identifier element may only occur at the beginning of a single element path.");
                     } else  if (elem.denotesParent()) {
-                        depth--;
-                        if (absolute && depth < 0) {
-                            throw new IllegalArgumentException("Invalid path: Too many parent elements.");
-                        }
-                        if (absolute || (i > 0 && elements[i - 1].denotesName())) {
+                        parents++;
+                        if (absolute || named > 0) {
                             isNormalized = false;
                         }
                     } else /* current element */ {
                         isNormalized = false;
                     }
+                }
+                if (absolute && parents > named) {
+                    throw new IllegalArgumentException("Invalid path: Too many parent elements.");
                 }
             }
         }

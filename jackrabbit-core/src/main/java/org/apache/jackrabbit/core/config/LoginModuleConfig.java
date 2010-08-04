@@ -49,24 +49,6 @@ public class LoginModuleConfig extends BeanConfig {
     public static final String PARAM_PRINCIPAL_PROVIDER_CLASS = "principalProvider";
 
     /**
-     * Same as {@link LoginModuleConfig#PARAM_PRINCIPAL_PROVIDER_CLASS}.
-     * Introduced for compatibility reasons.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-2629">JCR-2629</a>
-     */
-    public static final String COMPAT_PRINCIPAL_PROVIDER_CLASS = "principal_provider.class";
-
-    /**
-     * Property-Key if the <code>PrincipalProvider</code> configured with
-     * {@link LoginModuleConfig#PARAM_PRINCIPAL_PROVIDER_CLASS} be registered using the
-     * specified name instead of the class name which is used by default if the
-     * name parameter is missing.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-2629">JCR-2629</a>
-     */
-    public static final String COMPAT_PRINCIPAL_PROVIDER_NAME = "principal_provider.name";
-
-    /**
      * Creates an access manager configuration object from the
      * given bean configuration.
      *

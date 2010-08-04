@@ -17,13 +17,13 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import java.util.Random;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Performs a test with n sessions concurrently performing non-conflicting
@@ -33,100 +33,118 @@ import javax.jcr.Value;
  */
 public class ConcurrentNodeModificationTest extends AbstractJCRTest {
 
-    /**
-     * Logger instance.
-     */
-    private static final Logger log =
-        LoggerFactory.getLogger(ConcurrentNodeModificationTest.class);
+    private static final int NUM_ITERATIONS = 1;
+    private static final int NUM_SESSIONS = 10;
+    private static final int NUM_NODES = 100;
 
-    private static final int NUM_SESSIONS = 100;
-    private static final int NUM_ITERATIONS = 10;
-    private static final int NUM_NODES = 10;
-
-    private volatile boolean success;
+    final ArrayList exceptions = new ArrayList();
 
     /**
      * Runs the test.
      */
     public void testConcurrentNodeModificationSessions() throws Exception {
-        success = true;
+        int n = NUM_ITERATIONS;
+        while (n-- > 0) {
+            Thread[] threads = new Thread[NUM_SESSIONS];
+            for (int i = 0; i < threads.length; i++) {
+                // create new session
+                Session session = getHelper().getSuperuserSession();
+                TestSession ts = new TestSession("s" + i, session);
+                Thread t = new Thread(ts);
+                t.setName((NUM_ITERATIONS - n) + "-s" + i);
+                t.start();
+                log.println("Thread#" + i + " started");
+                threads[i] = t;
+                Thread.sleep(100);
+            }
+            for (int i = 0; i < threads.length; i++) {
+                threads[i].join();
+            }
+        }
 
-        Thread[] threads = new Thread[NUM_SESSIONS];
-        for (int i = 0; i < threads.length; i++) {
-            TestSession ts = new TestSession("s" + i);
-            threads[i] = new Thread(ts, "CNMT " + i);
+        if (!exceptions.isEmpty()) {
+            Exception e = null;
+            for (Iterator it = exceptions.iterator(); it.hasNext();) {
+                e = (Exception) it.next();
+                e.printStackTrace(log);
+            }
+            throw e;
+            //fail();
         }
-        for (Thread thread : threads) {
-            thread.start();
-        }
-        for (Thread thread : threads) {
-            thread.join();
-        }
-
-        assertTrue("Unexpected exceptions during test, see the log file for details", success);
     }
 
     //--------------------------------------------------------< inner classes >
     class TestSession implements Runnable {
 
-        private final Session session;
-        private final String identity;
+        Session session;
+        String identity;
+        Random r;
 
-        TestSession(String identity) throws RepositoryException {
-            this.session = getHelper().getSuperuserSession();
+        TestSession(String identity, Session s) {
+            session = s;
             this.identity = identity;
+            r = new Random();
+        }
+
+        private void randomSleep() {
+            long l = r.nextInt(90) + 20;
+            try {
+                Thread.sleep(l);
+            } catch (InterruptedException ie) {
+            }
         }
 
         public void run() {
-            log.debug("started.");
+
+            log.println("started.");
+            String state = "";
             try {
-                for (int i = 0; success && i < NUM_ITERATIONS; i++) {
-                    runIteration();
+                Node n = session.getRootNode().getNode(testPath);
+
+                String propName = "testprop" + Math.random();
+
+                state = "setting property " + propName;
+                n.setProperty(propName, "Hello World!");
+                session.save();
+                randomSleep();
+
+                state = "removing property " + propName;
+                n.setProperty(propName, (Value) null);
+                session.save();
+                randomSleep();
+
+                for (int i = 0; i < NUM_NODES; i++) {
+                    state = "adding subnode " + i;
+                    //Node n1 = n.addNode("x" + i, "nt:unstructured");
+                    Node n1 = n.addNode("x" + identity + i, "nt:unstructured");
+                    state = "adding property to subnode " + i;
+                    n1.setProperty("testprop", "xxx");
+                    if (i % 10 == 0) {
+                        state = "saving pending (added) subnodes";
+                        session.save();
+                    }
+                    randomSleep();
                 }
+
+                for (int i = 0; i < NUM_NODES; i++) {
+                    state = "removing subnode " + i;
+                    n.getNode("x" + identity + i).remove();
+                    if (i % 10 == 0) {
+                        state = "saving pending (removed) subnodes";
+                        session.save();
+                    }
+                    randomSleep();
+                }
+                session.save();
             } catch (Exception e) {
-                log.error("Operation failed", e);
-                success = false;
+                log.println("Exception while " + state + ": " + e.getMessage());
+                //e.printStackTrace();
+                exceptions.add(e);
             } finally {
                 session.logout();
             }
 
-            log.info("ended.");
+            log.println("ended.");
         }
-
-        private void runIteration() throws RepositoryException {
-            Node n = session.getRootNode().getNode(testPath);
-
-            String propName = "prop_" + identity;
-
-            log.info("setting property {}", propName);
-            n.setProperty(propName, "Hello World!");
-            Thread.yield(); // maximize chances of interference
-            session.save();
-
-            log.info("removing property {}", propName);
-            n.setProperty(propName, (Value) null);
-            Thread.yield(); // maximize chances of interference
-            session.save();
-
-            for (int i = 0; i < NUM_NODES; i++) {
-                String name = "x_" + identity + "_" + i;
-                log.info("adding subnode {}", name);
-                //Node n1 = n.addNode("x" + i, "nt:unstructured");
-                Node n1 = n.addNode(name, "nt:unstructured");
-                n1.setProperty("testprop", "xxx");
-                Thread.yield(); // maximize chances of interference
-                session.save();
-            }
-
-            for (int i = 0; i < NUM_NODES; i++) {
-                String name = "x_" + identity + "_" + i;
-                log.info("removing subnode {}", name);
-                n.getNode(name).remove();
-                Thread.yield(); // maximize chances of interference
-                session.save();
-            }
-        }
-
     }
-
 }

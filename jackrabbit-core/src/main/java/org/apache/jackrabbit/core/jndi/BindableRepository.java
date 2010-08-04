@@ -255,7 +255,6 @@ public class BindableRepository extends AbstractRepository
      * Delegated to the underlying repository instance.
      */
     public void shutdown() {
-        BindableRepositoryFactory.removeReference(reference);
         repository.shutdown();
         try {
             Runtime.getRuntime().removeShutdownHook(hook);

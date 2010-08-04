@@ -76,6 +76,21 @@ import java.util.Set;
 public class DefaultAccessManager extends AbstractAccessControlManager implements AccessManager {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAccessManager.class);
+    private static final CompiledPermissions NO_PERMISSION = new CompiledPermissions() {
+        public void close() {
+            //nop
+        }
+        public boolean grants(Path absPath, int permissions) {
+            // deny everything
+            return false;
+        }
+        public int getPrivileges(Path absPath) {
+            return PrivilegeRegistry.NO_PRIVILEGE;
+        }
+        public boolean canReadAll() {
+            return false;
+        }
+    };
 
     private boolean initialized;
 
@@ -146,7 +161,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         } else {
             log.warn("No AccessControlProvider defined -> no access is granted.");
             editor = null;
-            compiledPermissions = CompiledPermissions.NO_PERMISSION;
+            compiledPermissions = NO_PERMISSION;
         }
 
         initialized = true;
@@ -215,7 +230,6 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             if ((actions & REMOVE) == REMOVE) {
                 perm |= (id.denotesNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
             }
-            
             Path path = hierMgr.getPath(id);
             return isGranted(path, perm);
         }
@@ -241,14 +255,13 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessManager#canRead(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.id.ItemId)
+     * @see AccessManager#canRead(Path)
      */
-    public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
-        checkInitialized();
+    public boolean canRead(Path itemPath) throws RepositoryException {
         if (compiledPermissions.canReadAll()) {
             return true;
         } else {
-            return compiledPermissions.canRead(itemPath, itemId);
+            return isGranted(itemPath, Permission.READ);
         }
     }
 
@@ -314,7 +327,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkInitialized();
         checkPermission(absPath, Permission.READ_AC);
 
-        return acProvider.getEffectivePolicies(getPath(absPath), compiledPermissions);
+        return acProvider.getEffectivePolicies(getPath(absPath));
     }
 
     /**
@@ -377,7 +390,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getPolicies(Principal)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(Principal)
      */
     @Override
     public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
@@ -386,14 +399,6 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             throw new UnsupportedRepositoryOperationException("Editing of access control policies is not supported.");
         }
         return editor.getPolicies(principal);
-    }
-
-    /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getEffectivePolicies(Set)
-     */
-    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
-        checkInitialized();
-        return acProvider.getEffectivePolicies(principals, compiledPermissions);
     }
 
     /**
@@ -411,12 +416,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         } else {
             int privs = PrivilegeRegistry.getBits(privileges);
             Path p = resolver.getQPath(absPath);
-            CompiledPermissions perms = acProvider.compilePermissions(principals);
-            try {
-                return (perms.getPrivileges(p) | ~privs) == -1;
-            } finally {
-                perms.close();
-            }
+            return (acProvider.compilePermissions(principals).getPrivileges(p) | ~privs) == -1;
         }
     }
 
@@ -427,7 +427,6 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkInitialized();
         checkValidNodePath(absPath);
         checkPermission(absPath, Permission.READ_AC);
-
         CompiledPermissions perms = acProvider.compilePermissions(principals);
         try {
             int bits = perms.getPrivileges(resolver.getQPath(absPath));

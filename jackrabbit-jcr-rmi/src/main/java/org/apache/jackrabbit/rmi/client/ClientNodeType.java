@@ -271,11 +271,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
     }
 
     public boolean isAbstract() {
-        try {
-            return remote.isAbstract();
-        } catch (RemoteException ex) {
-            throw new RemoteRuntimeException(ex);
-        }
+        throw new RuntimeException("TODO: JCRRMI-26");
     }
 
     public boolean isQueryable() {

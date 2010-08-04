@@ -60,14 +60,14 @@ public class RepositoryCopier {
         LoggerFactory.getLogger(RepositoryCopier.class);
 
     /**
-     * Source repository context.
+     * Source repository.
      */
-    private final RepositoryContext source;
+    private final RepositoryImpl source;
 
     /**
-     * Target repository context.
+     * Target repository.
      */
-    private final RepositoryContext target;
+    private final RepositoryImpl target;
 
     /**
      * Copies the contents of the repository in the given source directory
@@ -175,12 +175,8 @@ public class RepositoryCopier {
      * @param target target repository
      */
     public RepositoryCopier(RepositoryImpl source, RepositoryImpl target) {
-        // TODO: It would be better if we were given the RepositoryContext
-        // instances directly. Perhaps we should use something like
-        // RepositoryImpl.getRepositoryCopier(RepositoryImpl target)
-        // instead of this public constructor to achieve that.
-        this.source = source.getRepositoryContext();
-        this.target = target.getRepositoryContext();
+        this.source = source;
+        this.target = target;
     }
 
     /**
@@ -200,8 +196,8 @@ public class RepositoryCopier {
     public void copy() throws RepositoryException {
         logger.info(
                 "Copying repository content from {} to {}",
-                source.getRepository().repConfig.getHomeDir(),
-                target.getRepository().repConfig.getHomeDir());
+                source.repConfig.getHomeDir(),
+                target.repConfig.getHomeDir());
         try {
             copyNamespaces();
             copyNodeTypes();
@@ -251,36 +247,33 @@ public class RepositoryCopier {
     private void copyVersionStore() throws RepositoryException {
         logger.info("Copying version histories");
         PersistenceCopier copier = new PersistenceCopier(
-                source.getInternalVersionManager().getPersistenceManager(),
-                target.getInternalVersionManager().getPersistenceManager(),
+                source.getVersionManagerImpl().getPersistenceManager(),
+                target.getVersionManagerImpl().getPersistenceManager(),
                 target.getDataStore());
         copier.copy(RepositoryImpl.VERSION_STORAGE_NODE_ID);
         copier.copy(RepositoryImpl.ACTIVITIES_NODE_ID);
     }
 
     private void copyWorkspaces() throws RepositoryException {
-        Collection<String> existing =
-            Arrays.asList(target.getRepository().getWorkspaceNames());
-        for (String name : source.getRepository().getWorkspaceNames()) {
+        Collection<String> existing = Arrays.asList(target.getWorkspaceNames());
+        for (String name : source.getWorkspaceNames()) {
             logger.info("Copying workspace {}" , name);
 
             if (!existing.contains(name)) {
-                target.getRepository().createWorkspace(name);
+                target.createWorkspace(name);
             }
 
             // Copy all the workspace content
             PersistenceCopier copier = new PersistenceCopier(
-                    source.getRepository().getWorkspaceInfo(name).getPersistenceManager(),
-                    target.getRepository().getWorkspaceInfo(name).getPersistenceManager(),
+                    source.getWorkspaceInfo(name).getPersistenceManager(),
+                    target.getWorkspaceInfo(name).getPersistenceManager(),
                     target.getDataStore());
             copier.excludeNode(RepositoryImpl.SYSTEM_ROOT_NODE_ID);
             copier.copy(RepositoryImpl.ROOT_NODE_ID);
 
             // Copy all the active open-scoped locks
-            LockManagerImpl sourceLockManager =
-                source.getRepository().getLockManager(name);
-            LockManagerImpl targetLockManager =
-                target.getRepository().getLockManager(name);
+            LockManagerImpl sourceLockManager = source.getLockManager(name);
+            LockManagerImpl targetLockManager = target.getLockManager(name);
             targetLockManager.copyOpenScopedLocksFrom(sourceLockManager);
         }
     }

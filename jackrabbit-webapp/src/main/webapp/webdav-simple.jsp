@@ -72,7 +72,7 @@ href = Text.encodeIllegalXMLCharacters(href);
 <ul>
 <li><a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a> (WebDAV 1,2)</li>
 <li><a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a> (DeltaV)</li>
-<li>Experimental: <a href="http://www.ietf.org/rfc/rfc5842.txt">RFC 5842</a> (WebDAV BIND)</li>
+<li>Experimental: <a href="http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-latest.html">draft-ietf-webdav-bind</a> (WebDAV BIND)</li>
 </ul> 
 
 <h3>Configuration</h3>

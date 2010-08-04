@@ -171,24 +171,13 @@ public interface AccessManager {
     boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException;
 
     /**
-     * Determines whether the item with the specified <code>itemPath</code>
-     * or <code>itemId</code> can be read. Either of the two parameters
-     * may be <code>null</code>.<br>
-     * Note, that this method should only be called for persisted items as NEW
-     * items may not be visible to the permission evaluation.
-     * For new items {@link #isGranted(Path, int)} should be used instead.<p/>
-     * If this method is called with both Path and ItemId it is left to the
-     * evaluation, which parameter is used.
+     * Determines whether the item at the specified absolute path can be read.
      *
-     * @param itemPath The path to the item or <code>null</code> if itemId
-     * should be used to determine the READ permission.
-     * @param itemId Id of the item to be tested or <code>null</code> if the
-     * itemPath should be used to determine the permission.
+     * @param itemPath Path to the item to be tested.s
      * @return <code>true</code> if the item can be read; otherwise <code>false</code>.
-     * @throws RepositoryException if the item is NEW and only an itemId is
-     * specified or if another error occurs.
+     * @throws RepositoryException if an error occurs.
      */
-    boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException;
+    boolean canRead(Path itemPath) throws RepositoryException;
 
     /**
      * Determines whether the subject of the current context is granted access

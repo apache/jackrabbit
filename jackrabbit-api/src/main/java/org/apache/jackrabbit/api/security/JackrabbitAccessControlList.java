@@ -121,8 +121,7 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * at the position of the specified <code>destEntry</code>.<p/>
      * If <code>destEntry</code> is <code>null</code> the entry is moved to the
      * end of the list.<p/>
-     * If <code>srcEntry</code> and <code>destEntry</code> are the same no
-     * changes are made.
+     * If srcChildRelPath and destChildRelPath are the same no changes are made.
      * 
      * @param srcEntry The access control entry to be moved within the list.
      * @param destEntry The entry before which the <code>srcEntry</code> will be moved.

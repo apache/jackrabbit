@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -50,14 +50,6 @@ class CachingIndexReader extends FilterIndexReader {
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(CachingIndexReader.class);
-
-    /**
-     * The number of nodes that are processed in a batch when the hierarchy
-     * cache is initialized. The value is 400'000, which will limit the
-     * temporary memory usage to initialize the hierarchy cache of a segment
-     * to 64MB (-> 170B * 400k)
-     */
-    private static final int MAX_CACHE_INIT_BATCH_SIZE = 400 * 1000;
 
     /**
      * The current value of the global creation tick counter.
@@ -427,112 +419,61 @@ class CachingIndexReader extends FilterIndexReader {
          * @throws IOException if an error occurs while reading from the index.
          */
         private void initializeParents(IndexReader reader) throws IOException {
-            double foreignParents = 0;
             long time = System.currentTimeMillis();
-
-            // initialize in multiple passes with
-            // a fixed number of nodes at a time
-            final Term[] startUUID = new Term[]{new Term(FieldNames.UUID, "")};
-
-            for (;;) {
-                final Map<Object, NodeInfo> docs = new HashMap<Object, NodeInfo>();
-                final Map<NodeId, Integer> parents = new HashMap<NodeId, Integer>();
-
-                if (startUUID[0].text().length() != 0) {
-                    // force reading the next uuid after startUUID
-                    startUUID[0] = new Term(FieldNames.UUID, startUUID[0].text() + "_");
-                }
-                // read UUIDs
-                collectTermDocs(reader, startUUID[0], new TermDocsCollector() {
-                    public boolean collect(Term term, TermDocs tDocs) throws IOException {
-                        // remember start term for next batch
-                        startUUID[0] = term;
-                        if (docs.size() >= MAX_CACHE_INIT_BATCH_SIZE) {
-                            return false;
+            final Map<Object, NodeInfo> docs = new HashMap<Object, NodeInfo>();
+            // read UUIDs
+            collectTermDocs(reader, new Term(FieldNames.UUID, ""), new TermDocsCollector() {
+                public void collect(Term term, TermDocs tDocs) throws IOException {
+                    NodeId id = new NodeId(term.text());
+                    while (tDocs.next()) {
+                        int doc = tDocs.doc();
+                        // skip shareable nodes
+                        if (!shareableNodes.get(doc)) {
+                            NodeInfo info = new NodeInfo(doc, id);
+                            docs.put(doc, info);
                         }
-                        NodeId id = new NodeId(term.text());
-                        while (tDocs.next()) {
-                            int doc = tDocs.doc();
-                            // skip shareable nodes
-                            if (!shareableNodes.get(doc)) {
-                                NodeInfo info = new NodeInfo(doc, id);
-                                docs.put(doc, info);
-                            }
-                        }
-                        return true;
-                    }
-                });
-
-                if (docs.isEmpty()) {
-                    // no more nodes to initialize
-                    break;
-                }
-
-                // read PARENTs (full scan)
-                collectTermDocs(reader, new Term(FieldNames.PARENT, "0"), new TermDocsCollector() {
-                    public boolean collect(Term term, TermDocs tDocs) throws IOException {
-                        NodeId id = new NodeId(term.text());
-                        while (tDocs.next()) {
-                            Integer docId = tDocs.doc();
-                            NodeInfo info = docs.get(docId);
-                            if (info == null) {
-                                // shareable node, see above
-                                // or cache init is batched
-                            } else {
-                                info.parent = id;
-                                docs.remove(docId);
-                                docs.put(info.id, info);
-                                parents.put(id, null);
-                            }
-                        }
-                        return true;
-                    }
-                });
-
-                // scan UUIDs again to get document numbers for parents
-                collectTermDocs(reader, new Term(FieldNames.UUID, ""), new TermDocsCollector() {
-                    public boolean collect(Term term, TermDocs tDocs) throws IOException {
-                        NodeId id = new NodeId(term.text());
-                        while (tDocs.next()) {
-                            int doc = tDocs.doc();
-                            if (parents.containsKey(id)) {
-                                parents.put(id, doc);
-                            }
-                        }
-                        return true;
-                    }
-                });
-
-                if (stopRequested) {
-                    return;
-                }
-
-                for (NodeInfo info : docs.values()) {
-                    int parentDocId = -1;
-                    NodeInfo parent = docs.get(info.parent);
-                    if (parent != null) {
-                        parentDocId = parent.docId;
-                    } else {
-                        Integer docId = parents.get(info.parent);
-                        if (docId != null) {
-                            parentDocId = docId;
-                        }
-                    }
-                    if (parentDocId != -1) {
-                        inSegmentParents[info.docId] = parentDocId;
-                    } else if (info.parent != null) {
-                        foreignParents++;
-                        foreignParentDocIds.put(info.docId, DocId.create(info.parent));
-                    } else if (shareableNodes.get(info.docId)) {
-                        Document doc = reader.document(info.docId, FieldSelectors.UUID_AND_PARENT);
-                        foreignParentDocIds.put(info.docId, DocId.create(doc.getValues(FieldNames.PARENT)));
-                    } else {
-                        // no parent -> root node
-                        foreignParentDocIds.put(info.docId, DocId.NULL);
                     }
                 }
+            });
+
+            // read PARENTs
+            collectTermDocs(reader, new Term(FieldNames.PARENT, "0"), new TermDocsCollector() {
+                public void collect(Term term, TermDocs tDocs) throws IOException {
+                    NodeId id = new NodeId(term.text());
+                    while (tDocs.next()) {
+                        Integer docId = tDocs.doc();
+                        NodeInfo info = docs.get(docId);
+                        if (info == null) {
+                            // shareable node, see above
+                        } else {
+                            info.parent = id;
+                            docs.remove(docId);
+                            docs.put(info.id, info);
+                        }
+                    }
+                }
+            });
+
+            if (stopRequested) {
+                return;
             }
 
+            double foreignParents = 0;
+            for (NodeInfo info : docs.values()) {
+                NodeInfo parent = docs.get(info.parent);
+                if (parent != null) {
+                    inSegmentParents[info.docId] = parent.docId;
+                } else if (info.parent != null) {
+                    foreignParents++;
+                    foreignParentDocIds.put(info.docId, DocId.create(info.parent));
+                } else if (shareableNodes.get(info.docId)) {
+                    Document doc = reader.document(info.docId, FieldSelectors.UUID_AND_PARENT);
+                    foreignParentDocIds.put(info.docId, DocId.create(doc.getValues(FieldNames.PARENT)));
+                } else {
+                    // no parent -> root node
+                    foreignParentDocIds.put(info.docId, DocId.NULL);
+                }
+            }
             if (log.isDebugEnabled()) {
                 NumberFormat nf = NumberFormat.getPercentInstance();
                 nf.setMaximumFractionDigits(1);
@@ -571,10 +512,7 @@ class CachingIndexReader extends FilterIndexReader {
                         Term t = terms.term();
                         if (t != null && t.field() == start.field()) {
                             tDocs.seek(terms);
-                            if (!collector.collect(t, tDocs)) {
-                                // collector indicated break
-                                break;
-                            }
+                            collector.collect(t, tDocs);
                         } else {
                             break;
                         }
@@ -604,10 +542,9 @@ class CachingIndexReader extends FilterIndexReader {
          *
          * @param term the term.
          * @param tDocs the term docs of <code>term</code>.
-         * @return false if the collector does not wish to collect more TermDocs.
          * @throws IOException if an error occurs while reading from the index.
          */
-        boolean collect(Term term, TermDocs tDocs) throws IOException;
+        void collect(Term term, TermDocs tDocs) throws IOException;
     }
 
     private final static class NodeInfo {

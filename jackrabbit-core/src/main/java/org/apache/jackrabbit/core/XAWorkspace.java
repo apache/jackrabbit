@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
 
 /**
  * Workspace extension that works in an XA environment.
@@ -32,19 +30,21 @@ public class XAWorkspace extends WorkspaceImpl {
      * Protected constructor.
      *
      * @param wspConfig The workspace configuration
-     * @param sessionContext component context of this session
+     * @param stateMgr  The shared item state manager
+     * @param rep       The repository
+     * @param session   The session
      */
-    protected XAWorkspace(
-            WorkspaceConfig wspConfig, SessionContext sessionContext)
-            throws RepositoryException {
-        super(wspConfig, sessionContext);
+    protected XAWorkspace(WorkspaceConfig wspConfig,
+                          SharedItemStateManager stateMgr, RepositoryImpl rep,
+                          SessionImpl session) {
+
+        super(wspConfig, stateMgr, rep, session);
     }
 
-    @Override
-    protected LocalItemStateManager createItemStateManager()
-            throws RepositoryException {
-        return XAItemStateManager.createInstance(
-                getSharedItemStateManager(), this, null,
-                repositoryContext.getItemStateCacheFactory());
+    /**
+     * {@inheritDoc}
+     */
+    protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
+        return XAItemStateManager.createInstance(shared, this, null, rep.getItemStateCacheFactory());
     }
 }

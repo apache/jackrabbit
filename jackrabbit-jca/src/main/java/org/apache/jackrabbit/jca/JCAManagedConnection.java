@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.jca;
 
+import org.apache.jackrabbit.api.XASession;
+
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
@@ -52,7 +53,7 @@ public final class JCAManagedConnection
     /**
      * Session instance.
      */
-    private final Session session;
+    private final XASession session;
 
     /**
      * XAResource instance.
@@ -77,18 +78,16 @@ public final class JCAManagedConnection
     /**
      * Construct the managed connection.
      */
-    public JCAManagedConnection(
-            JCAManagedConnectionFactory mcf, JCAConnectionRequestInfo cri,
-            Session session) {
+    public JCAManagedConnection(JCAManagedConnectionFactory mcf, JCAConnectionRequestInfo cri, XASession session) {
         this.mcf = mcf;
         this.cri = cri;
         this.session = session;
         this.listeners = new LinkedList<ConnectionEventListener>();
         this.handles = new LinkedList<JCASessionHandle>();
         if (this.mcf.getBindSessionToTransaction().booleanValue()) {
-            this.xaResource =  new TransactionBoundXAResource(this, (XAResource) session);
+            this.xaResource =  new TransactionBoundXAResource(this, session.getXAResource());
         } else {
-            this.xaResource = (XAResource) session;
+            this.xaResource = session.getXAResource();
         }
     }
 
@@ -219,7 +218,7 @@ public final class JCAManagedConnection
     /**
      * Return the session.
      */
-    public Session getSession(JCASessionHandle handle) {
+    public XASession getSession(JCASessionHandle handle) {
         synchronized (handles) {
             if ((handles.size() > 0) && (handles.get(0) == handle)) {
                 return session;

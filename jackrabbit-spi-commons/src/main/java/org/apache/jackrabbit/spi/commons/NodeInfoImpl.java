@@ -26,7 +26,6 @@ import org.apache.jackrabbit.spi.PropertyId;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -176,13 +175,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         this.index = index;
         this.primaryTypeName = primaryTypeName;
         this.mixinNames = mixinNames;
-        if (!references.hasNext()) {
-            this.references = Collections.emptyList();
-        } else {
-            this.references = new ArrayList<PropertyId>();
-            while (references.hasNext()) {
-                this.references.add(references.next());
-            }
+        this.references = new ArrayList<PropertyId>();
+        while (references.hasNext()) {
+            this.references.add(references.next());
         }
         this.propertyIds = new ArrayList<PropertyId>();
         while (propertyIds.hasNext()) {
@@ -225,7 +220,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * {@inheritDoc}
      */
     public Name[] getMixins() {
-        return mixinNames;
+        Name[] ret = new Name[mixinNames.length];
+        System.arraycopy(mixinNames, 0, ret, 0, mixinNames.length);
+        return ret;
     }
 
     /**

@@ -16,16 +16,12 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
-
-import static org.apache.jackrabbit.webdav.DavConstants.HEADER_ETAG;
-import static org.apache.jackrabbit.webdav.DavConstants.HEADER_LAST_MODIFIED;
-
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
@@ -43,7 +39,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,7 +51,6 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Map;
 
 /**
  * <code>ValueFactoryImpl</code>...
@@ -69,11 +63,6 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
     private static final Object DUMMY_VALUE = new Serializable() {
         private static final long serialVersionUID = -5667366239976271493L;
     };
-
-    /**
-     * empty array
-     */
-    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     private final ValueLoader loader;
     private final ValueFactory vf;
@@ -127,6 +116,11 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
         private static final long serialVersionUID = 2736654000266713469L;
 
         /**
+         * empty array
+         */
+        private final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
+        /**
          * max size for keeping tmp data in memory
          */
         private static final int MAX_BUFFER_SIZE = 0x10000;
@@ -148,13 +142,11 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
          */
         private byte[] buffer;
 
-        private Map<String, String> headers;
-
         /**
          * URI to retrieve the value from
          */
-        private final String uri;
-        private final long length;
+        private String uri;
+        private long length;
         private int index = -1;
         private boolean initialized = true;
 
@@ -386,57 +378,28 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
             }
             if (obj instanceof BinaryQValue) {
                 BinaryQValue other = (BinaryQValue) obj;
-
-                // Consider unequal urls as unequal values and both urls null as equal values
-                if (this.uri == null) {
-                    return other.uri == null;
-                }
-                if (!this.uri.equals(other.uri)) {
-                    return false;
-                }
-
-                // Consider both uninitialized as equal values
-                if (!this.preInitialized() && !other.preInitialized()) {
-                    return true;
-                }
-
-                try {
-                    // Initialized the one which is not
-                    if (!this.preInitialized()) {
-                        this.preInitialize(new String[] {HEADER_ETAG, HEADER_LAST_MODIFIED});
-                    } else if (!other.preInitialized()) {
-                        other.preInitialize(new String[] {HEADER_ETAG, HEADER_LAST_MODIFIED});
-                    }
-                } catch (RepositoryException e) {
-                    return false;
-                } catch (IOException e) {
-                    return false;
-                }
-
-                // If we have headers try to determine equality from them
-                if (headers != null && !headers.isEmpty()) {
-
-                    // Values are (un)equal if we have equal Etags
-                    if (containKey(HEADER_ETAG, this.headers, other.headers)) {
-                        return equalValue(HEADER_ETAG, this.headers, other.headers);
-                    }
-
-                    // Values are unequal if we have different Last-modified values
-                    if (containKey(HEADER_LAST_MODIFIED, this.headers, other.headers)) {
-                        if (!equalValue(HEADER_LAST_MODIFIED, this.headers, other.headers)) {
+                // for both the value has not been loaded yet
+                if (!initialized) {
+                    if (other.uri != null) {
+                        return other.uri.equals(uri);
+                    } else {
+                        // need to load the binary value in order to be able
+                        // to compare the 2 values.
+                        try {
+                            loadBinary();
+                        } catch (RepositoryException e) {
+                            return false;
+                        } catch (IOException e) {
                             return false;
                         }
                     }
-
-                // Otherwise compare binaries
-                } else {
-                    return ((file == null ? other.file == null : file.equals(other.file))
-                        && Arrays.equals(buffer, other.buffer));
                 }
+                // both have been loaded
+                return ((file == null ? other.file == null : file.equals(other.file))
+                    && Arrays.equals(buffer, other.buffer));
             }
             return false;
         }
-
 
         /**
          * Returns zero to satisfy the Object equals/hashCode contract.
@@ -457,42 +420,6 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
                 throw new IllegalStateException();
             }
             loader.loadBinary(uri, index, this);
-        }
-
-        /**
-         * Load the header with the given names. If none of the named headers exist, load binary.
-         */
-        private void preInitialize(String[] headerNames) throws IOException, RepositoryException {
-            headers = loader.loadHeaders(uri, headerNames);
-            if (headers.isEmpty()) {
-                loadBinary();
-            }
-        }
-
-        /**
-         * @return <code>true</code> if either initialized or headers have been
-         *         loaded, <code>false</code> otherwise.
-         */
-        private boolean preInitialized() {
-            return initialized || headers != null;
-        }
-
-        /**
-         * @return <code>true</code> if both maps contain the same value for
-         *         <code>key</code>, <code>false</code> otherwise. The
-         *         <code>key</code> must not map to <code>null</code> in either
-         *         map.
-         */
-        private boolean equalValue(String key, Map<String, String> map1, Map<String, String> map2) {
-            return map1.get(key).equals(map2.get(key));
-        }
-
-        /**
-         * @return <code>true</code> if both maps contains the <code>key</code>,
-         *         <code>false</code> otherwise.
-         */
-        private boolean containKey(String key, Map<String, String> map1, Map<String, String> map2) {
-            return map1.containsKey(key) && map2.containsKey(key);
         }
 
         //-----------------------------< Serializable >-------------------------

@@ -371,7 +371,8 @@ public abstract class QueryResultImpl implements QueryResult {
             throws RepositoryException {
         for (ScoreNode node : nodes) {
             try {
-                if (node != null && !accessMgr.canRead(null, node.getNodeId())) {
+                // TODO: rather use AccessManager.canRead(Path)
+                if (node != null && !accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
                     return false;
                 }
             } catch (ItemNotFoundException e) {
@@ -455,7 +456,7 @@ public abstract class QueryResultImpl implements QueryResult {
             if (total == -1) {
                 return -1;
             }
-            long size = offset > total ? 0 : total - offset;
+            long size = total - offset;
             if (limit >= 0 && size > limit) {
                 return limit;
             } else {

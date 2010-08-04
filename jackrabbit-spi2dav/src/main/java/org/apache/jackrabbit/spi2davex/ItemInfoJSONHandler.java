@@ -38,8 +38,6 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.util.StringCache;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +49,7 @@ class ItemInfoJsonHandler implements JsonHandler {
 
     private static Logger log = LoggerFactory.getLogger(ItemInfoJsonHandler.class);
 
-    private static final String LEAF_NODE_HINT = "::NodeIteratorSize";
+    private static final int SPECIAL_JSON_PAIR = Integer.MAX_VALUE;
 
     private final List<ItemInfo> itemInfos;
     private final NamePathResolver resolver;
@@ -61,19 +59,12 @@ class ItemInfoJsonHandler implements JsonHandler {
     private final PathFactory pFactory;
     private final IdFactory idFactory;
 
-    private boolean expectingHintValue = false;
-
     private Name name;
+    private int propertyType;
     private int index = Path.INDEX_DEFAULT;
 
-    // temp. property state
-    private int propertyType;
-    private boolean multiValuedProperty = false;
-    private List<QValue> propValues = new ArrayList<QValue>();
-
     private Stack<NodeInfo> nodeInfos = new Stack<NodeInfo>();
-
-    private Stack<List<PropertyInfoImpl>> propInfoLists = new Stack<List<PropertyInfoImpl>>();
+    private PropertyInfoImpl mvPropInfo;
 
     ItemInfoJsonHandler(NamePathResolver resolver, NodeInfo nInfo,
                         String rootURI,
@@ -90,7 +81,6 @@ class ItemInfoJsonHandler implements JsonHandler {
         itemInfos = new ArrayList<ItemInfo>();
         itemInfos.add(nInfo);
         nodeInfos.push(nInfo);
-        propInfoLists.push(new ArrayList<PropertyInfoImpl>(8));
     }
 
     public void object() throws IOException {
@@ -103,7 +93,7 @@ class ItemInfoJsonHandler implements JsonHandler {
                 Path p = pFactory.create(currentPath, relPath, true);
                 NodeInfo nInfo = new NodeInfoImpl(id, p);
                 nodeInfos.push(nInfo);
-                propInfoLists.push(new ArrayList<PropertyInfoImpl>(8));
+                itemInfos.add(nInfo);
             } catch (RepositoryException e) {
                 throw new IOException(e.getMessage());
             }
@@ -113,9 +103,7 @@ class ItemInfoJsonHandler implements JsonHandler {
     public void endObject() throws IOException {
         try {
             NodeInfoImpl nInfo = (NodeInfoImpl) nodeInfos.pop();
-            List<PropertyInfoImpl> props = propInfoLists.pop();
-            // all required information to create a node info should now be gathered
-            nInfo.setPropertyInfos(props.toArray(new PropertyInfoImpl[props.size()]), idFactory);
+            nInfo.resolveUUID(idFactory);
             NodeInfo parent = getCurrentNodeInfo();
             if (parent != null) {
                 if (nInfo.getPath().getAncestor(1).equals(parent.getPath())) {
@@ -125,80 +113,62 @@ class ItemInfoJsonHandler implements JsonHandler {
                     log.debug("NodeInfo '"+ nInfo.getPath() + "' out of hierarchy. Parent path = " + parent.getPath());
                 }
             }
-            if (nInfo.isCompleted()) {
-                itemInfos.addAll(props);
-                itemInfos.add(nInfo);
-            } else {
+            if (!nInfo.isCompleted()) {
                 log.debug("Incomplete NodeInfo '"+ nInfo.getPath() + "' -> Only present as ChildInfo with its parent.");
+                itemInfos.remove(nInfo);
             }
         } catch (RepositoryException e) {
             throw new IOException(e.getMessage());
-        } finally {
-            // reset all node-related handler state
-            name = null;
-            index = Path.INDEX_DEFAULT;
         }
     }
 
     public void array() throws IOException {
-        multiValuedProperty = true;
-        propValues.clear();
+        try {
+            mvPropInfo = createPropertyInfo(null, true);
+        } catch (RepositoryException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     public void endArray() throws IOException {
         try {
-            if (propertyType == PropertyType.UNDEFINED) {
-                if (propValues.isEmpty()) {
-                    // make sure that type is set for mv-properties with empty value array.
-                    propertyType = vFactory.retrieveType(getValueURI());
-                } else {
-                    propertyType = propValues.get(0).getType();
-                }
+            // make sure that type is set for mv-properties with empty value array.
+            if (propertyType == PropertyType.UNDEFINED &&
+                    mvPropInfo.numberOfValues() == 0) {
+                int type = vFactory.retrieveType(getValueURI());
+                mvPropInfo.setType(type);
             }
-            // create multi-valued property info
-            NodeInfoImpl parent = getCurrentNodeInfo();
-            Path p = pFactory.create(parent.getPath(), name, true);
-            PropertyId id = idFactory.createPropertyId(parent.getId(), name);
-            PropertyInfoImpl propInfo = new PropertyInfoImpl(id, p, propertyType, propValues.toArray(new QValue[propValues.size()]));
-            propInfo.checkCompleted();
-            getCurrentPropInfos().add(propInfo);
+            mvPropInfo.checkCompleted();
+            getCurrentNodeInfo().addPropertyInfo(mvPropInfo, idFactory);
+            mvPropInfo = null;
         } catch (RepositoryException e) {
             throw new IOException(e.getMessage());
-        } finally {
-            // reset property-related handler state
-            propertyType = PropertyType.UNDEFINED;
-            multiValuedProperty = false;
-            propValues.clear();
-            name = null;
         }
     }
 
     public void key(String key) throws IOException {
-        expectingHintValue = false;
         try {
-            if (key.equals(LEAF_NODE_HINT)) {
-                expectingHintValue = true;
-                // TODO: remember name of hint if there will be additional types of hints
-                name = null;
+            if (key.equals("::NodeIteratorSize")) {
+                propertyType = SPECIAL_JSON_PAIR;
+                // TODO: if additional JSON pairs are created -> set name
             } else if (key.startsWith(":")) {
-                expectingHintValue = true;
-                // either
-                //   :<nameOfProperty> : "PropertyTypeName"
-                // or
-                //   :<nameOfBinaryProperty> : <lengthOfBinaryProperty>
-                //name = resolver.getQName(key.substring(1));
-                name = resolver.getQName(StringCache.fromCacheOrNew(key.substring(1)));
+                // binary property
+                name = resolver.getQName(key.substring(1));
+                propertyType = PropertyType.BINARY;
                 index = Path.INDEX_DEFAULT;
             } else if (key.endsWith("]")) {
                 // sns-node name
                 int pos = key.lastIndexOf('[');
-                //name = resolver.getQName(key.substring(0, pos));
-                name = resolver.getQName(StringCache.fromCacheOrNew(key.substring(0, pos)));
+                name = resolver.getQName(key.substring(0, pos));
                 propertyType = PropertyType.UNDEFINED;
                 index = Integer.parseInt(key.substring(pos + 1, key.length() - 1));
             } else {
                 // either node or property
-                name = resolver.getQName(StringCache.cache(key));
+                Name previousName = name;
+                name = resolver.getQName(key);
+                propertyType = guessPropertyType(name, previousName);
+                // property type is defined through json value OR special property
+                // :propertyName = type.
                 index = Path.INDEX_DEFAULT;
             }
         } catch (RepositoryException e) {
@@ -206,27 +176,21 @@ class ItemInfoJsonHandler implements JsonHandler {
         }
     }
 
-    /**
-     * there is currently one special string-value hint:
-     *
-     *   :<nameOfProperty> : "PropertyTypeName"
-     *
-     * @param value The value.
-     * @throws IOException
-     */
     public void value(String value) throws IOException {
-        if (expectingHintValue) {
-            // :<nameOfProperty> : "PropertyTypeName"
-            propertyType = PropertyType.valueFromName(value);
-            return;
-        }
         try {
             QValue v;
             switch (propertyType) {
+                case SPECIAL_JSON_PAIR:
+                    // currently no special boolean value pair -> ignore
+                    return;
+                case PropertyType.BINARY:
+                    // key started with ':' but value is String instead of
+                    // long. value therefore reflects the property type.
+                    // -> reset the property type.
+                    // -> omit creation of value AND call to value(QValue)
+                    propertyType = PropertyType.valueFromName(value);
+                    return;
                 case PropertyType.UNDEFINED:
-                    if (!NameConstants.JCR_UUID.equals(name)) {
-                        value = StringCache.cache(value);
-                    }
                     v = vFactory.create(value, PropertyType.STRING);
                     break;
                 case PropertyType.NAME:
@@ -245,8 +209,8 @@ class ItemInfoJsonHandler implements JsonHandler {
     }
 
     public void value(boolean value) throws IOException {
-        if (expectingHintValue) {
-            // there are currently no special boolean value hints:
+        if (propertyType == SPECIAL_JSON_PAIR) {
+            // currently no special boolean value pair -> ignore
             return;
         }
         try {
@@ -256,46 +220,30 @@ class ItemInfoJsonHandler implements JsonHandler {
         }
     }
 
-    /**
-     * there are currently 2 types of special long value hints:
-     *
-     * a) ::NodeIteratorSize : 0
-     *    ==> denotes the current node as leaf node
-     *
-     * b) :<nameOfBinaryProperty> : <lengthOfBinaryProperty>
-     *
-     * @param value The value.
-     * @throws IOException
-     */
     public void value(long value) throws IOException {
-        if (expectingHintValue) {
-            if (name == null) {
-                // ::NodeIteratorSize : 0
-                NodeInfoImpl parent = getCurrentNodeInfo();
-                if (parent != null) {
-                    parent.markAsLeafNode();
-                }
-            } else {
-                // :<nameOfBinaryProperty> : <lengthOfBinaryProperty>
-                propertyType = PropertyType.BINARY;
-                try {
-                    int indx = (!multiValuedProperty) ? -1 : propValues.size();
-                    value(vFactory.create(value, getValueURI(), indx));
-                } catch (RepositoryException e) {
-                    throw new IOException(e.getMessage());
-                }
+        if (propertyType == SPECIAL_JSON_PAIR) {
+            NodeInfoImpl parent = getCurrentNodeInfo();
+            if (parent != null) {
+                parent.setNumberOfChildNodes(value);
             }
             return;
         }
         try {
-            value(vFactory.create(value));
+            QValue v;
+            if (propertyType == PropertyType.BINARY) {
+                int indx = (mvPropInfo == null) ? -1 : mvPropInfo.numberOfValues();
+                v = vFactory.create(value, getValueURI(), indx);
+            } else {
+                v = vFactory.create(value);
+            }
+            value(v);
         } catch (RepositoryException e) {
             throw new IOException(e.getMessage());
         }
     }
 
     public void value(double value) throws IOException {
-        if (expectingHintValue) {
+        if (propertyType == SPECIAL_JSON_PAIR) {
             // currently no special double value pair -> ignore
             return;
         }
@@ -313,31 +261,10 @@ class ItemInfoJsonHandler implements JsonHandler {
      * @throws RepositoryException
      */
     private void value(QValue value) throws RepositoryException {
-        if (!multiValuedProperty) {
-            try {
-                if (propertyType == PropertyType.UNDEFINED) {
-                    propertyType = value.getType();
-                }
-                // create single-valued property info
-                NodeInfoImpl parent = getCurrentNodeInfo();
-                Path p = pFactory.create(parent.getPath(), name, true);
-                PropertyId id = idFactory.createPropertyId(parent.getId(), name);
-                PropertyInfoImpl propInfo = new PropertyInfoImpl(id, p, propertyType, value);
-                propInfo.checkCompleted();
-                // add property info to current list, will be processed on endObject() event
-                getCurrentPropInfos().add(propInfo);
-            } finally {
-                // reset property-related handler state
-                propertyType = PropertyType.UNDEFINED;
-                multiValuedProperty = false;
-                propValues.clear();
-                name = null;
-                expectingHintValue = false;
-            }
+        if (mvPropInfo == null) {
+            createPropertyInfo(value, false);
         } else {
-            // multi-valued property
-            // add value to current list, will be processed on endArray() event
-            propValues.add(value);
+            mvPropInfo.addValue(value);
         }
     }
 
@@ -346,17 +273,48 @@ class ItemInfoJsonHandler implements JsonHandler {
     }
 
     private NodeInfoImpl getCurrentNodeInfo() {
-        return (nodeInfos.isEmpty()) ? null : (NodeInfoImpl) nodeInfos.peek();
+        return  (nodeInfos.isEmpty()) ? null : (NodeInfoImpl) nodeInfos.peek();
     }
 
-    private List<PropertyInfoImpl> getCurrentPropInfos() {
-        return (propInfoLists.isEmpty()) ? null : propInfoLists.peek();
+    private PropertyInfoImpl createPropertyInfo(QValue value, boolean isMultiValued) throws RepositoryException {
+        NodeInfoImpl parent = getCurrentNodeInfo();
+        Path p = pFactory.create(parent.getPath(), name, true);
+        PropertyId id = idFactory.createPropertyId(parent.getId(), name);
+
+        PropertyInfoImpl pInfo;
+        if (isMultiValued) {
+            pInfo = new PropertyInfoImpl(id, p, propertyType);
+            // not added to parent but upon having read all values.
+        } else {
+            pInfo = new PropertyInfoImpl(id, p, propertyType, value);
+            parent.addPropertyInfo(pInfo, idFactory);
+        }
+        itemInfos.add(pInfo);
+        return pInfo;
     }
 
     private String getValueURI() throws RepositoryException {
-        Path propertyPath = pFactory.create(getCurrentNodeInfo().getPath(), name, true);
+        Path propertyPath;
+        if (mvPropInfo == null) {
+            propertyPath = pFactory.create(getCurrentNodeInfo().getPath(), name, true);
+        } else {
+            propertyPath = mvPropInfo.getPath();
+        }
         StringBuffer sb = new StringBuffer(rootURI);
         sb.append(Text.escapePath(resolver.getJCRPath(propertyPath)));
         return sb.toString();
+    }
+
+    private int guessPropertyType(Name name, Name previousName) {
+        if (name.equals(previousName)) {
+            // property has been previously retrieved from :name : "typeName"
+            // entry in the JSON string. if by coincidence the previous key
+            // is equal but belongs to an JSON object (-> node) the prop type
+            // has been reset to UNDEFINED anyway.
+            return propertyType;
+        } else {
+            // default: determine type upon Property.getType() only.
+            return PropertyType.UNDEFINED;
+        }
     }
 }

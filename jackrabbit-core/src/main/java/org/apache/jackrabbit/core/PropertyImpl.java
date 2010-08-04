@@ -16,14 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import static javax.jcr.PropertyType.BINARY;
-import static javax.jcr.PropertyType.NAME;
-import static javax.jcr.PropertyType.PATH;
-import static javax.jcr.PropertyType.REFERENCE;
-import static javax.jcr.PropertyType.STRING;
-import static javax.jcr.PropertyType.UNDEFINED;
-import static javax.jcr.PropertyType.WEAKREFERENCE;
-
 import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -32,15 +24,13 @@ import java.util.Calendar;
 
 import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -49,7 +39,6 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -57,6 +46,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -78,13 +68,11 @@ public class PropertyImpl extends ItemImpl implements Property {
      * Package private constructor.
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Property</code>
-     * @param sessionContext the component context of the associated session
+     * @param session    the <code>Session</code> through which this <code>Property</code> is acquired
      * @param data       the property data
      */
-    PropertyImpl(
-            ItemManager itemMgr, SessionContext sessionContext,
-            PropertyData data) {
-        super(itemMgr, sessionContext, data);
+    PropertyImpl(ItemManager itemMgr, SessionImpl session, PropertyData data) {
+        super(itemMgr, session, data);
         this.data = data;
         // value will be read on demand
     }
@@ -166,31 +154,12 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     protected void restoreTransient(PropertyState transientState)
             throws RepositoryException {
-        PropertyState thisState = null;
-
-        if (!isTransient()) {
-            thisState = (PropertyState) getOrCreateTransientItemState();
-            if (transientState.getStatus() == ItemState.STATUS_NEW
-                    && thisState.getStatus() != ItemState.STATUS_NEW) {
-                thisState.setStatus(ItemState.STATUS_NEW);
-                stateMgr.disconnectTransientItemState(thisState);
-            }
-        } else {
-            // JCR-2503: Re-create transient state in the state manager,
-            // because it was removed
-            synchronized (data) {
-                try {
-                    thisState = stateMgr.createTransientPropertyState(
-                            transientState.getParentId(),
-                            transientState.getName(),
-                            PropertyState.STATUS_NEW);
-                    data.setState(thisState);
-                } catch (ItemStateException e) {
-                    throw new RepositoryException(e);
-                }
-            }
+        PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
+        if (transientState.getStatus() == ItemState.STATUS_NEW
+                && thisState.getStatus() != ItemState.STATUS_NEW) {
+            thisState.setStatus(ItemState.STATUS_NEW);
+            stateMgr.disconnectTransientItemState(thisState);
         }
-
         // reapply transient changes
         thisState.setType(transientState.getType());
         thisState.setMultiValued(transientState.isMultiValued());
@@ -215,8 +184,8 @@ public class PropertyImpl extends ItemImpl implements Property {
     protected long getLength(InternalValue value) throws RepositoryException {
         long length;
         switch (value.getType()) {
-            case NAME:
-            case PATH:
+            case PropertyType.NAME:
+            case PropertyType.PATH:
                 String str = ValueFormat.getJCRString(value, session);
                 length = str.length();
                 break;
@@ -302,7 +271,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (oldValues != null) {
             for (int i = 0; i < oldValues.length; i++) {
                 InternalValue old = oldValues[i];
-                if (old != null && old.getType() == BINARY) {
+                if (old != null && old.getType() == PropertyType.BINARY) {
                     // make sure temporarily allocated data is discarded
                     // before overwriting it
                     old.discard();
@@ -313,9 +282,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         // set new values
         thisState.setValues(values);
         // set type
-        if (type == UNDEFINED) {
+        if (type == PropertyType.UNDEFINED) {
             // fallback to default type
-            type = STRING;
+            type = PropertyType.STRING;
         }
         thisState.setType(type);
     }
@@ -345,8 +314,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check type according to definition of this property
         final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
-        if (reqType == UNDEFINED) {
-            reqType = NAME;
+        if (reqType == PropertyType.UNDEFINED) {
+            reqType = PropertyType.NAME;
         }
 
         if (name == null) {
@@ -355,13 +324,12 @@ public class PropertyImpl extends ItemImpl implements Property {
         }
 
         InternalValue internalValue;
-        if (reqType != NAME) {
+        if (reqType != PropertyType.NAME) {
             // type conversion required
             Value targetValue = ValueHelper.convert(
                     ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                     reqType, session.getValueFactory());
-            internalValue = InternalValue.create(
-                    targetValue, session, sessionContext.getDataStore());
+            internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
         } else {
             // no type conversion required
             internalValue = InternalValue.create(name);
@@ -395,8 +363,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check type according to definition of this property
         final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
-        if (reqType == UNDEFINED) {
-            reqType = NAME;
+        if (reqType == PropertyType.UNDEFINED) {
+            reqType = PropertyType.NAME;
         }
 
         InternalValue[] internalValues = null;
@@ -407,14 +375,12 @@ public class PropertyImpl extends ItemImpl implements Property {
                 Name name = names[i];
                 InternalValue internalValue = null;
                 if (name != null) {
-                    if (reqType != NAME) {
+                    if (reqType != PropertyType.NAME) {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
                                 ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                                 reqType, session.getValueFactory());
-                        internalValue = InternalValue.create(
-                                targetValue, session,
-                                sessionContext.getDataStore());
+                        internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
                     } else {
                         // no type conversion required
                         internalValue = InternalValue.create(name);
@@ -497,39 +463,33 @@ public class PropertyImpl extends ItemImpl implements Property {
         }
     }
 
-    /** Wrapper around {@link #getValue()} */
     public String getString() throws RepositoryException {
         return getValue().getString();
     }
 
-    /** Wrapper around {@link #getValue()} */
     public InputStream getStream() throws RepositoryException {
-        final Binary binary = getValue().getBinary();
+        final Binary bin = getValue().getBinary();
         // make sure binary is disposed after stream had been consumed
-        return new AutoCloseInputStream(binary.getStream()) {
+        return new AutoCloseInputStream(bin.getStream()) {
             public void close() throws IOException {
                 super.close();
-                binary.dispose();
+                bin.dispose();
             }
         };
     }
 
-    /** Wrapper around {@link #getValue()} */
     public long getLong() throws RepositoryException {
         return getValue().getLong();
     }
 
-    /** Wrapper around {@link #getValue()} */
     public double getDouble() throws RepositoryException {
         return getValue().getDouble();
     }
 
-    /** Wrapper around {@link #getValue()} */
     public Calendar getDate() throws RepositoryException {
         return getValue().getDate();
     }
 
-    /** Wrapper around {@link #getValue()} */
     public boolean getBoolean() throws RepositoryException {
         return getValue().getBoolean();
     }
@@ -538,35 +498,27 @@ public class PropertyImpl extends ItemImpl implements Property {
         Value value = getValue();
         int type = value.getType();
         switch (type) {
-            case REFERENCE:
-            case WEAKREFERENCE:
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
                 return session.getNodeByUUID(value.getString());
 
-            case PATH:
-            case NAME:
+            case PropertyType.PATH:
+            case PropertyType.NAME:
                 String path = value.getString();
                 Path p = session.getQPath(path);
                 boolean absolute = p.isAbsolute();
-                try {
-                    return (absolute) ? session.getNode(path) : getParent().getNode(path);
-                } catch (PathNotFoundException e) {
-                    throw new ItemNotFoundException(path);
-                }
+                return (absolute) ? session.getNode(path) : getParent().getNode(path);
 
-            case STRING:
+            case PropertyType.STRING:
                 try {
-                    Value refValue = ValueHelper.convert(value, REFERENCE, session.getValueFactory());
+                    Value refValue = ValueHelper.convert(value, PropertyType.REFERENCE, session.getValueFactory());
                     return session.getNodeByUUID(refValue.getString());
                 } catch (RepositoryException e) {
                     // try if STRING value can be interpreted as PATH value
-                    Value pathValue = ValueHelper.convert(value, PATH, session.getValueFactory());
+                    Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
                     p = session.getQPath(pathValue.getString());
                     absolute = p.isAbsolute();
-                    try {
-                        return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
-                    } catch (PathNotFoundException e1) {
-                        throw new ItemNotFoundException(pathValue.getString());
-                    }
+                    return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
                 }
 
             default:
@@ -576,7 +528,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public Property getProperty() throws RepositoryException {
         Value value = getValue();
-        Value pathValue = ValueHelper.convert(value, PATH, session.getValueFactory());
+        Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
         String path = pathValue.getString();
         boolean absolute;
         try {
@@ -585,114 +537,91 @@ public class PropertyImpl extends ItemImpl implements Property {
         } catch (RepositoryException e) {
             throw new ValueFormatException("Property value cannot be converted to a PATH");
         }
-        try {
-            return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(path);
-        }
+        return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
     }
 
-    /** Wrapper around {@link #getValue()} */
     public BigDecimal getDecimal() throws RepositoryException {
         return getValue().getDecimal();
     }
 
-    /** Wrapper around {@link #setValue(Value)} */
     public void setValue(BigDecimal value) throws RepositoryException {
-        if (value != null) {
-            setValue(getValueFactory().createValue(value));
-        } else {
-            setValue((Value) null);
-        }
+        setValue(session.getValueFactory().createValue(value));
     }
 
-    /** Wrapper around {@link #getValue()} */
     public Binary getBinary() throws RepositoryException {
         return getValue().getBinary();
     }
 
-    /** Wrapper around {@link #setValue(Value)} */
     public void setValue(Binary value) throws RepositoryException {
-        if (value != null) {
-            setValue(getValueFactory().createValue(value));
-        } else {
-            setValue((Value) null);
-        }
+        setValue(session.getValueFactory().createValue(value));
     }
 
-    /** Wrapper around {@link #setValue(Value)} */
     public void setValue(Calendar value) throws RepositoryException {
         if (value != null) {
             try {
                 setValue(session.getValueFactory().createValue(value));
             } catch (IllegalArgumentException e) {
-                throw new ValueFormatException(
-                        "Value is not an ISO8601 date: " + value, e);
+                throw new ValueFormatException(e.getMessage());
             }
         } else {
-            setValue((Value) null);
+            remove();
         }
     }
 
-    /** Wrapper around {@link #setValue(Value)} */
     public void setValue(double value) throws RepositoryException {
-        setValue(getValueFactory().createValue(value));
+        setValue(session.getValueFactory().createValue(value));
     }
 
-    /** Wrapper around {@link #setValue(Value)} */
     public void setValue(InputStream value) throws RepositoryException {
         if (value != null) {
-            Binary binary = getValueFactory().createBinary(value);
-            try {
-                setValue(getValueFactory().createValue(binary));
-            } finally {
-                binary.dispose();
-            }
+            setValue(session.getValueFactory().createValue(value));
         } else {
-            setValue((Value) null);
+            remove();
         }
     }
 
-    /** Wrapper around {@link #setValue(Value)} */
     public void setValue(String value) throws RepositoryException {
         if (value != null) {
-            setValue(getValueFactory().createValue(value));
+            setValue(session.getValueFactory().createValue(value));
         } else {
-            setValue((Value) null);
+            remove();
         }
     }
 
-    /** Wrapper around {@link #setValue(Value[])} */
     public void setValue(String[] strings) throws RepositoryException {
         if (strings != null) {
-            setValue(getValues(strings, STRING));
-        } else {
-            setValue((Value[]) null);
-        }
-    }
-
-    /** Wrapper around {@link #setValue(Value)} */
-    public void setValue(boolean value) throws RepositoryException {
-        setValue(getValueFactory().createValue(value));
-    }
-
-    /** Wrapper around {@link #setValue(Value)} */
-    public void setValue(Node value) throws RepositoryException {
-        if (value != null) {
-            try {
-                setValue(getValueFactory().createValue(value));
-            } catch (UnsupportedRepositoryOperationException e) {
-                throw new ValueFormatException(
-                        "Node is not referenceable: " + value, e);
+            ValueFactory factory = session.getValueFactory();
+            Value[] values = new Value[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                if (strings[i] != null) {
+                    values[i] = factory.createValue(strings[i]);
+                }
             }
+            setValue(values);
         } else {
-            setValue((Value) null);
+            remove();
         }
     }
 
-    /** Wrapper around {@link #setValue(Value)} */
+    public void setValue(boolean value) throws RepositoryException {
+        setValue(session.getValueFactory().createValue(value));
+    }
+
+    public void setValue(Node target)
+            throws ValueFormatException, RepositoryException {
+        if (target == null) {
+            remove();
+        } else if (((NodeImpl) target).isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            setValue(session.getValueFactory().createValue(
+                    target.getUUID(), PropertyType.REFERENCE));
+        } else {
+            throw new ValueFormatException(
+                    "target node must be of node type mix:referenceable");
+        }
+    }
+
     public void setValue(long value) throws RepositoryException {
-        setValue(getValueFactory().createValue(value));
+        setValue(session.getValueFactory().createValue(value));
     }
 
     public synchronized void setValue(Value value)
@@ -708,11 +637,11 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check type according to definition of this property
         final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
-        if (reqType == UNDEFINED) {
+        if (reqType == PropertyType.UNDEFINED) {
             if (value != null) {
                 reqType = value.getType();
             } else {
-                reqType = STRING;
+                reqType = PropertyType.STRING;
             }
         }
 
@@ -726,12 +655,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             // type conversion required
             Value targetVal = ValueHelper.convert(
                     value, reqType, session.getValueFactory());
-            internalValue = InternalValue.create(
-                    targetVal, session, sessionContext.getDataStore());
+            internalValue = InternalValue.create(targetVal, session, rep.getDataStore());
         } else {
             // no type conversion required
-            internalValue = InternalValue.create(
-                    value, session, sessionContext.getDataStore());
+            internalValue = InternalValue.create(value, session, rep.getDataStore());
         }
         internalSetValue(new InternalValue[]{internalValue}, reqType);
     }
@@ -739,8 +666,11 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * {@inheritDoc}
      */
-    public void setValue(Value[] values) throws RepositoryException {
-        setValue(values, UNDEFINED);
+    public void setValue(Value[] values)
+            throws ValueFormatException, VersionException,
+            LockException, ConstraintViolationException,
+            RepositoryException {
+        setValue(values, PropertyType.UNDEFINED);
     }
 
     /**
@@ -761,10 +691,10 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         if (values != null) {
             // check type of values
-            int firstValueType = UNDEFINED;
+            int firstValueType = PropertyType.UNDEFINED;
             for (int i = 0; i < values.length; i++) {
                 if (values[i] != null) {
-                    if (firstValueType == UNDEFINED) {
+                    if (firstValueType == PropertyType.UNDEFINED) {
                         firstValueType = values[i].getType();
                     } else if (firstValueType != values[i].getType()) {
                         throw new ValueFormatException(
@@ -776,7 +706,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
-        if (reqType == UNDEFINED) {
+        if (reqType == PropertyType.UNDEFINED) {
             reqType = valueType; // use the given type as property type
         }
 
@@ -789,7 +719,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             for (int i = 0; i < values.length; i++) {
                 Value value = values[i];
                 if (value != null) {
-                    if (reqType == UNDEFINED) {
+                    if (reqType == PropertyType.UNDEFINED) {
                         // Use the type of the fist value as the type
                         reqType = value.getType();
                     }
@@ -798,7 +728,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                                 value, reqType, session.getValueFactory());
                     }
                     internalValues[i] = InternalValue.create(
-                            value, session, sessionContext.getDataStore());
+                            value, session, rep.getDataStore());
                 } else {
                     internalValues[i] = null;
                 }

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.cluster.NamespaceEventChannel;
 import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
-import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.StringIndex;
@@ -46,17 +45,6 @@ public class NamespaceRegistryImpl implements
         NamespaceRegistry, NamespaceEventListener, StringIndex {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
-
-    /**
-     * Special property key string to be used instead of an empty key to
-     * avoid problems with Java implementations that have problems with
-     * empty keys in property files. The selected value ({@value}) would be
-     * invalid as either a namespace prefix or a URI, so there's little fear
-     * of accidental collisions.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-888">JCR-888</a>
-     */
-    private static final String EMPTY_KEY = ".empty.key";
 
     private static final String NS_REG_RESOURCE = "ns_reg.properties";
     private static final String NS_IDX_RESOURCE = "ns_idx.properties";
@@ -103,11 +91,12 @@ public class NamespaceRegistryImpl implements
     /**
      * Protected constructor: Constructs a new instance of this class.
      *
-     * @param fs repository file system
+     * @param nsRegStore
      * @throws RepositoryException
      */
-    public NamespaceRegistryImpl(FileSystem fs) throws RepositoryException {
-        this.nsRegStore = new BasedFileSystem(fs, "/namespaces");
+    protected NamespaceRegistryImpl(FileSystem nsRegStore)
+            throws RepositoryException {
+        this.nsRegStore = nsRegStore;
         load();
     }
 
@@ -209,15 +198,11 @@ public class NamespaceRegistryImpl implements
                 for (Object p : props.keySet()) {
                     String prefix = (String) p;
                     String uri = props.getProperty(prefix);
-                    String idx = indexes.getProperty(escapePropertyKey(uri));
-                    // JCR-888: Backwards compatibility check
-                    if (idx == null && uri.equals("")) {
-                        idx = indexes.getProperty(uri);
-                    }
+                    String idx = indexes.getProperty(uri);
                     if (idx != null) {
-                        map(unescapePropertyKey(prefix), uri, Integer.decode(idx));
+                        map(prefix, uri, Integer.decode(idx));
                     } else {
-                        map(unescapePropertyKey(prefix), uri);
+                        map(prefix, uri);
                     }
                 }
             } finally {
@@ -244,7 +229,7 @@ public class NamespaceRegistryImpl implements
             // store mappings in properties
             for (String prefix : prefixToURI.keySet()) {
                 String uri = prefixToURI.get(prefix);
-                props.setProperty(escapePropertyKey(prefix), uri);
+                props.setProperty(prefix, uri);
             }
 
             try {
@@ -269,7 +254,7 @@ public class NamespaceRegistryImpl implements
             // store mappings in properties
             for (String uri : uriToIndex.keySet()) {
                 String index = uriToIndex.get(uri).toString();
-                props.setProperty(escapePropertyKey(uri), index);
+                props.setProperty(uri, index);
             }
 
             try {
@@ -282,36 +267,6 @@ public class NamespaceRegistryImpl implements
             String msg = "failed to persist namespace registry index.";
             log.debug(msg);
             throw new RepositoryException(msg, e);
-        }
-    }
-
-    /**
-     * Replaces an empty string with the special {@link #EMPTY_KEY} value.
-     *
-     * @see #unescapePropertyKey(String)
-     * @param key property key
-     * @return escaped property key
-     */
-    private String escapePropertyKey(String key) {
-        if (key.equals("")) {
-            return EMPTY_KEY;
-        } else {
-            return key;
-        }
-    }
-
-    /**
-     * Converts the special {@link #EMPTY_KEY} value back to an empty string.
-     *
-     * @see #escapePropertyKey(String)
-     * @param key property key
-     * @return escaped property key
-     */
-    private String unescapePropertyKey(String key) {
-        if (key.equals(EMPTY_KEY)) {
-            return "";
-        } else {
-            return key;
         }
     }
 

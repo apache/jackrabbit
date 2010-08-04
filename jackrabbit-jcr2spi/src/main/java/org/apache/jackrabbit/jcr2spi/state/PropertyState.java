@@ -210,10 +210,10 @@ public class PropertyState extends ItemState {
     public QPropertyDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
             /*
-            Don't pass 'all-node types from parent':
+            Don't pass 'all-nodetypes from parent':
             for NEW-states the definition is always set upon creation.
             for all other states the definition must be retrieved only taking
-            the effective node types present on the parent into account
+            the effective nodetypes present on the parent into account
             any kind of transiently added mixins must not have an effect
             on the definition retrieved for an state that has been persisted
             before. The effective NT must be evaluated as if it had been
@@ -260,15 +260,15 @@ public class PropertyState extends ItemState {
     void setValues(QValue[] values, int type) throws RepositoryException {
         if (getStatus() == Status.NEW) {
             if (data == null) {
-                data = new PropertyData(type, values, getDefinition());
+                data = new PropertyData(type, values);
             } else {
-                data.setValues(type, values, getDefinition());
+                data.setValues(type, values);
             }
         } else {
             if (transientData == null) {
-                transientData = new PropertyData(type, values, getDefinition());
+                transientData = new PropertyData(type, values);
             } else {
-                transientData.setValues(type, values, getDefinition());
+                transientData.setValues(type, values);
             }
             markModified();
         }
@@ -343,9 +343,9 @@ public class PropertyState extends ItemState {
 
     //--------------------------------------------------------< inner class >---
     /**
-     * Inner class storing property values and their type.
+     * Inner class storing property values an their type.
      */
-    private static class PropertyData {
+    private class PropertyData {
         private int type;
         private QValue[] values;
         private boolean discarded;
@@ -355,14 +355,14 @@ public class PropertyState extends ItemState {
             this.values = pInfo.getValues();
         }
 
-        private PropertyData(int type, QValue[] values, QPropertyDefinition definition) throws ConstraintViolationException, RepositoryException {
-            setValues(type, values, definition);
+        private PropertyData(int type, QValue[] values) throws ConstraintViolationException, RepositoryException {
+            setValues(type, values);
         }
 
-        private void setValues(int type, QValue[] values, QPropertyDefinition definition) throws ConstraintViolationException, RepositoryException {
+        private void setValues(int type, QValue[] values) throws ConstraintViolationException, RepositoryException {
             // make sure the arguments are consistent and do not violate the
             // given property definition.
-            validate(values, type, definition);
+            validate(values, type, getDefinition());
             // free old values if existing
             discardValues();
 
@@ -387,7 +387,7 @@ public class PropertyState extends ItemState {
     /**
      * Helper class for delayed determination of property differences.
      */
-    private static class PropertyDiffer implements MergeResult {
+    private class PropertyDiffer implements MergeResult {
 
         private final PropertyData oldData;
         private final PropertyData newData;

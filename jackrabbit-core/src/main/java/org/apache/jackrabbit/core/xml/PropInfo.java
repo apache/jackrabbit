@@ -56,13 +56,7 @@ public class PropInfo {
     private final TextValue[] values;
 
     /**
-     * Hint indicating whether the property is multi- or single-value
-     */
-    public enum MultipleStatus { UNKNOWN, SINGLE, MULTIPLE }
-    private MultipleStatus multipleStatus;
-
-    /**
-     * Creates a property information instance.
+     * Creates a proprety information instance.
      *
      * @param name name of the property being imported
      * @param type type of the property being imported
@@ -72,26 +66,6 @@ public class PropInfo {
         this.name = name;
         this.type = type;
         this.values = values;
-        multipleStatus =
-                values.length == 1
-                        ? MultipleStatus.UNKNOWN : MultipleStatus.MULTIPLE;
-    }
-
-    /**
-     * Creates a property information instance.
-     *
-     * @param name name of the property being imported
-     * @param type type of the property being imported
-     * @param values value(s) of the property being imported
-     * @param multipleStatus Hint indicating whether the property is
-     *                       multi- or single-value
-     */
-    public PropInfo(Name name, int type, TextValue[] values,
-                    MultipleStatus multipleStatus) {
-        this.name = name;
-        this.type = type;
-        this.values = values;
-        this.multipleStatus = multipleStatus;
     }
 
     /**
@@ -116,19 +90,12 @@ public class PropInfo {
 
     public QPropertyDefinition getApplicablePropertyDef(EffectiveNodeType ent)
             throws ConstraintViolationException {
-        if (multipleStatus == MultipleStatus.MULTIPLE) {
-            return ent.getApplicablePropertyDef(name, type, true);
-        } else if (multipleStatus == MultipleStatus.SINGLE) {
-            return ent.getApplicablePropertyDef(name, type, false);
+        if (values.length == 1) {
+            // could be single- or multi-valued (n == 1)
+            return ent.getApplicablePropertyDef(name, type);
         } else {
-            // multipleStatus == MultipleStatus.UNKNOWN
-            if (values.length == 1) {
-                // one value => could be single- or multi-valued
-                return ent.getApplicablePropertyDef(name, type);
-            } else {
-                // zero or more than one values => must be multi-valued
-                return ent.getApplicablePropertyDef(name, type, true);
-            }
+            // can only be multi-valued (n == 0 || n > 1)
+            return ent.getApplicablePropertyDef(name, type, true);
         }
     }
 

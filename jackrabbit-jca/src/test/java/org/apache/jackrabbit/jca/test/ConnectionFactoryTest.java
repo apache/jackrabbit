@@ -24,8 +24,8 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.naming.Referenceable;
 import javax.resource.spi.ManagedConnection;
-import javax.transaction.xa.XAResource;
 
+import org.apache.jackrabbit.api.XASession;
 import org.apache.jackrabbit.jca.JCAConnectionRequestInfo;
 import org.apache.jackrabbit.jca.JCARepositoryHandle;
 import org.apache.jackrabbit.jca.JCASessionHandle;
@@ -117,7 +117,7 @@ public final class ConnectionFactoryTest
 
         // Open a session
         Session session = repository.login(JCR_SUPERUSER);
-        assertTrue(session instanceof XAResource);
+        assertTrue(session instanceof XASession);
         session.logout();
     }
     

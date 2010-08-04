@@ -16,55 +16,48 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.commons.collections.map.LRUMap;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.ItemImpl;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.authorization.AccessControlListener;
-import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
-import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
-import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Iterator;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.QueryResult;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.util.Text;
+import org.apache.commons.collections.iterators.IteratorChain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The ACLProvider generates access control policies out of the items stored
@@ -104,12 +97,28 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     private NodeId rootNodeId;
 
+    //-------------------------------------------------< AccessControlUtils >---
     /**
-     * Cache to ease the retrieval of ACEs defined for a given node. This cache
-     * is used by the ACLPermissions created individually for each Session
-     * instance.
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(Path)
      */
-    private EntryCollector entryCollector;
+    public boolean isAcItem(Path absPath) throws RepositoryException {
+        Path.Element[] elems = absPath.getElements();
+        for (Path.Element elem : elems) {
+            if (N_POLICY.equals(elem.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Test if the given node is itself a rep:ACL or a rep:ACE node.
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(ItemImpl)
+     */
+    public boolean isAcItem(ItemImpl item) throws RepositoryException {
+        NodeImpl n = ((item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent());
+        return n.isNodeType(NT_REP_ACL) || n.isNodeType(NT_REP_ACE);
+    }
 
     //----------------------------------------------< AccessControlProvider >---
     /**
@@ -124,93 +133,34 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         NodeImpl root = (NodeImpl) session.getRootNode();
         rootNodeId = root.getNodeId();
         systemEditor = new ACLEditor(systemSession, this);
-
         // TODO: replace by configurable default policy (see JCR-2331)
         boolean initializedWithDefaults = !configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS);
         if (initializedWithDefaults && !isAccessControlled(root)) {
             initRootACL(session, systemEditor);
         }
-
-        entryCollector = createEntryCollector((SessionImpl) systemSession);
-    }
-
-    @Override
-    public void close() {
-        super.close();        
-        entryCollector.close();
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.security.authorization.CompiledPermissions)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
+     * @param absPath absolute path
      */
-    public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException {
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
 
         NodeImpl targetNode = (NodeImpl) session.getNode(session.getJCRPath(absPath));
-        NodeImpl node = getNode(targetNode, isAcItem(targetNode));
+        NodeImpl node = getNode(targetNode);
         List<AccessControlList> acls = new ArrayList<AccessControlList>();
 
         // collect all ACLs effective at node
-        collectAcls(node, permissions, acls);
+        collectAcls(node, acls);
         // if no effective ACLs are present -> add a default, empty acl.
         if (acls.isEmpty()) {
             // no access control information can be retrieved for the specified
             // node, since neither the node nor any of its parents is access
-            // controlled. TODO: there should be a default policy in this case (see JCR-2331)
+            // controlled.
             log.warn("No access controlled node present in item hierarchy starting from " + targetNode.getPath());
         }
         return acls.toArray(new AccessControlList[acls.size()]);
-    }
-
-    /**
-     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(java.util.Set, CompiledPermissions)
-     */
-    public AccessControlPolicy[] getEffectivePolicies(Set<Principal> principals, CompiledPermissions permissions) throws RepositoryException {
-        String propName = ISO9075.encode(session.getJCRName(P_PRINCIPAL_NAME));
-
-        StringBuilder stmt = new StringBuilder("/jcr:root");
-        stmt.append("//element(*,");
-        stmt.append(session.getJCRName(NT_REP_ACE));
-        stmt.append(")[");
-        int i = 0;
-        for (Principal principal : principals) {
-            if (i > 0) {
-                stmt.append(" or ");
-            }
-            stmt.append("@");
-            stmt.append(propName);
-            stmt.append("='");
-            stmt.append(principal.getName().replaceAll("'", "''"));
-            stmt.append("'");
-            i++;
-        }
-        stmt.append("]");
-        
-        QueryResult result;
-        try {
-            QueryManager qm = session.getWorkspace().getQueryManager();
-            Query q = qm.createQuery(stmt.toString(), Query.XPATH);
-            result = q.execute();
-        } catch (RepositoryException e) {
-            log.error("Unexpected error while searching effective policies.", e.getMessage());            
-            throw new UnsupportedOperationException("Retrieve effective policies for set of principals not supported.", e);
-        }
-
-        Set<AccessControlPolicy> acls = new LinkedHashSet<AccessControlPolicy>();
-        for (NodeIterator it = result.getNodes(); it.hasNext();) {
-            NodeImpl aclNode = (NodeImpl) it.nextNode().getParent();
-            NodeImpl accessControlledNode = (NodeImpl) aclNode.getParent();
-            
-            if (isAccessControlled(accessControlledNode)) {
-                if (permissions.canRead(aclNode.getPrimaryPath(), aclNode.getNodeId())) {
-                    acls.add(new UnmodifiableAccessControlList(entryCollector.getEntries(accessControlledNode), accessControlledNode.getPath(), Collections.<String, Integer>emptyMap()));
-                } else {
-                    throw new AccessDeniedException("Access denied at " + Text.getRelativeParent(aclNode.getPath(), 1));
-                }
-            }
-        }
-
-        return acls.toArray(new AccessControlPolicy[acls.size()]);
     }
 
     /**
@@ -244,37 +194,22 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             return true;
         } else {
             CompiledPermissions cp = new AclPermissions(principals, false);
-            return cp.canRead(null, rootNodeId);
+            return cp.grants(PathFactoryImpl.getInstance().getRootPath(), Permission.READ);
         }
     }
 
     //----------------------------------------------------------< protected >---
     /**
-     * Create the <code>EntryCollector</code> instance that is used by this
-     * provider to gather the effective ACEs for a given list of principals at a
-     * given node during AC evaluation.
-     *
-     * @param systemSession The system session to create the entry collector for.
-     * @return A new instance of <code>CachingEntryCollector</code>.
-     * @throws RepositoryException If an error occurs.
-     * @see #retrieveResultEntries(NodeImpl, EntryFilter)
-     */
-    protected EntryCollector createEntryCollector(SessionImpl systemSession) throws RepositoryException {
-        return new CachingEntryCollector(systemSession, systemEditor, rootNodeId);
-    }
-
-    /**
      * Retrieve an iterator of <code>AccessControlEntry</code> to be evaluated
      * upon {@link AbstractCompiledPermissions#buildResult}.
      *
      * @param node Target node.
-     * @param filter The entry filter used to collect the access control entries.
+     * @param principalNames List of principal names.
      * @return an iterator of <code>AccessControlEntry</code>.
      * @throws RepositoryException If an error occurs.
      */
-    protected Iterator<AccessControlEntry> retrieveResultEntries(NodeImpl node, EntryFilter filter) throws RepositoryException {
-        Iterator<AccessControlEntry> itr = entryCollector.collectEntries(node, filter).iterator();
-        return itr;
+    protected Iterator<AccessControlEntry> retrieveResultEntries(NodeImpl node, List<String> principalNames) throws RepositoryException {
+        return new Entries(node, principalNames).iterator();
     }
 
     //------------------------------------------------------------< private >---
@@ -284,17 +219,13 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * searched and returned.
      *
      * @param targetNode The node for which AC information needs to be retrieved.
-     * @param isAcItem true if the specified target node defines access control
-     * content; false otherwise.
-     * @return the given <code>targetNode</code> or the nearest non-ac-parent
-     * in case the <code>targetNode</code> itself defines access control content.
+     * @return the node
      * @throws RepositoryException if an error occurs
      */
-    private NodeImpl getNode(NodeImpl targetNode, boolean isAcItem) throws RepositoryException {
+    private NodeImpl getNode(NodeImpl targetNode) throws RepositoryException {
         NodeImpl node;
-        if (isAcItem) {
-            Name ntName = ((NodeTypeImpl) targetNode.getPrimaryNodeType()).getQName();
-            if (ntName.equals(NT_REP_ACL)) {
+        if (isAcItem(targetNode)) {
+            if (targetNode.isNodeType(NT_REP_ACL)) {
                 node = (NodeImpl) targetNode.getParent();
             } else {
                 node = (NodeImpl) targetNode.getParent().getParent();
@@ -313,21 +244,19 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * @param acls List used to collect the effective acls.
      * @throws RepositoryException if an error occurs
      */
-    private void collectAcls(NodeImpl node, CompiledPermissions permissions, List<AccessControlList> acls) throws RepositoryException {
+    private void collectAcls(NodeImpl node, List<AccessControlList> acls) throws RepositoryException {
         // if the given node is access-controlled, construct a new ACL and add
         // it to the list
         if (isAccessControlled(node)) {
-            if (permissions.grants(node.getPrimaryPath(), Permission.READ_AC)) {
-                // retrieve the entries for the access controlled node
-                acls.add(new UnmodifiableAccessControlList(entryCollector.getEntries(node), node.getPath(), Collections.<String, Integer>emptyMap()));
-            } else {
-                throw new AccessDeniedException("Access denied at " + node.getPath());
-            }
+            // build acl for the access controlled node
+            NodeImpl aclNode = node.getNode(N_POLICY);
+            AccessControlList acl = systemEditor.getACL(aclNode);
+            acls.add(new UnmodifiableAccessControlList(acl));
         }
         // then, recursively look for access controlled parents up the hierarchy.
         if (!rootNodeId.equals(node.getId())) {
             NodeImpl parentNode = (NodeImpl) node.getParent();
-            collectAcls(parentNode, permissions, acls);
+            collectAcls(parentNode, acls);
         }
     }
 
@@ -387,24 +316,22 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * and if it has a child node named
      * {@link AccessControlConstants#N_POLICY "rep:ACL"}.
      *
-     * @param node the node to be tested
-     * @return <code>true</code> if the node is access controlled and has a
-     * rep:policy child; <code>false</code> otherwise.
+     * @param node hte node
+     * @return <code>true</code> if the node is access controlled;
+     *         <code>false</code> otherwise.
      * @throws RepositoryException if an error occurs
      */
     static boolean isAccessControlled(NodeImpl node) throws RepositoryException {
-        return node.hasNode(N_POLICY) && node.isNodeType(NT_REP_ACCESS_CONTROLLABLE);
+        return node.isNodeType(NT_REP_ACCESS_CONTROLLABLE) && node.hasNode(N_POLICY);
     }
 
     //------------------------------------------------< CompiledPermissions >---
     /**
      *
      */
-    private class AclPermissions extends AbstractCompiledPermissions implements AccessControlListener {
+    private class AclPermissions extends AbstractCompiledPermissions implements SynchronousEventListener {
 
         private final List<String> principalNames;
-        private final Map<NodeId, Boolean> readCache = new LRUMap(1000);
-        private final Object monitor = new Object();
 
         private AclPermissions(Set<Principal> principals) throws RepositoryException {
             this(principals, true);
@@ -419,17 +346,58 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             if (listenToEvents) {
                 /*
                  Make sure this AclPermission recalculates the permissions if
-                 any ACL concerning it is modified.
-                 */
-                 entryCollector.addListener(this);
+                 any ACL concerning it is modified. interesting events are:
+                 - new ACE-entry for any of the principals (NODE_ADDED)
+                 - changing ACE-entry for any of the principals (PROPERTY_CHANGED)
+                   > new permissions granted/denied
+                   >
+                 - removed ACE-entry for any of the principals (NODE_REMOVED)
+                */
+                int events = Event.PROPERTY_CHANGED | Event.NODE_ADDED | Event.NODE_REMOVED;
+                String[] ntNames = new String[] {
+                        resolver.getJCRName(NT_REP_ACE),
+                        resolver.getJCRName(NT_REP_ACL)
+                };
+                observationMgr.addEventListener(this, events, session.getRootNode().getPath(), true, null, ntNames, true);
             }
         }
 
-        private Result buildResult(NodeImpl node, boolean existingNode, boolean isAcItem, EntryFilter filter) throws RepositoryException {
+        //------------------------------------< AbstractCompiledPermissions >---
+        /**
+         * @see AbstractCompiledPermissions#buildResult(Path)
+         */
+        @Override
+        protected Result buildResult(Path absPath) throws RepositoryException {
+            boolean existingNode = false;
+            NodeImpl node = null;
+            String jcrPath = resolver.getJCRPath(absPath);
+
+            if (session.nodeExists(jcrPath)) {
+                node = (NodeImpl) session.getNode(jcrPath);
+                existingNode = true;
+            } else {
+                // path points to existing prop or non-existing item (node or prop).
+                // -> find the nearest persisted node
+                String parentPath = Text.getRelativeParent(jcrPath, 1);
+                while (parentPath.length() > 0) {
+                    if (session.nodeExists(parentPath)) {
+                        node = (NodeImpl) session.getNode(parentPath);
+                        break;
+                    }
+                    parentPath = Text.getRelativeParent(parentPath, 1);
+                }
+            }
+
+            if (node == null) {
+                // should never get here
+                throw new ItemNotFoundException("Item out of hierarchy.");
+            }
+
+            boolean isAcItem = isAcItem(absPath);
+
             // retrieve all ACEs at path or at the direct ancestor of path that
             // apply for the principal names.
-            Iterator<AccessControlEntry> entries = retrieveResultEntries(getNode(node, isAcItem), filter);
-
+            Iterator<AccessControlEntry> entries = retrieveResultEntries(getNode(node), principalNames);
             /*
              Calculate privileges and permissions:
              Since the ACEs only define privileges on a node and do not allow
@@ -453,7 +421,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                  defined locally must be treated different than inherited entries.
                  */
                 int entryBits = ace.getPrivilegeBits();
-                boolean isLocal = existingNode && ace.isLocal(node.getNodeId());
+                boolean isLocal = existingNode && ace.isLocal(jcrPath);
                 if (!isLocal) {
                     if (ace.isAllow()) {
                         parentAllows |= Permission.diff(entryBits, parentDenies);
@@ -474,115 +442,163 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             return new Result(allows, denies, allowPrivileges, denyPrivileges);
         }
 
-        //------------------------------------< AbstractCompiledPermissions >---
-        /**
-         * @see AbstractCompiledPermissions#buildResult(Path)
-         */
-        @Override
-        protected Result buildResult(Path absPath) throws RepositoryException {
-            boolean existingNode = false;
-            NodeImpl node;
-
-            ItemManager itemMgr = session.getItemManager();
-            try {
-                ItemImpl item = itemMgr.getItem(absPath);
-                if (item.isNode()) {
-                    node = (NodeImpl) item;
-                    existingNode = true;
-                } else {
-                    node = (NodeImpl) item.getParent();
-                }
-            } catch (RepositoryException e) {
-                // path points to a non-persisted item.
-                // -> find the nearest persisted node starting from the root.
-                Path.Element[] elems = absPath.getElements();
-                NodeImpl parent = (NodeImpl) session.getRootNode();
-                for (int i = 1; i < elems.length - 1; i++) {
-                    Name name = elems[i].getName();
-                    int index = elems[i].getIndex();
-                    if (!parent.hasNode(name, index)) {
-                        // last persisted node reached
-                        break;
-                    }
-                    parent = parent.getNode(name, index);
-
-                }
-                node = parent;
-            }
-
-            if (node == null) {
-                // should never get here
-                throw new ItemNotFoundException("Item out of hierarchy.");
-            }
-
-            boolean isAcItem = isAcItem(absPath);
-            return buildResult(node, existingNode, isAcItem, new EntryFilterImpl(principalNames));
-        }
-
-        /**
-         * @see AbstractCompiledPermissions#clearCache()
-         */
-        @Override
-        protected void clearCache() {
-            synchronized (monitor) {
-                readCache.clear();
-            }
-            super.clearCache();
-        }
-
         //--------------------------------------------< CompiledPermissions >---
         /**
          * @see CompiledPermissions#close()
          */
         @Override
         public void close() {
-            entryCollector.removeListener(this);
+            try {
+                observationMgr.removeEventListener(this);
+            } catch (RepositoryException e) {
+                log.debug("Unable to unregister listener: ", e.getMessage());
+            }
             super.close();
         }
 
+        //--------------------------------------------------< EventListener >---
         /**
-         * @see CompiledPermissions#canRead(Path, ItemId)
+         * @see javax.jcr.observation.EventListener#onEvent(EventIterator)
          */
-        public boolean canRead(Path path, ItemId itemId) throws RepositoryException {
-            ItemId id = (itemId == null) ? session.getHierarchyManager().resolvePath(path) : itemId;
-            /* currently READ access cannot be denied to individual properties.
-               if the parent node is readable the properties are as well.
-               this simplifies the canRead test as well as the caching.
-             */
-            boolean existingNode = false;
-            NodeId nodeId;
-            if (id.denotesNode()) {
-                nodeId = (NodeId) id;
-                // since method may only be called for existing nodes the
-                // flag be set to true if the id identifies a node.
-                existingNode = true;
-            } else {
-                nodeId = ((PropertyId) id).getParentId();
-            }
-
-            boolean canRead;
-            synchronized (monitor) {
-                if (readCache.containsKey(nodeId)) {
-                    canRead = readCache.get(nodeId);
-                } else {
-                    ItemManager itemMgr = session.getItemManager();
-                    NodeImpl node = (NodeImpl) itemMgr.getItem(nodeId);
-                    Result result = buildResult(node, existingNode, isAcItem(node), new EntryFilterImpl(principalNames));
-
-                    canRead = result.grants(Permission.READ);
-                    readCache.put(nodeId, canRead);
+        public synchronized void onEvent(EventIterator events) {
+            // only invalidate cache if any of the events affects the
+            // nodes defining permissions for principals compiled here.
+            boolean clearCache = false;
+            while (events.hasNext() && !clearCache) {
+                try {
+                    Event ev = events.nextEvent();
+                    String path = ev.getPath();
+                    switch (ev.getType()) {
+                        case Event.NODE_ADDED:
+                            // test if the new node is an ACE node that affects
+                            // the permission of any of the principals listed in
+                            // principalNames.
+                            NodeImpl n = (NodeImpl) session.getNode(path);
+                            if (n.isNodeType(NT_REP_ACE) &&
+                                    principalNames.contains(n.getProperty(P_PRINCIPAL_NAME).getString())) {
+                                clearCache = true;
+                            }
+                            break;
+                        case Event.PROPERTY_REMOVED:
+                        case Event.NODE_REMOVED:
+                            // can't find out if the removed ACL/ACE node was
+                            // relevant for the principals
+                            clearCache = true;
+                            break;
+                        case Event.PROPERTY_ADDED:
+                        case Event.PROPERTY_CHANGED:
+                            // test if the added/changed prop belongs to an ACe
+                            // node and affects the permission of any of the
+                            // principals listed in principalNames.
+                            PropertyImpl p = (PropertyImpl) session.getProperty(path);
+                            NodeImpl parent = (NodeImpl) p.getParent();
+                            if (parent.isNodeType(NT_REP_ACE)) {
+                                String principalName = null;
+                                if (P_PRIVILEGES.equals(p.getQName())) {
+                                    // test if principal-name sibling-prop matches
+                                    principalName = parent.getProperty(P_PRINCIPAL_NAME).getString();
+                                } else if (P_PRINCIPAL_NAME.equals(p.getQName())) {
+                                    // a new ace or an ace change its principal-name.
+                                    principalName = p.getString();
+                                }
+                                if (principalName != null &&
+                                        principalNames.contains(principalName)) {
+                                    clearCache = true;
+                                }
+                            }
+                            break;
+                        case Event.NODE_MOVED:
+                            // protected ac nodes cannot be moved around
+                            // -> nothing to do TODO check again
+                            break;
+                        default:
+                            // illegal event-type: should never occur. ignore
+                    }
+                } catch (RepositoryException e) {
+                    // should not get here
+                    log.warn("Internal error: ", e.getMessage());
                 }
             }
-            return canRead;
+            if (clearCache) {
+                clearCache();
+            }
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Inner class used to collect ACEs for a given set of principals throughout
+     * the node hierarchy.
+     */
+    private class Entries {
+
+        private final Collection<String> principalNames;
+        private final List<AccessControlEntry> userAces = new ArrayList();
+        private final List<AccessControlEntry> groupAces = new ArrayList();
+
+        private Entries(NodeImpl node, Collection<String> principalNames) throws RepositoryException {
+            this.principalNames = principalNames;
+            collectEntries(node);
         }
 
-        //----------------------------------------< ACLModificationListener >---
+        private void collectEntries(NodeImpl node) throws RepositoryException {
+            // if the given node is access-controlled, construct a new ACL and add
+            // it to the list
+            if (isAccessControlled(node)) {
+                // build acl for the access controlled node
+                NodeImpl aclNode = node.getNode(N_POLICY);
+                //collectEntries(aclNode, principalNamesToEntries);
+                collectEntriesFromAcl(aclNode);
+            }
+            // recursively look for access controlled parents up the hierarchy.
+            if (!rootNodeId.equals(node.getId())) {
+                NodeImpl parentNode = (NodeImpl) node.getParent();
+                collectEntries(parentNode);
+            }
+        }
+
         /**
-         * @see org.apache.jackrabbit.core.security.authorization.AccessControlListener#acModified(AccessControlModifications)
+         * Separately collect the entries defined for the user and group
+         * principals.
+         *
+         * @param aclNode acl node
+         * @throws RepositoryException if an error occurs
          */
-        public void acModified(AccessControlModifications modifications) {
-            // ignore the details of the modifications and clear all caches.
-            clearCache();
+        private void collectEntriesFromAcl(NodeImpl aclNode) throws RepositoryException {
+            // first collect aces present on the given aclNode.
+            List<AccessControlEntry> gaces = new ArrayList<AccessControlEntry>();
+            List<AccessControlEntry> uaces = new ArrayList<AccessControlEntry>();
+
+            ACLTemplate tmpl = (ACLTemplate) systemEditor.getACL(aclNode);
+            for (AccessControlEntry ace : tmpl.getAccessControlEntries()) {
+                Principal principal = ace.getPrincipal();
+                // only process aceNode if 'principalName' is contained in the given set
+                if (principalNames.contains(principal.getName())) {
+                    // add it to the proper list (e.g. separated by principals)
+                    /**
+                     * NOTE: access control entries must be collected in reverse
+                     * order in order to assert proper evaluation.
+                     */
+                    if (principal instanceof Group) {
+                        gaces.add(0, ace);
+                    } else {
+                        uaces.add(0, ace);
+                    }
+                }
+            }
+
+            // add the lists of aces to the overall lists that contain the entries
+            // throughout the hierarchy.
+            if (!gaces.isEmpty()) {
+                groupAces.addAll(gaces);
+            }
+            if (!uaces.isEmpty()) {
+                userAces.addAll(uaces);
+            }
+        }
+
+        private Iterator<AccessControlEntry> iterator() {
+            return new IteratorChain(userAces.iterator(), groupAces.iterator());
         }
     }
 }

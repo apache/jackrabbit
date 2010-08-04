@@ -193,9 +193,6 @@
 
 		<command name="registerNamespace"
 			className="org.apache.jackrabbit.standalone.cli.namespace.RegisterNamespace"/>
-			
-		<command name="registerNodeType"
-			className="org.apache.jackrabbit.standalone.cli.nodetype.RegisterNodeType"/>
 
 		<command name="removeItem"
 			className="org.apache.jackrabbit.standalone.cli.core.RemoveItem"/>

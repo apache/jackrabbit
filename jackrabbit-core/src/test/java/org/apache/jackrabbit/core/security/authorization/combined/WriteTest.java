@@ -20,8 +20,6 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
@@ -56,21 +54,6 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
             superuser.logout();
             throw e;
         }
-    }
-
-    protected boolean isExecutable() {
-        try {
-            AccessControlPolicy[] rootPolicies = acMgr.getPolicies("/");
-            if (rootPolicies.length > 0) {
-                return true;
-            }
-            if (acMgr.getApplicablePolicies("/").hasNext()) {
-                return true;
-            }
-        } catch (RepositoryException e) {
-            // ignore
-        }
-        return false;
     }
 
     private JackrabbitAccessControlList getPrincipalBasedPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
@@ -190,58 +173,5 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
 
         assertFalse(testSession.hasPermission(childNPath+"/anyproperty", javax.jcr.Session.ACTION_SET_PROPERTY));
         assertFalse(testAcMgr.hasPrivileges(childNPath, modPropPrivs));
-    }
-
-    public void testCanReadOnCombinedPolicies() throws RepositoryException, NotExecutableException {
-        Group testGroup = getTestGroup();
-        Session testSession = getTestSession();
-        /*
-          precondition:
-          testuser must have READ-only permission on test-node and below
-        */
-        checkReadOnly(path);
-
-        Privilege[] readPrivs = privilegesFromName(Privilege.JCR_READ);
-        // nodebased: remove READ privilege for 'testUser' at 'path'
-        withdrawPrivileges(path, readPrivs, getRestrictions(superuser, path));
-        // principalbased: add READ privilege for 'testGroup'
-        givePrivileges(path, testGroup.getPrincipal(), readPrivs, getPrincipalBasedRestrictions(path), false);
-        /*
-         expected result:
-         - nodebased wins over principalbased -> READ is denied
-         */
-        NodeId nodeId = ((NodeImpl) superuser.getNode(path)).getNodeId();
-        assertFalse(((SessionImpl) testSession).getAccessManager().canRead(null, nodeId));
-
-        /* allow again on child N -> should be allowed */
-        givePrivileges(childNPath, testGroup.getPrincipal(), readPrivs, getPrincipalBasedRestrictions(path), false);
-
-        NodeId childId = ((NodeImpl) superuser.getNode(childNPath)).getNodeId();
-        assertTrue(((SessionImpl) testSession).getAccessManager().canRead(null, childId));
-
-        // remove the nodebased policy
-        JackrabbitAccessControlList policy = getPolicy(acMgr, path, testUser.getPrincipal());
-        acMgr.removePolicy(policy.getPath(), policy);
-        superuser.save();
-
-        /*
-         expected result:
-         - READ privilege is present again.
-         */
-        assertTrue(((SessionImpl) testSession).getAccessManager().canRead(null, nodeId));
-
-        // nodebased: remove READ privilege for 'testUser' at 'path'
-        givePrivileges(path, readPrivs, getRestrictions(superuser, path));
-        // principalbased: add READ privilege for 'testGroup'
-        withdrawPrivileges(path, testGroup.getPrincipal(), readPrivs, getPrincipalBasedRestrictions(path), false);
-        /*
-         expected result:
-         - nodebased wins over principalbased -> READ is allowed
-         */
-        assertTrue(((SessionImpl) testSession).getAccessManager().canRead(null, nodeId));
-
-        /* allow again on child N -> should be allowed */
-        withdrawPrivileges(childNPath, testGroup.getPrincipal(), readPrivs, getPrincipalBasedRestrictions(path), false);
-        assertFalse(((SessionImpl) testSession).getAccessManager().canRead(null, childId));
     }
 }

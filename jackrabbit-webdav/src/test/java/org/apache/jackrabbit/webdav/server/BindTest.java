@@ -59,7 +59,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Test cases for WebDAV BIND functionality (see <a href="http://greenbytes.de/tech/webdav/rfc5842.html">RFC 5842</a>
+ * Test cases for WebDAV BIND functionality (see <a href="http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-21.html">draft-ietf-webdav-bind-21</a>
  * <p>
  * Required system properties:
  * <ul>
@@ -95,7 +95,7 @@ public class BindTest extends TestCase {
         super.tearDown();
     }
     
-    // http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
+    // http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-20.html#rfc.section.8.1
     public void testOptions() throws HttpException, IOException {
         OptionsMethod options = new OptionsMethod(this.uri.toASCIIString());
         int status = this.client.executeMethod(options);
@@ -147,7 +147,7 @@ public class BindTest extends TestCase {
     
     // utility methods
     
-    // see http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.3.1
+    // see http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-20.html#rfc.section.3.1
     private URI getResourceId(String uri) throws IOException, DavException, URISyntaxException {
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(BindConstants.RESOURCEID);

@@ -68,7 +68,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         this.config = config;
 
         // dummy value factory and dummy resolver as descriptors are not
-        // expected to contain Name or Path values.
+        // expected contain Name or Path values.
         ValueFactory vf = ValueFactoryImpl.getInstance(); 
         NamePathResolver resolver = new DefaultNamePathResolver(new NamespaceResolver() {
             public String getURI(String prefix) throws NamespaceException {

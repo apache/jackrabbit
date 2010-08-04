@@ -63,7 +63,6 @@ import java.util.Set;
 public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
 
     private final Map<String, PrincipalProviderRegistry> ppRegistries = new HashMap<String, PrincipalProviderRegistry>();
-    private final Object monitor = new Object();
 
     /**
      * List of workspace names for which {@link #createSystemUsers} has already
@@ -73,27 +72,25 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
 
     private PrincipalProviderRegistry getPrincipalProviderRegistry(SessionImpl s) throws RepositoryException {
         String wspName = s.getWorkspace().getName();
-        synchronized (monitor) {
-            PrincipalProviderRegistry p = ppRegistries.get(wspName);
-            if (p == null) {
-                SystemSession systemSession;
-                if (s instanceof SystemSession) {
-                    systemSession = (SystemSession) s;
-                } else {
-                    RepositoryImpl repo = (RepositoryImpl) getRepository();
-                    systemSession = repo.getSystemSession(wspName);
-                    // TODO: review again... this workaround is used in several places.
-                    repo.onSessionCreated(systemSession);
-                }
-
-                PrincipalProvider defaultPP = new DefaultPrincipalProvider(systemSession, (UserManagerImpl) getUserManager(systemSession));
-                defaultPP.init(new Properties());
-
-                p = new WorkspaceBasedPrincipalProviderRegistry(defaultPP);
-                ppRegistries.put(wspName, p);
+        PrincipalProviderRegistry p = ppRegistries.get(wspName);
+        if (p == null) {
+            SystemSession systemSession;
+            if (s instanceof SystemSession) {
+                systemSession = (SystemSession) s;
+            } else {
+                RepositoryImpl repo = (RepositoryImpl) getRepository();
+                systemSession = repo.getSystemSession(wspName);
+                // TODO: review again... this workaround is used in several places.
+                repo.onSessionCreated(systemSession);
             }
-            return p;
+
+            PrincipalProvider defaultPP = new DefaultPrincipalProvider(systemSession, (UserManagerImpl) getUserManager(systemSession));
+            defaultPP.init(new Properties());
+            
+            p = new WorkspaceBasedPrincipalProviderRegistry(defaultPP);
+            ppRegistries.put(wspName, p);
         }
+        return p;
     }
 
     //------------------------------------------< JackrabbitSecurityManager >---
@@ -113,7 +110,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
     @Override
     public void dispose(String workspaceName) {
         super.dispose(workspaceName);
-        synchronized (monitor) {
+        synchronized (ppRegistries) {
             PrincipalProviderRegistry reg = ppRegistries.remove(workspaceName);
             if (reg != null) {
                 reg.getDefault().close();
@@ -127,7 +124,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
     @Override
     public void close() {
         super.close();
-        synchronized (monitor) {
+        synchronized (ppRegistries) {
             for (PrincipalProviderRegistry registry : ppRegistries.values()) {
                 registry.getDefault().close();
             }

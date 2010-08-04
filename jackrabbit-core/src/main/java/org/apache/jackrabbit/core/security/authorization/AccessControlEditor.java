@@ -40,7 +40,7 @@ public interface AccessControlEditor {
      * Modification will therefore not take effect, until they are written back to
      * the editor and persisted.
      * <p/>
-     * Compared to the policy returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path, CompiledPermissions)},
+     * Compared to the policy returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path)},
      * the scope of the policies it limited to the Node itself and does
      * not take inherited elements into account.
      *
@@ -90,7 +90,7 @@ public interface AccessControlEditor {
      * the editable policies that have been set to the node at
      * <code>nodePath</code> before.
      * <p/>
-     * Compared to the policies returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path, CompiledPermissions)},
+     * Compared to the policies returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path)},
      * the scope of the policies returned by this methods it limited to the Node
      * itself and does never not take inherited elements into account.
      *

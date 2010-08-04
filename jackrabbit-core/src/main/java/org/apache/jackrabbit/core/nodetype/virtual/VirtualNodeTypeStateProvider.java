@@ -99,16 +99,47 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         return null;
     }
 
-    public void onNodeTypeAdded(Name ntName) {
-        discardAll(); // TODO: More efficient reloading
+    /**
+     * {@inheritDoc}
+     */
+    public void onNodeTypeAdded(Name ntName) throws RepositoryException {
+        try {
+            VirtualNodeState root = (VirtualNodeState) getRootState();
+            QNodeTypeDefinition ntDef = ntReg.getNodeTypeDef(ntName);
+            VirtualNodeState ntState = createNodeTypeState(root, ntDef);
+            root.addChildNodeEntry(ntName, ntState.getNodeId());
+
+            // add as hard reference
+            root.addStateReference(ntState);
+            root.notifyStateUpdated();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
-    public void onNodeTypeModified(Name ntName) {
-        discardAll(); // TODO: More efficient reloading
+    /**
+     * {@inheritDoc}
+     */
+    public void onNodeTypeModified(Name ntName) throws RepositoryException {
+        // todo: do more efficient reloading
+        try {
+            getRootState().discard();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
-    public void onNodeTypesRemoved(Collection<Name> names) {
-        discardAll(); // TODO: More efficient reloading
+    /**
+     * {@inheritDoc}
+     */
+    public void onNodeTypesRemoved(Collection<Name> names)
+            throws RepositoryException {
+        // todo: do more efficient reloading
+        try {
+            getRootState().discard();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**

@@ -197,7 +197,6 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     /**
      * @see Object#hashCode()
      */
-    @Override
     public int hashCode() {
         if (hashCode == -1) {
             hashCode = buildHashCode();
@@ -208,7 +207,6 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     /**
      * @see Object#equals(Object)
      */
-    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;

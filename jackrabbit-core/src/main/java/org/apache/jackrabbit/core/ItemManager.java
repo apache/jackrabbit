@@ -38,7 +38,7 @@ import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -50,8 +50,6 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -90,11 +88,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
     private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
     private final org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef;
-
-    /**
-     * Component context of the associated session.
-     */
-    protected final SessionContext sessionContext;
+    private final NodeId rootNodeId;
 
     protected final SessionImpl session;
 
@@ -114,16 +108,23 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
-     * @param sessionContext component context of the associated session
+     * @param sism        the item state manager associated with the new
+     *                    instance
+     * @param hierMgr     the hierarchy manager
+     * @param session     the session associated with the new instance
      * @param rootNodeDef the definition of the root node
+     * @param rootNodeId  the id of the root node
      */
-    protected ItemManager(
-            SessionContext sessionContext, NodeDefinitionImpl rootNodeDef) {
-        this.sism = sessionContext.getItemStateManager();
-        this.hierMgr = sessionContext.getHierarchyManager();
-        this.sessionContext = sessionContext;
-        this.session = sessionContext.getSessionImpl();
+    protected ItemManager(SessionItemStateManager sism,
+                          HierarchyManager hierMgr,
+                          SessionImpl session,
+                          org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef,
+                          NodeId rootNodeId) {
+        this.sism = sism;
+        this.hierMgr = hierMgr;
+        this.session = session;
         this.rootNodeDef = rootNodeDef;
+        this.rootNodeId = rootNodeId;
 
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
@@ -133,12 +134,26 @@ public class ItemManager implements Dumpable, ItemStateListener {
     }
 
     /**
-     * Checks that this session is alive.
+     * Creates a new per-session instance <code>ItemManager</code> instance.
      *
-     * @throws RepositoryException if the session has been closed
+     * @param itemStateProvider the item state provider associated with
+     *                          the new instance
+     * @param hierMgr           the hierarchy manager
+     * @param session           the session associated with the new instance
+     * @param rootNodeDef       the definition of the root node
+     * @param rootNodeId        the id of the root node
+     * @return the item manager instance.
      */
-    private void sanityCheck() throws RepositoryException {
-        sessionContext.getSessionState().checkAlive();
+    public static ItemManager createInstance(
+            SessionItemStateManager itemStateProvider,
+            HierarchyManager hierMgr,
+            SessionImpl session,
+            org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl rootNodeDef,
+            NodeId rootNodeId) {
+        ItemManager mgr = new ItemManager(itemStateProvider, hierMgr,
+                session, rootNodeDef, rootNodeId);
+        itemStateProvider.addListener(mgr);
+        return mgr;
     }
 
     /**
@@ -153,7 +168,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
     NodeDefinitionImpl getDefinition(NodeState state)
             throws RepositoryException {
-        if (state.getId().equals(sessionContext.getRootNodeId())) {
+        if (state.getId().equals(rootNodeId)) {
             // special handling required for root node
             return rootNodeDef;
         }
@@ -286,7 +301,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     private boolean itemExists(ItemId itemId, Path path) {
         try {
-            sanityCheck();
+            // check sanity of session
+            session.sanityCheck();
 
             // shortcut: check if state exists for the given item
             if (!sism.hasItemState(itemId)) {
@@ -313,7 +329,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws RepositoryException
      */
     private ItemImpl getItem(ItemId itemId, Path path) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        sanityCheck();
+        // check sanity of session
+        session.sanityCheck();
 
         boolean permissionCheck = true;
         ItemData data = getItemData(itemId, path, permissionCheck);
@@ -408,44 +425,26 @@ public class ItemManager implements Dumpable, ItemStateListener {
         if (state == null) {
             throw new InvalidItemStateException(data.getId() + ": the item does not exist anymore");
         }
-        if (state.getStatus() == ItemState.STATUS_NEW) {
-            if (!data.getDefinition().isProtected()) {
-                /*
-                NEW items can always be read as long they have been added through
-                the API and NOT by the system (i.e. protected items).
-                */
-                return true;
-            } else {
-                /*
-                NEW protected (system) item:
-                need use the path to evaluate the effective permissions.
-                */
-                return (path == null) ?
-                        sessionContext.getAccessManager().isGranted(data.getId(), AccessManager.READ) :
-                        sessionContext.getAccessManager().isGranted(path, Permission.READ);
-            }
+        if (state.getStatus() == ItemState.STATUS_NEW &&
+                !data.getDefinition().isProtected()) {
+            // NEW items can always be read as long they have been added
+            // through the API and NOT by the system (i.e. protected props).
+            return true;
         } else {
-            /* item is not NEW -> save to call acMgr.canRead(Path,ItemId) */
-            return sessionContext.getAccessManager().canRead(path, data.getId());
+            return (path == null) ?
+                    canRead(data.getId()) :
+                    session.getAccessManager().canRead(path);
         }
     }
 
     /**
-     * @param parent The item data of the parent node.
-     * @param childId
-     * @return true if the item with the given <code>childId</code> can be read;
+     * @param id
+     * @return true if the item with the given <code>id</code> can be read;
      * <code>false</code> otherwise.
      * @throws RepositoryException
      */
-    private boolean canRead(ItemData parent, ItemId childId) throws RepositoryException {
-        if (parent.getStatus() == ItemState.STATUS_EXISTING) {
-            // child item is for sure not NEW (because then the parent was modified).
-            // safe to use AccessManager#canRead(Path, ItemId).
-            return sessionContext.getAccessManager().canRead(null, childId);
-        } else {
-            // child could be NEW -> don't use AccessManager#canRead(Path, ItemId)
-            return sessionContext.getAccessManager().isGranted(childId, AccessManager.READ);
-        }
+    private boolean canRead(ItemId id) throws RepositoryException {
+        return session.getAccessManager().isGranted(id, AccessManager.READ);
     }
 
     //--------------------------------------------------< item access methods >
@@ -461,7 +460,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public boolean itemExists(Path path) {
         try {
-            sanityCheck();
+            // check sanity of session
+            session.sanityCheck();
 
             ItemId id = hierMgr.resolvePath(path);
             return (id != null) && itemExists(id, path);
@@ -478,7 +478,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public boolean nodeExists(Path path) {
         try {
-            sanityCheck();
+            // check sanity of session
+            session.sanityCheck();
 
             NodeId id = hierMgr.resolveNodePath(path);
             return (id != null) && itemExists(id, path);
@@ -495,7 +496,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public boolean propertyExists(Path path) {
         try {
-            sanityCheck();
+            // check sanity of session
+            session.sanityCheck();
 
             PropertyId id = hierMgr.resolvePropertyPath(path);
             return (id != null) && itemExists(id, path);
@@ -519,7 +521,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws RepositoryException
      */
     NodeImpl getRootNode() throws RepositoryException {
-        return (NodeImpl) getItem(sessionContext.getRootNodeId());
+        return (NodeImpl) getItem(rootNodeId);
     }
 
     /**
@@ -670,7 +672,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized boolean hasChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        sanityCheck();
+        // check sanity of session
+        session.sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {
@@ -682,7 +685,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         NodeState state = (NodeState) data.getState();
         for (ChildNodeEntry entry : state.getChildNodeEntries()) {
             // make sure any of the properties can be read.
-            if (canRead(data, entry.getId())) {
+            if (canRead(entry.getId())) {
                 return true;
             }
         }
@@ -698,7 +701,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized NodeIterator getChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        sanityCheck();
+        // check sanity of session
+        session.sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {
@@ -728,7 +732,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized boolean hasChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        sanityCheck();
+        // check sanity of session
+        session.sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {
@@ -741,7 +746,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         while (iter.hasNext()) {
             Name propName = iter.next();
             // make sure any of the properties can be read.
-            if (canRead(data, new PropertyId(parentId, propName))) {
+            if (canRead(new PropertyId(parentId, propName))) {
                 return true;
             }
         }
@@ -758,7 +763,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized PropertyIterator getChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        sanityCheck();
+        // check sanity of session
+        session.sanityCheck();
 
         ItemData data = getItemData(parentId);
         if (!data.isNode()) {
@@ -824,18 +830,18 @@ public class ItemManager implements Dumpable, ItemStateListener {
         // check special nodes
         final NodeState state = data.getNodeState();
         if (state.getNodeTypeName().equals(NameConstants.NT_VERSION)) {
-            return new VersionImpl(this, sessionContext, data);
+            return new VersionImpl(this, session, data);
         } else if (state.getNodeTypeName().equals(NameConstants.NT_VERSIONHISTORY)) {
-            return new VersionHistoryImpl(this, sessionContext, data);
+            return new VersionHistoryImpl(this, session, data);
         } else {
             // create node object
-            return new NodeImpl(this, sessionContext, data);
+            return new NodeImpl(this, session, data);
         }
     }
 
     private PropertyImpl createPropertyInstance(PropertyData data) {
         // check special nodes
-        return new PropertyImpl(this, sessionContext, data);
+        return new PropertyImpl(this, session, data);
     }
 
     //---------------------------------------------------< item cache methods >
@@ -1086,12 +1092,14 @@ public class ItemManager implements Dumpable, ItemStateListener {
                  */
                 case ItemState.STATUS_EXISTING_REMOVED:
                 case ItemState.STATUS_EXISTING_MODIFIED:
+                case ItemState.STATUS_STALE_MODIFIED:
                     ItemState persistentState = discarded.getOverlayedState();
-                    // the state is a transient wrapper for the underlying
-                    // persistent state, therefore restore the persistent state
-                    // and resurrect this item instance if necessary
-                    SessionItemStateManager stateMgr =
-                        sessionContext.getItemStateManager();
+                    /**
+                     * the state is a transient wrapper for the underlying
+                     * persistent state, therefore restore the persistent state
+                     * and resurrect this item instance if necessary
+                     */
+                    SessionItemStateManager stateMgr = session.getItemStateManager();
                     stateMgr.disconnectTransientItemState(discarded);
                     data.setState(persistentState);
                     return;

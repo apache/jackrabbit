@@ -140,7 +140,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
     /**
      * Update the child node entries according to the child-infos obtained
-     * from the persistence layer.
+     * from the persistent layer.
      * NOTE: the status of the entries already present is not respected. Thus
      * new or removed entries are not touched in order not to modify the
      * transient status of the parent. Operations that affect the set or order

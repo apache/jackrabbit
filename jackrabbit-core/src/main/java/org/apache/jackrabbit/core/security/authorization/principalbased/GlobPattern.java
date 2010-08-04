@@ -36,19 +36,9 @@ class GlobPattern {
     public static final String WILDCARD_ALL = "*";
 
     private final String pattern;
-    private final char[] patternChars;
-
-    private final boolean matchesAll;
-    private final boolean containsWildcard;
 
     private GlobPattern(String pattern)  {
         this.pattern = pattern;
-
-        matchesAll = WILDCARD_ALL.equals(pattern);
-        containsWildcard = pattern.indexOf(ALL) > -1;
-
-        patternChars = pattern.toCharArray();
-
     }
 
     static GlobPattern create(String pattern) {
@@ -60,17 +50,17 @@ class GlobPattern {
 
     boolean matches(String toMatch) {
         // shortcut
-        if (matchesAll) {
+        if (WILDCARD_ALL.equals(pattern)) {
             return true;
         }
         if (toMatch == null) {
             return false;
         }
 
-        if (containsWildcard) {
-            return matches(patternChars, toMatch.toCharArray());
+        if (containsWildCard()) {
+            return matches(pattern, toMatch);
         } else {
-            return Text.isDescendantOrEqual(pattern, toMatch);
+            return pattern.equals(toMatch) || Text.isDescendant(pattern, toMatch);
         }
     }
 
@@ -84,13 +74,21 @@ class GlobPattern {
         }
     }
 
-    private static boolean matches(char[] patternChars, char[] toMatch) {
+    private boolean containsWildCard() {
         // TODO: add proper impl
-        for (int i = 0; i < patternChars.length; i++) {
-            if (patternChars[i] == ALL) {
+        return pattern.indexOf(ALL) > -1;
+    }
+
+    private static boolean matches(String pattern, String toMatch) {
+        // TODO: add proper impl
+        char[] c1 = pattern.toCharArray();
+        char[] c2 = toMatch.toCharArray();
+
+        for (int i = 0; i < c1.length; i++) {
+            if (c1[i] == ALL) {
                 return true;
             }
-            if (i >= toMatch.length || patternChars[i] != toMatch[i]) {
+            if (i >= c2.length || c1[i] != c2[i]) {
                 return false;
             }
         }
@@ -103,7 +101,6 @@ class GlobPattern {
     /**
      * @see Object#hashCode()
      */
-    @Override
     public int hashCode() {
         return pattern.hashCode();
     }
@@ -111,7 +108,6 @@ class GlobPattern {
     /**
      * @see Object#toString()
      */
-    @Override
     public String toString() {
         return pattern;
     }
@@ -119,7 +115,6 @@ class GlobPattern {
     /**
      * @see Object#equals(Object)
      */
-    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;

@@ -365,10 +365,10 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     public void checkAddNodeConstraints(Name name, QNodeTypeDefinition nodeTypeDefinition, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         if (nodeTypeDefinition.isAbstract()) {
-            throw new ConstraintViolationException("not allowed to add node " + name + ": " + nodeTypeDefinition.getName() + " is abstract and cannot be used as primary node type.");
+            throw new ConstraintViolationException(name + " is abstract  be used as primary node type.");
         }
         if (nodeTypeDefinition.isMixin()) {
-            throw new ConstraintViolationException("not allowed to add node " + name + ":" + nodeTypeDefinition.getName() + " is a mixin and cannot be used as primary node type.");
+            throw new ConstraintViolationException(name + " is abstract and cannot be used as primary node type.");
         }
         QNodeDefinition nd = definitionProvider.getQNodeDefinition(this, name, nodeTypeDefinition.getName());
         if (nd.isProtected()) {

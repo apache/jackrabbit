@@ -133,7 +133,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     }
 
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getPolicies(java.security.Principal)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(java.security.Principal)
      */
     public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
         checkInitialized();

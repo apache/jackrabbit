@@ -29,11 +29,13 @@ import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -103,14 +105,17 @@ public class ItemValidator {
     private static Logger log = LoggerFactory.getLogger(ItemValidator.class);
 
     /**
-     * Component context of the associated session.
-     */
-    protected final SessionContext sessionContext;
-
-    /**
      * node type registry
      */
     protected final NodeTypeRegistry ntReg;
+
+    /**
+     * hierarchy manager used for generating error msg's
+     * that contain human readable paths
+     *
+     * @see #safeGetJCRPath(ItemId)
+     */
+    protected final HierarchyManager hierMgr;
 
     /**
      * Path resolver for outputting user-friendly error messages.
@@ -118,14 +123,56 @@ public class ItemValidator {
     protected final PathResolver resolver;
 
     /**
+     *
+     */
+    protected final LockManager lockMgr;
+
+    protected final AccessManager accessMgr;
+
+    protected final RetentionRegistry retentionReg;
+
+    protected final ItemManager itemMgr;
+
+    /**
      * Creates a new <code>ItemValidator</code> instance.
      *
-     * @param sessionContext component context of this session
+     * @param ntReg      node type registry
+     * @param hierMgr    hierarchy manager
+     * @param session    session
      */
-    public ItemValidator(SessionContext sessionContext) throws RepositoryException {
-        this.sessionContext = sessionContext;
-        this.ntReg = sessionContext.getRepositoryContext().getNodeTypeRegistry();
-        this.resolver = sessionContext.getSessionImpl();
+    public ItemValidator(NodeTypeRegistry ntReg,
+                         HierarchyManager hierMgr,
+                         SessionImpl session) throws RepositoryException {
+        this(ntReg, hierMgr, session, session.getLockManager(),
+                session.getAccessManager(), session.getRetentionRegistry(),
+                session.getItemManager());
+    }
+
+    /**
+     * Creates a new <code>ItemValidator</code> instance.
+     *
+     * @param ntReg      node type registry
+     * @param hierMgr    hierarchy manager
+     * @param resolver   resolver
+     * @param lockMgr    lockMgr
+     * @param accessMgr  accessMgr
+     * @param retentionReg
+     * @param itemMgr    the item manager
+     */
+    public ItemValidator(NodeTypeRegistry ntReg,
+                         HierarchyManager hierMgr,
+                         PathResolver resolver,
+                         LockManager lockMgr,
+                         AccessManager accessMgr,
+                         RetentionRegistry retentionReg,
+                         ItemManager itemMgr) {
+        this.ntReg = ntReg;
+        this.hierMgr = hierMgr;
+        this.resolver = resolver;
+        this.lockMgr = lockMgr;
+        this.accessMgr = accessMgr;
+        this.retentionReg = retentionReg;
+        this.itemMgr = itemMgr;
     }
 
     /**
@@ -151,21 +198,23 @@ public class ItemValidator {
                 ntReg.getEffectiveNodeType(nodeState.getNodeTypeName());
         // effective node type (primary type incl. mixins)
         EffectiveNodeType entPrimaryAndMixins = getEffectiveNodeType(nodeState);
-        QNodeDefinition def =
-            sessionContext.getItemManager().getDefinition(nodeState).unwrap();
+        QNodeDefinition def = itemMgr.getDefinition(nodeState).unwrap();
 
         // check if primary type satisfies the 'required node types' constraint
-        for (Name requiredPrimaryType : def.getRequiredPrimaryTypes()) {
-            if (!entPrimary.includesNodeType(requiredPrimaryType)) {
+        Name[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
+        for (int i = 0; i < requiredPrimaryTypes.length; i++) {
+            if (!entPrimary.includesNodeType(requiredPrimaryTypes[i])) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": missing required primary type "
-                        + requiredPrimaryType;
+                        + requiredPrimaryTypes[i];
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
             }
         }
         // mandatory properties
-        for (QPropertyDefinition pd : entPrimaryAndMixins.getMandatoryPropDefs()) {
+        QPropertyDefinition[] pda = entPrimaryAndMixins.getMandatoryPropDefs();
+        for (int i = 0; i < pda.length; i++) {
+            QPropertyDefinition pd = pda[i];
             if (!nodeState.hasPropertyName(pd.getName())) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory property " + pd.getName()
@@ -175,7 +224,9 @@ public class ItemValidator {
             }
         }
         // mandatory child nodes
-        for (QItemDefinition cnd : entPrimaryAndMixins.getMandatoryNodeDefs()) {
+        QItemDefinition[] cnda = entPrimaryAndMixins.getMandatoryNodeDefs();
+        for (int i = 0; i < cnda.length; i++) {
+            QItemDefinition cnd = cnda[i];
             if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory child node " + cnd.getName()
@@ -203,14 +254,13 @@ public class ItemValidator {
      */
     public void validate(PropertyState propState)
             throws ConstraintViolationException, RepositoryException {
-        QPropertyDefinition def =
-            sessionContext.getItemManager().getDefinition(propState).unwrap();
+        QPropertyDefinition def = itemMgr.getDefinition(propState).unwrap();
         InternalValue[] values = propState.getValues();
         int type = PropertyType.UNDEFINED;
-        for (InternalValue value : values) {
+        for (int i = 0; i < values.length; i++) {
             if (type == PropertyType.UNDEFINED) {
-                type = value.getType();
-            } else if (type != value.getType()) {
+                type = values[i].getType();
+            } else if (type != values[i].getType()) {
                 throw new ConstraintViolationException(safeGetJCRPath(propState.getPropertyId())
                         + ": inconsistent value types");
             }
@@ -267,7 +317,7 @@ public class ItemValidator {
 
         if (permissions > Permission.NONE) {
             Path path = item.getPrimaryPath();
-            sessionContext.getAccessManager().checkPermission(path, permissions);
+            accessMgr.checkPermission(path, permissions);
         }
         if ((options & CHECK_HOLD) == CHECK_HOLD) {
             if (hasHold(item, isRemoval)) {
@@ -316,7 +366,7 @@ public class ItemValidator {
         }
         if (permissions > Permission.NONE) {
             Path path = item.getPrimaryPath();
-            if (!sessionContext.getAccessManager().isGranted(path, permissions)) {
+            if (!accessMgr.isGranted(path, permissions)) {
                 return false;
             }
         }
@@ -339,7 +389,7 @@ public class ItemValidator {
             return;
         }
         NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
-        sessionContext.getSessionImpl().getLockManager().checkLock(node);
+        lockMgr.checkLock(node);
     }
 
     private boolean isProtected(ItemImpl item) throws RepositoryException {
@@ -361,7 +411,7 @@ public class ItemValidator {
             path = path.getAncestor(1);
         }
         boolean checkParent = (item.isNode() && isRemoval);
-        return sessionContext.getSessionImpl().getRetentionRegistry().hasEffectiveHold(path, checkParent);
+        return retentionReg.hasEffectiveHold(path, checkParent);
     }
 
     private boolean hasRetention(ItemImpl item, boolean isRemoval) throws RepositoryException {
@@ -373,7 +423,7 @@ public class ItemValidator {
             path = path.getAncestor(1);
         }
         boolean checkParent = (item.isNode() && isRemoval);
-        return sessionContext.getSessionImpl().getRetentionRegistry().hasEffectiveRetention(path, checkParent);
+        return retentionReg.hasEffectiveRetention(path, checkParent);
     }
 
 
@@ -507,8 +557,7 @@ public class ItemValidator {
      */
     public String safeGetJCRPath(ItemId id) {
         try {
-            return safeGetJCRPath(
-                    sessionContext.getHierarchyManager().getPath(id));
+            return safeGetJCRPath(hierMgr.getPath(id));
         } catch (ItemNotFoundException e) {
             // return string representation of id as a fallback
             return id.toString();

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.Repository;
@@ -56,7 +58,6 @@ import javax.security.auth.Subject;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
-import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
 import org.apache.jackrabbit.core.cluster.ClusterException;
@@ -74,7 +75,7 @@ import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.data.GarbageCollector;
+import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -87,7 +88,6 @@ import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
-import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
@@ -98,10 +98,12 @@ import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
 import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ISMLocking;
+import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -165,8 +167,11 @@ public class RepositoryImpl extends AbstractRepository
      */
     private final Map<String, DescriptorValue> repDescriptors = new HashMap<String, DescriptorValue>();
 
-    protected final RepositoryContext context = new RepositoryContext(this);
+    private NodeId rootNodeId;
 
+    private final NamespaceRegistryImpl nsReg;
+    private final NodeTypeRegistry ntReg;
+    private final InternalVersionManagerImpl vMgr;
     private final VirtualNodeTypeStateManager virtNTMgr;
 
     /**
@@ -182,6 +187,17 @@ public class RepositoryImpl extends AbstractRepository
 
     // configuration of the repository
     protected final RepositoryConfig repConfig;
+
+    // the virtual repository file system
+    private final FileSystem repStore;
+
+    // sub file system where the repository stores meta data such as uuid of root node, etc.
+    private final FileSystem metaDataStore;
+
+    /**
+     * Data store for binary properties.
+     */
+    private final DataStore dataStore;
 
     /**
      * the delegating observation dispatcher for all workspaces
@@ -209,6 +225,11 @@ public class RepositoryImpl extends AbstractRepository
     private RepositoryLockMechanism repLock;
 
     /**
+     * Clustered node used, <code>null</code> if clustering is not configured.
+     */
+    private ClusterNode clusterNode;
+
+    /**
      * Shutdown lock for guaranteeing that no new sessions are started during
      * repository shutdown and that a repository shutdown is not initiated
      * during a login. Each session login acquires a read lock while the
@@ -223,6 +244,11 @@ public class RepositoryImpl extends AbstractRepository
      * There is one cache manager per repository that manages the sizes of the caches used.
      */
     private final CacheManager cacheMgr = new CacheManager();
+
+    /**
+     * There is only one item state cache factory
+     */
+    private final ItemStateCacheFactory cacheFactory = new ManagedMLRUItemStateCacheFactory(cacheMgr);
 
     /**
      * Chanel for posting create workspace messages.
@@ -281,28 +307,31 @@ public class RepositoryImpl extends AbstractRepository
         try {
             this.repConfig = repConfig;
 
-            context.setFileSystem(repConfig.getFileSystem());
+            // setup file systems
+            repStore = repConfig.getFileSystem();
+            String fsRootPath = "/meta";
+            try {
+                if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
+                    repStore.createFolder(fsRootPath);
+                }
+            } catch (FileSystemException fse) {
+                String msg = "failed to create folder for repository meta data";
+                log.error(msg, fse);
+                throw new RepositoryException(msg, fse);
+            }
+            metaDataStore = new BasedFileSystem(repStore, fsRootPath);
 
-            // Load root node identifier
-            context.setRootNodeId(loadRootNodeId());
+            // init root node uuid
+            rootNodeId = loadRootNodeId(metaDataStore);
 
             // initialize repository descriptors
             initRepositoryDescriptors();
 
             // create registries
-            context.setNamespaceRegistry(createNamespaceRegistry());
-            context.setNodeTypeRegistry(createNodeTypeRegistry());
+            nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
+            ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
-            // Create item state cache manager
-            context.setItemStateCacheFactory(
-                    new ManagedMLRUItemStateCacheFactory(cacheMgr));
-
-            DataStore dataStore = repConfig.getDataStore();
-            if (dataStore != null) {
-                context.setDataStore(dataStore);
-            }
-
-            context.setWorkspaceManager(new WorkspaceManager(this));
+            dataStore = repConfig.getDataStore();
 
             // init workspace configs
             for (WorkspaceConfig config : repConfig.getWorkspaceConfigs()) {
@@ -313,28 +342,24 @@ public class RepositoryImpl extends AbstractRepository
             // initialize optional clustering
             // put here before setting up any other external event source that a cluster node
             // will be interested in
-            ClusterNode clusterNode = null;
             if (repConfig.getClusterConfig() != null) {
                 clusterNode = createClusterNode();
-                context.setClusterNode(clusterNode);
-                context.getNamespaceRegistry().setEventChannel(clusterNode);
-                context.getNodeTypeRegistry().setEventChannel(clusterNode);
+                nsReg.setEventChannel(clusterNode);
+                ntReg.setEventChannel(clusterNode);
 
                 createWorkspaceEventChannel = clusterNode;
                 clusterNode.setListener(this);
             }
 
             // init version manager
-            InternalVersionManagerImpl vMgr = createVersionManager(
-                    repConfig.getVersioningConfig(), delegatingDispatcher);
-            context.setInternalVersionManager(vMgr);
+            vMgr = createVersionManager(repConfig.getVersioningConfig(),
+                    delegatingDispatcher);
             if (clusterNode != null) {
                 vMgr.setEventChannel(clusterNode.createUpdateChannel(null));
             }
 
             // init virtual node type manager
-            virtNTMgr = new VirtualNodeTypeStateManager(
-                    context.getNodeTypeRegistry(),
+            virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
                     delegatingDispatcher, NODETYPES_NODE_ID, SYSTEM_ROOT_NODE_ID);
 
             // initialize startup workspaces
@@ -343,9 +368,6 @@ public class RepositoryImpl extends AbstractRepository
             // initialize system search manager
             getSystemSearchManager(repConfig.getDefaultWorkspaceName());
 
-            // Initialise the security manager;
-            initSecurityManager();
-            
             // after the workspace is initialized we pass a system session to
             // the virtual node type manager
 
@@ -396,44 +418,8 @@ public class RepositoryImpl extends AbstractRepository
         }
     }
 
-    /**
-     * Protected factory method for creating the namespace registry.
-     * Called by the constructor after the repository file system has
-     * been initialised.
-     *
-     * @return namespace registry
-     * @throws RepositoryException if the namespace registry can not be created
-     */
-    protected NamespaceRegistryImpl createNamespaceRegistry()
-            throws RepositoryException {
-        return new NamespaceRegistryImpl(context.getFileSystem());
-    }
-
-    /**
-     * Protected factory method for creating the node type registry.
-     * Called by the constructor after the repository file system and
-     * namespace registry have been initialised.
-     *
-     * @return node type registry
-     * @throws RepositoryException if the node type registry can not be created
-     */
-    protected NodeTypeRegistry createNodeTypeRegistry()
-            throws RepositoryException {
-        return new NodeTypeRegistry(
-                context.getNamespaceRegistry(), context.getFileSystem());
-    }
-
-    /**
-     * Returns the internal component context of this repository.
-     * This package-private method should only be used when there is
-     * no other reasonable way to access the repository context.
-     * A better design would be to access the repository instance
-     * through the repository context.
-     *
-     * @return repository context
-     */
-    RepositoryContext getRepositoryContext() { // TODO: Get rid of this method
-        return context;
+    public DataStore getDataStore() {
+        return dataStore;
     }
 
     /**
@@ -448,39 +434,56 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
-     * Creates the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
-     * of this <code>Repository</code> and adds it to the repository context.
+     * Get the item state cache factory of this repository.
      *
+     * @return the cache factory
+     */
+    public ItemStateCacheFactory getItemStateCacheFactory() {
+        return cacheFactory;
+    }
+
+    /**
+     * Get the cluster node. Returns <code>null</code> if this repository
+     * is not running clustered.
+     *
+     * @return cluster node
+     */
+    public ClusterNode getClusterNode() {
+        return clusterNode;
+    }
+
+    /**
+     * Returns the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
+     * of this <code>Repository</code>
+     *
+     * @return the security manager
      * @throws RepositoryException if an error occurs.
      */
-    private synchronized void initSecurityManager() throws RepositoryException {
-        SecurityManagerConfig smc =
-            getConfig().getSecurityConfig().getSecurityManagerConfig();
-        if (smc == null) {
-            log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
-            securityMgr = new SimpleSecurityManager();
-        } else {
-            securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
+    protected synchronized JackrabbitSecurityManager getSecurityManager()
+            throws RepositoryException {
+
+        if (securityMgr == null) {
+            SecurityManagerConfig smc = getConfig().getSecurityConfig().getSecurityManagerConfig();
+            String workspaceName = getConfig().getDefaultWorkspaceName();
+            if (smc != null && smc.getWorkspaceName() != null) {
+                workspaceName = smc.getWorkspaceName();
+            }
+            SystemSession securitySession = getSystemSession(workspaceName);
+            // mark system session as 'active' for that the system workspace does
+            // not get disposed by workspace-janitor
+            onSessionCreated(securitySession);
+
+            if (smc == null) {
+                log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
+                securityMgr = new SimpleSecurityManager();
+            } else {
+                securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
+            }
+
+            securityMgr.init(this, securitySession);
+            log.info("SecurityManager = " + securityMgr.getClass());
         }
-
-        log.info("SecurityManager = " + securityMgr.getClass());
-
-        context.setSecurityManager(securityMgr);
-
-        String workspaceName = getConfig().getDefaultWorkspaceName();
-        if (smc != null && smc.getWorkspaceName() != null) {
-            workspaceName = smc.getWorkspaceName();
-        }
-        SystemSession securitySession = getSystemSession(workspaceName);
-        // mark system session as 'active' for that the system workspace does
-        // not get disposed by workspace-janitor
-        onSessionCreated(securitySession);
-
-        // FIXME: Note that this call must be done *after* the security
-        // manager has been added to the repository context, since the
-        // initialisation code may invoke code that depends on the presence
-        // of a security manager. It would be better if this was not the case.
-        securityMgr.init(this, securitySession);
+        return securityMgr;
     }
 
     /**
@@ -496,18 +499,21 @@ public class RepositoryImpl extends AbstractRepository
 
 
         FileSystem fs = vConfig.getFileSystem();
-        PersistenceManager pm = createPersistenceManager(
-                vConfig.getHomeDir(), fs,
-                vConfig.getPersistenceManagerConfig());
+        PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
+                fs,
+                vConfig.getPersistenceManagerConfig(),
+                rootNodeId,
+                nsReg,
+                ntReg,
+                dataStore);
 
         ISMLocking ismLocking = vConfig.getISMLocking();
 
-        return new InternalVersionManagerImpl(
-                pm, fs, context.getNodeTypeRegistry(), delegatingDispatcher,
+        return new InternalVersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 SYSTEM_ROOT_NODE_ID,
                 VERSION_STORAGE_NODE_ID,
                 ACTIVITIES_NODE_ID,
-                context.getItemStateCacheFactory(),
+                cacheFactory,
                 ismLocking);
     }
 
@@ -541,51 +547,117 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
-     * Returns the root node identifier. The identifier is loaded from
-     * the <code>meta/rootUUID</code> file within the repository file system.
-     * If such a file does not yet exist, the hardcoded default root node
-     * identifier ({@link #ROOT_NODE_ID}) is used and written to that file.
-     * <p>
-     * This utility method should only be used by the constructor after the
-     * repository file system has been initialised.
-     *
-     * @return root node identifier
-     * @throws RepositoryException if the identifier can not be loaded or saved
+     * Returns the root node uuid.
+     * @param fs
+     * @return
+     * @throws RepositoryException
      */
-    private NodeId loadRootNodeId() throws RepositoryException {
+    protected NodeId loadRootNodeId(FileSystem fs) throws RepositoryException {
+        FileSystemResource uuidFile = new FileSystemResource(fs, "rootUUID");
         try {
-            FileSystemResource uuidFile = new FileSystemResource(
-                    context.getFileSystem(), "/meta/rootUUID");
             if (uuidFile.exists()) {
-                // Load uuid of the repository's root node. It is stored in
-                // text format (36 characters) for better readability.
-                InputStream in = uuidFile.getInputStream();
                 try {
-                    return NodeId.valueOf(IOUtils.toString(in, "US-ASCII"));
-                } finally {
-                    IOUtils.closeQuietly(in);
+                    // load uuid of the repository's root node
+                    InputStream in = uuidFile.getInputStream();
+/*
+                   // uuid is stored in binary format (16 bytes)
+                   byte[] bytes = new byte[16];
+                   try {
+                       in.read(bytes);
+                   } finally {
+                       try {
+                           in.close();
+                       } catch (IOException ioe) {
+                           // ignore
+                       }
+                   }
+                   rootNodeUUID = new UUID(bytes).toString();            // uuid is stored in binary format (16 bytes)
+*/
+                    // uuid is stored in text format (36 characters) for better readability
+
+                    char[] chars;
+                    try {
+                        chars = IOUtils.toCharArray(in);
+                    } finally {
+                        IOUtils.closeQuietly(in);
+                    }
+                    return NodeId.valueOf(new String(chars));
+                } catch (Exception e) {
+                    String msg = "failed to load persisted repository state";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, e);
                 }
             } else {
-                // Use hard-coded uuid for root node rather than generating
-                // a different uuid per repository instance; using a
-                // hard-coded uuid makes it easier to copy/move entire
-                // workspaces from one repository instance to another.
-                uuidFile.makeParentDirs();
-                OutputStream out = uuidFile.getOutputStream();
+                // create new uuid
+/*
+                UUID rootUUID = UUID.randomUUID();     // version 4 uuid
+                rootNodeUUID = rootUUID.toString();
+*/
+                /**
+                 * use hard-coded uuid for root node rather than generating
+                 * a different uuid per repository instance; using a
+                 * hard-coded uuid makes it easier to copy/move entire
+                 * workspaces from one repository instance to another.
+                 */
                 try {
-                    out.write(ROOT_NODE_ID.toString().getBytes("US-ASCII"));
+                    // persist uuid of the repository's root node
+                    OutputStream out = uuidFile.getOutputStream();
+/*
+                    // store uuid in binary format
+                    try {
+                        out.write(rootUUID.getBytes());
+                    } finally {
+                        try {
+                            out.close();
+                        } catch (IOException ioe) {
+                            // ignore
+                        }
+                    }
+*/
+                    // store uuid in text format for better readability
+                    OutputStreamWriter writer = new OutputStreamWriter(out);
+                    try {
+                        writer.write(ROOT_NODE_ID.toString());
+                    } finally {
+                        IOUtils.closeQuietly(writer);
+                    }
                     return ROOT_NODE_ID;
-                } finally {
-                    IOUtils.closeQuietly(out);
+                } catch (Exception e) {
+                    String msg = "failed to persist repository state";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, e);
                 }
             }
-        } catch (IOException e) {
-            throw new RepositoryException(
-                    "Failed to load or persist the root node identifier", e);
         } catch (FileSystemException fse) {
-            throw new RepositoryException(
-                    "Failed to access the root node identifier", fse);
+            String msg = "failed to access repository state";
+            log.debug(msg);
+            throw new RepositoryException(msg, fse);
         }
+    }
+
+    /**
+     * Creates the <code>NamespaceRegistry</code> instance.
+     *
+     * @param fs
+     * @return
+     * @throws RepositoryException
+     */
+    protected NamespaceRegistryImpl createNamespaceRegistry(FileSystem fs)
+            throws RepositoryException {
+        return new NamespaceRegistryImpl(fs);
+    }
+
+    /**
+     * Creates the <code>NodeTypeRegistry</code> instance.
+     *
+     * @param fs
+     * @return
+     * @throws RepositoryException
+     */
+    protected NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsReg,
+                                                      FileSystem fs)
+            throws RepositoryException {
+        return NodeTypeRegistry.create(nsReg, fs);
     }
 
     /**
@@ -624,12 +696,9 @@ public class RepositoryImpl extends AbstractRepository
         if (systemSearchMgr == null) {
             if (repConfig.isSearchEnabled()) {
                 systemSearchMgr = new SearchManager(
-                        repConfig,
-                        context.getNamespaceRegistry(),
-                        context.getNodeTypeRegistry(),
+                        repConfig, nsReg, ntReg,
                         getWorkspaceInfo(wspName).itemStateMgr,
-                        context.getInternalVersionManager().getPersistenceManager(),
-                        SYSTEM_ROOT_NODE_ID,
+                        vMgr.getPersistenceManager(), SYSTEM_ROOT_NODE_ID,
                         null, null, executor);
 
                 SystemSession defSysSession = getSystemSession(wspName);
@@ -657,6 +726,22 @@ public class RepositoryImpl extends AbstractRepository
         } catch (Exception e) {
             throw new RepositoryException(e);
         }
+    }
+
+    protected NamespaceRegistryImpl getNamespaceRegistry() {
+        return nsReg;
+    }
+
+    protected NodeTypeRegistry getNodeTypeRegistry() {
+        return ntReg;
+    }
+
+    protected InternalVersionManager getVersionManager() {
+        return vMgr;
+    }
+
+    protected NodeId getRootNodeId() {
+        return rootNodeId;
     }
 
     /**
@@ -719,12 +804,8 @@ public class RepositoryImpl extends AbstractRepository
                         + workspaceName + "' already exists.");
             }
 
-            // needed to get newly created workspace config file content when
-            // running in clustered environment
-            StringBuffer workspaceConfigContent = null;
-            if (context.getClusterNode() != null) {
-                workspaceConfigContent = new StringBuffer();
-            }
+            // needed to get newly created workspace config file content when runnin in clustered environment
+            StringBuffer workspaceConfigContent = clusterNode != null ? new StringBuffer() : null;
 
             // create the workspace configuration
             WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, workspaceConfigContent);
@@ -1013,8 +1094,7 @@ public class RepositoryImpl extends AbstractRepository
         } else {
             log.debug("Found preauthenticated Subject, try to extend authentication");
             // login either using JAAS or custom LoginModule
-            AuthContext authCtx = context.getSecurityManager().getAuthContext(
-                    null, subject, workspaceName);
+            AuthContext authCtx = getSecurityManager().getAuthContext(null, subject, workspaceName);
             try {
                 authCtx.login();
                 s = createSession(authCtx, workspaceName);
@@ -1059,7 +1139,6 @@ public class RepositoryImpl extends AbstractRepository
         log.info("Shutting down repository...");
 
         // stop optional cluster node
-        ClusterNode clusterNode = context.getClusterNode();
         if (clusterNode != null) {
             clusterNode.stop();
         }
@@ -1097,15 +1176,16 @@ public class RepositoryImpl extends AbstractRepository
             }
         }
 
-        try {
-            context.getInternalVersionManager().close();
-        } catch (Exception e) {
-            log.error("Error while closing Version Manager.", e);
+        if (vMgr != null) {
+            try {
+                vMgr.close();
+            } catch (Exception e) {
+                log.error("Error while closing Version Manager.", e);
+            }
         }
 
         repDescriptors.clear();
 
-        DataStore dataStore = context.getDataStore();
         if (dataStore != null) {
             try {
                 // close the datastore
@@ -1115,11 +1195,13 @@ public class RepositoryImpl extends AbstractRepository
             }
         }
 
-        try {
-            // close repository file system
-            context.getFileSystem().close();
-        } catch (FileSystemException e) {
-            log.error("error while closing repository file system", e);
+        if (repStore != null) {
+            try {
+                // close repository file system
+                repStore.close();
+            } catch (FileSystemException e) {
+                log.error("error while closing repository file system", e);
+            }
         }
 
         // make sure this instance is not used anymore
@@ -1160,6 +1242,18 @@ public class RepositoryImpl extends AbstractRepository
      */
     public RepositoryConfig getConfig() {
         return repConfig;
+    }
+
+    InternalVersionManagerImpl getVersionManagerImpl() {
+        return vMgr;
+    }
+
+    /**
+     * Returns the repository file system.
+     * @return repository file system
+     */
+    protected FileSystem getFileSystem() {
+        return repStore;
     }
 
     /**
@@ -1322,17 +1416,17 @@ public class RepositoryImpl extends AbstractRepository
      * @throws RepositoryException if the persistence manager could
      *                             not be instantiated/initialized
      */
-    private PersistenceManager createPersistenceManager(
-            File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig)
+    private static PersistenceManager createPersistenceManager(File homeDir,
+                                                               FileSystem fs,
+                                                               PersistenceManagerConfig pmConfig,
+                                                               NodeId rootNodeId,
+                                                               NamespaceRegistry nsReg,
+                                                               NodeTypeRegistry ntReg,
+                                                               DataStore dataStore)
             throws RepositoryException {
         try {
             PersistenceManager pm = pmConfig.newInstance(PersistenceManager.class);
-            pm.init(new PMContext(
-                    homeDir, fs,
-                    context.getRootNodeId(),
-                    context.getNamespaceRegistry(),
-                    context.getNodeTypeRegistry(),
-                    context.getDataStore()));
+            pm.init(new PMContext(homeDir, fs, rootNodeId, nsReg, ntReg, dataStore));
             return pm;
         } catch (Exception e) {
             String msg = "Cannot instantiate persistence manager " + pmConfig.getClassName();
@@ -1344,68 +1438,25 @@ public class RepositoryImpl extends AbstractRepository
      * Creates a <code>SharedItemStateManager</code> or derivative.
      *
      * @param persistMgr     persistence manager
+     * @param rootNodeId     root node id
+     * @param ntReg          node type registry
      * @param usesReferences <code>true</code> if the item state manager should use
      *                       node references to verify integrity of its reference properties;
      *                       <code>false</code> otherwise
+     * @param cacheFactory   cache factory
      * @return item state manager
      * @throws ItemStateException if an error occurs
      */
-    protected SharedItemStateManager createItemStateManager(
-            PersistenceManager persistMgr, boolean usesReferences,
-            ISMLocking locking) throws ItemStateException {
-        return new SharedItemStateManager(
-                persistMgr,
-                context.getRootNodeId(),
-                context.getNodeTypeRegistry(),
-                true,
-                context.getItemStateCacheFactory(),
-                locking);
-    }
+    protected SharedItemStateManager createItemStateManager(PersistenceManager persistMgr,
+                                                            NodeId rootNodeId,
+                                                            NodeTypeRegistry ntReg,
+                                                            boolean usesReferences,
+                                                            ItemStateCacheFactory cacheFactory,
+                                                            ISMLocking locking)
+            throws ItemStateException {
 
-    /**
-     * Creates a data store garbage collector for this repository.
-     * <p>
-     * Note that you should use the {@link RepositoryManager} interface
-     * to access this functionality. This RepositoryImpl method may be
-     * removed in future Jackrabbit versions. 
-     */
-    public GarbageCollector createDataStoreGarbageCollector()
-            throws RepositoryException {
-        ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
-        InternalVersionManagerImpl vm = context.getInternalVersionManager();
-        PersistenceManager pm = vm.getPersistenceManager();
-        pmList.add(pm);
-        String[] wspNames = getWorkspaceNames();
-        Session[] sessions = new Session[wspNames.length];
-        for (int i = 0; i < wspNames.length; i++) {
-            String wspName = wspNames[i];
-            WorkspaceInfo wspInfo = getWorkspaceInfo(wspName);
-            // this will initialize the workspace if required
-            SessionImpl systemSession =
-                SystemSession.create(context, wspInfo.getConfig());
-            // mark this session as 'active' so the workspace does not get disposed
-            // by the workspace-janitor until the garbage collector is done
-            onSessionCreated(systemSession);
-            // the workspace could be disposed again, so re-initialize if required
-            // afterwards it will not be disposed because a session is registered
-            wspInfo.initialize();
-            sessions[i] = systemSession;
-            pm = wspInfo.getPersistenceManager();
-            pmList.add(pm);
-        }
-        IterablePersistenceManager[] ipmList =
-            new IterablePersistenceManager[pmList.size()];
-        for (int i = 0; i < pmList.size(); i++) {
-            pm = pmList.get(i);
-            if (!(pm instanceof IterablePersistenceManager)) {
-                ipmList = null;
-                break;
-            }
-            ipmList[i] = (IterablePersistenceManager) pm;
-        }
-        return new GarbageCollector(context.getDataStore(), ipmList, sessions);
+        return new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory, locking);
     }
-
 
     //-----------------------------------------------------------< Repository >
     /**
@@ -1442,8 +1493,7 @@ public class RepositoryImpl extends AbstractRepository
                 }
             }
             // not preauthenticated -> try login with credentials
-            AuthContext authCtx = context.getSecurityManager().getAuthContext(
-                    credentials, new Subject(), workspaceName);
+            AuthContext authCtx = getSecurityManager().getAuthContext(credentials, new Subject(), workspaceName);
             authCtx.login();
 
             // create session, and add SimpleCredentials attributes (JCR-1932)
@@ -1548,7 +1598,8 @@ public class RepositoryImpl extends AbstractRepository
     protected SessionImpl createSessionInstance(AuthContext loginContext,
                                                 WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-        return new XASessionImpl(context, loginContext, wspConfig);
+
+        return new XASessionImpl(this, loginContext, wspConfig);
     }
 
     /**
@@ -1565,7 +1616,8 @@ public class RepositoryImpl extends AbstractRepository
     protected SessionImpl createSessionInstance(Subject subject,
                                                 WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-        return new XASessionImpl(context, subject, wspConfig);
+
+        return new XASessionImpl(this, subject, wspConfig);
     }
 
     /**
@@ -1816,12 +1868,8 @@ public class RepositoryImpl extends AbstractRepository
                 if (searchMgr == null && config.isSearchEnabled()) {
                     // search manager is lazily instantiated in order to avoid
                     // 'chicken & egg' bootstrap problems
-                    searchMgr = new SearchManager(
-                            config,
-                            context.getNamespaceRegistry(),
-                            context.getNodeTypeRegistry(),
-                            itemStateMgr, persistMgr,
-                            context.getRootNodeId(),
+                    searchMgr = new SearchManager(config,
+                            nsReg, ntReg, itemStateMgr, persistMgr, rootNodeId,
                             getSystemSearchManager(getName()),
                             SYSTEM_ROOT_NODE_ID, executor);
                 }
@@ -1847,7 +1895,6 @@ public class RepositoryImpl extends AbstractRepository
                 if (lockMgr == null) {
                     lockMgr =
                         new LockManagerImpl(getSystemSession(), fs, executor);
-                    ClusterNode clusterNode = context.getClusterNode();
                     if (clusterNode != null && config.isClustered()) {
                         lockChannel = clusterNode.createLockChannel(getName());
                         lockMgr.setEventChannel(lockChannel);
@@ -1891,7 +1938,8 @@ public class RepositoryImpl extends AbstractRepository
                 // system session is lazily instantiated in order to avoid
                 // 'chicken & egg' bootstrap problems
                 if (systemSession == null) {
-                    systemSession = SystemSession.create(context, config);
+                    systemSession =
+                            SystemSession.create(RepositoryImpl.this, config);
                 }
                 return systemSession;
             }
@@ -1963,14 +2011,18 @@ public class RepositoryImpl extends AbstractRepository
         protected void doInitialize() throws RepositoryException {
             fs = config.getFileSystem();
 
-            persistMgr = createPersistenceManager(
-                    new File(config.getHomeDir()), fs,
-                    config.getPersistenceManagerConfig());
+            persistMgr = createPersistenceManager(new File(config.getHomeDir()),
+                    fs,
+                    config.getPersistenceManagerConfig(),
+                    rootNodeId,
+                    nsReg,
+                    ntReg,
+                    dataStore);
 
             // JCR-2551: Recovery from a lost version history
             if (Boolean.getBoolean("org.apache.jackrabbit.version.recovery")) {
-                RepositoryChecker checker = new RepositoryChecker(
-                        persistMgr, context.getInternalVersionManager());
+                RepositoryChecker checker =
+                    new RepositoryChecker(persistMgr, vMgr);
                 checker.check(ROOT_NODE_ID, true);
                 checker.fix();
             }
@@ -1979,17 +2031,16 @@ public class RepositoryImpl extends AbstractRepository
 
             // create item state manager
             try {
-                itemStateMgr =
-                    createItemStateManager(persistMgr, true, ismLocking);
+                itemStateMgr = createItemStateManager(persistMgr, rootNodeId,
+                        ntReg, true, cacheFactory, ismLocking);
                 try {
                     itemStateMgr.addVirtualItemStateProvider(
-                            context.getInternalVersionManager().getVirtualItemStateProvider());
+                            vMgr.getVirtualItemStateProvider());
                     itemStateMgr.addVirtualItemStateProvider(
                             virtNTMgr.getVirtualItemStateProvider());
                 } catch (Exception e) {
                     log.error("Unable to add vmgr: " + e.toString(), e);
                 }
-                ClusterNode clusterNode = context.getClusterNode();
                 if (clusterNode != null && config.isClustered()) {
                     updateChannel = clusterNode.createUpdateChannel(getName());
                     itemStateMgr.setEventChannel(updateChannel);
@@ -2333,7 +2384,7 @@ public class RepositoryImpl extends AbstractRepository
          * {@inheritDoc}
          */
         public NamespaceResolver getNamespaceResolver() {
-            return new RegistryNamespaceResolver(context.getNamespaceRegistry());
+            return new RegistryNamespaceResolver(getNamespaceRegistry());
         }
 
         /**
@@ -2352,6 +2403,12 @@ public class RepositoryImpl extends AbstractRepository
             getWorkspaceInfo(workspace).getLockManager();
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        public DataStore getDataStore() {
+            return RepositoryImpl.this.getDataStore();
+        }
     }
 
     /**

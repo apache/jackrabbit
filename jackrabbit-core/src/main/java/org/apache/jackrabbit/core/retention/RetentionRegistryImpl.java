@@ -287,7 +287,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
         if (element != null) {
             rp = element.get();
         }
-        if (rp == null && checkParent && (!nodePath.denotesRoot())) {
+        if (rp == null && checkParent) {
             element = retentionMap.map(nodePath.getAncestor(1), true);
             if (element != null) {
                 rp = element.get();

@@ -84,13 +84,7 @@ public class SystemViewExporter extends Exporter {
      */
     protected void exportProperty(String uri, String local, Value value)
             throws RepositoryException, SAXException {
-        // start property element
-        addAttribute(SV, "name", getXMLName(uri, local));
-        addAttribute(SV, "type", PropertyType.nameFromValue(value.getType()));
-        startElement(SV, "property");
-        // value
-        exportValue(value);
-        endElement(SV, "property");
+        exportProperty(uri, local, value.getType(), new Value[] { value });
     }
 
     /**
@@ -102,7 +96,6 @@ public class SystemViewExporter extends Exporter {
         // start property element
         addAttribute(SV, "name", getXMLName(uri, local));
         addAttribute(SV, "type", PropertyType.nameFromValue(type));
-        addAttribute(SV, "multiple", Boolean.TRUE.toString());
         startElement(SV, "property");
         // values
         for (int i = 0; i < values.length; i++) {

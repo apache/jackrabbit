@@ -16,7 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.commons.iterator.Iterators;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.ItemNotFoundException;
+
+import org.apache.commons.collections.iterators.EmptyIterator;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
@@ -25,15 +34,6 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
-
-import javax.jcr.ItemNotFoundException;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * In memory store for {@link ItemInfo}s.
@@ -106,7 +106,7 @@ public class ItemInfoStore {
         Iterable<ItemInfo> batch = batches.get(id);
 
         return batch == null
-            ? Iterators.<ItemInfo>empty()
+            ? ItemInfoStore.<ItemInfo>empty()
             : batch.iterator();
     }
 
@@ -184,6 +184,11 @@ public class ItemInfoStore {
             list.add(infos.next());
         }
         return list;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Iterator<T> empty() {
+        return EmptyIterator.INSTANCE;
     }
 
 }

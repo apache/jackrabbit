@@ -799,7 +799,7 @@ public class NodeImpl extends ItemImpl implements Node {
             } catch (RepositoryException e) {
                 // should never occur
                 log.warn("Internal error", e);
-                mixinValue = Name.EMPTY_ARRAY;
+                mixinValue = new Name[0];
             }
         }
         List<Name> l = new ArrayList<Name>();

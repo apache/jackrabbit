@@ -273,17 +273,15 @@
             <param-value></param-value>
             <description>
                 Defines how a missing authorization header should be handled.
-                 1) If this init-param is missing, a 401 response is generated.
-                    This is suiteable for clients (eg. webdav clients) for which
-                    sending a proper authorization header is not possible if the
-                    server never sent a 401.
-                 2) If this init-param is present with an empty value,
-                    null-credentials are returned, thus forcing an null login
-                    on the repository.
-                 3) If this init-param is present with the value 'guestcredentials'
-                    java.jcr.GuestCredentials are used to login to the repository.
-                 4) If this init-param has a 'user:password' value, the respective
-                    simple credentials are generated.
+                1) If this init-param is missing, a 401 response is generated.
+                This is suiteable for clients (eg. webdav clients) for which
+                sending a proper authorization header is not possible if the
+                server never sent a 401.
+                2) If this init-param is present with an empty value,
+                null-credentials are returned, thus forcing an null login
+                on the repository.
+                3) If this init-param has a 'user:password' value, the respective
+                simple credentials are generated.
             </description>
         </init-param>
         <!--
