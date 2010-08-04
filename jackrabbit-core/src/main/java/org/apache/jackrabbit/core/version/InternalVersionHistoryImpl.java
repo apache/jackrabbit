@@ -288,6 +288,34 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersion(NodeId id) {
+        InternalVersion v = getCachedVersion(id);
+
+        // If the version was not found, our cache may not have been
+        // synchronized with updates from another cluster node.  Reload the history
+        // to be sure we have the latest updates and try again.
+        if (v == null) {
+            try {
+                reload();
+            } catch (RepositoryException e) {
+
+                // We should add the checked exception to this method definition
+                // so we don't need to wrap it.
+                // Avoiding it for now to limit impact of this fix.
+                throw new RuntimeException(e);
+            }
+            v = getCachedVersion(id);
+        }
+
+        return v;
+    }
+
+    /**
+     * Returns the version from cache, or <code>null</code> if it is not
+     * present.
+     * @param id the id of the version
+     * @return the version or <code>null</code> if not cached.
+     */
+    private synchronized InternalVersion getCachedVersion(NodeId id) {
         InternalVersion v = versionCache.get(id);
         if (v == null) {
             for (Name versionName : nameCache.keySet()) {
@@ -413,6 +441,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 parentNode.removeNode(node.getName());
                 // store changes for this node and his children
                 parentNode.store();
+            } else {
+                node.store();
             }
         } else {
             log.debug("Current version history has at least one reference");
@@ -435,7 +465,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * or <code>null</code> of the label was not moved.
      *
      * @param versionName the name of the version
-     * @param label the label to assgign
+     * @param label the label to assign
      * @param move  flag what to do by collisions
      * @return the version that was previously assigned by this label or <code>null</code>.
      * @throws VersionException if the version does not exist or if the label is already defined.
