@@ -31,8 +31,8 @@ import org.apache.jackrabbit.spi.RepositoryService;
  * Item infos are put into the cache after they have been read from the {@link RepositoryService}.
  * If the cache is full, the oldest item is discared. Reading items removes the from the cache.
  *
- * The undrlying idea here is, that {@link ItemInfo}s which are supplied by the
- * <code>RepositoryService</code> but not immediatly needed are put into the cache to avoid further
+ * The underlying idea here is, that {@link ItemInfo}s which are supplied by the
+ * <code>RepositoryService</code> but not immediately needed are put into the cache to avoid further
  * round trips to <code>RepositoryService</code>. When they are needed later, they are read
  * from the cache. There is no need to keep them in this cache after that point since they are
  * present in the hierarchy from then on.
@@ -75,6 +75,9 @@ public class ItemInfoCacheImpl implements ItemInfoCache {
         Object entry = entries.remove(nodeId);
         if (entry == null) {
             entry = entries.remove(nodeId.getPath());
+        } else {
+            // there might be a corresponding path-indexed entry, clear it as well
+            entries.remove(node(entry).info.getPath());
         }
 
         return node(entry);
@@ -90,6 +93,9 @@ public class ItemInfoCacheImpl implements ItemInfoCache {
         Object entry = entries.remove(propertyId);
         if (entry == null) {
             entry = entries.remove(propertyId.getPath());
+        } else {
+            // there might be a corresponding path-indexed entry, clear it as well
+            entries.remove(property(entry).info.getPath());
         }
 
         return property(entry);
@@ -97,7 +103,7 @@ public class ItemInfoCacheImpl implements ItemInfoCache {
 
     /**
      * This implementation cached the item by its id and if the id
-     * id uuid based but has no path, also by its path.
+     * is uuid based but has no path, also by its path.
      */
     public void put(ItemInfo info, long generation) {
         ItemId id = info.getId();
