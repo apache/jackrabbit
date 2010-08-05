@@ -116,9 +116,10 @@ public abstract class AbstractQueryHandler implements QueryHandler {
 
     /**
      * Sets the {@link OnWorkspaceInconsistency} handler with the given name.
-     * Currently the only valid name is:
+     * Currently the valid names are:
      * <ul>
      * <li><code>fail</code></li>
+     * <li><code>log</code></li>
      * </ul>
      *
      * @param name the name of a {@link OnWorkspaceInconsistency} handler.
