@@ -1097,24 +1097,25 @@ public class NodeImpl extends ItemImpl implements Node {
      *                               specified name.
      * @throws RepositoryException   If another error occurs.
      */
-    public NodeImpl getNode(Name name, int index)
+    public NodeImpl getNode(final Name name, final int index)
             throws ItemNotFoundException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        NodeState thisState = data.getNodeState();
-        if (index == 0) {
-            index = 1;
-        }
-        ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
-        if (cne == null) {
-            throw new ItemNotFoundException();
-        }
-        try {
-            return itemMgr.getNode(cne.getId(), getNodeId());
-        } catch (AccessDeniedException ade) {
-            throw new ItemNotFoundException();
-        }
+        return perform(new SessionOperation<NodeImpl>() {
+            public NodeImpl perform(SessionContext context)
+                    throws RepositoryException {
+                ChildNodeEntry cne = data.getNodeState().getChildNodeEntry(
+                        name, index != 0 ? index : 1);
+                if (cne != null) {
+                    try {
+                        return context.getItemManager().getNode(
+                                cne.getId(), getNodeId());
+                    } catch (AccessDeniedException e) {
+                        throw new ItemNotFoundException();
+                    }
+                } else {
+                    throw new ItemNotFoundException();
+                }
+            }
+        });
     }
 
     /**
@@ -1140,19 +1141,17 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return <code>true</code> if the child node exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
      */
-    public boolean hasNode(Name name, int index) throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        NodeState thisState = data.getNodeState();
-        if (index == 0) {
-            index = 1;
-        }
-        ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
-        if (cne == null) {
-            return false;
-        }
-        return itemMgr.itemExists(cne.getId());
+    public boolean hasNode(final Name name, final int index)
+            throws RepositoryException {
+        return perform(new SessionOperation<Boolean>() {
+            public Boolean perform(SessionContext context)
+                    throws RepositoryException {
+                ChildNodeEntry cne = data.getNodeState().getChildNodeEntry(
+                        name, index != 0 ? index : 1);
+                return cne != null
+                    && context.getItemManager().itemExists(cne.getId());
+            }
+        });
     }
 
     /**
@@ -1165,17 +1164,21 @@ public class NodeImpl extends ItemImpl implements Node {
      *                               specified name.
      * @throws RepositoryException   If another error occurs.
      */
-    public PropertyImpl getProperty(Name name)
+    public PropertyImpl getProperty(final Name name)
             throws ItemNotFoundException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        PropertyId propId = new PropertyId(getNodeId(), name);
-        try {
-            return (PropertyImpl) itemMgr.getItem(propId);
-        } catch (AccessDeniedException ade) {
-            throw new ItemNotFoundException(name.toString());
-        }
+        return perform(new SessionOperation<PropertyImpl>() {
+            public PropertyImpl perform(SessionContext context)
+                    throws RepositoryException {
+                try {
+                    return (PropertyImpl) context.getItemManager().getItem(
+                            new PropertyId(getNodeId(), name));
+                } catch (AccessDeniedException ade) {
+                    String n = context.getSessionImpl().getJCRName(name);
+                    throw new ItemNotFoundException(
+                            "Property " + n + " not found");
+                }
+            }
+        });
     }
 
     /**
@@ -1187,17 +1190,15 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return <code>true</code> if the property exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
      */
-    public boolean hasProperty(Name name) throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        NodeState thisState = data.getNodeState();
-        if (!thisState.hasPropertyName(name)) {
-            return false;
-        }
-        PropertyId propId = new PropertyId(thisState.getNodeId(), name);
-
-        return itemMgr.itemExists(propId);
+    public boolean hasProperty(final Name name) throws RepositoryException {
+        return perform(new SessionOperation<Boolean>() {
+            public Boolean perform(SessionContext context)
+                    throws RepositoryException {
+                return data.getNodeState().hasPropertyName(name)
+                    && context.getItemManager().itemExists(
+                            new PropertyId(getNodeId(), name));
+            }
+        });
     }
 
     /**
@@ -1651,23 +1652,24 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public String getName() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
+        return perform(new SessionOperation<String>() {
+            public String perform(SessionContext context)
+                    throws RepositoryException {
+                NodeId parentId = data.getNodeState().getParentId();
+                if (parentId == null) {
+                    return ""; // this is the root node
+                }
 
-        final NodeState state = data.getNodeState();
-        if (state.getParentId() == null) {
-            // this is the root node
-            return "";
-        }
-
-        Name name;
-        HierarchyManager hierMgr = sessionContext.getHierarchyManager();
-        if (!isShareable()) {
-            name = hierMgr.getName(id);
-        } else {
-            name = hierMgr.getName(getNodeId(), getParentId());
-        }
-        return session.getJCRName(name);
+                Name name;
+                if (!isShareable()) {
+                    name = context.getHierarchyManager().getName(id);
+                } else {
+                    name = context.getHierarchyManager().getName(
+                            getNodeId(), parentId);
+                }
+                return context.getSessionImpl().getJCRName(name);
+            }
+        });
     }
 
     /**
@@ -1683,19 +1685,19 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public Node getParent()
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check if root node
-        NodeId parentId = getParentId();
-        if (parentId == null) {
-            String msg = "root node doesn't have a parent";
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
-        }
-        return (Node) itemMgr.getItem(parentId);
+    public Node getParent() throws RepositoryException {
+        return perform(new SessionOperation<Node>() {
+            public Node perform(SessionContext context)
+                    throws RepositoryException {
+                NodeId parentId = getParentId();
+                if (parentId != null) {
+                    return (Node) context.getItemManager().getItem(parentId);
+                } else {
+                    throw new ItemNotFoundException(
+                            "Root node doesn't have a parent");
+                }
+            }
+        });
     }
 
     //----------------------------------------------------------------< Node >
