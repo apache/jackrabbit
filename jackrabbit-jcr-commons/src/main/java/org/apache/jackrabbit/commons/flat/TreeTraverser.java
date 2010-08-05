@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.commons.flat;
 
-import static org.apache.jackrabbit.commons.iterator.Iterators.empty;
-import static org.apache.jackrabbit.commons.iterator.Iterators.iteratorChain;
-import static org.apache.jackrabbit.commons.iterator.Iterators.properties;
-import static org.apache.jackrabbit.commons.iterator.Iterators.singleton;
 import static org.apache.jackrabbit.commons.iterator.LazyIteratorChain.chain;
 
 import javax.jcr.Item;
@@ -28,6 +24,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -247,16 +244,16 @@ public final class TreeTraverser implements Iterable<Node> {
      * Returns an iterator of the nodes of the sub-tree rooted at
      * <code>node</code>.
      */
+    @SuppressWarnings("unchecked")
     private Iterator<Node> iterator(Node node) {
         try {
             if (inclusionPolicy.include(node)) {
-                return iteratorChain(singleton(node), chain(childIterators(node)));
+                return chain(singleton(node), chain(childIterators(node)));
             }
             else {
                 return chain(childIterators(node));
             }
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             errorHandler.call(node, e);
             return empty();
         }
@@ -265,25 +262,21 @@ public final class TreeTraverser implements Iterable<Node> {
     /**
      * Returns an iterator of iterators of the child nodes of <code>node</code>.
      */
-    private Iterator<Iterator<Node>> childIterators(final Node node) {
+    private Iterator<Iterator<Node>> childIterators(Node node) {
         try {
+            final NodeIterator childNodes = node.getNodes();
             return new Iterator<Iterator<Node>>() {
-                private final NodeIterator childNodes = node.getNodes();
-
                 public boolean hasNext() {
                     return childNodes.hasNext();
                 }
-
                 public Iterator<Node> next() {
                     return iterator(childNodes.nextNode());
                 }
-
                 public void remove() {
                     throw new UnsupportedOperationException();
                 }
             };
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             errorHandler.call(node, e);
             return empty();
         }
@@ -303,12 +296,12 @@ public final class TreeTraverser implements Iterable<Node> {
                 return nodes.hasNext();
             }
 
+            @SuppressWarnings("unchecked")
             public Iterator<Property> next() {
                 Node n = nodes.next();
                 try {
-                    return properties(n.getProperties());
-                }
-                catch (RepositoryException e) {
+                    return n.getProperties();
+                } catch (RepositoryException e) {
                     errorHandler.call(n, e);
                     return empty();
                 }
@@ -319,5 +312,16 @@ public final class TreeTraverser implements Iterable<Node> {
             }
         };
     }
+
+    // -----------------------------------------------------< utility >---
+
+    private static <T> Iterator<T> empty() {
+        return Collections.<T>emptySet().iterator();
+    }
+
+    private <T> Iterator<T> singleton(T value) {
+        return Collections.singleton(value).iterator();
+    }
+
 
 }

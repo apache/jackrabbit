@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.commons.iterator;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -42,9 +43,25 @@ public class LazyIteratorChain<T> implements Iterator<T> {
         return new LazyIteratorChain<T>(iterators);
     }
 
+    /**
+     * Returns the concatenation of all iterators in <code>iterators</code>.
+     *
+     * @param <T>
+     * @param iterators
+     * @return
+     */
+    public static <T> Iterator<T> chain(Iterator<T>... iterators) {
+        return new LazyIteratorChain<T>(iterators);
+    }
+
     public LazyIteratorChain(Iterator<Iterator<T>> iterators) {
         super();
         this.iterators = iterators;
+    }
+
+    public LazyIteratorChain(Iterator<T>... iterators) {
+        super();
+        this.iterators = Arrays.asList(iterators).iterator();
     }
 
     public boolean hasNext() {

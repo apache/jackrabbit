@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.commons.flat;
 
-import static org.apache.jackrabbit.commons.iterator.Iterators.arrayIterator;
-import static org.apache.jackrabbit.commons.iterator.Iterators.empty;
-
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -192,10 +191,9 @@ public class Rank<T> {
         if (n > 0) {
             take(n, first, values.length - 1);
             first += n;
-            return arrayIterator(values, first - n, first);
-        }
-        else {
-            return empty();
+            return Arrays.asList(values).subList(first - n, first).iterator();
+        } else {
+            return Collections.<T>emptySet().iterator();
         }
     }
 
