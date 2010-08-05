@@ -271,7 +271,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     // make transient (copy-on-write)
                     NodeState transientState =
                             stateMgr.createTransientNodeState(
-                                    data.getNodeState(), ItemState.STATUS_EXISTING_MODIFIED);
+                                    (NodeState) stateMgr.getItemState(getId()), ItemState.STATUS_EXISTING_MODIFIED);
                     // replace persistent with transient state
                     data.setState(transientState);
                 } catch (ItemStateException ise) {
