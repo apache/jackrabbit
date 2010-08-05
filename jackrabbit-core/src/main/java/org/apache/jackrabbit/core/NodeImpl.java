@@ -2042,140 +2042,136 @@ public class NodeImpl extends ItemImpl implements Node {
      *                                      validation immediately.
      * @throws RepositoryException          if another error occurs.
      */
-    protected PropertyImpl setProperty(Name name,
-                                       Value[] values,
-                                       int type,
-                                       boolean enforceType) throws
-            ValueFormatException, VersionException, LockException,
-            ConstraintViolationException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
+    protected PropertyImpl setProperty(
+            final Name name, final Value[] values, final int type,
+            final boolean enforceType) throws RepositoryException {
+        return perform(new SessionOperation<PropertyImpl>() {
+            public PropertyImpl perform(SessionContext context)
+                    throws RepositoryException {
+                // check pre-conditions for setting property
+                checkSetProperty();
 
-        // check pre-conditions for setting property
-        checkSetProperty();
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, true, enforceType, status);
-        try {
-            prop.setValue(values, type);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
+                BitSet status = new BitSet();
+                PropertyImpl prop = getOrCreateProperty(
+                        name, type, true, enforceType, status);
+                try {
+                    prop.setValue(values, type);
+                } catch (RepositoryException re) {
+                    if (status.get(CREATED)) {
+                        // setting value failed, get rid of newly created property
+                        removeChildProperty(name);
+                    }
+                    // rethrow
+                    throw re;
+                }
+                return prop;
             }
-            // rethrow
-            throw re;
-        }
-        return prop;
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public Node getNode(String relPath)
-            throws PathNotFoundException, RepositoryException {
+    public Node getNode(final String relPath) throws RepositoryException {
+        return perform(new SessionOperation<Node>() {
+            public Node perform(SessionContext context)
+                    throws RepositoryException {
+                Path p = resolveRelativePath(relPath);
+                NodeId id = getNodeId(p);
+                if (id == null) {
+                    throw new PathNotFoundException(relPath);
+                }
 
-        // check state of this instance
-        sanityCheck();
-
-        Path p = resolveRelativePath(relPath);
-        NodeId id = getNodeId(p);
-        if (id == null) {
-            throw new PathNotFoundException(relPath);
-        }
-
-        // determine parent as mandated by path
-        NodeId parentId = null;
-        if (!p.denotesRoot()) {
-            parentId = getNodeId(p.getAncestor(1));
-        }
-        try {
-            if (parentId == null) {
-                return (NodeImpl) itemMgr.getItem(id);
+                // determine parent as mandated by path
+                NodeId parentId = null;
+                if (!p.denotesRoot()) {
+                    parentId = getNodeId(p.getAncestor(1));
+                }
+                try {
+                    // if the node is shareable, it now returns the node
+                    // with the right parent
+                    if (parentId != null) {
+                        return itemMgr.getNode(id, parentId);
+                    } else {
+                        return (NodeImpl) itemMgr.getItem(id);
+                    }
+                } catch (AccessDeniedException e) {
+                    throw new PathNotFoundException(relPath);
+                } catch (ItemNotFoundException e) {
+                    throw new PathNotFoundException(relPath);
+                }
             }
-            // if the node is shareable, it now returns the node with the right
-            // parent
-            return itemMgr.getNode(id, parentId);
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(relPath);
-        } catch (ItemNotFoundException infe) {
-            throw new PathNotFoundException(relPath);
-        }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
     public NodeIterator getNodes() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        /**
-         * IMPORTANT:
-         * an implementation of Node.getNodes()
-         * must not use a class derived from TraversingElementVisitor
-         * to traverse the hierarchy because this would lead to an infinite
-         * recursion!
-         */
-        try {
-            return itemMgr.getChildNodes((NodeId) id);
-        } catch (ItemNotFoundException infe) {
-            String msg = "failed to list the child nodes of " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, infe);
-        } catch (AccessDeniedException ade) {
-            String msg = "failed to list the child nodes of " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, ade);
-        }
+        // IMPORTANT: an implementation of Node.getNodes() must not use
+        // a class derived from TraversingElementVisitor to traverse the
+        // hierarchy because this would lead to an infinite recursion!
+        return perform(new SessionOperation<NodeIterator>() {
+            public NodeIterator perform(SessionContext context)
+                    throws RepositoryException {
+                try {
+                    return itemMgr.getChildNodes((NodeId) id);
+                } catch (ItemNotFoundException e) {
+                    throw new RepositoryException(
+                            "Failed to list child nodes of " + NodeImpl.this, e);
+                } catch (AccessDeniedException e) {
+                    throw new RepositoryException(
+                            "Failed to list child nodes of " + NodeImpl.this, e);
+                }
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
     public PropertyIterator getProperties() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        /**
-         * IMPORTANT:
-         * an implementation of Node.getProperties()
-         * must not use a class derived from TraversingElementVisitor
-         * to traverse the hierarchy because this would lead to an infinite
-         * recursion!
-         */
-        try {
-            return itemMgr.getChildProperties((NodeId) id);
-        } catch (ItemNotFoundException infe) {
-            String msg = "failed to list the child properties of " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, infe);
-        } catch (AccessDeniedException ade) {
-            String msg = "failed to list the child properties of " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, ade);
-        }
+        // IMPORTANT: an implementation of Node.getProperties() must not use
+        // a class derived from TraversingElementVisitor to traverse the
+        // hierarchy because this would lead to an infinite recursion!
+        return perform(new SessionOperation<PropertyIterator>() {
+            public PropertyIterator perform(SessionContext context)
+                    throws RepositoryException {
+                try {
+                    return itemMgr.getChildProperties((NodeId) id);
+                } catch (ItemNotFoundException e) {
+                    throw new RepositoryException(
+                            "Failed to list properties of " + NodeImpl.this, e);
+                } catch (AccessDeniedException e) {
+                    throw new RepositoryException(
+                            "Failed to list properties of " + NodeImpl.this, e);
+                }
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public Property getProperty(String relPath)
+    public Property getProperty(final String relPath)
             throws PathNotFoundException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        PropertyId id = resolveRelativePropertyPath(relPath);
-        if (id == null) {
-            throw new PathNotFoundException(relPath);
-        }
-        try {
-            return (Property) itemMgr.getItem(id);
-        } catch (ItemNotFoundException infe) {
-            throw new PathNotFoundException(relPath);
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(relPath);
-        }
+        return perform(new SessionOperation<Property>() {
+            public Property perform(SessionContext context)
+                    throws RepositoryException {
+                PropertyId id = resolveRelativePropertyPath(relPath);
+                if (id != null) {
+                    try {
+                        return (Property) itemMgr.getItem(id);
+                    } catch (ItemNotFoundException e) {
+                        throw new PathNotFoundException(relPath);
+                    } catch (AccessDeniedException e) {
+                        throw new PathNotFoundException(relPath);
+                    }
+                } else {
+                    throw new PathNotFoundException(relPath);
+                }
+            }
+        });
     }
 
     /**
