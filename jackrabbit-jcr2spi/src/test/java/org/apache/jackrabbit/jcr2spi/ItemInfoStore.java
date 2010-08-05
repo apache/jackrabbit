@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
@@ -25,6 +24,7 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 
 import javax.jcr.ItemNotFoundException;
 
