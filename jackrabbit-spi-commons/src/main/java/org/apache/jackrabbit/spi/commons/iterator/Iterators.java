@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.jackrabbit.commons.iterator;
+package org.apache.jackrabbit.spi.commons.iterator;
 
 import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.collections.iterators.EmptyIterator;

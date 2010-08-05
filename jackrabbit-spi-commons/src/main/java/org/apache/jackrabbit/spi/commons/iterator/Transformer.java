@@ -14,20 +14,22 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.jackrabbit.commons.iterator;
+package org.apache.jackrabbit.spi.commons.iterator;
 
 /**
- * Type safe counter part of {@link org.apache.commons.collections.Predicate}.
+ * Type safe counter part of {@link org.apache.commons.collections.Transformer}.
  *
- * @param <T> type of values this predicate is defined on
+ * @param <A>  argument type to transform from
+ * @param <R>  result type to transform to
  */
-public interface Predicate<T> {
+public interface Transformer<A, R> {
 
     /**
-     * Use the specified parameter to perform a test that returns true or false.
+     * Transforms the input object (leaving it unchanged) into some output object.
      *
-     * @param arg  the predicate to evaluate, should not be changed
-     * @return true or false
+     * @param input  the object to be transformed, should be left unchanged
+     * @return a transformed object
      */
-    public boolean evaluate(T arg);
+    public R transform(A argument);
+
 }

@@ -16,12 +16,9 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
-import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
-import static org.apache.jackrabbit.commons.iterator.Iterators.transformIterator;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.transformIterator;
 
-import org.apache.jackrabbit.commons.iterator.Iterators;
-import org.apache.jackrabbit.commons.iterator.Predicate;
-import org.apache.jackrabbit.commons.iterator.Transformer;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Name;
@@ -33,6 +30,9 @@ import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
+import org.apache.jackrabbit.spi.commons.iterator.Predicate;
+import org.apache.jackrabbit.spi.commons.iterator.Transformer;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;

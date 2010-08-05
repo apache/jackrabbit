@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
-import static org.apache.jackrabbit.commons.iterator.Iterators.iteratorChain;
-import static org.apache.jackrabbit.commons.iterator.Iterators.singleton;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.iteratorChain;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.singleton;
 
-import org.apache.jackrabbit.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -31,6 +30,7 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
+import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
