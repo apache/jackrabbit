@@ -16,12 +16,7 @@
  */
 package org.apache.jackrabbit.commons.flat;
 
-import static org.apache.jackrabbit.commons.iterator.Iterators.filterIterator;
-import static org.apache.jackrabbit.commons.iterator.Iterators.nodes;
-import static org.apache.jackrabbit.commons.iterator.Iterators.properties;
-
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.commons.iterator.Predicate;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -32,6 +27,7 @@ import javax.jcr.RepositoryException;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * <p>
@@ -256,31 +252,56 @@ public class BTreeManager implements TreeManager {
     /**
      * Returns a {@link SizedIterator} of the child nodes of <code>node</code>.
      */
+    @SuppressWarnings("unchecked")
     protected SizedIterator<Node> getNodes(Node node) throws RepositoryException {
         NodeIterator nodes = node.getNodes();
-        return getSizedIterator(nodes(nodes), nodes.getSize());
+        return getSizedIterator(nodes, nodes.getSize());
     }
 
     /**
-     * Returns a {@link SizedIterator} of the properties of <code>node</code> which
-     * excludes the <code>jcr.primaryType</code> property.
+     * Returns a {@link SizedIterator} of the properties of <code>node</code>
+     * which excludes the <code>jcr.primaryType</code> property.
      */
-    protected SizedIterator<Property> getProperties(final Node node) throws RepositoryException {
+    protected SizedIterator<Property> getProperties(Node node) throws RepositoryException {
         final PropertyIterator properties = node.getProperties();
 
-        Iterator<Property> filtered = filterIterator(properties(properties), new Predicate<Property>() {
-            public boolean evaluate(Property property) {
-                try {
-                    return !JcrConstants.JCR_PRIMARYTYPE.equals(property.getName());
+        Iterator<Property> filteredIterator = new Iterator<Property>() {
+            Property next = null;
+
+            public boolean hasNext() {
+                while (next == null && properties.hasNext()) {
+                    Property p = properties.nextProperty();
+                    try {
+                        if (!JcrConstants.JCR_PRIMARYTYPE.equals(p.getName())) {
+                            next = p;
+                        }
+                    }
+                    catch (RepositoryException ignore) {
+                        next = p;
+                    }
                 }
-                catch (RepositoryException ignore) {
-                    return true;
+
+                return next != null;
+            }
+
+            public Property next() {
+                if (hasNext()) {
+                    Property property = next;
+                    next = null;
+                    return property;
+                }
+                else {
+                    throw new NoSuchElementException();
                 }
             }
-        });
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
 
         long size = properties.getSize();
-        return getSizedIterator(filtered, size > 0 ? size - 1 : size);
+        return getSizedIterator(filteredIterator, size > 0 ? size - 1 : size);
     }
 
     /**
@@ -311,7 +332,7 @@ public class BTreeManager implements TreeManager {
     /**
      * Wraps <code>iterator</code> into a {@link SizedIterator} given a
      * <code>size</code>. The value of the <code>size</code> parameter must
-     * correctly reflect the number of items in <code>iterator</code>.Ê
+     * correctly reflect the number of items in <code>iterator</code>.
      */
     protected final <T> SizedIterator<T> getSizedIterator(final Iterator<T> iterator, final long size) {
         return new SizedIterator<T>() {
