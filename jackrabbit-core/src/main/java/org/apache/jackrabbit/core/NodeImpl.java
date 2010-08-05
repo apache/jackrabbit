@@ -80,6 +80,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.AddNodeOperation;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -1498,7 +1499,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Same as <code>{@link Node#addNode(String, String)}</code> except that
      * this method takes <code>Name</code> arguments instead of
      * <code>String</code>s and has an additional <code>uuid</code> argument.
-     * <p/>
+     * <p>
      * <b>Important Notice:</b> This method is for internal use only! Passing
      * already assigned uuid's might lead to unexpected results and
      * data corruption in the worst case.
@@ -1511,6 +1512,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return the newly added node
      * @throws RepositoryException if the node can not added
      */
+    // FIXME: This method should not be public
     public synchronized NodeImpl addNode(
             Name nodeName, Name nodeTypeName, NodeId id)
             throws RepositoryException {
@@ -2042,65 +2044,10 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return the newly added node
      * @throws RepositoryException if the node can not be added
      */
-    public synchronized Node addNodeWithUuid(
+    public Node addNodeWithUuid(
             String relPath, String nodeTypeName, String uuid)
             throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // Get the canonical path of the new node
-        Path path;
-        try {
-            path = PathFactoryImpl.getInstance().create(
-                    getPrimaryPath(), session.getQPath(relPath), true);
-        } catch (NameException e) {
-            throw new RepositoryException(
-                    "Failed to resolve path " + relPath
-                    + " relative to " + this, e);
-        }
-
-        // Get the last path element and check that it's a simple name
-        Path.Element last = path.getNameElement();
-        if (!last.denotesName() || last.getIndex() != 0) {
-            throw new RepositoryException(
-                    "Invalid last path element for adding node "
-                    + relPath + " relative to " + this);
-        }
-
-        // Get the parent node instance
-        NodeImpl parentNode;
-        Path parentPath = path.getAncestor(1);
-        try {
-            parentNode = itemMgr.getNode(parentPath);
-        } catch (PathNotFoundException e) {
-            if (itemMgr.propertyExists(parentPath)) {
-                throw new ConstraintViolationException(
-                        "Unable to add a child node to property "
-                        + session.getJCRPath(parentPath));
-            }
-            throw e;
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(
-                    "Failed to resolve path " + relPath + " relative to " + this);
-        }
-
-        // Resolve node type name (if any)
-        Name typeName = null;
-        if (nodeTypeName != null) {
-            typeName = session.getQName(nodeTypeName);
-        }
-
-        // Check that the given UUID (if any) does not already exist
-        NodeId id = null;
-        if (uuid != null) {
-            id = new NodeId(uuid);
-            if (itemMgr.itemExists(id)) {
-                throw new ItemExistsException(
-                        "A node with this UUID already exists: " + uuid);
-            }
-        }
-
-        return parentNode.addNode(last.getName(), typeName, id);
+        return perform(new AddNodeOperation(this, relPath, nodeTypeName, uuid));
     }
 
     /**
