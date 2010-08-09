@@ -60,7 +60,7 @@ public class BackwardsCompatibilityTest extends TestCase {
         FileUtils.deleteDirectory(target);
         target.mkdirs();
 
-        File source = new File("src/test/compatibility/repositories.zip");
+        File source = new File("src/test/resources/compatibility.zip");
         unpack(source, target);
 
         for (File dir : target.listFiles()) {
