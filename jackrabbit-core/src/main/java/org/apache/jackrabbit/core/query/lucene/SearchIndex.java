@@ -52,6 +52,7 @@ import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -59,6 +60,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
@@ -664,20 +666,18 @@ public class SearchIndex extends AbstractQueryHandler {
      * string from among those returned by QueryManager.getSupportedQueryLanguages(); if it is not
      * then an <code>InvalidQueryException</code> is thrown.
      *
-     * @param session the session of the current user creating the query object.
-     * @param itemMgr the item manager of the current user.
+     * @param sessionContext component context of the current session
      * @param statement the query statement.
      * @param language the syntax of the query statement.
      * @throws InvalidQueryException if statement is invalid or language is unsupported.
      * @return A <code>Query</code> object.
      */
-    public ExecutableQuery createExecutableQuery(SessionImpl session,
-                                             ItemManager itemMgr,
-                                             String statement,
-                                             String language)
+    public ExecutableQuery createExecutableQuery(
+            SessionContext sessionContext, String statement, String language)
             throws InvalidQueryException {
-        QueryImpl query = new QueryImpl(session, itemMgr, this,
-                getContext().getPropertyTypeRegistry(), statement, language, getQueryNodeFactory());
+        QueryImpl query = new QueryImpl(
+                sessionContext, this, getContext().getPropertyTypeRegistry(),
+                statement, language, getQueryNodeFactory());
         query.setRespectDocumentOrder(documentOrder);
         return query;
     }
@@ -687,9 +687,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * object model is considered invalid for the implementing class, an
      * InvalidQueryException is thrown.
      *
-     * @param session the session of the current user creating the query
-     *                object.
-     * @param itemMgr the item manager of the current user.
+     * @param sessionContext component context of the current session
      * @param qomTree query query object model tree.
      * @return A <code>Query</code> object.
      * @throws javax.jcr.query.InvalidQueryException
@@ -697,11 +695,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * @see QueryHandler#createExecutableQuery(SessionImpl, ItemManager, QueryObjectModelTree)
      */
     public ExecutableQuery createExecutableQuery(
-            SessionImpl session,
-            ItemManager itemMgr,
-            QueryObjectModelTree qomTree) throws InvalidQueryException {
-        QueryObjectModelImpl query = new QueryObjectModelImpl(session, itemMgr, this,
-                getContext().getPropertyTypeRegistry(), qomTree);
+            SessionContext sessionContext, QueryObjectModelTree qomTree)
+            throws InvalidQueryException {
+        QueryObjectModelImpl query = new QueryObjectModelImpl(
+                sessionContext, this, getContext().getPropertyTypeRegistry(),
+                qomTree);
         query.setRespectDocumentOrder(documentOrder);
         return query;
     }

@@ -47,6 +47,7 @@ import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryHandlerFactory;
 import org.apache.jackrabbit.core.query.QueryObjectModelImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
@@ -227,10 +228,7 @@ public class SearchManager implements SynchronousEventListener {
     /**
      * Creates a query object that can be executed on the workspace.
      *
-     * @param session   the session of the user executing the query.
-     * @param itemMgr   the item manager of the user executing the query. Needed
-     *                  to return <code>Node</code> instances in the result
-     *                  set.
+     * @param sessionContext component context of the current session
      * @param statement the actual query statement.
      * @param language  the syntax of the query statement.
      * @param node      a nt:query node where the query was read from or
@@ -240,21 +238,19 @@ public class SearchManager implements SynchronousEventListener {
      *                               <code>language</code> is unknown.
      * @throws RepositoryException   if any other error occurs.
      */
-    public Query createQuery(SessionImpl session,
-                             ItemManager itemMgr,
-                             String statement,
-                             String language,
-                             Node node)
+    public Query createQuery(
+            SessionContext sessionContext,
+            String statement, String language, Node node)
             throws InvalidQueryException, RepositoryException {
         AbstractQueryImpl query = createQueryInstance();
-        query.init(session, itemMgr, handler, statement, language, node);
+        query.init(sessionContext, handler, statement, language, node);
         return query;
     }
 
     /**
      * Creates a query object model that can be executed on the workspace.
      *
-     * @param session   the session of the user executing the query.
+     * @param sessionContext component context of the current session
      * @param qomTree   the query object model tree, representing the query.
      * @param langugage the original language of the query statement.
      * @param node      a nt:query node where the query was read from or
@@ -265,13 +261,12 @@ public class SearchManager implements SynchronousEventListener {
      *                               implementation.
      * @throws RepositoryException   if any other error occurs.
      */
-    public QueryObjectModel createQueryObjectModel(SessionImpl session,
-                                                   QueryObjectModelTree qomTree,
-                                                   String langugage,
-                                                   Node node)
+    public QueryObjectModel createQueryObjectModel(
+            SessionContext sessionContext, QueryObjectModelTree qomTree,
+            String langugage, Node node)
             throws InvalidQueryException, RepositoryException {
         QueryObjectModelImpl qom = new QueryObjectModelImpl();
-        qom.init(session, session.getItemManager(), handler, qomTree, langugage, node);
+        qom.init(sessionContext, handler, qomTree, langugage, node);
         return qom;
     }
 

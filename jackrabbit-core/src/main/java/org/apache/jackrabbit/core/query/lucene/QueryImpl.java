@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.PropertyDefinition;
@@ -25,15 +25,16 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
@@ -43,7 +44,6 @@ import org.apache.jackrabbit.spi.commons.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.QueryParser;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +72,7 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * Creates a new query instance from a query string.
      *
-     * @param session   the session of the user executing this query.
-     * @param itemMgr   the item manager of the session executing this query.
+     * @param sessionContext component context of the current session
      * @param index     the search index.
      * @param propReg   the property type registry.
      * @param statement the query statement.
@@ -82,17 +81,15 @@ public class QueryImpl extends AbstractQueryImpl {
      * @throws InvalidQueryException if the query statement is invalid according
      *                               to the specified <code>language</code>.
      */
-    public QueryImpl(SessionImpl session,
-                     ItemManager itemMgr,
-                     SearchIndex index,
-                     PropertyTypeRegistry propReg,
-                     String statement,
-                     String language,
-                     QueryNodeFactory factory) throws InvalidQueryException {
-        super(session, itemMgr, index, propReg);
+    public QueryImpl(
+            SessionContext sessionContext, SearchIndex index,
+            PropertyTypeRegistry propReg, String statement, String language,
+            QueryNodeFactory factory) throws InvalidQueryException {
+        super(sessionContext, index, propReg);
         // parse query according to language
         // build query tree using the passed factory
-        this.root = QueryParser.parse(statement, language, session, factory);
+        this.root = QueryParser.parse(
+                statement, language, sessionContext.getSessionImpl(), factory);
     }
 
     /**
@@ -109,7 +106,8 @@ public class QueryImpl extends AbstractQueryImpl {
         }
 
         // build lucene query
-        Query query = LuceneQueryBuilder.createQuery(root, session,
+        Query query = LuceneQueryBuilder.createQuery(
+                root, sessionContext.getSessionImpl(),
                 index.getContext().getItemStateManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
                 propReg, index.getSynonymProvider(),
@@ -130,9 +128,9 @@ public class QueryImpl extends AbstractQueryImpl {
             ascSpecs[i] = orderSpecs[i].isAscending();
         }
 
-        return new SingleColumnQueryResult(index, itemMgr,
-                session, session.getAccessManager(),
-                this, query, new SpellSuggestion(index.getSpellChecker(), root),
+        return new SingleColumnQueryResult(
+                index, sessionContext, this, query,
+                new SpellSuggestion(index.getSpellChecker(), root),
                 getColumns(), orderProperties, ascSpecs,
                 orderProperties.length == 0 && getRespectDocumentOrder(),
                 offset, limit);
@@ -145,6 +143,7 @@ public class QueryImpl extends AbstractQueryImpl {
      * @throws RepositoryException if an error occurs.
      */
     protected ColumnImpl[] getColumns() throws RepositoryException {
+        SessionImpl session = sessionContext.getSessionImpl();
         QueryObjectModelFactory qomFactory = session.getWorkspace().getQueryManager().getQOMFactory();
         // get columns
         Map<Name, ColumnImpl> columns = new LinkedHashMap<Name, ColumnImpl>();
@@ -213,7 +212,9 @@ public class QueryImpl extends AbstractQueryImpl {
      * @throws RepositoryException if an error occurs while creating the column.
      */
     protected ColumnImpl columnForName(Name propertyName) throws RepositoryException {
-        QueryObjectModelFactory qomFactory = session.getWorkspace().getQueryManager().getQOMFactory();
+        SessionImpl session = sessionContext.getSessionImpl();
+        QueryObjectModelFactory qomFactory =
+            session.getWorkspace().getQueryManager().getQOMFactory();
         String name = session.getJCRName(propertyName);
         return (ColumnImpl) qomFactory.column(
                 session.getJCRName(DEFAULT_SELECTOR_NAME), name, name);

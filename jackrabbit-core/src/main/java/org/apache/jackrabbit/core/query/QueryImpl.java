@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LANGUAGE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_STATEMENT;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.NT_QUERY;
+
+import java.text.NumberFormat;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -35,10 +33,16 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
 import javax.jcr.version.VersionException;
-import java.text.NumberFormat;
+
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides the default implementation for a JCR query.
@@ -51,9 +55,9 @@ public class QueryImpl extends AbstractQueryImpl {
     private static final Logger log = LoggerFactory.getLogger(QueryImpl.class);
 
     /**
-     * The session of the user executing this query
+     * Component context of the current session
      */
-    protected SessionImpl session;
+    protected SessionContext sessionContext;
 
     /**
      * The query statement
@@ -99,19 +103,17 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * @inheritDoc
      */
-    public void init(SessionImpl session,
-                     ItemManager itemMgr,
-                     QueryHandler handler,
-                     String statement,
-                     String language,
-                     Node node) throws InvalidQueryException {
+    public void init(
+            SessionContext sessionContext, QueryHandler handler,
+            String statement, String language, Node node)
+            throws InvalidQueryException {
         checkNotInitialized();
-        this.session = session;
+        this.sessionContext = sessionContext;
         this.statement = statement;
         this.language = language;
         this.handler = handler;
         this.node = node;
-        this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
+        this.query = handler.createExecutableQuery(sessionContext, statement, language);
         setInitialized();
     }
 
@@ -177,18 +179,20 @@ public class QueryImpl extends AbstractQueryImpl {
             RepositoryException {
 
         checkInitialized();
+        NamePathResolver resolver = sessionContext.getSessionImpl();
         try {
-            Path p = session.getQPath(absPath).getNormalizedPath();
+            Path p = resolver.getQPath(absPath).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
 
-            String relPath = session.getJCRPath(p).substring(1);
-            Node queryNode = session.getRootNode().addNode(
-                    relPath, session.getJCRName(NameConstants.NT_QUERY));
+            String relPath = resolver.getJCRPath(p).substring(1);
+            Node queryNode =
+                sessionContext.getSessionImpl().getRootNode().addNode(
+                        relPath, resolver.getJCRName(NT_QUERY));
             // set properties
-            queryNode.setProperty(session.getJCRName(NameConstants.JCR_LANGUAGE), language);
-            queryNode.setProperty(session.getJCRName(NameConstants.JCR_STATEMENT), statement);
+            queryNode.setProperty(resolver.getJCRName(JCR_LANGUAGE), language);
+            queryNode.setProperty(resolver.getJCRName(JCR_STATEMENT), statement);
             node = queryNode;
             return node;
         } catch (NameException e) {
@@ -200,10 +204,11 @@ public class QueryImpl extends AbstractQueryImpl {
      * {@inheritDoc}
      */
     public String[] getBindVariableNames() throws RepositoryException {
+        NameResolver resolver = sessionContext.getSessionImpl();
         Name[] names = query.getBindVariableNames();
         String[] strNames = new String[names.length];
         for (int i = 0; i < names.length; i++) {
-            strNames[i] = session.getJCRName(names[i]);
+            strNames[i] = resolver.getJCRName(names[i]);
         }
         return strNames;
     }
@@ -222,7 +227,7 @@ public class QueryImpl extends AbstractQueryImpl {
             throws IllegalArgumentException, RepositoryException {
         checkInitialized();
         try {
-            query.bindValue(session.getQName(varName), value);
+            query.bindValue(sessionContext.getSessionImpl().getQName(varName), value);
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage());
         }

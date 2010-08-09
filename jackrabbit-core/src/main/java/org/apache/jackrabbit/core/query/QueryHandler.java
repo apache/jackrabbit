@@ -16,18 +16,17 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import java.io.IOException;
+import java.util.Iterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 
-import java.io.IOException;
-import java.util.Iterator;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
  * Defines an interface for the actual node indexing and query execution.
@@ -102,17 +101,14 @@ public interface QueryHandler {
      * string from among those returned by QueryManager.getSupportedQueryLanguages(); if it is not
      * then an <code>InvalidQueryException</code> is thrown.
      *
-     * @param session the session of the current user creating the query object.
-     * @param itemMgr the item manager of the current user.
+     * @param sessionContext component context of the current session
      * @param statement the query statement.
      * @param language the syntax of the query statement.
      * @throws InvalidQueryException if statement is invalid or language is unsupported.
      * @return A <code>Query</code> object.
      */
-    ExecutableQuery createExecutableQuery(SessionImpl session,
-                                          ItemManager itemMgr,
-                                          String statement,
-                                          String language)
+    ExecutableQuery createExecutableQuery(
+            SessionContext sessionContext, String statement, String language)
             throws InvalidQueryException;
 
     /**
@@ -120,16 +116,13 @@ public interface QueryHandler {
      * object model is considered invalid for the implementing class, an
      * InvalidQueryException is thrown.
      *
-     * @param session the session of the current user creating the query
-     *                object.
-     * @param itemMgr the item manager of the current user.
+     * @param sessionContext component context of the current session
      * @param qomTree query query object model tree.
      * @return A <code>Query</code> object.
      * @throws InvalidQueryException if the query object model tree is invalid.
      */
-    ExecutableQuery createExecutableQuery(SessionImpl session,
-                                          ItemManager itemMgr,
-                                          QueryObjectModelTree qomTree)
+    ExecutableQuery createExecutableQuery(
+            SessionContext sessionContext, QueryObjectModelTree qomTree)
             throws InvalidQueryException;
     
     /**

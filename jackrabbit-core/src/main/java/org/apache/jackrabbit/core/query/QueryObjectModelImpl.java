@@ -26,8 +26,7 @@ import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.Source;
 
 import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
@@ -44,20 +43,18 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
      * {@inheritDoc}
      * @throws UnsupportedOperationException always.
      */
-    public void init(SessionImpl session,
-                     ItemManager itemMgr,
-                     QueryHandler handler,
-                     String statement,
-                     String language,
-                     Node node) throws InvalidQueryException {
+    @Override
+    public void init(
+            SessionContext sessionContext, QueryHandler handler,
+            String statement, String language, Node node)
+            throws InvalidQueryException {
         throw new UnsupportedOperationException();
     }
 
     /**
      * Initializes a query instance from a query object model.
      *
-     * @param session  the session of the user executing this query.
-     * @param itemMgr  the item manager of the session executing this query.
+     * @param sessionContext component context of the current session
      * @param handler  the query handler of the search index.
      * @param qomTree  the query object model tree.
      * @param language the original query syntax from where the JQOM was
@@ -68,21 +65,18 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
      *                               according to the given language.
      * @throws RepositoryException   if another error occurs
      */
-    public void init(SessionImpl session,
-                     ItemManager itemMgr,
-                     QueryHandler handler,
-                     QueryObjectModelTree qomTree,
-                     String language,
-                     Node node)
+    public void init(
+            SessionContext sessionContext, QueryHandler handler,
+            QueryObjectModelTree qomTree, String language, Node node)
             throws InvalidQueryException, RepositoryException {
         checkNotInitialized();
-        this.session = session;
+        this.sessionContext = sessionContext;
         this.language = language;
         this.handler = handler;
         this.qomTree = qomTree;
         this.node = node;
         this.statement = QueryObjectModelBuilderRegistry.getQueryObjectModelBuilder(language).toString(this);
-        this.query = handler.createExecutableQuery(session, itemMgr, qomTree);
+        this.query = handler.createExecutableQuery(sessionContext, qomTree);
         setInitialized();
     }
 
