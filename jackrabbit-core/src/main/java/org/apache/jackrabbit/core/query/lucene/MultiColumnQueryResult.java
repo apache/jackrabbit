@@ -20,9 +20,7 @@ import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 
@@ -42,19 +40,13 @@ public class MultiColumnQueryResult extends QueryResultImpl {
      */
     protected final Ordering[] orderings;
 
-    public MultiColumnQueryResult(SearchIndex index,
-                                  ItemManager itemMgr,
-                                  SessionImpl session,
-                                  AccessManager accessMgr,
-                                  AbstractQueryImpl queryImpl,
-                                  MultiColumnQuery query,
-                                  SpellSuggestion spellSuggestion,
-                                  ColumnImpl[] columns,
-                                  OrderingImpl[] orderings,
-                                  boolean documentOrder,
-                                  long offset,
-                                  long limit) throws RepositoryException {
-        super(index, itemMgr, session, accessMgr, queryImpl, spellSuggestion,
+    public MultiColumnQueryResult(
+            SearchIndex index, SessionContext sessionContext,
+            AbstractQueryImpl queryImpl, MultiColumnQuery query,
+            SpellSuggestion spellSuggestion,  ColumnImpl[] columns,
+            OrderingImpl[] orderings, boolean documentOrder,
+            long offset, long limit) throws RepositoryException {
+        super(index, sessionContext, queryImpl, spellSuggestion,
                 columns, documentOrder, offset, limit);
         this.query = query;
         this.orderings = index.createOrderings(orderings);
@@ -67,7 +59,9 @@ public class MultiColumnQueryResult extends QueryResultImpl {
      */
     protected MultiColumnQueryHits executeQuery(long resultFetchHint)
             throws IOException {
-        return index.executeQuery(session, query, orderings, resultFetchHint);
+        return index.executeQuery(
+                sessionContext.getSessionImpl(),
+                query, orderings, resultFetchHint);
     }
 
     /**

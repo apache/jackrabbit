@@ -20,11 +20,9 @@ import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.lucene.search.Query;
 
 /**
@@ -48,20 +46,13 @@ public class SingleColumnQueryResult extends QueryResultImpl {
      */
     protected final boolean[] orderSpecs;
 
-    public SingleColumnQueryResult(SearchIndex index,
-                                   ItemManager itemMgr,
-                                   SessionImpl session,
-                                   AccessManager accessMgr,
-                                   AbstractQueryImpl queryImpl,
-                                   Query query,
-                                   SpellSuggestion spellSuggestion,
-                                   ColumnImpl[] columns,
-                                   Path[] orderProps,
-                                   boolean[] orderSpecs,
-                                   boolean documentOrder,
-                                   long offset,
-                                   long limit) throws RepositoryException {
-        super(index, itemMgr, session, accessMgr, queryImpl, spellSuggestion,
+    public SingleColumnQueryResult(
+            SearchIndex index, SessionContext sessionContext,
+            AbstractQueryImpl queryImpl, Query query,
+            SpellSuggestion spellSuggestion, ColumnImpl[] columns,
+            Path[] orderProps, boolean[] orderSpecs, boolean documentOrder,
+            long offset, long limit) throws RepositoryException {
+        super(index, sessionContext, queryImpl, spellSuggestion,
                 columns, documentOrder, offset, limit);
         this.query = query;
         this.orderProps = orderProps;
@@ -75,7 +66,8 @@ public class SingleColumnQueryResult extends QueryResultImpl {
      */
     protected MultiColumnQueryHits executeQuery(long resultFetchHint)
             throws IOException {
-        return index.executeQuery(session, queryImpl, query,
+        return index.executeQuery(
+                sessionContext.getSessionImpl(), queryImpl, query,
                 orderProps, orderSpecs, resultFetchHint);
     }
 

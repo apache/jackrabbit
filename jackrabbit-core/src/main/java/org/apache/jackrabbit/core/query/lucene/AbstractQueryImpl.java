@@ -18,12 +18,12 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import java.util.Set;
@@ -39,14 +39,9 @@ import java.util.Collections;
 public abstract class AbstractQueryImpl implements ExecutableQuery {
 
     /**
-     * The session of the user executing this query
+     * Component context of the current session
      */
-    protected final SessionImpl session;
-
-    /**
-     * The item manager of the user executing this query
-     */
-    protected final ItemManager itemMgr;
+    protected final SessionContext sessionContext;
 
     /**
      * The actual search index
@@ -78,17 +73,14 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
     /**
      * Creates a new query instance from a query string.
      *
-     * @param session the session of the user executing this query.
-     * @param itemMgr the item manager of the session executing this query.
+     * @param sessionContext component context of the current session
      * @param index   the search index.
      * @param propReg the property type registry.
      */
-    public AbstractQueryImpl(SessionImpl session,
-                             ItemManager itemMgr,
-                             SearchIndex index,
-                             PropertyTypeRegistry propReg) {
-        this.session = session;
-        this.itemMgr = itemMgr;
+    public AbstractQueryImpl(
+            SessionContext sessionContext, SearchIndex index,
+            PropertyTypeRegistry propReg) {
+        this.sessionContext = sessionContext;
         this.index = index;
         this.propReg = propReg;
     }
@@ -169,7 +161,8 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     protected QueryObjectModelFactory getQOMFactory()
             throws RepositoryException {
-        return session.getWorkspace().getQueryManager().getQOMFactory();
+        Workspace workspace = sessionContext.getSessionImpl().getWorkspace();
+        return workspace.getQueryManager().getQOMFactory();
     }
 
     /**

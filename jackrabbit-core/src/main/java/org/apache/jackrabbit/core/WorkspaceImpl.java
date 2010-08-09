@@ -772,7 +772,7 @@ public class WorkspaceImpl extends AbstractWorkspace
                 log.debug(msg);
                 throw new RepositoryException(msg, nswe);
             }
-            queryManager = new QueryManagerImpl(session, session.getItemManager(), searchManager);
+            queryManager = new QueryManagerImpl(sessionContext, searchManager);
         }
         return queryManager;
     }

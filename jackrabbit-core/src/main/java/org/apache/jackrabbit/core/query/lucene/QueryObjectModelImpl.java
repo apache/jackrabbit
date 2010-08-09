@@ -16,29 +16,29 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.query.QueryResult;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
 import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 
 /**
  * <code>QueryObjectModelImpl</code>...
@@ -53,20 +53,17 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
     /**
      * Creates a new query instance from a query string.
      *
-     * @param session the session of the user executing this query.
-     * @param itemMgr the item manager of the session executing this query.
+     * @param sessionContext component context of the current session
      * @param index   the search index.
      * @param propReg the property type registry.
      * @param qomTree the query object model tree.
      * @throws InvalidQueryException if the QOM tree is invalid.
      */
-    public QueryObjectModelImpl(SessionImpl session,
-                                ItemManager itemMgr,
-                                SearchIndex index,
-                                PropertyTypeRegistry propReg,
-                                QueryObjectModelTree qomTree)
+    public QueryObjectModelImpl(
+            SessionContext sessionContext, SearchIndex index,
+            PropertyTypeRegistry propReg, QueryObjectModelTree qomTree)
             throws InvalidQueryException {
-        super(session, itemMgr, index, propReg);
+        super(sessionContext, index, propReg);
         this.qomTree = qomTree;
         checkNodeTypes();
         extractBindVariableNames();
@@ -96,9 +93,9 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
      */
     public QueryResult execute(long offset, long limit)
             throws RepositoryException {
-
-        LuceneQueryFactory factory = new LuceneQueryFactoryImpl(session,
-                index.getSortComparatorSource(),
+        SessionImpl session = sessionContext.getSessionImpl();
+        LuceneQueryFactory factory = new LuceneQueryFactoryImpl(
+                session, index.getSortComparatorSource(),
                 index.getContext().getHierarchyManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
                 index.getSynonymProvider(), index.getIndexFormatVersion(),
@@ -135,8 +132,8 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
             }
         }
         OrderingImpl[] orderings = qomTree.getOrderings();
-        return new MultiColumnQueryResult(index, itemMgr,
-                session, session.getAccessManager(),
+        return new MultiColumnQueryResult(
+                index, sessionContext,
                 // TODO: spell suggestion missing
                 this, query, null, columns.toArray(new ColumnImpl[columns.size()]),
                 orderings, orderings.length == 0 && getRespectDocumentOrder(),
@@ -170,10 +167,12 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
      */
     private void checkNodeTypes() throws InvalidQueryException {
         try {
+            final NodeTypeManagerImpl manager =
+                sessionContext.getSessionImpl().getNodeTypeManager();
             qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
                 public Object visit(SelectorImpl node, Object data) throws Exception {
                     String ntName = node.getNodeTypeName();
-                    if (!session.getNodeTypeManager().hasNodeType(ntName)) {
+                    if (!manager.hasNodeType(ntName)) {
                         throw new Exception(ntName + " is not a known node type");
                     }
                     return super.visit(node, data);

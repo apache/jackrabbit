@@ -20,19 +20,17 @@ import javax.jcr.Node;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
 
 /**
- * Defines common initialization methods for all query implementations.
+ * Defines common initialisation methods for all query implementations.
  */
 public abstract class AbstractQueryImpl implements Query {
 
     /**
-     * Initializes a query instance from a query string.
+     * Initialises a query instance from a query string.
      *
-     * @param session   the session of the user executing this query.
-     * @param itemMgr   the item manager of the session executing this query.
+     * @param sessionContext component context of the current session
      * @param handler   the query handler of the search index.
      * @param statement the query statement.
      * @param language  the syntax of the query statement.
@@ -41,10 +39,8 @@ public abstract class AbstractQueryImpl implements Query {
      * @throws InvalidQueryException if the query statement is invalid according
      *                               to the specified <code>language</code>.
      */
-    public abstract void init(SessionImpl session,
-                              ItemManager itemMgr,
-                              QueryHandler handler,
-                              String statement,
-                              String language,
-                              Node node) throws InvalidQueryException;
+    public abstract void init(
+            SessionContext sessionContext, QueryHandler handler,
+            String statement, String language, Node node)
+            throws InvalidQueryException;
 }

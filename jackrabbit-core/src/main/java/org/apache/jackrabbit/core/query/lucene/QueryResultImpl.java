@@ -29,10 +29,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,19 +52,9 @@ public abstract class QueryResultImpl implements QueryResult {
     protected final SearchIndex index;
 
     /**
-     * The item manager of the session executing the query
+     * Component context of the current session
      */
-    protected final ItemManager itemMgr;
-
-    /**
-     * The session executing the query
-     */
-    protected final SessionImpl session;
-
-    /**
-     * The access manager of the session that executes the query.
-     */
-    protected final AccessManager accessMgr;
+    protected final SessionContext sessionContext;
 
     /**
      * The query instance which created this query result.
@@ -134,11 +123,7 @@ public abstract class QueryResultImpl implements QueryResult {
      * calling {@link #getResults(long)} after this constructor had been called.
      *
      * @param index           the search index where the query is executed.
-     * @param itemMgr         the item manager of the session executing the
-     *                        query.
-     * @param session         the session executing the query.
-     * @param accessMgr       the access manager of the session executiong the
-     *                        query.
+     * @param sessionContext component context of the current session
      * @param queryImpl       the query instance which created this query
      *                        result.
      * @param spellSuggestion the spell suggestion or <code>null</code> if none
@@ -153,20 +138,13 @@ public abstract class QueryResultImpl implements QueryResult {
      * @throws IllegalArgumentException if any of the columns does not have a
      *                                  column name.
      */
-    public QueryResultImpl(SearchIndex index,
-                           ItemManager itemMgr,
-                           SessionImpl session,
-                           AccessManager accessMgr,
-                           AbstractQueryImpl queryImpl,
-                           SpellSuggestion spellSuggestion,
-                           ColumnImpl[] columns,
-                           boolean documentOrder,
-                           long offset,
-                           long limit) throws RepositoryException {
+    public QueryResultImpl(
+            SearchIndex index, SessionContext sessionContext,
+            AbstractQueryImpl queryImpl, SpellSuggestion spellSuggestion,
+            ColumnImpl[] columns, boolean documentOrder,
+            long offset, long limit) throws RepositoryException {
         this.index = index;
-        this.itemMgr = itemMgr;
-        this.session = session;
-        this.accessMgr = accessMgr;
+        this.sessionContext = sessionContext;
         this.queryImpl = queryImpl;
         this.spellSuggestion = spellSuggestion;
         this.docOrder = documentOrder;
@@ -186,9 +164,10 @@ public abstract class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public String[] getSelectorNames() throws RepositoryException {
+        NameResolver resolver = sessionContext.getSessionImpl();
         String[] names = new String[selectorNames.length];
         for (int i = 0; i < selectorNames.length; i++) {
-            names[i] = session.getJCRName(selectorNames[i]);
+            names[i] = resolver.getJCRName(selectorNames[i]);
         }
         return names;
     }
@@ -204,7 +183,8 @@ public abstract class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public NodeIterator getNodes() throws RepositoryException {
-        return new NodeIteratorImpl(itemMgr, getScoreNodes(), 0);
+        return new NodeIteratorImpl(
+                sessionContext.getItemManager(), getScoreNodes(), 0);
     }
 
     /**
@@ -218,9 +198,12 @@ public abstract class QueryResultImpl implements QueryResult {
                 throw new RepositoryException(e);
             }
         }
-        return new RowIteratorImpl(getScoreNodes(), columns,
-                selectorNames, itemMgr,
-                index.getContext().getHierarchyManager(), session, session.getValueFactory(),
+        return new RowIteratorImpl(
+                getScoreNodes(), columns,
+                selectorNames, sessionContext.getItemManager(),
+                index.getContext().getHierarchyManager(),
+                sessionContext.getSessionImpl(), 
+                sessionContext.getSessionImpl().getValueFactory(),
                 excerptProvider, spellSuggestion);
     }
 
@@ -253,7 +236,8 @@ public abstract class QueryResultImpl implements QueryResult {
      */
     private ScoreNodeIterator getScoreNodes() {
         if (docOrder) {
-            return new DocOrderScoreNodeIterator(itemMgr, resultNodes, 0);
+            return new DocOrderScoreNodeIterator(
+                    sessionContext.getItemManager(), resultNodes, 0);
         } else {
             return new LazyScoreNodeIteratorImpl();
         }
@@ -371,7 +355,8 @@ public abstract class QueryResultImpl implements QueryResult {
             throws RepositoryException {
         for (ScoreNode node : nodes) {
             try {
-                if (node != null && !accessMgr.canRead(null, node.getNodeId())) {
+                if (node != null && !sessionContext.getAccessManager().canRead(
+                        null, node.getNodeId())) {
                     return false;
                 }
             } catch (ItemNotFoundException e) {
