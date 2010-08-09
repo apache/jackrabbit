@@ -36,7 +36,7 @@ import javax.jcr.version.VersionHistory;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.math.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.benchmark.PerformanceTest;
@@ -48,6 +48,8 @@ import org.apache.jackrabbit.benchmark.SmallFileWriteTest;
 import org.apache.jackrabbit.benchmark.BigFileReadTest;
 import org.apache.jackrabbit.benchmark.BigFileWriteTest;
 import org.apache.jackrabbit.benchmark.ConcurrentReadTest;
+import org.apache.jackrabbit.benchmark.ConcurrentReadWriteTest;
+import org.apache.jackrabbit.benchmark.SimpleSearchTest;
 
 public abstract class AbstractPerformanceTest {
 
@@ -105,6 +107,8 @@ public abstract class AbstractPerformanceTest {
             runTest(suite, new BigFileReadTest(), writer, name);
             runTest(suite, new BigFileWriteTest(), writer, name);
             runTest(suite, new ConcurrentReadTest(), writer, name);
+            runTest(suite, new ConcurrentReadWriteTest(), writer, name);
+            runTest(suite, new SimpleSearchTest(), writer, name);
 
             writer.println(
                     "--------------------------------------"
@@ -117,7 +121,7 @@ public abstract class AbstractPerformanceTest {
     private void runTest(
             PerformanceTestSuite suite, PerformanceTest test,
             PrintWriter writer, String name) throws Exception {
-        SummaryStatistics statistics = suite.runTest(test);
+        DescriptiveStatistics statistics = suite.runTest(test);
         writer.format(
                 "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
                 name + " \""+ test + "\"",
