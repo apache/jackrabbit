@@ -36,11 +36,10 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,7 +125,13 @@ public class QueryImpl extends AbstractQueryImpl {
     public QueryResult execute() throws RepositoryException {
         checkInitialized();
         long time = System.currentTimeMillis();
-        QueryResult result = query.execute(offset, limit);
+        QueryResult result = sessionContext.getSessionState().perform(
+                new SessionOperation<QueryResult>() {
+                    public QueryResult perform(SessionContext context)
+                            throws RepositoryException {
+                        return query.execute(offset, limit);
+                    }
+                });
         if (log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;
             NumberFormat format = NumberFormat.getNumberInstance();

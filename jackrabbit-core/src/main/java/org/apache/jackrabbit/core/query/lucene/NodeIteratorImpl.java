@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,14 +38,16 @@ class NodeIteratorImpl implements NodeIterator {
     /** Logger instance for this class */
     private static final Logger log = LoggerFactory.getLogger(NodeIteratorImpl.class);
 
+    /**
+     * Component context of the current session
+     */
+    protected final SessionContext sessionContext;
+
     /** The node ids of the nodes in the result set with their score value */
     protected final ScoreNodeIterator scoreNodes;
 
-    /** The index for the default selector withing {@link #scoreNodes} */
+    /** The index for the default selector within {@link #scoreNodes} */
     private final int selectorIndex;
-
-    /** ItemManager to turn UUIDs into Node instances */
-    protected final ItemManager itemMgr;
 
     /** Number of invalid nodes */
     protected int invalid = 0;
@@ -59,16 +63,15 @@ class NodeIteratorImpl implements NodeIterator {
     /**
      * Creates a new <code>NodeIteratorImpl</code> instance.
      *
-     * @param itemMgr       the <code>ItemManager</code> to turn UUIDs into
-     *                      <code>Node</code> instances.
+     * @param sessionContext component context of the current session
      * @param scoreNodes    iterator over score nodes.
      * @param selectorIndex the index for the default selector within
      *                      <code>scoreNodes</code>.
      */
-    NodeIteratorImpl(ItemManager itemMgr,
-                     ScoreNodeIterator scoreNodes,
-                     int selectorIndex) {
-        this.itemMgr = itemMgr;
+    NodeIteratorImpl(
+            SessionContext sessionContext, ScoreNodeIterator scoreNodes,
+            int selectorIndex) {
+        this.sessionContext = sessionContext;
         this.scoreNodes = scoreNodes;
         this.selectorIndex = selectorIndex;
     }
@@ -175,19 +178,35 @@ class NodeIteratorImpl implements NodeIterator {
      * method returns, then there are no more valid element in this iterator.
      */
     protected void fetchNext() {
-        // reset
-        next = null;
-        while (next == null && scoreNodes.hasNext()) {
-            ScoreNode[] sn = scoreNodes.nextScoreNodes();
-            try {
-                next = (NodeImpl) itemMgr.getItem(sn[selectorIndex].getNodeId());
-            } catch (RepositoryException e) {
-                log.warn("Exception retrieving Node with UUID: "
-                        + sn[selectorIndex].getNodeId() + ": " + e.toString());
-                // try next
-                invalid++;
-            }
+        try {
+            sessionContext.getSessionState().perform(new FetchNext());
+        } catch (RepositoryException e) {
+            log.warn("Failed to fetch next node", e);
         }
+    }
+
+    private class FetchNext implements SessionOperation<Object> {
+
+        public Object perform(SessionContext context) {
+            next = null; // reset
+
+            ItemManager itemMgr = context.getItemManager();
+            while (next == null && scoreNodes.hasNext()) {
+                ScoreNode[] sn = scoreNodes.nextScoreNodes();
+                try {
+                    next = (NodeImpl) itemMgr.getItem(
+                            sn[selectorIndex].getNodeId());
+                } catch (RepositoryException e) {
+                    log.warn("Failed to retrieve query result node "
+                            + sn[selectorIndex].getNodeId(), e);
+                    // try next
+                    invalid++;
+                }
+            }
+
+            return this;
+        }
+
     }
 
     protected void initialize() {
