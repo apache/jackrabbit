@@ -220,7 +220,7 @@ public class WriteTest extends AbstractWriteTest {
 
     public void testInvalidPrincipal() throws Exception {
         PrincipalManager pMgr = ((JackrabbitSession) superuser).getPrincipalManager();
-        String unknown = "unkown";
+        String unknown = "unknown";
         while (pMgr.hasPrincipal(unknown)) {
             unknown = unknown + "_";
         }
