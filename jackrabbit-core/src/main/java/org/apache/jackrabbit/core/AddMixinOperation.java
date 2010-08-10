@@ -59,8 +59,6 @@ class AddMixinOperation implements SessionOperation<Object> {
     }
 
     public Object perform(SessionContext context) throws RepositoryException {
-        SessionImpl session = context.getSessionImpl();
-
         int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:(simple)versionable. since adding the
         // mixin alters the version storage jcr:versionManagement privilege
@@ -69,16 +67,17 @@ class AddMixinOperation implements SessionOperation<Object> {
                 || MIX_SIMPLE_VERSIONABLE.equals(mixinName)) {
             permissions |= Permission.VERSION_MNGMT;
         }
-        session.getValidator().checkModify(
+        context.getSessionImpl().getValidator().checkModify(
                 node,
                 CHECK_LOCK | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD,
                 permissions);
 
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeManagerImpl ntMgr =
+            context.getSessionImpl().getNodeTypeManager();
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
         if (!mixin.isMixin()) {
             throw new RepositoryException(
-                    session.getJCRName(mixinName) + " is not a mixin node type");
+                    context.getJCRName(mixinName) + " is not a mixin node type");
         }
 
         Name primaryTypeName = node.getNodeState().getNodeTypeName();

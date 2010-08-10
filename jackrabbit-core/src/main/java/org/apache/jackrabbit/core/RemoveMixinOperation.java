@@ -85,7 +85,7 @@ class RemoveMixinOperation implements SessionOperation<Object> {
         NodeState state = node.getNodeState();
         if (!state.getMixinTypeNames().contains(mixinName)) {
             throw new NoSuchNodeTypeException(
-                    "Mixin " + session.getJCRName(mixinName)
+                    "Mixin " + context.getJCRName(mixinName)
                     + " not included in " + node);
         }
 
@@ -177,7 +177,7 @@ class RemoveMixinOperation implements SessionOperation<Object> {
         } catch (ItemStateException e) {
             throw new RepositoryException(
                     "Failed to determine effect of removing mixin "
-                    + session.getJCRName(mixinName), e);
+                    + context.getJCRName(mixinName), e);
         }
 
         // modify the state of this node
@@ -278,7 +278,7 @@ class RemoveMixinOperation implements SessionOperation<Object> {
         } catch (ItemStateException e) {
             throw new RepositoryException(
                     "Failed to clean up child items defined by removed mixin "
-                    + session.getJCRName(mixinName), e);
+                    + context.getJCRName(mixinName), e);
         } finally {
             if (!success) {
                 // TODO JCR-1914: revert any changes made so far

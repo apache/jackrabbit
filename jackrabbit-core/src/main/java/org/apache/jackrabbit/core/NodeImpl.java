@@ -1173,7 +1173,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     return (PropertyImpl) context.getItemManager().getItem(
                             new PropertyId(getNodeId(), name));
                 } catch (AccessDeniedException ade) {
-                    String n = context.getSessionImpl().getJCRName(name);
+                    String n = context.getJCRName(name);
                     throw new ItemNotFoundException(
                             "Property " + n + " not found");
                 }
@@ -1667,7 +1667,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     name = context.getHierarchyManager().getName(
                             getNodeId(), parentId);
                 }
-                return context.getSessionImpl().getJCRName(name);
+                return context.getJCRName(name);
             }
         });
     }

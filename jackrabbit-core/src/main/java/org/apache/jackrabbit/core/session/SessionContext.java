@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.session;
 
+import javax.jcr.NamespaceException;
+
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.ItemValidator;
@@ -26,8 +28,13 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-public class SessionContext {
+public class SessionContext implements NamePathResolver {
 
     private final RepositoryContext repositoryContext;
 
@@ -154,6 +161,35 @@ public class SessionContext {
             ObservationManagerImpl observationManager) {
         assert observationManager != null;
         this.observationManager = observationManager;
+    }
+
+    //--------------------------------------------------------< NameResolver >
+
+    public Name getQName(String name)
+            throws IllegalNameException, NamespaceException {
+        return session.getQName(name);
+    }
+
+    public String getJCRName(Name name) throws NamespaceException {
+        return session.getJCRName(name);
+    }
+
+    //--------------------------------------------------------< PathResolver >
+
+    public Path getQPath(String path)
+            throws MalformedPathException, IllegalNameException,
+            NamespaceException {
+        return session.getQPath(path);
+    }
+
+    public Path getQPath(String path, boolean normalizeIdentifier)
+            throws MalformedPathException, IllegalNameException,
+            NamespaceException {
+        return session.getQPath(path, normalizeIdentifier);
+    }
+
+    public String getJCRPath(Path path) throws NamespaceException {
+        return session.getJCRPath(path);
     }
 
 }
