@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.core;
 
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_HOLD;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_LOCK;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_PENDING_CHANGES;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -37,6 +42,8 @@ import javax.jcr.version.VersionManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
@@ -70,20 +77,30 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     private static final Logger log = LoggerFactory.getLogger(VersionManagerImpl.class);
 
     /**
-     * Creates a new version manager for the given session
-     * @param session workspace sesion
+     * Component context of the current session
+     */
+    private final SessionContext sessionContext;
+
+    /**
+     * Creates a new version manager
+     *
+     * @param sessionContext component context of the current session
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    public VersionManagerImpl(SessionImpl session,
-                                 UpdatableItemStateManager stateMgr,
-                                 HierarchyManager hierMgr) {
-        super(session, stateMgr, hierMgr);
+    public VersionManagerImpl(
+            SessionContext sessionContext, UpdatableItemStateManager stateMgr,
+            HierarchyManager hierMgr) {
+        super(sessionContext.getSessionImpl(), stateMgr, hierMgr);
+        this.sessionContext = sessionContext;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    private <T> T perform(SessionOperation<T> operation)
+            throws RepositoryException {
+        return sessionContext.getSessionState().perform(operation);
+    }
+
+    /** Wrapper around {@link #checkin(String, Calendar)}. */
     public Version checkin(String absPath) throws RepositoryException {
         return checkin(absPath, null);
     }
@@ -97,40 +114,55 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      * @return new version
      * @throws RepositoryException if the version can not be created
      */
-    public Version checkin(String absPath, Calendar created)
+    public Version checkin(final String absPath, final Calendar created)
             throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath,
-                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD
-                | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
-                Permission.VERSION_MNGMT);
-        NodeId baseId = checkoutCheckin(state, true, false, created);
-        return (VersionImpl) session.getNodeById(baseId);
+        return perform(new SessionOperation<Version> () {
+            public Version perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(
+                        absPath,
+                        CHECK_LOCK | CHECK_HOLD | CHECK_PENDING_CHANGES_ON_NODE,
+                        Permission.VERSION_MNGMT);
+                NodeId baseId = checkoutCheckin(state, true, false, created);
+                return (Version) session.getNodeById(baseId);
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public void checkout(String absPath) throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath,
-                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
-                Permission.VERSION_MNGMT);
-        checkoutCheckin(state, false, true, null);
+    public void checkout(final String absPath) throws RepositoryException {
+        perform(new SessionOperation<NodeId> () {
+            public NodeId perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(
+                        absPath,
+                        CHECK_LOCK | CHECK_HOLD,
+                        Permission.VERSION_MNGMT);
+                return checkoutCheckin(state, false, true, null);
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public Version checkpoint(String absPath) throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath,
-                ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE,
-                Permission.VERSION_MNGMT);
-        NodeId baseId = checkoutCheckin(state, true, true, null);
-        return (VersionImpl) session.getNodeById(baseId);
+    public Version checkpoint(final String absPath) throws RepositoryException {
+        return perform(new SessionOperation<Version> () {
+            public Version perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(
+                        absPath,
+                        CHECK_LOCK | CHECK_HOLD | CHECK_PENDING_CHANGES_ON_NODE,
+                        Permission.VERSION_MNGMT);
+                NodeId baseId = checkoutCheckin(state, true, true, null);
+                return (Version) session.getNodeById(baseId);
+            }
+        });
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link Node#isCheckedOut()}. */
     public boolean isCheckedOut(String absPath) throws RepositoryException {
         return session.getNode(absPath).isCheckedOut();
     }
@@ -138,26 +170,34 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     /**
      * {@inheritDoc}
      */
-    public VersionHistory getVersionHistory(String absPath)
+    public VersionHistory getVersionHistory(final String absPath)
             throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath);
-        InternalVersionHistory vh = getVersionHistory(state);
-        return (VersionHistory) session.getNodeById(vh.getId());
+        return perform(new SessionOperation<VersionHistory> () {
+            public VersionHistory perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(absPath);
+                InternalVersionHistory vh = getVersionHistory(state);
+                return (VersionHistory) session.getNodeById(vh.getId());
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public Version getBaseVersion(String absPath)
+    public Version getBaseVersion(final String absPath)
             throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath);
-        InternalVersion v = getBaseVersion(state);
-        return (Version) session.getNodeById(v.getId());
+        return perform(new SessionOperation<Version> () {
+            public Version perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(absPath);
+                InternalVersion v = getBaseVersion(state);
+                return (Version) session.getNodeById(v.getId());
+            }
+        });
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Wrapper around {@link #restore(Version[], boolean)}. */
     public void restore(Version version, boolean removeExisting)
             throws RepositoryException {
         restore(new Version[]{version}, removeExisting);
@@ -166,80 +206,106 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     /**
      * {@inheritDoc}
      */
-    public void restore(Version[] versions, boolean removeExisting)
+    public void restore(final Version[] versions, final boolean removeExisting)
             throws RepositoryException {
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to restore version. Session has pending changes.";
-            log.error(msg);
-            throw new InvalidItemStateException(msg);
-        }
-        // add all versions to map of versions to restore
-        Map<NodeId, InternalVersion> toRestore = new HashMap<NodeId, InternalVersion>();
-        for (Version version : versions) {
-            InternalVersion v = vMgr.getVersion(((VersionImpl) version).getNodeId());
-            // check for collision
-            NodeId historyId = v.getVersionHistory().getId();
-            if (toRestore.containsKey(historyId)) {
-                String msg = "Unable to restore. Two or more versions have same version history.";
-                log.error(msg);
-                throw new VersionException(msg);
+        perform(new SessionOperation<Object> () {
+            public Object perform(SessionContext context)
+                    throws RepositoryException {
+                // check for pending changes
+                if (session.hasPendingChanges()) {
+                    throw new InvalidItemStateException(
+                            "Unable to restore version. Session has pending changes.");
+                }
+
+                // add all versions to map of versions to restore
+                Map<NodeId, InternalVersion> toRestore =
+                    new HashMap<NodeId, InternalVersion>();
+                for (Version version : versions) {
+                    InternalVersion v =
+                        vMgr.getVersion(((VersionImpl) version).getNodeId());
+                    // check for collision
+                    NodeId historyId = v.getVersionHistory().getId();
+                    if (toRestore.containsKey(historyId)) {
+                        throw new VersionException(
+                                "Unable to restore. Two or more versions have same version history.");
+                    }
+                    toRestore.put(historyId, v);
+                }
+
+                WriteOperation ops = startWriteOperation();
+                try {
+                    internalRestore(
+                            new VersionSet(toRestore, true), removeExisting);
+                    ops.save();
+                } catch (ItemStateException e) {
+                    throw new RepositoryException(e);
+                } finally {
+                    ops.close();
+                }
+
+                return this;
             }
-            toRestore.put(historyId, v);
-        }
-        WriteOperation ops = startWriteOperation();
-        try {
-            internalRestore(new VersionSet(toRestore, true), removeExisting);
-            ops.save();
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        } finally {
-            ops.close();
-        }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public void restore(String absPath, String versionName, boolean removeExisting)
-            throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath,
-                ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
-                Permission.NONE);
-        restore(state, session.getQName(versionName), removeExisting);
+    public void restore(
+            final String absPath, final String versionName,
+            final boolean removeExisting) throws RepositoryException {
+        perform(new SessionOperation<Object> () {
+            public Object perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(
+                        absPath,
+                        CHECK_PENDING_CHANGES | CHECK_LOCK | CHECK_HOLD,
+                        Permission.NONE);
+                restore(state, context.getQName(versionName), removeExisting);
+                return this;
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public void restore(String absPath, Version version, boolean removeExisting)
+    public void restore(
+            final String absPath, final Version version, final boolean removeExisting)
             throws RepositoryException {
-        // first check if node exists
-        if (session.nodeExists(absPath)) {
-            String msg = "VersionManager.restore(String, Version, boolean) not " +
-                    "allowed on existing nodes. " +
-                    "use VersionManager.restore(Version, boolean) instead: " + absPath;
-            log.error(msg);
-            throw new VersionException(msg);
-        } else {
-            // parent has to exist
-            Path path = session.getQPath(absPath);
-            Path parentPath = path.getAncestor(1);
-            Name name = path.getNameElement().getName();
-            NodeImpl parent = session.getItemManager().getNode(parentPath);
+        perform(new SessionOperation<Object> () {
+            public Object perform(SessionContext context)
+                    throws RepositoryException {
+                // first check if node exists
+                if (session.nodeExists(absPath)) {
+                    throw new VersionException(
+                            "VersionManager.restore(String, Version, boolean)"
+                            + " not allowed on existing nodes; use"
+                            + " VersionManager.restore(Version, boolean) instead: "
+                            + absPath);
+                } else {
+                    // parent has to exist
+                    Path path = context.getQPath(absPath);
+                    Path parentPath = path.getAncestor(1);
+                    Name name = path.getNameElement().getName();
+                    NodeImpl parent = context.getItemManager().getNode(parentPath);
 
-            NodeStateEx state = getNodeState(parent,
-                    ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
-                    Permission.NONE);
+                    NodeStateEx state = getNodeState(
+                            parent,
+                            CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | CHECK_HOLD,
+                            Permission.NONE);
 
-            // check if given version is a baseline
-            InternalVersion v = getVersion(version);
-            if (v instanceof InternalBaseline) {
-                restore(state, name, (InternalBaseline) v);
-            } else {
-                restore(state, name, v, removeExisting);
+                    // check if given version is a baseline
+                    InternalVersion v = getVersion(version);
+                    if (v instanceof InternalBaseline) {
+                        restore(state, name, (InternalBaseline) v);
+                    } else {
+                        restore(state, name, v, removeExisting);
+                    }
+                }
+                return this;
             }
-        }
+        });
     }
 
     /**
@@ -253,8 +319,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      */
     protected void restore(NodeImpl node, Version version, boolean removeExisting)
             throws RepositoryException {
-        NodeStateEx state = getNodeState(node.getPath(),
-                ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
+        NodeStateEx state = getNodeState(
+                node.getPath(),
+                CHECK_PENDING_CHANGES | CHECK_LOCK | CHECK_HOLD,
                 Permission.NONE);
         InternalVersion v = getVersion(version);
         restore(state, v, removeExisting);
@@ -263,12 +330,21 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     /**
      * {@inheritDoc}
      */
-    public void restoreByLabel(String absPath, String versionLabel, boolean removeExisting)
-            throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath,
-                ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD,
-                Permission.NONE);
-        restoreByLabel(state, session.getQName(versionLabel), removeExisting);
+    public void restoreByLabel(
+            final String absPath, final String versionLabel,
+            final boolean removeExisting) throws RepositoryException {
+        perform(new SessionOperation<Object> () {
+            public Object perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(
+                        absPath,
+                        CHECK_PENDING_CHANGES | CHECK_LOCK | CHECK_HOLD,
+                        Permission.NONE);
+                restoreByLabel(
+                        state, context.getQName(versionLabel), removeExisting);
+                return this;
+            }
+        });
     }
 
     /**
@@ -287,11 +363,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         mergeOrUpdate(state, srcWorkspaceName, null, false, false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public NodeIterator merge(String absPath, String srcWorkspace,
-                              boolean bestEffort)
+    /** Wrapper around {@link #merge(String, String, boolean, boolean)}. */
+    public NodeIterator merge(
+            String absPath, String srcWorkspace, boolean bestEffort)
             throws RepositoryException {
         return merge(absPath, srcWorkspace, bestEffort, false);
     }
@@ -299,15 +373,22 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     /**
      * {@inheritDoc}
      */
-    public NodeIterator merge(String absPath, String srcWorkspaceName,
-                              boolean bestEffort, boolean isShallow)
+    public NodeIterator merge(
+            final String absPath, final String srcWorkspaceName,
+            final boolean bestEffort, final boolean isShallow)
             throws RepositoryException {
-        NodeStateEx state = getNodeState(absPath,
-                ItemValidator.CHECK_PENDING_CHANGES,
-                Permission.VERSION_MNGMT);
-        List<ItemId> failedIds = new LinkedList<ItemId>();
-        mergeOrUpdate(state, srcWorkspaceName, failedIds, bestEffort, isShallow);
-        return new LazyItemIterator(session.getItemManager(), failedIds);
+        return perform(new SessionOperation<NodeIterator> () {
+            public NodeIterator perform(SessionContext context)
+                    throws RepositoryException {
+                NodeStateEx state = getNodeState(
+                        absPath,
+                        CHECK_PENDING_CHANGES,
+                        Permission.VERSION_MNGMT);
+                List<ItemId> failedIds = new LinkedList<ItemId>();
+                mergeOrUpdate(state, srcWorkspaceName, failedIds, bestEffort, isShallow);
+                return new LazyItemIterator(session.getItemManager(), failedIds);
+            }
+        });
     }
 
     /**
