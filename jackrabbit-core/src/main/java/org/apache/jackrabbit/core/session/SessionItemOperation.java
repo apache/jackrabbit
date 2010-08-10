@@ -33,10 +33,17 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
  */
 public abstract class SessionItemOperation<T> implements SessionOperation<T> {
 
+    private final String method;
+
     private final String path;
 
-    private SessionItemOperation(String path) {
+    private SessionItemOperation(String method, String path) {
+        this.method = method;
         this.path = path;
+    }
+
+    public String toString() {
+        return method + "(" + path + ")";
     }
 
     public T perform(SessionContext context) throws RepositoryException {
@@ -59,7 +66,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
             throws RepositoryException;
 
     public static SessionItemOperation<Boolean> itemExists(String path) {
-        return new SessionItemOperation<Boolean>(path) {
+        return new SessionItemOperation<Boolean>("itemExists", path) {
             @Override @SuppressWarnings("deprecation")
             protected Boolean perform(ItemManager manager, Path path) {
                 return manager.itemExists(path);
@@ -68,7 +75,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
     }
 
     public static SessionItemOperation<Boolean> propertyExists(String path) {
-        return new SessionItemOperation<Boolean>(path) {
+        return new SessionItemOperation<Boolean>("propertyExists", path) {
             @Override
             protected Boolean perform(ItemManager manager, Path path) {
                 return manager.propertyExists(path);
@@ -77,7 +84,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
     }
 
     public static SessionItemOperation<Boolean> nodeExists(String path) {
-        return new SessionItemOperation<Boolean>(path) {
+        return new SessionItemOperation<Boolean>("nodeExists", path) {
             @Override
             protected Boolean perform(ItemManager manager, Path path) {
                 return manager.nodeExists(path);
@@ -86,7 +93,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
     }
 
     public static SessionItemOperation<ItemImpl> getItem(String path) {
-        return new SessionItemOperation<ItemImpl>(path) {
+        return new SessionItemOperation<ItemImpl>("getItem", path) {
             @Override @SuppressWarnings("deprecation")
             protected ItemImpl perform(ItemManager manager, Path path)
                     throws RepositoryException {
@@ -96,7 +103,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
     }
 
     public static SessionItemOperation<PropertyImpl> getProperty(String path) {
-        return new SessionItemOperation<PropertyImpl>(path) {
+        return new SessionItemOperation<PropertyImpl>("getProperty", path) {
             @Override
             protected PropertyImpl perform(ItemManager manager, Path path)
                     throws RepositoryException {
@@ -106,7 +113,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
     }
 
     public static SessionItemOperation<NodeImpl> getNode(String path) {
-        return new SessionItemOperation<NodeImpl>(path) {
+        return new SessionItemOperation<NodeImpl>("getNode", path) {
             @Override
             protected NodeImpl perform(ItemManager manager, Path path)
                     throws RepositoryException {
@@ -116,7 +123,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
     }
 
     public static SessionItemOperation<Object> remove(String path) {
-        return new SessionItemOperation<Object>(path) {
+        return new SessionItemOperation<Object>("remove", path) {
             @Override  @SuppressWarnings("deprecation")
             protected Object perform(ItemManager manager, Path path)
                     throws RepositoryException {
