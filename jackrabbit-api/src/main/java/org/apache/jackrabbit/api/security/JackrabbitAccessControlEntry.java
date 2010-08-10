@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.api.security;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.security.AccessControlEntry;
 
@@ -36,8 +37,9 @@ public interface JackrabbitAccessControlEntry extends AccessControlEntry {
      * Return the names of the restrictions present with this access control entry.
      *
      * @return the names of the restrictions
+     * @throws RepositoryException if an error occurs.
      */
-    String[] getRestrictionNames();
+    String[] getRestrictionNames() throws RepositoryException;
 
     /**
      * Return the value of the restriction with the specified name or
@@ -47,6 +49,7 @@ public interface JackrabbitAccessControlEntry extends AccessControlEntry {
      * {@link #getRestrictionNames()}.
      * @return value of the restriction with the specified name or
      * <code>null</code> if no such restriction exists
+     * @throws RepositoryException if an error occurs.
      */
-    Value getRestriction(String restrictionName);
+    Value getRestriction(String restrictionName) throws RepositoryException;
 }

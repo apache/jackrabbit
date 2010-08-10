@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.security.AccessControlEntry;
@@ -51,7 +52,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         SessionImpl sImpl = (SessionImpl) superuser;
         PrincipalManager princicipalMgr = sImpl.getPrincipalManager();
         PrivilegeRegistry privilegeRegistry = new PrivilegeRegistry(sImpl);
-        return new ACLTemplate(path, princicipalMgr, privilegeRegistry, sImpl.getValueFactory());
+        return new ACLTemplate(path, princicipalMgr, privilegeRegistry, sImpl.getValueFactory(), sImpl);
     }
 
     protected Principal getSecondPrincipal() throws Exception {
@@ -277,5 +278,48 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         assertEquals(testPrincipal, last.getPrincipal());
         assertEquals(false, last.isAllow());
         assertEquals(writePriv[0], last.getPrivileges()[0]);
+    }
+
+    public void testRestrictions() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+
+        String restrName = ((SessionImpl) superuser).getJCRName(ACLTemplate.P_GLOB);
+        
+        String[] names = pt.getRestrictionNames();
+        assertNotNull(names);
+        assertEquals(1, names.length);
+        assertEquals(restrName, names[0]);
+        assertEquals(PropertyType.STRING, pt.getRestrictionType(names[0]));
+
+        Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
+
+        // add entry without restr. -> must succeed
+        assertTrue(pt.addAccessControlEntry(testPrincipal, writePriv));
+        assertEquals(1, pt.getAccessControlEntries().length);
+
+        // ... again -> no modification.
+        assertFalse(pt.addAccessControlEntry(testPrincipal, writePriv));
+        assertEquals(1, pt.getAccessControlEntries().length);
+
+        // ... again using different method -> no modification.
+        assertFalse(pt.addEntry(testPrincipal, writePriv, true));
+        assertEquals(1, pt.getAccessControlEntries().length);
+
+        // ... complementary entry -> must modify the acl
+        assertTrue(pt.addEntry(testPrincipal, writePriv, false));
+        assertEquals(1, pt.getAccessControlEntries().length);
+
+        // add an entry with a restrictions:
+        Map<String,Value> restrictions = Collections.singletonMap(restrName, superuser.getValueFactory().createValue("/.*"));
+        assertTrue(pt.addEntry(testPrincipal, writePriv, false, restrictions));
+        assertEquals(2, pt.getAccessControlEntries().length);
+
+        // ... same again -> no modification.
+        assertFalse(pt.addEntry(testPrincipal, writePriv, false, restrictions));
+        assertEquals(2, pt.getAccessControlEntries().length);
+
+        // ... complementary entry -> must modify the acl.
+        assertTrue(pt.addEntry(testPrincipal, writePriv, true, restrictions));
+        assertEquals(2, pt.getAccessControlEntries().length);        
     }
 }

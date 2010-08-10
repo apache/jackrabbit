@@ -51,6 +51,12 @@ public interface AccessControlConstants {
      */
     Name P_PRINCIPAL_NAME = NF.create(Name.NS_REP_URI, "principalName");
 
+    /**
+     * rep:glob property name used to restrict the number of child nodes
+     * or properties that are affected by an ACL inherited from a parent node.
+     */
+    Name P_GLOB = NF.create(Name.NS_REP_URI, "glob");
+
     //----------------------------------------------------< node type names >---
     /**
      * rep:AccessControllable nodetype

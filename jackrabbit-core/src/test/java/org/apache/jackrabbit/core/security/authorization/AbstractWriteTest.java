@@ -32,6 +32,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
@@ -39,9 +41,11 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -1063,6 +1067,207 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Node child = testSession.getNode(childNPath);
         child.remove();
         testSession.save();
+    }
+
+    /**
+     * Test the rep:glob restriction
+     * 
+     * @throws Exception
+     */
+    public void testGlobRestriction() throws Exception {
+        Session testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        ValueFactory vf = superuser.getValueFactory();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Node child = superuser.getNode(childNPath).addNode(nodeName3);
+        superuser.save();
+        String childchildPath = child.getPath();
+
+        Privilege[] write = privilegesFromName(PrivilegeRegistry.REP_WRITE);
+        String writeActions = Session.ACTION_ADD_NODE +","+Session.ACTION_REMOVE +","+ Session.ACTION_SET_PROPERTY;
+
+
+        // permissions defined @ path
+        // restriction: grants write priv to all nodeName3 children
+        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));        
+        restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue("/*"+nodeName3));
+        givePrivileges(path, write, restrictions);
+
+        assertFalse(testAcMgr.hasPrivileges(path, write));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_SET_PROPERTY));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath, write));
+        assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_SET_PROPERTY));
+
+        assertTrue(testAcMgr.hasPrivileges(childNPath2, write));
+        assertTrue(testSession.hasPermission(childNPath2, Session.ACTION_SET_PROPERTY));
+        assertFalse(testSession.hasPermission(childNPath2, writeActions)); // removal req. rmchildnode privilege on parent.
+
+        assertTrue(testAcMgr.hasPrivileges(childchildPath, write));
+    }
+
+    /**
+     * Test the rep:glob restriction
+     *
+     * @throws Exception
+     */
+    public void testGlobRestriction2() throws Exception {
+        Session testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        ValueFactory vf = superuser.getValueFactory();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Node child = superuser.getNode(childNPath).addNode(nodeName3);
+        superuser.save();
+        String childchildPath = child.getPath();
+
+        Privilege[] write = privilegesFromName(PrivilegeRegistry.REP_WRITE);
+        Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
+        Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+
+        // permissions defined @ path
+        // restriction: grants write-priv to nodeName3 grand-children but not direct nodeName3 children.
+        restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue("/*/"+nodeName3));
+        givePrivileges(path, write, restrictions);
+
+        assertFalse(testAcMgr.hasPrivileges(path, write));
+        assertFalse(testAcMgr.hasPrivileges(path, rmNode));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath, addNode));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath2, write));
+
+        assertTrue(testAcMgr.hasPrivileges(childchildPath, write));
+    }
+
+    /**
+     * Test the rep:glob restriction
+     *
+     * @throws Exception
+     */
+    public void testGlobRestriction3() throws Exception {
+        Session testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        ValueFactory vf = superuser.getValueFactory();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Node child = superuser.getNode(childNPath).addNode(nodeName3);
+        superuser.save();
+        String childchildPath = child.getPath();
+
+        Privilege[] write = privilegesFromName(PrivilegeRegistry.REP_WRITE);
+        Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
+        String writeActions = Session.ACTION_ADD_NODE +","+Session.ACTION_REMOVE +","+ Session.ACTION_SET_PROPERTY;
+
+        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+
+        // permissions defined @ path
+        // restriction: allows write to nodeName3 children
+        restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue("/*/"+nodeName3));
+        givePrivileges(path, write, restrictions);
+        // and grant add-node only at path (no glob restriction)
+        givePrivileges(path, addNode, getRestrictions(superuser, path));
+
+        assertFalse(testAcMgr.hasPrivileges(path, write));
+        assertTrue(testAcMgr.hasPrivileges(path, addNode));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath, write));
+        assertTrue(testAcMgr.hasPrivileges(childNPath, addNode));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath2, write));
+        assertTrue(testAcMgr.hasPrivileges(childchildPath, write));
+    }
+
+    /**
+     * Test the rep:glob restriction
+     *
+     * @throws Exception
+     */
+    public void testGlobRestriction4() throws Exception {
+        Session testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        ValueFactory vf = superuser.getValueFactory();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Node child = superuser.getNode(childNPath).addNode(nodeName3);
+        superuser.save();
+        String childchildPath = child.getPath();
+
+        Privilege[] write = privilegesFromName(PrivilegeRegistry.REP_WRITE);
+        Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
+
+        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+        restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue("/*"+nodeName3));
+        givePrivileges(path, write, restrictions);
+
+        withdrawPrivileges(childNPath2, addNode, getRestrictions(superuser, childNPath2));
+
+        assertFalse(testAcMgr.hasPrivileges(path, write));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_REMOVE));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath, write));
+        assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath2, write));
+
+        assertTrue(testAcMgr.hasPrivileges(childchildPath, write));
+    }
+
+
+    /**
+     * Test the rep:glob restriction
+     *
+     * @throws Exception
+     */
+    public void testCancelInheritanceRestriction() throws Exception {
+        Session testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        ValueFactory vf = superuser.getValueFactory();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] write = privilegesFromName(PrivilegeRegistry.REP_WRITE);
+        Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
+
+        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+        restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
+        givePrivileges(path, write, restrictions);
+
+        assertTrue(testAcMgr.hasPrivileges(path, write));
+        assertTrue(testSession.hasPermission(path, Session.ACTION_SET_PROPERTY));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath, write));
+        assertFalse(testSession.hasPermission(childNPath, Session.ACTION_SET_PROPERTY));
+
+        assertFalse(testAcMgr.hasPrivileges(childNPath2, write));
+        assertFalse(testSession.hasPermission(childNPath2, Session.ACTION_SET_PROPERTY));
     }
 
     private static Node findPolicyNode(Node start) throws RepositoryException {
