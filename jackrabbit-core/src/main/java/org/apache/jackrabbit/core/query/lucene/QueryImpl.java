@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
@@ -89,7 +90,7 @@ public class QueryImpl extends AbstractQueryImpl {
         // parse query according to language
         // build query tree using the passed factory
         this.root = QueryParser.parse(
-                statement, language, sessionContext.getSessionImpl(), factory);
+                statement, language, sessionContext, factory);
     }
 
     /**
@@ -144,13 +145,14 @@ public class QueryImpl extends AbstractQueryImpl {
      */
     protected ColumnImpl[] getColumns() throws RepositoryException {
         SessionImpl session = sessionContext.getSessionImpl();
-        QueryObjectModelFactory qomFactory = session.getWorkspace().getQueryManager().getQOMFactory();
+        QueryObjectModelFactory qomFactory =
+            session.getWorkspace().getQueryManager().getQOMFactory();
         // get columns
         Map<Name, ColumnImpl> columns = new LinkedHashMap<Name, ColumnImpl>();
         for (Name name : root.getSelectProperties()) {
-            String pn = session.getJCRName(name);
+            String pn = sessionContext.getJCRName(name);
             ColumnImpl col = (ColumnImpl) qomFactory.column(
-                    session.getJCRName(DEFAULT_SELECTOR_NAME), pn, pn);
+                    sessionContext.getJCRName(DEFAULT_SELECTOR_NAME), pn, pn);
             columns.put(name, col);
         }
         if (columns.size() == 0) {
@@ -212,11 +214,11 @@ public class QueryImpl extends AbstractQueryImpl {
      * @throws RepositoryException if an error occurs while creating the column.
      */
     protected ColumnImpl columnForName(Name propertyName) throws RepositoryException {
-        SessionImpl session = sessionContext.getSessionImpl();
+        Workspace workspace = sessionContext.getSessionImpl().getWorkspace();
         QueryObjectModelFactory qomFactory =
-            session.getWorkspace().getQueryManager().getQOMFactory();
-        String name = session.getJCRName(propertyName);
+            workspace.getQueryManager().getQOMFactory();
+        String name = sessionContext.getJCRName(propertyName);
         return (ColumnImpl) qomFactory.column(
-                session.getJCRName(DEFAULT_SELECTOR_NAME), name, name);
+                sessionContext.getJCRName(DEFAULT_SELECTOR_NAME), name, name);
     }
 }

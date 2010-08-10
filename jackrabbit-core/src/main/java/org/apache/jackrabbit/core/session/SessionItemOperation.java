@@ -42,7 +42,7 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
     public T perform(SessionContext context) throws RepositoryException {
         try {
             Path normalized =
-                context.getSessionImpl().getQPath(path).getNormalizedPath();
+                context.getQPath(path).getNormalizedPath();
             if (normalized.isAbsolute()) {
                 return perform(context.getItemManager(), normalized);
             } else {

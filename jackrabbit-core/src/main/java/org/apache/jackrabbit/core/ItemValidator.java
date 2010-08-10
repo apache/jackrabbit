@@ -42,7 +42,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,11 +112,6 @@ public class ItemValidator {
     protected final NodeTypeRegistry ntReg;
 
     /**
-     * Path resolver for outputting user-friendly error messages.
-     */
-    protected final PathResolver resolver;
-
-    /**
      * Creates a new <code>ItemValidator</code> instance.
      *
      * @param sessionContext component context of this session
@@ -125,7 +119,6 @@ public class ItemValidator {
     public ItemValidator(SessionContext sessionContext) throws RepositoryException {
         this.sessionContext = sessionContext;
         this.ntReg = sessionContext.getRepositoryContext().getNodeTypeRegistry();
-        this.resolver = sessionContext.getSessionImpl();
     }
 
     /**
@@ -490,7 +483,7 @@ public class ItemValidator {
      */
     public String safeGetJCRPath(Path path) {
         try {
-            return resolver.getJCRPath(path);
+            return sessionContext.getJCRPath(path);
         } catch (NamespaceException e) {
             log.error("failed to convert {} to a JCR path", path);
             // return string representation of internal path as a fallback

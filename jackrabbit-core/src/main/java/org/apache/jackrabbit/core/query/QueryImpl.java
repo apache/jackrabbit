@@ -179,20 +179,19 @@ public class QueryImpl extends AbstractQueryImpl {
             RepositoryException {
 
         checkInitialized();
-        NamePathResolver resolver = sessionContext.getSessionImpl();
         try {
-            Path p = resolver.getQPath(absPath).getNormalizedPath();
+            Path p = sessionContext.getQPath(absPath).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
 
-            String relPath = resolver.getJCRPath(p).substring(1);
+            String relPath = sessionContext.getJCRPath(p).substring(1);
             Node queryNode =
                 sessionContext.getSessionImpl().getRootNode().addNode(
-                        relPath, resolver.getJCRName(NT_QUERY));
+                        relPath, sessionContext.getJCRName(NT_QUERY));
             // set properties
-            queryNode.setProperty(resolver.getJCRName(JCR_LANGUAGE), language);
-            queryNode.setProperty(resolver.getJCRName(JCR_STATEMENT), statement);
+            queryNode.setProperty(sessionContext.getJCRName(JCR_LANGUAGE), language);
+            queryNode.setProperty(sessionContext.getJCRName(JCR_STATEMENT), statement);
             node = queryNode;
             return node;
         } catch (NameException e) {
@@ -204,11 +203,10 @@ public class QueryImpl extends AbstractQueryImpl {
      * {@inheritDoc}
      */
     public String[] getBindVariableNames() throws RepositoryException {
-        NameResolver resolver = sessionContext.getSessionImpl();
         Name[] names = query.getBindVariableNames();
         String[] strNames = new String[names.length];
         for (int i = 0; i < names.length; i++) {
-            strNames[i] = resolver.getJCRName(names[i]);
+            strNames[i] = sessionContext.getJCRName(names[i]);
         }
         return strNames;
     }
@@ -227,7 +225,7 @@ public class QueryImpl extends AbstractQueryImpl {
             throws IllegalArgumentException, RepositoryException {
         checkInitialized();
         try {
-            query.bindValue(sessionContext.getSessionImpl().getQName(varName), value);
+            query.bindValue(sessionContext.getQName(varName), value);
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage());
         }

@@ -164,10 +164,9 @@ public abstract class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public String[] getSelectorNames() throws RepositoryException {
-        NameResolver resolver = sessionContext.getSessionImpl();
         String[] names = new String[selectorNames.length];
         for (int i = 0; i < selectorNames.length; i++) {
-            names[i] = resolver.getJCRName(selectorNames[i]);
+            names[i] = sessionContext.getJCRName(selectorNames[i]);
         }
         return names;
     }
@@ -202,7 +201,7 @@ public abstract class QueryResultImpl implements QueryResult {
                 getScoreNodes(), columns,
                 selectorNames, sessionContext.getItemManager(),
                 index.getContext().getHierarchyManager(),
-                sessionContext.getSessionImpl(), 
+                sessionContext, 
                 sessionContext.getSessionImpl().getValueFactory(),
                 excerptProvider, spellSuggestion);
     }

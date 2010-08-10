@@ -25,7 +25,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -55,14 +54,13 @@ public class AddNodeOperation implements SessionOperation<Node> {
     }
 
     public Node perform(SessionContext context) throws RepositoryException {
-        SessionImpl session = context.getSessionImpl();
         ItemManager itemMgr = context.getItemManager();
 
         // Get the canonical path of the new node
         Path path;
         try {
             path = PathFactoryImpl.getInstance().create(
-                    node.getPrimaryPath(), session.getQPath(relPath), true);
+                    node.getPrimaryPath(), context.getQPath(relPath), true);
         } catch (NameException e) {
             throw new RepositoryException(
                     "Failed to resolve path " + relPath
@@ -86,7 +84,7 @@ public class AddNodeOperation implements SessionOperation<Node> {
             if (itemMgr.propertyExists(parentPath)) {
                 throw new ConstraintViolationException(
                         "Unable to add a child node to property "
-                        + session.getJCRPath(parentPath));
+                        + context.getJCRPath(parentPath));
             }
             throw e;
         } catch (AccessDeniedException ade) {
@@ -98,7 +96,7 @@ public class AddNodeOperation implements SessionOperation<Node> {
         // Resolve node type name (if any)
         Name typeName = null;
         if (nodeTypeName != null) {
-            typeName = session.getQName(nodeTypeName);
+            typeName = context.getQName(nodeTypeName);
         }
 
         // Check that the given UUID (if any) does not already exist

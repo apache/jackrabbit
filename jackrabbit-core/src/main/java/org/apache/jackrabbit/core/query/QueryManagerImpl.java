@@ -75,8 +75,7 @@ public class QueryManagerImpl implements QueryManager {
             throws RepositoryException {
         this.sessionContext = sessionContext;
         this.searchMgr = searchMgr;
-        this.qomFactory = new QueryObjectModelFactoryImpl(
-                sessionContext.getSessionImpl()) {
+        this.qomFactory = new QueryObjectModelFactoryImpl(sessionContext) {
             protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
                     throws InvalidQueryException, RepositoryException {
                 return searchMgr.createQueryObjectModel(
@@ -106,15 +105,14 @@ public class QueryManagerImpl implements QueryManager {
         return perform(new SessionOperation<Query>() {
             public Query perform(SessionContext context)
                     throws RepositoryException {
-                NamePathResolver resolver = context.getSessionImpl();
-                if (!node.isNodeType(resolver.getJCRName(NT_QUERY))) {
+                if (!node.isNodeType(context.getJCRName(NT_QUERY))) {
                     throw new InvalidQueryException(
                             "Node is not of type nt:query: " + node);
                 }
                 String statement =
-                    node.getProperty(resolver.getJCRName(JCR_STATEMENT)).getString();
+                    node.getProperty(context.getJCRName(JCR_STATEMENT)).getString();
                 String language =
-                    node.getProperty(resolver.getJCRName(JCR_LANGUAGE)).getString();
+                    node.getProperty(context.getJCRName(JCR_LANGUAGE)).getString();
 
                 QueryFactory qf = new QueryFactoryImpl(node, language);
                 return qf.createQuery(statement, language);

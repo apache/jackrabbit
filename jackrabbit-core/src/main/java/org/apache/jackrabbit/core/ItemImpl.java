@@ -222,7 +222,7 @@ public abstract class ItemImpl implements Item {
      * @throws RepositoryException if the given name is invalid
      */
     protected Name getQName(String name) throws RepositoryException {
-        return session.getQName(name);
+        return sessionContext.getQName(name);
     }
 
     /**
@@ -379,7 +379,7 @@ public abstract class ItemImpl implements Item {
         return perform(new SessionOperation<String>() {
             public String perform(SessionContext context)
                     throws RepositoryException {
-                return context.getSessionImpl().getJCRPath(getPrimaryPath());
+                return context.getJCRPath(getPrimaryPath());
             }
         });
     }
