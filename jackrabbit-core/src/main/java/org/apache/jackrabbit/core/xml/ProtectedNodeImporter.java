@@ -53,7 +53,7 @@ public interface ProtectedNodeImporter {
                  ReferenceChangeTracker referenceTracker);
 
     /**
-     * Notifies this importer about the existience of a protected node that
+     * Notifies this importer about the existence of a protected node that
      * has either been created (NEW) or has been found to be existing.
      * This importer implementation is in charge of evaluating the nature of
      * that protected node in order to determine, if it is able to handle
@@ -73,7 +73,7 @@ public interface ProtectedNodeImporter {
             RepositoryException;
 
     /**
-     * Notifies this importer about the existience of a protected node that
+     * Notifies this importer about the existence of a protected node that
      * has either been created (NEW) or has been found to be existing.
      * This importer implementation is in charge of evaluating the nature of
      * that protected node in order to determine, if it is able to handle
@@ -164,7 +164,7 @@ public interface ProtectedNodeImporter {
     void endChildInfo() throws RepositoryException;
 
     /**
-     * Post processing protected reference properties underneith a parent
+     * Post processing protected reference properties underneath a parent
      * node that has been handled by this importer.
      * This method is called
      * from {@link org.apache.jackrabbit.core.xml.Importer#end()}.

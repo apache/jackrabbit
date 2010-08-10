@@ -27,7 +27,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 
 /**
  * <code>ProtectedPropertyImporter</code> is in charge of importing single
- * properties whith a protected <code>QPropertyDefinition</code>.
+ * properties with a protected <code>QPropertyDefinition</code>.
  *
  * @see ProtectedNodeImporter for an abstract class used to import protected
  * nodes and the subtree below them.
