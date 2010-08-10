@@ -110,7 +110,7 @@ public class SessionState {
     public <T> T perform(SessionOperation<T> operation)
             throws RepositoryException {
         if (!lock.tryLock()) {
-            log.warn("Attempt to perform {} while another thread is"
+            log.debug("Attempt to perform {} while another thread is"
                     + " concurrently accessing the session. Blocking until"
                     + " the other thread is finished using this session.",
                     operation);
