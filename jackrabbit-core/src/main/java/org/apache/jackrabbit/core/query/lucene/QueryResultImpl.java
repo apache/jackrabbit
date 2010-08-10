@@ -31,7 +31,6 @@ import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,8 +181,7 @@ public abstract class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public NodeIterator getNodes() throws RepositoryException {
-        return new NodeIteratorImpl(
-                sessionContext.getItemManager(), getScoreNodes(), 0);
+        return new NodeIteratorImpl(sessionContext, getScoreNodes(), 0);
     }
 
     /**
