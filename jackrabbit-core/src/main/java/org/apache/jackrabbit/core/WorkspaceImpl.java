@@ -271,7 +271,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
     VersionManagerImpl getVersionManagerImpl() {
         if (versionMgr == null) {
-            versionMgr = new VersionManagerImpl(session, stateMgr, hierMgr);
+            versionMgr = new VersionManagerImpl(sessionContext, stateMgr, hierMgr);
         }
         return versionMgr;
     }
