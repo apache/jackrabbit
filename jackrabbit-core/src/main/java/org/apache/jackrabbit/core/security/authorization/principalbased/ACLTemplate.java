@@ -21,8 +21,10 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
+import org.apache.jackrabbit.core.security.authorization.GlobPattern;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,12 +63,6 @@ class ACLTemplate extends AbstractACLTemplate {
      * node itself).
      */
     static final Name P_NODE_PATH = NF.create(Name.NS_REP_URI, "nodePath");
-    /**
-     * rep:glob property name used to restrict the number of child nodes
-     * or properties that are affected by the privileges applied at
-     * rep:nodePath
-     */
-    static final Name P_GLOB = NF.create(Name.NS_REP_URI, "glob");
 
     private final Principal principal;
 
@@ -74,6 +70,8 @@ class ACLTemplate extends AbstractACLTemplate {
 
     private final String jcrNodePathName;
     private final String jcrGlobName;
+
+    private final NameResolver resolver;
 
     ACLTemplate(Principal principal, String path, NamePathResolver resolver, ValueFactory vf)
             throws RepositoryException {
@@ -94,6 +92,8 @@ class ACLTemplate extends AbstractACLTemplate {
 
         jcrNodePathName = resolver.getJCRName(P_NODE_PATH);
         jcrGlobName = resolver.getJCRName(P_GLOB);
+
+        this.resolver = resolver;
 
         if (acNode != null && acNode.hasNode(N_POLICY)) {
             // build the list of policy entries;
@@ -132,23 +132,34 @@ class ACLTemplate extends AbstractACLTemplate {
     }
 
     AccessControlEntry createEntry(Principal princ, Privilege[] privileges,
-                                   boolean allow, Map<String, Value> restrictions)
-            throws RepositoryException {
-        checkValidEntry(princ, privileges, allow, restrictions);
+                                   boolean allow, Map<String, Value> restrictions) throws RepositoryException {
+        // adjust restrictions if necessary
+        Map<String, Value> rest = adjustRestrictions(restrictions);
+        checkValidEntry(princ, privileges, allow, rest);
+        return new Entry(princ, privileges, allow, rest);
+    }
 
+    private Map<String, Value> adjustRestrictions(Map<String, Value> restrictions) throws RepositoryException {
         // make sure the nodePath restriction is of type PATH
         Value v = restrictions.get(jcrNodePathName);
-        if (v.getType() != PropertyType.PATH) {
+        if (v == null) {
+            v = restrictions.get(P_NODE_PATH.toString());
+        }
+        if (v != null && v.getType() != PropertyType.PATH) {
             v = valueFactory.createValue(v.getString(), PropertyType.PATH);
             restrictions.put(jcrNodePathName, v);
         }
         // ... and glob is of type STRING.
         v = restrictions.get(jcrGlobName);
+        if (v == null) {
+            v = restrictions.get(P_GLOB.toString());
+        }
         if (v != null && v.getType() != PropertyType.STRING) {
             v = valueFactory.createValue(v.getString(), PropertyType.STRING);
             restrictions.put(jcrGlobName, v);
         }
-        return new Entry(princ, privileges, allow, restrictions);
+
+        return restrictions;
     }
 
     //------------------------------------------------< AbstractACLTemplate >---
@@ -164,7 +175,7 @@ class ACLTemplate extends AbstractACLTemplate {
         }
 
         Set<String> rNames = restrictions.keySet();
-        if (!rNames.contains(jcrNodePathName)) {
+        if (!rNames.contains(jcrNodePathName) && !rNames.contains(P_NODE_PATH.toString())) {
             throw new AccessControlException("Missing mandatory restriction: " + jcrNodePathName);
         }
     }
@@ -189,9 +200,9 @@ class ACLTemplate extends AbstractACLTemplate {
      * @see JackrabbitAccessControlList#getRestrictionType(String)
      */
     public int getRestrictionType(String restrictionName) {
-        if (jcrNodePathName.equals(restrictionName)) {
+        if (jcrNodePathName.equals(restrictionName) || P_NODE_PATH.toString().equals(restrictionName)) {
             return PropertyType.PATH;
-        } else if (jcrGlobName.equals(restrictionName)) {
+        } else if (jcrGlobName.equals(restrictionName) || P_GLOB.toString().equals(restrictionName)) {
             return PropertyType.STRING;
         } else {
             return PropertyType.UNDEFINED;
@@ -294,16 +305,13 @@ class ACLTemplate extends AbstractACLTemplate {
         private Entry(Principal principal, Privilege[] privileges, boolean allow,
                       Map<String, Value> restrictions)
                 throws AccessControlException, RepositoryException {
-            super(principal, privileges, allow, restrictions, valueFactory);
+            super(principal, privileges, allow, restrictions);
 
-            // TODO: review again
-            Value np = getRestriction(jcrNodePathName);
-            nodePath = getRestriction(jcrNodePathName).getString();
-            Value glob = getRestriction(jcrGlobName);
+            Map<Name, Value> rstr = getRestrictions();
+            nodePath = rstr.get(P_NODE_PATH).getString();
+            Value glob = rstr.get(P_GLOB);
             if (glob != null) {
-                StringBuffer b = new StringBuffer(nodePath);
-                b.append(glob.getString());
-                pattern = GlobPattern.create(b.toString());
+                pattern = GlobPattern.create(nodePath, glob.getString());
             } else {
                 pattern = GlobPattern.create(nodePath);
             }
@@ -319,6 +327,16 @@ class ACLTemplate extends AbstractACLTemplate {
 
         boolean matchesNodePath(String jcrPath) {
             return nodePath.equals(jcrPath);
+        }
+
+        @Override
+        protected NameResolver getResolver() {
+            return resolver;
+        }
+
+        @Override
+        protected ValueFactory getValueFactory() {
+            return valueFactory;
         }
     }
 }

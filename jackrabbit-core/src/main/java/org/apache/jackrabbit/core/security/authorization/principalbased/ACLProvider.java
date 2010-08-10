@@ -109,7 +109,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 ValueFactory vf = session.getValueFactory();
                 Map<String, Value> restrictions = new HashMap<String, Value>();
                 restrictions.put(session.getJCRName(ACLTemplate.P_NODE_PATH), vf.createValue(root.getPath(), PropertyType.PATH));
-                restrictions.put(session.getJCRName(ACLTemplate.P_GLOB), vf.createValue(GlobPattern.WILDCARD_ALL));
 
                 PrincipalManager pMgr = session.getPrincipalManager();
                 AccessControlManager acMgr = session.getAccessControlManager();
@@ -307,7 +306,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         private boolean canReadAll;
 
-        private final Map<ItemId, Boolean> readCache = new LRUMap(2000);
+        // TODO find optimal cache size and ev. make it configurable (see also JCR-2573).        
+        private final Map<ItemId, Boolean> readCache = new LRUMap(5000);
         private final Object monitor = new Object();
 
         /**
@@ -351,8 +351,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             // and retrieve the entries from the entry-collector.
             entries = entriesCache.getEntries(principals);
             
-            // in addition: trivial check if read access is deny somewhere
-            // as as shortcut in #canRead(Path)
+            // in addition: trivial check if read access is denied somewhere
             canReadAll = canRead(session.getQPath("/"));            
             if (canReadAll) {
                 for (AccessControlEntry entry : entries) {

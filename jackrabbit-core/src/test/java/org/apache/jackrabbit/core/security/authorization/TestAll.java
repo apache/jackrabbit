@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(PrivilegeRegistryTest.class);
         suite.addTestSuite(JackrabbitAccessControlListTest.class);
+        suite.addTestSuite(GlobPatternTest.class);
 
         return suite;
     }

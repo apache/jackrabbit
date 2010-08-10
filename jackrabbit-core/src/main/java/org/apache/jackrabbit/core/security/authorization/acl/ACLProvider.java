@@ -310,6 +310,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      *
      * @param node the Node to collect the ACLs for, which must NOT be part of the
      * structure defined by mix:AccessControllable.
+     * @param permissions
      * @param acls List used to collect the effective acls.
      * @throws RepositoryException if an error occurs
      */
@@ -382,7 +383,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
     /**
      * Test if the given node is access controlled. The node is access
-     * controlled if it is of nodetype
+     * controlled if it is of node type
      * {@link AccessControlConstants#NT_REP_ACCESS_CONTROLLABLE "rep:AccessControllable"}
      * and if it has a child node named
      * {@link AccessControlConstants#N_POLICY "rep:ACL"}.
@@ -403,7 +404,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     private class AclPermissions extends AbstractCompiledPermissions implements AccessControlListener {
 
         private final List<String> principalNames;
-        private final Map<NodeId, Boolean> readCache = new LRUMap(1000);
+        // TODO find optimal cache size and ev. make it configurable (see also JCR-2573).
+        private final Map<ItemId, Boolean> readCache = new LRUMap(5000);
         private final Object monitor = new Object();
 
         private AclPermissions(Set<Principal> principals) throws RepositoryException {
@@ -425,7 +427,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             }
         }
 
-        private Result buildResult(NodeImpl node, boolean existingNode, boolean isAcItem, EntryFilter filter) throws RepositoryException {
+        private Result buildResult(NodeImpl node, boolean isExistingNode, boolean isAcItem, EntryFilterImpl filter) throws RepositoryException {
             // retrieve all ACEs at path or at the direct ancestor of path that
             // apply for the principal names.
             Iterator<AccessControlEntry> entries = retrieveResultEntries(getNode(node, isAcItem), filter);
@@ -444,17 +446,22 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
             int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
 
+            String parentPath = Text.getRelativeParent(filter.getPath(), 1);
+
             while (entries.hasNext()) {
                 ACLTemplate.Entry ace = (ACLTemplate.Entry) entries.next();
                 /*
-                 Determine if the ACE is defined on the node at absPath (locally):
-                 Except for READ-privileges the permissions must be determined
-                 from privileges defined for the parent. Consequently aces
-                 defined locally must be treated different than inherited entries.
+                 Determine if the ACE also takes effect on the parent:
+                 Some permissions (e.g. add-node or removal) must be determined
+                 from privileges defined for the parent.
+                 A 'local' entry defined on the target node never effects the
+                 parent. For inherited ACEs determine if the ACE matches the
+                 parent path.
                  */
                 int entryBits = ace.getPrivilegeBits();
-                boolean isLocal = existingNode && ace.isLocal(node.getNodeId());
-                if (!isLocal) {
+                boolean isLocal = isExistingNode && ace.isLocal(node.getNodeId());
+                boolean matchesParent = (!isLocal && ace.matches(parentPath));
+                if (matchesParent) {
                     if (ace.isAllow()) {
                         parentAllows |= Permission.diff(entryBits, parentDenies);
                     } else {
@@ -516,7 +523,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             }
 
             boolean isAcItem = isAcItem(absPath);
-            return buildResult(node, existingNode, isAcItem, new EntryFilterImpl(principalNames));
+            return buildResult(node, existingNode, isAcItem, new EntryFilterImpl(principalNames, absPath, session));
         }
 
         /**
@@ -545,32 +552,22 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          */
         public boolean canRead(Path path, ItemId itemId) throws RepositoryException {
             ItemId id = (itemId == null) ? session.getHierarchyManager().resolvePath(path) : itemId;
-            /* currently READ access cannot be denied to individual properties.
-               if the parent node is readable the properties are as well.
-               this simplifies the canRead test as well as the caching.
-             */
-            boolean existingNode = false;
-            NodeId nodeId;
-            if (id.denotesNode()) {
-                nodeId = (NodeId) id;
-                // since method may only be called for existing nodes the
-                // flag be set to true if the id identifies a node.
-                existingNode = true;
-            } else {
-                nodeId = ((PropertyId) id).getParentId();
-            }
-
+            // no extra check for existence as method may only be called for existing items.
+            boolean isExistingNode = id.denotesNode();
             boolean canRead;
             synchronized (monitor) {
-                if (readCache.containsKey(nodeId)) {
-                    canRead = readCache.get(nodeId);
+                if (readCache.containsKey(id)) {
+                    canRead = readCache.get(id);
                 } else {
                     ItemManager itemMgr = session.getItemManager();
+                    NodeId nodeId = (isExistingNode) ? (NodeId) id : ((PropertyId) id).getParentId();
                     NodeImpl node = (NodeImpl) itemMgr.getItem(nodeId);
-                    Result result = buildResult(node, existingNode, isAcItem(node), new EntryFilterImpl(principalNames));
+                    // TODO: check again if retrieving the path can be avoided
+                    Path absPath = (path == null) ? session.getHierarchyManager().getPath(id) : path;
+                    Result result = buildResult(node, isExistingNode, isAcItem(node), new EntryFilterImpl(principalNames, absPath, session));
 
                     canRead = result.grants(Permission.READ);
-                    readCache.put(nodeId, canRead);
+                    readCache.put(id, canRead);
                 }
             }
             return canRead;

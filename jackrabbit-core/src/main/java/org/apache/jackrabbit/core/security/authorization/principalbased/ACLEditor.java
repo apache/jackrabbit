@@ -21,7 +21,6 @@ import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 import javax.jcr.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -29,6 +28,7 @@ import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
@@ -48,6 +48,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.PropertyType;
 import javax.jcr.NodeIterator;
 import java.security.Principal;
+import java.util.Set;
 
 /**
  * <code>ACLEditor</code>...
@@ -206,7 +207,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         /* add all new entries defined on the template */
         AccessControlEntry[] aces = acl.getAccessControlEntries();
         for (AccessControlEntry ace1 : aces) {
-            JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) ace1;
+            AccessControlEntryImpl ace = (AccessControlEntryImpl) ace1;
 
             // create the ACE node
             Name nodeName = getUniqueNodeName(aclNode, "entry");
@@ -225,11 +226,10 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             setProperty(aceNode, P_PRIVILEGES, vs);
 
             // store the restrictions:
-            String[] restrNames = ace.getRestrictionNames();
-            for (String restrName : restrNames) {
-                Name pName = session.getQName(restrName);
+            Set<Name> restrNames = ace.getRestrictions().keySet();
+            for (Name restrName : restrNames) {
                 Value value = ace.getRestriction(restrName);
-                setProperty(aceNode, pName, value);
+                setProperty(aceNode, restrName, value);
             }
         }
 

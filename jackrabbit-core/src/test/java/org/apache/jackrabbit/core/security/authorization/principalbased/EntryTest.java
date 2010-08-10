@@ -164,4 +164,33 @@ public class EntryTest extends AbstractEntryTest {
             assertFalse("Restrictions shouldn't match " + str, ace.matches(str));
         }
     }
+
+    public void testRestrictions() throws RepositoryException {
+        // test if restrictions with expanded name are properly resolved
+        Map<String, Value> restrictions = new HashMap<String,Value>();
+        restrictions.put(ACLTemplate.P_GLOB.toString(), superuser.getValueFactory().createValue("*/test"));
+        restrictions.put(ACLTemplate.P_NODE_PATH.toString(), superuser.getValueFactory().createValue("/a/b/c"));
+
+        Privilege[] privs = new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)};
+        ACLTemplate.Entry ace = (ACLTemplate.Entry) createEntry(testPrincipal, privs, true, restrictions);
+
+        Value v = ace.getRestriction(ACLTemplate.P_GLOB.toString());
+        Value v2 = ace.getRestriction(glob);
+        assertEquals(v, v2);
+
+        v = ace.getRestriction(ACLTemplate.P_NODE_PATH.toString());
+        v2 = ace.getRestriction(nodePath);
+        assertEquals(v, v2);
+
+        Map<String, Boolean> toMatch = new HashMap<String, Boolean>();
+        toMatch.put("/a/b/c", false);
+        toMatch.put("/a/b/ctest", false);
+        toMatch.put("/a/b/c/test", true);
+        toMatch.put("/a/b/c/something/test", true);
+        toMatch.put("/a/b/cde/test", true);
+
+        for (String str : toMatch.keySet()) {
+            assertEquals("Path to match : " + str, toMatch.get(str).booleanValue(), ace.matches(str));
+        }
+    }
 }

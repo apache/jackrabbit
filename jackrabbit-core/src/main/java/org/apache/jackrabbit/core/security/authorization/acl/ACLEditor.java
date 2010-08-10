@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
@@ -47,6 +47,7 @@ import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
+import java.util.Set;
 
 /**
  * <code>ACLEditor</code>...
@@ -133,7 +134,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             String mixin = session.getJCRName(NT_REP_ACCESS_CONTROLLABLE);
             if (controlledNode.isNodeType(mixin) || controlledNode.canAddMixin(mixin)) {
                 acl = new ACLTemplate(nodePath, session.getPrincipalManager(),
-                        privilegeRegistry, session.getValueFactory());
+                        privilegeRegistry, session.getValueFactory(), session);
             }
         } // else: acl already present -> getPolicies must be used.
         return (acl != null) ? new AccessControlPolicy[] {acl} : new AccessControlPolicy[0];
@@ -171,7 +172,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         
         AccessControlEntry[] entries = ((ACLTemplate) policy).getAccessControlEntries();
         for (AccessControlEntry entry : entries) {
-            JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) entry;
+            AccessControlEntryImpl ace = (AccessControlEntryImpl) entry;
 
             Name nodeName = getUniqueNodeName(aclNode, ace.isAllow() ? "allow" : "deny");
             Name ntName = (ace.isAllow()) ? NT_REP_GRANT_ACE : NT_REP_DENY_ACE;
@@ -188,6 +189,13 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             Privilege[] pvlgs = ace.getPrivileges();
             Value[] names = getPrivilegeNames(pvlgs, vf);
             setProperty(aceNode, P_PRIVILEGES, names);
+
+            // store the restrictions:
+            Set<Name> restrNames = ace.getRestrictions().keySet();
+            for (Name restrName : restrNames) {
+                Value value = ace.getRestriction(restrName);
+                setProperty(aceNode, restrName, value);
+            }
         }
 
         // mark the parent modified.
