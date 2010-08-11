@@ -312,8 +312,8 @@ public abstract class AbstractLoginModule implements LoginModule {
         try {
             Principal userPrincipal = getPrincipal(creds);
             if (userPrincipal == null) {
-                // unknown principal or a Group-principal
-                log.debug("Unknown User -> ignore.");
+                // unknown or disabled user or a group
+                log.debug("No valid user -> ignore.");
                 return false;
             }
             boolean authenticated;

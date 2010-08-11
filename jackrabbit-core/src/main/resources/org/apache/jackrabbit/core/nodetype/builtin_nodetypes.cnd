@@ -600,6 +600,7 @@
 
 [rep:User] > rep:Authorizable, rep:Impersonatable
   - rep:password (STRING) protected mandatory
+  - rep:disabled (STRING) protected
 
 [rep:Group] > rep:Authorizable
   - rep:members (WEAKREFERENCE) protected multiple < 'rep:Authorizable'

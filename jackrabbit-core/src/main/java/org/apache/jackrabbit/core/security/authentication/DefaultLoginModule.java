@@ -76,7 +76,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
      * If the the userID cannot be resolved to a User or if obtaining the
      * principal fail, <code>null</code> is returned.
      *
-     * @param credentials Credentions to retrieve the principal for.
+     * @param credentials Credentials to retrieve the principal for.
      * @return a user principal or <code>null</code>.
      * @see AbstractLoginModule#getPrincipal(Credentials)
      */
@@ -88,7 +88,12 @@ public class DefaultLoginModule extends AbstractLoginModule {
             Authorizable authrz = userManager.getAuthorizable(userId);
             if (authrz != null && !authrz.isGroup()) {
                 user = (User) authrz;
-                principal = user.getPrincipal();
+                if (user.isDisabled()) {
+                    // log message and return null -> login module returns false.
+                    log.debug("User " + userId + " has been disabled.");
+                } else {
+                    principal = user.getPrincipal();
+                }
             }
         } catch (RepositoryException e) {
             // should not get here
@@ -130,17 +135,16 @@ public class DefaultLoginModule extends AbstractLoginModule {
     @Override
     protected boolean impersonate(Principal principal, Credentials credentials)
             throws RepositoryException, FailedLoginException {
-
-        Authorizable authrz = userManager.getAuthorizable(principal);
-        if (authrz == null || authrz.isGroup()) {
-            return false;
-        }
-        Subject impersSubject = getImpersonatorSubject(credentials);
-        User user = (User) authrz;
-        if (user.getImpersonation().allows(impersSubject)) {
-            return true;
+        if (user != null) {
+            Subject impersSubject = getImpersonatorSubject(credentials);
+            if (user.getImpersonation().allows(impersSubject)) {
+                return true;
+            } else {
+                throw new FailedLoginException("attempt to impersonate denied for " + principal.getName());
+            }
         } else {
-            throw new FailedLoginException("attempt to impersonate denied for " + principal.getName());
+            log.debug("Failed to retrieve user to impersonate for principal name " + principal.getName());
+            return false;
         }
     }
 }

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 
@@ -124,6 +125,43 @@ public class UserImpl extends AuthorizableImpl implements User {
     public void changePassword(String password) throws RepositoryException {
         Value v = getSession().getValueFactory().createValue(buildPasswordValue(password));
         userManager.setProtectedProperty(getNode(), P_PASSWORD, v);
+    }
+
+    /**
+     * @see User#disable(String)
+     */
+    public void disable(String reason) throws RepositoryException {
+        if (isAdmin()) {
+            throw new RepositoryException("The administrator user cannot be disabled.");
+        }
+        if (reason == null) {
+            if (isDisabled()) {
+                // enable the user again.
+                PropertyImpl disableProp = getNode().getProperty(P_DISABLED);
+                userManager.removeProtectedItem(disableProp, getNode());
+            } // else: nothing to do.
+        } else {
+            Value v = getSession().getValueFactory().createValue(reason);
+            userManager.setProtectedProperty(getNode(), P_DISABLED, v);
+        }
+    }
+
+    /**
+     * @see User#isDisabled()
+     */
+    public boolean isDisabled() throws RepositoryException {
+        return getNode().hasProperty(P_DISABLED);
+    }
+
+    /**
+     * @see User#getDisabledReason()
+     */
+    public String getDisabledReason() throws RepositoryException {
+        if (isDisabled()) {
+            return getNode().getProperty(P_DISABLED).getString();
+        } else {
+            return null;
+        }
     }
 
     //--------------------------------------------------------------------------

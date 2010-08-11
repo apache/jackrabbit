@@ -54,6 +54,7 @@ interface UserConstants {
      */
     Name P_USERID = NF.create(Name.NS_REP_URI, "userId");
     Name P_PASSWORD = NF.create(Name.NS_REP_URI, "password");
+    Name P_DISABLED = NF.create(Name.NS_REP_URI, "disabled");
 
     /**
      * @deprecated As of 2.0 group membership is stored with the group node.
