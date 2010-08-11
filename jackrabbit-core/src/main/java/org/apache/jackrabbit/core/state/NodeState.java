@@ -110,10 +110,11 @@ public class NodeState extends ItemState {
         this.nodeTypeName = nodeTypeName;
     }
 
+    //-------------------------------------------------------< public methods >
     /**
      * {@inheritDoc}
      */
-    protected synchronized void copy(ItemState state, boolean syncModCount) {
+    public synchronized void copy(ItemState state, boolean syncModCount) {
         synchronized (state) {
             NodeState nodeState = (NodeState) state;
             id = nodeState.id;
@@ -130,7 +131,6 @@ public class NodeState extends ItemState {
         }
     }
 
-    //-------------------------------------------------------< public methods >
     /**
      * {@inheritDoc}
      *
@@ -330,12 +330,13 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Renames a new <code>ChildNodeEntry</code>.
+     * Renames a  <code>ChildNodeEntry</code> by removing the old entry and
+     * appending the new entry to the end of the list.
      *
      * @param oldName <code>Name</code> object specifying the entry's old name
      * @param index   1-based index if there are same-name child node entries
      * @param newName <code>Name</code> object specifying the entry's new name
-     * @return <code>true</code> if the entry was sucessfully renamed;
+     * @return <code>true</code> if the entry was successfully renamed;
      *         otherwise <code>false</code>
      */
     public boolean renameChildNodeEntry(Name oldName, int index,
@@ -407,19 +408,12 @@ public class NodeState extends ItemState {
     /**
      * Sets the list of <code>ChildNodeEntry</code> objects denoting the
      * child nodes of this node.
-     * @param nodeEntries list of {@link ChildNodeEntry} or
-     * a {@link ChildNodeEntries} list.
+     * @param nodeEntries list of {@link ChildNodeEntry}s
      */
     public void setChildNodeEntries(List<ChildNodeEntry> nodeEntries) {
         synchronized (this) {
-            if (nodeEntries instanceof ChildNodeEntries) {
-                // optimization
-                ChildNodeEntries entries = (ChildNodeEntries) nodeEntries;
-                childNodeEntries = (ChildNodeEntries) entries.clone();
-            } else {
-                childNodeEntries.removeAll();
-                childNodeEntries.addAll(nodeEntries);
-            }
+            childNodeEntries.removeAll();
+            childNodeEntries.addAll(nodeEntries);
         }
         notifyNodesReplaced();
     }
