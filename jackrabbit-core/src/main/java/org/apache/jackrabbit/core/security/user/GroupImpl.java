@@ -52,7 +52,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     private Principal principal;
 
-    protected GroupImpl(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
+    protected GroupImpl(NodeImpl node, UserManagerImpl userManager) {
         super(node, userManager);
     }
 
@@ -149,6 +149,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
         values[values.length - 1] = toAdd;
 
         userManager.setProtectedProperty(node, P_MEMBERS, values, PropertyType.WEAKREFERENCE);
+        userManager.getMembershipCache().clear();
         return true;
     }
 
@@ -178,6 +179,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                     Value[] values = valList.toArray(new Value[valList.size()]);
                     userManager.setProtectedProperty(node, P_MEMBERS, values);
                 }
+                userManager.getMembershipCache().clear();
                 return true;
             } catch (RepositoryException e) {
                 // modification failed -> revert all pending changes.

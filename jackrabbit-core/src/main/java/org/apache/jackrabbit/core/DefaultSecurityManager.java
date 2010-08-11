@@ -61,6 +61,7 @@ import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
+import org.apache.jackrabbit.core.security.user.MembershipCache;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -436,6 +437,20 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     }
 
     /**
+     * @param session
+     * @return
+     * @throws RepositoryException
+     */
+    protected MembershipCache getMembershipCache(SessionImpl session) throws RepositoryException {
+        if (session == systemSession || session instanceof SystemSession) {
+            // force creation of the membership cache within the corresponding uMgr
+            return null;
+        } else {
+            return ((UserManagerImpl) getSystemUserManager(session.getWorkspace().getName())).getMembershipCache();
+        }
+    }
+
+    /**
      * Creates a {@link UserManagerImpl} for the given session. May be overridden
      * to return a custom implementation.
      *
@@ -449,17 +464,23 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
 
         // since users are stored in and retrieved from a dedicated workspace
         // only the system session assigned with that workspace will get the
-        // system user manager (special implementation that asserts the existance
+        // system user manager (special implementation that asserts the existence
         // of the admin user).
         UserManagerImpl um;
         if (umc != null) {
-            Class<?>[] paramTypes = new Class[] { SessionImpl.class, String.class, Properties.class };
-            um = (UserManagerImpl) umc.getUserManager(UserManagerImpl.class, paramTypes, (SessionImpl) session, adminId, params);
+            Class<?>[] paramTypes = new Class[] {
+                    SessionImpl.class,
+                    String.class,
+                    Properties.class,
+                    MembershipCache.class};
+            um = (UserManagerImpl) umc.getUserManager(UserManagerImpl.class,
+                    paramTypes, (SessionImpl) session, adminId, params,
+                    getMembershipCache(session));
             // TODO: should we make sure the implementation doesn't allow
             // TODO: to change the autosave behavior? since the user manager
             // TODO: writes to a separate workspace this would cause troubles.
         } else {
-            um = new UserManagerImpl(session, adminId, params);
+            um = new UserManagerImpl(session, adminId, params, getMembershipCache(session));
         }
         return um;
     }
