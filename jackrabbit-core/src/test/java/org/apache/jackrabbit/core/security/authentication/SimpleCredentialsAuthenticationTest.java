@@ -134,6 +134,17 @@ public class SimpleCredentialsAuthenticationTest extends AbstractJCRTest {
         public void changePassword(String password) throws RepositoryException {
         }
 
+        public void disable(String reason) throws RepositoryException {
+        }
+
+        public boolean isDisabled() throws RepositoryException {
+            return false;
+        }
+
+        public String getDisabledReason() throws RepositoryException {
+            return null;
+        }
+
         public String getID() throws RepositoryException {
             return null;
         }

@@ -194,6 +194,7 @@ public class UserImporterTest extends AbstractJCRTest {
                 "   <sv:property sv:name=\"jcr:uuid\" sv:type=\"String\"><sv:value>e358efa4-89f5-3062-b10d-d7316b65649e</sv:value></sv:property>" +
                 "   <sv:property sv:name=\"rep:password\" sv:type=\"String\"><sv:value>{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375</sv:value></sv:property>" +
                 "   <sv:property sv:name=\"rep:principalName\" sv:type=\"String\"><sv:value>t</sv:value></sv:property>" +
+                "   <sv:property sv:name=\"rep:disabled\" sv:type=\"String\"><sv:value>disabledUser</sv:value></sv:property>" +
                 "</sv:node>";
 
         NodeImpl target = (NodeImpl) sImpl.getNode(umgr.getUsersPath());
@@ -208,6 +209,8 @@ public class UserImporterTest extends AbstractJCRTest {
             assertFalse(newUser.isGroup());
             assertEquals("t", newUser.getPrincipal().getName());
             assertEquals("t", newUser.getID());
+            assertTrue(((User) newUser).isDisabled());
+            assertEquals("disabledUser", ((User) newUser).getDisabledReason());
 
             NodeImpl n = ((UserImpl) newUser).getNode();
             assertTrue(n.isNew());
@@ -216,6 +219,7 @@ public class UserImporterTest extends AbstractJCRTest {
             assertEquals("t", n.getName());
             assertEquals("t", n.getProperty(UserConstants.P_PRINCIPAL_NAME).getString());
             assertEquals("{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375", n.getProperty(UserConstants.P_PASSWORD).getString());
+            assertEquals("disabledUser", n.getProperty(UserConstants.P_DISABLED).getString());
 
             // saving changes of the import -> must succeed. add mandatory
             // props should have been created.

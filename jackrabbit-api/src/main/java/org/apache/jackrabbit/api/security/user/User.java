@@ -57,4 +57,36 @@ public interface User extends Authorizable {
      * @throws RepositoryException If an error occurs.
      */
     void changePassword(String password) throws RepositoryException;
+
+    /**
+     * Disable this user thus preventing future login if the <code>reason</code>
+     * is a non-null String.<br>
+     * Note however, that this user will still be accessible by
+     * {@link UserManager#getAuthorizable}.
+     *
+     * @param reason String describing the reason for disable this user or
+     * <code>null</code> if the user account should be enabled again.
+     * @throws RepositoryException
+     */
+    void disable(String reason) throws RepositoryException;
+
+    /**
+     * Returns <code>true</code> if this user is disabled, <code>false</code>
+     * otherwise.
+     *
+     * @return <code>true</code> if this user is disabled, <code>false</code>
+     * otherwise.
+     * @throws RepositoryException
+     */
+    boolean isDisabled() throws RepositoryException;
+
+    /**
+     * Returns the String specified upon disabling this user or <code>null</code>
+     * if {@link #isDisabled()} returns <code>false</code>.
+     * 
+     * @return The reason specified upon disabling this user or <code>null</code>
+     * if this user is not disabled.
+     * @throws RepositoryException
+     */
+    String getDisabledReason() throws RepositoryException;
 }

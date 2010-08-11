@@ -246,6 +246,23 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                 referenceTracker.processedReference(new Impersonators(a.getID(), vs));
                 return true;
 
+            } else if (UserConstants.P_DISABLED.equals(propName)) {
+                if (a.isGroup()) {
+                    log.warn("Expected parent node of type rep:User.");
+                    return false;
+                }
+                // minimal validation of the passed definition
+                if (def.isMultiple() || !UserConstants.NT_REP_USER.equals(def.getDeclaringNodeType())) {
+                    // some other unexpected property definition -> cannot handle
+                    log.warn("Unexpected definition for property rep:disabled");
+                    return false;
+                }
+
+                Value v = protectedPropInfo.getValues(PropertyType.STRING, resolver)[0];
+                ((User) a).disable(v.getString());
+
+                return true;
+
             } else if (UserConstants.P_MEMBERS.equals(propName)) {
                 if (!a.isGroup()) {
                     // unexpected parent type -> cannot handle
