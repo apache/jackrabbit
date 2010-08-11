@@ -38,7 +38,7 @@ public class UserImpl extends AuthorizableImpl implements User {
     private Principal principal;
     private Impersonation impersonation;
 
-    protected UserImpl(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
+    protected UserImpl(NodeImpl node, UserManagerImpl userManager) {
         super(node, userManager);
     }
 

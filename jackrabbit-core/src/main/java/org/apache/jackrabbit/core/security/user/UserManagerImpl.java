@@ -236,6 +236,8 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     private final boolean isSystemUserManager;
 
+    private final MembershipCache membershipCache;
+
     /**
      * Create a new <code>UserManager</code> with the default configuration.
      *
@@ -243,7 +245,18 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param adminId The user ID of the administrator.
      */
     public UserManagerImpl(SessionImpl session, String adminId) {
-        this(session, adminId, null);
+        this(session, adminId, null, null);
+    }
+
+    /**
+     * Create a new <code>UserManager</code>
+     *
+     * @param session The editing/reading session.
+     * @param adminId The user ID of the administrator.
+     * @param config The configuration parameters.
+     */
+    public UserManagerImpl(SessionImpl session, String adminId, Properties config) {
+        this(session, adminId, config, null);
     }
 
     /**
@@ -263,8 +276,10 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param session The editing/reading session.
      * @param adminId The user ID of the administrator.
      * @param config The configuration parameters.
+     * @param mCache Shared membership cache.
      */
-    public UserManagerImpl(SessionImpl session, String adminId, Properties config) {
+    public UserManagerImpl(SessionImpl session, String adminId, Properties config,
+                           MembershipCache mCache) {
         this.session = session;
         this.adminId = adminId;
 
@@ -278,6 +293,12 @@ public class UserManagerImpl extends ProtectedItemModifier
 
         param = (config != null) ? config.get(PARAM_COMPATIBILE_JR16) : null;
         compatibleJR16 = (param != null) && Boolean.parseBoolean(param.toString());
+
+        if (mCache != null) {
+            membershipCache = mCache;
+        } else {
+            membershipCache = new MembershipCache(session, groupsPath);
+        }
 
         NodeResolver nr;
         try {
@@ -323,6 +344,13 @@ public class UserManagerImpl extends ProtectedItemModifier
         return groupsPath;
     }
 
+    /**
+     * @return The membership cache present with this user manager instance.
+     */
+    public MembershipCache getMembershipCache() {
+        return membershipCache;
+    }
+
     //--------------------------------------------------------< UserManager >---
     /**
      * @see UserManager#getAuthorizable(String)
@@ -333,7 +361,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
         Authorizable a = internalGetAuthorizable(id);
         /**
-         * Extra check for the existance of the administrator user that must
+         * Extra check for the existence of the administrator user that must
          * always exist.
          * In case it got removed if must be recreated using a system session.
          * Since a regular session may lack read permission on the admin-user's
@@ -596,7 +624,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * <pre>
      * - the passed node is <code>null</code>,
      * - doesn't have the correct node type or
-     * - isn't placed underneith the configured user/group tree.
+     * - isn't placed underneath the configured user/group tree.
      * </pre>
      *
      * @param n A user/group node.
@@ -625,7 +653,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * which might happen if userID != principal-name.
      * In this case: generate another ID for the group to be created.
      *
-     * @param principalName to be used as hint for the groupid.
+     * @param principalName to be used as hint for the group id.
      * @return a group id.
      * @throws RepositoryException If an error occurs.
      */
@@ -753,7 +781,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * <li>The <code>usersPath</code> has been modified in the user manager
      * configuration after a successful repository start that already created
      * the administrator user.</li>
-     * <li>The NodeId created by {@link #buildNodeId(String)} by conincidence
+     * <li>The NodeId created by {@link #buildNodeId(String)} by coincidence
      * collides with another NodeId created during the regular node creation
      * process.</li>
      * </ul>

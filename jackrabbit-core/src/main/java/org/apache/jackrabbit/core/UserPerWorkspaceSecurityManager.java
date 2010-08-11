@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.simple.SimpleWorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.user.MembershipCache;
 import org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 
@@ -223,10 +224,15 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
         // from a dedicated workspace: the system session of each workspace must
         // get a system user manager that asserts the existence of the admin user.
         if (umc != null) {
-            Class<?>[] paramTypes = new Class[] { SessionImpl.class, String.class, Properties.class };
-            return (UserPerWorkspaceUserManager) umc.getUserManager(UserPerWorkspaceUserManager.class, paramTypes, (SessionImpl) session, adminId, params);
+            Class<?>[] paramTypes = new Class[] {
+                    SessionImpl.class,
+                    String.class,
+                    Properties.class,
+                    MembershipCache.class};
+            return (UserPerWorkspaceUserManager) umc.getUserManager(UserPerWorkspaceUserManager.class,
+                    paramTypes, (SessionImpl) session, adminId, params, getMembershipCache(session));
         } else {
-            return new UserPerWorkspaceUserManager(session, adminId, params);
+            return new UserPerWorkspaceUserManager(session, adminId, params, getMembershipCache(session));
         }
     }
 

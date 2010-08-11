@@ -38,14 +38,14 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
     private boolean autoSave = true;
 
     /**
-     * Same as <code>TransientChangeUserManagerImpl(session, adminID, null)</code>.
+     * Same as <code>UserPerWorkspaceUserManager(session, adminID, null, null)</code>.
      *
      * @param session
      * @param adminId
      * @throws RepositoryException
      */
-    public UserPerWorkspaceUserManager(SessionImpl session, String adminId) throws RepositoryException {
-        this(session, adminId, null);
+    public UserPerWorkspaceUserManager(SessionImpl session, String adminId) {
+        super(session, adminId);
     }
 
     /**
@@ -57,8 +57,22 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
      * @param config
      * @throws javax.jcr.RepositoryException
      */
-    public UserPerWorkspaceUserManager(SessionImpl session, String adminId, Properties config) throws RepositoryException {
+    public UserPerWorkspaceUserManager(SessionImpl session, String adminId, Properties config) {
         super(session, adminId, config);
+    }
+        
+    /**
+     * Creates a UserManager that doesn't implicitly save changes but requires
+     * an explicit call to {@link javax.jcr.Session#save()}.
+     *
+     * @param session
+     * @param adminId
+     * @param config
+     * @throws javax.jcr.RepositoryException
+     */
+    public UserPerWorkspaceUserManager(SessionImpl session, String adminId,
+                                       Properties config, MembershipCache mCache) {
+        super(session, adminId, config, mCache);
     }
 
     //--------------------------------------------------------< UserManager >---

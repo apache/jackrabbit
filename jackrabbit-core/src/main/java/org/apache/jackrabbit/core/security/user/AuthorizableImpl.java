@@ -22,7 +22,6 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
@@ -34,20 +33,16 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.Session;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemVisitor;
-import javax.jcr.Node;
-import javax.jcr.util.TraversingItemVisitor;
+import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
 /**
  * AuthorizableImpl
@@ -67,8 +62,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * {@link #NT_REP_AUTHORIZABLE}.
      * @throws RepositoryException If an error occurs.
      */
-    protected AuthorizableImpl(NodeImpl node, UserManagerImpl userManager)
-            throws RepositoryException {
+    protected AuthorizableImpl(NodeImpl node, UserManagerImpl userManager) {
         this.node = node;
         this.userManager = userManager;
     }
@@ -88,18 +82,14 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#declaredMemberOf()
      */
     public Iterator<Group> declaredMemberOf() throws RepositoryException {
-        Set<Group> memberShip = new HashSet<Group>();
-        collectMembership(memberShip, false);
-        return memberShip.iterator();
+        return collectMembership(false);
     }
 
     /**
      * @see Authorizable#memberOf()
      */
     public Iterator<Group> memberOf() throws RepositoryException {
-        Set<Group> memberShip = new HashSet<Group>();
-        collectMembership(memberShip, true);
-        return memberShip.iterator();
+        return collectMembership(true);
     }
 
     /**
@@ -242,13 +232,19 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     public synchronized void remove() throws RepositoryException {
         // don't allow for removal of the administrator even if the executing
         // session has all permissions.
-        if (!isGroup() && ((User) this).isAdmin()) {
+        boolean isGroup = isGroup();
+        if (!isGroup && ((User) this).isAdmin()) {
             throw new RepositoryException("The administrator cannot be removed.");
         }
         Session s = getSession();
         node.remove();
         if (userManager.isAutoSave()) {
             s.save();
+        }
+
+        // upon successful removal of a Group -> clear the membership cache
+        if (isGroup) {
+            userManager.getMembershipCache().clear();
         }
     }
 
@@ -309,69 +305,25 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         return node.getProperty(P_PRINCIPAL_NAME).getString();
     }
 
-    private void collectMembership(final Set<Group> groups, boolean includeIndirect) throws RepositoryException {
-        PropertyIterator refs = getMembershipReferences();
-        if (refs != null) {
-            while (refs.hasNext()) {
-                try {
-                    NodeImpl n = (NodeImpl) refs.nextProperty().getParent();
-                    if (n.isNodeType(NT_REP_GROUP)) {
-                        Group group = userManager.createGroup(n);
-                        // only retrieve indirect membership if the group is not
-                        // yet present (detected eventual circular membership).
-                        if (groups.add(group) && includeIndirect) {
-                            ((AuthorizableImpl) group).collectMembership(groups, true);
-                        }
-                    } else {
-                        // weak-ref property 'rep:members' that doesn't reside under an
-                        // group node -> doesn't represent a valid group member.
-                        log.debug("Invalid member reference to '" + this + "' -> Not included in membership set.");
-                    }
-                } catch (ItemNotFoundException e) {
-                    // group node doesn't exist  -> -> ignore exception
-                    // and skip this reference from membership list.
-                } catch (AccessDeniedException e) {
-                    // not allowed to see the group node -> ignore exception
-                    // and skip this reference from membership list.
-                }
-            }
+    private Iterator<Group> collectMembership(boolean includeIndirect) throws RepositoryException {
+        Collection<String> groupNodeIds;
+        if (includeIndirect) {
+            groupNodeIds = userManager.getMembershipCache().getMemberOf(node.getIdentifier());
         } else {
-            // workaround for failure of Node#getWeakReferences
-            // traverse the tree below groups-path and collect membership manually.
-            log.info("Traversing groups tree to collect membership.");
-            ItemVisitor visitor = new TraversingItemVisitor.Default() {
-                @Override
-                protected void entering(Property property, int level) throws RepositoryException {
-                    PropertyImpl pImpl = (PropertyImpl) property;
-                    NodeImpl n = (NodeImpl) pImpl.getParent();
-                    if (P_MEMBERS.equals(pImpl.getQName()) && n.isNodeType(NT_REP_GROUP)) {
-                        for (Value value : property.getValues()) {
-                            if (value.getString().equals(node.getIdentifier())) {
-                                Group gr = (Group) userManager.getAuthorizable(n);
-                                groups.add(gr);
-                            }
-                        }
-                    }
-                }
-            };
-            Node groupsNode = getSession().getNode(userManager.getGroupsPath());
-            visitor.visit(groupsNode);
+            groupNodeIds = userManager.getMembershipCache().getDeclaredMemberOf(node.getIdentifier());
         }
-    }
 
-    /**
-     * @return the iterator returned by {@link Node#getWeakReferences(String)}
-     * or <code>null</code> if the method call fails with <code>RepositoryException</code>.
-     * See fallback scenario above.
-     */
-    private PropertyIterator getMembershipReferences() {
-        PropertyIterator refs = null;
-        try {
-            refs = node.getWeakReferences(getSession().getJCRName(P_MEMBERS));
-        } catch (RepositoryException e) {
-            log.error("Failed to retrieve membership references of " + this + ".", e);
+        Set<Group> groups = new HashSet<Group>(groupNodeIds.size());
+        for (String identifier : groupNodeIds) {
+            try {
+                NodeImpl n = (NodeImpl) getSession().getNodeByIdentifier(identifier);
+                Group group = userManager.createGroup(n);
+                groups.add(group);
+            } catch (RepositoryException e) {
+                // group node doesn't exist or cannot be read -> ignore.
+            }
         }
-        return refs;
+        return groups.iterator();
     }
 
     /**
