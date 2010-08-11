@@ -755,12 +755,13 @@ public class SharedItemStateManager
 
             ISMLocking.ReadLock readLock = null;
             try {
-                /* Let the shared item listeners know about the change */
-                shared.persisted();
-
                 // downgrade to read lock
                 readLock = writeLock.downgrade();
                 writeLock = null;
+
+                // Let the shared item listeners know about the change
+                // JCR-2171: This must happen after downgrading the lock!
+                shared.persisted();
 
                 /* notify virtual providers about node references */
                 for (int i = 0; i < virtualNodeReferences.length; i++) {
