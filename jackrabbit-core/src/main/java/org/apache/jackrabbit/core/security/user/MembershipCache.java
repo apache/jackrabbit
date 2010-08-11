@@ -141,7 +141,7 @@ public class MembershipCache implements UserConstants {
                             for (Value value : property.getValues()) {
                                 String v = value.getString();
                                 if (v.equals(authorizableNodeIdentifier)) {
-                                    groupNodeIdentifiers.add(v);
+                                    groupNodeIdentifiers.add(n.getIdentifier());
                                 }
                             }
                         }
