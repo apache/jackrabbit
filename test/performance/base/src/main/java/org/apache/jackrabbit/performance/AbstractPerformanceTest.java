@@ -16,29 +16,20 @@
  */
 package org.apache.jackrabbit.performance;
 
-import static org.testng.AssertJUnit.fail;
-
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Random;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.benchmark.CreateManyChildNodesTest;
 import org.apache.jackrabbit.benchmark.PerformanceTest;
 import org.apache.jackrabbit.benchmark.PerformanceTestSuite;
 import org.apache.jackrabbit.benchmark.LoginTest;
@@ -50,6 +41,8 @@ import org.apache.jackrabbit.benchmark.BigFileWriteTest;
 import org.apache.jackrabbit.benchmark.ConcurrentReadTest;
 import org.apache.jackrabbit.benchmark.ConcurrentReadWriteTest;
 import org.apache.jackrabbit.benchmark.SimpleSearchTest;
+import org.apache.jackrabbit.benchmark.TransientManyChildNodesTest;
+import org.apache.jackrabbit.benchmark.UpdateManyChildNodesTest;
 
 public abstract class AbstractPerformanceTest {
 
@@ -109,6 +102,9 @@ public abstract class AbstractPerformanceTest {
             runTest(suite, new ConcurrentReadTest(), writer, name);
             runTest(suite, new ConcurrentReadWriteTest(), writer, name);
             runTest(suite, new SimpleSearchTest(), writer, name);
+            runTest(suite, new CreateManyChildNodesTest(), writer, name);
+            runTest(suite, new UpdateManyChildNodesTest(), writer, name);
+            runTest(suite, new TransientManyChildNodesTest(), writer, name);
 
             writer.println(
                     "--------------------------------------"
