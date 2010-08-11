@@ -192,37 +192,6 @@ public class NodeImpl extends ItemImpl implements Node {
         return getPropertyId(p);
     }
 
-    protected PropertyId resolveRelativePropertyPathOld(String relPath)
-            throws RepositoryException {
-        try {
-            /**
-             * first check if relPath is just a name (in which case we don't
-             * have to build & resolve absolute path)
-             */
-            if (relPath.indexOf('/') == -1) {
-                Name propName = session.getQName(relPath);
-                // check if property entry exists
-                NodeState thisState = data.getNodeState();
-                if (thisState.hasPropertyName(propName)) {
-                    return new PropertyId(thisState.getNodeId(), propName);
-                } else {
-                    // there's no property with that name
-                    return null;
-                }
-            }
-            /**
-             * build and resolve absolute path
-             */
-            Path p = PathFactoryImpl.getInstance().create(
-                    getPrimaryPath(), session.getQPath(relPath), true);
-            return sessionContext.getHierarchyManager().resolvePropertyPath(p);
-        } catch (NameException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-    }
-
     /**
      * Returns the id of the node at <code>relPath</code> or <code>null</code>
      * if no node exists at <code>relPath</code>.
