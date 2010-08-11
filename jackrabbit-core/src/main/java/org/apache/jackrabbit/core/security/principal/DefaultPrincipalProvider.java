@@ -92,21 +92,21 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * Creates a new DefaultPrincipalProvider reading the principals from the
      * storage below the given security root node.
      *
-     * @param securitySession for repository access.
-     * @param userManager Used to retrieve the principals.
+     * @param systemSession for repository access.
+     * @param systemUserManager Used to retrieve the principals.
      * @throws RepositoryException if an error accessing the repository occurs.
      */
-    public DefaultPrincipalProvider(Session securitySession,
-                                    UserManagerImpl userManager) throws RepositoryException {
+    public DefaultPrincipalProvider(Session systemSession,
+                                    UserManagerImpl systemUserManager) throws RepositoryException {
 
-        this.userManager = userManager;
+        this.userManager = systemUserManager;
         everyonePrincipal = EveryonePrincipal.getInstance();
         membershipCache = new LRUMap();
 
         // listen to modifications of group-membership
         String[] ntNames = new String[2];
-        if (securitySession instanceof SessionImpl) {
-            NameResolver resolver = (NameResolver) securitySession;
+        if (systemSession instanceof SessionImpl) {
+            NameResolver resolver = (NameResolver) systemSession;
             ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_GROUP);
             ntNames[1] = resolver.getJCRName(UserManagerImpl.NT_REP_AUTHORIZABLE_FOLDER);
             pMembers = resolver.getJCRName(UserManagerImpl.P_MEMBERS);
@@ -124,7 +124,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         while (!Text.isDescendantOrEqual(targetPath, userPath)) {
             targetPath = Text.getRelativeParent(targetPath, 1);
         }
-        securitySession.getWorkspace().getObservationManager().addEventListener(this,
+        systemSession.getWorkspace().getObservationManager().addEventListener(this,
                 Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
                 targetPath,
                 true,
