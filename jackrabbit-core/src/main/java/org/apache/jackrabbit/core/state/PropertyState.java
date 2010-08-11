@@ -81,7 +81,7 @@ public class PropertyState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    protected synchronized void copy(ItemState state, boolean syncModCount) {
+    public synchronized void copy(ItemState state, boolean syncModCount) {
         synchronized (state) {
             PropertyState propState = (PropertyState) state;
             id = propState.id;

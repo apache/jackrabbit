@@ -796,23 +796,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         synchronized (localState) {
             // copy state from transient state:
-            // parent id's
-            localState.setParentId(transientState.getParentId());
-            // primary type
-            localState.setNodeTypeName(transientState.getNodeTypeName());
-            // mixin types
-            localState.setMixinTypeNames(transientState.getMixinTypeNames());
-            // child node entries
-            localState.setChildNodeEntries(transientState.getChildNodeEntries());
-            // property entries
-            localState.setPropertyNames(transientState.getPropertyNames());
-            // shared set
-            localState.setSharedSet(transientState.getSharedSet());
-            // modCount
-            if (localState.getModCount() != transientState.getModCount()) {
-                localState.setModCount(transientState.getModCount());
-            }
-
+            localState.copy(transientState, true);
             // make state persistent
             stateMgr.store(localState);
         }

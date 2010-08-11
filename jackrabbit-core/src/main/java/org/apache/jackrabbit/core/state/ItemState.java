@@ -140,7 +140,7 @@ public abstract class ItemState {
      * @param state source state information
      * @param syncModCount if the modCount should be synchronized.
      */
-    protected abstract void copy(ItemState state, boolean syncModCount);
+    public abstract void copy(ItemState state, boolean syncModCount);
 
     /**
      * Pull state information from overlayed state.
