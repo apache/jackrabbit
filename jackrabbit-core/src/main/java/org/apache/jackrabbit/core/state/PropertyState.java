@@ -78,6 +78,7 @@ public class PropertyState extends ItemState {
         multiValued = false;
     }
 
+    //-------------------------------------------------------< public methods >
     /**
      * {@inheritDoc}
      */
@@ -94,7 +95,6 @@ public class PropertyState extends ItemState {
         }
     }
 
-    //-------------------------------------------------------< public methods >
     /**
      * Determines if this item state represents a node.
      *
