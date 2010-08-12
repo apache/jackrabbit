@@ -21,6 +21,7 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
 import java.util.Comparator;
+import java.util.Set;
 
 /**
  * TreeManager instances are responsible for the mapping between sequence views
@@ -61,6 +62,12 @@ public interface TreeManager {
      * @throws RepositoryException
      */
     boolean isLeaf(Node node) throws RepositoryException;
+
+    /**
+     * Properties to ignore.
+     * @return
+     */
+    public Set<String> getIgnoredProperties();
 
     /**
      * {@link Comparator} used for establishing the order of the keys in the

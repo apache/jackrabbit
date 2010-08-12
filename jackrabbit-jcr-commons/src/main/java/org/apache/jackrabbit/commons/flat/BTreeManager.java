@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.commons.flat;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.predicate.Predicate;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -25,9 +26,11 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * <p>
@@ -91,6 +94,10 @@ public class BTreeManager implements TreeManager {
     private final boolean autoSave;
     private final Comparator<Item> itemOrder;
 
+    private final Set<String> ignoredProperties = new HashSet<String>(Arrays.asList(
+            JcrConstants.JCR_PRIMARYTYPE,
+            JcrConstants.JCR_MIXINTYPES));
+
     /**
      * Create a new {@link BTreeManager} rooted at Node <code>root</code>.
      *
@@ -139,6 +146,16 @@ public class BTreeManager implements TreeManager {
                 }
             }
         };
+    }
+
+    /**
+     * Properties to ignore. The default set contains {@link JcrConstants#JCR_PRIMARYTYPE}
+     * and {@link JcrConstants#JCR_MIXINTYPES}.
+     *
+     * @return
+     */
+    public Set<String> getIgnoredProperties() {
+        return ignoredProperties;
     }
 
     /**
@@ -196,9 +213,7 @@ public class BTreeManager implements TreeManager {
         }
 
         if (count == 0) {
-            Node parent = node.getParent();
-            node.remove();
-            removeRec(parent);
+            removeRec(node);
         }
     }
 
@@ -236,7 +251,7 @@ public class BTreeManager implements TreeManager {
      * @see org.apache.jackrabbit.commons.flat.TreeManager#isLeaf(javax.jcr.Node)
      */
     public boolean isLeaf(Node node) throws RepositoryException {
-        return !node.hasNodes() && !isRoot(node);
+        return !node.hasNodes();
     }
 
     public Comparator<String> getOrder() {
@@ -265,43 +280,14 @@ public class BTreeManager implements TreeManager {
     protected SizedIterator<Property> getProperties(Node node) throws RepositoryException {
         final PropertyIterator properties = node.getProperties();
 
-        Iterator<Property> filteredIterator = new Iterator<Property>() {
-            Property next = null;
-
-            public boolean hasNext() {
-                while (next == null && properties.hasNext()) {
-                    Property p = properties.nextProperty();
-                    try {
-                        if (!JcrConstants.JCR_PRIMARYTYPE.equals(p.getName())) {
-                            next = p;
-                        }
-                    }
-                    catch (RepositoryException ignore) {
-                        next = p;
-                    }
-                }
-
-                return next != null;
-            }
-
-            public Property next() {
-                if (hasNext()) {
-                    Property property = next;
-                    next = null;
-                    return property;
-                }
-                else {
-                    throw new NoSuchElementException();
-                }
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        };
-
         long size = properties.getSize();
-        return getSizedIterator(filteredIterator, size > 0 ? size - 1 : size);
+        for (Iterator<String> ignored = ignoredProperties.iterator(); size > 0 && ignored.hasNext(); ) {
+            if (node.hasProperty(ignored.next())) {
+                size--;
+            }
+        }
+
+        return getSizedIterator(filterProperties(properties), size);
     }
 
     /**
@@ -425,6 +411,23 @@ public class BTreeManager implements TreeManager {
             n = n.getParent();
             d.remove();
         }
+    }
+
+    /**
+     * Filtering ignored properties from the given properties.
+     */
+    private Iterator<Property> filterProperties(Iterator<Property> properties) {
+        return new FilterIterator<Property>(properties, new Predicate() {
+            public boolean evaluate(Object object) {
+                try {
+                    Property p = (Property) object;
+                    return !ignoredProperties.contains(p.getName());
+                }
+                catch (RepositoryException ignore) {
+                    return true;
+                }
+            }
+        });
     }
 
     private static class WrappedRepositoryException extends RuntimeException {

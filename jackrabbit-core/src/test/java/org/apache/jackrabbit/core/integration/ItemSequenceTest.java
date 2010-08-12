@@ -24,8 +24,10 @@ import org.apache.jackrabbit.commons.flat.PropertySequence;
 import org.apache.jackrabbit.commons.flat.Rank;
 import org.apache.jackrabbit.commons.flat.TreeManager;
 import org.apache.jackrabbit.commons.flat.TreeTraverser;
+import org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -40,11 +42,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 public class ItemSequenceTest extends AbstractJCRTest {
     private Node testNode;
+    private final ErrorHandler errorHandler = new ErrorHandler() {
+        public void call(Item item, RepositoryException exception) {
+            fail("An exception occurred on " + item + ": " + exception);
+        }
+    };
 
     @Override
     public void setUp() throws Exception {
@@ -53,10 +61,45 @@ public class ItemSequenceTest extends AbstractJCRTest {
         superuser.save();
     }
 
+    public void testEmptyNodeSequence() throws RepositoryException {
+        Comparator<String> order = Rank.<String>comparableComparator();
+        TreeManager treeManager = new BTreeManager(testNode, 5, 10, order, true);
+        NodeSequence nodes = ItemSequence.createNodeSequence(treeManager, errorHandler);
+
+        Iterator<Node> nodeIt = nodes.iterator();
+        assertTrue(nodeIt.hasNext());
+        assertTrue(treeManager.isRoot(nodeIt.next()));
+        assertFalse(nodeIt.hasNext());
+
+        checkTreeProperty(testNode, 5, 10, order);
+        checkOrder(nodes, order);
+        assertEmpty(nodes);
+    }
+
+    public void testSingletonNodeSequence() throws RepositoryException {
+        Comparator<String> order = Rank.<String>comparableComparator();
+        TreeManager treeManager = new BTreeManager(testNode, 5, 10, order, true);
+        NodeSequence nodes = ItemSequence.createNodeSequence(treeManager, errorHandler);
+
+        nodes.addNode("key", NodeType.NT_UNSTRUCTURED);
+        assertTrue(nodes.hasItem("key"));
+
+        Iterator<Node> nodeIt = nodes.iterator();
+        assertTrue(nodeIt.hasNext());
+        assertEquals("key", nodeIt.next().getName());
+        assertFalse(nodeIt.hasNext());
+
+        checkTreeProperty(testNode, 5, 10, order);
+        checkOrder(nodes, order);
+
+        nodes.removeNode("key");
+        assertEmpty(nodes);
+    }
+
     public void testNodeSequence() throws RepositoryException, IOException {
         Comparator<String> order = Rank.<String>comparableComparator();
         TreeManager treeManager = new BTreeManager(testNode, 5, 10, order, true);
-        NodeSequence nodes = ItemSequence.createNodeSequence(treeManager);
+        NodeSequence nodes = ItemSequence.createNodeSequence(treeManager, errorHandler);
 
         List<String> words = loadWords();
         Collections.shuffle(words);
@@ -75,13 +118,41 @@ public class ItemSequenceTest extends AbstractJCRTest {
         checkLookup(nodes, words);
 
         removeAll(nodes, words);
-        checkEmpty(nodes);
+        assertEmpty(nodes);
+    }
+
+    public void testEmptyPropertySequence() throws RepositoryException {
+        Comparator<String> order = Rank.<String>comparableComparator();
+        TreeManager treeManager = new BTreeManager(testNode, 2, 4, order, true);
+        PropertySequence properties = ItemSequence.createPropertySequence(treeManager, errorHandler);
+
+        Iterator<Property> propertyIt = properties.iterator();
+        assertFalse(propertyIt.hasNext());
+        assertEmpty(properties);
+    }
+
+    public void testSingletonPropertySequence() throws RepositoryException {
+        Comparator<String> order = Rank.<String>comparableComparator();
+        TreeManager treeManager = new BTreeManager(testNode, 2, 4, order, true);
+        PropertySequence properties = ItemSequence.createPropertySequence(treeManager, errorHandler);
+
+        ValueFactory vFactory = testNode.getSession().getValueFactory();
+        properties.addProperty("key", vFactory.createValue("key_"));
+        assertTrue(properties.hasItem("key"));
+
+        Iterator<Property> propertyIt = properties.iterator();
+        assertTrue(propertyIt.hasNext());
+        assertEquals("key", propertyIt.next().getName());
+        assertFalse(propertyIt.hasNext());
+
+        properties.removeProperty("key");
+        assertEmpty(properties);
     }
 
     public void testPropertySequence() throws RepositoryException, IOException {
         Comparator<String> order = Rank.<String>comparableComparator();
         TreeManager treeManager = new BTreeManager(testNode, 2, 4, order, true);
-        PropertySequence properties = ItemSequence.createPropertySequence(treeManager);
+        PropertySequence properties = ItemSequence.createPropertySequence(treeManager, errorHandler);
 
         List<String> words = loadWords();
         Collections.shuffle(words);
@@ -100,7 +171,7 @@ public class ItemSequenceTest extends AbstractJCRTest {
         checkLookup(properties, words);
 
         removeAll(properties, words);
-        checkEmpty(properties);
+        assertEmpty(properties);
     }
 
     // -----------------------------------------------------< internal >---
@@ -263,13 +334,15 @@ public class ItemSequenceTest extends AbstractJCRTest {
         }
     }
 
-    private static void checkEmpty(NodeSequence nodes) throws RepositoryException {
+    private void assertEmpty(NodeSequence nodes) throws RepositoryException {
         for (Node n : nodes) {
-            fail("NodeSqeuence should be empty but found " + n.getPath());
+            if (!n.isSame(testNode)) {
+                fail("NodeSqeuence should be empty but found " + n.getPath());
+            }
         }
     }
 
-    private static void checkEmpty(PropertySequence properties) throws RepositoryException {
+    private void assertEmpty(PropertySequence properties) throws RepositoryException {
         for (Property p : properties) {
             fail("PropertySqeuence should be empty but found " + p.getPath());
         }
