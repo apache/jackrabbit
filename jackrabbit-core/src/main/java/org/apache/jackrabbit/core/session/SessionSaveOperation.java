@@ -21,8 +21,16 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.id.NodeId;
 
+/**
+ * Operation to persist transient changes in a session.
+ */
 public class SessionSaveOperation implements SessionOperation<Object> {
 
+    /**
+     * Persists transient changes by delegating to the save() method of the
+     * root node (or the parent of transient changes if access to the root
+     * node is not available to this session).
+     */
     public Object perform(SessionContext context) throws RepositoryException {
         NodeId id;
         // JCR-2425: check whether session is allowed to read root node

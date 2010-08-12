@@ -34,10 +34,20 @@ import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
+/**
+ * Component context of a session. This class keeps track of the internal
+ * components associated with a session.
+ */
 public class SessionContext implements NamePathResolver {
 
+    /**
+     * The repository context of this session.
+     */
     private final RepositoryContext repositoryContext;
 
+    /**
+     * This session.
+     */
     private final SessionImpl session;
 
     /**
@@ -65,8 +75,17 @@ public class SessionContext implements NamePathResolver {
      */
     private volatile AccessManager accessManager;
 
+    /**
+     * The observation manager of this session.
+     */
     private volatile ObservationManagerImpl observationManager;
 
+    /**
+     * Creates a component context for the given session.
+     *
+     * @param repositoryContext repository context of the session
+     * @param session the session
+     */
     public SessionContext(
             RepositoryContext repositoryContext, SessionImpl session) {
         assert repositoryContext != null;
@@ -76,6 +95,11 @@ public class SessionContext implements NamePathResolver {
         this.state = new SessionState(this);
     }
 
+    /**
+     * Returns the repository context of the session.
+     *
+     * @return repository context
+     */
     public RepositoryContext getRepositoryContext() {
         return repositoryContext;
     }
@@ -99,10 +123,20 @@ public class SessionContext implements NamePathResolver {
         return repositoryContext.getDataStore();
     }
 
+    /**
+     * Returns this session.
+     *
+     * @return session
+     */
     public SessionImpl getSessionImpl() {
         return session;
     }
 
+    /**
+     * Returns the state of this session.
+     *
+     * @return session state
+     */
     public SessionState getSessionState() {
         return state;
     }

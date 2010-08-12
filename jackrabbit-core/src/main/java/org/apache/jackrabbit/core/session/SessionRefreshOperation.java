@@ -26,15 +26,30 @@ import org.apache.jackrabbit.core.cluster.ClusterNode;
  */
 public class SessionRefreshOperation implements SessionOperation<Object> {
 
+    /**
+     * Flag to keep transient changes.
+     */
     private final boolean keepChanges;
 
+    /**
+     * Flag to synchronise with other cluster nodes.
+     */
     private final boolean clusterSync;
 
+    /**
+     * Creates a session refresh operation.
+     *
+     * @param keepChanges whether to keep transient changes
+     * @param clusterSync whether to synchronise with other cluster nodes
+     */
     public SessionRefreshOperation(boolean keepChanges, boolean clusterSync) {
         this.keepChanges = keepChanges;
         this.clusterSync = clusterSync;
     }
 
+    /**
+     * Refreshes the session.
+     */
     public Object perform(SessionContext context) throws RepositoryException {
         // JCR-1753: Ensure that we are up to date with cluster changes
         ClusterNode cluster = context.getRepositoryContext().getClusterNode();
