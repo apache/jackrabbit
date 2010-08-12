@@ -1,30 +1,30 @@
-Release Notes -- Apache Jackrabbit -- Version 1.6.2
+Release Notes -- Apache Jackrabbit -- Version 1.6.3
 
 Introduction
 ------------
 
-Apache Jackrabbit 1.6.2 is a bug fix release that fixes issues reported
+Apache Jackrabbit 1.6.3 is a bug fix release that fixes issues reported
 against previous releases. This release is backwards-compatible with the
 earlier 1.6.x releases, but contains a change in persistence format that
-makes it impossible to downgrade to an earlier release after a repository
-has been upgraded to the 1.6.2 version. A full backup of the repository
-is recommended before this upgrade.
+makes it impossible to downgrade to releases earlier than 1.6.2 after a
+repository has been upgraded. A full backup of the repository is recommended
+before this upgrade.
 
 Changes in this release
 -----------------------
 
 This release fixes the following issues:
 
-  JCR-2170 Remove PropDefId and NodeDefId
-  JCR-2433 NPE when copying nodes with Workspace.copy()
-  JCR-2456 Repository is corrupt after concurrent changes with the same session
-  JCR-2503 inconsistent session and persistent state after ...
-  JCR-2525 NodeState and NodeStateListener deadlock
-  JCR-2554 Deadlock inside XASession on Weblogic
-  JCR-2577 SISM.checkAddedChildNodes() prevents merging of concurrent changes
-  JCR-2611 DefaultHighlighter.java does not encode illegal XML characters
+  JCR-2341 Unable to add/lock and unlock/remove Node with shared Session ...
+  JCR-2413 AlreadyClosedException on initial index creation
+  JCR-2579 InvalidItemStateException when attempting concurrent, non ...
+  JCR-2598 Saving concurrent sessions executing random operations causes ...
   JCR-2613 NoSuchItemStateException on checkin after removeVersion in XA ...
-  JCR-2645 XML text extraction in Jackrabbit 1.x accesses external resources
+  JCR-2651 Add a OnWorkspaceInconsistency with logging only
+  JCR-2652 Can no longer set a Date property using a Long value
+  JCR-2659 Fails to remove a previously assigned mixin
+  JCR-2667 NodeReferences are lost when deleting and setting the same ...
+  JCR-2681 XMLPersistanceManager doesn't preserve a property's ...
 
 See the Jackrabbit issue tracker for more details about these changes:
 
@@ -50,13 +50,11 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Antonio Martinez        Marcel Reutegger        Stefan Guggisberg
-    Bart van der Schans     Martijn Hendriks        Stephan Huttenhuis
-    Bram de Kruijff         Maxime Bégnis           The Dong
-    Claus Köll              Paul Jara               Thomas Müller
-    Frederic Guilbeault     Peter Krokavec          Tobias Bocanegra
-    Grégory Joseph          Robert Sauer            Tom Quellenberg
-    Jukka Zitting           Sascha Theves
+    Adam Cooney           Marcel Reutegger      Tobias Bocanegra
+    Cédric Damioli        Paco Avila            Tom Quellenberg
+    Claus Köll            Sergiy Shyrkov        Vidar Ramdal
+    Dan Diephouse         Stefan Guggisberg
+    Jukka Zitting         Stephan Huttenhuis
 
 Thank you to everyone involved!
 
