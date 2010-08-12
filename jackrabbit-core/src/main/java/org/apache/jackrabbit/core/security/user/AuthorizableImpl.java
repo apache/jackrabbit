@@ -37,6 +37,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -403,7 +404,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         NodeId getNodeId() {
             return node.getNodeId();
         }
-        
+
         //---------------------------------------------< ItemBasedPrincipal >---
         /**
          * Method revealing the path to the Node that represents the

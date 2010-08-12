@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 interface UserConstants {
 
     NameFactory NF = NameFactoryImpl.getInstance();
-    
+
     /**
      * root-path to security related content e.g. principals
      */
@@ -61,7 +61,9 @@ interface UserConstants {
      * @see #P_MEMBERS
      */
     Name P_GROUPS = NF.create(Name.NS_REP_URI, "groups");
+
     Name P_MEMBERS = NF.create(Name.NS_REP_URI, "members");
+    Name N_MEMBERS = NF.create(Name.NS_REP_URI, "members");
 
     /**
      * Name of the user property containing the principal names of those allowed
@@ -73,6 +75,6 @@ interface UserConstants {
     Name NT_REP_AUTHORIZABLE_FOLDER = NF.create(Name.NS_REP_URI, "AuthorizableFolder");
     Name NT_REP_USER = NF.create(Name.NS_REP_URI, "User");
     Name NT_REP_GROUP = NF.create(Name.NS_REP_URI, "Group");
+    Name NT_REP_MEMBERS = NF.create(Name.NS_REP_URI, "Members");
     Name MIX_REP_IMPERSONATABLE = NF.create(Name.NS_REP_URI, "Impersonatable");
-
 }

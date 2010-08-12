@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.test.NotExecutableException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>GroupTest</code>...
@@ -151,6 +151,50 @@ public class GroupTest extends AbstractUserTest {
             assertTrue(newGroup.isMember(userMgr.getAuthorizable(auth.getID())));
 
         } finally {
+            if (newGroup != null) {
+                newGroup.removeMember(auth);
+                newGroup.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testAddMembers() throws NotExecutableException, RepositoryException {
+        User auth = getTestUser(superuser);
+        Group newGroup = null;
+        int size = 100;
+        List<User> users = new ArrayList<User>(size);
+        try {
+            newGroup = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
+
+            for (int k = 0; k < size; k++) {
+                users.add(userMgr.createUser("user_" + k, "pass_" + k));
+            }
+            save(superuser);
+
+            for (User user : users) {
+                assertTrue(newGroup.addMember(user));
+            }
+            save(superuser);
+
+            for (User user : users) {
+                assertTrue(newGroup.isMember(user));
+            }
+
+            for (User user : users) {
+                assertTrue(newGroup.removeMember(user));
+            }
+            save(superuser);
+
+            for (User user : users) {
+                assertFalse(newGroup.isMember(user));
+            }
+        } finally {
+            for (User user : users) {
+                user.remove();
+                save(superuser);
+            }
             if (newGroup != null) {
                 newGroup.removeMember(auth);
                 newGroup.remove();
@@ -387,7 +431,7 @@ public class GroupTest extends AbstractUserTest {
             }
         }
     }
-       
+
     public void testRemoveGroupClearsMembership() throws NotExecutableException, RepositoryException {
         User auth = getTestUser(superuser);
         Group newGroup = null;

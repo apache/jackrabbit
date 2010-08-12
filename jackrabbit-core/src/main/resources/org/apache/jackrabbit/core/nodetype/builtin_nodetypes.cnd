@@ -603,12 +603,18 @@
   - rep:disabled (STRING) protected
 
 [rep:Group] > rep:Authorizable
+  + rep:members (rep:Members) = rep:Members multiple VERSION
   - rep:members (WEAKREFERENCE) protected multiple < 'rep:Authorizable'
 
 [rep:AuthorizableFolder] > nt:hierarchyNode
   + * (rep:Authorizable) = rep:User VERSION
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder VERSION
-  
+
+[rep:Members] > nt:hierarchyNode
+  orderable
+  + * (rep:Members) = rep:Members multiple
+  - * (WEAKREFERENCE) < 'rep:Authorizable'
+    
 // -----------------------------------------------------------------------------
 // J A C K R A B B I T  R E T E N T I O N  M A N A G E M E N T
 // -----------------------------------------------------------------------------

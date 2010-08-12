@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -37,23 +37,24 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
+
+import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
-import java.io.UnsupportedEncodingException;
 
 /**
  * Default implementation of the <code>UserManager</code> interface with the
@@ -89,7 +90,7 @@ import java.io.UnsupportedEncodingException;
  * Examples:
  * Creating an non-existing user with ID 'aSmith' without specifying an
  * intermediate path would result in the following structure:
- * 
+ *
  * <pre>
  * + rep:security            [nt:unstructured]
  *   + rep:authorizables     [rep:AuthorizableFolder]
@@ -202,6 +203,15 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public static final String PARAM_AUTO_EXPAND_SIZE = "autoExpandSize";
 
+    /**
+     * If this parameter is present group memberships are collected in a node
+     * structure below {@link UserConstants#N_MEMBERS} instead of the default
+     * multi valued property {@link UserConstants#P_MEMBERS}. Its value determines
+     * the maximum number of member properties until additional intermediate nodes
+     * are inserted. Valid values are integers > 4.
+     */
+    public static final String PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE = "groupMembershipSplitSize";
+
     private static final Logger log = LoggerFactory.getLogger(UserManagerImpl.class);
 
     private final SessionImpl session;
@@ -236,6 +246,14 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     private final boolean isSystemUserManager;
 
+    /**
+     * Maximum number of properties on the group membership node structure under
+     * {@link UserConstants#N_MEMBERS} until additional intermediate nodes are inserted.
+     * If 0 (default), {@link UserConstants#P_MEMBERS} is used to record group
+     * memberships.
+     */
+    private final int groupMembershipSplitSize;
+
     private final MembershipCache membershipCache;
 
     /**
@@ -269,6 +287,8 @@ public class UserManagerImpl extends ProtectedItemModifier
      * <li>{@link #PARAM_DEFAULT_DEPTH}. The default number of levels is 2.</li>
      * <li>{@link #PARAM_AUTO_EXPAND_TREE}. By default this option is disabled.</li>
      * <li>{@link #PARAM_AUTO_EXPAND_SIZE}. The default value is 1000.</li>
+     * <li>{@link #PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE}. The default is 0 which means use
+     * {@link UserConstants#P_MEMBERS}.</li>
      * </ul>
      *
      * See the overall {@link UserManagerImpl introduction} for details.
@@ -294,10 +314,13 @@ public class UserManagerImpl extends ProtectedItemModifier
         param = (config != null) ? config.get(PARAM_COMPATIBILE_JR16) : null;
         compatibleJR16 = (param != null) && Boolean.parseBoolean(param.toString());
 
+        param = (config != null) ? config.get(PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE) : null;
+        groupMembershipSplitSize = parseMembershipSplitSize(param);
+
         if (mCache != null) {
             membershipCache = mCache;
         } else {
-            membershipCache = new MembershipCache(session, groupsPath);
+            membershipCache = new MembershipCache(session, groupsPath, groupMembershipSplitSize > 0);
         }
 
         NodeResolver nr;
@@ -314,14 +337,14 @@ public class UserManagerImpl extends ProtectedItemModifier
          * evaluate if the editing session is a system session. since the
          * SystemSession class is package protected the session object cannot
          * be checked for the property instance.
-         * 
+         *
          * workaround: compare the class name and check if the subject contains
          * the system principal.
          */
-        isSystemUserManager = "org.apache.jackrabbit.core.SystemSession".equals(session.getClass().getName()) && 
+        isSystemUserManager = "org.apache.jackrabbit.core.SystemSession".equals(session.getClass().getName()) &&
                 !session.getSubject().getPrincipals(SystemPrincipal.class).isEmpty();
     }
-    
+
     /**
      * Implementation specific methods releaving where users are created within
      * the content.
@@ -399,7 +422,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             // a) try short-cut that works in case of ID.equals(principalName) only.
             // b) execute query in case of pName mismatch or exception. however, query
             //    requires persisted user nodes (see known issue of UserImporter).
-            String name = principal.getName();           
+            String name = principal.getName();
             try {
                 Authorizable a = internalGetAuthorizable(name);
                 if (a != null && name.equals(a.getPrincipal().getName())) {
@@ -500,7 +523,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * Create a new <code>Group</code> from the given <code>principal</code>.
      * It will be created below the defined {@link #getGroupsPath() group path}.<br>
-     * Non-existant elements of the Path will be created as nodes
+     * Non-existent elements of the Path will be created as nodes
      * of type {@link #NT_REP_AUTHORIZABLE_FOLDER rep:AuthorizableFolder}.
      * The group ID will be generated from the principal name. If the name
      * conflicts with an existing authorizable ID (may happen in cases where
@@ -557,6 +580,18 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public void autoSave(boolean enable) throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException("Cannot change autosave behavior.");
+    }
+
+    /**
+     * Maximum number of properties on the group membership node structure under
+     * {@link UserConstants#N_MEMBERS} until additional intermediate nodes are inserted.
+     * If 0 (default), {@link UserConstants#P_MEMBERS} is used to record group
+     * memberships.
+     *
+     * @return
+     */
+    public int getGroupMembershipSplitSize() {
+        return groupMembershipSplitSize;
     }
 
     //--------------------------------------------------------------------------
@@ -616,6 +651,14 @@ public class UserManagerImpl extends ProtectedItemModifier
         if (isAutoSave()) {
             parent.save();
         }
+    }
+
+    NodeImpl addProtectedNode(NodeImpl parent, Name name, Name ntName) throws RepositoryException {
+        NodeImpl n = addNode(parent, name, ntName);
+        if (isAutoSave()) {
+            parent.save();
+        }
+        return n;
     }
 
     /**
@@ -763,7 +806,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * return a custom implementation.
      *
      * @param node group node
-     * @return A group 
+     * @return A group
      * @throws RepositoryException if an error occurs
      */
     protected Group doCreateGroup(NodeImpl node) throws RepositoryException {
@@ -810,7 +853,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             if (!isAutoSave()) {
                 session.save();
             }
-            log.info("Resolved conflict and (re)created admin user with id \'" + adminId + "\' and default pw.");          
+            log.info("Resolved conflict and (re)created admin user with id \'" + adminId + "\' and default pw.");
         }
         return admin;
     }
@@ -831,9 +874,30 @@ public class UserManagerImpl extends ProtectedItemModifier
             throw new RepositoryException("Unexpected error while build ID hash", e);
         }
     }
-    
+
     private static boolean isValidPrincipal(Principal principal) {
         return principal != null && principal.getName() != null && principal.getName().length() > 0;
+    }
+
+    private static int parseMembershipSplitSize(Object param) {
+        int n = 0;
+        if (param != null) {
+            try {
+                n = Integer.parseInt(param.toString());
+                if (n < 4) {
+                    n = 0;
+                }
+            }
+            catch (NumberFormatException e) {
+                n = 0;
+            }
+            if (n == 0) {
+                log.warn("Invalid value {} for {}. Expected integer >= 4",
+                        param.toString(), PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE);
+            }
+        }
+
+        return n;
     }
 
     //----------------------------------------------------< SessionListener >---
@@ -863,7 +927,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         private final Set<String> served = new HashSet<String>();
 
         private Authorizable next;
-        private NodeIterator authNodeIter;
+        private final NodeIterator authNodeIter;
 
         private AuthorizableIterator(NodeIterator authNodeIter) {
             this.authNodeIter = authNodeIter;
@@ -1061,7 +1125,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         private static final String DELIMITER = "/";
         private static final int DEFAULT_DEPTH = 2;
         private static final long DEFAULT_SIZE = 1000;
-        
+
         private final int defaultDepth;
         private final boolean autoExpandTree;
         // best effort max-size of authorizables per folder. there may be
@@ -1240,7 +1304,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             // - if the authorizable node to be created potentially collides with
             //   any of the intermediate nodes.
             int segmLength = defaultDepth +1;
-            
+
             while (intermediateFolderNeeded(escapedId, folder)) {
                 String folderName = Text.escapeIllegalJcrChars(id.substring(0, segmLength));
                 if (folder.hasNode(folderName)) {
@@ -1317,10 +1381,12 @@ public class UserManagerImpl extends ProtectedItemModifier
             if (folder.getNodes().getSize() >= autoExpandSize) {
                 return true;
             }
-            
+
             // no collision and no need to create an additional intermediate
             // folder due to max-size reached
             return false;
         }
     }
+
+
 }
