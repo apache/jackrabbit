@@ -65,7 +65,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
             final PrincipalManager pMgr = user.getSession().getPrincipalManager();
 
             Set<Principal> s = new HashSet<Principal>();
-            for (String pName: impersonators) {
+            for (String pName : impersonators) {
                 Principal p = pMgr.getPrincipal(pName);
                 if (p == null) {
                     log.debug("Impersonator " + pName + " does not correspond to a known Principal.");
@@ -132,7 +132,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
     }
 
     /**
-     * @see Impersonation#allows(Subject) 
+     * @see Impersonation#allows(Subject)
      */
     public boolean allows(Subject subject) throws RepositoryException {
         if (subject == null) {
@@ -145,7 +145,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
         }
 
         Set<String> principalNames = new HashSet<String>();
-        for (Principal p: subject.getPrincipals()) {
+        for (Principal p : subject.getPrincipals()) {
             principalNames.add(p.getName());
         }
 
