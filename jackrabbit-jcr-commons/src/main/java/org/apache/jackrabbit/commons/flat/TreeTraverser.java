@@ -18,6 +18,8 @@ package org.apache.jackrabbit.commons.flat;
 
 import static org.apache.jackrabbit.commons.iterator.LazyIteratorChain.chain;
 
+import org.apache.jackrabbit.commons.predicate.Predicate;
+
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -51,7 +53,7 @@ import java.util.Iterator;
 public final class TreeTraverser implements Iterable<Node> {
     private final Node root;
     private final ErrorHandler errorHandler;
-    private final InclusionPolicy inclusionPolicy;
+    private final InclusionPolicy<? super Node> inclusionPolicy;
 
     /**
      * Create a new instance of a TreeTraverser rooted at <code>node</code>.
@@ -61,7 +63,7 @@ public final class TreeTraverser implements Iterable<Node> {
      * @param inclusionPolicy Inclusion policy to determine which nodes to
      *            include
      */
-    public TreeTraverser(Node root, ErrorHandler errorHandler, InclusionPolicy inclusionPolicy) {
+    public TreeTraverser(Node root, ErrorHandler errorHandler, InclusionPolicy<? super Node> inclusionPolicy) {
         super();
         this.root = root;
         this.errorHandler = errorHandler == null? ErrorHandler.IGNORE : errorHandler;
@@ -103,45 +105,45 @@ public final class TreeTraverser implements Iterable<Node> {
     }
 
     /**
-     * Inclusion policy to determine which nodes to include when traversing.
+     * Inclusion policy to determine which itmes to include when traversing.
      * There a two predefined inclusion policies:
      * <ul>
-     * <li>{@link #ALL} includes all nodes.</li>
+     * <li>{@link #ALL} includes all items.</li>
      * <li>{@link #LEAVES} includes only leave nodes. A leaf node is a node
-     * which does not have childe nodes.</li>
+     * which does not have child nodes.</li>
      * </ul>
      */
-    public interface InclusionPolicy {
+    public interface InclusionPolicy<T extends Item> {
 
         /**
-         * This inclusions policy includes all nodes.
+         * This inclusions policy includes all items.
          */
-        public static InclusionPolicy ALL = new InclusionPolicy() {
-            public boolean include(Node node) {
+        public static InclusionPolicy<Item> ALL = new InclusionPolicy<Item>() {
+            public boolean include(Item item) {
                 return true;
             }
         };
 
         /**
-         * This inclusion policy only includes leave nodes. A leaf node is a
-         * node which does not have child nodes.
+         * This inclusion policy includes leave nodes only. A leaf
+         * node is a node which does not have child nodes.
          */
-        public static InclusionPolicy LEAVES = new InclusionPolicy() {
+        public static InclusionPolicy<Node> LEAVES = new InclusionPolicy<Node>() {
             public boolean include(Node node) throws RepositoryException {
                 return !node.hasNodes();
             }
         };
 
         /**
-         * Call back method to determine whether to include a given node.
+         * Call back method to determine whether to include a given item.
          *
-         * @param node The node under consideration
-         * @return <code>true</code> when <code>node</code> should be included.
+         * @param item The item under consideration
+         * @return <code>true</code> when <code>item</code> should be included.
          *         <code>false</code> otherwise.
          *
          * @throws RepositoryException
          */
-        boolean include(Node node) throws RepositoryException;
+        boolean include(T item) throws RepositoryException;
     }
 
     /**
@@ -155,7 +157,7 @@ public final class TreeTraverser implements Iterable<Node> {
      * @return iterator of {@link Node}
      */
     public static Iterator<Node> nodeIterator(Node root, ErrorHandler errorHandler,
-            InclusionPolicy inclusionPolicy) {
+            InclusionPolicy<? super Node> inclusionPolicy) {
 
         return new TreeTraverser(root, errorHandler, inclusionPolicy).iterator();
     }
@@ -180,11 +182,16 @@ public final class TreeTraverser implements Iterable<Node> {
      *
      * @param nodes nodes whose properties to chain
      * @param errorHandler handler for exceptions occurring on traversal
+     * @param inclusionPolicy inclusion policy to determine properties items to include
+     *
      * @return iterator of {@link Property}
      */
-    public static Iterator<Property> propertyIterator(Iterator<Node> nodes, ErrorHandler errorHandler) {
-        return chain(propertyIterators(nodes, errorHandler));
+    public static Iterator<Property> propertyIterator(Iterator<Node> nodes, ErrorHandler errorHandler,
+            InclusionPolicy<? super Property> inclusionPolicy) {
+
+        return filter(chain(propertyIterators(nodes, errorHandler)), inclusionPolicy);
     }
+
 
     /**
      * Create an iterator of the properties for a given iterator of nodes. The
@@ -198,7 +205,7 @@ public final class TreeTraverser implements Iterable<Node> {
      * @return iterator of {@link Property}
      */
     public static Iterator<Property> propertyIterator(Iterator<Node> nodes) {
-        return propertyIterator(nodes, ErrorHandler.IGNORE);
+        return propertyIterator(nodes, ErrorHandler.IGNORE, InclusionPolicy.ALL);
     }
 
     /**
@@ -207,14 +214,15 @@ public final class TreeTraverser implements Iterable<Node> {
      *
      * @param root root node of the sub-tree to traverse
      * @param errorHandler handler for exceptions occurring on traversal
-     * @param inclusionPolicy inclusion policy to determine which nodes to
+     * @param inclusionPolicy inclusion policy to determine which items to
      *            include
      * @return iterator of {@link Property}
      */
     public static Iterator<Property> propertyIterator(Node root, ErrorHandler errorHandler,
-            InclusionPolicy inclusionPolicy) {
+            InclusionPolicy<Item> inclusionPolicy) {
 
-        return propertyIterator(nodeIterator(root, errorHandler, inclusionPolicy), errorHandler);
+        return propertyIterator(nodeIterator(root, errorHandler, inclusionPolicy), errorHandler,
+                inclusionPolicy);
     }
 
     /**
@@ -323,5 +331,24 @@ public final class TreeTraverser implements Iterable<Node> {
         return Collections.singleton(value).iterator();
     }
 
+    /**
+     * Filtering items not matching the <code>inclusionPolicy</code> from
+     * <code>iterator</code>.
+     */
+    private static <T extends Item> Iterator<T> filter(final Iterator<T> iterator,
+            final InclusionPolicy<? super T> inclusionPolicy) {
+
+        return new FilterIterator<T>(iterator, new Predicate() {
+            @SuppressWarnings("unchecked")
+            public boolean evaluate(Object object) {
+                try {
+                    return inclusionPolicy.include((T) object);
+                }
+                catch (RepositoryException ignore) {
+                    return true;
+                }
+            }
+        });
+    }
 
 }

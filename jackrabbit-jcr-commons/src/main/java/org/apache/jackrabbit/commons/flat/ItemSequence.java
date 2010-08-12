@@ -16,8 +16,9 @@
  */
 package org.apache.jackrabbit.commons.flat;
 
-import org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler;
-import org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
@@ -28,8 +29,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
-import java.util.Comparator;
-import java.util.Iterator;
+import org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler;
+import org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy;
 
 /**
  * <p>
@@ -173,7 +174,7 @@ public abstract class ItemSequence {
     }
 
     /**
-     * Create a new {@link NodeSequence} instance with the same parametrization
+     * Create a new {@link NodeSequence} instance with the same parameterization
      * as this instance.
      *
      * @return
@@ -359,17 +360,18 @@ public abstract class ItemSequence {
     }
 
     protected static class NodeSequenceImpl extends ItemSequence implements NodeSequence {
+        private final InclusionPolicy<Node> inclusionPolicy = new InclusionPolicy<Node>() {
+            public boolean include(Node node) throws RepositoryException {
+                return treeManager.isLeaf(node);
+            }
+        };
 
         public NodeSequenceImpl(TreeManager treeManager, ErrorHandler errorHandler)  {
             super(treeManager, errorHandler);
         }
 
         public Iterator<Node> iterator() {
-            return TreeTraverser.nodeIterator(root, errorHandler, new InclusionPolicy() {
-                public boolean include(Node node) throws RepositoryException {
-                    return treeManager.isLeaf(node);
-                }
-            });
+            return TreeTraverser.nodeIterator(root, errorHandler, inclusionPolicy);
         }
 
         public Node getItem(String key) throws RepositoryException {
@@ -442,13 +444,19 @@ public abstract class ItemSequence {
     }
 
     protected static class PropertySequenceImpl extends ItemSequence implements PropertySequence {
+        private final InclusionPolicy<Property> inclusionPolicy = new InclusionPolicy<Property>() {
+            private final Set<String> ignoredProperties = treeManager.getIgnoredProperties();
+            public boolean include(Property property) throws RepositoryException {
+                return !ignoredProperties.contains(property.getName());
+            }
+        };
 
         public PropertySequenceImpl(TreeManager treeManager, ErrorHandler errorHandler) {
             super(treeManager, errorHandler);
         }
 
         public Iterator<Property> iterator() {
-            return TreeTraverser.propertyIterator(getNodeSequence().iterator(), errorHandler);
+            return TreeTraverser.propertyIterator(getNodeSequence().iterator(), errorHandler, inclusionPolicy);
         }
 
         public Property getItem(String key) throws RepositoryException {
