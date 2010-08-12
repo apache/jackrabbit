@@ -24,10 +24,26 @@
     </encoder>
   </appender>
 
+  <appender name="sift" class="ch.qos.logback.classic.sift.SiftingAppender">
+    <discriminator>
+      <Key>testclass</Key>
+      <DefaultValue>junit</DefaultValue>
+    </discriminator>
+    <sift>
+      <appender name="FILE-${testname}" class="ch.qos.logback.core.FileAppender">
+        <File>target/surefire-reports/${testclass}.log</File>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+          <Pattern>%date{HH:mm:ss.SSS} %-5level %-40([%thread] %F:%L) %msg%n</Pattern>
+        </layout>
+      </appender>
+    </sift>
+  </appender>
+
   <logger name="org.apache.jackrabbit.test" level="DEBUG"/>
 
   <root level="INFO">
     <appender-ref ref="file"/>
+    <appender-ref ref="sift"/>
   </root>
 
 </configuration>
