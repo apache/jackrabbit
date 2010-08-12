@@ -16,25 +16,26 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
-import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.commons.collections.map.ListOrderedMap;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import java.util.Properties;
-import java.util.List;
+
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * <code>IdResolverTest</code>...
@@ -48,7 +49,7 @@ public class NodeCreationTest extends AbstractUserTest {
 
     private SessionImpl s;
     private UserManagerImpl uMgr;
-    private List<NodeImpl> toRemove = new ArrayList();
+    private final List<NodeImpl> toRemove = new ArrayList();
 
     private String usersPath;
     private String groupsPath;
@@ -56,7 +57,7 @@ public class NodeCreationTest extends AbstractUserTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         String workspaceName = ((RepositoryImpl) superuser.getRepository()).getConfig().getSecurityConfig().getSecurityManagerConfig().getWorkspaceName();
         s = (SessionImpl) ((SessionImpl) superuser).createSession(workspaceName);
 
@@ -68,7 +69,7 @@ public class NodeCreationTest extends AbstractUserTest {
     protected void tearDown() throws Exception {
         try {
             for (NodeImpl node : toRemove) {
-                uMgr.removeProtectedItem(node, node.getParent());
+                uMgr.removeProtectedItem(node, (NodeImpl) node.getParent());
                 save(s);
             }
         } finally {
@@ -99,7 +100,7 @@ public class NodeCreationTest extends AbstractUserTest {
 
         try {
             NodeImpl folder = (NodeImpl) u.getNode().getParent().getParent();
-            ((UserManagerImpl) userMgr).removeProtectedItem(folder, folder.getParent());
+            ((UserManagerImpl) userMgr).removeProtectedItem(folder, (NodeImpl) folder.getParent());
             save(superuser);
         } finally {
             boolean fail = false;
@@ -150,7 +151,7 @@ public class NodeCreationTest extends AbstractUserTest {
 
     /**
      * Having 3 default levels -> test uids again.
-     * 
+     *
      * @throws RepositoryException
      */
     public void testChangedDefaultLevel() throws RepositoryException, NotExecutableException {
@@ -299,7 +300,7 @@ public class NodeCreationTest extends AbstractUserTest {
      * authorizables already present a leve N: In this case auto-expansion must
      * be aborted at that level and the authorizable will be create at level N
      * ignoring that max-size has been reached.
-     *  
+     *
      * @throws RepositoryException
      */
     public void testConflictUponChangingAutoExpandFlag() throws RepositoryException, NotExecutableException {
@@ -343,7 +344,7 @@ public class NodeCreationTest extends AbstractUserTest {
 
     /**
      * Find by ID must succeed.
-     * 
+     *
      * @throws RepositoryException
      */
     public void testFindById() throws RepositoryException, NotExecutableException {
