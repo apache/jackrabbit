@@ -33,19 +33,152 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
  */
 public abstract class SessionItemOperation<T> implements SessionOperation<T> {
 
+    //----------------------------------------------< static factory methods >
+
+    /**
+     * Creates a session operation for checking the existence of an item
+     * at the given path.
+     *
+     * @param path absolute path of the item
+     * @return session operation
+     */
+    public static SessionItemOperation<Boolean> itemExists(String path) {
+        return new SessionItemOperation<Boolean>("itemExists", path) {
+            @Override @SuppressWarnings("deprecation")
+            protected Boolean perform(ItemManager manager, Path path) {
+                return manager.itemExists(path);
+            }
+        };
+    }
+
+    /**
+     * Creates a session operation for checking the existence of a property
+     * at the given path.
+     *
+     * @param path absolute path of the property
+     * @return session operation
+     */
+    public static SessionItemOperation<Boolean> propertyExists(String path) {
+        return new SessionItemOperation<Boolean>("propertyExists", path) {
+            @Override
+            protected Boolean perform(ItemManager manager, Path path) {
+                return manager.propertyExists(path);
+            }
+        };
+    }
+
+    /**
+     * Creates a session operation for checking the existence of a node
+     * at the given path.
+     *
+     * @param path absolute path of the node
+     * @return session operation
+     */
+    public static SessionItemOperation<Boolean> nodeExists(String path) {
+        return new SessionItemOperation<Boolean>("nodeExists", path) {
+            @Override
+            protected Boolean perform(ItemManager manager, Path path) {
+                return manager.nodeExists(path);
+            }
+        };
+    }
+
+    /**
+     * Creates a session operation for getting the item at the given path.
+     *
+     * @param path absolute path of the item
+     * @return session operation
+     */
+    public static SessionItemOperation<ItemImpl> getItem(String path) {
+        return new SessionItemOperation<ItemImpl>("getItem", path) {
+            @Override @SuppressWarnings("deprecation")
+            protected ItemImpl perform(ItemManager manager, Path path)
+                    throws RepositoryException {
+                return manager.getItem(path);
+            }
+        };
+    }
+
+    /**
+     * Creates a session operation for getting the property at the given path.
+     *
+     * @param path absolute path of the property
+     * @return session operation
+     */
+    public static SessionItemOperation<PropertyImpl> getProperty(String path) {
+        return new SessionItemOperation<PropertyImpl>("getProperty", path) {
+            @Override
+            protected PropertyImpl perform(ItemManager manager, Path path)
+                    throws RepositoryException {
+                return manager.getProperty(path);
+            }
+        };
+    }
+
+    /**
+     * Creates a session operation for getting the node at the given path.
+     *
+     * @param path absolute path of the node
+     * @return session operation
+     */
+    public static SessionItemOperation<NodeImpl> getNode(String path) {
+        return new SessionItemOperation<NodeImpl>("getNode", path) {
+            @Override
+            protected NodeImpl perform(ItemManager manager, Path path)
+                    throws RepositoryException {
+                return manager.getNode(path);
+            }
+        };
+    }
+
+    /**
+     * Creates a session operation for removing the item at the given path.
+     *
+     * @param path absolute path of the item
+     * @return session operation
+     */
+    public static SessionItemOperation<Object> remove(String path) {
+        return new SessionItemOperation<Object>("remove", path) {
+            @Override  @SuppressWarnings("deprecation")
+            protected Object perform(ItemManager manager, Path path)
+                    throws RepositoryException {
+                manager.getItem(path).remove();
+                return this;
+            }
+        };
+    }
+
+    //------------------------------------------------< SessionItemOperation >
+
+    /**
+     * The method being executed (itemExists/getItem/remove/etc.)
+     */
     private final String method;
 
+    /**
+     * Absolute path of the item that this operation accesses.
+     */
     private final String path;
 
+    /**
+     * Creates a new operation for a accessing the item at the given path.
+     *
+     * @param method method being executed
+     * @param path absolute path of the item
+     */
     private SessionItemOperation(String method, String path) {
         this.method = method;
         this.path = path;
     }
 
-    public String toString() {
-        return method + "(" + path + ")";
-    }
-
+    /**
+     * Performs this operation on the specified item. This method resolves
+     * the given absolute path and calls the abstract
+     * {@link #perform(ItemManager, Path)} method to actually perform the
+     * selected operation.
+     *
+     * @throws RepositoryException if the operation fails
+     */
     public T perform(SessionContext context) throws RepositoryException {
         try {
             Path normalized =
@@ -62,75 +195,24 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
         }
     }
 
+    /**
+     * Performs this operation using the given item manager.
+     *
+     * @param manager item manager of this session
+     * @param path resolved path of the item
+     * @throws RepositoryException if the operation fails
+     */
     protected abstract T perform(ItemManager manager, Path path)
             throws RepositoryException;
 
-    public static SessionItemOperation<Boolean> itemExists(String path) {
-        return new SessionItemOperation<Boolean>("itemExists", path) {
-            @Override @SuppressWarnings("deprecation")
-            protected Boolean perform(ItemManager manager, Path path) {
-                return manager.itemExists(path);
-            }
-        };
-    }
+    //--------------------------------------------------------------< Object >
 
-    public static SessionItemOperation<Boolean> propertyExists(String path) {
-        return new SessionItemOperation<Boolean>("propertyExists", path) {
-            @Override
-            protected Boolean perform(ItemManager manager, Path path) {
-                return manager.propertyExists(path);
-            }
-        };
+    /**
+     * Returns a string representation of this operation.
+     *
+     * @return "getItem(/path/to/item)", etc.
+     */
+    public String toString() {
+        return method + "(" + path + ")";
     }
-
-    public static SessionItemOperation<Boolean> nodeExists(String path) {
-        return new SessionItemOperation<Boolean>("nodeExists", path) {
-            @Override
-            protected Boolean perform(ItemManager manager, Path path) {
-                return manager.nodeExists(path);
-            }
-        };
-    }
-
-    public static SessionItemOperation<ItemImpl> getItem(String path) {
-        return new SessionItemOperation<ItemImpl>("getItem", path) {
-            @Override @SuppressWarnings("deprecation")
-            protected ItemImpl perform(ItemManager manager, Path path)
-                    throws RepositoryException {
-                return manager.getItem(path);
-            }
-        };
-    }
-
-    public static SessionItemOperation<PropertyImpl> getProperty(String path) {
-        return new SessionItemOperation<PropertyImpl>("getProperty", path) {
-            @Override
-            protected PropertyImpl perform(ItemManager manager, Path path)
-                    throws RepositoryException {
-                return manager.getProperty(path);
-            }
-        };
-    }
-
-    public static SessionItemOperation<NodeImpl> getNode(String path) {
-        return new SessionItemOperation<NodeImpl>("getNode", path) {
-            @Override
-            protected NodeImpl perform(ItemManager manager, Path path)
-                    throws RepositoryException {
-                return manager.getNode(path);
-            }
-        };
-    }
-
-    public static SessionItemOperation<Object> remove(String path) {
-        return new SessionItemOperation<Object>("remove", path) {
-            @Override  @SuppressWarnings("deprecation")
-            protected Object perform(ItemManager manager, Path path)
-                    throws RepositoryException {
-                manager.getItem(path).remove();
-                return this;
-            }
-        };
-    }
-
 }
