@@ -79,8 +79,8 @@ public class MembershipCache implements UserConstants {
     }
 
     //------------------------------------------------------------< private >---
+
     /**
-     *
      * @param authorizableNodeIdentifier
      * @return
      * @throws RepositoryException
@@ -118,7 +118,7 @@ public class MembershipCache implements UserConstants {
     }
 
     private Collection<String> collectDeclaredMembershipFromReferences(String authorizableNodeIdentifier,
-            Session session) throws RepositoryException {
+                                                                       Session session) throws RepositoryException {
 
         Set<String> pIds = new HashSet<String>();
         Set<String> nIds = new HashSet<String>();
@@ -138,8 +138,7 @@ public class MembershipCache implements UserConstants {
                 if (P_MEMBERS.equals(pMember.getQName())) {
                     // Found membership information in members property
                     groupNodeIdentifiers = pIds;
-                }
-                else {
+                } else {
                     // Found membership information in members node
                     groupNodeIdentifiers = nIds;
                     while (nGroup.isNodeType(NT_REP_MEMBERS)) {
@@ -189,8 +188,7 @@ public class MembershipCache implements UserConstants {
                             pIds.add(nGroup.getIdentifier());
                         }
                     }
-                }
-                else {
+                } else {
                     // Found membership information in members node
                     while (nGroup.isNodeType(NT_REP_MEMBERS)) {
                         nGroup = (NodeImpl) nGroup.getParent();
@@ -220,6 +218,7 @@ public class MembershipCache implements UserConstants {
      * to use the members property or the members node to record membership
      * information. If both sets are non empty, the one configured in the
      * settings will take precedence and an warning is logged.
+     *
      * @return
      */
     private Set<String> select(Set<String> pIds, Set<String> nIds) {
@@ -227,16 +226,13 @@ public class MembershipCache implements UserConstants {
         if (useMembersNode) {
             if (!nIds.isEmpty() || pIds.isEmpty()) {
                 result = nIds;
-            }
-            else {
+            } else {
                 result = pIds;
             }
-        }
-        else {
+        } else {
             if (!pIds.isEmpty() || nIds.isEmpty()) {
                 result = pIds;
-            }
-            else {
+            } else {
                 result = nIds;
             }
         }
@@ -265,7 +261,7 @@ public class MembershipCache implements UserConstants {
     }
 
     private static PropertyIterator getMembershipReferences(String authorizableNodeIdentifier,
-            Session session) {
+                                                            Session session) {
 
         PropertyIterator refs = null;
         try {
