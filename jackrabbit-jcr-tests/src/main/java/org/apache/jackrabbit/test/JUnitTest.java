@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import junit.framework.TestCase;
 
@@ -29,11 +30,25 @@ public abstract class JUnitTest extends TestCase {
     /**
      * Logger instance for test cases
      */
-    private static final Logger logger = LoggerFactory.getLogger(JUnitTest.class);
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * Output stream for general messages from tests.
      */
     public final LogPrintWriter log = new LogPrintWriter(logger);
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        MDC.put("testclass", getClass().getName());
+        MDC.put("testcase", getName());
+        logger.info("Starting test case {}", getName());
+    }
+ 
+    protected void tearDown() throws Exception {
+        logger.info("Completed test case {}", getName());
+        MDC.remove("testcase");
+        MDC.remove("testclass");
+        super.tearDown();
+    }
 
 }
