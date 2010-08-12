@@ -125,7 +125,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 if (prop.isMultiple()) {
                     return prop.getValues();
                 } else {
-                    return new Value[] {prop.getValue()};
+                    return new Value[]{prop.getValue()};
                 }
             }
         }
@@ -199,6 +199,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             throw e;
         }
     }
+
     /**
      * @see Authorizable#removeProperty(String)
      */
@@ -308,10 +309,21 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
 
     private Iterator<Group> collectMembership(boolean includeIndirect) throws RepositoryException {
         Collection<String> groupNodeIds;
-        if (includeIndirect) {
-            groupNodeIds = userManager.getMembershipCache().getMemberOf(node.getIdentifier());
+        MembershipCache cache = userManager.getMembershipCache();
+        String nid = node.getIdentifier();
+
+        if (node.getSession().hasPendingChanges()) {
+            // avoid retrieving outdated cache entries or filling the cache with
+            // invalid data due to group-membership changes pending on the
+            // current session.
+            // this is mainly for backwards compatibility reasons (no cache present)
+            // where transient changes (in non-autosave mode) were reflected to the
+            // editing session (see JCR-2713)
+            Session session = node.getSession();
+            groupNodeIds = (includeIndirect) ? cache.collectMembership(nid, session) : cache.collectDeclaredMembership(nid, session);
         } else {
-            groupNodeIds = userManager.getMembershipCache().getDeclaredMemberOf(node.getIdentifier());
+            //  retrieve cached membership. there are no pending changes.
+            groupNodeIds = (includeIndirect) ? cache.getMemberOf(nid) : cache.getDeclaredMemberOf(nid);
         }
 
         Set<Group> groups = new HashSet<Group>(groupNodeIds.size());
@@ -341,7 +353,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         PropertyDefinition def = prop.getDefinition();
         if (def.isProtected()) {
             return false;
-        } else  {
+        } else {
             NodeTypeImpl declaringNt = (NodeTypeImpl) prop.getDefinition().getDeclaringNodeType();
             return declaringNt.isNodeType(UserConstants.NT_REP_AUTHORIZABLE);
         }

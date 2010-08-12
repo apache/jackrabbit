@@ -78,8 +78,39 @@ public class MembershipCache implements UserConstants {
         return Collections.unmodifiableCollection(groupNodeIds);
     }
 
-    //------------------------------------------------------------< private >---
+    /**
+     * Collects the declared memberships for the specified identifier of an
+     * authorizable using the specified session.
+     * 
+     * @param authorizableNodeIdentifier
+     * @param session
+     * @return
+     * @throws RepositoryException
+     */
+    Collection<String> collectDeclaredMembership(String authorizableNodeIdentifier, Session session) throws RepositoryException {
+        Collection<String> groupNodeIds = collectDeclaredMembershipFromReferences(authorizableNodeIdentifier, session);
+        if (groupNodeIds == null) {
+            groupNodeIds = collectDeclaredMembershipFromTraversal(authorizableNodeIdentifier, session);
+        }
+        return groupNodeIds;
+    }
 
+    /**
+     * Collects the complete memberships for the specified identifier of an
+     * authorizable using the specified session.
+     *
+     * @param authorizableNodeIdentifier
+     * @param session
+     * @return
+     * @throws RepositoryException
+     */
+    Collection<String> collectMembership(String authorizableNodeIdentifier, Session session) throws RepositoryException {
+        Set<String> groupNodeIds = new HashSet<String>();
+        memberOf(authorizableNodeIdentifier, groupNodeIds, session);
+        return groupNodeIds;
+    }
+
+    //------------------------------------------------------------< private >---
     /**
      * @param authorizableNodeIdentifier
      * @return
@@ -92,10 +123,7 @@ public class MembershipCache implements UserConstants {
             // concurrent read operations using the system session of this workspace.
             Session session = getSession();
             try {
-                groupNodeIds = collectDeclaredMembershipFromReferences(authorizableNodeIdentifier, session);
-                if (groupNodeIds == null) {
-                    groupNodeIds = collectDeclaredMembershipFromTraversal(authorizableNodeIdentifier, session);
-                }
+                groupNodeIds = collectDeclaredMembership(authorizableNodeIdentifier, session);
                 cache.put(authorizableNodeIdentifier, Collections.unmodifiableCollection(groupNodeIds));
             }
             finally {
@@ -108,6 +136,12 @@ public class MembershipCache implements UserConstants {
         return groupNodeIds;
     }
 
+    /**
+     * 
+     * @param authorizableNodeIdentifier
+     * @param groupNodeIds
+     * @throws RepositoryException
+     */
     private void memberOf(String authorizableNodeIdentifier, Collection<String> groupNodeIds) throws RepositoryException {
         Collection<String> declared = declaredMemberOf(authorizableNodeIdentifier);
         for (String identifier : declared) {
@@ -117,9 +151,31 @@ public class MembershipCache implements UserConstants {
         }
     }
 
+    /**
+     * 
+     * @param authorizableNodeIdentifier
+     * @param groupNodeIds
+     * @param session
+     * @throws RepositoryException
+     */
+    private void memberOf(String authorizableNodeIdentifier, Collection<String> groupNodeIds, Session session) throws RepositoryException {
+        Collection<String> declared = collectDeclaredMembership(authorizableNodeIdentifier, session);
+        for (String identifier : declared) {
+            if (groupNodeIds.add(identifier)) {
+                memberOf(identifier, groupNodeIds, session);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param authorizableNodeIdentifier
+     * @param session
+     * @return
+     * @throws RepositoryException
+     */
     private Collection<String> collectDeclaredMembershipFromReferences(String authorizableNodeIdentifier,
                                                                        Session session) throws RepositoryException {
-
         Set<String> pIds = new HashSet<String>();
         Set<String> nIds = new HashSet<String>();
 
