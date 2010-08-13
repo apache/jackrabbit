@@ -17,19 +17,24 @@
 package org.apache.jackrabbit.core.session;
 
 import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.RepositoryContext;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -75,6 +80,11 @@ public class SessionContext implements NamePathResolver {
     private final NodeTypeManagerImpl nodeTypeManager;
 
     /**
+     * The workspace of this session
+     */
+    private final WorkspaceImpl workspace;
+
+    /**
      * The item state manager of this session
      */
     private volatile SessionItemStateManager itemStateManager;
@@ -99,9 +109,12 @@ public class SessionContext implements NamePathResolver {
      *
      * @param repositoryContext repository context of the session
      * @param session the session
+     * @param workspaceConfig workspace configuration
+     * @throws RepositoryException if the workspace can not be accessed
      */
     public SessionContext(
-            RepositoryContext repositoryContext, SessionImpl session) {
+            RepositoryContext repositoryContext, SessionImpl session,
+            WorkspaceConfig workspaceConfig) throws RepositoryException {
         assert repositoryContext != null;
         assert session != null;
         this.repositoryContext = repositoryContext;
@@ -111,7 +124,10 @@ public class SessionContext implements NamePathResolver {
             new ValueFactoryImpl(session, repositoryContext.getDataStore());
         this.itemValidator = new ItemValidator(this);
         this.nodeTypeManager = new NodeTypeManagerImpl(this);
+        this.workspace = new WorkspaceImpl(this, workspaceConfig);
     }
+
+    //-------------------------------------------< per-repository components >
 
     /**
      * Returns the repository context of the session.
@@ -120,6 +136,15 @@ public class SessionContext implements NamePathResolver {
      */
     public RepositoryContext getRepositoryContext() {
         return repositoryContext;
+    }
+
+    /**
+     * Returns this repository.
+     *
+     * @return repository
+     */
+    public RepositoryImpl getRepository() {
+        return repositoryContext.getRepository();
     }
 
     /**
@@ -149,6 +174,17 @@ public class SessionContext implements NamePathResolver {
     public NodeTypeRegistry getNodeTypeRegistry() {
         return repositoryContext.getNodeTypeRegistry();
     }
+
+    /**
+     * Returns the security manager of this repository.
+     *
+     * @return security manager
+     */
+    public JackrabbitSecurityManager getSecurityManager() {
+        return repositoryContext.getSecurityManager();
+    }
+
+    //----------------------------------------------< per-session components >
 
     /**
      * Returns this session.
@@ -193,6 +229,15 @@ public class SessionContext implements NamePathResolver {
      */
     public NodeTypeManagerImpl getNodeTypeManager() {
         return nodeTypeManager;
+    }
+
+    /**
+     * Returns the workspace of this session.
+     *
+     * @return workspace
+     */
+    public WorkspaceImpl getWorkspace() {
+        return workspace;
     }
 
     public SessionItemStateManager getItemStateManager() {

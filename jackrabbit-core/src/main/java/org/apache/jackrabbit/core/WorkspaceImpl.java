@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
@@ -42,15 +45,19 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.lock.SessionLockManager;
+import org.apache.jackrabbit.core.lock.XALockManager;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
@@ -71,19 +78,14 @@ public class WorkspaceImpl extends AbstractWorkspace
     private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
 
     /**
+     * The component context of this session.
+     */
+    protected final SessionContext context;
+
+    /**
      * The configuration of this <code>Workspace</code>
      */
     protected final WorkspaceConfig wspConfig;
-
-    /**
-     * The component context of the repository that created this workspace.
-     */
-    protected final RepositoryContext repositoryContext;
-
-    /**
-     * The component context of this session.
-     */
-    protected final SessionContext sessionContext;
 
     /**
      * The persistent state mgr associated with the workspace represented by <i>this</i>
@@ -136,22 +138,22 @@ public class WorkspaceImpl extends AbstractWorkspace
     private RetentionRegistry retentionRegistry;
 
     /**
-     * Protected constructor.
+     * Creates a new workspace instance
      *
+     * @param context component context of this session
      * @param wspConfig The workspace configuration
-     * @param sessionContext component context of this session
+     * @throws RepositoryException if the workspace can not be accessed 
      */
-    protected WorkspaceImpl(
-            WorkspaceConfig wspConfig, SessionContext sessionContext)
+    public WorkspaceImpl(
+            SessionContext context, WorkspaceConfig wspConfig)
             throws RepositoryException {
+        this.context = context;
         this.wspConfig = wspConfig;
-        this.sessionContext = sessionContext;
-        this.repositoryContext = sessionContext.getRepositoryContext();
         this.stateMgr = createItemStateManager();
         this.hierMgr = new CachingHierarchyManager(
-                repositoryContext.getRootNodeId(), this.stateMgr);
+                context.getRootNodeId(), this.stateMgr);
         this.stateMgr.addListener(hierMgr);
-        this.session = sessionContext.getSessionImpl();
+        this.session = context.getSessionImpl();
     }
 
     /**
@@ -196,7 +198,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      *                             for some reason
      */
     public void sanityCheck() throws RepositoryException {
-        sessionContext.getSessionState().checkAlive();
+        context.getSessionState().checkAlive();
     }
 
     //--------------------------------------------------< new JSR 283 methods >
@@ -204,24 +206,27 @@ public class WorkspaceImpl extends AbstractWorkspace
      * {@inheritDoc}
      */
     public void createWorkspace(String name, String srcWorkspace)
-            throws AccessDeniedException, UnsupportedRepositoryOperationException,
-            RepositoryException {
+            throws AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        session.createWorkspace(name);
+        WorkspaceManager manager =
+            context.getRepositoryContext().getWorkspaceManager();
+
+        // TODO verify that this session has the right privileges
+        // for this operation
+        manager.createWorkspace(name);
 
         SessionImpl tmpSession = null;
         try {
             // create a temporary session on new workspace for current subject
-            tmpSession = repositoryContext.getWorkspaceManager().createSession(
-                    session.getSubject(), name);
+            tmpSession = manager.createSession(session.getSubject(), name);
             WorkspaceImpl newWsp = (WorkspaceImpl) tmpSession.getWorkspace();
 
             // Workspace#clone(String, String, String, booelan) doesn't
             // allow to clone to "/"...
             //newWsp.clone(srcWorkspace, "/", "/", false);
-           Node root = session.getRootNode();
+           Node root = getSession().getRootNode();
            for (NodeIterator it = root.getNodes(); it.hasNext(); ) {
                Node child = it.nextNode();
                // skip nodes that already exist in newly created workspace
@@ -246,7 +251,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     public void deleteWorkspace(String name) throws AccessDeniedException,
             UnsupportedRepositoryOperationException, RepositoryException {
         // check if workspace exists (will throw NoSuchWorkspaceException if not)
-        repositoryContext.getRepository().getWorkspaceInfo(name);
+        context.getRepository().getWorkspaceInfo(name);
         // todo implement deleteWorkspace
         throw new UnsupportedRepositoryOperationException("not yet implemented");
     }
@@ -258,7 +263,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     public javax.jcr.lock.LockManager getLockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
         if (jcr283LockManager == null) {
             jcr283LockManager =
-                new SessionLockManager(sessionContext, session.getLockManager());
+                new SessionLockManager(context, getInternalLockManager());
         }
         return jcr283LockManager;
     }
@@ -272,7 +277,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
     VersionManagerImpl getVersionManagerImpl() {
         if (versionMgr == null) {
-            versionMgr = new VersionManagerImpl(sessionContext, stateMgr, hierMgr);
+            versionMgr = new VersionManagerImpl(context, stateMgr, hierMgr);
         }
         return versionMgr;
     }
@@ -300,19 +305,17 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @throws AccessDeniedException if the session through which
      * this <code>Workspace</code> object was acquired does not have permission
      * to create the new workspace.
-     * @throws UnsupportedRepositoryOperationException if the repository does
-     * not support the creation of workspaces.
      * @throws RepositoryException if another error occurs.
      * @since JCR 2.0
      */
     public void createWorkspace(String name)
-            throws AccessDeniedException,
-            UnsupportedRepositoryOperationException,
-            RepositoryException {
+            throws AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        session.createWorkspace(name);
+        // TODO verify that this session has the right privileges
+        // for this operation
+        context.getRepositoryContext().getWorkspaceManager().createWorkspace(name);
     }
 
     //--------------------------------------------------< JackrabbitWorkspace >
@@ -328,13 +331,18 @@ public class WorkspaceImpl extends AbstractWorkspace
      *                               already exists or if another error occurs
      * @see #getAccessibleWorkspaceNames()
      */
-    public void createWorkspace(String workspaceName, InputSource configTemplate)
+    public void createWorkspace(
+            String workspaceName, InputSource configTemplate)
             throws AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        session.createWorkspace(workspaceName, configTemplate);
+        // TODO verify that this session has the right privileges
+        // for this operation
+        context.getRepositoryContext().getWorkspaceManager().createWorkspace(
+                workspaceName, configTemplate);
     }
+
 
     /**
      * Returns the configuration of this workspace.
@@ -373,7 +381,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Path srcPath;
         try {
-            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
+            srcPath = context.getQPath(srcAbsPath).getNormalizedPath();
         } catch (NameException e) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
@@ -385,7 +393,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Path destPath;
         try {
-            destPath = session.getQPath(destAbsPath).getNormalizedPath();
+            destPath = context.getQPath(destAbsPath).getNormalizedPath();
         } catch (NameException e) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
@@ -396,7 +404,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         BatchedItemOperations ops =
-            new BatchedItemOperations(stateMgr, sessionContext);
+            new BatchedItemOperations(stateMgr, context);
 
         try {
             ops.edit();
@@ -411,11 +419,11 @@ public class WorkspaceImpl extends AbstractWorkspace
         try {
             NodeId id = ops.copy(srcPath, srcWsp.getItemStateManager(),
                     srcWsp.getHierarchyManager(),
-                    srcWsp.sessionContext.getAccessManager(),
+                    srcWsp.context.getAccessManager(),
                     destPath, flag);
             ops.update();
             succeeded = true;
-            return session.getJCRPath(hierMgr.getPath(id));
+            return context.getJCRPath(hierMgr.getPath(id));
         } finally {
             if (!succeeded) {
                 // update operation failed, cancel all modifications
@@ -448,7 +456,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Path srcPath;
         try {
-            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
+            srcPath = context.getQPath(srcAbsPath).getNormalizedPath();
         } catch (NameException e) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
@@ -460,7 +468,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Path destPath;
         try {
-            destPath = session.getQPath(destAbsPath).getNormalizedPath();
+            destPath = context.getQPath(destAbsPath).getNormalizedPath();
         } catch (NameException e) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
@@ -471,7 +479,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         BatchedItemOperations ops =
-            new BatchedItemOperations(stateMgr, sessionContext);
+            new BatchedItemOperations(stateMgr, context);
 
         try {
             ops.edit();
@@ -487,7 +495,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             ItemId id = ops.clone(srcPath, destPath);
             ops.update();
             succeeded = true;
-            return session.getJCRPath(hierMgr.getPath(id));
+            return context.getJCRPath(hierMgr.getPath(id));
         } finally {
             if (!succeeded) {
                 // update operation failed, cancel all modifications
@@ -509,8 +517,12 @@ public class WorkspaceImpl extends AbstractWorkspace
         sanityCheck();
 
         if (lockMgr == null) {
-            lockMgr = repositoryContext.getRepository().getLockManager(
-                    wspConfig.getName());
+            lockMgr =
+                context.getRepository().getLockManager(wspConfig.getName());
+            // FIXME Shouldn't need to use instanceof here
+            if (context.getSessionImpl() instanceof XASessionImpl) {
+                lockMgr = new XALockManager((LockManagerImpl) lockMgr);
+            }
         }
         return lockMgr;
     }
@@ -527,7 +539,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         sanityCheck();
         if (retentionRegistry == null) {
             retentionRegistry =
-                repositoryContext.getRepository().getRetentionRegistry(wspConfig.getName());
+                context.getRepository().getRetentionRegistry(wspConfig.getName());
         }
         return retentionRegistry;
     }
@@ -551,10 +563,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * {@inheritDoc}
      */
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        return repositoryContext.getNamespaceRegistry();
+        return context.getRepositoryContext().getNamespaceRegistry();
     }
 
     /**
@@ -564,7 +573,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         // check state of this instance
         sanityCheck();
 
-        return sessionContext.getNodeTypeManager();
+        return context.getNodeTypeManager();
     }
 
     /**
@@ -593,7 +602,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         // check authorization for specified workspace
-        if (!sessionContext.getAccessManager().canAccess(srcWorkspace)) {
+        if (!context.getAccessManager().canAccess(srcWorkspace)) {
             throw new AccessDeniedException("not authorized to access " + srcWorkspace);
         }
 
@@ -604,8 +613,9 @@ public class WorkspaceImpl extends AbstractWorkspace
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = repositoryContext.getWorkspaceManager().createSession(
-                    session.getSubject(), srcWorkspace);
+            WorkspaceManager manager =
+                context.getRepositoryContext().getWorkspaceManager();
+            srcSession = manager.createSession(session.getSubject(), srcWorkspace);
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
             // do cross-workspace copy
@@ -655,7 +665,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         // check authorization for specified workspace
-        if (!sessionContext.getAccessManager().canAccess(srcWorkspace)) {
+        if (!context.getAccessManager().canAccess(srcWorkspace)) {
             throw new AccessDeniedException("not authorized to access " + srcWorkspace);
         }
 
@@ -666,8 +676,9 @@ public class WorkspaceImpl extends AbstractWorkspace
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = repositoryContext.getWorkspaceManager().createSession(
-                    session.getSubject(), srcWorkspace);
+            WorkspaceManager manager =
+                context.getRepositoryContext().getWorkspaceManager();
+            srcSession = manager.createSession(session.getSubject(), srcWorkspace);
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
             // do cross-workspace copy
@@ -694,7 +705,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Path srcPath;
         try {
-            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
+            srcPath = context.getQPath(srcAbsPath).getNormalizedPath();
         } catch (NameException e) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
@@ -706,7 +717,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Path destPath;
         try {
-            destPath = session.getQPath(destAbsPath).getNormalizedPath();
+            destPath = context.getQPath(destAbsPath).getNormalizedPath();
         } catch (NameException e) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
@@ -717,7 +728,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         BatchedItemOperations ops =
-            new BatchedItemOperations(stateMgr, sessionContext);
+            new BatchedItemOperations(stateMgr, context);
 
         try {
             ops.edit();
@@ -747,7 +758,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @return the observation manager of this session
      */
     public ObservationManager getObservationManager() {
-        return sessionContext.getObservationManager();
+        return context.getObservationManager();
     }
 
     /**
@@ -761,7 +772,8 @@ public class WorkspaceImpl extends AbstractWorkspace
         if (queryManager == null) {
             SearchManager searchManager;
             try {
-                searchManager = repositoryContext.getRepository().getSearchManager(wspConfig.getName());
+                searchManager =
+                    context.getRepository().getSearchManager(wspConfig.getName());
                 if (searchManager == null) {
                     String msg = "no search manager configured for this workspace";
                     log.debug(msg);
@@ -773,7 +785,7 @@ public class WorkspaceImpl extends AbstractWorkspace
                 log.debug(msg);
                 throw new RepositoryException(msg, nswe);
             }
-            queryManager = new QueryManagerImpl(sessionContext, searchManager);
+            queryManager = new QueryManagerImpl(context, searchManager);
         }
         return queryManager;
     }
@@ -792,14 +804,32 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the names of all workspaces of this repository with respect of the
+     * access rights of this session.
+     *
+     * @return the names of all accessible workspaces
+     * @throws RepositoryException if an error occurs
      */
     public String[] getAccessibleWorkspaceNames() throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        return session.getWorkspaceNames();
+        // filter workspaces according to access rights
+        List<String> names = new ArrayList<String>();
+        WorkspaceManager manager =
+            context.getRepositoryContext().getWorkspaceManager();
+        for (String name : manager.getWorkspaceNames()) {
+            try {
+                if (context.getAccessManager().canAccess(name)) {
+                    names.add(name);
+                }
+            } catch (NoSuchWorkspaceException e) {
+                log.warn("Workspace disappeared unexpectedly: " + name, e);
+            }
+        }
+        return names.toArray(new String[names.size()]);
     }
+
 
     /**
      * {@inheritDoc}
@@ -814,7 +844,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Path parentPath;
         try {
-            parentPath = session.getQPath(parentAbsPath).getNormalizedPath();
+            parentPath = context.getQPath(parentAbsPath).getNormalizedPath();
         } catch (NameException e) {
             String msg = "invalid path: " + parentAbsPath;
             log.debug(msg);
@@ -825,9 +855,9 @@ public class WorkspaceImpl extends AbstractWorkspace
         }
 
         Importer importer = new WorkspaceImporter(
-                parentPath, this, sessionContext,
+                parentPath, this, context,
                 uuidBehavior, wspConfig.getImportConfig());
-        return new ImportHandler(importer, session);
+        return new ImportHandler(importer, getSession());
     }
 
     /**
@@ -838,21 +868,33 @@ public class WorkspaceImpl extends AbstractWorkspace
      */
     protected SharedItemStateManager getSharedItemStateManager()
             throws RepositoryException {
-        WorkspaceManager manager = repositoryContext.getWorkspaceManager();
+        WorkspaceManager manager =
+            context.getRepositoryContext().getWorkspaceManager();
         return manager.getWorkspaceStateManager(getName());
     }
 
     /**
      * Create the persistent item state manager on top of the shared item
-     * state manager. May be overridden by subclasses.
-     * @param shared shared item state manager
+     * state manager.
+     *
      * @return local item state manager
+     * @throws RepositoryException if the workspace can not be accessed 
      */
     protected LocalItemStateManager createItemStateManager()
             throws RepositoryException {
-        return LocalItemStateManager.createInstance(
-                getSharedItemStateManager(), this,
-                repositoryContext.getItemStateCacheFactory());
+        SharedItemStateManager sism = getSharedItemStateManager();
+        ItemStateCacheFactory iscf =
+            context.getRepositoryContext().getItemStateCacheFactory();
+
+        // FIXME We should be able to avoid the instanceof operator here
+        if (context.getSessionImpl() instanceof XASessionImpl) {
+            return XAItemStateManager.createInstance(
+                    sism, this, null, iscf);
+        } else {
+            return LocalItemStateManager.createInstance(
+                    sism, this, iscf);
+        }
+
     }
 
     //------------------------------------------< EventStateCollectionFactory >

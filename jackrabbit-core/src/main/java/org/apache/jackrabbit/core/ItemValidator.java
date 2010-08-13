@@ -364,7 +364,7 @@ public class ItemValidator {
             return;
         }
         NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
-        context.getSessionImpl().getLockManager().checkLock(node);
+        context.getWorkspace().getInternalLockManager().checkLock(node);
     }
 
     private boolean isProtected(ItemImpl item) throws RepositoryException {

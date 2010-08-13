@@ -70,7 +70,6 @@ import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
@@ -103,7 +102,6 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -157,11 +155,6 @@ public class SessionImpl extends AbstractSession
      */
     protected final Map<String, Object> attributes =
         new HashMap<String, Object>();
-
-    /**
-     * the Workspace associated with this session
-     */
-    protected final WorkspaceImpl wsp;
 
     /**
      * Name and Path resolver
@@ -233,14 +226,13 @@ public class SessionImpl extends AbstractSession
             RepositoryContext repositoryContext, Subject subject,
             WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
-        this.context = new SessionContext(repositoryContext, this);
+        this.context = new SessionContext(repositoryContext, this, wspConfig);
         this.repositoryContext = repositoryContext;
         this.subject = subject;
 
         userId = retrieveUserId(subject, wspConfig.getName());
 
         namePathResolver = new DefaultNamePathResolver(this, this, true);
-        wsp = createWorkspaceInstance(wspConfig);
         context.setItemStateManager(createSessionItemStateManager());
         context.setItemManager(createItemManager());
         context.setAccessManager(createAccessManager(subject));
@@ -268,23 +260,10 @@ public class SessionImpl extends AbstractSession
     protected SessionItemStateManager createSessionItemStateManager() {
         SessionItemStateManager mgr = new SessionItemStateManager(
                 context.getRootNodeId(),
-                wsp.getItemStateManager(),
-                repositoryContext.getNodeTypeRegistry());
-        wsp.getItemStateManager().addListener(mgr);
+                context.getWorkspace().getItemStateManager(),
+                context.getNodeTypeRegistry());
+        context.getWorkspace().getItemStateManager().addListener(mgr);
         return mgr;
-    }
-
-    /**
-     * Creates the workspace instance backing this session.
-     *
-     * @param wspConfig The workspace configuration
-     * @return An instance of the {@link WorkspaceImpl} class or an extension
-     *         thereof.
-     * @throws RepositoryException if the workspace can not be accessed
-     */
-    protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig)
-            throws RepositoryException {
-        return new WorkspaceImpl(wspConfig, context);
     }
 
     /**
@@ -301,9 +280,9 @@ public class SessionImpl extends AbstractSession
             throws RepositoryException {
         try {
             return new ObservationManagerImpl(
-                    repositoryContext.getRepository().getObservationDispatcher(wspName),
+                    context.getRepository().getObservationDispatcher(wspName),
                     this, context.getItemManager(),
-                    repositoryContext.getClusterNode());
+                    context.getRepositoryContext().getClusterNode());
         } catch (NoSuchWorkspaceException e) {
             // should never get here
             throw new RepositoryException(
@@ -317,7 +296,7 @@ public class SessionImpl extends AbstractSession
      */
     protected InternalVersionManager createVersionManager()
             throws RepositoryException {
-        return repositoryContext.getInternalVersionManager();
+        return context.getRepositoryContext().getInternalVersionManager();
     }
 
     /**
@@ -333,8 +312,8 @@ public class SessionImpl extends AbstractSession
             throws AccessDeniedException, RepositoryException {
         String wspName = getWorkspace().getName();
         AMContext ctx = new AMContext(
-                new File(repositoryContext.getRepository().getConfig().getHomeDir()),
-                repositoryContext.getFileSystem(),
+                new File(context.getRepository().getConfig().getHomeDir()),
+                context.getRepositoryContext().getFileSystem(),
                 this,
                 getSubject(),
                 context.getHierarchyManager(),
@@ -449,7 +428,7 @@ public class SessionImpl extends AbstractSession
      * @throws RepositoryException
      */
     protected RetentionRegistry getRetentionRegistry() throws RepositoryException {
-        return wsp.getRetentionRegistry();
+        return context.getWorkspace().getRetentionRegistry();
     }
 
     /**
@@ -487,62 +466,6 @@ public class SessionImpl extends AbstractSession
         } catch (AccessDeniedException ade) {
             throw new ItemNotFoundException(id.toString());
         }
-    }
-
-    /**
-     * Returns the names of all workspaces of this repository with respect of the
-     * access rights of this session.
-     *
-     * @return the names of all accessible workspaces
-     * @throws RepositoryException if an error occurs
-     */
-    protected String[] getWorkspaceNames() throws RepositoryException {
-        // filter workspaces according to access rights
-        List<String> names = new ArrayList<String>();
-        for (String name : repositoryContext.getWorkspaceManager().getWorkspaceNames()) {
-            try {
-                if (context.getAccessManager().canAccess(name)) {
-                    names.add(name);
-                }
-            } catch (NoSuchWorkspaceException e) {
-                log.warn("Workspace disappeared unexpectedly: " + name, e);
-            }
-        }
-        return names.toArray(new String[names.size()]);
-    }
-
-    /**
-     * Creates a workspace with the given name.
-     *
-     * @param workspaceName name of the new workspace
-     * @throws AccessDeniedException if the current session is not allowed to
-     *                               create the workspace
-     * @throws RepositoryException   if a workspace with the given name
-     *                               already exists or if another error occurs
-     */
-    protected void createWorkspace(String workspaceName)
-            throws AccessDeniedException, RepositoryException {
-        // @todo verify that this session has the right privileges for this operation
-        repositoryContext.getWorkspaceManager().createWorkspace(workspaceName);
-    }
-
-    /**
-     * Creates a workspace with the given name and a workspace configuration
-     * template.
-     *
-     * @param workspaceName  name of the new workspace
-     * @param configTemplate the configuration template of the new workspace
-     * @throws AccessDeniedException if the current session is not allowed to
-     *                               create the workspace
-     * @throws RepositoryException   if a workspace with the given name already
-     *                               exists or if another error occurs
-     */
-    protected void createWorkspace(
-            String workspaceName, InputSource configTemplate)
-            throws AccessDeniedException, RepositoryException {
-        // @todo verify that this session has the right privileges for this operation
-        repositoryContext.getWorkspaceManager().createWorkspace(
-                workspaceName, configTemplate);
     }
 
     /**
@@ -719,11 +642,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public Workspace getWorkspace() {
-        return getWorkspaceImpl();
-    }
-
-    WorkspaceImpl getWorkspaceImpl() {
-        return wsp;
+        return context.getWorkspace();
     }
 
     /**
@@ -884,7 +803,9 @@ public class SessionImpl extends AbstractSession
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
         context.getItemValidator().checkModify(parent, options, Permission.NONE);
 
-        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, wsp.getConfig().getImportConfig());
+        SessionImporter importer = new SessionImporter(
+                parent, this, uuidBehavior,
+                context.getWorkspace().getConfig().getImportConfig());
         return new ImportHandler(importer, this);
     }
 
@@ -939,7 +860,7 @@ public class SessionImpl extends AbstractSession
             // dispose item manager
             context.getItemManager().dispose();
             // dispose workspace
-            wsp.dispose();
+            context.getWorkspace().dispose();
 
             // logout JAAS subject
             if (loginContext != null) {
@@ -1016,7 +937,7 @@ public class SessionImpl extends AbstractSession
      */
     public void addLockToken(String lt) {
         try {
-            wsp.getLockManager().addLockToken(lt);
+            getWorkspace().getLockManager().addLockToken(lt);
         } catch (RepositoryException e) {
             log.debug("Error while adding lock token.");
         }
@@ -1027,7 +948,7 @@ public class SessionImpl extends AbstractSession
      */
     public String[] getLockTokens() {
         try {
-            return wsp.getLockManager().getLockTokens();
+            return getWorkspace().getLockManager().getLockTokens();
         } catch (RepositoryException e) {
             log.debug("Error while accessing lock tokens.");
             return new String[0];
@@ -1039,18 +960,10 @@ public class SessionImpl extends AbstractSession
      */
     public void removeLockToken(String lt) {
         try {
-            wsp.getLockManager().removeLockToken(lt);
+            getWorkspace().getLockManager().removeLockToken(lt);
         } catch (RepositoryException e) {
             log.debug("Error while removing lock token.");
         }
-    }
-
-    /**
-     * Return the lock manager for this session.
-     * @return lock manager for this session
-     */
-    public LockManager getLockManager() throws RepositoryException {
-        return wsp.getInternalLockManager();
     }
 
     /**
@@ -1067,7 +980,7 @@ public class SessionImpl extends AbstractSession
         }
 
         try {
-            return getLockManager().getLocks(this);
+            return context.getWorkspace().getInternalLockManager().getLocks(this);
         } catch (RepositoryException e) {
             log.error("Lock manager not available.", e);
             return new Lock[0];
