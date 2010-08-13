@@ -20,7 +20,12 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +38,9 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
 import javax.jcr.util.TraversingItemVisitor;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,7 +50,7 @@ import java.util.Set;
 /**
  * <code>MembershipCache</code>...
  */
-public class MembershipCache implements UserConstants {
+public class MembershipCache implements UserConstants, SynchronousEventListener, SessionListener {
 
     /**
      * logger instance
@@ -54,24 +60,123 @@ public class MembershipCache implements UserConstants {
     private final SessionImpl systemSession;
     private final String groupsPath;
     private final boolean useMembersNode;
+    private final String pMembers;
     private final Map<String, Collection<String>> cache;
 
     @SuppressWarnings("unchecked")
-    MembershipCache(SessionImpl systemSession, String groupsPath, boolean useMembersNode) {
+    MembershipCache(SessionImpl systemSession, String groupsPath, boolean useMembersNode) throws RepositoryException {
         this.systemSession = systemSession;
         this.groupsPath = (groupsPath == null) ? UserConstants.GROUPS_PATH : groupsPath;
         this.useMembersNode = useMembersNode;
+
+        pMembers = systemSession.getJCRName(UserManagerImpl.P_MEMBERS);
         cache = new LRUMap();
+                
+        String[] ntNames = new String[] {
+                systemSession.getJCRName(UserConstants.NT_REP_GROUP),
+                systemSession.getJCRName(UserConstants.NT_REP_MEMBERS)
+        };
+        // register event listener to be informed about membership changes.
+        systemSession.getWorkspace().getObservationManager().addEventListener(this,
+                Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
+                groupsPath,
+                true,
+                null,
+                ntNames,
+                false);
+        // make sure the membership cache is informed if the system session is
+        // logged out in order to stop listening to events.
+        systemSession.addListener(this);
     }
 
-    synchronized void clear() {
-        cache.clear();
+
+    //------------------------------------------------------< EventListener >---
+    /**
+     * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
+     */
+    public void onEvent(EventIterator eventIterator) {
+        // evaluate if the membership cache needs to be cleared;
+        boolean clear = false;
+        while (eventIterator.hasNext() && !clear) {
+            Event ev = eventIterator.nextEvent();
+            try {
+                if (pMembers.equals(Text.getName(ev.getPath()))) {
+                    // simple case: a rep:members property that is affected
+                    clear = true;
+                } else if (useMembersNode) {
+                    // test if it affects a property defined by rep:Members node type.
+                    int type = ev.getType();
+                    if (type == Event.PROPERTY_ADDED || type == Event.PROPERTY_CHANGED) {
+                        Property p = systemSession.getProperty(ev.getPath());
+                        Name declNtName = ((NodeTypeImpl) p.getDefinition().getDeclaringNodeType()).getQName();
+                        clear = NT_REP_MEMBERS.equals(declNtName);
+                    } else {
+                        // PROPERTY_REMOVED
+                        // test if the primary node type of the parent node is rep:Members
+                        // this could potentially by some other property as well as the
+                        // rep:Members node are not protected and could changed by
+                        // adding a mixin type.
+                        // ignoring this and simply clear the cache
+                        String parentId = ev.getIdentifier();
+                        Node n = systemSession.getNodeByIdentifier(parentId);
+                        Name ntName = ((NodeTypeImpl) n.getPrimaryNodeType()).getQName();
+                        clear = (UserConstants.NT_REP_MEMBERS.equals(ntName));
+                    }
+                }
+            } catch (RepositoryException e) {
+                log.warn(e.getMessage());
+                // exception while processing the event -> clear the cache to
+                // be sure it isn't outdated.
+                clear = true;
+            }
+        }
+
+        if (clear) {
+            synchronized (cache) {
+                cache.clear();
+            }
+        }
     }
 
+    //----------------------------------------------------< SessionListener >---
+    /**
+     * @see SessionListener#loggingOut(org.apache.jackrabbit.core.SessionImpl)
+     */
+    public void loggingOut(SessionImpl session) {
+        try {
+            systemSession.getWorkspace().getObservationManager().removeEventListener(this);
+        } catch (RepositoryException e) {
+            log.error("Unexpected error: Failed to stop event listening of MembershipCache.", e);
+        }
+
+    }
+
+    /**
+     * @see SessionListener#loggedOut(org.apache.jackrabbit.core.SessionImpl)
+     */
+    public void loggedOut(SessionImpl session) {
+        // nothing to do
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * @param authorizableNodeIdentifier The identifier of the node representing
+     * the authorizable to retrieve the declared membership for.
+     * @return A collection of node identifiers of those group nodes the
+     * authorizable in question is declared member of.
+     * @throws RepositoryException If an error occurs.
+     */
     synchronized Collection<String> getDeclaredMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
         return declaredMemberOf(authorizableNodeIdentifier);
     }
 
+    /**
+     * @param authorizableNodeIdentifier The identifier of the node representing
+     * the authorizable to retrieve the membership for.
+     * @return A collection of node identifiers of those group nodes the
+     * authorizable in question is a direct or indirect member of.
+     * @throws RepositoryException If an error occurs.
+     */
     synchronized Collection<String> getMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
         Set<String> groupNodeIds = new HashSet<String>();
         memberOf(authorizableNodeIdentifier, groupNodeIds);
@@ -82,10 +187,12 @@ public class MembershipCache implements UserConstants {
      * Collects the declared memberships for the specified identifier of an
      * authorizable using the specified session.
      * 
-     * @param authorizableNodeIdentifier
-     * @param session
-     * @return
-     * @throws RepositoryException
+     * @param authorizableNodeIdentifier The identifier of the node representing
+     * the authorizable to retrieve the membership for.
+     * @param session The session to be used to read the membership information.
+     * @return @return A collection of node identifiers of those group nodes the
+     * authorizable in question is a direct member of.
+     * @throws RepositoryException If an error occurs.
      */
     Collection<String> collectDeclaredMembership(String authorizableNodeIdentifier, Session session) throws RepositoryException {
         Collection<String> groupNodeIds = collectDeclaredMembershipFromReferences(authorizableNodeIdentifier, session);
@@ -99,10 +206,12 @@ public class MembershipCache implements UserConstants {
      * Collects the complete memberships for the specified identifier of an
      * authorizable using the specified session.
      *
-     * @param authorizableNodeIdentifier
-     * @param session
-     * @return
-     * @throws RepositoryException
+     * @param authorizableNodeIdentifier The identifier of the node representing
+     * the authorizable to retrieve the membership for.
+     * @param session The session to be used to read the membership information.
+     * @return A collection of node identifiers of those group nodes the
+     * authorizable in question is a direct or indirect member of.
+     * @throws RepositoryException If an error occurs.
      */
     Collection<String> collectMembership(String authorizableNodeIdentifier, Session session) throws RepositoryException {
         Set<String> groupNodeIds = new HashSet<String>();
