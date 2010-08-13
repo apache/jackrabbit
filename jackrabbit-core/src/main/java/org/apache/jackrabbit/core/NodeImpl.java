@@ -64,6 +64,7 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 
+import org.apache.jackrabbit.api.JackrabbitNode;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
@@ -112,7 +113,7 @@ import org.slf4j.LoggerFactory;
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
  */
-public class NodeImpl extends ItemImpl implements Node {
+public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
@@ -555,12 +556,41 @@ public class NodeImpl extends ItemImpl implements Node {
         return node;
     }
 
+    /**
+     *
+     * @param oldName
+     * @param index
+     * @param id
+     * @param newName
+     * @throws RepositoryException
+     * @deprecated use #renameChildNode(NodeId, Name, boolean) 
+     */
     protected void renameChildNode(Name oldName, int index, NodeId id,
                                    Name newName)
             throws RepositoryException {
+        renameChildNode(id, newName, false);
+    }
+
+    /**
+     *
+     * @param id
+     * @param newName
+     * @param replace
+     * @throws RepositoryException
+     */
+    protected void renameChildNode(NodeId id, Name newName, boolean replace)
+            throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        thisState.renameChildNodeEntry(oldName, index, newName);
+        if (replace) {
+            // rename the specified child node by replacing the old
+            // child node entry with a new one at the same relative position
+            thisState.replaceChildNodeEntry(id, newName, id);
+        } else {
+            // rename the specified child node by removing the old and adding
+            // a new child node entry.
+            thisState.renameChildNodeEntry(id, newName);
+        }
     }
 
     protected void removeChildProperty(Name propName) throws RepositoryException {
@@ -3423,6 +3453,87 @@ public class NodeImpl extends ItemImpl implements Node {
         internalSetProperty(
                 JCR_CURRENT_LIFECYCLE_STATE,
                 InternalValue.create(state));
+    }
+
+    //-------------------------------------------------------< JackrabbitNode >
+
+    /**
+     * {@inheritDoc}
+     */
+    public void rename(String newName) throws RepositoryException {
+        // check if this is the root node
+        if (getDepth() == 0) {
+            throw new RepositoryException("Cannot rename the root node");
+        }
+
+        Name qName;
+        try {
+            qName = session.getQName(newName);
+        } catch (NameException e) {
+            throw new RepositoryException("invalid node name: " + newName, e);
+        }
+
+        NodeImpl parent = (NodeImpl) getParent();
+
+        // check for name collisions
+        NodeImpl existing = null;
+        try {
+            existing = parent.getNode(qName);
+            // there's already a node with that name:
+            // check same-name sibling setting of existing node
+            if (!existing.getDefinition().allowsSameNameSiblings()) {
+                throw new ItemExistsException(
+                        "Same name siblings are not allowed: " + existing);
+            }
+        } catch (AccessDeniedException ade) {
+            // FIXME by throwing ItemExistsException we're disclosing too much information
+            throw new ItemExistsException();
+        } catch (ItemNotFoundException infe) {
+            // no name collision, fall through
+        }
+
+        // verify that parent node
+        // - is checked-out
+        // - is not protected neither by node type constraints nor by retention/hold
+        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
+        ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
+        sessionContext.getItemValidator().checkRemove(parent, options, Permission.NONE);
+        sessionContext.getItemValidator().checkModify(parent, options, Permission.NONE);
+
+        // check constraints
+        // get applicable definition of target node at new location
+        NodeTypeImpl nt = (NodeTypeImpl) getPrimaryNodeType();
+        org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl newTargetDef;
+        try {
+            newTargetDef = parent.getApplicableChildNodeDefinition(qName, nt.getQName());
+        } catch (RepositoryException re) {
+            String msg = safeGetJCRPath() + ": no definition found in parent node's node type for new node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg, re);
+        }
+        // if there's already a node with that name also check same-name sibling
+        // setting of new node; just checking same-name sibling setting on
+        // existing node is not sufficient since same-name sibling nodes don't
+        // necessarily have identical definitions
+        if (existing != null && !newTargetDef.allowsSameNameSiblings()) {
+            throw new ItemExistsException(
+                    "Same name siblings not allowed: " + existing);
+        }
+
+        // check permissions
+        AccessManager acMgr = sessionContext.getAccessManager();
+        if (!(acMgr.isGranted(getPrimaryPath(), Permission.REMOVE_NODE) &&
+                acMgr.isGranted(parent.getPrimaryPath(), qName, Permission.ADD_NODE | Permission.NODE_TYPE_MNGMT))) {
+            String msg = "Not allowed to rename node " + safeGetJCRPath() + " to " + newName;
+            log.debug(msg);
+            throw new AccessDeniedException(msg);
+        }
+
+        // change definition
+        onRedefine(newTargetDef.unwrap());
+
+        // delegate to parent
+        parent.renameChildNode(getNodeId(), qName, true);
     }
 
     //--------------------------------------------------------------< Object >

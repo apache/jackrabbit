@@ -181,7 +181,7 @@ public class SessionMoveOperation implements SessionOperation<Object> {
             // change definition of target
             targetNode.onRedefine(newTargetDef.unwrap());
             // do rename
-            destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
+            destParentNode.renameChildNode(targetId, destName.getName(), false);
         } else {
             // check shareable case
             if (targetNode.getNodeState().isShareable()) {
