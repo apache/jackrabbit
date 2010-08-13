@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.lock;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.XAWorkspace;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -475,7 +475,7 @@ class XAEnvironment {
             if (isUnlock) {
                 // Only if we have a valid ItemState try to unlock
                 // JCR-2332
-                if (((XAWorkspace)((SessionImpl)node.getSession()).getWorkspace()).getItemStateManager().hasItemState(node.getId())) {
+                if (((WorkspaceImpl) node.getSession().getWorkspace()).getItemStateManager().hasItemState(node.getId())) {
                     lockMgr.internalUnlock(node);
                 }
             } else {

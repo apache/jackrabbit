@@ -709,7 +709,7 @@ public class RepositoryImpl extends AbstractRepository
      * @param workspaceName name of the new workspace
      * @throws RepositoryException if a workspace with the given name
      *                             already exists or if another error occurs
-     * @see SessionImpl#createWorkspace(String)
+     * @see WorkspaceImpl#createWorkspace(String)
      */
     protected void createWorkspace(String workspaceName)
             throws RepositoryException {
@@ -758,7 +758,7 @@ public class RepositoryImpl extends AbstractRepository
      *                       workspace
      * @throws RepositoryException if a workspace with the given name already
      *                             exists or if another error occurs
-     * @see SessionImpl#createWorkspace(String,InputSource)
+     * @see WorkspaceImpl#createWorkspace(String,InputSource)
      */
     private void createWorkspaceInternal(String workspaceName,
                                    InputSource configTemplate)
@@ -785,7 +785,7 @@ public class RepositoryImpl extends AbstractRepository
      *                       workspace
      * @throws RepositoryException if a workspace with the given name already
      *                             exists or if another error occurs
-     * @see SessionImpl#createWorkspace(String,InputSource)
+     * @see WorkspaceImpl#createWorkspace(String,InputSource)
      */
     protected void createWorkspace(String workspaceName,
                                    InputSource configTemplate)

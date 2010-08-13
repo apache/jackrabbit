@@ -2750,7 +2750,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * Returns the version manager of this workspace.
      */
     private VersionManagerImpl getVersionManagerImpl() {
-        return sessionContext.getSessionImpl().getWorkspaceImpl().getVersionManagerImpl();
+        return sessionContext.getWorkspace().getVersionManagerImpl();
     }
 
     /**
@@ -2943,7 +2943,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             // a new node needs no check
             return;
         }
-        sessionContext.getSessionImpl().getLockManager().checkLock(this);
+        sessionContext.getWorkspace().getInternalLockManager().checkLock(this);
     }
 
     //--------------------------------------------------< new JSR 283 methods >

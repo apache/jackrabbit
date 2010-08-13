@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.api.XASession;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.lock.XALockManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
@@ -84,11 +82,6 @@ public class XASessionImpl extends SessionImpl
     private InternalXAResource[] txResources;
 
     /**
-     * Session-local lock manager.
-     */
-    private LockManager lockMgr;
-
-    /**
      * Create a new instance of this class.
      *
      * @param repositoryContext repository context
@@ -129,9 +122,13 @@ public class XASessionImpl extends SessionImpl
      * Initialize this object.
      */
     private void init() throws RepositoryException {
-        XAItemStateManager stateMgr = (XAItemStateManager) wsp.getItemStateManager();
-        XALockManager lockMgr = (XALockManager) getLockManager();
-        InternalXAVersionManager versionMgr = (InternalXAVersionManager) getInternalVersionManager();
+        WorkspaceImpl workspace = context.getWorkspace();
+        XAItemStateManager stateMgr =
+            (XAItemStateManager) workspace.getItemStateManager();
+        XALockManager lockMgr =
+            (XALockManager) workspace.getInternalLockManager();
+        InternalXAVersionManager versionMgr =
+            (InternalXAVersionManager) getInternalVersionManager();
 
         /**
          * Create array that contains all resources that participate in this
@@ -158,15 +155,6 @@ public class XASessionImpl extends SessionImpl
      * {@inheritDoc}
      */
     @Override
-    protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig)
-            throws RepositoryException {
-        return new XAWorkspace(wspConfig, context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected InternalVersionManager createVersionManager()
             throws RepositoryException {
         return new InternalXAVersionManager(
@@ -176,16 +164,6 @@ public class XASessionImpl extends SessionImpl
                 repositoryContext.getItemStateCacheFactory());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public LockManager getLockManager() throws RepositoryException {
-        if (lockMgr == null) {
-            LockManagerImpl lockMgr = (LockManagerImpl) wsp.getInternalLockManager();
-            this.lockMgr = new XALockManager(lockMgr);
-        }
-        return lockMgr;
-    }
     //-------------------------------------------------------------< XASession >
     /**
      * {@inheritDoc}

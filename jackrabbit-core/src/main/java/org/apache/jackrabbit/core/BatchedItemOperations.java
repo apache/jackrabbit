@@ -1415,7 +1415,8 @@ public class BatchedItemOperations extends ItemValidator {
     protected void verifyUnlocked(Path nodePath)
             throws LockException, RepositoryException {
         // make sure there's no foreign lock on node at nodePath
-        context.getSessionImpl().getLockManager().checkLock(nodePath, session);
+        context.getWorkspace().getInternalLockManager().checkLock(
+                nodePath, session);
     }
 
     /**
