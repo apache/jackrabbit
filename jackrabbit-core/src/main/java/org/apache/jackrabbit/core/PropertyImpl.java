@@ -44,6 +44,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -204,7 +205,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     protected void onRedefine(QPropertyDefinition def) throws RepositoryException {
         PropertyDefinitionImpl newDef =
-                session.getNodeTypeManager().getPropertyDefinition(def);
+                sessionContext.getNodeTypeManager().getPropertyDefinition(def);
         data.setDefinition(newDef);
     }
 
@@ -222,7 +223,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         switch (value.getType()) {
             case NAME:
             case PATH:
-                String str = ValueFormat.getJCRString(value, session);
+                String str = ValueFormat.getJCRString(value, sessionContext);
                 length = str.length();
                 break;
             default:
@@ -364,10 +365,10 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType != NAME) {
             // type conversion required
             Value targetValue = ValueHelper.convert(
-                    ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
-                    reqType, session.getValueFactory());
+                    ValueFormat.getJCRValue(InternalValue.create(name), sessionContext, getSession().getValueFactory()),
+                    reqType, getSession().getValueFactory());
             internalValue = InternalValue.create(
-                    targetValue, session, sessionContext.getDataStore());
+                    targetValue, sessionContext, sessionContext.getDataStore());
         } else {
             // no type conversion required
             internalValue = InternalValue.create(name);
@@ -416,10 +417,10 @@ public class PropertyImpl extends ItemImpl implements Property {
                     if (reqType != NAME) {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
-                                ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
-                                reqType, session.getValueFactory());
+                                ValueFormat.getJCRValue(InternalValue.create(name), sessionContext, getSession().getValueFactory()),
+                                reqType, getSession().getValueFactory());
                         internalValue = InternalValue.create(
-                                targetValue, session,
+                                targetValue, sessionContext,
                                 sessionContext.getDataStore());
                     } else {
                         // no type conversion required
@@ -488,14 +489,14 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue[] internals = internalGetValues();
         Value[] values = new Value[internals.length];
         for (int i = 0; i < internals.length; i++) {
-            values[i] = ValueFormat.getJCRValue(internals[i], session, session.getValueFactory());
+            values[i] = ValueFormat.getJCRValue(internals[i], sessionContext, getSession().getValueFactory());
         }
         return values;
     }
 
     public Value getValue() throws RepositoryException {
         try {
-            return ValueFormat.getJCRValue(internalGetValue(), session, session.getValueFactory());
+            return ValueFormat.getJCRValue(internalGetValue(), sessionContext, getSession().getValueFactory());
         } catch (RuntimeException e) {
             String msg = "Internal error while retrieving value of " + this;
             log.error(msg, e);
@@ -541,6 +542,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     public Node getNode() throws ValueFormatException, RepositoryException {
+        Session session = getSession();
         Value value = getValue();
         int type = value.getType();
         switch (type) {
@@ -551,7 +553,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             case PATH:
             case NAME:
                 String path = value.getString();
-                Path p = session.getQPath(path);
+                Path p = sessionContext.getQPath(path);
                 boolean absolute = p.isAbsolute();
                 try {
                     return (absolute) ? session.getNode(path) : getParent().getNode(path);
@@ -566,7 +568,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 } catch (RepositoryException e) {
                     // try if STRING value can be interpreted as PATH value
                     Value pathValue = ValueHelper.convert(value, PATH, session.getValueFactory());
-                    p = session.getQPath(pathValue.getString());
+                    p = sessionContext.getQPath(pathValue.getString());
                     absolute = p.isAbsolute();
                     try {
                         return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
@@ -582,17 +584,17 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public Property getProperty() throws RepositoryException {
         Value value = getValue();
-        Value pathValue = ValueHelper.convert(value, PATH, session.getValueFactory());
+        Value pathValue = ValueHelper.convert(value, PATH, getSession().getValueFactory());
         String path = pathValue.getString();
         boolean absolute;
         try {
-            Path p = session.getQPath(path);
+            Path p = sessionContext.getQPath(path);
             absolute = p.isAbsolute();
         } catch (RepositoryException e) {
             throw new ValueFormatException("Property value cannot be converted to a PATH");
         }
         try {
-            return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
+            return (absolute) ? getSession().getProperty(path) : getParent().getProperty(path);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(path);
         }
@@ -630,7 +632,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     public void setValue(Calendar value) throws RepositoryException {
         if (value != null) {
             try {
-                setValue(session.getValueFactory().createValue(value));
+                setValue(getSession().getValueFactory().createValue(value));
             } catch (IllegalArgumentException e) {
                 throw new ValueFormatException(
                         "Value is not an ISO8601 date: " + value, e);
@@ -731,13 +733,13 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType != value.getType()) {
             // type conversion required
             Value targetVal = ValueHelper.convert(
-                    value, reqType, session.getValueFactory());
+                    value, reqType, getSession().getValueFactory());
             internalValue = InternalValue.create(
-                    targetVal, session, sessionContext.getDataStore());
+                    targetVal, sessionContext, sessionContext.getDataStore());
         } else {
             // no type conversion required
             internalValue = InternalValue.create(
-                    value, session, sessionContext.getDataStore());
+                    value, sessionContext, sessionContext.getDataStore());
         }
         internalSetValue(new InternalValue[]{internalValue}, reqType);
     }
@@ -801,10 +803,10 @@ public class PropertyImpl extends ItemImpl implements Property {
                     }
                     if (reqType != value.getType()) {
                         value = ValueHelper.convert(
-                                value, reqType, session.getValueFactory());
+                                value, reqType, getSession().getValueFactory());
                     }
                     internalValues[i] = InternalValue.create(
-                            value, session, sessionContext.getDataStore());
+                            value, sessionContext, sessionContext.getDataStore());
                 } else {
                     internalValues[i] = null;
                 }
@@ -874,7 +876,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     public String getName() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        return session.getJCRName(((PropertyId) id).getName());
+        return sessionContext.getJCRName(((PropertyId) id).getName());
     }
 
     /**

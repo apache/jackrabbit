@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
@@ -73,6 +74,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     protected InternalVersionHistory getInternalVersionHistory()
             throws RepositoryException {
+        SessionImpl session = sessionContext.getSessionImpl();
         InternalVersionHistory history =
                 session.getInternalVersionManager().getVersionHistory((NodeId) id);
         if (history == null) {
@@ -85,6 +87,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see javax.jcr.version.VersionHistory#getRootVersion()
      */
     public javax.jcr.version.Version getRootVersion() throws RepositoryException {
+        SessionImpl session = sessionContext.getSessionImpl();
         return (Version) session.getNodeById(
                 getInternalVersionHistory().getRootVersion().getId());
     }
@@ -93,8 +96,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see javax.jcr.version.VersionHistory#getAllVersions()
      */
     public VersionIterator getAllVersions() throws RepositoryException {
-        return new VersionIteratorImpl(session,
-                getInternalVersionHistory().getRootVersion());
+        return new VersionIteratorImpl(
+                getSession(), getInternalVersionHistory().getRootVersion());
     }
 
     /**
@@ -107,13 +110,15 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see VersionHistory#getAllLinearVersions()
      */
+    @SuppressWarnings("deprecation")
     public VersionIterator getAllLinearVersions() throws RepositoryException {
         // get base version. this can certainly be optimized
+        SessionImpl session = sessionContext.getSessionImpl();
         InternalVersionHistory vh = getInternalVersionHistory();
         Node vn = session.getNodeById(vh.getVersionableId());
         InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
 
-        return new VersionIteratorImpl(session, vh.getRootVersion(), base);
+        return new VersionIteratorImpl(getSession(), vh.getRootVersion(), base);
     }
 
     /**
@@ -129,12 +134,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public javax.jcr.version.Version getVersion(String versionName)
             throws VersionException, RepositoryException {
         try {
-            Name name = session.getQName(versionName);
+            Name name = sessionContext.getQName(versionName);
             InternalVersion v = getInternalVersionHistory().getVersion(name);
             if (v == null) {
                 throw new VersionException("No version with name '" + versionName + "' exists in this version history.");
             }
-            return (Version) session.getNodeById(v.getId());
+            return (Version) sessionContext.getSessionImpl().getNodeById(v.getId());
         } catch (NameException e) {
             throw new VersionException(e);
         }
@@ -145,13 +150,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public javax.jcr.version.Version getVersionByLabel(String label) throws RepositoryException {
         try {
-            Name qLabel = session.getQName(label);
+            Name qLabel = sessionContext.getQName(label);
             InternalVersion v =
                 getInternalVersionHistory().getVersionByLabel(qLabel);
             if (v == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
-            return (Version) session.getNodeById(v.getId());
+            return (Version) sessionContext.getSessionImpl().getNodeById(v.getId());
         } catch (NameException e) {
             throw new VersionException(e);
         }
@@ -165,9 +170,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            session.getInternalVersionManager().setVersionLabel(
-                    session, getInternalVersionHistory(), session.getQName(versionName),
-                    session.getQName(label), move);
+            sessionContext.getSessionImpl().getInternalVersionManager().setVersionLabel(
+                    getSession(), getInternalVersionHistory(),
+                    sessionContext.getQName(versionName),
+                    sessionContext.getQName(label), move);
         } catch (NameException e) {
             throw new VersionException(e);
         }
@@ -180,8 +186,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            InternalVersion existing = session.getInternalVersionManager().setVersionLabel(
-                    session, getInternalVersionHistory(), null, session.getQName(label), true);
+            InternalVersion existing = sessionContext.getSessionImpl().getInternalVersionManager().setVersionLabel(
+                    getSession(), getInternalVersionHistory(),
+                    null, sessionContext.getQName(label), true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
@@ -198,7 +205,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         Name[] labels = getInternalVersionHistory().getVersionLabels();
         String[] ret = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
-            ret[i] = session.getJCRName(labels[i]);
+            ret[i] = sessionContext.getJCRName(labels[i]);
         }
         return ret;
     }
@@ -212,7 +219,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         Name[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
         String[] ret = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
-            ret[i] = session.getJCRName(labels[i]);
+            ret[i] = sessionContext.getJCRName(labels[i]);
         }
         return ret;
     }
@@ -222,7 +229,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
         try {
-            Name qLabel = session.getQName(label);
+            Name qLabel = sessionContext.getQName(label);
             return getInternalVersionHistory().getVersionByLabel(qLabel) != null;
         } catch (NameException e) {
             throw new IllegalArgumentException("Unable to resolve label: " + e);
@@ -236,7 +243,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
         try {
-            Name qLabel = session.getQName(label);
+            Name qLabel = sessionContext.getQName(label);
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
         } catch (NameException e) {
             throw new VersionException(e);
@@ -252,8 +259,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            session.getInternalVersionManager().removeVersion(session,
-                    getInternalVersionHistory(), session.getQName(versionName));
+            sessionContext.getSessionImpl().getInternalVersionManager().removeVersion(
+                    getSession(),
+                    getInternalVersionHistory(),
+                    sessionContext.getQName(versionName));
         } catch (NameException e) {
             throw new RepositoryException(e);
         }
@@ -298,7 +307,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     private void checkVersionManagementPermission() throws RepositoryException {
         try {
-            session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
+            sessionContext.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
         } catch (ItemNotFoundException e) {
             // ignore.
         }

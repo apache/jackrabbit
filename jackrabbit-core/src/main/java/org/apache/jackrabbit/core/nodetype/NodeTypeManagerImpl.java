@@ -122,12 +122,10 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * @param ntReg      node type registry
      * @param session    current session
      * @param store      the data store
-     * @throws RepositoryException If an error occurs.
      */
     @SuppressWarnings("unchecked")
     public NodeTypeManagerImpl(
-            NodeTypeRegistry ntReg, SessionImpl session, DataStore store)
-            throws RepositoryException {
+            NodeTypeRegistry ntReg, SessionImpl session, DataStore store) {
         this.ntReg = ntReg;
         this.session = session;
         this.valueFactory = session.getValueFactory();

@@ -72,7 +72,7 @@ public abstract class ProtectedItemModifier {
         // validation: make sure Node is not locked or checked-in.
         parentImpl.checkSetProperty();
 
-        NodeTypeImpl nodeType = parentImpl.session.getNodeTypeManager().getNodeType(ntName);
+        NodeTypeImpl nodeType = parentImpl.sessionContext.getNodeTypeManager().getNodeType(ntName);
         org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl def = parentImpl.getApplicableChildNodeDefinition(name, ntName);
 
         // check for name collisions
@@ -87,7 +87,7 @@ public abstract class ProtectedItemModifier {
             }
             // check same-name sibling setting of existing node
             NodeId newId = cne.getId();
-            NodeImpl n = (NodeImpl) parentImpl.session.getItemManager().getItem(newId);
+            NodeImpl n = (NodeImpl) parentImpl.sessionContext.getItemManager().getItem(newId);
             if (!n.getDefinition().allowsSameNameSiblings()) {
                 throw new ItemExistsException();
             }
@@ -106,7 +106,7 @@ public abstract class ProtectedItemModifier {
         }
         // validation: make sure Node is not locked or checked-in.
         parentImpl.checkSetProperty();
-        InternalValue intVs = InternalValue.create(value, parentImpl.session);
+        InternalValue intVs = InternalValue.create(value, parentImpl.sessionContext);
         return parentImpl.internalSetProperty(name, intVs);
     }
 
@@ -116,7 +116,7 @@ public abstract class ProtectedItemModifier {
         parentImpl.checkSetProperty();
         InternalValue[] intVs = new InternalValue[values.length];
         for (int i = 0; i < values.length; i++) {
-            intVs[i] = InternalValue.create(values[i], parentImpl.session);
+            intVs[i] = InternalValue.create(values[i], parentImpl.sessionContext);
         }
         return parentImpl.internalSetProperty(name, intVs);
     }
@@ -127,7 +127,7 @@ public abstract class ProtectedItemModifier {
         parentImpl.checkSetProperty();
         InternalValue[] intVs = new InternalValue[values.length];
         for (int i = 0; i < values.length; i++) {
-            intVs[i] = InternalValue.create(values[i], parentImpl.session);
+            intVs[i] = InternalValue.create(values[i], parentImpl.sessionContext);
         }
         return parentImpl.internalSetProperty(name, intVs, type);
     }

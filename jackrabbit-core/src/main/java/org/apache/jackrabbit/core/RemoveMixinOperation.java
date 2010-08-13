@@ -89,8 +89,8 @@ class RemoveMixinOperation implements SessionOperation<Object> {
                     + " not included in " + node);
         }
 
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+        NodeTypeManagerImpl ntMgr = context.getNodeTypeManager();
+        NodeTypeRegistry ntReg = context.getNodeTypeRegistry();
 
         // build effective node type of remaining mixin's & primary type
         Set<Name> remainingMixins = new HashSet<Name>(state.getMixinTypeNames());

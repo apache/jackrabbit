@@ -564,7 +564,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         // check state of this instance
         sanityCheck();
 
-        return session.getNodeTypeManager();
+        return sessionContext.getNodeTypeManager();
     }
 
     /**

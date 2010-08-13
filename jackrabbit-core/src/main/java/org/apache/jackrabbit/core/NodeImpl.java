@@ -136,7 +136,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         super(itemMgr, sessionContext, data);
         this.data = data;
         // paranoid sanity check
-        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        NodeTypeRegistry ntReg = sessionContext.getNodeTypeRegistry();
         final NodeState state = data.getNodeState();
         if (!ntReg.isRegistered(state.getNodeTypeName())) {
             /**
@@ -223,11 +223,11 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      */
     private Path resolveRelativePath(String relPath) throws RepositoryException {
         try {
-            return session.getQPath(relPath);
+            return sessionContext.getQPath(relPath);
         } catch (NameException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
+            throw new RepositoryException(
+                    "Failed to resolve path " + relPath
+                    + " relative to " + this, e);
         }
     }
 
@@ -369,7 +369,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             throws ConstraintViolationException, RepositoryException {
         try {
             return getOrCreateProperty(
-                    session.getQName(name), type,
+                    sessionContext.getQName(name), type,
                     multiValued, exactTypeMatch, status);
         } catch (NameException e) {
             throw new RepositoryException("invalid property name: " + name, e);
@@ -471,8 +471,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             propState.setType(type);
             propState.setMultiValued(propDef.isMultiple());
             // compute system generated values if necessary
-            InternalValue[] genValues = session.getNodeTypeInstanceHandler()
-                    .computeSystemGeneratedPropertyValues(data.getNodeState(), propDef);
+            InternalValue[] genValues =
+                sessionContext.getSessionImpl().getNodeTypeInstanceHandler()
+                .computeSystemGeneratedPropertyValues(data.getNodeState(), propDef);
             if (genValues == null) {
                 genValues = InternalValue.create(propDef.getDefaultValues());
             }
@@ -634,7 +635,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
     protected void onRedefine(QNodeDefinition def) throws RepositoryException {
         NodeDefinitionImpl newDef =
-                session.getNodeTypeManager().getNodeDefinition(def);
+            sessionContext.getNodeTypeManager().getNodeDefinition(def);
         // modify the state of 'this', i.e. the target node
         getOrCreateTransientItemState();
         // set new definition
@@ -742,9 +743,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      */
     public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
         try {
-            NodeTypeRegistry registry =
-                session.getNodeTypeManager().getNodeTypeRegistry();
-            return registry.getEffectiveNodeType(
+            return sessionContext.getNodeTypeRegistry().getEffectiveNodeType(
                     data.getNodeState().getNodeTypeName(),
                     data.getNodeState().getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
@@ -768,9 +767,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     protected NodeDefinitionImpl getApplicableChildNodeDefinition(Name nodeName,
                                                                   Name nodeTypeName)
             throws ConstraintViolationException, RepositoryException {
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeManagerImpl ntMgr = sessionContext.getNodeTypeManager();
         QNodeDefinition cnd = getEffectiveNodeType().getApplicableChildNodeDef(
-                nodeName, nodeTypeName, ntMgr.getNodeTypeRegistry());
+                nodeName, nodeTypeName, sessionContext.getNodeTypeRegistry());
         return ntMgr.getNodeDefinition(cnd);
     }
 
@@ -807,7 +806,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                         propertyName, PropertyType.UNDEFINED, multiValued);
             }
         }
-        return session.getNodeTypeManager().getPropertyDefinition(pd);
+        return sessionContext.getNodeTypeManager().getPropertyDefinition(pd);
     }
 
     protected void makePersistent() throws InvalidItemStateException {
@@ -924,8 +923,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
         // check effective node type
         try {
-            NodeTypeRegistry registry =
-                session.getNodeTypeManager().getNodeTypeRegistry();
+            NodeTypeRegistry registry = sessionContext.getNodeTypeRegistry();
             EffectiveNodeType type =
                 registry.getEffectiveNodeType(primary, mixins);
             return type.includesNodeType(ntName);
@@ -1214,15 +1212,15 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         // Check the explicitly specified node type (if any)
         NodeTypeImpl nt = null;
         if (nodeTypeName != null) {
-            nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
+            nt = sessionContext.getNodeTypeManager().getNodeType(nodeTypeName);
             if (nt.isMixin()) {
                 throw new ConstraintViolationException(
                         "Unable to add a node with a mixin node type: "
-                        + session.getJCRName(nodeTypeName));
+                        + sessionContext.getJCRName(nodeTypeName));
             } else if (nt.isAbstract()) {
                 throw new ConstraintViolationException(
                         "Unable to add a node with an abstract node type: "
-                        + session.getJCRName(nodeTypeName));
+                        + sessionContext.getJCRName(nodeTypeName));
             } else {
                 // adding a node with explicit specifying the node type name
                 // requires the editing session to have nt_management privilege.
@@ -1238,7 +1236,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         } catch (RepositoryException e) {
             throw new ConstraintViolationException(
                     "No child node definition for "
-                    + session.getJCRName(nodeName) + " found in " + this, e);
+                    + sessionContext.getJCRName(nodeName) + " found in " + this, e);
         }
 
         // Use default node type from child node definition if needed
@@ -1372,7 +1370,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             String name;
             try {
                 Path.Element[] path = new Path.Element[] { srcName };
-                name = session.getJCRPath(new PathBuilder(path).getPath());
+                name = sessionContext.getJCRPath(new PathBuilder(path).getPath());
             } catch (NameException e) {
                 name = srcName.toString();
             } catch (NamespaceException e) {
@@ -1386,7 +1384,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             String name;
             try {
                 Path.Element[] path = new Path.Element[] { dstName };
-                name = session.getJCRPath(new PathBuilder(path).getPath());
+                name = sessionContext.getJCRPath(new PathBuilder(path).getPath());
             } catch (NameException e) {
                 name = dstName.toString();
             } catch (NamespaceException e) {
@@ -1413,7 +1411,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         pb.addLast(srcName.getName(), srcName.getIndex());
         Path childPath = pb.getPath();
         if (!acMgr.isGranted(childPath, Permission.ADD_NODE | Permission.REMOVE_NODE)) {
-            String msg = "Not allowed to reorder child node " + session.getJCRPath(childPath) + ".";
+            String msg = "Not allowed to reorder child node " + sessionContext.getJCRPath(childPath) + ".";
             log.debug(msg);
             throw new AccessDeniedException(msg);
         }
@@ -1750,7 +1748,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
         Path.Element insertName;
         try {
-            Path p = session.getQPath(srcName);
+            Path p = sessionContext.getQPath(srcName);
             // p must be a relative path of length==depth==1 (to eliminate e.g. "..")
             if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                 throw new RepositoryException("invalid name: " + srcName);
@@ -1765,7 +1763,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         Path.Element beforeName;
         if (destName != null) {
             try {
-                Path p = session.getQPath(destName);
+                Path p = sessionContext.getQPath(destName);
                 // p must be a relative path of length==depth==1 (to eliminate e.g. "..")
                 if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                     throw new RepositoryException("invalid name: " + destName);
@@ -1806,7 +1804,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     public Property setProperty(String name, String[] values, int type)
             throws RepositoryException {
         Value[] converted = getValues(values, type);
-        return setProperty(session.getQName(name), converted, type, true);
+        return setProperty(sessionContext.getQName(name), converted, type, true);
     }
 
     /** Wrapper around {@link #setProperty(String, Value)} */
@@ -1837,14 +1835,14 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             value = ValueHelper.convert(value, type, getValueFactory());
         }
         return sessionContext.getSessionState().perform(
-                new SetPropertyOperation(session.getQName(name), value, true));
+                new SetPropertyOperation(sessionContext.getQName(name), value, true));
     }
 
     /** Wrapper around {@link SetPropertyOperation} */
     public Property setProperty(String name, Value value)
             throws RepositoryException {
         return sessionContext.getSessionState().perform(
-                new SetPropertyOperation(session.getQName(name), value, false));
+                new SetPropertyOperation(sessionContext.getQName(name), value, false));
     }
 
     /** Wrapper around {@link #setProperty(String, Value)} */
@@ -2209,7 +2207,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      */
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
         try {
-            return isNodeType(session.getQName(nodeTypeName));
+            return isNodeType(sessionContext.getQName(nodeTypeName));
         } catch (NameException e) {
             throw new RepositoryException(
                     "invalid node type name: " + nodeTypeName, e);
@@ -2223,7 +2221,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         // check state of this instance
         sanityCheck();
 
-        return session.getNodeTypeManager().getNodeType(
+        return sessionContext.getNodeTypeManager().getNodeType(
                 data.getNodeState().getNodeTypeName());
     }
 
@@ -2242,7 +2240,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         Iterator<Name> iter = mixinNames.iterator();
         int i = 0;
         while (iter.hasNext()) {
-            nta[i++] = session.getNodeTypeManager().getNodeType(iter.next());
+            nta[i++] = sessionContext.getNodeTypeManager().getNodeType(iter.next());
         }
         return nta;
     }
@@ -2250,7 +2248,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /** Wrapper around {@link #addMixin(Name)}. */
     public void addMixin(String mixinName) throws RepositoryException {
         try {
-            addMixin(session.getQName(mixinName));
+            addMixin(sessionContext.getQName(mixinName));
         } catch (NameException e) {
             throw new RepositoryException(
                     "Invalid mixin type name: " + mixinName, e);
@@ -2260,7 +2258,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /** Wrapper around {@link #removeMixin(Name)}. */
     public void removeMixin(String mixinName) throws RepositoryException {
         try {
-            removeMixin(session.getQName(mixinName));
+            removeMixin(sessionContext.getQName(mixinName));
         } catch (NameException e) {
             throw new RepositoryException(
                     "Invalid mixin type name: " + mixinName, e);
@@ -2275,8 +2273,8 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         // check state of this instance
         sanityCheck();
 
-        Name ntName = session.getQName(mixinName);
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        Name ntName = sessionContext.getQName(mixinName);
+        NodeTypeManagerImpl ntMgr = sessionContext.getNodeTypeManager();
         NodeTypeImpl mixin = ntMgr.getNodeType(ntName);
         if (!mixin.isMixin()) {
             return false;
@@ -2433,8 +2431,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-            srcSession = rep.createSession(session.getSubject(), workspaceName);
+            RepositoryImpl rep = (RepositoryImpl) getSession().getRepository();
+            srcSession = rep.createSession(
+                    sessionContext.getSessionImpl().getSubject(), workspaceName);
 
             // search nearest ancestor that is referenceable
             NodeImpl m1 = this;
@@ -2464,7 +2463,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             try {
                 Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
                 // use prefix mappings of srcSession
-                relPath = session.getJCRPath(p);
+                relPath = sessionContext.getJCRPath(p);
             } catch (NameException be) {
                 // should never get here...
                 String msg = "internal error: failed to determine relative path";
@@ -2758,7 +2757,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * Returns the version manager of this workspace.
      */
     private VersionManagerImpl getVersionManagerImpl() {
-        return session.getWorkspaceImpl().getVersionManagerImpl();
+        return sessionContext.getSessionImpl().getWorkspaceImpl().getVersionManagerImpl();
     }
 
     /**
@@ -2890,7 +2889,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = getSession().getWorkspace().getLockManager();
         return lockMgr.lock(getPath(), isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
@@ -2902,7 +2901,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = getSession().getWorkspace().getLockManager();
         return lockMgr.getLock(getPath());
     }
 
@@ -2915,7 +2914,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = getSession().getWorkspace().getLockManager();
         lockMgr.unlock(getPath());
     }
 
@@ -2925,7 +2924,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     public boolean holdsLock() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = getSession().getWorkspace().getLockManager();
         return lockMgr.holdsLock(getPath());
     }
 
@@ -2935,7 +2934,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     public boolean isLocked() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = session.getWorkspace().getLockManager();
+        LockManager lockMgr = getSession().getWorkspace().getLockManager();
         return lockMgr.isLocked(getPath());
     }
 
@@ -2951,7 +2950,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             // a new node needs no check
             return;
         }
-        session.getLockManager().checkLock(this);
+        sessionContext.getSessionImpl().getLockManager().checkLock(this);
     }
 
     //--------------------------------------------------< new JSR 283 methods >
@@ -2978,7 +2977,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 if (name != null) {
                     Name qName;
                     try {
-                        qName = session.getQName(name);
+                        qName = sessionContext.getQName(name);
                     } catch (NameException e) {
                         throw new RepositoryException("invalid property name: " + name, e);
                     }
@@ -3016,7 +3015,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
         Value ref = getSession().getValueFactory().createValue(this, true);
         List<Property> props = new ArrayList<Property>();
-        QueryManagerImpl qm = (QueryManagerImpl) session.getWorkspace().getQueryManager();
+        QueryManagerImpl qm = (QueryManagerImpl) getSession().getWorkspace().getQueryManager();
         for (Node n : qm.getWeaklyReferringNodes(this)) {
             for (PropertyIterator it = n.getProperties(); it.hasNext(); ) {
                 Property p = it.nextProperty();
@@ -3056,7 +3055,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             StringBuilder stmt = new StringBuilder();
             stmt.append("//*[@").append(ISO9075.encode(name));
             stmt.append(" = '").append(data.getId()).append("']");
-            Query q = session.getWorkspace().getQueryManager().createQuery(
+            Query q = getSession().getWorkspace().getQueryManager().createQuery(
                     stmt.toString(), Query.XPATH);
             QueryResult result = q.execute();
             ArrayList<Property> l = new ArrayList<Property>();
@@ -3120,13 +3119,13 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             throw new RepositoryException(msg);
         }
 
-        Name ntName = session.getQName(nodeTypeName);
+        Name ntName = sessionContext.getQName(nodeTypeName);
         if (ntName.equals(state.getNodeTypeName())) {
             log.debug("Node already has " + nodeTypeName + " as primary node type.");
             return;
         }
 
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeManagerImpl ntMgr = sessionContext.getNodeTypeManager();
         NodeType nt = ntMgr.getNodeType(ntName);
         if (nt.isMixin()) {
             throw new ConstraintViolationException(nodeTypeName + ": not a primary node type.");
@@ -3226,7 +3225,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                                         ValueHelper.convert(
                                                 prop.getValues(),
                                                 pdi.getRequiredType(),
-                                                session.getValueFactory());
+                                                getSession().getValueFactory());
                                 // redefine property
                                 prop.onRedefine(pdi.unwrap());
                                 // set converted values
@@ -3237,7 +3236,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                                         ValueHelper.convert(
                                                 prop.getValue(),
                                                 pdi.getRequiredType(),
-                                                session.getValueFactory());
+                                                getSession().getValueFactory());
                                 // redefine property
                                 prop.onRedefine(pdi.unwrap());
                                 // set converted values
@@ -3325,7 +3324,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             ConstraintViolationException, RepositoryException {
         Value v = null;
         if (value != null) {
-            v = session.getValueFactory().createValue(value);
+            v = getSession().getValueFactory().createValue(value);
         }
         return setProperty(name, v);
     }
@@ -3338,7 +3337,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             ConstraintViolationException, RepositoryException {
         Value v = null;
         if (value != null) {
-            v = session.getValueFactory().createValue(value);
+            v = getSession().getValueFactory().createValue(value);
         }
         return setProperty(name, v);
     }
@@ -3468,7 +3467,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
         Name qName;
         try {
-            qName = session.getQName(newName);
+            qName = sessionContext.getQName(newName);
         } catch (NameException e) {
             throw new RepositoryException("invalid node name: " + newName, e);
         }

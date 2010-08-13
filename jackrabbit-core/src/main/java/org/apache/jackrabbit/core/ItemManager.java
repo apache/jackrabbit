@@ -117,13 +117,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @param sessionContext component context of the associated session
      * @param rootNodeDef the definition of the root node
      */
-    protected ItemManager(
-            SessionContext sessionContext, NodeDefinitionImpl rootNodeDef) {
+    protected ItemManager(SessionContext sessionContext) {
         this.sism = sessionContext.getItemStateManager();
         this.hierMgr = sessionContext.getHierarchyManager();
         this.sessionContext = sessionContext;
         this.session = sessionContext.getSessionImpl();
-        this.rootNodeDef = rootNodeDef;
+        this.rootNodeDef = sessionContext.getNodeTypeManager().getRootNodeDefinition();
 
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
@@ -200,7 +199,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
 
         // get child node entry
         ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
-        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        NodeTypeRegistry ntReg = sessionContext.getNodeTypeRegistry();
         try {
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(
                     parentState.getNodeTypeName(), parentState.getMixinTypeNames());
@@ -216,7 +215,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
                 log.warn("Fallback to nt:unstructured due to unknown child " +
                         "node definition for type '" + state.getNodeTypeName() + "'");
             }
-            return session.getNodeTypeManager().getNodeDefinition(def);
+            return sessionContext.getNodeTypeManager().getNodeDefinition(def);
         } catch (NodeTypeConflictException e) {
             throw new RepositoryException(e);
         }
@@ -231,11 +230,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
         // see also: JCR-2408
         if (state.getStatus() == ItemState.STATUS_EXISTING_REMOVED
                 && state.getName().equals(NameConstants.JCR_UUID)) {
-            NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+            NodeTypeRegistry ntReg = sessionContext.getNodeTypeRegistry();
             QPropertyDefinition def = ntReg.getEffectiveNodeType(
                     NameConstants.MIX_REFERENCEABLE).getApplicablePropertyDef(
                     state.getName(), state.getType());
-            return session.getNodeTypeManager().getPropertyDefinition(def);
+            return sessionContext.getNodeTypeManager().getPropertyDefinition(def);
         }
         try {
             // retrieve parent in 2 steps in order to avoid the check for
@@ -251,7 +250,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         try {
             NodeState parent = (NodeState) sism.getAttic().getItemState(
                     state.getParentId()).getOverlayedState();
-            NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+            NodeTypeRegistry ntReg = sessionContext.getNodeTypeRegistry();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(
                     parent.getNodeTypeName(), parent.getMixinTypeNames());
             QPropertyDefinition def;
@@ -265,7 +264,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
                 log.warn("Fallback to nt:unstructured due to unknown property " +
                         "definition for '" + state.getName() + "'");
             }
-            return session.getNodeTypeManager().getPropertyDefinition(def);
+            return sessionContext.getNodeTypeManager().getPropertyDefinition(def);
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } catch (NodeTypeConflictException e) {
