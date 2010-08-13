@@ -16,22 +16,24 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import javax.jcr.lock.Lock;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemValidator;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
-import java.util.HashSet;
-import java.util.Set;
+
+import org.apache.jackrabbit.core.ItemValidator;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>SessionLockManager</code> implements the
@@ -47,12 +49,30 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
 
     private static Logger log = LoggerFactory.getLogger(SessionLockManager.class);
 
+    /**
+     * Component context of the current session
+     */
+    private final SessionContext context;
+
+    /**
+     * Current session
+     */
     private final SessionImpl session;
+
     private final LockManager systemLockMgr;
+
     private final Set<String> lockTokens = new HashSet<String>();
 
-    public SessionLockManager(SessionImpl session, LockManager systemLockMgr) throws RepositoryException {
-        this.session = session;
+    /**
+     * Creates a lock manager.
+     *
+     * @param context component context of the current session
+     * @param systemLockMgr internal lock manager
+     */
+    public SessionLockManager(
+            SessionContext context, LockManager systemLockMgr) {
+        this.context = context;
+        this.session = context.getSessionImpl();
         this.systemLockMgr = systemLockMgr;
     }
 
@@ -153,7 +173,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
         NodeImpl node = (NodeImpl) session.getNode(absPath);
         
         int options = ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
-        session.getValidator().checkModify(node, options, Permission.LOCK_MNGMT);
+        context.getItemValidator().checkModify(node, options, Permission.LOCK_MNGMT);
         checkLockable(node);
 
         synchronized (systemLockMgr) {
@@ -171,7 +191,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
 
         NodeImpl node = (NodeImpl) session.getNode(absPath);
         int options = ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
-        session.getValidator().checkModify(node, options, Permission.LOCK_MNGMT);
+        context.getItemValidator().checkModify(node, options, Permission.LOCK_MNGMT);
         checkLockable(node);
 
         synchronized (systemLockMgr) {

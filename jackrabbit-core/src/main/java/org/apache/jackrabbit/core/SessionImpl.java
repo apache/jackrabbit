@@ -16,6 +16,12 @@
  */
 package org.apache.jackrabbit.core;
 
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_CHECKED_OUT;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_CONSTRAINTS;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_HOLD;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_LOCK;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_RETENTION;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.security.AccessControlException;
@@ -373,13 +379,6 @@ public class SessionImpl extends AbstractSession
      */
     private void sanityCheck() throws RepositoryException {
         context.getSessionState().checkAlive();
-    }
-
-    /**
-     * @return ItemValidator instance for this session.
-     */
-    public ItemValidator getValidator() {
-        return context.getItemValidator();
     }
 
     /**
@@ -913,7 +912,7 @@ public class SessionImpl extends AbstractSession
         // by either node type constraints nor by some retention or hold.
         int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT |
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
-        getValidator().checkModify(parent, options, Permission.NONE);
+        context.getItemValidator().checkModify(parent, options, Permission.NONE);
 
         SessionImporter importer = new SessionImporter(parent, this, uuidBehavior, wsp.getConfig().getImportConfig());
         return new ImportHandler(importer, this);
@@ -1227,8 +1226,10 @@ public class SessionImpl extends AbstractSession
 
         // here's therefore a minimal rather than best effort implementation;
         // returning true is always fine according to the spec...
-        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
-                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
+        ItemValidator validator = context.getItemValidator();
+        int options =
+            CHECK_CHECKED_OUT | CHECK_LOCK | CHECK_CONSTRAINTS
+            | CHECK_HOLD | CHECK_RETENTION;
         if (target instanceof Node) {
             if (methodName.equals("addNode")
                     || methodName.equals("addMixin")
@@ -1239,10 +1240,10 @@ public class SessionImpl extends AbstractSession
                     || methodName.equals("setPrimaryType")
                     || methodName.equals("setProperty")
                     || methodName.equals("update")) {
-                return getValidator().canModify((ItemImpl) target, options, Permission.NONE);
+                return validator.canModify((ItemImpl) target, options, Permission.NONE);
             } else if (methodName.equals("remove")) {
                 try {
-                    getValidator().checkRemove((ItemImpl) target, options, Permission.NONE);
+                    validator.checkRemove((ItemImpl) target, options, Permission.NONE);
                 } catch (RepositoryException e) {
                     return false;
                 }
@@ -1250,10 +1251,10 @@ public class SessionImpl extends AbstractSession
         } else if (target instanceof Property) {
             if (methodName.equals("setValue")
                     || methodName.equals("save")) {
-                return getValidator().canModify((ItemImpl) target, options, Permission.NONE);
+                return validator.canModify((ItemImpl) target, options, Permission.NONE);
             } else if (methodName.equals("remove")) {
                 try {
-                    getValidator().checkRemove((ItemImpl) target, options, Permission.NONE);
+                    validator.checkRemove((ItemImpl) target, options, Permission.NONE);
                 } catch (RepositoryException e) {
                     return false;
                 }

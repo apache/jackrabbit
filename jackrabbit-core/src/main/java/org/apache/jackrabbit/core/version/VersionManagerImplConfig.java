@@ -25,8 +25,8 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -53,14 +53,15 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
 
     /**
      * Creates a new version manager for the given session
-     * @param session workspace sesion
+     *
+     * @param context component context of the current session
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    protected VersionManagerImplConfig(SessionImpl session,
-                                        UpdatableItemStateManager stateMgr,
-                                        HierarchyManager hierMgr) {
-        super(session, stateMgr, hierMgr);
+    protected VersionManagerImplConfig(
+            SessionContext context, UpdatableItemStateManager stateMgr,
+            HierarchyManager hierMgr) {
+        super(context, stateMgr, hierMgr);
     }
 
     /**

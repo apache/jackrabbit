@@ -331,7 +331,7 @@ public class BatchedItemOperations extends ItemValidator {
     public NodeId copy(Path srcPath, Path destPath, int flag)
             throws RepositoryException {
         return copy(
-                srcPath, stateMgr, hierMgr, sessionContext.getAccessManager(),
+                srcPath, stateMgr, hierMgr, context.getAccessManager(),
                 destPath, flag);
     }
 
@@ -687,7 +687,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 3. access rights
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
-            AccessManager accessMgr = sessionContext.getAccessManager();
+            AccessManager accessMgr = context.getAccessManager();
             // make sure current session is granted read access on parent node
             if (!accessMgr.isGranted(parentPath, Permission.READ)) {
                 throw new ItemNotFoundException(safeGetJCRPath(parentState.getNodeId()));
@@ -709,7 +709,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             QItemDefinition parentDef =
-                sessionContext.getItemManager().getDefinition(parentState).unwrap();
+                context.getItemManager().getDefinition(parentState).unwrap();
             // make sure parent node is not protected
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(
@@ -741,7 +741,7 @@ public class BatchedItemOperations extends ItemValidator {
                     throw new RepositoryException(msg, ise);
                 }
                 QNodeDefinition conflictingTargetDef =
-                    sessionContext.getItemManager().getDefinition(conflictingState).unwrap();
+                    context.getItemManager().getDefinition(conflictingState).unwrap();
                 // check same-name sibling setting of both target and existing node
                 if (!conflictingTargetDef.allowsSameNameSiblings()
                         || !newNodeDef.allowsSameNameSiblings()) {
@@ -754,7 +754,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         RetentionRegistry retentionReg =
-            sessionContext.getSessionImpl().getRetentionRegistry();
+            context.getSessionImpl().getRetentionRegistry();
         if ((options & CHECK_HOLD) == CHECK_HOLD) {
             if (retentionReg.hasEffectiveHold(parentPath, false)) {
                 throw new RepositoryException("Unable to add node. Parent is affected by a hold.");
@@ -866,7 +866,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             try {
-                AccessManager accessMgr = sessionContext.getAccessManager();
+                AccessManager accessMgr = context.getAccessManager();
                 // make sure current session is granted read access on parent node
                 if (!accessMgr.isGranted(targetPath, Permission.READ)) {
                     throw new PathNotFoundException(safeGetJCRPath(targetPath));
@@ -888,13 +888,13 @@ public class BatchedItemOperations extends ItemValidator {
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             QItemDefinition parentDef =
-                sessionContext.getItemManager().getDefinition(parentState).unwrap();
+                context.getItemManager().getDefinition(parentState).unwrap();
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(safeGetJCRPath(parentId)
                         + ": cannot remove child node of protected parent node");
             }
             QItemDefinition targetDef =
-                sessionContext.getItemManager().getDefinition(targetState).unwrap();
+                context.getItemManager().getDefinition(targetState).unwrap();
             if (targetDef.isMandatory()) {
                 throw new ConstraintViolationException(safeGetJCRPath(targetPath)
                         + ": cannot remove mandatory node");
@@ -929,7 +929,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         RetentionRegistry retentionReg =
-            sessionContext.getSessionImpl().getRetentionRegistry();
+            context.getSessionImpl().getRetentionRegistry();
         if ((options & CHECK_HOLD) == CHECK_HOLD) {
             if (retentionReg.hasEffectiveHold(targetPath, true)) {
                 throw new RepositoryException("Unable to perform removal. Node is affected by a hold.");
@@ -978,7 +978,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // access rights
         // make sure current session is granted read access on node
-        AccessManager accessMgr = sessionContext.getAccessManager();
+        AccessManager accessMgr = context.getAccessManager();
         if (!accessMgr.isGranted(nodePath, Permission.READ)) {
             throw new PathNotFoundException(safeGetJCRPath(node.getNodeId()));
         }
@@ -998,7 +998,7 @@ public class BatchedItemOperations extends ItemValidator {
         verifyCheckedOut(nodePath);
 
         RetentionRegistry retentionReg =
-            sessionContext.getSessionImpl().getRetentionRegistry();
+            context.getSessionImpl().getRetentionRegistry();
         if (retentionReg.hasEffectiveHold(nodePath, false)) {
             throw new RepositoryException("Unable to write. Node is affected by a hold.");
         }
@@ -1026,7 +1026,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws PathNotFoundException, RepositoryException {
         // access rights
         // make sure current session is granted read access on node
-        AccessManager accessMgr = sessionContext.getAccessManager();
+        AccessManager accessMgr = context.getAccessManager();
         if (!accessMgr.isGranted(nodePath, Permission.READ)) {
             throw new PathNotFoundException(safeGetJCRPath(nodePath));
         }
@@ -1419,7 +1419,7 @@ public class BatchedItemOperations extends ItemValidator {
     protected void verifyUnlocked(Path nodePath)
             throws LockException, RepositoryException {
         // make sure there's no foreign lock on node at nodePath
-        sessionContext.getSessionImpl().getLockManager().checkLock(nodePath, session);
+        context.getSessionImpl().getLockManager().checkLock(nodePath, session);
     }
 
     /**
@@ -1435,7 +1435,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws PathNotFoundException, ConstraintViolationException,
             RepositoryException {
         NodeState node = getNodeState(nodePath);
-        if (sessionContext.getItemManager().getDefinition(node).isProtected()) {
+        if (context.getItemManager().getDefinition(node).isProtected()) {
             throw new ConstraintViolationException(safeGetJCRPath(nodePath)
                     + ": node is protected");
         }

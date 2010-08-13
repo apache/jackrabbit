@@ -76,7 +76,7 @@ class RemoveMixinOperation implements SessionOperation<Object> {
         ItemManager itemMgr = context.getItemManager();
         SessionItemStateManager stateMgr = context.getItemStateManager();
 
-        session.getValidator().checkModify(
+        context.getItemValidator().checkModify(
                 node,
                 CHECK_LOCK | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD,
                 Permission.NODE_TYPE_MNGMT);

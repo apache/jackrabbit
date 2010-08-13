@@ -32,9 +32,9 @@ import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemValidator;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The JCR Version Manager impementation is split in several classes in order to
+ * The JCR Version Manager implementation is split in several classes in order to
  * group related methods together.
  * <p/>
  * this class provides methods for the restore operations.
@@ -65,14 +65,15 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
 
     /**
      * Creates a new version manager for the given session
-     * @param session workspace sesion
+     *
+     * @param context component context of the current session
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    protected VersionManagerImplRestore(SessionImpl session,
-                                        UpdatableItemStateManager stateMgr,
-                                        HierarchyManager hierMgr) {
-        super(session, stateMgr, hierMgr);
+    protected VersionManagerImplRestore(
+            SessionContext context, UpdatableItemStateManager stateMgr,
+            HierarchyManager hierMgr) {
+        super(context, stateMgr, hierMgr);
     }
 
     /**

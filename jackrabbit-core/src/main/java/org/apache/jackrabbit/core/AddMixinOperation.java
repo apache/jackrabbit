@@ -67,7 +67,7 @@ class AddMixinOperation implements SessionOperation<Object> {
                 || MIX_SIMPLE_VERSIONABLE.equals(mixinName)) {
             permissions |= Permission.VERSION_MNGMT;
         }
-        context.getSessionImpl().getValidator().checkModify(
+        context.getItemValidator().checkModify(
                 node,
                 CHECK_LOCK | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD,
                 permissions);
