@@ -66,6 +66,7 @@ public class NodeTypePredicate extends DepthPredicate {
      * extends from the configured node type (Node.isNodeType() check).
      * @see org.apache.jackrabbit.commons.predicate.DepthPredicate#matches(javax.jcr.Item)
      */
+    @Override
     protected boolean matches(Item item) throws RepositoryException {
         if (item.isNode()) {
             if (respectSupertype) {

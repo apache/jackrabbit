@@ -66,6 +66,7 @@ public class IsNodePredicate extends DepthPredicate {
      * positive (true).
      * @see org.apache.jackrabbit.commons.predicate.DepthPredicate#matches(javax.jcr.Item)
      */
+    @Override
     protected boolean matches(Item item) throws RepositoryException {
         return item.isNode() == isNode;
     }
