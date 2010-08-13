@@ -54,6 +54,7 @@ public class NamePredicate extends DepthPredicate {
      * the configured name.
      * @see org.apache.jackrabbit.commons.predicate.DepthPredicate#matches(javax.jcr.Item)
      */
+    @Override
     protected boolean matches(Item item) throws RepositoryException {
         return item.getName().equals(name);
     }

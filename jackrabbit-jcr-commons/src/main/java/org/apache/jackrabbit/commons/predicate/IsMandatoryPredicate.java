@@ -45,6 +45,7 @@ public class IsMandatoryPredicate extends DepthPredicate {
     /**
      * @see org.apache.jackrabbit.commons.predicate.DepthPredicate#matches(javax.jcr.Item)
      */
+    @Override
     protected boolean matches(Item item) throws RepositoryException {
         if (item.isNode()) {
             return ((Node) item).getDefinition().isMandatory() == isMandatory;

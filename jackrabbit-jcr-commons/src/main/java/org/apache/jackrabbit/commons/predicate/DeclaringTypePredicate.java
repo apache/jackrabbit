@@ -66,6 +66,7 @@ public class DeclaringTypePredicate extends DepthPredicate {
      * flag is <code>true</code> it returns <code>false</code>.
      * @see org.apache.jackrabbit.commons.predicate.DepthPredicate#matches(javax.jcr.Item)
      */
+    @Override
     protected boolean matches(Item item) throws RepositoryException {
         if (item.isNode()) {
             return !propsOnly && ((Node) item).getDefinition().getDeclaringNodeType().getName().equals(nodeType);
