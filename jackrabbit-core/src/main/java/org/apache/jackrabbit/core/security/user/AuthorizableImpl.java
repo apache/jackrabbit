@@ -234,19 +234,13 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     public synchronized void remove() throws RepositoryException {
         // don't allow for removal of the administrator even if the executing
         // session has all permissions.
-        boolean isGroup = isGroup();
-        if (!isGroup && ((User) this).isAdmin()) {
+        if (!isGroup() && ((User) this).isAdmin()) {
             throw new RepositoryException("The administrator cannot be removed.");
         }
         Session s = getSession();
         node.remove();
         if (userManager.isAutoSave()) {
             s.save();
-        }
-
-        // upon successful removal of a Group -> clear the membership cache
-        if (isGroup) {
-            userManager.getMembershipCache().clear();
         }
     }
 

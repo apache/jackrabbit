@@ -44,7 +44,7 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
      * @param adminId
      * @throws RepositoryException
      */
-    public UserPerWorkspaceUserManager(SessionImpl session, String adminId) {
+    public UserPerWorkspaceUserManager(SessionImpl session, String adminId) throws RepositoryException {
         super(session, adminId);
     }
 
@@ -57,7 +57,7 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
      * @param config
      * @throws javax.jcr.RepositoryException
      */
-    public UserPerWorkspaceUserManager(SessionImpl session, String adminId, Properties config) {
+    public UserPerWorkspaceUserManager(SessionImpl session, String adminId, Properties config) throws RepositoryException {
         super(session, adminId, config);
     }
         
@@ -71,7 +71,7 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
      * @throws javax.jcr.RepositoryException
      */
     public UserPerWorkspaceUserManager(SessionImpl session, String adminId,
-                                       Properties config, MembershipCache mCache) {
+                                       Properties config, MembershipCache mCache) throws RepositoryException {
         super(session, adminId, config, mCache);
     }
 

@@ -400,7 +400,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
             values[values.length - 1] = toAdd;
 
             userManager.setProtectedProperty(node, P_MEMBERS, values, PropertyType.WEAKREFERENCE);
-            userManager.getMembershipCache().clear();
             return true;
         }
 
@@ -423,7 +422,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
                         Value[] values = valList.toArray(new Value[valList.size()]);
                         userManager.setProtectedProperty(node, P_MEMBERS, values);
                     }
-                    userManager.getMembershipCache().clear();
                     return true;
                 } catch (RepositoryException e) {
                     // modification failed -> revert all pending changes.
@@ -476,7 +474,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 if (userManager.isAutoSave()) {
                     node.save();
                 }
-                userManager.getMembershipCache().clear();
                 return true;
             }
             catch (RepositoryException e) {
@@ -509,7 +506,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 if (userManager.isAutoSave()) {
                     node.save();
                 }
-                userManager.getMembershipCache().clear();
                 return true;
             }
             catch (RepositoryException e) {

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -41,7 +40,6 @@ import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -73,19 +71,11 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     private static Logger log = LoggerFactory.getLogger(DefaultPrincipalProvider.class);
 
     /**
-     * a cache for group memberships: maps principal-name to a set of principals
-     * representing the members.
-     */
-    private final Map<String, Set<Principal>> membershipCache;
-
-    /**
      * Principal-Base of this Provider
      */
     private final UserManagerImpl userManager;
 
     private final EveryonePrincipal everyonePrincipal;
-
-    private final String pMembers;
     private final String pPrincipalName;
 
     /**
@@ -101,20 +91,14 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
 
         this.userManager = systemUserManager;
         everyonePrincipal = EveryonePrincipal.getInstance();
-        membershipCache = new LRUMap();
 
-        // listen to modifications of group-membership
-        String[] ntNames = new String[2];
+        String[] ntNames = new String[1];
         if (systemSession instanceof SessionImpl) {
             NameResolver resolver = (NameResolver) systemSession;
-            ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_GROUP);
-            ntNames[1] = resolver.getJCRName(UserManagerImpl.NT_REP_AUTHORIZABLE_FOLDER);
-            pMembers = resolver.getJCRName(UserManagerImpl.P_MEMBERS);
+            ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_AUTHORIZABLE_FOLDER);
             pPrincipalName = resolver.getJCRName(UserManagerImpl.P_PRINCIPAL_NAME);
         } else {
-            ntNames[0] = "rep:Group";
-            ntNames[1] = "rep:AuthorizableFolder";
-            pMembers = "rep:members";
+            ntNames[0] = "rep:AuthorizableFolder";
             pPrincipalName = "rep:principalName";
         }
 
@@ -125,12 +109,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             targetPath = Text.getRelativeParent(targetPath, 1);
         }
         systemSession.getWorkspace().getObservationManager().addEventListener(this,
-                Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                targetPath,
-                true,
-                null,
-                ntNames,
-                false);
+                Event.NODE_ADDED | Event.NODE_REMOVED, targetPath, true, null, ntNames, false);
     }
 
     //------------------------------------------< AbstractPrincipalProvider >---
@@ -221,19 +200,10 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      */
     public PrincipalIterator getGroupMembership(Principal userPrincipal) {
         checkInitialized();
-        Set<Principal> mship;
-        synchronized (membershipCache) {
-            mship = membershipCache.get(userPrincipal.getName());
-            if (mship == null) {
-                // recursively collect group membership
-                mship = collectGroupMembership(userPrincipal);
-
-                // make sure everyone-group is not missing
-                if (!mship.contains(everyonePrincipal) && everyonePrincipal.isMember(userPrincipal)) {
-                    mship.add(everyonePrincipal);
-                }
-                membershipCache.put(userPrincipal.getName(), mship);
-            }
+        Set<Principal> mship = collectGroupMembership(userPrincipal);
+        // make sure everyone-group is not missing
+        if (!mship.contains(everyonePrincipal) && everyonePrincipal.isMember(userPrincipal)) {
+            mship.add(everyonePrincipal);
         }
         return new PrincipalIteratorAdapter(mship);
 
@@ -245,7 +215,6 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     @Override
     public synchronized void close() {
         super.close();
-        membershipCache.clear();
     }
 
     /**
@@ -279,26 +248,6 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     public void onEvent(EventIterator eventIterator) {
         // superclass: flush all cached
         clearCache();
-
-        // membership cache:
-        while (eventIterator.hasNext()) {
-            Event ev = eventIterator.nextEvent();
-            int type = ev.getType();
-            if (type == Event.PROPERTY_ADDED || type == Event.PROPERTY_CHANGED
-                    || type == Event.PROPERTY_REMOVED) {
-                try {
-                    if (pMembers.equals(Text.getName(ev.getPath()))) {
-                        synchronized (membershipCache) {
-                            membershipCache.clear();
-                        }
-                        break;
-                    }
-                } catch (RepositoryException e) {
-                    // should never get here
-                    log.warn(e.getMessage());
-                }
-            }
-        }
     }
 
     //--------------------------------------------------------------------------

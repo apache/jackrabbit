@@ -262,7 +262,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param session The editing/reading session.
      * @param adminId The user ID of the administrator.
      */
-    public UserManagerImpl(SessionImpl session, String adminId) {
+    public UserManagerImpl(SessionImpl session, String adminId) throws RepositoryException {
         this(session, adminId, null, null);
     }
 
@@ -273,7 +273,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param adminId The user ID of the administrator.
      * @param config The configuration parameters.
      */
-    public UserManagerImpl(SessionImpl session, String adminId, Properties config) {
+    public UserManagerImpl(SessionImpl session, String adminId, Properties config) throws RepositoryException {
         this(session, adminId, config, null);
     }
 
@@ -297,9 +297,10 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param adminId The user ID of the administrator.
      * @param config The configuration parameters.
      * @param mCache Shared membership cache.
+     * @throws javax.jcr.RepositoryException
      */
     public UserManagerImpl(SessionImpl session, String adminId, Properties config,
-                           MembershipCache mCache) {
+                           MembershipCache mCache) throws RepositoryException {
         this.session = session;
         this.adminId = adminId;
 
