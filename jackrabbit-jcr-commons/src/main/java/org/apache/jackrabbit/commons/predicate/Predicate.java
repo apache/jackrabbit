@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.commons.predicate;
 
 /**
- * Interface for object predicates, i.e. functions that evalute a given
+ * Interface for object predicates, i.e. functions that evaluate a given
  * object to a boolean value.
  */
 public interface Predicate {
