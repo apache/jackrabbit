@@ -49,7 +49,7 @@ public class DepthPredicate implements Predicate {
      * Matches if the given depth is greater or equal the minimum depth and
      * less or equal the maximum depth and if the call to {@link #matches(Item)}
      * returns <code>true</code>.
-     * @see org.apache.commons.collections.Predicate#evaluate(java.lang.Object)
+     * @see Predicate#evaluate(java.lang.Object)
      */
     public boolean evaluate(Object item) {
         if ( item instanceof Item ) {
