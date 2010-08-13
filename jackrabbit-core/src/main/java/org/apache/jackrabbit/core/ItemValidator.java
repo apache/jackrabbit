@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -112,6 +113,14 @@ public class ItemValidator {
     protected final NodeTypeRegistry ntReg;
 
     /**
+     * A bit mask of the checks that are currently enabled. All access to
+     * this mask must be synchronized to ensure that only the thread that
+     * uses the {@link #performRelaxed(SessionOperation, int)} method will
+     * experience the effect of the relaxed set of checks.
+     */
+    private int enabledChecks = ~0;
+
+    /**
      * Creates a new <code>ItemValidator</code> instance.
      *
      * @param sessionContext component context of this session
@@ -119,6 +128,28 @@ public class ItemValidator {
     public ItemValidator(SessionContext sessionContext) throws RepositoryException {
         this.sessionContext = sessionContext;
         this.ntReg = sessionContext.getRepositoryContext().getNodeTypeRegistry();
+    }
+
+    /**
+     * Performs the given session operation with the specified checks disabled.
+     *
+     * @param operation the session operation to be performed
+     * @param checksToDisable bit mask of checks to be disabled
+     * @return return value of the session operation
+     * @throws RepositoryException if the operation could not be performed
+     */
+    public synchronized <T> T performRelaxed(
+            SessionOperation<T> operation, int checksToDisable)
+            throws RepositoryException {
+        int previousChecks = enabledChecks;
+        try {
+            enabledChecks &= ~checksToDisable;
+            log.debug("Performing {} with checks [{}] disabled",
+                    operation, Integer.toBinaryString(~enabledChecks));
+            return operation.perform(sessionContext);
+        } finally {
+            enabledChecks = previousChecks;
+        }
     }
 
     /**
@@ -216,12 +247,16 @@ public class ItemValidator {
         EffectiveNodeType.checkSetPropertyValueConstraints(def, values);
     }
 
-    public void checkModify(ItemImpl item, int options, int permissions) throws RepositoryException {
-        checkCondition(item, options, permissions, false);
+    public synchronized void checkModify(
+            ItemImpl item, int options, int permissions)
+            throws RepositoryException {
+        checkCondition(item, options & enabledChecks, permissions, false);
     }
 
-    public void checkRemove(ItemImpl item, int options, int permissions) throws RepositoryException {
-        checkCondition(item, options, permissions, true);
+    public synchronized void checkRemove(
+            ItemImpl item, int options, int permissions)
+            throws RepositoryException {
+        checkCondition(item, options & enabledChecks, permissions, true);
     }
 
     private void checkCondition(ItemImpl item, int options, int permissions, boolean isRemoval) throws RepositoryException {
@@ -274,8 +309,10 @@ public class ItemValidator {
         }
     }
 
-    public boolean canModify(ItemImpl item, int options, int permissions) throws RepositoryException {
-        return hasCondition(item, options, permissions, false);
+    public synchronized boolean canModify(
+            ItemImpl item, int options, int permissions)
+            throws RepositoryException {
+        return hasCondition(item, options & enabledChecks, permissions, false);
     }
 
     private boolean hasCondition(ItemImpl item, int options, int permissions, boolean isRemoval) throws RepositoryException {
