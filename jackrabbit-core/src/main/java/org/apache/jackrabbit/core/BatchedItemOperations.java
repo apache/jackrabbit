@@ -39,6 +39,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
@@ -718,7 +719,8 @@ public class BatchedItemOperations extends ItemValidator {
             }
             // make sure there's an applicable definition for new child node
             EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-            entParent.checkAddNodeConstraints(nodeName, nodeTypeName, ntReg);
+            entParent.checkAddNodeConstraints(
+                    nodeName, nodeTypeName, context.getNodeTypeRegistry());
             QNodeDefinition newNodeDef =
                     findApplicableNodeDefinition(nodeName, nodeTypeName,
                             parentState);
@@ -1908,7 +1910,9 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         try {
-            EffectiveNodeType type = ntReg.getEffectiveNodeType(primary, mixins);
+            NodeTypeRegistry registry = context.getNodeTypeRegistry();
+            EffectiveNodeType type =
+                registry.getEffectiveNodeType(primary, mixins);
             return type.includesNodeType(NameConstants.MIX_REFERENCEABLE);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node "

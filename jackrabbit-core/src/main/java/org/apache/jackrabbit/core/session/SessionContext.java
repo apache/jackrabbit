@@ -58,6 +58,11 @@ public class SessionContext implements NamePathResolver {
     private final SessionState state;
 
     /**
+     * The item validator of this session
+     */
+    private final ItemValidator itemValidator;
+
+    /**
      * Node type manager of this session
      */
     private final NodeTypeManagerImpl nodeTypeManager;
@@ -71,11 +76,6 @@ public class SessionContext implements NamePathResolver {
      * The item manager of this session
      */
     private volatile ItemManager itemManager;
-
-    /**
-     * The item validator of this session
-     */
-    private volatile ItemValidator itemValidator;
 
     /**
      * The access manager of this session
@@ -103,6 +103,7 @@ public class SessionContext implements NamePathResolver {
         this.nodeTypeManager = new NodeTypeManagerImpl(
                 repositoryContext.getNodeTypeRegistry(), session,
                 repositoryContext.getDataStore());
+        this.itemValidator = new ItemValidator(this);
     }
 
     /**
@@ -161,6 +162,15 @@ public class SessionContext implements NamePathResolver {
     }
 
     /**
+     * Returns the item validator of this session.
+     *
+     * @return item validator
+     */
+    public ItemValidator getItemValidator() {
+        return itemValidator;
+    }
+
+    /**
      * Returns the node type manager of this session.
      *
      * @return node type manager
@@ -192,16 +202,6 @@ public class SessionContext implements NamePathResolver {
     public void setItemManager(ItemManager itemManager) {
         assert itemManager != null;
         this.itemManager = itemManager;
-    }
-
-    public ItemValidator getItemValidator() {
-        assert itemValidator != null;
-        return itemValidator;
-    }
-
-    public void setItemValidator(ItemValidator itemValidator) {
-        assert itemValidator != null;
-        this.itemValidator = itemValidator;
     }
 
     public AccessManager getAccessManager() {
