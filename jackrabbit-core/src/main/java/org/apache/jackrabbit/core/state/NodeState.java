@@ -330,7 +330,7 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Renames a  <code>ChildNodeEntry</code> by removing the old entry and
+     * Renames a <code>ChildNodeEntry</code> by removing the old entry and
      * appending the new entry to the end of the list.
      *
      * @param oldName <code>Name</code> object specifying the entry's old name
@@ -341,10 +341,27 @@ public class NodeState extends ItemState {
      */
     public boolean renameChildNodeEntry(Name oldName, int index,
                                                      Name newName) {
+        ChildNodeEntry oldEntry = childNodeEntries.get(oldName, index);;
+        if (oldEntry != null) {
+            return renameChildNodeEntry(oldEntry.getId(), newName);
+        }
+        return false;
+    }
+
+    /**
+     * Renames a <code>ChildNodeEntry</code> by removing the old entry and
+     * appending the new entry to the end of the list.
+     *
+     * @param id id the entry to be renamed is refering to.
+     * @param newName <code>Name</code> object specifying the entry's new name
+     * @return <code>true</code> if the entry was successfully renamed;
+     *         otherwise <code>false</code>
+     */
+    public boolean renameChildNodeEntry(NodeId id, Name newName) {
         ChildNodeEntry oldEntry = null;
         ChildNodeEntry newEntry = null;
         synchronized (this) {
-            oldEntry = childNodeEntries.remove(oldName, index);
+            oldEntry = childNodeEntries.remove(id);
             if (oldEntry != null) {
                 newEntry =
                     childNodeEntries.add(newName, oldEntry.getId());
@@ -356,6 +373,39 @@ public class NodeState extends ItemState {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Replaces the <code>ChildNodeEntry</code> identified by <code>oldId</code>
+     * with a new entry. Note that the entry will <i>overwrite</i> the old
+     * entry at the same relative position within the child node entries list.
+     *
+     * @param oldId id the entry to be replaced is refering to.
+     * @param newName <code>Name</code> object specifying the entry's new name
+     * @param newId the id the new entry is refering to.
+     * @return <code>true</code> if the entry was successfully replaced;
+     *         otherwise <code>false</code>
+     */
+    public boolean replaceChildNodeEntry(NodeId oldId, Name newName, NodeId newId) {
+        synchronized (this) {
+            ChildNodeEntry oldEntry = childNodeEntries.get(oldId);
+            if (oldEntry == null) {
+                return false;
+            }
+
+            ChildNodeEntries entries = new ChildNodeEntries();
+            for (ChildNodeEntry entry : childNodeEntries.list()) {
+                if (entry.getId() == oldId) {
+                    entries.add(newName, newId);
+                } else {
+                    entries.add(entry.getName(), entry.getId());
+                }
+            }
+            childNodeEntries = entries;
+        }
+
+        notifyNodesReplaced();
+        return true;
     }
 
     /**
