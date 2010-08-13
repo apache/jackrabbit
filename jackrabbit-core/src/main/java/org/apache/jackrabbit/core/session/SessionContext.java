@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.session;
 
 import javax.jcr.NamespaceException;
+import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
@@ -30,6 +31,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
@@ -56,6 +58,11 @@ public class SessionContext implements NamePathResolver {
      * The state of this session.
      */
     private final SessionState state;
+
+    /**
+     * The value factory of this session
+     */
+    private final ValueFactory valueFactory;
 
     /**
      * The item validator of this session
@@ -100,10 +107,10 @@ public class SessionContext implements NamePathResolver {
         this.repositoryContext = repositoryContext;
         this.session = session;
         this.state = new SessionState(this);
-        this.nodeTypeManager = new NodeTypeManagerImpl(
-                repositoryContext.getNodeTypeRegistry(), session,
-                repositoryContext.getDataStore());
+        this.valueFactory =
+            new ValueFactoryImpl(session, repositoryContext.getDataStore());
         this.itemValidator = new ItemValidator(this);
+        this.nodeTypeManager = new NodeTypeManagerImpl(this);
     }
 
     /**
@@ -159,6 +166,15 @@ public class SessionContext implements NamePathResolver {
      */
     public SessionState getSessionState() {
         return state;
+    }
+
+    /**
+     * Returns the value factory of this session.
+     *
+     * @return value factory
+     */
+    public ValueFactory getValueFactory() {
+        return valueFactory;
     }
 
     /**
