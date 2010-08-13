@@ -62,7 +62,7 @@ public class PathPredicate implements Predicate {
     }
 
     /**
-     * @see org.apache.commons.collections.Predicate#evaluate(java.lang.Object)
+     * @see Predicate#evaluate(java.lang.Object)
      */
     public boolean evaluate(Object item) {
         if ( item instanceof Item ) {
