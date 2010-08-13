@@ -651,8 +651,8 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                                               boolean useDefaultValues)
             throws RepositoryException {
         // compute system generated values if necessary
-        InternalValue[] values = session.getNodeTypeInstanceHandler().
-                computeSystemGeneratedPropertyValues(state.getState(), def);
+        InternalValue[] values =
+            state.getState().computeGeneratedValues(def, session.getUserID());
         if (values == null && useDefaultValues) {
             values = InternalValue.create(def.getDefaultValues());
         }
