@@ -87,7 +87,6 @@ import org.apache.jackrabbit.core.session.SessionRefreshOperation;
 import org.apache.jackrabbit.core.session.SessionSaveOperation;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
@@ -184,11 +183,6 @@ public class SessionImpl extends AbstractSession
      */
     protected final Map<SessionListener, SessionListener> listeners =
         new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
-
-    /**
-     * value factory
-     */
-    protected ValueFactory valueFactory;
 
     /**
      * Principal Manager
@@ -994,11 +988,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public ValueFactory getValueFactory() {
-        if (valueFactory == null) {
-            valueFactory =
-                new ValueFactoryImpl(this, context.getDataStore());
-        }
-        return valueFactory;
+        return context.getValueFactory();
     }
 
     /**

@@ -35,7 +35,6 @@ import java.util.Set;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
@@ -49,9 +48,8 @@ import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -77,19 +75,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         implements JackrabbitNodeTypeManager, Dumpable, NodeTypeRegistryListener {
 
     /**
-     * The wrapped node type registry.
+     * Component context of the current session.
      */
-    private final NodeTypeRegistry ntReg;
-
-    /**
-     * Current session.
-     */
-    private final SessionImpl session;
-
-    /**
-     * The value factory obtained from the current session.
-     */
-    private final ValueFactory valueFactory;
+    private final SessionContext context;
 
     /**
      * The root node definition.
@@ -114,8 +102,6 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      */
     private final Map<QNodeDefinition, NodeDefinitionImpl> ndCache;
 
-    private final DataStore store;
-
     /**
      * Creates a new <code>NodeTypeManagerImpl</code> instance.
      *
@@ -124,13 +110,8 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * @param store      the data store
      */
     @SuppressWarnings("unchecked")
-    public NodeTypeManagerImpl(
-            NodeTypeRegistry ntReg, SessionImpl session, DataStore store) {
-        this.ntReg = ntReg;
-        this.session = session;
-        this.valueFactory = session.getValueFactory();
-        this.ntReg.addListener(this);
-        this.store = store;
+    public NodeTypeManagerImpl(SessionContext context) {
+        this.context = context;
 
         // setup caches with soft references to node type
         // & item definition instances
@@ -138,9 +119,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
-        rootNodeDef =
-            new NodeDefinitionImpl(ntReg.getRootNodeDef(), this, session);
+        NodeTypeRegistry registry = context.getNodeTypeRegistry();
+
+        rootNodeDef = new NodeDefinitionImpl(
+                registry.getRootNodeDef(), this, context);
         ndCache.put(rootNodeDef.unwrap(), rootNodeDef);
+
+        registry.addListener(this);
     }
 
     /**
@@ -158,7 +143,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         synchronized (ndCache) {
             NodeDefinitionImpl ndi = ndCache.get(def);
             if (ndi == null) {
-                ndi = new NodeDefinitionImpl(def, this, session);
+                ndi = new NodeDefinitionImpl(def, this, context);
                 ndCache.put(def, ndi);
             }
             return ndi;
@@ -173,7 +158,8 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         synchronized (pdCache) {
             PropertyDefinitionImpl pdi = pdCache.get(def);
             if (pdi == null) {
-                pdi = new PropertyDefinitionImpl(def, this, session, valueFactory);
+                pdi = new PropertyDefinitionImpl(
+                        def, this, context, context.getValueFactory());
                 pdCache.put(def, pdi);
             }
             return pdi;
@@ -189,9 +175,12 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         synchronized (ntCache) {
             NodeTypeImpl nt = ntCache.get(name);
             if (nt == null) {
-                EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
-                QNodeTypeDefinition def = ntReg.getNodeTypeDef(name);
-                nt = new NodeTypeImpl(ent, def, this, session, valueFactory, store);
+                NodeTypeRegistry registry = context.getNodeTypeRegistry();
+                EffectiveNodeType ent = registry.getEffectiveNodeType(name);
+                QNodeTypeDefinition def = registry.getNodeTypeDef(name);
+                nt = new NodeTypeImpl(
+                        ent, def, this, context,
+                        context.getValueFactory(), context.getDataStore());
                 ntCache.put(name, nt);
             }
             return nt;
@@ -202,14 +191,14 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * @see org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager#getNamePathResolver()
      */
     public NamePathResolver getNamePathResolver() {
-        return session;
+        return context;
     }
 
     /**
      * @return the node type registry
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
-        return ntReg;
+        return context.getNodeTypeRegistry();
     }
 
     /**
@@ -257,7 +246,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
                 }
             } else if (contentType.equalsIgnoreCase(TEXT_X_JCR_CND)) {
                 try {
-                    NamespaceMapping mapping = new NamespaceMapping(session);
+                    NamespaceMapping mapping = new NamespaceMapping(context.getSessionImpl());
 
                     CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping> reader =
                         new CompactNodeTypeDefReader<QNodeTypeDefinition, NamespaceMapping>(
@@ -278,16 +267,17 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
                         "Unsupported content type: " + contentType);
             }
 
-            new NamespaceHelper(session).registerNamespaces(namespaceMap);
+            new NamespaceHelper(context.getSessionImpl()).registerNamespaces(namespaceMap);
 
             if (reregisterExisting) {
+                NodeTypeRegistry registry = context.getNodeTypeRegistry();
                 // split the node types into new and already registered node types.
                 // this way we can register new node types together with already
                 // registered node types which make circular dependencies possible
                 List<QNodeTypeDefinition> newNodeTypeDefs = new ArrayList<QNodeTypeDefinition>();
                 List<QNodeTypeDefinition> registeredNodeTypeDefs = new ArrayList<QNodeTypeDefinition>();
                 for (QNodeTypeDefinition nodeTypeDef: nodeTypeDefs) {
-                    if (ntReg.isRegistered(nodeTypeDef.getName())) {
+                    if (registry.isRegistered(nodeTypeDef.getName())) {
                         registeredNodeTypeDefs.add(nodeTypeDef);
                     } else {
                         newNodeTypeDefs.add(nodeTypeDef);
@@ -301,7 +291,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
 
                 // re-register already existing node types
                 for (QNodeTypeDefinition nodeTypeDef: registeredNodeTypeDefs) {
-                    ntReg.reregisterNodeType(nodeTypeDef);
+                    registry.reregisterNodeType(nodeTypeDef);
                     nodeTypes.add(getNodeType(nodeTypeDef.getName()));
                 }
                 return nodeTypes.toArray(new NodeType[nodeTypes.size()]);
@@ -382,7 +372,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * {@inheritDoc}
      */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
-        Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        Name[] ntNames = context.getNodeTypeRegistry().getRegisteredNodeTypes();
         Arrays.sort(ntNames);
         ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (Name ntName : ntNames) {
@@ -395,7 +385,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * {@inheritDoc}
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
-        Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        Name[] ntNames = context.getNodeTypeRegistry().getRegisteredNodeTypes();
         Arrays.sort(ntNames);
         ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (Name ntName : ntNames) {
@@ -411,7 +401,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * {@inheritDoc}
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
-        Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        Name[] ntNames = context.getNodeTypeRegistry().getRegisteredNodeTypes();
         Arrays.sort(ntNames);
         ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (Name ntName : ntNames) {
@@ -429,7 +419,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            return getNodeType(session.getQName(nodeTypeName));
+            return getNodeType(context.getQName(nodeTypeName));
         } catch (NameException e) {
             throw new NoSuchNodeTypeException(nodeTypeName, e);
         } catch (NamespaceException e) {
@@ -450,7 +440,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      */
     private Collection<NodeType> registerNodeTypes(List<QNodeTypeDefinition> defs)
             throws InvalidNodeTypeDefException, RepositoryException {
-        ntReg.registerNodeTypes(defs);
+        context.getNodeTypeRegistry().registerNodeTypes(defs);
 
         Set<NodeType> types = new HashSet<NodeType>();
         for (QNodeTypeDefinition def : defs) {
@@ -507,7 +497,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      */
     public boolean hasNodeType(String name) throws RepositoryException {
         try {
-            Name qname = session.getQName(name);
+            Name qname = context.getQName(name);
             return getNodeTypeRegistry().isRegistered(qname);
         } catch (NamespaceException e) {
             return false;
@@ -559,6 +549,8 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
             NodeTypeDefinition[] definitions, boolean allowUpdate)
             throws InvalidNodeTypeDefinitionException, NodeTypeExistsException,
             UnsupportedRepositoryOperationException, RepositoryException {
+        NodeTypeRegistry registry = context.getNodeTypeRegistry();
+
         // split the node types into new and already registered node types.
         // this way we can register new node types together with already
         // registered node types which make circular dependencies possible
@@ -567,7 +559,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         for (NodeTypeDefinition definition : definitions) {
             // convert to QNodeTypeDefinition
             QNodeTypeDefinition def = toNodeTypeDef(definition);
-            if (ntReg.isRegistered(def.getName())) {
+            if (registry.isRegistered(def.getName())) {
               if (allowUpdate) {
                   modifiedDefs.add(def);
               } else {
@@ -586,7 +578,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
 
             // re-register already existing node types
             for (QNodeTypeDefinition nodeTypeDef: modifiedDefs) {
-                ntReg.reregisterNodeType(nodeTypeDef);
+                registry.reregisterNodeType(nodeTypeDef);
                 result.add(getNodeType(nodeTypeDef.getName()));
             }
 
@@ -616,7 +608,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         Set<Name> ntNames = new HashSet<Name>();
         for (String name : names) {
             try {
-                ntNames.add(session.getQName(name));
+                ntNames.add(context.getQName(name));
             } catch (NamespaceException e) {
                 throw new RepositoryException("Invalid name: " + name, e);
             } catch (NameException e) {
@@ -638,7 +630,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      */
     private QNodeTypeDefinition toNodeTypeDef(NodeTypeDefinition definition)
             throws InvalidNodeTypeDefinitionException, RepositoryException {
-        return new QNodeTypeDefinitionImpl(definition, session, QValueFactoryImpl.getInstance());
+        return new QNodeTypeDefinitionImpl(definition, context, QValueFactoryImpl.getInstance());
     }
 
     //-------------------------------------------------------------< Dumpable >
@@ -648,7 +640,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
     public void dump(PrintStream ps) {
         ps.println("NodeTypeManager (" + this + ")");
         ps.println();
-        ntReg.dump(ps);
+        context.getNodeTypeRegistry().dump(ps);
     }
 
 }
