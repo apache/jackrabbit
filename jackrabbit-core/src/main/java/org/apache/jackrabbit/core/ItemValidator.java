@@ -108,11 +108,6 @@ public class ItemValidator {
     protected final SessionContext context;
 
     /**
-     * node type registry
-     */
-    protected final NodeTypeRegistry ntReg;
-
-    /**
      * A bit mask of the checks that are currently enabled. All access to
      * this mask must be synchronized to ensure that only the thread that
      * uses the {@link #performRelaxed(SessionOperation, int)} method will
@@ -125,9 +120,8 @@ public class ItemValidator {
      *
      * @param context component context of this session
      */
-    public ItemValidator(SessionContext context) throws RepositoryException {
+    public ItemValidator(SessionContext context) {
         this.context = context;
-        this.ntReg = context.getRepositoryContext().getNodeTypeRegistry();
     }
 
     /**
@@ -171,8 +165,9 @@ public class ItemValidator {
     public void validate(NodeState nodeState)
             throws ConstraintViolationException, RepositoryException {
         // effective primary node type
+        NodeTypeRegistry registry = context.getNodeTypeRegistry();
         EffectiveNodeType entPrimary =
-                ntReg.getEffectiveNodeType(nodeState.getNodeTypeName());
+            registry.getEffectiveNodeType(nodeState.getNodeTypeName());
         // effective node type (primary type incl. mixins)
         EffectiveNodeType entPrimaryAndMixins = getEffectiveNodeType(nodeState);
         QNodeDefinition def =
@@ -421,7 +416,7 @@ public class ItemValidator {
     public EffectiveNodeType getEffectiveNodeType(NodeState state)
             throws RepositoryException {
         try {
-            return ntReg.getEffectiveNodeType(
+            return context.getNodeTypeRegistry().getEffectiveNodeType(
                     state.getNodeTypeName(), state.getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node "
@@ -449,7 +444,8 @@ public class ItemValidator {
                                                 NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-        return entParent.getApplicableChildNodeDef(name, nodeTypeName, ntReg);
+        return entParent.getApplicableChildNodeDef(
+                name, nodeTypeName, context.getNodeTypeRegistry());
     }
 
     /**

@@ -254,7 +254,6 @@ public class SessionImpl extends AbstractSession
         wsp = createWorkspaceInstance(wspConfig);
         context.setItemStateManager(createSessionItemStateManager());
         context.setItemManager(createItemManager());
-        context.setItemValidator(new ItemValidator(context));
         context.setAccessManager(createAccessManager(subject));
         context.setObservationManager(
                 createObservationManager(wspConfig.getName()));
