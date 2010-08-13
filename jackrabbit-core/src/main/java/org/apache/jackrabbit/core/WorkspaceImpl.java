@@ -257,7 +257,8 @@ public class WorkspaceImpl extends AbstractWorkspace
      */
     public javax.jcr.lock.LockManager getLockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
         if (jcr283LockManager == null) {
-            jcr283LockManager = new SessionLockManager(session, session.getLockManager());
+            jcr283LockManager =
+                new SessionLockManager(sessionContext, session.getLockManager());
         }
         return jcr283LockManager;
     }

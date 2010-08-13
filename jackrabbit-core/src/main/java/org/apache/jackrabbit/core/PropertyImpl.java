@@ -23,6 +23,11 @@ import static javax.jcr.PropertyType.REFERENCE;
 import static javax.jcr.PropertyType.STRING;
 import static javax.jcr.PropertyType.UNDEFINED;
 import static javax.jcr.PropertyType.WEAKREFERENCE;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_CHECKED_OUT;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_CONSTRAINTS;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_HOLD;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_LOCK;
+import static org.apache.jackrabbit.core.ItemValidator.CHECK_RETENTION;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -262,13 +267,14 @@ public class PropertyImpl extends ItemImpl implements Property {
         }
 
         // check protected flag and for retention/hold
-        int options = ItemValidator.CHECK_CONSTRAINTS;
-        session.getValidator().checkModify(this, options, Permission.NONE);
+        sessionContext.getItemValidator().checkModify(
+                this, CHECK_CONSTRAINTS, Permission.NONE);
 
         // make sure the parent is checked-out and neither locked nor under retention
-        options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
-                ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
-        session.getValidator().checkModify(parent, options, Permission.NONE);
+        sessionContext.getItemValidator().checkModify(
+                parent,
+                CHECK_CHECKED_OUT | CHECK_LOCK | CHECK_HOLD | CHECK_RETENTION,
+                Permission.NONE);
     }
 
     /**

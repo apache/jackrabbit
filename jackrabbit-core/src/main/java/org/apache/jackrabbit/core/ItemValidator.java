@@ -105,7 +105,7 @@ public class ItemValidator {
     /**
      * Component context of the associated session.
      */
-    protected final SessionContext sessionContext;
+    protected final SessionContext context;
 
     /**
      * node type registry
@@ -123,11 +123,11 @@ public class ItemValidator {
     /**
      * Creates a new <code>ItemValidator</code> instance.
      *
-     * @param sessionContext component context of this session
+     * @param context component context of this session
      */
-    public ItemValidator(SessionContext sessionContext) throws RepositoryException {
-        this.sessionContext = sessionContext;
-        this.ntReg = sessionContext.getRepositoryContext().getNodeTypeRegistry();
+    public ItemValidator(SessionContext context) throws RepositoryException {
+        this.context = context;
+        this.ntReg = context.getRepositoryContext().getNodeTypeRegistry();
     }
 
     /**
@@ -146,7 +146,7 @@ public class ItemValidator {
             enabledChecks &= ~checksToDisable;
             log.debug("Performing {} with checks [{}] disabled",
                     operation, Integer.toBinaryString(~enabledChecks));
-            return operation.perform(sessionContext);
+            return operation.perform(context);
         } finally {
             enabledChecks = previousChecks;
         }
@@ -176,7 +176,7 @@ public class ItemValidator {
         // effective node type (primary type incl. mixins)
         EffectiveNodeType entPrimaryAndMixins = getEffectiveNodeType(nodeState);
         QNodeDefinition def =
-            sessionContext.getItemManager().getDefinition(nodeState).unwrap();
+            context.getItemManager().getDefinition(nodeState).unwrap();
 
         // check if primary type satisfies the 'required node types' constraint
         for (Name requiredPrimaryType : def.getRequiredPrimaryTypes()) {
@@ -228,7 +228,7 @@ public class ItemValidator {
     public void validate(PropertyState propState)
             throws ConstraintViolationException, RepositoryException {
         QPropertyDefinition def =
-            sessionContext.getItemManager().getDefinition(propState).unwrap();
+            context.getItemManager().getDefinition(propState).unwrap();
         InternalValue[] values = propState.getValues();
         int type = PropertyType.UNDEFINED;
         for (InternalValue value : values) {
@@ -295,7 +295,7 @@ public class ItemValidator {
 
         if (permissions > Permission.NONE) {
             Path path = item.getPrimaryPath();
-            sessionContext.getAccessManager().checkPermission(path, permissions);
+            context.getAccessManager().checkPermission(path, permissions);
         }
         if ((options & CHECK_HOLD) == CHECK_HOLD) {
             if (hasHold(item, isRemoval)) {
@@ -346,7 +346,7 @@ public class ItemValidator {
         }
         if (permissions > Permission.NONE) {
             Path path = item.getPrimaryPath();
-            if (!sessionContext.getAccessManager().isGranted(path, permissions)) {
+            if (!context.getAccessManager().isGranted(path, permissions)) {
                 return false;
             }
         }
@@ -369,7 +369,7 @@ public class ItemValidator {
             return;
         }
         NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
-        sessionContext.getSessionImpl().getLockManager().checkLock(node);
+        context.getSessionImpl().getLockManager().checkLock(node);
     }
 
     private boolean isProtected(ItemImpl item) throws RepositoryException {
@@ -391,7 +391,7 @@ public class ItemValidator {
             path = path.getAncestor(1);
         }
         boolean checkParent = (item.isNode() && isRemoval);
-        return sessionContext.getSessionImpl().getRetentionRegistry().hasEffectiveHold(path, checkParent);
+        return context.getSessionImpl().getRetentionRegistry().hasEffectiveHold(path, checkParent);
     }
 
     private boolean hasRetention(ItemImpl item, boolean isRemoval) throws RepositoryException {
@@ -403,7 +403,7 @@ public class ItemValidator {
             path = path.getAncestor(1);
         }
         boolean checkParent = (item.isNode() && isRemoval);
-        return sessionContext.getSessionImpl().getRetentionRegistry().hasEffectiveRetention(path, checkParent);
+        return context.getSessionImpl().getRetentionRegistry().hasEffectiveRetention(path, checkParent);
     }
 
 
@@ -520,7 +520,7 @@ public class ItemValidator {
      */
     public String safeGetJCRPath(Path path) {
         try {
-            return sessionContext.getJCRPath(path);
+            return context.getJCRPath(path);
         } catch (NamespaceException e) {
             log.error("failed to convert {} to a JCR path", path);
             // return string representation of internal path as a fallback
@@ -538,7 +538,7 @@ public class ItemValidator {
     public String safeGetJCRPath(ItemId id) {
         try {
             return safeGetJCRPath(
-                    sessionContext.getHierarchyManager().getPath(id));
+                    context.getHierarchyManager().getPath(id));
         } catch (ItemNotFoundException e) {
             // return string representation of id as a fallback
             return id.toString();

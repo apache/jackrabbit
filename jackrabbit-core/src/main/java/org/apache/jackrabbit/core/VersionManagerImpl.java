@@ -77,27 +77,21 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     private static final Logger log = LoggerFactory.getLogger(VersionManagerImpl.class);
 
     /**
-     * Component context of the current session
-     */
-    private final SessionContext sessionContext;
-
-    /**
      * Creates a new version manager
      *
-     * @param sessionContext component context of the current session
+     * @param context component context of the current session
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
     public VersionManagerImpl(
-            SessionContext sessionContext, UpdatableItemStateManager stateMgr,
+            SessionContext context, UpdatableItemStateManager stateMgr,
             HierarchyManager hierMgr) {
-        super(sessionContext.getSessionImpl(), stateMgr, hierMgr);
-        this.sessionContext = sessionContext;
+        super(context, stateMgr, hierMgr);
     }
 
     private <T> T perform(SessionOperation<T> operation)
             throws RepositoryException {
-        return sessionContext.getSessionState().perform(operation);
+        return context.getSessionState().perform(operation);
     }
 
     /** Wrapper around {@link #checkin(String, Calendar)}. */
@@ -598,7 +592,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             throws RepositoryException {
         try {
             if (options > 0 || permissions > 0) {
-                session.getValidator().checkModify(node, options, permissions);
+                context.getItemValidator().checkModify(node, options, permissions);
             }
             return new NodeStateEx(
                     stateMgr,

@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -58,6 +59,11 @@ abstract public class VersionManagerImplBase {
      * default logger
      */
     private static final Logger log = LoggerFactory.getLogger(VersionManagerImplBase.class);
+
+    /**
+     * Component context of the current session
+     */
+    protected final SessionContext context;
 
     /**
      * workspace session
@@ -96,14 +102,16 @@ abstract public class VersionManagerImplBase {
 
     /**
      * Creates a new version manager base for the given session
-     * @param session workspace sesion
+     *
+     * @param context component context of the current session
      * @param stateMgr the underlying state manager
      * @param hierMgr local hierarchy manager
      */
-    protected VersionManagerImplBase(SessionImpl session,
-                                        UpdatableItemStateManager stateMgr,
-                                        HierarchyManager hierMgr) {
-        this.session = session;
+    protected VersionManagerImplBase(
+            SessionContext context, UpdatableItemStateManager stateMgr,
+            HierarchyManager hierMgr) {
+        this.context = context;
+        this.session = context.getSessionImpl();
         this.stateMgr = stateMgr;
         this.hierMgr = hierMgr;
         this.ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
@@ -422,7 +430,7 @@ abstract public class VersionManagerImplBase {
             // ignore
             return;
         }
-        session.getValidator().checkModify(node, options, permissions);
+        context.getItemValidator().checkModify(node, options, permissions);
     }
 
     /**
@@ -434,7 +442,7 @@ abstract public class VersionManagerImplBase {
      */
     protected void checkModify(NodeImpl node, int options, int permissions)
             throws RepositoryException {
-        session.getValidator().checkModify(node, options, permissions);
+        context.getItemValidator().checkModify(node, options, permissions);
     }
 
     /**

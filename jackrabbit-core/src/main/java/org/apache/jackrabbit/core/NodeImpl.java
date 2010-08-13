@@ -955,7 +955,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             throws VersionException, LockException, RepositoryException {
         // make sure this node is checked-out and is not locked
         int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT;
-        session.getValidator().checkModify(this, options, Permission.NONE);
+        sessionContext.getItemValidator().checkModify(this, options, Permission.NONE);
     }
 
     /**
@@ -1271,7 +1271,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
             | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD
             | ItemValidator.CHECK_RETENTION;
-        session.getValidator().checkModify(this, options, Permission.NONE);
+        sessionContext.getItemValidator().checkModify(this, options, Permission.NONE);
 
         // now do create the child node
         return createChildNode(nodeName, nt, id);
@@ -1399,7 +1399,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         // make sure this node is checked-out and neither protected nor locked
         int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT
                 | ItemValidator.CHECK_CONSTRAINTS;
-        session.getValidator().checkModify(this, options, Permission.NONE);
+        sessionContext.getItemValidator().checkModify(this, options, Permission.NONE);
 
         /*
         make sure the session is allowed to reorder child nodes.
@@ -1584,7 +1584,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         // (2) check lock status
         // (3) check protected flag of parent (i.e. this) node
         int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_CONSTRAINTS;
-        session.getValidator().checkModify(this, options, Permission.NONE);
+        sessionContext.getItemValidator().checkModify(this, options, Permission.NONE);
 
         // (4) check for name collisions
         NodeDefinitionImpl def;
@@ -2292,7 +2292,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 || NameConstants.MIX_SIMPLE_VERSIONABLE.equals(ntName)) {
             permissions |= Permission.VERSION_MNGMT;
         }
-        if (!session.getValidator().canModify(this, options, permissions)) {
+        if (!sessionContext.getItemValidator().canModify(this, options, permissions)) {
             return false;
         }
 
@@ -3111,7 +3111,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         // the editing session has sufficient permission to change the primary type.
         int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK
                 | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
-        session.getValidator().checkModify(this, options, Permission.NODE_TYPE_MNGMT);
+        sessionContext.getItemValidator().checkModify(this, options, Permission.NODE_TYPE_MNGMT);
 
         final NodeState state = data.getNodeState();
         if (state.getParentId() == null) {
