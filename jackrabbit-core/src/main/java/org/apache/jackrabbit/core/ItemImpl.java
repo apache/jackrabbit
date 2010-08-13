@@ -56,11 +56,6 @@ public abstract class ItemImpl implements Item {
     protected final SessionContext sessionContext;
 
     /**
-     * The session to which this item is associated.
-     */
-    protected final SessionImpl session;
-
-    /**
      * Item data associated with this item.
      */
     protected final ItemData data;
@@ -84,7 +79,6 @@ public abstract class ItemImpl implements Item {
      */
     ItemImpl(ItemManager itemMgr, SessionContext sessionContext, ItemData data) {
         this.sessionContext = sessionContext;
-        this.session = sessionContext.getSessionImpl();
         this.stateMgr = sessionContext.getItemStateManager();
         this.id = data.getId();
         this.itemMgr = itemMgr;
@@ -411,7 +405,7 @@ public abstract class ItemImpl implements Item {
      * @return current session
      */
     public Session getSession() {
-        return session;
+        return sessionContext.getSessionImpl();
     }
 
     /**
@@ -427,7 +421,7 @@ public abstract class ItemImpl implements Item {
         if (otherItem instanceof ItemImpl) {
             ItemImpl other = (ItemImpl) otherItem;
             return id.equals(other.id)
-                    && session.getWorkspace().getName().equals(
+                    && getSession().getWorkspace().getName().equals(
                             other.getSession().getWorkspace().getName());
         }
         return false;

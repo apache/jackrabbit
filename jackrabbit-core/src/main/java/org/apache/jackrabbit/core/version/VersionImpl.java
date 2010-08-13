@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.AbstractNodeData;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -62,6 +63,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @throws RepositoryException if the internal version is not available
      */
     protected InternalVersion getInternalVersion() throws RepositoryException {
+        SessionImpl session = sessionContext.getSessionImpl();
         InternalVersion version =
                 session.getInternalVersionManager().getVersion((NodeId) id);
         if (version == null) {
@@ -85,7 +87,7 @@ public class VersionImpl extends NodeImpl implements Version {
         InternalVersion[] suc = getInternalVersion().getSuccessors();
         Version[] ret = new Version[suc.length];
         for (int i = 0; i < suc.length; i++) {
-            ret[i] = (Version) session.getNodeById(suc[i].getId());
+            ret[i] = (Version) sessionContext.getSessionImpl().getNodeById(suc[i].getId());
         }
         return ret;
     }
@@ -98,7 +100,7 @@ public class VersionImpl extends NodeImpl implements Version {
         InternalVersion[] pred = getInternalVersion().getPredecessors();
         Version[] ret = new Version[pred.length];
         for (int i = 0; i < pred.length; i++) {
-            ret[i] = (Version) session.getNodeById(pred[i].getId());
+            ret[i] = (Version) sessionContext.getSessionImpl().getNodeById(pred[i].getId());
         }
         return ret;
     }
@@ -108,6 +110,7 @@ public class VersionImpl extends NodeImpl implements Version {
      */
     public Version getLinearSuccessor() throws RepositoryException {
         // get base version. this can certainly be optimized
+        SessionImpl session = sessionContext.getSessionImpl();
         InternalVersionHistory vh = ((VersionHistoryImpl) getContainingHistory())
                 .getInternalVersionHistory();
         Node vn = session.getNodeById(vh.getVersionableId());
@@ -122,7 +125,7 @@ public class VersionImpl extends NodeImpl implements Version {
      */
     public javax.jcr.version.Version getLinearPredecessor() throws RepositoryException {
         InternalVersion pred = getInternalVersion().getLinearPredecessor();
-        return (Version) session.getNodeById(pred.getId());
+        return (Version) sessionContext.getSessionImpl().getNodeById(pred.getId());
     }
 
     /**
@@ -146,7 +149,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * {@inheritDoc}
      */
     public Node getFrozenNode() throws RepositoryException {
-        return session.getNodeById(getInternalVersion().getFrozenNodeId());
+        return sessionContext.getSessionImpl().getNodeById(getInternalVersion().getFrozenNodeId());
     }
 
     /**

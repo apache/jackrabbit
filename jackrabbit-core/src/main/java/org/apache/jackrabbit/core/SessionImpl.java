@@ -160,11 +160,6 @@ public class SessionImpl extends AbstractSession
         new HashMap<String, Object>();
 
     /**
-     * the node type manager
-     */
-    protected final NodeTypeManagerImpl ntMgr;
-
-    /**
      * the Workspace associated with this session
      */
     protected final WorkspaceImpl wsp;
@@ -256,9 +251,6 @@ public class SessionImpl extends AbstractSession
         userId = retrieveUserId(subject, wspConfig.getName());
 
         namePathResolver = new DefaultNamePathResolver(this, this, true);
-        ntMgr = new NodeTypeManagerImpl(
-                repositoryContext.getNodeTypeRegistry(), this,
-                repositoryContext.getDataStore());
         wsp = createWorkspaceInstance(wspConfig);
         context.setItemStateManager(createSessionItemStateManager());
         context.setItemManager(createItemManager());
@@ -313,8 +305,7 @@ public class SessionImpl extends AbstractSession
      * @return item manager
      */
     protected ItemManager createItemManager() {
-        ItemManager mgr =
-            new ItemManager(context, ntMgr.getRootNodeDefinition());
+        ItemManager mgr = new ItemManager(context);
         context.getItemStateManager().addListener(mgr);
         return mgr;
     }
@@ -432,7 +423,7 @@ public class SessionImpl extends AbstractSession
      * @return the <code>NodeTypeManager</code>
      */
     public NodeTypeManagerImpl getNodeTypeManager() {
-        return ntMgr;
+        return context.getNodeTypeManager();
     }
 
     /**

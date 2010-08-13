@@ -72,8 +72,7 @@ class AddMixinOperation implements SessionOperation<Object> {
                 CHECK_LOCK | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD,
                 permissions);
 
-        NodeTypeManagerImpl ntMgr =
-            context.getSessionImpl().getNodeTypeManager();
+        NodeTypeManagerImpl ntMgr = context.getNodeTypeManager();
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
         if (!mixin.isMixin()) {
             throw new RepositoryException(
@@ -89,7 +88,7 @@ class AddMixinOperation implements SessionOperation<Object> {
 
         // build effective node type of mixin's & primary type in order
         // to detect conflicts
-        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+        NodeTypeRegistry ntReg = context.getNodeTypeRegistry();
         EffectiveNodeType entExisting;
         try {
             // existing mixin's

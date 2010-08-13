@@ -113,10 +113,10 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
 
         List<ColumnImpl> columns = new ArrayList<ColumnImpl>();
         // expand columns without name
+        NodeTypeManagerImpl ntMgr = sessionContext.getNodeTypeManager();
         for (ColumnImpl column : qomTree.getColumns()) {
             if (column.getColumnName() == null) {
                 QueryObjectModelFactory qomFactory = getQOMFactory();
-                NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
                 SelectorImpl selector = qomTree.getSelector(column.getSelectorQName());
                 NodeTypeImpl nt = ntMgr.getNodeType(selector.getNodeTypeQName());
                 for (PropertyDefinition pd : nt.getPropertyDefinitions()) {
@@ -168,7 +168,7 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
     private void checkNodeTypes() throws InvalidQueryException {
         try {
             final NodeTypeManagerImpl manager =
-                sessionContext.getSessionImpl().getNodeTypeManager();
+                sessionContext.getNodeTypeManager();
             qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
                 public Object visit(SelectorImpl node, Object data) throws Exception {
                     String ntName = node.getNodeTypeName();

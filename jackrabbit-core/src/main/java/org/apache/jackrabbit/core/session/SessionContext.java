@@ -25,6 +25,8 @@ import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
@@ -54,6 +56,11 @@ public class SessionContext implements NamePathResolver {
      * The state of this session.
      */
     private final SessionState state;
+
+    /**
+     * Node type manager of this session
+     */
+    private final NodeTypeManagerImpl nodeTypeManager;
 
     /**
      * The item state manager of this session
@@ -93,6 +100,9 @@ public class SessionContext implements NamePathResolver {
         this.repositoryContext = repositoryContext;
         this.session = session;
         this.state = new SessionState(this);
+        this.nodeTypeManager = new NodeTypeManagerImpl(
+                repositoryContext.getNodeTypeRegistry(), session,
+                repositoryContext.getDataStore());
     }
 
     /**
@@ -124,6 +134,15 @@ public class SessionContext implements NamePathResolver {
     }
 
     /**
+     * Returns the node type registry of this repository.
+     *
+     * @return node type registry
+     */
+    public NodeTypeRegistry getNodeTypeRegistry() {
+        return repositoryContext.getNodeTypeRegistry();
+    }
+
+    /**
      * Returns this session.
      *
      * @return session
@@ -139,6 +158,15 @@ public class SessionContext implements NamePathResolver {
      */
     public SessionState getSessionState() {
         return state;
+    }
+
+    /**
+     * Returns the node type manager of this session.
+     *
+     * @return node type manager
+     */
+    public NodeTypeManagerImpl getNodeTypeManager() {
+        return nodeTypeManager;
     }
 
     public SessionItemStateManager getItemStateManager() {
