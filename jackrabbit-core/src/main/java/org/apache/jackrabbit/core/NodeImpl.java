@@ -3501,13 +3501,13 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         sessionContext.getItemValidator().checkModify(parent, options, Permission.NONE);
 
         // check constraints
-        // get applicable definition of target node at new location
+        // get applicable definition of renamed target node
         NodeTypeImpl nt = (NodeTypeImpl) getPrimaryNodeType();
         org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl newTargetDef;
         try {
             newTargetDef = parent.getApplicableChildNodeDefinition(qName, nt.getQName());
         } catch (RepositoryException re) {
-            String msg = safeGetJCRPath() + ": no definition found in parent node's node type for new node";
+            String msg = safeGetJCRPath() + ": no definition found in parent node's node type for renamed node";
             log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
