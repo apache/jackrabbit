@@ -23,7 +23,7 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-public class SimpleSearchTest extends PerformanceTest {
+public class SimpleSearchTest extends AbstractTest {
 
     private static final int NODE_COUNT = 100;
 

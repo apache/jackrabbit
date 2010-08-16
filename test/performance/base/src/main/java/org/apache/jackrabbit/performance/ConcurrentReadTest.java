@@ -32,7 +32,7 @@ import javax.jcr.Session;
  * not the performance of individual readers nor the overall fairness of
  * the scheduling.
  */
-public class ConcurrentReadTest extends PerformanceTest {
+public class ConcurrentReadTest extends AbstractTest {
 
     private static final int NODE_COUNT = 100;
 

@@ -101,7 +101,7 @@ public abstract class AbstractPerformanceTest {
     }
 
     private void runTest(
-            PerformanceTestSuite suite, PerformanceTest test,
+            PerformanceTestSuite suite, AbstractTest test,
             PrintWriter writer, String name) throws Exception {
         DescriptiveStatistics statistics = suite.runTest(test);
         writer.format(

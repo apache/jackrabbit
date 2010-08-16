@@ -19,7 +19,7 @@ package org.apache.jackrabbit.performance;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-public class LoginTest extends PerformanceTest {
+public class LoginTest extends AbstractTest {
 
     private final Session[] sessions = new Session[1000];
 

@@ -19,7 +19,10 @@ package org.apache.jackrabbit.performance;
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 
-public abstract class PerformanceTest {
+/**
+ * Abstract base class for individual performance benchmarks.
+ */
+public abstract class AbstractTest {
 
     private Repository repository;
 
