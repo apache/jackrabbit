@@ -25,7 +25,7 @@ import javax.jcr.Session;
  * transiently adding and removing a child node to a node that already has
  * {@value #CHILD_COUNT} existing child nodes.
  */
-public class TransientManyChildNodesTest extends PerformanceTest {
+public class TransientManyChildNodesTest extends AbstractTest {
 
     private static final int CHILD_COUNT = 10 * 1000;
 

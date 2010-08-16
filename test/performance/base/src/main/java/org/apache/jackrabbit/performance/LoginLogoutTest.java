@@ -18,7 +18,7 @@ package org.apache.jackrabbit.performance;
 
 import javax.jcr.RepositoryException;
 
-public class LoginLogoutTest extends PerformanceTest {
+public class LoginLogoutTest extends AbstractTest {
 
     public void runTest() throws RepositoryException {
         for (int i = 0; i < 1000; i++) {

@@ -24,7 +24,7 @@ import javax.jcr.Session;
  * Test for measuring the performance of creating a node with
  * {@value #CHILD_COUNT} child nodes.
  */
-public class CreateManyChildNodesTest extends PerformanceTest {
+public class CreateManyChildNodesTest extends AbstractTest {
 
     private static final int CHILD_COUNT = 10 * 1000;
 

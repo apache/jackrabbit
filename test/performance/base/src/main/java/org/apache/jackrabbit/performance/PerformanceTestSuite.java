@@ -43,7 +43,7 @@ public class PerformanceTestSuite {
         this.credentials = credentials;
     }
 
-    public DescriptiveStatistics runTest(PerformanceTest test) throws Exception {
+    public DescriptiveStatistics runTest(AbstractTest test) throws Exception {
         DescriptiveStatistics statistics = new DescriptiveStatistics();
 
         test.setRepository(repository);
@@ -74,7 +74,7 @@ public class PerformanceTestSuite {
         return statistics;
     }
 
-    public void run(PerformanceTest test) throws Exception {
+    public void run(AbstractTest test) throws Exception {
         DescriptiveStatistics statistics = runTest(test);
         System.out.format(
                 "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",

@@ -22,7 +22,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-public class BigFileWriteTest extends PerformanceTest {
+public class BigFileWriteTest extends AbstractTest {
 
     private static final int FILE_SIZE = 100;
 

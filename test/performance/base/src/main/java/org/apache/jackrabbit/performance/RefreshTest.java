@@ -19,7 +19,7 @@ package org.apache.jackrabbit.performance;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-public class RefreshTest extends PerformanceTest {
+public class RefreshTest extends AbstractTest {
 
     private Session session;
 
