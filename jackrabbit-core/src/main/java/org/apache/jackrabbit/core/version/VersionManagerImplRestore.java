@@ -32,6 +32,7 @@ import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemValidator;
+import org.apache.jackrabbit.core.NodeTypeInstanceHandler;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
@@ -651,8 +652,9 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                                               boolean useDefaultValues)
             throws RepositoryException {
         // compute system generated values if necessary
-        InternalValue[] values = session.getNodeTypeInstanceHandler().
-                computeSystemGeneratedPropertyValues(state.getState(), def);
+        InternalValue[] values =
+            new NodeTypeInstanceHandler(session.getUserID()).
+            computeSystemGeneratedPropertyValues(state.getState(), def);
         if (values == null && useDefaultValues) {
             values = InternalValue.create(def.getDefaultValues());
         }
