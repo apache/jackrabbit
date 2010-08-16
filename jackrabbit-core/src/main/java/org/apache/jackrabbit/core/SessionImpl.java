@@ -167,6 +167,11 @@ public class SessionImpl extends AbstractSession
     protected final InternalVersionManager versionMgr;
 
     /**
+     * node type instance handler
+     */
+    protected final NodeTypeInstanceHandler ntInstanceHandler;
+
+    /**
      * Listeners (weak references)
      */
     protected final Map<SessionListener, SessionListener> listeners =
@@ -240,6 +245,7 @@ public class SessionImpl extends AbstractSession
                 createObservationManager(wspConfig.getName()));
 
         versionMgr = createVersionManager();
+        ntInstanceHandler = new NodeTypeInstanceHandler(userId);
     }
 
     /**
@@ -429,6 +435,14 @@ public class SessionImpl extends AbstractSession
      */
     protected RetentionRegistry getRetentionRegistry() throws RepositoryException {
         return context.getWorkspace().getRetentionRegistry();
+    }
+
+    /**
+     * Returns the node type instance handler for this session
+     * @return the node type instance handler.
+     */
+    public NodeTypeInstanceHandler getNodeTypeInstanceHandler() {
+        return ntInstanceHandler;
     }
 
     /**
