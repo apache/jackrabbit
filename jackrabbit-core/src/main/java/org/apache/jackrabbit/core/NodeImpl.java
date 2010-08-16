@@ -471,8 +471,15 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             propState.setType(type);
             propState.setMultiValued(propDef.isMultiple());
             // compute system generated values if necessary
-            propState.setDefaultValues(
-                    data.getNodeState(), propDef, getSession().getUserID());
+            InternalValue[] genValues =
+                sessionContext.getSessionImpl().getNodeTypeInstanceHandler()
+                .computeSystemGeneratedPropertyValues(data.getNodeState(), propDef);
+            if (genValues == null) {
+                genValues = InternalValue.create(propDef.getDefaultValues());
+            }
+            if (genValues != null) {
+                propState.setValues(genValues);
+            }
         } catch (ItemStateException ise) {
             String msg = "failed to add property " + name + " to " + this;
             log.debug(msg);

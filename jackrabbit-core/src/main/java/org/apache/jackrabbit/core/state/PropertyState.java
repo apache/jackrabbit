@@ -21,10 +21,8 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 
 import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
@@ -184,28 +182,6 @@ public class PropertyState extends ItemState {
      */
     public void setValues(InternalValue[] values) {
         this.values = values;
-    }
-
-    /**
-     * Sets the system-generated or node type -specified default values
-     * of this property. If such values are not specified, then this property
-     * is not modified.
-     * 
-     * @param parent parent node state
-     * @param def property definition
-     * @param userId user identifier associated with the current session
-     * @throws RepositoryException if the default values could not be created 
-     */
-    public void setDefaultValues(
-            NodeState parent, QPropertyDefinition def, String userId)
-            throws RepositoryException {
-        InternalValue[] values = parent.computeGeneratedValues(def, userId);
-        if (values == null) {
-            values = InternalValue.create(def.getDefaultValues());
-        }
-        if (values != null) {
-            setValues(values);
-        }
     }
 
     /**

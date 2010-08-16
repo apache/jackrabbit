@@ -18,20 +18,14 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.jcr.RepositoryException;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -866,70 +860,6 @@ public class NodeState extends ItemState {
     }
 
     //-------------------------------------------------< misc. helper methods >
-
-    /**
-     * Computes the values of well-known system (i.e. protected) properties.
-     *
-     * @param def the definition of the property to compute
-     * @return the computed values
-     */
-    public InternalValue[] computeGeneratedValues(
-            QPropertyDefinition def, String userId) {
-        if (userId == null) {
-            userId = "system";
-        }
-
-        Name name = def.getName();
-        Name declaringNT = def.getDeclaringNodeType();
-
-        if (NameConstants.JCR_UUID.equals(name)) {
-            // jcr:uuid property of the mix:referenceable node type
-            if (NameConstants.MIX_REFERENCEABLE.equals(declaringNT)) {
-                return new InternalValue[]{InternalValue.create(getNodeId().toString())};
-            }
-        } else if (NameConstants.JCR_PRIMARYTYPE.equals(name)) {
-            // jcr:primaryType property (of any node type)
-            return new InternalValue[]{InternalValue.create(getNodeTypeName())};
-        } else if (NameConstants.JCR_MIXINTYPES.equals(name)) {
-            // jcr:mixinTypes property (of any node type)
-            Set<Name> mixins = getMixinTypeNames();
-            InternalValue[] values = new InternalValue[mixins.size()];
-            int i = 0;
-            for (Name n : mixins) {
-                values[i++] = InternalValue.create(n);
-            }
-            return values;
-        } else if (NameConstants.JCR_CREATED.equals(name)) {
-            // jcr:created property of a version or a mix:created
-            if (NameConstants.MIX_CREATED.equals(declaringNT)
-                    || NameConstants.NT_VERSION.equals(declaringNT)) {
-                return new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (NameConstants.JCR_CREATEDBY.equals(name)) {
-            // jcr:createdBy property of a mix:created
-            if (NameConstants.MIX_CREATED.equals(declaringNT)) {
-                return new InternalValue[]{InternalValue.create(userId)};
-            }
-        } else if (NameConstants.JCR_LASTMODIFIED.equals(name)) {
-            // jcr:lastModified property of a mix:lastModified
-            if (NameConstants.MIX_LASTMODIFIED.equals(declaringNT)) {
-                return new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (NameConstants.JCR_LASTMODIFIEDBY.equals(name)) {
-            // jcr:lastModifiedBy property of a mix:lastModified
-            if (NameConstants.MIX_LASTMODIFIED.equals(declaringNT)) {
-                return new InternalValue[]{InternalValue.create(userId)};
-            }
-        } else if (NameConstants.JCR_ETAG.equals(name)) {
-            // jcr:etag property of a mix:etag
-            if (NameConstants.MIX_ETAG.equals(declaringNT)) {
-                // TODO: provide real implementation
-                return new InternalValue[]{InternalValue.create("")};
-            }
-        }
-
-        return null;
-    }
 
     /**
      * {@inheritDoc}

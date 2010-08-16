@@ -1255,7 +1255,13 @@ public class BatchedItemOperations extends ItemValidator {
         prop.setMultiValued(def.isMultiple());
 
         // compute system generated values if necessary
-        prop.setDefaultValues(parent, def, session.getUserID());
+        InternalValue[] genValues = session.getNodeTypeInstanceHandler()
+                .computeSystemGeneratedPropertyValues(parent, def);
+        if (genValues != null) {
+            prop.setValues(genValues);
+        } else if (def.getDefaultValues() != null) {
+            prop.setValues(InternalValue.create(def.getDefaultValues()));
+        }
 
         // now add new property entry to parent
         parent.addPropertyName(propName);
