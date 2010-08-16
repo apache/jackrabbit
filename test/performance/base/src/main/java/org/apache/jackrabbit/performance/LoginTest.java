@@ -35,8 +35,4 @@ public class LoginTest extends AbstractTest {
         }
     }
 
-    public String toString() {
-        return "1000 x login()";
-    }
-
 }

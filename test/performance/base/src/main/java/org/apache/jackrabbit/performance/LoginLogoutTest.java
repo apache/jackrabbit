@@ -26,8 +26,4 @@ public class LoginLogoutTest extends AbstractTest {
         }
     }
 
-    public String toString() {
-        return "1000 x login().logout()";
-    }
-
 }

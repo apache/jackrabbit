@@ -33,7 +33,7 @@ public class SmallFileWriteTest extends AbstractTest {
     private Node root;
 
     public void beforeSuite() throws RepositoryException {
-        session = getRepository().login(getCredentials());
+        session = loginWriter();
     }
 
     public void beforeTest() throws RepositoryException {
@@ -55,14 +55,6 @@ public class SmallFileWriteTest extends AbstractTest {
     public void afterTest() throws RepositoryException {
         root.remove();
         session.save();
-    }
-
-    public void afterSuite() throws RepositoryException {
-        session.logout();
-    }
-
-    public String toString() {
-        return FILE_COUNT + " x write a " + FILE_SIZE + "kB file";
     }
 
 }

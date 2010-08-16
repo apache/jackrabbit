@@ -31,7 +31,7 @@ public class CreateManyChildNodesTest extends AbstractTest {
     private Session session;
 
     public void beforeSuite() throws RepositoryException {
-        session = getRepository().login(getCredentials());
+        session = loginWriter();
     }
 
     public void beforeTest() throws RepositoryException {
@@ -48,10 +48,6 @@ public class CreateManyChildNodesTest extends AbstractTest {
     public void afterTest() throws RepositoryException {
         session.getRootNode().getNode("testnode").remove();
         session.save();
-    }
-
-    public void afterSuite() throws RepositoryException {
-        session.logout();
     }
 
 }
