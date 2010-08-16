@@ -65,8 +65,7 @@ public abstract class AbstractPerformanceTest {
         }
     }
 
-    private void testPerformance(String name, RepositoryImpl repository)
-            throws Exception {
+    private void testPerformance(String name, RepositoryImpl repository) {
         PerformanceTestSuite suite = new PerformanceTestSuite(
                 repository,
                 new SimpleCredentials("admin", "admin".toCharArray()));
@@ -85,34 +84,37 @@ public abstract class AbstractPerformanceTest {
     }
 
     private void runTest(
-            PerformanceTestSuite suite, AbstractTest test, String name)
-            throws Exception {
-        DescriptiveStatistics statistics = suite.runTest(test);
-
-        File base = new File("..", "base");
-        File target = new File(base, "target");
-        File report = new File(target, test + ".txt");
-        boolean needsPrefix = !report.exists();
-
-        PrintWriter writer = new PrintWriter(
-                new FileWriterWithEncoding(report, "UTF-8", true));
+            PerformanceTestSuite suite, AbstractTest test, String name) {
         try {
-            if (needsPrefix) {
-                writer.format(
-                        "# %-34.34s     avg     std     min     max   count%n",
-                        test);
-            }
+            DescriptiveStatistics statistics = suite.runTest(test);
 
-            writer.format(
-                    "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
-                    name,
-                    statistics.getMean(),
-                    statistics.getStandardDeviation(),
-                    statistics.getMin(),
-                    statistics.getMax(),
-                    statistics.getN());
-        } finally {
-            writer.close();
+            File base = new File("..", "base");
+            File target = new File(base, "target");
+            File report = new File(target, test + ".txt");
+            boolean needsPrefix = !report.exists();
+
+            PrintWriter writer = new PrintWriter(
+                    new FileWriterWithEncoding(report, "UTF-8", true));
+            try {
+                if (needsPrefix) {
+                    writer.format(
+                            "# %-34.34s     avg     std     min     max   count%n",
+                            test);
+                }
+
+                writer.format(
+                        "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
+                        name,
+                        statistics.getMean(),
+                        statistics.getStandardDeviation(),
+                        statistics.getMin(),
+                        statistics.getMax(),
+                        statistics.getN());
+            } finally {
+                writer.close();
+            }
+        } catch (Exception e) {
+            System.out.println("Unable to run " + test + ": " + e.getMessage());
         }
     }
 
