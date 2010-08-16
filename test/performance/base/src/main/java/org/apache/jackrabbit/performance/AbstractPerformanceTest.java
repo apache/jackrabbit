@@ -26,6 +26,7 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -66,52 +67,53 @@ public abstract class AbstractPerformanceTest {
 
     private void testPerformance(String name, RepositoryImpl repository)
             throws Exception {
-        File report = new File("target", "performance-" + name + ".txt");
-        PrintWriter writer = new PrintWriter(report, "UTF-8");
-        try {
-            writer.format(
-                    "%-36.36s     avg     std     min     max   count%n",
-                    name);
-            writer.println(
-                    "--------------------------------------"
-                    + "--------------------------------------");
-
-            PerformanceTestSuite suite = new PerformanceTestSuite(
-                    repository,
-                    new SimpleCredentials("admin", "admin".toCharArray()));
-            runTest(suite, new LoginTest(), writer, name);
-            runTest(suite, new LoginLogoutTest(), writer, name);
-            runTest(suite, new SmallFileReadTest(), writer, name);
-            runTest(suite, new SmallFileWriteTest(), writer, name);
-            runTest(suite, new BigFileReadTest(), writer, name);
-            runTest(suite, new BigFileWriteTest(), writer, name);
-            runTest(suite, new ConcurrentReadTest(), writer, name);
-            runTest(suite, new ConcurrentReadWriteTest(), writer, name);
-            runTest(suite, new SimpleSearchTest(), writer, name);
-            runTest(suite, new CreateManyChildNodesTest(), writer, name);
-            runTest(suite, new UpdateManyChildNodesTest(), writer, name);
-            runTest(suite, new TransientManyChildNodesTest(), writer, name);
-
-            writer.println(
-                    "--------------------------------------"
-                    + "--------------------------------------");
-        } finally {
-            writer.close();
-        }
+        PerformanceTestSuite suite = new PerformanceTestSuite(
+                repository,
+                new SimpleCredentials("admin", "admin".toCharArray()));
+        runTest(suite, new LoginTest(), name);
+        runTest(suite, new LoginLogoutTest(), name);
+        runTest(suite, new SmallFileReadTest(), name);
+        runTest(suite, new SmallFileWriteTest(), name);
+        runTest(suite, new BigFileReadTest(), name);
+        runTest(suite, new BigFileWriteTest(), name);
+        runTest(suite, new ConcurrentReadTest(), name);
+        runTest(suite, new ConcurrentReadWriteTest(), name);
+        runTest(suite, new SimpleSearchTest(), name);
+        runTest(suite, new CreateManyChildNodesTest(), name);
+        runTest(suite, new UpdateManyChildNodesTest(), name);
+        runTest(suite, new TransientManyChildNodesTest(), name);
     }
 
     private void runTest(
-            PerformanceTestSuite suite, AbstractTest test,
-            PrintWriter writer, String name) throws Exception {
+            PerformanceTestSuite suite, AbstractTest test, String name)
+            throws Exception {
         DescriptiveStatistics statistics = suite.runTest(test);
-        writer.format(
-                "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
-                name + " \""+ test + "\"",
-                statistics.getMean(),
-                statistics.getStandardDeviation(),
-                statistics.getMin(),
-                statistics.getMax(),
-                statistics.getN());
+
+        File base = new File("..", "base");
+        File target = new File(base, "target");
+        File report = new File(target, test + ".txt");
+        boolean needsPrefix = !report.exists();
+
+        PrintWriter writer = new PrintWriter(
+                new FileWriterWithEncoding(report, "UTF-8", true));
+        try {
+            if (needsPrefix) {
+                writer.format(
+                        "# %-34.34s     avg     std     min     max   count%n",
+                        test);
+            }
+
+            writer.format(
+                    "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
+                    name,
+                    statistics.getMean(),
+                    statistics.getStandardDeviation(),
+                    statistics.getMin(),
+                    statistics.getMax(),
+                    statistics.getN());
+        } finally {
+            writer.close();
+        }
     }
 
     /**
