@@ -16,29 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.core.ItemImpl;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
-import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.NamedAccessControlPolicyImpl;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -47,11 +29,30 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import java.security.Principal;
-import java.security.acl.Group;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.NamedAccessControlPolicyImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the <code>AccessControlProvider</code> interface that
@@ -114,6 +115,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
      *
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(Path)
      */
+    @Override
     public boolean isAcItem(Path absPath) throws RepositoryException {
         return false;
     }
@@ -124,6 +126,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
      *
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(ItemImpl)
      */
+    @Override
     public boolean isAcItem(ItemImpl item) throws RepositoryException {
         return false;
     }
@@ -265,7 +268,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 } else {
                     pPath = Text.getRelativeParent(pPath, 1);
                 }
-            }         
+            }
             throw new ItemNotFoundException("Unable to determine permissions: No item and no existing parent for target path " + absPath);
         }
     }
