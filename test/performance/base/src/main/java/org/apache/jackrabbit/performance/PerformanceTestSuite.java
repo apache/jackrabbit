@@ -46,30 +46,22 @@ public class PerformanceTestSuite {
     public DescriptiveStatistics runTest(AbstractTest test) throws Exception {
         DescriptiveStatistics statistics = new DescriptiveStatistics();
 
-        test.setRepository(repository);
-        test.setCredentials(credentials);
+        test.setUp(repository, credentials);
+        try {
+            // Run a few iterations to warm up the system
+            long warmupEnd = System.currentTimeMillis() + warmup * 1000;
+            while (System.currentTimeMillis() < warmupEnd) {
+                test.execute();
+            }
 
-        test.beforeSuite();
-
-        // Run a few iterations to warm up the system
-        long warmupEnd = System.currentTimeMillis() + warmup * 1000;
-        while (System.currentTimeMillis() < warmupEnd) {
-            test.beforeTest();
-            test.runTest();
-            test.afterTest();
+            // Run test iterations, and capture the execution times
+            long runtimeEnd = System.currentTimeMillis() + runtime * 1000;
+            while (System.currentTimeMillis() < runtimeEnd) {
+                statistics.addValue(test.execute());
+            }
+        } finally {
+            test.tearDown();
         }
-
-        // Run test iterations, and capture the execution times
-        long runtimeEnd = System.currentTimeMillis() + runtime * 1000;
-        while (System.currentTimeMillis() < runtimeEnd) {
-            test.beforeTest();
-            long start = System.currentTimeMillis();
-            test.runTest();
-            statistics.addValue(System.currentTimeMillis() - start);
-            test.afterTest();
-        }
-
-        test.afterSuite();
 
         return statistics;
     }
