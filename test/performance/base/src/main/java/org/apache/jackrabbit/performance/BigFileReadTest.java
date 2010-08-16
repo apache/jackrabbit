@@ -71,8 +71,4 @@ public class BigFileReadTest extends AbstractTest {
         session.logout();
     }
 
-    public String toString() {
-        return "read a " + FILE_SIZE + "MB file";
-    }
-
 }

@@ -78,6 +78,7 @@ public abstract class AbstractPerformanceTest {
         runTest(suite, new ConcurrentReadTest(), name);
         runTest(suite, new ConcurrentReadWriteTest(), name);
         runTest(suite, new SimpleSearchTest(), name);
+        runTest(suite, new TwoWayJoinTest(), name);
         runTest(suite, new CreateManyChildNodesTest(), name);
         runTest(suite, new UpdateManyChildNodesTest(), name);
         runTest(suite, new TransientManyChildNodesTest(), name);

@@ -31,7 +31,7 @@ public class BigFileWriteTest extends AbstractTest {
     private Node file;
 
     public void beforeSuite() throws RepositoryException {
-        session = getRepository().login(getCredentials());
+        session = loginWriter();
     }
 
     public void runTest() throws RepositoryException {
@@ -48,14 +48,6 @@ public class BigFileWriteTest extends AbstractTest {
     public void afterTest() throws RepositoryException {
         file.remove();
         session.save();
-    }
-
-    public void afterSuite() throws RepositoryException {
-        session.logout();
-    }
-
-    public String toString() {
-        return "write a " + FILE_SIZE + "MB file";
     }
 
 }

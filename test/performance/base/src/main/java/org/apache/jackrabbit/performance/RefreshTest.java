@@ -37,8 +37,4 @@ public class RefreshTest extends AbstractTest {
         session.logout();
     }
 
-    public String toString() {
-        return "1 000 000 x refresh(false)";
-    }
-
 }

@@ -71,8 +71,4 @@ public class SmallFileReadTest extends AbstractTest {
         session.logout();
     }
 
-    public String toString() {
-        return FILE_COUNT + " x read a " + FILE_SIZE + "kB file";
-    }
-
 }
