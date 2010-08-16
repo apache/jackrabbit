@@ -19,7 +19,10 @@ package org.apache.jackrabbit.core;
 import java.util.Calendar;
 import java.util.Set;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -50,6 +53,30 @@ public class NodeTypeInstanceHandler {
         this.userId = userId == null
                 ? DEFAULT_USERID
                 : userId;
+    }
+
+    /**
+     * Sets the system-generated or node type -specified default values
+     * of the given property. If such values are not specified, then the
+     * property is not modified.
+     *
+     * @param property property state
+     * @param parent parent node state
+     * @param def property definition
+     * @param userId user identifier associated with the current session
+     * @throws RepositoryException if the default values could not be created
+     */
+    public void setDefaultValues(
+            PropertyState property, NodeState parent, QPropertyDefinition def)
+            throws RepositoryException {
+        InternalValue[] values =
+            computeSystemGeneratedPropertyValues(parent, def);
+        if (values == null && def.getDefaultValues() != null) {
+            values = InternalValue.create(def.getDefaultValues());
+        }
+        if (values != null) {
+            property.setValues(values);
+        }
     }
 
     /**
