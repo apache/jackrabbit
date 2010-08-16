@@ -79,6 +79,7 @@ public abstract class AbstractPerformanceTest {
         runTest(suite, new ConcurrentReadWriteTest(), name);
         runTest(suite, new SimpleSearchTest(), name);
         runTest(suite, new TwoWayJoinTest(), name);
+        runTest(suite, new ThreeWayJoinTest(), name);
         runTest(suite, new CreateManyChildNodesTest(), name);
         runTest(suite, new UpdateManyChildNodesTest(), name);
         runTest(suite, new TransientManyChildNodesTest(), name);
@@ -86,6 +87,11 @@ public abstract class AbstractPerformanceTest {
 
     private void runTest(
             PerformanceTestSuite suite, AbstractTest test, String name) {
+        String selected = System.getProperty("test");
+        if (selected != null && !selected.equals(test.toString())) {
+            return;
+        }
+
         try {
             DescriptiveStatistics statistics = suite.runTest(test);
 
