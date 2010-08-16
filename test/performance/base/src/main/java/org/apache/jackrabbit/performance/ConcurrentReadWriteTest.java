@@ -16,67 +16,45 @@
  */
 package org.apache.jackrabbit.performance;
 
-import javax.jcr.ItemVisitor;
+import java.util.Random;
+
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 /**
  * A {@link ConcurrentReadTest} with a single writer thread that continuously
- * updates the nodes being accessed by the concurrent readers.
+ * updates the nodes being accessed by the readers.
  */
 public class ConcurrentReadWriteTest extends ConcurrentReadTest {
-
-    private volatile boolean running;
-
-    private Thread writer;
 
     public void beforeSuite() throws Exception {
         super.beforeSuite();
 
-        running = true;
-        writer = new Writer();
-        writer.start();
+        addBackgroundJob(new Writer());
     }
 
-    private class Writer extends Thread implements ItemVisitor {
+    private class Writer implements Runnable {
+
+        private final Session session = loginReader();
+
+        private final Random random = new Random();
 
         private long count = 0;
 
-        @Override
         public void run() {
             try {
-                while (running) {
-                    root.accept(this);
-                }
+                int i = random.nextInt(NODE_COUNT);
+                int j = random.nextInt(NODE_COUNT);
+                Node node = session.getRootNode().getNode(
+                        "testroot/node" + i + "/node" + j);
+                node.setProperty("count", count++);
+                session.save();
             } catch (RepositoryException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        public void visit(Node node) throws RepositoryException {
-            if (running) {
-                node.setProperty("count", count++);
-                node.getSession().save();
-
-                NodeIterator iterator = node.getNodes();
-                while (iterator.hasNext()) {
-                    iterator.nextNode().accept(this);
-                }
-            }
-        }
-
-        public void visit(Property property) {
-        }
-
-    }
-
-    public void afterSuite() throws Exception {
-        running = false;
-        writer.join();
-
-        super.afterSuite();
     }
 
 }

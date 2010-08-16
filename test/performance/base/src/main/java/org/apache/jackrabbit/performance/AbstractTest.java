@@ -80,12 +80,12 @@ public abstract class AbstractTest {
      * @throws Exception if the benchmark can not be cleaned up
      */
     public void tearDown() throws Exception {
-        afterSuite();
-
         this.running = false;
         for (Thread thread : threads) {
             thread.join();
         }
+
+        afterSuite();
 
         for (Session session : sessions) {
             if (session.isLive()) {
