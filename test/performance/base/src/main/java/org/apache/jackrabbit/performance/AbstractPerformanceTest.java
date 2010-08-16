@@ -29,20 +29,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.benchmark.CreateManyChildNodesTest;
-import org.apache.jackrabbit.benchmark.PerformanceTest;
-import org.apache.jackrabbit.benchmark.PerformanceTestSuite;
-import org.apache.jackrabbit.benchmark.LoginTest;
-import org.apache.jackrabbit.benchmark.LoginLogoutTest;
-import org.apache.jackrabbit.benchmark.SmallFileReadTest;
-import org.apache.jackrabbit.benchmark.SmallFileWriteTest;
-import org.apache.jackrabbit.benchmark.BigFileReadTest;
-import org.apache.jackrabbit.benchmark.BigFileWriteTest;
-import org.apache.jackrabbit.benchmark.ConcurrentReadTest;
-import org.apache.jackrabbit.benchmark.ConcurrentReadWriteTest;
-import org.apache.jackrabbit.benchmark.SimpleSearchTest;
-import org.apache.jackrabbit.benchmark.TransientManyChildNodesTest;
-import org.apache.jackrabbit.benchmark.UpdateManyChildNodesTest;
 
 public abstract class AbstractPerformanceTest {
 
