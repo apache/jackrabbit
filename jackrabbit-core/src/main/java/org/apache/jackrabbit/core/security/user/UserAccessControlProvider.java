@@ -26,7 +26,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.security.AccessControlPolicy;
@@ -39,6 +38,7 @@ import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
@@ -100,6 +100,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     private String userAdminGroupPath;
     private String groupAdminGroupPath;
     private String administratorsGroupPath;
+    private boolean membersInProperty;
 
     /**
      *
@@ -160,6 +161,9 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             }
             usersPath = (uMgr instanceof UserManagerImpl) ? ((UserManagerImpl) uMgr).getUsersPath() : UserConstants.USERS_PATH;
             groupsPath = (uMgr instanceof UserManagerImpl) ? ((UserManagerImpl) uMgr).getGroupsPath() : UserConstants.GROUPS_PATH;
+
+            membersInProperty = (!(uMgr instanceof UserManagerImpl)) || ((UserManagerImpl) uMgr).getGroupMembershipSplitSize() <= 0;
+
         } else {
             throw new RepositoryException("SessionImpl (system session) expected.");
         }
@@ -318,15 +322,12 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             implements SynchronousEventListener {
 
         private final String userNodePath;
-
-        private boolean isUserAdmin;
-        private boolean isGroupAdmin;
+        private Set<Principal> principals;
 
         protected CompiledPermissionsImpl(Set<Principal> principals, String userNodePath) throws RepositoryException {
             this.userNodePath = userNodePath;
-            isUserAdmin = containsGroup(principals, userAdminGroup);
-            isGroupAdmin = containsGroup(principals, groupAdminGroup);
-
+            this.principals = principals;
+            
             int events = Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED;
             observationMgr.addEventListener(this, events, groupsPath, true, null, null, false);
         }
@@ -369,6 +370,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             }
 
             if (Text.isDescendant(usersPath, jcrPath)) {
+                boolean isUserAdmin = containsGroup(principals, userAdminGroup);
                 /*
                  below the user-tree
                  - determine position of target relative to the editing user
@@ -409,6 +411,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                     } // else: normal user that isn't allowed to modify another user.
                 }
             } else if (Text.isDescendant(groupsPath, jcrPath)) {
+                boolean isGroupAdmin = containsGroup(principals, groupAdminGroup);
                 /*
                 below group-tree:
                 - test if the user is group-administrator.
@@ -493,36 +496,28 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 Event ev = events.nextEvent();
                 try {
                     String evPath = ev.getPath();
+                    int type = ev.getType();
                     String repMembers = session.getJCRName(UserConstants.P_MEMBERS);
                     if (repMembers.equals(Text.getName(evPath))) {
-                        // recalculate the is...Admin flags
-                        Node userNode = session.getNode(userNodePath);
-                        String nodePath = Text.getRelativeParent(evPath, 1);
-                        if (userAdminGroupPath.equals(nodePath)) {
-                            isUserAdmin = false;
-                            if (ev.getType() != Event.PROPERTY_REMOVED) {
-                                Value[] vs = session.getProperty(evPath).getValues();
-                                for (int i = 0; i < vs.length && !isUserAdmin; i++) {
-                                    isUserAdmin = userNode.getIdentifier().equals(vs[i].getString());
-                                }
-                            }
-                        } else if (groupAdminGroupPath.equals(nodePath)) {
-                            isGroupAdmin = false;
-                            if (ev.getType() != Event.PROPERTY_REMOVED) {
-                                Value[] vs = session.getProperty(evPath).getValues();
-                                for (int i = 0; i < vs.length && !isGroupAdmin; i++) {
-                                    isGroupAdmin = userNode.getIdentifier().equals(vs[i].getString());
-                                }
-                            }
-                        }
                         // invalidate the cached results
                         clearCache();
                         // only need to clear the cache once. stop processing
                         break;
-                    }
+                    } else if (!membersInProperty) {
+                        /* the affected property is not rep:Members and members are
+                           stored in a tree structure (user manager configuration.
+                           test if the parent node is of type rep:Members in order
+                           to determine if any membership modification occurred.*/
+                        Node parent = session.getNodeByIdentifier(ev.getIdentifier());
+                        if (UserConstants.NT_REP_MEMBERS.equals(((NodeTypeImpl) parent.getPrimaryNodeType()).getQName())) {
+                            clearCache();
+                        }
+
+                    } // else: not interested.
                 } catch (RepositoryException e) {
                     // should never get here
-                    log.error("Internal error ", e.getMessage());
+                    log.warn("Internal error ", e.getMessage());
+                    clearCache();
                 }
             }
         }
