@@ -17,27 +17,27 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.security.user.Impersonation;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.config.ImportConfig;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
-import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.ProtectedPropertyImporter;
 import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -54,15 +54,15 @@ import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.Value;
-import javax.jcr.PropertyType;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -70,17 +70,18 @@ import javax.jcr.retention.RetentionManager;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.ByteArrayInputStream;
 import java.security.AccessControlException;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.UUID;
-import java.util.Collections;
 
 /**
  * <code>UserImporterTest</code>...
@@ -215,7 +216,7 @@ public class UserImporterTest extends AbstractJCRTest {
             NodeImpl n = ((UserImpl) newUser).getNode();
             assertTrue(n.isNew());
             assertTrue(n.getParent().isSame(target));
-            
+
             assertEquals("t", n.getName());
             assertEquals("t", n.getProperty(UserConstants.P_PRINCIPAL_NAME).getString());
             assertEquals("{sha1}8efd86fb78a56a5145ed7739dcb00c78581c5375", n.getProperty(UserConstants.P_PASSWORD).getString());
@@ -224,7 +225,7 @@ public class UserImporterTest extends AbstractJCRTest {
             // saving changes of the import -> must succeed. add mandatory
             // props should have been created.
             sImpl.save();
-            
+
         } finally {
             sImpl.refresh(false);
             if (target.hasNode("t")) {
@@ -645,7 +646,7 @@ public class UserImporterTest extends AbstractJCRTest {
 
             assertTrue(target.hasNode("some"));
             assertTrue(target.hasNode("some/intermediate/path"));
-            
+
         } finally {
             sImpl.refresh(false);
         }
@@ -670,11 +671,13 @@ public class UserImporterTest extends AbstractJCRTest {
             // getWeakReferences only works upon save.
             sImpl.save();
 
-            assertTrue(g1.isMember(g));           
+            assertTrue(g1.isMember(g));
 
         } finally {
             sImpl.refresh(false);
-            target.getNode("gFolder").remove();
+            if (target.hasNode("gFolder")) {
+                target.getNode("gFolder").remove();
+            }
             sImpl.save();
         }
     }
@@ -709,14 +712,16 @@ public class UserImporterTest extends AbstractJCRTest {
             NodeImpl n = ((AuthorizableImpl) g1).getNode();
             assertTrue(n.hasProperty(UserConstants.P_MEMBERS));
 
-            // getWeakReferences only works upon save.            
+            // getWeakReferences only works upon save.
             sImpl.save();
 
             assertTrue(g1.isMember(g));
 
         } finally {
             sImpl.refresh(false);
-            target.getNode("gFolder").remove();
+            if (target.hasNode("gFolder")) {
+                target.getNode("gFolder").remove();
+            }
             sImpl.save();
         }
     }
@@ -1025,7 +1030,7 @@ public class UserImporterTest extends AbstractJCRTest {
 
             Authorizable u2 = umgr.getAuthorizable("g");
             assertNotNull(u2);
-            
+
             Subject subj = new Subject();
             subj.getPrincipals().add(u2.getPrincipal());
 
