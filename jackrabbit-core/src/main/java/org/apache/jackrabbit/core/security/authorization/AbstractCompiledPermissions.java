@@ -16,12 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import java.util.Map;
-
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
+import java.util.Map;
 
 /**
  * <code>AbstractCompiledPermissions</code>...
@@ -30,6 +29,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
 
     // cache mapping a Path to a 'Result' containing permissions and privileges.
     private final Map<Path, Result> cache;
+    private final Object monitor = new Object();
 
     @SuppressWarnings("unchecked")
     protected AbstractCompiledPermissions() {
@@ -44,7 +44,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
      */
     public Result getResult(Path absPath) throws RepositoryException {
         Result result;
-        synchronized (cache) {
+        synchronized (monitor) {
             result = cache.get(absPath);
             if (result == null) {
                 result = buildResult(absPath);
@@ -66,7 +66,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
      * Removes all entries from the cache.
      */
     protected void clearCache() {
-        synchronized (cache) {
+        synchronized (monitor) {
             cache.clear();
         }
     }
@@ -113,20 +113,13 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         private final int allowPrivileges;
         private final int denyPrivileges;
 
-        private final int hashCode;
+        private int hashCode = -1;
 
         public Result(int allows, int denies, int allowPrivileges, int denyPrivileges) {
             this.allows = allows;
             this.denies = denies;
             this.allowPrivileges = allowPrivileges;
             this.denyPrivileges = denyPrivileges;
-
-            int h = 17;
-            h = 37 * h + allows;
-            h = 37 * h + denies;
-            h = 37 * h + allowPrivileges;
-            h = 37 * h + denyPrivileges;
-            hashCode = h;
         }
 
         public boolean grants(int permissions) {
@@ -148,13 +141,23 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         /**
          * @see Object#hashCode()
          */
+        @Override
         public int hashCode() {
+            if (hashCode == -1) {
+                int h = 17;
+                h = 37 * h + allows;
+                h = 37 * h + denies;
+                h = 37 * h + allowPrivileges;
+                h = 37 * h + denyPrivileges;
+                hashCode = h;
+            }
             return hashCode;
         }
 
         /**
          * @see Object#equals(Object)
          */
+        @Override
         public boolean equals(Object object) {
             if (object == this) {
                 return true;

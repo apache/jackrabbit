@@ -1741,11 +1741,11 @@ public class BatchedItemOperations extends ItemValidator {
             }
             // copy properties
             for (Name propName : srcState.getPropertyNames()) {
-                Path propPath = PathFactoryImpl.getInstance().create(srcPath, propName, true);
-                if (!srcAccessMgr.canRead(propPath)) {
+                Path propPath = PathFactoryImpl.getInstance().create(srcPath, propName, true);                
+                PropertyId propId = new PropertyId(srcState.getNodeId(), propName);
+                if (!srcAccessMgr.canRead(propPath, propId)) {
                     continue;
                 }
-                PropertyId propId = new PropertyId(srcState.getNodeId(), propName);
                 PropertyState srcChildState =
                         (PropertyState) srcStateMgr.getItemState(propId);
 

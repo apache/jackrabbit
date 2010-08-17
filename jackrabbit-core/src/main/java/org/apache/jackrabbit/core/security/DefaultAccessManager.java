@@ -76,21 +76,6 @@ import java.util.Set;
 public class DefaultAccessManager extends AbstractAccessControlManager implements AccessManager {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAccessManager.class);
-    private static final CompiledPermissions NO_PERMISSION = new CompiledPermissions() {
-        public void close() {
-            //nop
-        }
-        public boolean grants(Path absPath, int permissions) {
-            // deny everything
-            return false;
-        }
-        public int getPrivileges(Path absPath) {
-            return PrivilegeRegistry.NO_PRIVILEGE;
-        }
-        public boolean canReadAll() {
-            return false;
-        }
-    };
 
     private boolean initialized;
 
@@ -161,7 +146,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         } else {
             log.warn("No AccessControlProvider defined -> no access is granted.");
             editor = null;
-            compiledPermissions = NO_PERMISSION;
+            compiledPermissions = CompiledPermissions.NO_PERMISSION;
         }
 
         initialized = true;
@@ -230,6 +215,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             if ((actions & REMOVE) == REMOVE) {
                 perm |= (id.denotesNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
             }
+            
             Path path = hierMgr.getPath(id);
             return isGranted(path, perm);
         }
@@ -255,13 +241,14 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessManager#canRead(Path)
+     * @see AccessManager#canRead(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.id.ItemId)
      */
-    public boolean canRead(Path itemPath) throws RepositoryException {
+    public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
+        checkInitialized();
         if (compiledPermissions.canReadAll()) {
             return true;
         } else {
-            return isGranted(itemPath, Permission.READ);
+            return compiledPermissions.canRead(itemPath, itemId);
         }
     }
 

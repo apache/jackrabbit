@@ -47,6 +47,7 @@ public class EntryTest extends AbstractEntryTest {
     private String nodePath;
     private String glob;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -64,6 +65,7 @@ public class EntryTest extends AbstractEntryTest {
         acl = new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser, superuser.getValueFactory());
     }
 
+    @Override
     protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow)
             throws RepositoryException {
         return (JackrabbitAccessControlEntry) acl.createEntry(principal, privileges, isAllow, restrictions);

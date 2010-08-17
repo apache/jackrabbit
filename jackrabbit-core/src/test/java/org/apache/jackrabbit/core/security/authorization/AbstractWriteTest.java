@@ -63,6 +63,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
     // TODO: test AC for moved node
     // TODO: test AC for moved AC-controlled node
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -85,6 +86,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         siblingPath = n2.getPath();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             if (testGroup != null && testUser != null) {
@@ -1033,6 +1035,33 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         // -> now reorder must succeed
         givePrivileges(childNPath, privilegesFromName(Privilege.JCR_REMOVE_NODE), getRestrictions(superuser, childNPath));
         n.orderBefore(Text.getName(childNPath), Text.getName(childNPath2));
+        testSession.save();
+    }
+    
+    /**
+     * Test case for JCR-2420
+     *
+     * @throws Exception
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2420">JCR-2420</a>
+     */
+    public void testRemovalJCR242() throws Exception {
+        Privilege[] allPriv = privilegesFromNames(new String[] {Privilege.JCR_ALL});
+
+        /* grant ALL privilege for testUser at 'path' */
+        givePrivileges(path, testUser.getPrincipal(), allPriv, getRestrictions(superuser, path));
+        /* grant ALL privilege for testUser at 'childNPath' */
+        givePrivileges(childNPath, testUser.getPrincipal(), allPriv, getRestrictions(superuser, childNPath));
+
+        Session testSession = getTestSession();
+        AccessControlManager acMgr = testSession.getAccessControlManager();
+
+        assertTrue(acMgr.hasPrivileges(path, allPriv));
+        assertTrue(acMgr.hasPrivileges(childNPath, allPriv));
+
+        assertTrue(testSession.hasPermission(childNPath, Session.ACTION_REMOVE));
+
+        Node child = testSession.getNode(childNPath);
+        child.remove();
         testSession.save();
     }
 

@@ -36,6 +36,8 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
@@ -76,6 +78,14 @@ class ACLTemplate extends AbstractACLTemplate {
     private final PrivilegeRegistry privilegeRegistry;
 
     /**
+     * The id of the access controlled node or <code>null</code> if this
+     * ACLTemplate isn't created for an existing access controlled node.
+     * Used for the Entry#isLocal(NodeId) call only in order to avoid calls
+     * to {@link javax.jcr.Node#getPath()}.
+     */
+    private final NodeId id;
+
+    /**
      * Construct a new empty {@link ACLTemplate}.
      *
      * @param path path
@@ -88,6 +98,7 @@ class ACLTemplate extends AbstractACLTemplate {
         super(path, valueFactory);
         this.principalMgr = principalMgr;
         this.privilegeRegistry = privilegeRegistry;
+        this.id = null;
     }
 
     /**
@@ -100,13 +111,14 @@ class ACLTemplate extends AbstractACLTemplate {
      */
     ACLTemplate(NodeImpl aclNode, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
         super((aclNode != null) ? aclNode.getParent().getPath() : null, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
-        if (aclNode == null || !aclNode.isNodeType(AccessControlConstants.NT_REP_ACL)) {
+        if (aclNode == null || !AccessControlConstants.NT_REP_ACL.equals(((NodeTypeImpl)aclNode.getPrimaryNodeType()).getQName())) {
             throw new IllegalArgumentException("Node must be of type 'rep:ACL'");
         }
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
         principalMgr = sImpl.getPrincipalManager();
-        
+
         this.privilegeRegistry = privilegeRegistry;
+        this.id = aclNode.getParentId();
 
         // load the entries:
         AccessControlManager acMgr = sImpl.getAccessControlManager();
@@ -127,17 +139,28 @@ class ACLTemplate extends AbstractACLTemplate {
                     privs[i] = acMgr.privilegeFromName(privValues[i].getString());
                 }
                 // create a new ACEImpl (omitting validation check)
-                Entry ace = new Entry(
+                Entry ace = createEntry(
                         princ,
                         privs,
-                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE),
-                        valueFactory);
+                        AccessControlConstants.NT_REP_GRANT_ACE.equals(((NodeTypeImpl) aceNode.getPrimaryNodeType()).getQName()));
                 // add the entry
                 internalAdd(ace);
             } catch (RepositoryException e) {
                 log.debug("Failed to build ACE from content.", e.getMessage());
             }
         }
+    }
+
+    /**
+     * Create a new entry omitting any validation checks.
+     *
+     * @param principal
+     * @param privileges
+     * @param isAllow
+     * @return
+     */
+    Entry createEntry(Principal principal, Privilege[] privileges, boolean isAllow) throws AccessControlException {
+        return new Entry(principal, privileges, isAllow);
     }
 
     private List<Entry> internalGetEntries(Principal principal) {
@@ -185,7 +208,7 @@ class ACLTemplate extends AbstractACLTemplate {
                     int mergedBits = e.getPrivilegeBits() | entry.getPrivilegeBits();
                     Privilege[] mergedPrivs = privilegeRegistry.getPrivileges(mergedBits);
                     // omit validation check.
-                    entry = new Entry(entry.getPrincipal(), mergedPrivs, entry.isAllow(), valueFactory);
+                    entry = createEntry(entry.getPrincipal(), mergedPrivs, entry.isAllow());
                 } else {
                     complementEntry = e;
                 }
@@ -209,9 +232,9 @@ class ACLTemplate extends AbstractACLTemplate {
                     // replace the existing entry having the privileges adjusted
                     int index = entries.indexOf(complementEntry);
                     entries.remove(complementEntry);
-                    Entry tmpl = new Entry(entry.getPrincipal(),
+                    Entry tmpl = createEntry(entry.getPrincipal(),
                             privilegeRegistry.getPrivileges(resultPrivs),
-                            !entry.isAllow(), valueFactory);
+                            !entry.isAllow());
                     entries.add(index, tmpl);
                 } /* else: does not need to be modified.*/
             }
@@ -231,6 +254,7 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      * @see AbstractACLTemplate#checkValidEntry(java.security.Principal, javax.jcr.security.Privilege[], boolean, java.util.Map) 
      */
+    @Override
     protected void checkValidEntry(Principal principal, Privilege[] privileges,
                                  boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException {
@@ -248,19 +272,12 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate#getEntries()
      */
+    @Override
     protected List<? extends AccessControlEntry> getEntries() {
         return entries;
     }
 
     //--------------------------------------------------< AccessControlList >---
-    /**
-     * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
-     */
-    public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {
-        List<? extends AccessControlEntry> l = getEntries();
-        return l.toArray(new AccessControlEntry[l.size()]);
-    }
-
     /**
      * @see javax.jcr.security.AccessControlList#removeAccessControlEntry(AccessControlEntry)
      */
@@ -297,27 +314,13 @@ class ACLTemplate extends AbstractACLTemplate {
     }
 
     /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#isEmpty()
-     */
-    public boolean isEmpty() {
-        return entries.isEmpty();
-    }
-
-    /**
-     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
-     */
-    public int size() {
-        return getEntries().size();
-    }
-
-    /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges,
                             boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
         checkValidEntry(principal, privileges, isAllow, restrictions);
-        Entry ace = new Entry(principal, privileges, isAllow, valueFactory);
+        Entry ace = createEntry(principal, privileges, isAllow);
         return internalAdd(ace);
     }
 
@@ -329,6 +332,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @return always zero
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return 0;
     }
@@ -340,6 +344,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @return true if the path and the entries are equal; false otherwise.
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
@@ -356,11 +361,20 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      *
      */
-    static class Entry extends AccessControlEntryImpl {
+    class Entry extends AccessControlEntryImpl {
 
-        Entry(Principal principal, Privilege[] privileges, boolean allow, ValueFactory valueFactory)
+        private Entry(Principal principal, Privilege[] privileges, boolean allow)
                 throws AccessControlException {
             super(principal, privileges, allow, Collections.<String, Value>emptyMap(), valueFactory);
+        }
+
+        /**
+         * @param nodeId
+         * @return <code>true</code> if this entry is defined on the node
+         * at <code>nodeId</code>
+         */
+        boolean isLocal(NodeId nodeId) {
+            return id != null && id.equals(nodeId);
         }
     }
 }

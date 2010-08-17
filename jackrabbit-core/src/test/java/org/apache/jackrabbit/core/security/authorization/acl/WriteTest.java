@@ -46,14 +46,17 @@ import java.util.UUID;
  */
 public class WriteTest extends AbstractWriteTest {
 
+    @Override
     protected boolean isExecutable() {
         return EvaluationUtil.isExecutable(acMgr);
     }
 
+    @Override
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
         return EvaluationUtil.getPolicy(acM, path, principal);
     }
 
+    @Override
     protected Map<String, Value> getRestrictions(Session s, String path) {
         return Collections.emptyMap();
     }
