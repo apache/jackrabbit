@@ -666,7 +666,7 @@ public class UserImporterTest extends AbstractJCRTest {
             assertNotNull(g1);
 
             NodeImpl n = ((AuthorizableImpl) g1).getNode();
-            assertTrue(n.hasProperty(UserConstants.P_MEMBERS));
+            assertTrue(n.hasProperty(UserConstants.P_MEMBERS) || n.hasNode(UserConstants.N_MEMBERS));
 
             // getWeakReferences only works upon save.
             sImpl.save();
@@ -710,7 +710,7 @@ public class UserImporterTest extends AbstractJCRTest {
             assertNotNull(g1);
 
             NodeImpl n = ((AuthorizableImpl) g1).getNode();
-            assertTrue(n.hasProperty(UserConstants.P_MEMBERS));
+            assertTrue(n.hasProperty(UserConstants.P_MEMBERS) || n.hasNode(UserConstants.N_MEMBERS));
 
             // getWeakReferences only works upon save.
             sImpl.save();
