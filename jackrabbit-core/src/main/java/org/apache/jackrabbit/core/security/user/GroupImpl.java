@@ -27,6 +27,8 @@ import org.apache.jackrabbit.commons.flat.Rank;
 import org.apache.jackrabbit.commons.flat.TreeManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -450,68 +452,76 @@ class GroupImpl extends AuthorizableImpl implements Group {
             this.node = node;
         }
 
-        public boolean addMember(AuthorizableImpl authorizable) throws RepositoryException {
-            NodeImpl nMembers = (node.hasNode(N_MEMBERS)
-                    ? node.getNode(N_MEMBERS)
-                    : userManager.addProtectedNode(node, N_MEMBERS, NT_REP_MEMBERS));
+        public boolean addMember(final AuthorizableImpl authorizable) throws RepositoryException {
+            return userManager.performProtectedOperation(getSession(), new SessionOperation<Boolean>() {
+                public Boolean perform(SessionContext context) throws RepositoryException {
+                    NodeImpl nMembers = (node.hasNode(N_MEMBERS)
+                            ? node.getNode(N_MEMBERS)
+                            : node.addNode(N_MEMBERS, NT_REP_MEMBERS, null));
 
-            try {
-                PropertySequence properties = getPropertySequence(nMembers);
-                String propName = Text.escapeIllegalJcrChars(authorizable.getID());
-                if (properties.hasItem(propName)) {
-                    log.debug("Authorizable {} is already member of {}", authorizable, this);
-                    return false;
-                } else {
-                    Value newMember = getSession().getValueFactory().createValue(authorizable.getNode(), true);
-                    properties.addProperty(propName, newMember);
-                }
+                    try {
+                        PropertySequence properties = getPropertySequence(nMembers);
+                        String propName = Text.escapeIllegalJcrChars(authorizable.getID());
+                        if (properties.hasItem(propName)) {
+                            log.debug("Authorizable {} is already member of {}", authorizable, this);
+                            return false;
+                        } else {
+                            Value newMember = getSession().getValueFactory().createValue(authorizable.getNode(), true);
+                            properties.addProperty(propName, newMember);
+                        }
 
-                if (userManager.isAutoSave()) {
-                    node.save();
+                        if (userManager.isAutoSave()) {
+                            node.save();
+                        }
+                        return true;
+                    }
+                    catch (RepositoryException e) {
+                        log.debug("addMember failed. Reverting changes", e);
+                        if (nMembers.isNew()) {
+                            node.refresh(false);
+                        } else {
+                            nMembers.refresh(false);
+                        }
+                        throw e;
+                    }
                 }
-                return true;
-            }
-            catch (RepositoryException e) {
-                log.debug("addMember failed. Reverting changes", e);
-                if (nMembers.isNew()) {
-                    node.refresh(false);
-                } else {
-                    nMembers.refresh(false);
-                }
-                throw e;
-            }
+            });
         }
 
-        public boolean removeMember(AuthorizableImpl authorizable) throws RepositoryException {
+        public boolean removeMember(final AuthorizableImpl authorizable) throws RepositoryException {
             if (!node.hasNode(N_MEMBERS)) {
                 log.debug("Group has no members -> cannot remove member {}", authorizable.getID());
                 return false;
             }
 
-            NodeImpl nMembers = node.getNode(N_MEMBERS);
-            try {
-                PropertySequence properties = getPropertySequence(nMembers);
-                String propName = Text.escapeIllegalJcrChars(authorizable.getID());
-                if (properties.hasItem(propName)) {
-                    properties.removeProperty(propName);
-                    if (!properties.iterator().hasNext()) {
-                        userManager.removeProtectedItem(nMembers, node);
-                    }
-                } else {
-                    log.debug("Authorizable {} was not member of {}", authorizable.getID(), getID());
-                    return false;
-                }
+            return userManager.performProtectedOperation(getSession(), new SessionOperation<Boolean>() {
+                public Boolean perform(SessionContext context) throws RepositoryException {
+                    NodeImpl nMembers = node.getNode(N_MEMBERS);
+                    try {
+                        PropertySequence properties = getPropertySequence(nMembers);
+                        String propName = Text.escapeIllegalJcrChars(authorizable.getID());
+                        if (properties.hasItem(propName)) {
+                            properties.removeProperty(propName);
+                            if (!properties.iterator().hasNext()) {
+                                nMembers.remove();
+                            }
+                        } else {
+                            log.debug("Authorizable {} was not member of {}", authorizable.getID(), getID());
+                            return false;
+                        }
 
-                if (userManager.isAutoSave()) {
-                    node.save();
+                        if (userManager.isAutoSave()) {
+                            node.save();
+                        }
+                        return true;
+                    }
+                    catch (RepositoryException e) {
+                        log.debug("removeMember failed. Reverting changes", e);
+                        nMembers.refresh(false);
+                        throw e;
+                    }
                 }
-                return true;
-            }
-            catch (RepositoryException e) {
-                log.debug("removeMember failed. Reverting changes", e);
-                nMembers.refresh(false);
-                throw e;
-            }
+            });
         }
 
         public Collection<Authorizable> getMembers(boolean includeIndirect, int type)

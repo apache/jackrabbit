@@ -16,12 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
@@ -29,11 +23,18 @@ import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.acl.ACLEditor;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
 /**
  * <code>ProtectedItemModifier</code>: An abstract helper class to allow classes
@@ -147,6 +148,11 @@ public abstract class ProtectedItemModifier {
 
     protected void markModified(NodeImpl parentImpl) throws RepositoryException {
         parentImpl.getOrCreateTransientItemState();
+    }
+
+    protected <T> T performProtected(SessionImpl session, SessionOperation<T> operation) throws RepositoryException {
+        ItemValidator itemValidator = session.context.getItemValidator();
+        return itemValidator.performRelaxed(operation, ItemValidator.CHECK_CONSTRAINTS);
     }
 
     private void checkPermission(ItemImpl item, int perm) throws RepositoryException {

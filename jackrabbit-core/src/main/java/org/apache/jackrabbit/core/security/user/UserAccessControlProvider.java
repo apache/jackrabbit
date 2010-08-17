@@ -16,21 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import java.security.Principal;
-import java.security.acl.Group;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
-
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -53,6 +38,21 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
+
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Implementation of the <code>AccessControlProvider</code> interface that
@@ -322,12 +322,12 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             implements SynchronousEventListener {
 
         private final String userNodePath;
-        private Set<Principal> principals;
+        private final Set<Principal> principals;
 
         protected CompiledPermissionsImpl(Set<Principal> principals, String userNodePath) throws RepositoryException {
             this.userNodePath = userNodePath;
             this.principals = principals;
-            
+
             int events = Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED;
             observationMgr.addEventListener(this, events, groupsPath, true, null, null, false);
         }
@@ -496,7 +496,6 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 Event ev = events.nextEvent();
                 try {
                     String evPath = ev.getPath();
-                    int type = ev.getType();
                     String repMembers = session.getJCRName(UserConstants.P_MEMBERS);
                     if (repMembers.equals(Text.getName(evPath))) {
                         // invalidate the cached results

@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -660,6 +661,10 @@ public class UserManagerImpl extends ProtectedItemModifier
             parent.save();
         }
         return n;
+    }
+
+    <T> T performProtectedOperation(SessionImpl session, SessionOperation<T> operation) throws RepositoryException {
+        return performProtected(session, operation);
     }
 
     /**
