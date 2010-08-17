@@ -610,7 +610,7 @@
   + * (rep:Authorizable) = rep:User VERSION
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder VERSION
 
-[rep:Members] > nt:hierarchyNode
+[rep:Members]
   orderable
   + * (rep:Members) = rep:Members multiple
   - * (WEAKREFERENCE) < 'rep:Authorizable'

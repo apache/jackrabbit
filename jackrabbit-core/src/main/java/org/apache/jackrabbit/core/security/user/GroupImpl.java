@@ -16,28 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -52,6 +30,27 @@ import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * GroupImpl...
@@ -227,10 +226,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
         TreeManager treeManager = new BTreeManager(nMembers, minChildren, maxChildren, order,
                 userManager.isAutoSave());
-
-        treeManager.getIgnoredProperties().addAll(Arrays.asList(
-                JcrConstants.JCR_CREATED,
-                "jcr:createdBy"));
 
         return ItemSequence.createPropertySequence(treeManager);
     }
