@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.user.UserAccessControlProvider;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.test.NotExecutableException;
 
