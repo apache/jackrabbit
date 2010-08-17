@@ -37,6 +37,12 @@ public class OracleDatabaseJournal extends DatabaseJournal {
     /** the Oracle table space to use */
     protected String tableSpace = "";
 
+    public OracleDatabaseJournal() {
+        setDatabaseType("oracle");
+        setDriver("oracle.jdbc.OracleDriver");
+        setSchemaObjectPrefix("");
+    }
+
     /**
      * {@inheritDoc}
      */
