@@ -95,8 +95,7 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
             throws RepositoryException {
         SessionImpl session = sessionContext.getSessionImpl();
         LuceneQueryFactory factory = new LuceneQueryFactoryImpl(
-                session, index.getSortComparatorSource(),
-                index.getContext().getHierarchyManager(),
+                session, index.getContext().getHierarchyManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
                 index.getSynonymProvider(), index.getIndexFormatVersion(),
                 getBindVariableValues());
