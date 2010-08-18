@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.query.lucene.join.Join;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.SortComparatorSource;
 
 /**
  * <code>JoinQuery</code> implements a query that performs a join.
@@ -51,9 +50,9 @@ public class JoinQuery implements MultiColumnQuery {
     private final JoinConditionImpl joinCondition;
 
     /**
-     * The sort comparator source of the index.
+     * Namespace mappings of this index.
      */
-    private final SortComparatorSource scs;
+    private final NamespaceMappings nsMappings;
 
     /**
      * The hierarchy manager of the workspace.
@@ -67,20 +66,20 @@ public class JoinQuery implements MultiColumnQuery {
      * @param right         the right side of the query.
      * @param joinType      the join type.
      * @param joinCondition the join condition.
-     * @param scs           the sort comparator source of the index.
+     * @param nsMappings namespace mappings of this index
      * @param hmgr          the hierarchy manager of the workspace.
      */
     public JoinQuery(MultiColumnQuery left,
                      MultiColumnQuery right,
                      JoinType joinType,
                      JoinConditionImpl joinCondition,
-                     SortComparatorSource scs,
+                     NamespaceMappings nsMappings,
                      HierarchyManager hmgr) {
         this.left = left;
         this.right = right;
         this.joinType = joinType;
         this.joinCondition = joinCondition;
-        this.scs = scs;
+        this.nsMappings = nsMappings;
         this.hmgr = hmgr;
     }
 
@@ -95,6 +94,6 @@ public class JoinQuery implements MultiColumnQuery {
         HierarchyResolver resolver = (HierarchyResolver) reader;
         return Join.create(left.execute(searcher, orderings, resultFetchHint),
                 right.execute(searcher, orderings, resultFetchHint),
-                joinType, joinCondition, reader, resolver, scs, hmgr);
+                joinType, joinCondition, reader, resolver, nsMappings, hmgr);
     }
 }

@@ -50,7 +50,6 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.SortComparatorSource;
 
 /**
  * <code>LuceneQueryFactoryImpl</code> implements a lucene query factory.
@@ -61,11 +60,6 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
      * Session of the user executing this query
      */
     private final SessionImpl session;
-
-    /**
-     * The source comparator source.
-     */
-    private final SortComparatorSource scs;
 
     /**
      * The hierarchy manager.
@@ -115,7 +109,6 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
      * @param bindVariables   the bind variable values of the query
      */
     public LuceneQueryFactoryImpl(SessionImpl session,
-                                  SortComparatorSource scs,
                                   HierarchyManager hmgr,
                                   NamespaceMappings nsMappings,
                                   Analyzer analyzer,
@@ -123,7 +116,6 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
                                   IndexFormatVersion version,
                                   Map<Name, Value> bindVariables) {
         this.session = session;
-        this.scs = scs;
         this.hmgr = hmgr;
         this.nsMappings = nsMappings;
         this.analyzer = analyzer;
@@ -277,6 +269,6 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
         MultiColumnQuery left = create((SourceImpl) join.getLeft());
         MultiColumnQuery right = create((SourceImpl) join.getRight());
         return new JoinQuery(left, right, join.getJoinTypeInstance(),
-                (JoinConditionImpl) join.getJoinCondition(), scs, hmgr);
+                (JoinConditionImpl) join.getJoinCondition(), nsMappings, hmgr);
     }
 }
