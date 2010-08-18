@@ -261,6 +261,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * @see AbstractAccessControlManager#checkInitialized()
      */
+    @Override
     protected void checkInitialized() throws IllegalStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -270,6 +271,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * @see AbstractAccessControlManager#checkPermission(String,int)
      */
+    @Override
     protected void checkPermission(String absPath, int permission) throws AccessDeniedException, PathNotFoundException, RepositoryException {
         checkValidNodePath(absPath);
         if (anonymous && permission != Permission.READ) {
@@ -280,6 +282,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * @see AbstractAccessControlManager#getPrivilegeRegistry()
      */
+    @Override
     protected PrivilegeRegistry getPrivilegeRegistry()
             throws RepositoryException {
         checkInitialized();
@@ -289,6 +292,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * @see AbstractAccessControlManager#checkValidNodePath(String)
      */
+    @Override
     protected void checkValidNodePath(String absPath) throws PathNotFoundException, RepositoryException {
         Path path = resolver.getQPath(absPath);
         if (!path.isAbsolute()) {

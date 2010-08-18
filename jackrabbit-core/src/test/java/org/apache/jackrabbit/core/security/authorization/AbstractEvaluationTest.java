@@ -55,6 +55,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     private Node trn;
     private Set<String> toClear = new HashSet<String>();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         if (!isExecutable()) {
@@ -78,6 +79,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         for (String path : toClear) {
             try {

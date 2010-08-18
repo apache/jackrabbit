@@ -32,10 +32,13 @@ public final class AnonymousPrincipal implements Principal, Serializable {
     public AnonymousPrincipal() {
     }
 
+    //-------------------------------------------------------------< Object >---
+    @Override
     public String toString() {
         return ("AnonymousPrincipal");
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -46,13 +49,15 @@ public final class AnonymousPrincipal implements Principal, Serializable {
         return false;
     }
 
+    @Override
     public int hashCode() {
         return ANONYMOUS_NAME.hashCode();
     }
 
-    //------------------------------------------------------------< Principal >
+    //----------------------------------------------------------< Principal >---
     /**
-     * {@inheritDoc}
+     * @returns Always returns "anonymous"
+     * @see Principal#getName()
      */
     public String getName() {
         return ANONYMOUS_NAME;
