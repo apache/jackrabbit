@@ -42,6 +42,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
     protected Principal testPrincipal;
     protected PrincipalManager pMgr;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 

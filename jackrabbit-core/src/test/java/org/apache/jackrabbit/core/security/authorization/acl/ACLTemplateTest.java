@@ -44,10 +44,12 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
 
     private Map<String, Value> restrictions = Collections.<String, Value>emptyMap();
 
+    @Override
     protected String getTestPath() {
         return "/ab/c/d";
     }
 
+    @Override
     protected JackrabbitAccessControlList createEmptyTemplate(String path) throws RepositoryException {
         SessionImpl sImpl = (SessionImpl) superuser;
         PrincipalManager princicipalMgr = sImpl.getPrincipalManager();
@@ -55,6 +57,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         return new ACLTemplate(path, princicipalMgr, privilegeRegistry, sImpl.getValueFactory(), sImpl);
     }
 
+    @Override
     protected Principal getSecondPrincipal() throws Exception {
         return pMgr.getEveryone();
     }

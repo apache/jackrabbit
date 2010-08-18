@@ -38,10 +38,12 @@ public class AdminPrincipal implements JackrabbitPrincipal {
         return adminId;
     }
 
+    @Override
     public int hashCode() {
         return adminId.hashCode();
     }
 
+    @Override
     public boolean equals(Object obj) {
         return obj == this || obj instanceof AdminPrincipal;
     }

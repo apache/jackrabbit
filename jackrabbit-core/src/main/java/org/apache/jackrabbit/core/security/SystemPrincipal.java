@@ -32,10 +32,13 @@ public final class SystemPrincipal implements Principal, Serializable {
     public SystemPrincipal() {
     }
 
+    //-------------------------------------------------------------< Object >---
+    @Override
     public String toString() {
         return ("SystemPrincipal");
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -46,11 +49,12 @@ public final class SystemPrincipal implements Principal, Serializable {
         return false;
     }
 
+    @Override
     public int hashCode() {
         return SYSTEM_USER.hashCode();
     }
 
-    //------------------------------------------------------------< Principal >
+    //----------------------------------------------------------< Principal >---
     /**
      * {@inheritDoc}
      */

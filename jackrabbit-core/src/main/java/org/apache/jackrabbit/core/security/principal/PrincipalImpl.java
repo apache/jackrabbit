@@ -60,6 +60,7 @@ public class PrincipalImpl implements JackrabbitPrincipal, Serializable {
      * Two principals are equal, if their names are.
      * @see Object#equals(Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -75,6 +76,7 @@ public class PrincipalImpl implements JackrabbitPrincipal, Serializable {
      * @return the hash code of the principals name.
      * @see Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return name.hashCode();
     }
@@ -82,6 +84,7 @@ public class PrincipalImpl implements JackrabbitPrincipal, Serializable {
     /**
      * @see Object#toString()
      */
+    @Override
     public String toString() {
         return getClass().getName() + ":" + name;
     }

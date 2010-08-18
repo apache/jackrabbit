@@ -57,10 +57,12 @@ public final class EveryonePrincipal implements java.security.acl.Group {
 
     //-------------------------------------------------------------< Object >---
 
+    @Override
     public int hashCode() {
         return NAME.hashCode();
     }
 
+    @Override
     public boolean equals(Object obj) {
         return obj == this || obj instanceof EveryonePrincipal;
     }

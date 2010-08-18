@@ -196,7 +196,7 @@ class ACLTemplate extends AbstractACLTemplate {
 
     private List<Entry> internalGetEntries(Principal principal) {
         String principalName = principal.getName();
-        List entriesPerPrincipal = new ArrayList(2);
+        List<Entry> entriesPerPrincipal = new ArrayList<Entry>(2);
         for (Entry entry : entries) {
             if (principalName.equals(entry.getPrincipal().getName())) {
                 entriesPerPrincipal.add(entry);

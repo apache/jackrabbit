@@ -34,15 +34,18 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
 
     private String testPath = "/rep:accessControl/users/test";
 
+    @Override
     protected String getTestPath() {
         return testPath;
     }
 
+    @Override
     protected JackrabbitAccessControlList createEmptyTemplate(String testPath)
             throws RepositoryException {
         return new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser, superuser.getValueFactory());
     }
 
+    @Override
     protected Principal getSecondPrincipal() throws Exception {
         return testPrincipal;
     }

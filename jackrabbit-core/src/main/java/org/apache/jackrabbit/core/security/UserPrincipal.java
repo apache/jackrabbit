@@ -39,10 +39,13 @@ public class UserPrincipal implements Principal, Serializable {
         this.name = name;
     }
 
+    //-------------------------------------------------------------< Object >---
+    @Override
     public String toString() {
         return ("UserPrincipal: " + name);
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -54,11 +57,12 @@ public class UserPrincipal implements Principal, Serializable {
         return false;
     }
 
+    @Override
     public int hashCode() {
         return name.hashCode();
     }
 
-    //------------------------------------------------------------< Principal >
+    //----------------------------------------------------------< Principal >---
     /**
      * {@inheritDoc}
      */

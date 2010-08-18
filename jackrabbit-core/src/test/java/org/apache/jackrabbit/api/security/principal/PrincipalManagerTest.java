@@ -37,6 +37,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
     private PrincipalManager principalMgr;
     private Group everyone;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         if (!(superuser instanceof JackrabbitSession)) {
