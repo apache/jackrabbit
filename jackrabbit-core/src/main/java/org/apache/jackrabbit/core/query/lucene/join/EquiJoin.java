@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene.join;
 
-import static org.apache.jackrabbit.core.query.lucene.FieldNames.PROPERTIES;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.jackrabbit.core.query.lucene.FieldNames;
 import org.apache.jackrabbit.core.query.lucene.MultiColumnQueryHits;
@@ -45,10 +45,11 @@ public class EquiJoin extends AbstractCondition {
      */
     private final IndexReader reader;
 
-    private final Term outerTerm;
-
     private final Map<String, List<ScoreNode[]>> rowsByInnerNodeValue =
         new HashMap<String, List<ScoreNode[]>>();
+
+    private final Map<Integer, Set<String>> valuesByOuterNodeDocument =
+        new HashMap<Integer, Set<String>>();
 
     /**
      * Creates a new equi join condition.
@@ -72,11 +73,6 @@ public class EquiJoin extends AbstractCondition {
         super(inner);
         this.reader = reader;
 
-        Term innerTerm = new Term(PROPERTIES, FieldNames.createNamedValue(
-                nsMappings.translateName(innerProperty), ""));
-        this.outerTerm = new Term(PROPERTIES, FieldNames.createNamedValue(
-                nsMappings.translateName(outerProperty), ""));
-
         // create lookup map
         Map<Integer, List<ScoreNode[]>> rowsByInnerDocument =
             new HashMap<Integer, List<ScoreNode[]>>();
@@ -94,17 +90,10 @@ public class EquiJoin extends AbstractCondition {
 
         // Build the rowsByInnerNodeValue map for efficient lookup in
         // the getMatchingScoreNodes() method
-        TermEnum terms = reader.terms(innerTerm);
-        do {
-            Term term = terms.term();
-            if (term == null
-                    || !term.field().equals(innerTerm.field())
-                    || !term.text().startsWith(innerTerm.text())) {
-                break;
-            }
-
-            String value = term.text().substring(innerTerm.text().length());
-            TermDocs docs = reader.termDocs(terms.term());
+        String innerName = nsMappings.translateName(innerProperty);
+        for (Map.Entry<Term, String> entry : getPropertyTerms(innerName)) {
+            String value = entry.getValue();
+            TermDocs docs = reader.termDocs(entry.getKey());
             while (docs.next()) {
                 List<ScoreNode[]> match = rowsByInnerDocument.get(docs.doc());
                 if (match != null) {
@@ -116,7 +105,23 @@ public class EquiJoin extends AbstractCondition {
                     rows.addAll(match);
                 }
             }
-        } while (terms.next());
+        }
+
+        // Build the valuesByOuterNodeDocument map for efficient lookup in
+        // the getMatchingScoreNodes() method
+        String outerName = nsMappings.translateName(outerProperty);
+        for (Map.Entry<Term, String> entry : getPropertyTerms(outerName)) {
+            String value = entry.getValue();
+            TermDocs docs = reader.termDocs(entry.getKey());
+            while (docs.next()) {
+                Set<String> values = valuesByOuterNodeDocument.get(docs.doc());
+                if (values == null) {
+                    values = new HashSet<String>();
+                    valuesByOuterNodeDocument.put(docs.doc(), values);
+                }
+                values.add(value);
+            }
+        }
     }
 
     /**
@@ -126,30 +131,38 @@ public class EquiJoin extends AbstractCondition {
             throws IOException {
         List<ScoreNode[]> list = new ArrayList<ScoreNode[]>();
 
-        int document = outer.getDoc(reader);
-        TermEnum terms = reader.terms(outerTerm);
+        Set<String> values = valuesByOuterNodeDocument.get(outer.getDoc(reader));
+        if (values != null) {
+            for (String value : values) {
+                List<ScoreNode[]> rows = rowsByInnerNodeValue.get(value);
+                if (rows != null) {
+                    list.addAll(rows);
+                }
+            }
+        }
+
+        return list.toArray(new ScoreNode[list.size()][]);
+    }
+
+    private Set<Map.Entry<Term, String>> getPropertyTerms(String property)
+            throws IOException {
+        Map<Term, String> map = new HashMap<Term, String>();
+
+        Term prefix = new Term(
+                FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(property, ""));
+        TermEnum terms = reader.terms(prefix);
         do {
             Term term = terms.term();
             if (term == null
-                    || !term.field().equals(outerTerm.field())
-                    || !term.text().startsWith(outerTerm.text())) {
+                    || !term.field().equals(prefix.field())
+                    || !term.text().startsWith(prefix.text())) {
                 break;
             }
-
-            List<ScoreNode[]> rows = rowsByInnerNodeValue.get(
-                    terms.term().text().substring(outerTerm.text().length()));
-            if (rows != null) {
-                TermDocs docs = reader.termDocs(terms.term());
-                while (docs.next()) {
-                    if (docs.doc() == document) {
-                        list.addAll(rows);
-                        break;
-                    }
-                }
-            }
+            map.put(term, term.text().substring(prefix.text().length()));
         } while (terms.next());
 
-        return list.toArray(new ScoreNode[list.size()][]);
+        return map.entrySet();
     }
 
 }
