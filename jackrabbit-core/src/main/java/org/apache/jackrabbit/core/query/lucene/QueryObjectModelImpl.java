@@ -96,10 +96,8 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
      */
     public QueryResult execute(long offset, long limit)
             throws RepositoryException {
-
-        LuceneQueryFactory factory = new LuceneQueryFactoryImpl(session,
-                index.getSortComparatorSource(),
-                index.getContext().getHierarchyManager(),
+        LuceneQueryFactory factory = new LuceneQueryFactoryImpl(
+                session, index.getContext().getHierarchyManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
                 index.getSynonymProvider(), index.getIndexFormatVersion(),
                 getBindVariableValues());

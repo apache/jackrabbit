@@ -25,6 +25,7 @@ import org.apache.jackrabbit.commons.query.qom.JoinType;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.query.lucene.HierarchyResolver;
 import org.apache.jackrabbit.core.query.lucene.MultiColumnQueryHits;
+import org.apache.jackrabbit.core.query.lucene.NamespaceMappings;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -35,7 +36,6 @@ import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.SortComparatorSource;
 
 /**
  * <code>Join</code> implements the result of a join.
@@ -113,7 +113,7 @@ public class Join implements MultiColumnQueryHits {
      * @param condition the QOM join condition.
      * @param reader    the index reader.
      * @param resolver  the hierarchy resolver.
-     * @param scs       the sort comparator source of the index.
+     * @param nsMappings namespace mappings of this index
      * @param hmgr      the hierarchy manager of the workspace.
      * @return the join result.
      * @throws IOException if an error occurs while executing the join.
@@ -124,7 +124,7 @@ public class Join implements MultiColumnQueryHits {
                               final JoinConditionImpl condition,
                               final IndexReader reader,
                               final HierarchyResolver resolver,
-                              final SortComparatorSource scs,
+                              final NamespaceMappings nsMappings,
                               final HierarchyManager hmgr)
             throws IOException {
         try {
@@ -183,8 +183,9 @@ public class Join implements MultiColumnQueryHits {
                         outerPropName = node.getProperty2QName();
                     }
 
-                    Condition c = new EquiJoin(inner, getIndex(inner, innerName),
-                            scs, reader, innerPropName, outerPropName);
+                    Condition c = new EquiJoin(
+                            inner, getIndex(inner, innerName), nsMappings,
+                            reader, innerPropName, outerPropName);
                     return new Join(outer, outerIdx, isInner, c);
                 }
 
