@@ -112,12 +112,7 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
     }
 
     /**
-     *
-     * @param srcEntry The access control entry to be moved within the list.
-     * @param destEntry The entry before which the <code>srcEntry</code> will be moved.
-     * @throws AccessControlException
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#orderBefore(javax.jcr.security.AccessControlEntry, javax.jcr.security.AccessControlEntry)
      */
     public void orderBefore(AccessControlEntry srcEntry, AccessControlEntry destEntry) throws AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
         if (srcEntry.equals(destEntry)) {
