@@ -93,4 +93,13 @@ public class ChildNodeJoinConditionImpl
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        String child = getChildSelectorName();
+        String parent = getParentSelectorName();
+        return "ISCHILDNODE(" + child + ", " + parent + ")";
+    }
+
 }

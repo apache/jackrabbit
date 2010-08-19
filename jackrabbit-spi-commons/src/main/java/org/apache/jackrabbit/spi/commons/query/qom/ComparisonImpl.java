@@ -109,7 +109,7 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
     //------------------------< Object >----------------------------------------
 
     public String toString() {
-        return operator.formatSql(protect(operand1), protect(operand2));
+        return operator.formatSql(operand1.toString(), operand2.toString());
     }
 
 }

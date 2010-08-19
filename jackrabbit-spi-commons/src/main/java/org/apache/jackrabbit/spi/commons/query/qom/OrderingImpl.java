@@ -90,4 +90,15 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        if (order == Order.ASCENDING) {
+            return operand + " ASC";
+        } else {
+            return operand + " DESC";
+        }
+    }
+
 }

@@ -97,4 +97,11 @@ public class ChildNodeImpl extends ConstraintImpl implements ChildNode {
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        return "ISCHILDNODE(" + getSelectorName() + ", " + quote(path) + ")";
+    }
+
 }

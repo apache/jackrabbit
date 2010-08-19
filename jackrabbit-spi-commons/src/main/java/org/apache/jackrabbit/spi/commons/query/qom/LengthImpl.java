@@ -56,4 +56,11 @@ public class LengthImpl extends DynamicOperandImpl implements Length {
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        return "LENGTH(" + getPropertyValue() + ")";
+    }
+
 }

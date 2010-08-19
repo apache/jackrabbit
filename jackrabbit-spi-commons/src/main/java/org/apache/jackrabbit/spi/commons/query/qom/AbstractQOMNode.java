@@ -91,6 +91,15 @@ public abstract class AbstractQOMNode {
         }
     }
 
+    protected String quote(Path path) {
+        String str = getJCRPath(path);
+        if (str.indexOf(':') != -1 || str.indexOf('/') != -1) {
+            return "[" + str + "]";
+        } else {
+            return str;
+        }
+    }
+
     protected String protect(Object expression) {
         String str = expression.toString();
         if (str.indexOf(" ") != -1) {
