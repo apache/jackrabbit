@@ -129,4 +129,11 @@ public class JoinImpl extends SourceImpl implements Join {
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        return joinType.formatSql(left, right, joinCondition);
+    }
+
 }

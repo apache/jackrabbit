@@ -81,4 +81,23 @@ public abstract class AbstractQOMNode {
             return path.toString();
         }
     }
+
+    protected String quote(Name name) {
+        String str = getJCRName(name);
+        if (str.indexOf(':') != -1) {
+            return "[" + str + "]";
+        } else {
+            return str;
+        }
+    }
+
+    protected String protect(Object expression) {
+        String str = expression.toString();
+        if (str.indexOf(" ") != -1) {
+            return "(" + str + ")";
+        } else {
+            return str;
+        }
+    }
+
 }

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.query.InvalidQueryException;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
@@ -227,4 +228,30 @@ public class QueryObjectModelTree extends AbstractQOMNode {
             throw new InvalidQueryException(e.getMessage());
         }
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("SELECT ");
+        for (int i = 0; i < columns.length; i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(columns[i]);
+        }
+
+        builder.append(" FROM ");
+        builder.append(source);
+
+        if (constraint != null) {
+            builder.append(" WHERE ");
+            builder.append(constraint);
+        }
+
+        return builder.toString();
+    }
+
+
 }

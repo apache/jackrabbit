@@ -71,4 +71,11 @@ public class OrImpl extends ConstraintImpl implements Or {
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        return protect(constraint1) + " OR " + protect(constraint2);
+    }
+
 }

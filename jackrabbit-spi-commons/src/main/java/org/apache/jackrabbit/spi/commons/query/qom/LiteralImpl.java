@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.query.qom;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.qom.Literal;
 
@@ -51,4 +52,20 @@ public class LiteralImpl extends StaticOperandImpl implements Literal {
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        try {
+            String str = value.getString();
+            if (str.indexOf(' ') != -1) {
+                str = "\"" + str + "\"";
+            }
+            return str;
+        } catch (RepositoryException e) {
+            return value.toString();
+        }
+    }
+
+
 }

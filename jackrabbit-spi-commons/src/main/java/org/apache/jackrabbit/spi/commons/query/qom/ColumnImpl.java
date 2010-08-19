@@ -118,4 +118,16 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        if (propertyName != null) {
+            return getSelectorName() + "." + getPropertyName()
+                + " AS " + getColumnName();
+        } else {
+            return getSelectorName() + ".*";
+        }
+    }
+
 }
