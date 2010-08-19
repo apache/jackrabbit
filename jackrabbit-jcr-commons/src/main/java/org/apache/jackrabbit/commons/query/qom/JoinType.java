@@ -30,19 +30,22 @@ import javax.jcr.query.qom.Source;
  */
 public enum JoinType {
 
-    INNER(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER),
+    INNER(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, "INNER JOIN"),
 
-    LEFT(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER),
+    LEFT(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, "LEFT OUTER JOIN"),
 
-    RIGHT(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
+    RIGHT(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER, "RIGHT OUTER JOIN");
 
     /**
      * JCR name of this join type.
      */
     private final String name;
 
-    private JoinType(String name) {
+    private final String sql;
+
+    private JoinType(String name, String sql) {
         this.name = name;
+        this.sql = sql;
     }
 
     /**
@@ -60,6 +63,20 @@ public enum JoinType {
             Source left, Source right, JoinCondition condition)
             throws RepositoryException {
         return factory.join(left, right, name, condition);
+    }
+
+    /**
+     * Formats an SQL join with this join type and the given sources and
+     * join condition. The sources and condition are simply used as-is,
+     * without any quoting or escaping.
+     *
+     * @param left left source
+     * @param right right source
+     * @param condition join condition
+     * @return SQL join, <code>left join right</code>
+     */
+    public String formatSql(Object left, Object right, Object condition) {
+        return left + " " + sql + " " + right + " ON " + condition;
     }
 
     /**
