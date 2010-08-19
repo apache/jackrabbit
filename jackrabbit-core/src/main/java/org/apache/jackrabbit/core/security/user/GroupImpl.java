@@ -170,11 +170,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 msp = new PropertyBasedMembershipProvider(node);
             }
         } else {
-            if (node.hasProperty(P_MEMBERS) || !node.hasNode(N_MEMBERS)) {
-                msp = new PropertyBasedMembershipProvider(node);
-            } else {
-                msp = new NodeBasedMembershipProvider(node);
-            }
+            msp = new PropertyBasedMembershipProvider(node);
         }
 
         if (node.hasProperty(P_MEMBERS) && node.hasNode(N_MEMBERS)) {
@@ -221,7 +217,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
         return false;
     }
 
-    private PropertySequence getPropertySequence(Node nMembers) throws RepositoryException {
+    static PropertySequence getPropertySequence(Node nMembers, UserManagerImpl userManager) throws RepositoryException {
         Comparator<String> order = Rank.comparableComparator();
         int maxChildren = userManager.getGroupMembershipSplitSize();
         int minChildren = maxChildren / 2;
@@ -460,7 +456,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                             : node.addNode(N_MEMBERS, NT_REP_MEMBERS, null));
 
                     try {
-                        PropertySequence properties = getPropertySequence(nMembers);
+                        PropertySequence properties = getPropertySequence(nMembers, userManager);
                         String propName = Text.escapeIllegalJcrChars(authorizable.getID());
                         if (properties.hasItem(propName)) {
                             log.debug("Authorizable {} is already member of {}", authorizable, this);
@@ -498,7 +494,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 public Boolean perform(SessionContext context) throws RepositoryException {
                     NodeImpl nMembers = node.getNode(N_MEMBERS);
                     try {
-                        PropertySequence properties = getPropertySequence(nMembers);
+                        PropertySequence properties = getPropertySequence(nMembers, userManager);
                         String propName = Text.escapeIllegalJcrChars(authorizable.getID());
                         if (properties.hasItem(propName)) {
                             properties.removeProperty(propName);
@@ -529,7 +525,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
             Collection<Authorizable> members = new HashSet<Authorizable>();
             if (node.hasNode(N_MEMBERS)) {
-                for (Property member : getPropertySequence(node.getNode(N_MEMBERS))) {
+                for (Property member : getPropertySequence(node.getNode(N_MEMBERS), userManager)) {
                     collectMembers(member.getValue(), members, includeIndirect, type);
                 }
             }

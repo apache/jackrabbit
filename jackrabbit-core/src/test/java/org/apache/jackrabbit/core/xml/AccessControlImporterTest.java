@@ -19,16 +19,16 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
-import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.config.ImportConfig;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.xml.sax.SAXException;
@@ -38,16 +38,17 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
 import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.AccessControlList;
+import javax.jcr.security.Privilege;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * <code>AccessControlImporterTest</code>: Testing import of resource based
@@ -279,7 +280,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
             new ParsingContentHandler(ih).parse(in);
 
             assertTrue(target.hasNode("test"));
-            String path = target.getNode("test").getPath();    
+            String path = target.getNode("test").getPath();
 
             AccessControlManager acMgr = sImpl.getAccessControlManager();
             AccessControlPolicy[] policies = acMgr.getPolicies(path);
@@ -296,7 +297,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
             assertEquals(acMgr.privilegeFromName(Privilege.JCR_WRITE), entry.getPrivileges()[0]);
 
             if(entry instanceof JackrabbitAccessControlEntry) {
-                assertTrue(((JackrabbitAccessControlEntry) entry).isAllow());                
+                assertTrue(((JackrabbitAccessControlEntry) entry).isAllow());
             }
 
         } finally {
@@ -596,7 +597,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
     /**
      * With the default importer that isn't able to deal with ACEs the
      * policy will be created but any ACEs will be ignored.
-     * 
+     *
      * @throws Exception
      */
     public void testImportWithDefaultImporter() throws Exception {
@@ -635,7 +636,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
         }
 
         @Override
-        public List<ProtectedNodeImporter> getProtectedNodeImporters() {
+        public List<? extends ProtectedNodeImporter> getProtectedItemImporters() {
             return Collections.singletonList(aci);
         }
     }

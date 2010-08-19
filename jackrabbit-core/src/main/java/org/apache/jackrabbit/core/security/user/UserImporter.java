@@ -23,14 +23,20 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.commons.flat.PropertySequence;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.core.xml.DefaultProtectedPropertyImporter;
+import org.apache.jackrabbit.core.xml.NodeInfo;
 import org.apache.jackrabbit.core.xml.PropInfo;
+import org.apache.jackrabbit.core.xml.ProtectedNodeImporter;
+import org.apache.jackrabbit.core.xml.ProtectedPropertyImporter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -48,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -111,14 +118,21 @@ import java.util.Map;
  * to find the authorizable with the given principal (reason: query will only
  * find persisted content).
  */
-public class UserImporter extends DefaultProtectedPropertyImporter {
+public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImporter {
 
-    /**
-     * logger instance
-     */
     private static final Logger log = LoggerFactory.getLogger(UserImporter.class);
 
     public static final String PARAM_IMPORT_BEHAVIOR = "importBehavior";
+
+    private JackrabbitSession session;
+
+    private NamePathResolver resolver;
+
+    private boolean isWorkspaceImport;
+
+    private int uuidBehavior;
+
+    private ReferenceChangeTracker referenceTracker;
 
     private UserPerWorkspaceUserManager userManager;
 
@@ -128,47 +142,52 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
 
     private int importBehavior = ImportBehavior.IGNORE;
 
-    @Override
     public boolean init(JackrabbitSession session, NamePathResolver resolver,
                         boolean isWorkspaceImport,
                         int uuidBehavior, ReferenceChangeTracker referenceTracker) {
-        if (super.init(session, resolver, isWorkspaceImport, uuidBehavior, referenceTracker)) {
-            if (initialized) {
-                throw new IllegalStateException("Already initialized");
-            }
-            if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW) {
-                log.debug("ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW isn't supported when importing users or groups.");
-                return false;
-            }
-            if (isWorkspaceImport) {
-                log.debug("Only Session-Import is supported when importing users or groups.");
-                return false;
-            }
-            try {
-                UserManager uMgr = session.getUserManager();
-                if (uMgr instanceof UserPerWorkspaceUserManager) {
-                    // make sure the user managers autosave flag can be changed to false.
-                    if (uMgr.isAutoSave()) {
-                        uMgr.autoSave(false);
-                        resetAutoSave = true;
-                        log.debug("Changed autosave behavior of UserManager to 'false'.");
-                    }
-                    userManager = (UserPerWorkspaceUserManager) uMgr;
-                    initialized = true;
-                } else {
-                    // either wrong implementation or one that implicitly calls save.
-                    log.debug("Failed to initialize UserImporter: UserManager isn't instance of UserPerWorkspaceUserManager or does implicit save call.");
+
+        this.session = session;
+        this.resolver = resolver;
+        this.isWorkspaceImport = isWorkspaceImport;
+        this.uuidBehavior = uuidBehavior;
+        this.referenceTracker = referenceTracker;
+
+        if (initialized) {
+            throw new IllegalStateException("Already initialized");
+        }
+        if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW) {
+            log.debug("ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW isn't supported when importing users or groups.");
+            return false;
+        }
+        if (isWorkspaceImport) {
+            log.debug("Only Session-Import is supported when importing users or groups.");
+            return false;
+        }
+        try {
+            UserManager uMgr = session.getUserManager();
+            if (uMgr instanceof UserPerWorkspaceUserManager) {
+                // make sure the user managers autosave flag can be changed to false.
+                if (uMgr.isAutoSave()) {
+                    uMgr.autoSave(false);
+                    resetAutoSave = true;
+                    log.debug("Changed autosave behavior of UserManager to 'false'.");
                 }
-            } catch (RepositoryException e) {
-                // failed to access user manager or to set the autosave behavior
-                // -> return false (not initialized) as importer can't operate.
-                log.error("Failed to initialize UserImporter: ", e);
+                userManager = (UserPerWorkspaceUserManager) uMgr;
+                initialized = true;
+            } else {
+                // either wrong implementation or one that implicitly calls save.
+                log.debug("Failed to initialize UserImporter: UserManager isn't instance of UserPerWorkspaceUserManager or does implicit save call.");
             }
+        } catch (RepositoryException e) {
+            // failed to access user manager or to set the autosave behavior
+            // -> return false (not initialized) as importer can't operate.
+            log.error("Failed to initialize UserImporter: ", e);
         }
         return initialized;
     }
 
-    @Override
+    // -----------------------------------------------------< ProtectedPropertyImporter >---
+
     public boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, QPropertyDefinition def) throws RepositoryException {
         if (!initialized) {
             throw new IllegalStateException("Not initialized");
@@ -281,11 +300,11 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                 // are to be imported later on -> postpone processing to the end.
                 // see -> processRefeferences
                 Value[] vs = protectedPropInfo.getValues(PropertyType.WEAKREFERENCE, resolver);
-                NodeId[] ids = new NodeId[vs.length];
+                Membership membership = new Membership(a.getID());
                 for (int i = 0; i < vs.length; i++) {
-                    ids[i] = new NodeId(vs[i].getString());
+                    membership.addMember(new NodeId(vs[i].getString()));
                 }
-                referenceTracker.processedReference(new Membership(a.getID(), ids));
+                referenceTracker.processedReference(membership);
                 return true;
 
             } // else: cannot handle -> return false
@@ -300,7 +319,10 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
         }
     }
 
-    @Override
+    public boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, QPropertyDefinition def) throws RepositoryException {
+        return false;
+    }
+
     public void processReferences() throws RepositoryException {
         if (!initialized) {
             throw new IllegalStateException("Not initialized");
@@ -320,7 +342,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                         throw new RepositoryException(((Membership) reference).groupId + " does not represent a valid group.");
                     }
 
-                    Group gr = (Group) a;
+                    final Group gr = (Group) a;
                     // 1. collect members to add and to remove.
                     Map<String, Authorizable> toRemove = new HashMap<String, Authorizable>();
                     for (Iterator<Authorizable> declMembers = gr.getDeclaredMembers(); declMembers.hasNext();) {
@@ -329,12 +351,11 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                     }
 
                     List<Authorizable> toAdd = new ArrayList<Authorizable>();
-                    List<Value> nonExisting = new ArrayList<Value>();
+                    final List<Membership.Member> nonExisting = new ArrayList<Membership.Member>();
 
-                    for (NodeId originalId : ((Membership) reference).ids) {
-
-                        NodeId remapped = referenceTracker.getMappedId(originalId);
-                        NodeId id = (remapped == null) ? originalId : remapped;
+                    for (Membership.Member member : ((Membership) reference).members) {
+                        NodeId remapped = referenceTracker.getMappedId(member.id);
+                        NodeId id = (remapped == null) ? member.id : remapped;
 
                         Authorizable authorz = null;
                         try {
@@ -352,7 +373,7 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                             handleFailure("New member of " + gr + ": No such authorizable (NodeID = " + id + ")");
                             if (importBehavior == ImportBehavior.BESTEFFORT) {
                                 log.info("ImportBehavior.BESTEFFORT: Remember non-existing member for processing.");
-                                nonExisting.add(session.getValueFactory().createValue(id.toString(), PropertyType.WEAKREFERENCE));
+                                nonExisting.add(member);
                             }
                         }
                     }
@@ -372,23 +393,55 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
                     // handling non-existing members in case of best-effort
                     if (!nonExisting.isEmpty()) {
                         log.info("ImportBehavior.BESTEFFORT: Found " + nonExisting.size() + " entries of rep:members pointing to non-existing authorizables. Adding to rep:members.");
+                        final NodeImpl groupNode = ((AuthorizableImpl) gr).getNode();
 
-                        NodeImpl groupNode = ((AuthorizableImpl) gr).getNode();
-                        // build list of valid members set before ....
-                        List<Value> memberValues = new ArrayList<Value>();
-                        if (groupNode.hasProperty(UserConstants.P_MEMBERS)) {
-                            Value[] vls = groupNode.getProperty(UserConstants.P_MEMBERS).getValues();
-                            memberValues.addAll(Arrays.asList(vls));
+                        if (userManager.getGroupMembershipSplitSize() > 0) {
+                            userManager.performProtectedOperation((SessionImpl) session, new SessionOperation<Object>() {
+                                public Boolean perform(SessionContext context) throws RepositoryException {
+                                    NodeImpl nMembers = (groupNode.hasNode(UserConstants.N_MEMBERS)
+                                            ? groupNode.getNode(UserConstants.N_MEMBERS)
+                                            : groupNode.addNode(UserConstants.N_MEMBERS, UserConstants.NT_REP_MEMBERS, null));
+
+                                    // Create N_MEMBERS node structure for holding member references
+                                    for (Membership.Member member : nonExisting) {
+                                        PropertySequence properties = GroupImpl.getPropertySequence(nMembers, userManager);
+                                        String propName = member.name;
+                                        if (propName == null) {
+                                            log.debug("Ignoring unnamed user with id {}", member.id);
+                                            continue;
+                                        }
+                                        if (properties.hasItem(propName)) {
+                                            log.debug("Overwriting authorizable {} which is already member of {}.", propName, gr);
+                                            properties.removeProperty(propName);
+                                        }
+                                        Value newMember = session.getValueFactory().createValue(member.id.toString(), PropertyType.WEAKREFERENCE);
+                                        properties.addProperty(propName, newMember);
+                                    }
+                                    return null;
+                                }
+                            });
+                        } else {
+                            // Create P_MEMBERS for holding member references
+                            // build list of valid members set before ....
+                            List<Value> memberValues = new ArrayList<Value>();
+                            if (groupNode.hasProperty(UserConstants.P_MEMBERS)) {
+                                Value[] vls = groupNode.getProperty(UserConstants.P_MEMBERS).getValues();
+                                memberValues.addAll(Arrays.asList(vls));
+                            }
+
+                            // ... and the non-Existing ones.
+                            for (Membership.Member member : nonExisting) {
+                                memberValues.add(session.getValueFactory().createValue(member.id.toString(), PropertyType.WEAKREFERENCE));
+                            }
+
+                            // and use implementation specific method to set the
+                            // value of rep:members properties which was not possible
+                            // through the API
+                            userManager.setProtectedProperty(groupNode,
+                                    UserConstants.P_MEMBERS,
+                                    memberValues.toArray(new Value[memberValues.size()]),
+                                    PropertyType.WEAKREFERENCE);
                         }
-                        // ... and the non-Existing ones.
-                        memberValues.addAll(nonExisting);
-                        // and use implementation specific method to set the
-                        // value of rep:members properties which was not possible
-                        // through the API
-                        userManager.setProtectedProperty(groupNode,
-                                UserConstants.P_MEMBERS,
-                                memberValues.toArray(new Value[memberValues.size()]),
-                                PropertyType.WEAKREFERENCE);
                     }
 
                     processed.add(reference);
@@ -461,6 +514,66 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
         }
     }
 
+    // -----------------------------------------------------< ProtectedNodeImporter >---
+
+    private Membership currentMembership;
+
+    public boolean start(NodeImpl protectedParent) throws RepositoryException {
+        String repMembers = resolver.getJCRName(UserConstants.NT_REP_MEMBERS);
+        if (repMembers.equals(protectedParent.getPrimaryNodeType().getName())) {
+            NodeImpl groupNode = protectedParent;
+            while(groupNode.getDepth() != 0 &&
+                  repMembers.equals(groupNode.getPrimaryNodeType().getName())) {
+
+                groupNode = (NodeImpl) groupNode.getParent();
+            }
+            Authorizable auth = userManager.getAuthorizable(groupNode);
+            if (auth == null) {
+                log.debug("Cannot handle protected node " + protectedParent + ". It nor one of its parents represent a valid Authorizable.");
+                return false;
+            }
+            else {
+                currentMembership = new Membership(auth.getID());
+                return true;
+            }
+        }
+        else {
+            return false;
+        }
+    }
+
+    public boolean start(NodeState protectedParent) {
+        return false;
+    }
+
+    public void startChildInfo(NodeInfo childInfo, List<PropInfo> propInfos) throws RepositoryException {
+        assert (currentMembership != null);
+
+        if (UserConstants.NT_REP_MEMBERS.equals(childInfo.getNodeTypeName())) {
+            for (PropInfo prop : propInfos) {
+                Value[] vs = prop.getValues(PropertyType.WEAKREFERENCE, resolver);
+                for (int i = 0; i < vs.length; i++) {
+                    String name = resolver.getJCRName(prop.getName());
+                    NodeId id = new NodeId(vs[i].getString());
+                    currentMembership.addMember(name, id);
+                }
+            }
+        }
+        else {
+            log.warn("{} is not of type {}", childInfo.getName(), UserConstants.NT_REP_MEMBERS);
+        }
+    }
+
+    public void endChildInfo() throws RepositoryException {
+    }
+
+    public void end(NodeImpl protectedParent) throws RepositoryException {
+        referenceTracker.processedReference(currentMembership);
+        currentMembership = null;
+    }
+
+    public void end(NodeState protectedParent) {
+    }
 
     //---------------------------------------------------------< BeanConfig >---
     /**
@@ -487,13 +600,31 @@ public class UserImporter extends DefaultProtectedPropertyImporter {
      * @see ImportBehavior For additional configuration options.
      */
     private final class Membership {
-
         private final String groupId;
-        private final NodeId[] ids;
+        private final List<Member> members = new LinkedList<Member>();
 
-        private Membership(String groupId, NodeId[] ids) {
+        public Membership(String groupId) {
             this.groupId = groupId;
-            this.ids = ids;
+        }
+
+        public void addMember(String name, NodeId id) {
+            members.add(new Member(name, id));
+        }
+
+        public void addMember(NodeId id) {
+            addMember(null, id);
+        }
+
+        // If only Java had tuples...
+        public class Member {
+            private final String name;
+            private final NodeId id;
+
+            public Member(String name, NodeId id) {
+                super();
+                this.name = name;
+                this.id = id;
+            }
         }
     }
 

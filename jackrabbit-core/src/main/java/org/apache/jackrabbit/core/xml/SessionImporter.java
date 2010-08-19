@@ -64,11 +64,7 @@ public class SessionImporter implements Importer {
      */
     private final ReferenceChangeTracker refTracker;
 
-    private final List<ProtectedNodeImporter> pnImporters = new ArrayList();
-    /**
-     * Available importers for protected properties.
-     */
-    private final List<ProtectedPropertyImporter> ppImporters = new ArrayList();
+    private final List<ProtectedItemImporter> pItemImporters = new ArrayList();
 
     /**
      * Currently active importer for protected nodes.
@@ -110,31 +106,19 @@ public class SessionImporter implements Importer {
         parents.push(importTargetNode);
 
         if (config != null) {
-            List<ProtectedNodeImporter> ln = config.getProtectedNodeImporters();
-            for (ProtectedNodeImporter pni : ln) {
-                if (pni.init(session, session, false, uuidBehavior, refTracker)) {
-                    pnImporters.add(pni);
-                }
-            }
-            List<ProtectedPropertyImporter> lp = config.getProtectedPropertyImporters();
-            for (ProtectedPropertyImporter ppi : lp) {
-                if (ppi.init(session, session, false, uuidBehavior, refTracker)) {
-                    ppImporters.add(ppi);
+            List<ProtectedItemImporter> iList = (List<ProtectedItemImporter>) config.getProtectedItemImporters();
+            for (ProtectedItemImporter importer : iList) {
+                if (importer.init(session, session, false, uuidBehavior, refTracker)) {
+                    pItemImporters.add(importer);
                 }
             }
         }
 
         // missing config -> initialize defaults.
-        if (pnImporters.isEmpty()) {
-            ProtectedNodeImporter def = new DefaultProtectedNodeImporter();
+        if (pItemImporters.isEmpty()) {
+            ProtectedItemImporter def = new DefaultProtectedItemImporter();
             if (def.init(session, session, false, uuidBehavior, refTracker)) {
-                pnImporters.add(def);
-            }
-        }
-        if (ppImporters.isEmpty()) {
-            DefaultProtectedPropertyImporter def = new DefaultProtectedPropertyImporter();
-            if (def.init(session, session, false, uuidBehavior, refTracker)) {
-                ppImporters.add(def);
+                pItemImporters.add(def);
             }
         }
     }
@@ -307,18 +291,27 @@ public class SessionImporter implements Importer {
             parents.push(null);
             log.debug("Skipping protected node: " + nodeName);
 
-            // Notify the ProtectedNodeImporter about the start of a item
-            // tree that is protected by this parent. If it potentially is
-            // able to deal with it, notify it about the child node.
-            for (ProtectedNodeImporter pni : pnImporters) {
-                if (pni.start(parent)) {
-                    log.debug("Protected node -> delegated to ProtectedNodeImporter");
-                    pnImporter = pni;
-                    pnImporter.startChildInfo(nodeInfo, propInfos);
-                    break;
-                } /* else: p-i-Importer isn't able to deal with the protected tree.
+            if (pnImporter != null) {
+                // pnImporter was already started (current nodeInfo is a sibling)
+                // notify it about this child node.
+                pnImporter.startChildInfo(nodeInfo, propInfos);
+            } else {
+                // no importer defined yet:
+                // test if there is a ProtectedNodeImporter among the configured
+                // importers that can handle this.
+                // if there is one, notify the ProtectedNodeImporter about the
+                // start of a item tree that is protected by this parent. If it
+                // potentially is able to deal with it, notify it about the child node.
+                for (ProtectedItemImporter pni : pItemImporters) {
+                    if (pni instanceof ProtectedNodeImporter && ((ProtectedNodeImporter) pni).start(parent)) {
+                        log.debug("Protected node -> delegated to ProtectedNodeImporter");
+                        pnImporter = (ProtectedNodeImporter) pni;
+                        pnImporter.startChildInfo(nodeInfo, propInfos);
+                        break;
+                    } /* else: p-i-Importer isn't able to deal with the protected tree.
                      try next. and if none can handle the passed parent the
                      tree below will be skipped */
+                }
             }
             return;
         }
@@ -406,8 +399,8 @@ public class SessionImporter implements Importer {
                 log.debug("Skipping protected property " + pi.getName());
 
                 // notify the ProtectedPropertyImporter.
-                for (ProtectedPropertyImporter ppi : ppImporters) {
-                    if (ppi.handlePropInfo(node, pi, def)) {
+                for (ProtectedItemImporter ppi : pItemImporters) {
+                    if (ppi instanceof ProtectedPropertyImporter && ((ProtectedPropertyImporter) ppi).handlePropInfo(node, pi, def)) {
                         log.debug("Protected property -> delegated to ProtectedPropertyImporter");
                         break;
                     } /* else: p-i-Importer isn't able to deal with this property.
@@ -453,11 +446,8 @@ public class SessionImporter implements Importer {
          */
         // 1. let protected property/node importers handle protected ref-properties
         //    and (protected) properties underneath a protected parent node.
-        for (ProtectedPropertyImporter ppi : ppImporters) {
+        for (ProtectedItemImporter ppi : pItemImporters) {
             ppi.processReferences();
-        }
-        for (ProtectedNodeImporter pni : pnImporters) {
-            pni.processReferences();
         }
 
         // 2. regular non-protected properties.

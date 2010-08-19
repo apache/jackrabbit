@@ -16,12 +16,9 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import junit.framework.TestCase;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.user.UserImporter;
-import org.apache.jackrabbit.core.xml.AccessControlImporter;
-import org.apache.jackrabbit.core.xml.ProtectedNodeImporter;
-import org.apache.jackrabbit.core.xml.ProtectedPropertyImporter;
+import org.apache.jackrabbit.core.xml.ProtectedItemImporter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -31,11 +28,14 @@ import org.xml.sax.SAXParseException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Properties;
+
+import junit.framework.TestCase;
 
 /**
  * Test cases for workspace configuration handling.
@@ -87,49 +87,35 @@ public class WorkspaceConfigTest extends TestCase {
         Element xml = parseXML(new InputSource(new StringReader(XML_1)), true);
         ImportConfig config = parser.parseImportConfig(xml);
 
-        List<ProtectedNodeImporter> ln = config.getProtectedNodeImporters();
-        assertEquals(1, ln.size());
-        assertTrue(ln.get(0) instanceof AccessControlImporter);
-
-        List<ProtectedPropertyImporter> lp = config.getProtectedPropertyImporters();
-        assertEquals(1, lp.size());
-        assertTrue(lp.get(0) instanceof UserImporter);
+        List<? extends ProtectedItemImporter> ln = config.getProtectedItemImporters();
+        assertEquals(2, ln.size());
 
         // XML_2 ---------------------------------------------------------------
         xml = parseXML(new InputSource(new StringReader(XML_2)), true);
         config = parser.parseImportConfig(xml);
 
-        ln = config.getProtectedNodeImporters();
+        ln = config.getProtectedItemImporters();
         assertTrue(ln.isEmpty());
-
-        lp = config.getProtectedPropertyImporters();
-        assertTrue(lp.isEmpty());
 
         // XML_3 ---------------------------------------------------------------
         xml = parseXML(new InputSource(new StringReader(XML_3)), true);
         config = parser.parseImportConfig(xml);
 
-        ln = config.getProtectedNodeImporters();
-        assertEquals(2, ln.size());
-
-        lp = config.getProtectedPropertyImporters();
-        assertEquals(2, lp.size());
+        ln = config.getProtectedItemImporters();
+        assertEquals(4, ln.size());
 
         // XML_4 ---------------------------------------------------------------
         xml = parseXML(new InputSource(new StringReader(XML_4)), true);
         config = parser.parseImportConfig(xml);
 
-        ln = config.getProtectedNodeImporters();
-        assertEquals(1, ln.size());
-
-        lp = config.getProtectedPropertyImporters();
-        assertEquals(1, lp.size());
+        ln = config.getProtectedItemImporters();
+        assertEquals(2, ln.size());
 
         // XML_5 ---------------------------------------------------------------
         xml = parseXML(new InputSource(new StringReader(XML_5)), true);
         config = parser.parseImportConfig(xml);
 
-        lp = config.getProtectedPropertyImporters();
+        List<? extends ProtectedItemImporter> lp = config.getProtectedItemImporters();
         assertEquals(1, lp.size());
         assertTrue(lp.get(0) instanceof UserImporter);
         assertEquals(UserImporter.ImportBehavior.NAME_BESTEFFORT, ((UserImporter)lp.get(0)).getImportBehavior());

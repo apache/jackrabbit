@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.jackrabbit.core.xml.ProtectedItemImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.xml.ProtectedNodeImporter;
-import org.apache.jackrabbit.core.xml.ProtectedPropertyImporter;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * <code>XmlImportConfig</code>...
@@ -35,42 +34,26 @@ public class ImportConfig {
      */
     private static final Logger log = LoggerFactory.getLogger(ImportConfig.class);
 
-    private final List<BeanConfig> protectedNodeImporters;
-    private final List<BeanConfig> protectedPropertyImporters;
+    private final List<BeanConfig> protectedItemImporters;
 
     public ImportConfig() {
-        protectedNodeImporters = Collections.emptyList();
-        protectedPropertyImporters = Collections.emptyList();
+        protectedItemImporters = Collections.emptyList();
     }
 
-    public ImportConfig(List<BeanConfig> protectedNodeImporters, List<BeanConfig> protectedPropertyImporters) {
-        this.protectedNodeImporters = protectedNodeImporters;
-        this.protectedPropertyImporters = protectedPropertyImporters;
+    public ImportConfig(List<BeanConfig> protectedItemImporters) {
+        this.protectedItemImporters = protectedItemImporters;
     }
 
-    public List<ProtectedNodeImporter> getProtectedNodeImporters() {
-        List<ProtectedNodeImporter> pnis =
-            new ArrayList<ProtectedNodeImporter>();
-        for (BeanConfig bc : protectedNodeImporters) {
+    public List<? extends ProtectedItemImporter> getProtectedItemImporters() {
+        List<ProtectedItemImporter> piis = new ArrayList();
+        for (BeanConfig bc : protectedItemImporters) {
             try {
-                pnis.add(bc.newInstance(ProtectedNodeImporter.class));
+                piis.add(bc.newInstance(ProtectedItemImporter.class));
             } catch (ConfigurationException e) {
                 log.warn(e.getMessage());
             }
         }
-        return pnis;
+        return piis;
     }
 
-    public List<ProtectedPropertyImporter> getProtectedPropertyImporters() {
-        List<ProtectedPropertyImporter> ppis =
-            new ArrayList<ProtectedPropertyImporter>();
-        for (BeanConfig bc : protectedPropertyImporters) {
-            try {
-                ppis.add(bc.newInstance(ProtectedPropertyImporter.class));
-            } catch (ConfigurationException e) {
-                log.warn(e.getMessage());
-            }
-        }
-        return ppis;
-    }
 }
