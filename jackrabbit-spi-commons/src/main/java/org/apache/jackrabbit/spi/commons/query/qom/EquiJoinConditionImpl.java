@@ -143,4 +143,12 @@ public class EquiJoinConditionImpl
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        return getSelector1Name() + "." + quote(getProperty1QName())
+            + " = " + getSelector2Name() + "." + quote(getProperty2QName());
+    }
+
 }
