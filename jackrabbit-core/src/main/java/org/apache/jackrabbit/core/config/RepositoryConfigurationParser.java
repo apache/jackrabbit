@@ -207,6 +207,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * Name of the optional XmlImport config entry inside the workspace configuration.
      */
     private static final String IMPORT_ELEMENT = "Import";
+    private static final String IMPORT_PII_ELEMENT = "ProtectedItemImporter";
     private static final String IMPORT_PNI_ELEMENT = "ProtectedNodeImporter";
     private static final String IMPORT_PPI_ELEMENT = "ProtectedPropertyImporter";
 
@@ -692,29 +693,24 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * @throws ConfigurationException
      */
     public ImportConfig parseImportConfig(Element parent) throws ConfigurationException {
-        List<BeanConfig> protectedNodeImporters = new ArrayList<BeanConfig>();
-        List<BeanConfig> protectedPropertyImporters = new ArrayList<BeanConfig>();
-
+        List<BeanConfig> protectedItemImporters = new ArrayList<BeanConfig>();
         Element element = getElement(parent, IMPORT_ELEMENT, false);
         if (element != null) {
             NodeList children = element.getChildNodes();
             for (int i = 0; i < children.getLength(); i++) {
                 Node child = children.item(i);
                 if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    if (IMPORT_PNI_ELEMENT.equals(child.getNodeName())) {
+                    if (IMPORT_PNI_ELEMENT.equals(child.getNodeName()) ||
+                            IMPORT_PPI_ELEMENT.equals(child.getNodeName()) ||
+                            IMPORT_PII_ELEMENT.equals(child.getNodeName())) {
                         String className = getAttribute((Element) child, CLASS_ATTRIBUTE);
                         BeanConfig bc = new BeanConfig(className, parseParameters((Element) child));
                         bc.setValidate(false);
-                        protectedNodeImporters.add(bc);
-                    } else if (IMPORT_PPI_ELEMENT.equals(child.getNodeName())) {
-                        String className = getAttribute((Element) child, CLASS_ATTRIBUTE);
-                        BeanConfig bc = new BeanConfig(className, parseParameters((Element) child));
-                        bc.setValidate(false);
-                        protectedPropertyImporters.add(bc);
+                        protectedItemImporters.add(bc);
                     } // else: some other entry -> ignore.
                 }
             }
-            return new ImportConfig(protectedNodeImporters, protectedPropertyImporters);
+            return new ImportConfig(protectedItemImporters);
         }
         return null;
     }

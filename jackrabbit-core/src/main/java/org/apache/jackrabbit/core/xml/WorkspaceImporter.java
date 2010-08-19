@@ -16,21 +16,6 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
-
 import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -56,6 +41,21 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
+
 /**
  * <code>WorkspaceImporter</code> ...
  */
@@ -73,7 +73,7 @@ public class WorkspaceImporter implements Importer {
     private final int uuidBehavior;
 
     private boolean aborted;
-    private Stack<NodeState> parents;
+    private final Stack<NodeState> parents;
 
     /**
      * helper object that keeps track of remapped uuid's and imported reference
@@ -160,18 +160,11 @@ public class WorkspaceImporter implements Importer {
         // for the time being log an exception if an importer is configured that
         // is expected to work with workspace import. see JCR-2521
         if (config != null) {
-            List<ProtectedNodeImporter> ln = config.getProtectedNodeImporters();
-            for (ProtectedNodeImporter pni : ln) {
-                if (pni.init(session, session, true, uuidBehavior, refTracker)) {
-                    log.warn("Protected node importer configured is not supported by workspace import.");
-                    //throw new UnsupportedOperationException("Workspace-Import of protected nodes: Not yet implement. ");
-                }
-            }
-            List<ProtectedPropertyImporter> lp = config.getProtectedPropertyImporters();
-            for (ProtectedPropertyImporter ppi : lp) {
+            List<? extends ProtectedItemImporter> pi = config.getProtectedItemImporters();
+            for (ProtectedItemImporter ppi : pi) {
                 if (ppi.init(session, session, true, uuidBehavior, refTracker)) {
-                    log.warn("Protected property importer configured is not supported by workspace import.");
-                    //throw new UnsupportedOperationException("Workspace-Import of protected properties: Not yet implement. ");
+                    log.warn("Protected item importer configured is not supported by workspace import.");
+                    //throw new UnsupportedOperationException("Workspace-Import of protected nodes: Not yet implement. ");
                 }
             }
         }
@@ -372,7 +365,7 @@ public class WorkspaceImporter implements Importer {
             conditionalAddProperty(
                     node, NameConstants.JCR_ISCHECKEDOUT,
                     PropertyType.BOOLEAN, false, InternalValue.create(true));
-            
+
             // set extra properties only for full versionable nodes
             if (ent.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                 // jcr:versionHistory
@@ -459,7 +452,7 @@ public class WorkspaceImporter implements Importer {
         // store property
         itemOps.store(prop);
     }
-    
+
     /**
      * Adds the the given property to a node unless the property already
      * exists.

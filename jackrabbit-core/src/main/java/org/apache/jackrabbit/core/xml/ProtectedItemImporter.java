@@ -20,22 +20,33 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
+import javax.jcr.RepositoryException;
+
 /**
- * Default implementation that isn't able to handle any protected properties.
+ * <code>ProtectedItemImporter</code>...
  */
-public class DefaultProtectedPropertyImporter extends DefaultProtectedItemImporter {
+public interface ProtectedItemImporter {
 
-    protected JackrabbitSession session;
-
-    protected NamePathResolver resolver;
-
-    protected boolean isWorkspaceImport;
-
-    protected int uuidBehavior;
-
-    protected ReferenceChangeTracker referenceTracker;
-
-    public DefaultProtectedPropertyImporter() {
-        super();
-    }
+    /**
+     *
+     * @param session
+     * @param resolver
+     * @param isWorkspaceImport
+     * @param uuidBehavior
+     * @param referenceTracker
+     * @return
+     */
+    boolean init(JackrabbitSession session, NamePathResolver resolver,
+                 boolean isWorkspaceImport, int uuidBehavior,
+                 ReferenceChangeTracker referenceTracker);
+        
+    /**
+     * Post processing protected reference properties underneath a protected
+     * or non-protected parent node. If the parent is protected it has been
+     * handled by this importer already. This method is called
+     * from {@link org.apache.jackrabbit.core.xml.Importer#end()}.
+     *
+     * @throws javax.jcr.RepositoryException If an error occurs.
+     */
+    void processReferences() throws RepositoryException;
 }

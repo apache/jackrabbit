@@ -32,19 +32,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
  * @see ProtectedNodeImporter for an abstract class used to import protected
  * nodes and the subtree below them.
  */
-public interface ProtectedPropertyImporter {
-
-    /**
-     * 
-     * @param session
-     * @param resolver
-     * @param isWorkspaceImport
-     * @param uuidBehavior
-     *@param referenceTracker  @return
-     */
-    boolean init(JackrabbitSession session, NamePathResolver resolver,
-                 boolean isWorkspaceImport, int uuidBehavior,
-                 ReferenceChangeTracker referenceTracker);
+public interface ProtectedPropertyImporter extends ProtectedItemImporter {
 
     /**
      * Handles a single protected property.
@@ -75,14 +63,5 @@ public interface ProtectedPropertyImporter {
     boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo,
                            QPropertyDefinition def)
             throws RepositoryException;
-
-
-    /**
-     * Post processing protected reference properties. This method is called
-     * from {@link org.apache.jackrabbit.core.xml.Importer#end()}.
-     *
-     * @throws RepositoryException If an error occurs.
-     */
-    void processReferences() throws RepositoryException;
 
 }
