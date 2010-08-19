@@ -116,4 +116,23 @@ public class FullTextSearchImpl
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("CONTAINS(");
+        builder.append(getSelectorName());
+        if (propertyName != null) {
+            builder.append(".");
+            builder.append(quote(propertyName));
+            builder.append(", ");
+        } else {
+            builder.append(".*, ");
+        }
+        builder.append(getFullTextSearchExpression());
+        builder.append(")");
+        return builder.toString();
+    }
+
 }

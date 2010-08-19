@@ -119,4 +119,22 @@ public class SameNodeJoinConditionImpl
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ISSAMENODE(");
+        builder.append(getSelector1Name());
+        builder.append(", ");
+        builder.append(getSelector2Name());
+        if (selector2Path != null) {
+            builder.append(", ");
+            builder.append(quote(selector2Path));
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
+
 }

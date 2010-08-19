@@ -102,4 +102,10 @@ public class DescendantNodeImpl
         return visitor.visit(this, data);
     }
 
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        return "ISDESCENDANTNODE(" + getSelectorName() + ", " + quote(path) + ")";
+    }
+
 }

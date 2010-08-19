@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.query.qom;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.qom.Literal;
@@ -57,15 +58,43 @@ public class LiteralImpl extends StaticOperandImpl implements Literal {
 
     public String toString() {
         try {
-            String str = value.getString();
-            if (str.indexOf(' ') != -1) {
-                str = "\"" + str + "\"";
+            switch (value.getType()) {
+            case PropertyType.BINARY:
+                return cast("BINARY");
+            case PropertyType.BOOLEAN:
+                return cast("BOOLEAN");
+            case PropertyType.DATE:
+                return cast("DATE");
+            case PropertyType.DECIMAL:
+                return cast("DECIMAL");
+            case PropertyType.DOUBLE:
+            case PropertyType.LONG:
+                return value.getString();
+            case PropertyType.NAME:
+                return cast("NAME");
+            case PropertyType.PATH:
+                return cast("PATH");
+            case PropertyType.REFERENCE:
+                return cast("REFERENCE");
+            case PropertyType.STRING:
+                return escape();
+            case PropertyType.URI:
+                return cast("URI");
+            case PropertyType.WEAKREFERENCE:
+                return cast("WEAKREFERENCE");
+            default:
+                return escape();
             }
-            return str;
         } catch (RepositoryException e) {
             return value.toString();
         }
     }
 
+    private String cast(String type) throws RepositoryException {
+        return "CAST(" + escape() + " AS " + type + ")";
+    }
 
+    private String escape() throws RepositoryException {
+        return "'" + value.getString().replace("'", "''") + "'";
+    }
 }

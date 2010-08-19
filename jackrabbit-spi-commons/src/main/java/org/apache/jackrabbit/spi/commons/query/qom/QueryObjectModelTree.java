@@ -235,11 +235,15 @@ public class QueryObjectModelTree extends AbstractQOMNode {
         StringBuilder builder = new StringBuilder();
 
         builder.append("SELECT ");
-        for (int i = 0; i < columns.length; i++) {
-            if (i > 0) {
-                builder.append(", ");
+        if (columns != null && columns.length > 0) {
+            for (int i = 0; i < columns.length; i++) {
+                if (i > 0) {
+                    builder.append(", ");
+                }
+                builder.append(columns[i]);
             }
-            builder.append(columns[i]);
+        } else {
+            builder.append("*");
         }
 
         builder.append(" FROM ");
@@ -248,6 +252,16 @@ public class QueryObjectModelTree extends AbstractQOMNode {
         if (constraint != null) {
             builder.append(" WHERE ");
             builder.append(constraint);
+        }
+
+        if (orderings != null && orderings.length > 0) {
+            builder.append(" ORDER BY ");
+            for (int i = 0; i < orderings.length; i++) {
+                if (i > 0) {
+                    builder.append(", ");
+                }
+                builder.append(orderings[i]);
+            }
         }
 
         return builder.toString();

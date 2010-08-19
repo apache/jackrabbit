@@ -93,4 +93,13 @@ public class DescendantNodeJoinConditionImpl
     public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
         return visitor.visit(this, data);
     }
+
+    //------------------------< Object >----------------------------------------
+
+    public String toString() {
+        String descendant = getDescendantSelectorName();
+        String ancestor = getAncestorSelectorName();
+        return "ISDESCENDANTNODE(" + descendant + ", " + ancestor + ")";
+    }
+
 }
