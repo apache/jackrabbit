@@ -1397,11 +1397,11 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
-                public Iterator<Authorizable> findAuthorizables(String propertyName, String value) throws RepositoryException {
+                public Iterator<Authorizable> findAuthorizables(String relPath, String value) throws RepositoryException {
                     return null;
                 }
 
-                public Iterator<Authorizable> findAuthorizables(String propertyName, String value, int searchType) throws RepositoryException {
+                public Iterator<Authorizable> findAuthorizables(String relPath, String value, int searchType) throws RepositoryException {
                     return null;
                 }
 

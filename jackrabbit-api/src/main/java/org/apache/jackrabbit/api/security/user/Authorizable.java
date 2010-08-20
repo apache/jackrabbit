@@ -104,61 +104,76 @@ public interface Authorizable {
     void remove() throws RepositoryException;
 
     /**
-     * Returns the names of properties present with <code>this</code> Authorizable.
+     * Returns the names of properties present with <code>this</code>
+     * Authorizable not taking possible relative paths into consideration.
+     * Same as {@link #getPropertyNames(String)} where the specified string
+     * is &quot;.&quot;.
+     *
+     * @return names of properties.
+     * @throws RepositoryException If an error occurs.
+     * @see #getProperty(String) where the specified relative path is simply an
+     * name.
+     * @see #hasProperty(String)
+     */
+    Iterator<String> getPropertyNames() throws RepositoryException;
+
+    /**
+     * Returns the names of properties present with <code>this</code>
+     * Authorizable at the specified relative path.
      *
      * @return names of properties.
      * @throws RepositoryException If an error occurs.
      * @see #getProperty(String)
      * @see #hasProperty(String)
      */
-    Iterator<String> getPropertyNames() throws RepositoryException;
+    Iterator<String> getPropertyNames(String relPath) throws RepositoryException;
 
     /**
      * Tests if a the property with specified name exists.
      *
-     * @param name The name of the property to be tested.
+     * @param relPath The relative path to the property to be tested.
      * @return <code>true</code> if a property with the given name exists.
      * @throws RepositoryException If an error occurs.
      * @see #getProperty(String)
      */
-    boolean hasProperty(String name) throws RepositoryException;
+    boolean hasProperty(String relPath) throws RepositoryException;
 
     /**
      * Set an arbitrary property to this <code>Authorizable</code>.
      *
-     * @param name The name of the property to be added or modified.
+     * @param relPath The relative path of the property to be added or modified.
      * @param value The desired value.
      * @throws RepositoryException If the specified property could not be set.
      */
-    void setProperty(String name, Value value) throws RepositoryException;
+    void setProperty(String relPath, Value value) throws RepositoryException;
 
     /**
      * Set an arbitrary property to this <code>Authorizable</code>.
      *
-     * @param name The name of the property to be added or modified.
+     * @param relPath The relative path of the property to be added or modified.
      * @param value The desired property values.
      * @throws RepositoryException If the specified property could not be set.
      */
-    void setProperty(String name, Value[] value) throws RepositoryException;
+    void setProperty(String relPath, Value[] value) throws RepositoryException;
 
     /**
      * Returns the values for the properties with the specified name or
      * <code>null</code>.
      *
-     * @param name The name of the property to be retrieved.
+     * @param relPath Relative path of the property to be retrieved.
      * @return value of the property with the given name or <code>null</code>
      *         if no such property exists.
      * @throws RepositoryException If an error occurs.
      */
-    Value[] getProperty(String name) throws RepositoryException;
+    Value[] getProperty(String relPath) throws RepositoryException;
 
     /**
      * Removes the property with the given name.
      *
-     * @param name The name of the property to be removed.
-     * @return true If the property with the specified name was successfully
+     * @param relPath Relative path (or name) of the property to be removed.
+     * @return true If the property at the specified relPath was successfully
      *         removed; false if no such property was present.
      * @throws RepositoryException If an error occurs.
      */
-    boolean removeProperty(String name) throws RepositoryException;
+    boolean removeProperty(String relPath) throws RepositoryException;
 }

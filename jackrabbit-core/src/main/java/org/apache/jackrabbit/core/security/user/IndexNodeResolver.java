@@ -16,9 +16,14 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.commons.iterator.FilteringNodeIterator;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.ISO9075;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -27,12 +32,15 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * 
  */
 class IndexNodeResolver extends NodeResolver {
+
+    private static Logger log = LoggerFactory.getLogger(IndexNodeResolver.class);
 
     private final QueryManager queryManager;
 
@@ -48,6 +56,7 @@ class IndexNodeResolver extends NodeResolver {
     @Override
     public Node findNode(Name nodeName, Name ntName) throws RepositoryException {
         Query query = buildQuery(nodeName, ntName);
+        query.setLimit(1);        
         NodeIterator res = query.execute().getNodes();
         if (res.hasNext()) {
             return res.nextNode();
@@ -69,9 +78,8 @@ class IndexNodeResolver extends NodeResolver {
     }
 
     /**
-     * Search nodes. Take the arguments as search criteria.
-     * The queried value has to be a string fragment of one of the Properties
-     * contained in the given set. And the node have to be of a requested nodetype
+     * Search authorizable nodes of the specified node type having the specified
+     * properties with the specified value.
      *
      * @param propertyNames
      * @param value
@@ -87,6 +95,20 @@ class IndexNodeResolver extends NodeResolver {
         return query.execute().getNodes();
     }
 
+    @Override
+    public NodeIterator findNodes(Path relPath, String value, int authorizableType, boolean exact, long maxSize) throws RepositoryException {
+        Query query;
+        if (relPath.getLength() == 1) {
+            Set<Name> names = Collections.singleton(relPath.getNameElement().getName());
+            // search without nt-restriction in order not to limit the query to the
+            // authorizable nodes and filter non-matching results later.
+            query = buildQuery(value, names, null, exact, maxSize, getSearchRoot(authorizableType));
+        } else {
+            query = buildQuery(value, relPath, exact, maxSize, getSearchRoot(authorizableType));
+        }
+        return new ResultFilteringNodeIterator(query.execute().getNodes(), getAuthorizableTypePredicate(authorizableType, false));        
+    }
+
     //--------------------------------------------------------------------------
     /**
      *
@@ -95,8 +117,7 @@ class IndexNodeResolver extends NodeResolver {
      * @return
      * @throws RepositoryException
      */
-    private Query buildQuery(Name nodeName, Name ntName)
-            throws RepositoryException {
+    private Query buildQuery(Name nodeName, Name ntName) throws RepositoryException {
         StringBuilder stmt = new StringBuilder("/jcr:root");
         stmt.append(getSearchRoot(ntName));
         stmt.append("//element(");
@@ -108,25 +129,44 @@ class IndexNodeResolver extends NodeResolver {
     }
 
     /**
+     * 
+     * @param value
+     * @param props
+     * @param ntName
+     * @param exact
+     * @param maxSize
+     * @return
+     * @throws RepositoryException
+     */
+    private Query buildQuery(String value, Set<Name> props, Name ntName,
+                             boolean exact, long maxSize) throws RepositoryException {
+        String searchRoot = getSearchRoot(ntName);
+        return buildQuery(value, props, ntName, exact, maxSize, searchRoot);
+    }
+
+    /**
      *
      * @param value
      * @param props
      * @param ntName
      * @param exact
-     * @param maxSize Currently ignored!
+     * @param maxSize
      * @return
      * @throws RepositoryException
      */
     private Query buildQuery(String value, Set<Name> props, Name ntName,
-                             boolean exact, long maxSize)
-            throws RepositoryException {
+                             boolean exact, long maxSize, String searchRoot) throws RepositoryException {
         StringBuilder stmt = new StringBuilder("/jcr:root");
-        String searchRoot = getSearchRoot(ntName);
         if (!"/".equals(searchRoot)) {
             stmt.append(searchRoot);
         }
-        stmt.append("//element(*,");
-        stmt.append(getNamePathResolver().getJCRName(ntName));
+
+        if (ntName != null) {
+            stmt.append("//element(*,");
+            stmt.append(getNamePathResolver().getJCRName(ntName));
+        } else {
+            stmt.append("//element(*");
+        }
 
         if (value == null) {
             stmt.append(")");
@@ -157,6 +197,47 @@ class IndexNodeResolver extends NodeResolver {
         return q;
     }
 
+    /**
+     *
+     * @param value
+     * @param relPath
+     * @param exact
+     * @param maxSize
+     * @return
+     * @throws RepositoryException
+     */
+    private Query buildQuery(String value, Path relPath, boolean exact, long maxSize, String searchRoot)
+            throws RepositoryException {
+        StringBuilder stmt = new StringBuilder("/jcr:root");
+        if (!"/".equals(searchRoot)) {
+            stmt.append(searchRoot);
+        }
+
+        String p = getNamePathResolver().getJCRPath(relPath.getAncestor(1));
+        stmt.append("//").append(p);
+
+        if (value != null) {
+            stmt.append("[");
+            Name prop = relPath.getNameElement().getName();
+            stmt.append((exact) ? "@" : "jcr:like(@");
+            String pName = getNamePathResolver().getJCRName(prop);
+            stmt.append(ISO9075.encode(pName));
+            if (exact) {
+                stmt.append("='");
+                stmt.append(value.replaceAll("'", "''"));
+                stmt.append("'");
+            } else {
+                stmt.append(",'%");
+                stmt.append(escapeForQuery(value));
+                stmt.append("%')");
+            }
+            stmt.append("]");
+        }
+        Query q = queryManager.createQuery(stmt.toString(), Query.XPATH);
+        q.setLimit(maxSize);
+        return q;
+    }
+
     private static String escapeForQuery(String value) {
         StringBuilder ret = new StringBuilder();
         for (int i = 0; i < value.length(); i++) {
@@ -170,5 +251,39 @@ class IndexNodeResolver extends NodeResolver {
             }
         }
         return ret.toString();
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * 
+     */
+    private class ResultFilteringNodeIterator extends FilteringNodeIterator {
+
+        private Set<String> authorizableIDs;
+
+        private ResultFilteringNodeIterator(NodeIterator base, AuthorizableTypePredicate filter) {
+            super(base, filter);
+        }
+
+        @Override
+        protected Node seekNext() {
+            if (authorizableIDs == null) {
+                authorizableIDs = new HashSet<String>();
+            }
+            Node n = null;
+            while (n == null && base.hasNext()) {
+                NodeImpl nextRes = (NodeImpl) base.nextNode();
+                Node authorizableNode = ((AuthorizableTypePredicate) filter).getAuthorizableNode(nextRes);
+                try {
+                    if (authorizableNode != null && authorizableIDs.add(authorizableNode.getIdentifier())) {
+                        n = authorizableNode;
+                    }
+                } catch (RepositoryException e) {
+                    log.warn(e.getMessage());
+                }
+            }
+            return n;
+        }
+
     }
 }

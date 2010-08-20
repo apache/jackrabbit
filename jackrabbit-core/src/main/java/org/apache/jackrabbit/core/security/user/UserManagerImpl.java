@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ import javax.jcr.version.VersionException;
 
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -443,30 +445,46 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * @see UserManager#findAuthorizables(String,String)
      */
-    public Iterator<Authorizable> findAuthorizables(String propertyName, String value) throws RepositoryException {
-        return findAuthorizables(propertyName, value, SEARCH_TYPE_AUTHORIZABLE);
+    public Iterator<Authorizable> findAuthorizables(String relPath, String value) throws RepositoryException {
+        return findAuthorizables(relPath, value, SEARCH_TYPE_AUTHORIZABLE);
     }
 
     /**
      * @see UserManager#findAuthorizables(String,String, int)
      */
-    public Iterator<Authorizable> findAuthorizables(String propertyName, String value, int searchType)
+    public Iterator<Authorizable> findAuthorizables(String relPath, String value, int searchType)
             throws RepositoryException {
-        Name name = session.getQName(propertyName);
-        Name ntName;
-        switch (searchType) {
-            case SEARCH_TYPE_AUTHORIZABLE:
-                ntName = NT_REP_AUTHORIZABLE;
-                break;
-            case SEARCH_TYPE_GROUP:
-                ntName = NT_REP_GROUP;
-                break;
-            case SEARCH_TYPE_USER:
-                ntName = NT_REP_USER;
-                break;
-            default: throw new IllegalArgumentException("Invalid search type " + searchType);
+        if (searchType < SEARCH_TYPE_USER || searchType > SEARCH_TYPE_AUTHORIZABLE) {
+            throw new IllegalArgumentException("Invalid search type " + searchType);
         }
-        NodeIterator nodes = authResolver.findNodes(name, value, ntName, true);
+
+        Path path = session.getQPath(relPath);
+        NodeIterator nodes;
+        if (relPath.indexOf('/') == -1) {
+            // search for properties somewhere below an authorizable node
+            nodes = authResolver.findNodes(path, value, searchType, true, Long.MAX_VALUE);
+        } else {
+            path = path.getNormalizedPath();
+            if (path.getLength() == 1) {
+                // only search below the authorizable node
+                Name ntName;
+                switch (searchType) {
+                    case SEARCH_TYPE_GROUP:
+                        ntName = NT_REP_GROUP;
+                        break;
+                    case SEARCH_TYPE_USER:
+                        ntName = NT_REP_USER;
+                        break;
+                    default:
+                        ntName = NT_REP_AUTHORIZABLE;
+                }
+                nodes = authResolver.findNodes(path.getNameElement().getName(), value, ntName, true);
+            } else {
+                // search below authorizable nodes but take some path constraints
+                // into account.
+                nodes = authResolver.findNodes(path, value, searchType, true, Long.MAX_VALUE);            
+            }
+        }
         return new AuthorizableIterator(nodes);
     }
 

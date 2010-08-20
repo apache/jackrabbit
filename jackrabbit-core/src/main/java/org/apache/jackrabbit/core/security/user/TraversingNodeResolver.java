@@ -17,9 +17,13 @@
 
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.commons.predicate.Predicate;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +37,10 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 
@@ -85,11 +91,12 @@ class TraversingNodeResolver extends NodeResolver {
         if (getSession().nodeExists(sr)) {
             try {
                 Node root = getSession().getNode(sr);
-                NodeIterator nodes = collectNodes(value,
-                        Collections.singleton(propertyName), ntName,
-                        root.getNodes(), true, 1);
-                if (nodes.hasNext()) {
-                    return nodes.nextNode();
+                Set<Node> matchSet = new HashSet<Node>();
+                collectNodes(value, Collections.singleton(propertyName), ntName, root.getNodes(), matchSet, true, 1);
+
+                NodeIterator it = new NodeIteratorAdapter(matchSet);
+                if (it.hasNext()) {
+                    return it.nextNode();
                 }
             } catch (PathNotFoundException e) {
                 // should not get here
@@ -109,7 +116,33 @@ class TraversingNodeResolver extends NodeResolver {
         if (getSession().nodeExists(sr)) {
             try {
                 Node root = getSession().getNode(sr);
-                return collectNodes(value, propertyNames, ntName, root.getNodes(), exact, maxSize);
+                Set<Node> matchSet = new HashSet<Node>();
+                collectNodes(value, propertyNames, ntName, root.getNodes(), matchSet, exact, maxSize);
+                return new NodeIteratorAdapter(matchSet);
+            } catch (PathNotFoundException e) {
+                // should not get here
+                log.warn("Error while retrieving node " + sr);
+            }
+        } // else: searchRoot does not exist yet -> omit the search
+        return NodeIteratorAdapter.EMPTY;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public NodeIterator findNodes(Path relPath, String value, int authorizableType, boolean exact, long maxSize) throws RepositoryException {
+        String sr = getSearchRoot(authorizableType);
+        if (getSession().nodeExists(sr)) {
+            try {
+                String path = getNamePathResolver().getJCRPath(relPath);
+                AuthorizableTypePredicate pred = getAuthorizableTypePredicate(authorizableType, relPath.getLength() > 1);
+
+                Node root = getSession().getNode(sr);
+                Map<String, Node> matchingNodes = new HashMap<String, Node>();
+                collectNodes(value, path, pred, root.getNodes(), matchingNodes, exact, maxSize);
+
+                return new NodeIteratorAdapter(matchingNodes.values());
             } catch (PathNotFoundException e) {
                 // should not get here
                 log.warn("Error while retrieving node " + sr);
@@ -144,33 +177,13 @@ class TraversingNodeResolver extends NodeResolver {
     }
 
     /**
-     * searches the given value in the range of the given NodeIterator.
-     * recurses unitll all matching values in all configured props are found.
-     *
-     * @param value   the value to be found in the nodes
-     * @param props   property to be searched, or null if {@link javax.jcr.Item#getName()}
-     * @param ntName  to filter search
-     * @param nodes   range of nodes and descendants to be searched
-     * @param exact   if set to true the value has to match exactly else a
-     * substring is searched
-     * @param maxSize
-     * @return
-     */
-    private NodeIterator collectNodes(String value, Set<Name> props, Name ntName,
-                                      NodeIterator nodes, boolean exact,
-                                      long maxSize) {
-        Set<Node> matchSet = new HashSet<Node>();
-        collectNodes(value, props, ntName, nodes, matchSet, exact, maxSize);
-        return new NodeIteratorAdapter(matchSet);
-    }
-
-    /**
-     * searches the given value in the range of the given NodeIterator.
-     * recurses unitll all matching values in all configured properties are found.
+     * Searches the given value in the range of the given NodeIterator.
+     * This method is called recursively to look within the complete tree
+     * of authorizable nodes.
      *
      * @param value         the value to be found in the nodes
      * @param propertyNames property to be searched, or null if {@link javax.jcr.Item#getName()}
-     * @param nodeTypeName  name of nodetypes to search
+     * @param nodeTypeName  name of node types to search
      * @param itr           range of nodes and descendants to be searched
      * @param matchSet      Set of found matches to append results
      * @param exact         if set to true the value has to match exact
@@ -189,6 +202,25 @@ class TraversingNodeResolver extends NodeResolver {
                 if (node.hasNodes() && maxSize > 0) {
                     collectNodes(value, propertyNames, nodeTypeName,
                             node.getNodes(), matchSet, exact, maxSize);
+                }
+            } catch (RepositoryException e) {
+                log.warn("Internal error while accessing node", e);
+            }
+        }
+    }
+
+    private void collectNodes(String value, String relPath,
+                              AuthorizableTypePredicate predicate, NodeIterator itr,
+                              Map<String, Node> matchingNodes, boolean exact, long maxSize) {
+        while (itr.hasNext()) {
+            NodeImpl node = (NodeImpl) itr.nextNode();
+            try {
+                Node authNode = getMatchingNode(node, predicate, relPath, value, exact);
+                if (authNode != null) {
+                    matchingNodes.put(authNode.getIdentifier(), authNode);
+                    maxSize--;
+                } else if (node.hasNodes() && maxSize > 0) {
+                    collectNodes(value, relPath, predicate, node.getNodes(), matchingNodes, exact, maxSize);
                 }
             } catch (RepositoryException e) {
                 log.warn("Internal error while accessing node", e);
@@ -243,6 +275,39 @@ class TraversingNodeResolver extends NodeResolver {
             }
         }
         return match;
+    }
+
+    /**
+     *
+     * @param node
+     * @param predicate
+     * @param relPath
+     * @param value
+     * @param exact
+     * @return
+     * @throws RepositoryException
+     */
+    private static Node getMatchingNode(NodeImpl node, AuthorizableTypePredicate predicate,
+                                        String relPath, String value,
+                                        boolean exact) throws RepositoryException {
+        boolean match = false;
+        Node authNode = predicate.getAuthorizableNode(node);
+        if (authNode != null && node.hasProperty(relPath)) {
+            try {
+                Property prop = node.getProperty(relPath);
+                if (prop.isMultiple()) {
+                    Value[] values = prop.getValues();
+                    for (int i = 0; i < values.length && !match; i++) {
+                        match = matches(value, values[i].getString(), exact);
+                    }
+                } else {
+                    match = matches(value, prop.getString(), exact);
+                }
+            } catch (PatternSyntaxException pe) {
+                log.debug("couldn't search for {}, pattern invalid: {}", value, pe.getMessage());
+            }
+        }
+        return (match) ? authNode : null;
     }
 
     private static boolean matches(String value, String toMatch, boolean exact) {

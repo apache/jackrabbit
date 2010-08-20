@@ -172,6 +172,10 @@ public class SimpleCredentialsAuthenticationTest extends AbstractJCRTest {
             return null;
         }
 
+        public Iterator<String> getPropertyNames(String relPath) throws RepositoryException {
+            return null;
+        }
+
         public boolean hasProperty(String name) throws RepositoryException {
             return false;
         }

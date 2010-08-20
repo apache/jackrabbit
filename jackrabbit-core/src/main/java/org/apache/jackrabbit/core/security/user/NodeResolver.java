@@ -24,16 +24,24 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.commons.predicate.Predicate;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Resolver: searches for Principals stored in Nodes of a {@link javax.jcr.Workspace}
- * which match a certain criteria<p>
- * The principalNames are assumed to be stored in properties.
+ * Resolver: searches for user and/or groups stored in Nodes of a {@link javax.jcr.Workspace}
+ * which match a certain criteria
  */
 abstract class NodeResolver {
+
+    private static Logger log = LoggerFactory.getLogger(NodeResolver.class);
 
     private final Session session;
     private final NamePathResolver resolver;
@@ -109,7 +117,7 @@ abstract class NodeResolver {
     }
 
     /**
-     * Search nodes. Take the arguments as search cirteria.
+     * Search nodes. Take the arguments as search criteria.
      * The queried value has to be a string fragment of one of the Properties
      * contained in the given set. And the node have to be of a requested nodetype
      *
@@ -124,6 +132,23 @@ abstract class NodeResolver {
     public abstract NodeIterator findNodes(Set<Name> propertyNames, String value,
                                            Name ntName, boolean exact, long maxSize)
             throws RepositoryException;
+
+    /**
+     * Search all properties underneath an authorizable of the specified type
+     * that match the specified value and relative path. If the relative path
+     * consists of a single name element the path constraint is omitted.
+     * 
+     * @param relPath
+     * @param value
+     * @param authorizableType
+     * @param exact
+     * @param maxSize
+     * @return
+     * @throws RepositoryException
+     */
+    public abstract NodeIterator findNodes(Path relPath, String value,
+                                           int authorizableType, boolean exact,
+                                           long maxSize) throws RepositoryException;
 
     /**
      * @return Session this instance has been constructed with.
@@ -155,6 +180,93 @@ abstract class NodeResolver {
             searchRoot = authorizableSearchRoot;
         }
         return searchRoot;
+    }
+
+    /**
+     * @param authorizableType
+     * @return The path of search root for the specified authorizable type.
+     */
+    String getSearchRoot(int authorizableType) {
+        switch (authorizableType) {
+            case UserManager.SEARCH_TYPE_USER:
+                return userSearchRoot;
+            case UserManager.SEARCH_TYPE_GROUP:
+                return groupSearchRoot;
+            default:
+                return authorizableSearchRoot;
+        }
+    }
+
+    /**
+     * 
+     * @param authorizableType
+     * @param exact If exact is true, the predicate only evaluates to true if the
+     * passed node is of the required authorizable node type. Otherwise, all
+     * ancestors are taken into account as well.
+     * @return a new AuthorizableTypePredicate instance.
+     */
+    AuthorizableTypePredicate getAuthorizableTypePredicate(int authorizableType, boolean exact) {
+        return new AuthorizableTypePredicate(authorizableType, exact);
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     *
+     */
+    class AuthorizableTypePredicate implements Predicate {
+
+        private final int authorizableType;
+        private final boolean exact;
+
+        private AuthorizableTypePredicate(int authorizableType, boolean exact) {
+            this.authorizableType = authorizableType;
+            this.exact = exact;
+        }
+
+        /**
+         * @see Predicate#evaluate(Object)
+         */
+        public boolean evaluate(Object object) {
+            if (object instanceof NodeImpl) {
+                Node n = getAuthorizableNode((NodeImpl) object);
+                return n != null;
+            }
+            return false;
+        }
+
+        Node getAuthorizableNode(NodeImpl n) {
+            try {
+                if (matches(n)) {
+                    return n;
+                }
+
+                if (!exact) {
+                    // walk up the node hierarchy to verify it is a child node
+                    // of an authorizable node of the expected type.
+                    while (n.getDepth() > 0) {
+                        n = (NodeImpl) n.getParent();
+                        if (matches(n)) {
+                            return n;
+                        }
+                    }
+                }
+            } catch (RepositoryException e) {
+                log.debug(e.getMessage());
+            }
+            return null;
+        }
+
+        private boolean matches(NodeImpl result) throws RepositoryException {
+            Name ntName = ((NodeTypeImpl) result.getPrimaryNodeType()).getQName();
+            switch (authorizableType) {
+                case UserManager.SEARCH_TYPE_GROUP:
+                    return UserConstants.NT_REP_GROUP.equals(ntName);
+                case UserManager.SEARCH_TYPE_USER:
+                    return UserConstants.NT_REP_USER.equals(ntName);
+                default:
+                    return UserConstants.NT_REP_USER.equals(ntName) || UserConstants.NT_REP_GROUP.equals(ntName);
+            }
+        }
     }
 }
 

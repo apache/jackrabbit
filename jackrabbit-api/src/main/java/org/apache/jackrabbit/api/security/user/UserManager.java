@@ -67,27 +67,37 @@ public interface UserManager {
     Authorizable getAuthorizable(Principal principal) throws RepositoryException;
 
     /**
-     * Returns all <code>Authorizable</code>s that have
-     * {@link Authorizable#getProperty(String) property} with the given name and
-     * that Property equals the given value.
+     * Returns all <code>Authorizable</code>s that have a
+     * {@link Authorizable#getProperty(String) property} with the given relative
+     * path (or name) that matches the specified value.
+     * <p/>
+     * If a relative path with more than one segment is specified only properties
+     * exactly matching that patch will be returned. If, however, a name is
+     * specified all properties that may be retrieved using
+     * {@link Authorizable#getProperty(String)} will be searched for a match.
      *
-     * @param propertyName
+     * @param relPath A relative property path or name.
      * @param value
      * @return All <code>Authorizable</code>s that have a property with the given
      * name exactly matching the given value.
      * @throws RepositoryException If an error occurs.
      * @see Authorizable#getProperty(String)
      */
-    Iterator<Authorizable> findAuthorizables(String propertyName, String value) throws RepositoryException;
+    Iterator<Authorizable> findAuthorizables(String relPath, String value) throws RepositoryException;
 
     /**
-     * Returns all <code>Authorizable</code>s that have
-     * {@link Authorizable#getProperty(String) property} with the given name and
-     * that Property equals the given value. In contrast to
+     * Returns all <code>Authorizable</code>s that have a
+     * {@link Authorizable#getProperty(String) property} with the given relative
+     * path (or name) that matches the specified value. In contrast to
      * {@link #findAuthorizables(String, String)} the type of authorizable is
      * respected while executing the search.
+     * <p/>
+     * If a relative path with more than one segment is specified only properties
+     * exactly matching that path will be returned. If, however, a name is
+     * specified all properties that may be retrieved using
+     * {@link Authorizable#getProperty(String)} will be searched for a match.
      *
-     * @param propertyName
+     * @param relPath A relative property path or name.
      * @param value
      * @param searchType Any of the following constants:
      * <ul>
@@ -98,7 +108,7 @@ public interface UserManager {
      * @return An iterator of <code>Authorizable</code>.
      * @throws RepositoryException If an error occurs.
      */
-    Iterator<Authorizable> findAuthorizables(String propertyName, String value, int searchType) throws RepositoryException;
+    Iterator<Authorizable> findAuthorizables(String relPath, String value, int searchType) throws RepositoryException;
 
     /**
      * Creates an User for the given userID / password pair; neither of the
