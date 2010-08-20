@@ -57,6 +57,7 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefDiff;
 import org.apache.jackrabbit.spi.commons.nodetype.QNodeDefinitionBuilder;
 import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.slf4j.Logger;
@@ -326,7 +327,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws NoSuchNodeTypeException if <code>ntName</code> does not
      *                                 denote a registered node type.
      * @throws RepositoryException if another error occurs.
-     * @see #unregisterNodeTypes(Collection)
+     * @see #unregisterNodeTypes(Collection, boolean)
      */
     public void unregisterNodeType(Name ntName)
             throws NoSuchNodeTypeException, RepositoryException {
@@ -1812,8 +1813,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * Notify the listeners that a node type <code>ntName</code> has been unregistered.
-     * @param ntName node type name
+     * Notify the listeners that oone or more node types have been unregistered.
+     * @param names node type names
      */
     private void notifyUnregistered(Collection<Name> names) {
         // copy listeners to array to avoid ConcurrentModificationException
