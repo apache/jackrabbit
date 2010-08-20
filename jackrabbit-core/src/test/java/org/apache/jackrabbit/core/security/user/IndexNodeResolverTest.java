@@ -31,6 +31,7 @@ public class IndexNodeResolverTest extends NodeResolverTest {
 
     private static Logger log = LoggerFactory.getLogger(IndexNodeResolver.class);
 
+    @Override
     protected NodeResolver createNodeResolver(SessionImpl session) throws RepositoryException, NotExecutableException {
         return new IndexNodeResolver(session, session);
     }

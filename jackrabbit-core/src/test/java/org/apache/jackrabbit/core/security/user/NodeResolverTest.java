@@ -17,18 +17,17 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -40,14 +39,13 @@ import java.util.Iterator;
 /** <code>NodeResolverTest</code>... */
 public abstract class NodeResolverTest extends AbstractJCRTest {
 
-    private static Logger log = LoggerFactory.getLogger(NodeResolverTest.class);
-
     NodeResolver nodeResolver;
     UserManager umgr;
     String usersPath = UserConstants.USERS_PATH;
     String groupsPath = UserConstants.GROUPS_PATH;
     String authorizablesPath = UserConstants.AUTHORIZABLES_PATH;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -231,6 +229,60 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
             save();
         }
     }
+
+    /**
+     * 
+     * @throws NotExecutableException
+     * @throws RepositoryException
+     */
+    public void testFindNodesByRelPathProperties() throws NotExecutableException, RepositoryException {
+        Value[] vs = new Value[] {
+                superuser.getValueFactory().createValue("blub"),
+                superuser.getValueFactory().createValue("blib")
+        };
+
+        String relPath = "relPath/" + propertyName1;
+        String relPath2 = "another/" + propertyName1;
+        String relPath3 = "relPath/relPath/" + propertyName1;
+        UserImpl currentUser = getCurrentUser();
+        currentUser.setProperty(relPath, vs);
+        currentUser.setProperty(relPath2, vs);
+        currentUser.setProperty(relPath3, vs);        
+        save();
+
+        Path relQPath = ((SessionImpl) superuser).getQPath(relPath);
+        Path relQName = ((SessionImpl) superuser).getQPath(propertyName1);
+
+        try {
+            NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
+            // 1) findNodes(QPath.....
+            // relPath : "prop1" -> should find the currentuserNode
+            NodeIterator result = nr.findNodes(relQName, "blub", UserManager.SEARCH_TYPE_USER, false, Long.MAX_VALUE);
+            assertTrue("expected result", result.hasNext());
+            Node n = result.nextNode();
+            assertEquals(currentUser.getNode().getPath(), n.getPath());
+            assertFalse("expected no more results", result.hasNext());
+
+            // relPath : "relPath/prop1" -> should find the currentuserNode
+            result = nr.findNodes(relQPath, "blub", UserManager.SEARCH_TYPE_USER, false, Long.MAX_VALUE);
+            assertTrue("expected result", result.hasNext());
+            assertEquals(currentUser.getNode().getPath(), result.nextNode().getPath());
+            assertFalse("expected no more results", result.hasNext());
+
+            // 2) findNodes(Name.......)
+            // search by Name -> should not find deep property
+            Name propName = ((SessionImpl) superuser).getQName(propertyName1);            
+            result = nr.findNodes(propName, "blub", UserConstants.NT_REP_USER, false);
+            assertFalse("should not find result", result.hasNext());
+
+        } finally {
+            currentUser.removeProperty(relPath);
+            currentUser.removeProperty(relPath2);
+            currentUser.removeProperty(relPath3);            
+            save();
+        }
+    }
+
 
     public void testFindNodesWithNonExistingSearchRoot() throws NotExecutableException, RepositoryException {
         String searchRoot = nodeResolver.getSearchRoot(UserConstants.NT_REP_AUTHORIZABLE);

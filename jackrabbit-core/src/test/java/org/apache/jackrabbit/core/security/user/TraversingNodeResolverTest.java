@@ -28,6 +28,7 @@ public class TraversingNodeResolverTest extends NodeResolverTest {
 
     private static Logger log = LoggerFactory.getLogger(TraversingNodeResolverTest.class);
 
+    @Override
     protected NodeResolver createNodeResolver(SessionImpl session) throws RepositoryException, NotExecutableException {
         return new TraversingNodeResolver(session, session);
     }

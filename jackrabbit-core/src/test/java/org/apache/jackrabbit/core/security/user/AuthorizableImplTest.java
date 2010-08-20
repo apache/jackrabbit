@@ -351,6 +351,10 @@ public class AuthorizableImplTest extends AbstractUserTest {
                 return user.getPropertyNames();
             }
 
+            public Iterator<String> getPropertyNames(String relPath) throws RepositoryException {
+                return user.getPropertyNames(relPath);
+            }
+
             public boolean hasProperty(String name) throws RepositoryException {
                 return user.hasProperty(name);
             }
