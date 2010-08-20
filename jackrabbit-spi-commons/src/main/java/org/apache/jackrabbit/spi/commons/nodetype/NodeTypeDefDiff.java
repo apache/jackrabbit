@@ -16,23 +16,23 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
-
-import javax.jcr.PropertyType;
-
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+
+import javax.jcr.PropertyType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
@@ -142,7 +142,14 @@ public class NodeTypeDefDiff {
                 type = tmpType;
             }
 
+            // check abstract flag (MAJOR modification)
+            tmpType = abstractFlagDiff();
+            if (tmpType > type) {
+                type = tmpType;
+            }
+
             // no need to check orderableChildNodes flag (TRIVIAL modification)
+            // no need to check queryable flag (TRIVIAL modification)
 
             // check property definitions
             tmpType = buildPropDefDiffs();
@@ -220,10 +227,17 @@ public class NodeTypeDefDiff {
     }
 
     /**
-     * @return <code>true</code> if mixin diff
+     * @return <code>true</code> if mixin flag diff
      */
     public int mixinFlagDiff() {
         return oldDef.isMixin() != newDef.isMixin() ? MAJOR : NONE;
+    }
+
+    /**
+     * @return <code>true</code> if abstract flag diff
+     */
+    public int abstractFlagDiff() {
+        return oldDef.isAbstract() && !newDef.isAbstract() ? MAJOR : NONE;
     }
 
     /**
@@ -243,43 +257,38 @@ public class NodeTypeDefDiff {
          */
 
         int maxType = NONE;
-        QPropertyDefinition[] pda1 = oldDef.getPropertyDefs();
-        Map<Name, QPropertyDefinition> defs1 = new HashMap<Name, QPropertyDefinition>();
-        for (QPropertyDefinition aPda1 : pda1) {
-            defs1.put(aPda1.getName(), aPda1);
+        Map<QPropertyDefinitionId, QPropertyDefinition> oldDefs = new HashMap<QPropertyDefinitionId, QPropertyDefinition>();
+        for (QPropertyDefinition def : oldDef.getPropertyDefs()) {
+            oldDefs.put(new QPropertyDefinitionId(def), def);
         }
 
-        QPropertyDefinition[] pda2 = newDef.getPropertyDefs();
-        Map<Name, QPropertyDefinition> defs2 = new HashMap<Name, QPropertyDefinition>();
-        for (QPropertyDefinition aPda2 : pda2) {
-            defs2.put(aPda2.getName(), aPda2);
+        Map<QPropertyDefinitionId, QPropertyDefinition> newDefs = new HashMap<QPropertyDefinitionId, QPropertyDefinition>();
+        for (QPropertyDefinition def : newDef.getPropertyDefs()) {
+            newDefs.put(new QPropertyDefinitionId(def), def);
         }
 
         /**
          * walk through defs1 and process all entries found in
          * both defs1 & defs2 and those found only in defs1
          */
-        Iterator iter = defs1.keySet().iterator();
-        while (iter.hasNext()) {
-            Name name = (Name) iter.next();
-            QPropertyDefinition def1 = defs1.get(name);
-            QPropertyDefinition def2 = defs2.get(name);
+        for (Map.Entry<QPropertyDefinitionId, QPropertyDefinition> entry : oldDefs.entrySet()) {
+            QPropertyDefinitionId id = entry.getKey();
+            QPropertyDefinition def1 = entry.getValue();
+            QPropertyDefinition def2 = newDefs.get(id);
             PropDefDiff diff = new PropDefDiff(def1, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
             }
             propDefDiffs.add(diff);
-            defs2.remove(name);
+            newDefs.remove(id);
         }
 
         /**
          * defs2 by now only contains entries found in defs2 only;
          * walk through defs2 and process all remaining entries
          */
-        iter = defs2.keySet().iterator();
-        while (iter.hasNext()) {
-            Name name = (Name) iter.next();
-            QPropertyDefinition def = defs2.get(name);
+        for (Map.Entry<QPropertyDefinitionId, QPropertyDefinition> entry : newDefs.entrySet()) {
+            QPropertyDefinition def = entry.getValue();
             PropDefDiff diff = new PropDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -301,43 +310,40 @@ public class NodeTypeDefDiff {
 
         int maxType = NONE;
         QNodeDefinition[] cnda1 = oldDef.getChildNodeDefs();
-        Map<Name, QNodeDefinition> defs1 = new HashMap<Name, QNodeDefinition>();
-        for (QNodeDefinition aCnda1 : cnda1) {
-            defs1.put(aCnda1.getName(), aCnda1);
+        Map<QNodeDefinitionId, QNodeDefinition> defs1 = new HashMap<QNodeDefinitionId, QNodeDefinition>();
+        for (QNodeDefinition def1 : cnda1) {
+            defs1.put(new QNodeDefinitionId(def1), def1);
         }
 
         QNodeDefinition[] cnda2 = newDef.getChildNodeDefs();
-        Map<Name, QNodeDefinition> defs2 = new HashMap<Name, QNodeDefinition>();
-        for (QNodeDefinition aCnda2 : cnda2) {
-            defs2.put(aCnda2.getName(), aCnda2);
+        Map<QNodeDefinitionId, QNodeDefinition> defs2 = new HashMap<QNodeDefinitionId, QNodeDefinition>();
+        for (QNodeDefinition def2 : cnda2) {
+            defs2.put(new QNodeDefinitionId(def2), def2);
         }
 
         /**
          * walk through defs1 and process all entries found in
          * both defs1 & defs2 and those found only in defs1
          */
-        Iterator iter = defs1.keySet().iterator();
-        while (iter.hasNext()) {
-            Name name = (Name) iter.next();
-            QNodeDefinition def1 = defs1.get(name);
-            QNodeDefinition def2 = defs2.get(name);
+        for (Map.Entry<QNodeDefinitionId, QNodeDefinition> entry1 : defs1.entrySet()) {
+            QNodeDefinitionId id = entry1.getKey();
+            QNodeDefinition def1 = entry1.getValue();
+            QNodeDefinition def2 = defs2.get(id);
             ChildNodeDefDiff diff = new ChildNodeDefDiff(def1, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
             }
             childNodeDefDiffs.add(diff);
-            defs2.remove(name);
+            defs2.remove(id);
         }
 
         /**
          * defs2 by now only contains entries found in defs2 only;
          * walk through defs2 and process all remaining entries
          */
-        iter = defs2.keySet().iterator();
-        while (iter.hasNext()) {
-            Name name = (Name) iter.next();
-            QNodeDefinition def = defs2.get(name);
-            ChildNodeDefDiff diff = new ChildNodeDefDiff(null, def);
+        for (Map.Entry<QNodeDefinitionId, QNodeDefinition> entry2 : defs2.entrySet()) {
+            QNodeDefinition def2 = entry2.getValue();
+            ChildNodeDefDiff diff = new ChildNodeDefDiff(null, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
             }
@@ -548,6 +554,8 @@ public class NodeTypeDefDiff {
                 }
 
                 // no need to check defaultValues (TRIVIAL change)
+                // no need to check availableQueryOperators (TRIVIAL change)
+                // no need to check queryOrderable (TRIVIAL change)
 
                 if (type == TRIVIAL) {
                     int t1 = getOldDef().getRequiredType();
@@ -625,6 +633,100 @@ public class NodeTypeDefDiff {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Identifier used to identify corresponding property definitions
+     */
+    static class QPropertyDefinitionId {
+
+        Name declaringNodeType;
+        Name name;
+        int requiredType;
+        boolean definesResidual;
+        boolean isMultiple;
+
+        QPropertyDefinitionId(QPropertyDefinition def) {
+            declaringNodeType = def.getDeclaringNodeType();
+            name = def.getName();
+            requiredType = def.getRequiredType();
+            definesResidual = def.definesResidual();
+            isMultiple = def.isMultiple();
+        }
+
+        //---------------------------------------< java.lang.Object overrides >
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof QPropertyDefinitionId) {
+                QPropertyDefinitionId other = (QPropertyDefinitionId) obj;
+                return declaringNodeType.equals(other.declaringNodeType)
+                        && name.equals(other.name)
+                        && requiredType == other.requiredType
+                        && definesResidual == other.definesResidual
+                        && isMultiple == other.isMultiple;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int h = 17;
+            h = 37 * h + declaringNodeType.hashCode();
+            h = 37 * h + name.hashCode();
+            h = 37 * h + (definesResidual ? 11 : 43);
+            h = 37 * h + (isMultiple ? 11 : 43);
+            h = 37 * h + requiredType;
+            return h;
+        }
+    }
+
+    /**
+     * Identifier used to identify corresponding node definitions
+     */
+    static class QNodeDefinitionId {
+
+        Name declaringNodeType;
+        Name name;
+        Name[] requiredPrimaryTypes;
+
+        QNodeDefinitionId(QNodeDefinition def) {
+            declaringNodeType = def.getDeclaringNodeType();
+            name = def.getName();
+            requiredPrimaryTypes = def.getRequiredPrimaryTypes();
+            if (requiredPrimaryTypes == null || requiredPrimaryTypes.length == 0) {
+                requiredPrimaryTypes = new Name[]{NameConstants.NT_BASE};
+            }
+            Arrays.sort(requiredPrimaryTypes);
+        }
+
+        //---------------------------------------< java.lang.Object overrides >
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof QNodeDefinitionId) {
+                QNodeDefinitionId other = (QNodeDefinitionId) obj;
+                return declaringNodeType.equals(other.declaringNodeType)
+                        && name.equals(other.name)
+                        && Arrays.equals(requiredPrimaryTypes, other.requiredPrimaryTypes);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int h = 17;
+            h = 37 * h + declaringNodeType.hashCode();
+            h = 37 * h + name.hashCode();
+            for (int i = 0; i < requiredPrimaryTypes.length; i++) {
+                h = 37 * h + requiredPrimaryTypes[i].hashCode();
+            }
+            return h;
         }
     }
 }

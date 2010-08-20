@@ -139,7 +139,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
     //-------------------------------------------< java.lang.Object overrides >
     /**
      * Compares two item definitions for equality. Returns <code>true</code>
-     * if the given object is an item defintion and has the same attributes
+     * if the given object is an item definition and has the same attributes
      * as this item definition.
      *
      * @param obj the object to compare this item definition with
