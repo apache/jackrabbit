@@ -27,8 +27,8 @@ import javax.jcr.Session;
  */
 public class ConcurrentRenameTest extends AbstractConcurrencyTest {
 
-    private static final int NUM_MOVES = 1000;
-    private static final int NUM_THREADS = 20;
+    private static final int NUM_MOVES = 100;
+    private static final int NUM_THREADS = 2;
 
     public void testConcurrentRename() throws Exception {
         runTask(new Task() {

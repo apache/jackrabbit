@@ -36,8 +36,6 @@ public class WorkspaceManagementTest extends AbstractJCRTest {
         super.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
 
         workspace = superuser.getWorkspace();
-        superuser.getRootNode().addNode("foo" + System.currentTimeMillis());
-        superuser.save();
     }
 
     /**
