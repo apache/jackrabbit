@@ -167,7 +167,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         this.primaryItemName = primaryItemName;
         this.propertyDefs = getSerializablePropertyDefs(declaredPropDefs);
         this.childNodeDefs = getSerializableNodeDefs(declaredNodeDefs);
-        // make sure supertypes are sorted
+        // make sure super types are sorted
         SortedSet<Name> types = new TreeSet<Name>();
         types.addAll(Arrays.asList(supertypes));
         this.supertypes = types.toArray(new Name[types.size()]);
@@ -355,7 +355,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
             QNodeTypeDefinitionImpl other = (QNodeTypeDefinitionImpl) obj;
             return (name == null ? other.name == null : name.equals(other.name))
                     && (primaryItemName == null ? other.primaryItemName == null : primaryItemName.equals(other.primaryItemName))
-                    && Arrays.equals(getSupertypes(), other.getSupertypes())
+                    && new HashSet(Arrays.asList(getSupertypes())).equals(new HashSet(Arrays.asList(other.getSupertypes())))
                     && isMixin == other.isMixin
                     && hasOrderableChildNodes == other.hasOrderableChildNodes
                     && isAbstract == other.isAbstract

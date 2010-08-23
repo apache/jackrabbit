@@ -18,7 +18,6 @@ package org.apache.jackrabbit.test.api;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Workspace;
 import javax.jcr.NoSuchWorkspaceException;
 
@@ -37,6 +36,8 @@ public class WorkspaceManagementTest extends AbstractJCRTest {
         super.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
 
         workspace = superuser.getWorkspace();
+        superuser.getRootNode().addNode("foo" + System.currentTimeMillis());
+        superuser.save();
     }
 
     /**

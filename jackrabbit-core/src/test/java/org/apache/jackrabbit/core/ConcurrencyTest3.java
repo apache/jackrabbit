@@ -33,9 +33,9 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 public class ConcurrencyTest3 extends TestCase {
 
-    private static final int NUM_ITERATIONS = 1;
+    private static final int NUM_ITERATIONS = 5;
 
-    private static final int NUM_THREADS = 5;
+    private static final int NUM_THREADS = 10;
 
     private File repoDescriptor;
 
