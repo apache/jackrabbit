@@ -37,9 +37,26 @@ public class RangeIteratorAdapter implements RangeIterator {
         new RangeIteratorAdapter(Collections.EMPTY_LIST);
 
     /**
+     * Adapts the given iterator into a range iterator. The given
+     * instance is returned as-is if it already implements the
+     * {@link RangeIterator} interface. Otherwise the iterator is
+     * wrapped into a {@link RangeIteratorAdapter} instance.
+     * 
+     * @param iterator iterator to adapt
+     * @return adapted iterator
+     */
+    public static RangeIterator adapt(Iterator<?> iterator) {
+        if (iterator instanceof RangeIterator) {
+            return (RangeIterator) iterator;
+        } else {
+            return new RangeIteratorAdapter(iterator, -1);
+        }
+    }
+
+    /**
      * The adapted iterator instance.
      */
-    private final Iterator iterator;
+    private final Iterator<?> iterator;
 
     /**
      * Number of elements in the adapted iterator, or -1 if unknown.
@@ -57,7 +74,7 @@ public class RangeIteratorAdapter implements RangeIterator {
      * @param iterator adapted iterator
      * @param size size of the iterator, or -1 if unknown
      */
-    public RangeIteratorAdapter(Iterator iterator, long size) {
+    public RangeIteratorAdapter(Iterator<?> iterator, long size) {
         this.iterator = iterator;
         this.size = size;
         this.position = 0;
@@ -68,7 +85,7 @@ public class RangeIteratorAdapter implements RangeIterator {
      *
      * @param iterator adapted iterator
      */
-    public RangeIteratorAdapter(Iterator iterator) {
+    public RangeIteratorAdapter(Iterator<?> iterator) {
         this(iterator, -1);
     }
 
@@ -77,7 +94,7 @@ public class RangeIteratorAdapter implements RangeIterator {
      *
      * @param collection the collection to iterate
      */
-    public RangeIteratorAdapter(Collection collection) {
+    public RangeIteratorAdapter(Collection<?> collection) {
         this(collection.iterator(), collection.size());
     }
 

@@ -24,6 +24,8 @@ import javax.jcr.RangeIterator;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
+import org.apache.jackrabbit.commons.predicate.Predicate;
+
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
  * into {@link RowIterator}s.
@@ -51,8 +53,20 @@ public class RowIteratorAdapter extends RangeIteratorDecorator
      *
      * @param iterator iterator of {@link Row}s
      */
-    public RowIteratorAdapter(Iterator iterator) {
-        super(new RangeIteratorAdapter(iterator));
+    public RowIteratorAdapter(Iterator<?> iterator) {
+        super(RangeIteratorAdapter.adapt(iterator));
+    }
+
+    /**
+     * Creates a filtered adapter for the given {@link Iterator}
+     * and {@link Predicate).
+     *
+     * @since Apache Jackrabbit 2.2
+     * @param iterator row iterator
+     * @param predicate filtering predicate
+     */
+    public RowIteratorAdapter(Iterator<?> iterator, Predicate predicate) {
+        super(new FilteredRangeIterator(iterator, predicate));
     }
 
     /**
@@ -60,7 +74,7 @@ public class RowIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link Row}s
      */
-    public RowIteratorAdapter(Collection collection) {
+    public RowIteratorAdapter(Collection<?> collection) {
         super(new RangeIteratorAdapter(collection));
     }
 

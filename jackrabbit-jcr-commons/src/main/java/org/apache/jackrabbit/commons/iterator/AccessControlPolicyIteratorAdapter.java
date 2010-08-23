@@ -16,12 +16,15 @@
  */
 package org.apache.jackrabbit.commons.iterator;
 
-import javax.jcr.RangeIterator;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import javax.jcr.RangeIterator;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+
+import org.apache.jackrabbit.commons.predicate.Predicate;
 
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
@@ -37,21 +40,25 @@ public class AccessControlPolicyIteratorAdapter extends RangeIteratorDecorator
         new AccessControlPolicyIteratorAdapter(RangeIteratorAdapter.EMPTY);
 
     /**
-     * Creates an adapter for the given {@link RangeIterator}.
-     *
-     * @param iterator iterator of {@link AccessControlPolicy access control policies}.
-     */
-    public AccessControlPolicyIteratorAdapter(RangeIterator iterator) {
-        super(iterator);
-    }
-
-    /**
      * Creates an adapter for the given {@link Iterator}.
      *
      * @param iterator iterator of {@link AccessControlPolicy access control policies}.
      */
-    public AccessControlPolicyIteratorAdapter(Iterator iterator) {
-        super(new RangeIteratorAdapter(iterator));
+    public AccessControlPolicyIteratorAdapter(Iterator<?> iterator) {
+        super(RangeIteratorAdapter.adapt(iterator));
+    }
+
+    /**
+     * Creates a filtered adapter for the given {@link Iterator}
+     * and {@link Predicate).
+     *
+     * @since Apache Jackrabbit 2.2
+     * @param iterator access control policy iterator
+     * @param predicate filtering predicate
+     */
+    public AccessControlPolicyIteratorAdapter(
+            Iterator<?> iterator, Predicate predicate) {
+        super(new FilteredRangeIterator(iterator, predicate));
     }
 
     /**
@@ -59,7 +66,7 @@ public class AccessControlPolicyIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link AccessControlPolicy} objects.
      */
-    public AccessControlPolicyIteratorAdapter(Collection collection) {
+    public AccessControlPolicyIteratorAdapter(Collection<?> collection) {
         super(new RangeIteratorAdapter(collection));
     }
 
