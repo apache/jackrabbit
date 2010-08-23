@@ -40,15 +40,6 @@ public class RowIteratorAdapter extends RangeIteratorDecorator
         new RowIteratorAdapter(RangeIteratorAdapter.EMPTY);
 
     /**
-     * Creates an adapter for the given {@link RangeIterator}.
-     *
-     * @param iterator iterator of {@link Row}s
-     */
-    public RowIteratorAdapter(RangeIterator iterator) {
-        super(iterator);
-    }
-
-    /**
      * Creates an adapter for the given {@link Iterator}.
      *
      * @param iterator iterator of {@link Row}s
