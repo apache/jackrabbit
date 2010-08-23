@@ -69,7 +69,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      * Creates a new SPI node definition based on a JCR NodeDefinition.
      *
      * @param name              the name of the child item.
-     * @param declaringNodeType the delaring node type
+     * @param declaringNodeType the declaring node type
      * @param isAutoCreated     if this item is auto created.
      * @param isMandatory       if this is a mandatory item.
      * @param onParentVersion   the on parent version behaviour.
@@ -87,6 +87,10 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
                 onParentVersion, isProtected);
         this.defaultPrimaryType = defaultPrimaryType;
         this.requiredPrimaryTypes.addAll(Arrays.asList(requiredPrimaryTypes));
+        // sanitize field value
+        if (this.requiredPrimaryTypes.isEmpty()) {
+            this.requiredPrimaryTypes.add(NameConstants.NT_BASE);
+        }
         this.allowsSameNameSiblings = allowsSameNameSiblings;
     }
 
@@ -148,7 +152,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     //-------------------------------------------------------------< Object >---
     /**
      * Compares two node definitions for equality. Returns <code>true</code>
-     * if the given object is a node defintion and has the same attributes
+     * if the given object is a node definition and has the same attributes
      * as this node definition.
      *
      * @param obj the object to compare this node definition with
@@ -182,28 +186,14 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            // build hashCode (format: <declaringNodeType>/<name>/<requiredPrimaryTypes>)
-            StringBuffer sb = new StringBuffer();
-
-            if (getDeclaringNodeType() != null) {
-                sb.append(getDeclaringNodeType().toString());
-                sb.append('/');
-            }
-            if (definesResidual()) {
-                sb.append('*');
-            } else {
-                sb.append(getName().toString());
-            }
-            sb.append('/');
-            // set of required node type names, sorted in ascending order
-            TreeSet<Name> set = new TreeSet<Name>();
-            Name[] names = getRequiredPrimaryTypes();
-            set.addAll(Arrays.asList(names));
-            sb.append(set.toString());
-
-            hashCode = sb.toString().hashCode();
+            int h = super.hashCode();
+            h = 37 * h + (defaultPrimaryType == null ? 0 : defaultPrimaryType.hashCode());
+            h = 37 * h + requiredPrimaryTypes.hashCode();
+            h = 37 * h + (allowsSameNameSiblings ? 11 : 43);
+            hashCode = h;
         }
         return hashCode;
+
     }
 
     //-----------------------------------------------------------< internal >---

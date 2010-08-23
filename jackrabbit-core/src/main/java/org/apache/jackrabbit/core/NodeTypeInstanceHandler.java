@@ -63,7 +63,6 @@ public class NodeTypeInstanceHandler {
      * @param property property state
      * @param parent parent node state
      * @param def property definition
-     * @param userId user identifier associated with the current session
      * @throws RepositoryException if the default values could not be created
      */
     public void setDefaultValues(

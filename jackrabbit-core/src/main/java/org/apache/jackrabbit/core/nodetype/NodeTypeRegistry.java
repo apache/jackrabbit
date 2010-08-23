@@ -424,7 +424,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         String message =
-            "The following nodetype change contains non-trivial changes."
+            "The following node type change contains non-trivial changes."
             + "Up until now only trivial changes are supported."
             + " (see javadoc for "
             + NodeTypeDefDiff.class.getName()

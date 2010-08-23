@@ -229,7 +229,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
     //-------------------------------------------------------------< Object >---
     /**
      * Compares two property definitions for equality. Returns <code>true</code>
-     * if the given object is a property defintion and has the same attributes
+     * if the given object is a property definition and has the same attributes
      * as this property definition.
      *
      * @param obj the object to compare this property definition with
@@ -244,51 +244,38 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         }
         if (obj instanceof QPropertyDefinition) {
             QPropertyDefinition other = (QPropertyDefinition) obj;
+
             return super.equals(obj)
                     && requiredType == other.getRequiredType()
                     && multiple == other.isMultiple()
                     && fullTextSearchable == other.isFullTextSearchable()
                     && queryOrderable == other.isQueryOrderable()
-                    && Arrays.equals(valueConstraints, other.getValueConstraints())
-                    && Arrays.equals(defaultValues, other.getDefaultValues())
-                    && Arrays.equals(availableQueryOperators, other.getAvailableQueryOperators());
+                    && (valueConstraints == null || other.getValueConstraints() == null) ? (valueConstraints == other.getValueConstraints())
+                        : new HashSet(Arrays.asList(valueConstraints)).equals(new HashSet(Arrays.asList(other.getValueConstraints())))
+                    && (defaultValues == null || other.getDefaultValues() == null) ? (defaultValues == other.getDefaultValues())
+                        : new HashSet(Arrays.asList(defaultValues)).equals(new HashSet(Arrays.asList(other.getDefaultValues())))
+                    && new HashSet(Arrays.asList(availableQueryOperators)).equals(new HashSet(Arrays.asList(other.getAvailableQueryOperators())));
         }
         return false;
     }
 
     /**
-     * Overwrites {@link QItemDefinitionImpl#hashCode()}.
+     * Overrides {@link QItemDefinitionImpl#hashCode()}.
      *
-     * @return the hashcode
+     * @return the hash code
      */
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            // build hashCode (format: <declaringNodeType>/<name>/<requiredType>/<multiple>)
-            StringBuffer sb = new StringBuffer();
-
-            sb.append(getDeclaringNodeType().toString());
-            sb.append('/');
-            if (definesResidual()) {
-                sb.append('*');
-            } else {
-                sb.append(getName().toString());
-            }
-            sb.append('/');
-            sb.append(requiredType);
-            sb.append('/');
-            sb.append(multiple ? 1 : 0);
-            sb.append('/');
-            sb.append(fullTextSearchable ? 1 : 0);
-            sb.append('/');
-            sb.append(queryOrderable ? 1 : 0);
-            sb.append('/');
-            Set<String> s = new HashSet<String>();
-            String[] names = getAvailableQueryOperators();
-            s.addAll(Arrays.asList(names));
-            sb.append(s.toString());
-
-            hashCode = sb.toString().hashCode();
+            int h = super.hashCode();
+            h = 37 * h + requiredType;
+            h = 37 * h + (multiple ? 11 : 43);
+            h = 37 * h + (queryOrderable ? 11 : 43);
+            h = 37 * h + (fullTextSearchable ? 11 : 43);
+            h = 37 * h + ((valueConstraints != null) ? new HashSet(Arrays.asList(valueConstraints)).hashCode() : 0);
+            h = 37 * h + ((defaultValues != null) ? new HashSet(Arrays.asList(defaultValues)).hashCode() : 0);
+            h = 37 * h + new HashSet(Arrays.asList(availableQueryOperators)).hashCode();
+            hashCode = h;
         }
         return hashCode;
     }
@@ -296,7 +283,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
     //-----------------------------------------------------------< internal >---
 
     /**
-     * Convers JCR {@link Value}s to {@link QValue}s.
+     * Converts JCR {@link Value}s to {@link QValue}s.
      *
      * @param values   the JCR values.
      * @param resolver the name/path resolver of the session that provided the
@@ -310,13 +297,14 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
                                           NamePathResolver resolver,
                                           QValueFactory factory)
             throws RepositoryException {
-        QValue[] defaultValues = null;
         if (values != null) {
-            defaultValues = new QValue[values.length];
+            QValue[] defaultValues = new QValue[values.length];
             for (int i = 0; i < values.length; i++) {
                 defaultValues[i] = ValueFormat.getQValue(values[i], resolver, factory);
             }
+            return defaultValues;
+        }  else {
+            return null;
         }
-        return defaultValues;
     }
 }

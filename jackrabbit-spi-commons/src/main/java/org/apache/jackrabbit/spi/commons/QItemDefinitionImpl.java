@@ -167,10 +167,17 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
     }
 
     /**
-     * See {@link QNodeDefinition#hashCode()} and {@link QPropertyDefinition#hashCode()}.
-     *
-     * @return the hashcode
+     * {@inheritDoc}
      */
     @Override
-    public abstract int hashCode();
+    public int hashCode() {
+        int h = 17;
+        h = 37 * h + getDeclaringNodeType().hashCode();
+        h = 37 * h + getName().hashCode();
+        h = 37 * h + getOnParentVersion();
+        h = 37 * h + (isProtected() ? 11 : 43);
+        h = 37 * h + (isMandatory() ? 11 : 43);
+        h = 37 * h + (isAutoCreated() ? 11 : 43);
+        return h;
+    }
 }

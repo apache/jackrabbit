@@ -43,8 +43,8 @@ import java.util.Set;
  * <b><code>NONE</code></b> inidcates that there is no modification at all.
  * <p/>
  * A <b><code>TRIVIAL</code></b> modification has no impact on the consistency
- * of existing content and does not affect existing/assigned definition id's.
- * The following modifications are considered <code>TRIVIAL</code>:
+ * of existing content. The following modifications are considered
+ * <code>TRIVIAL</code>:
  * <ul>
  * <li>changing node type <code>orderableChildNodes</code> flag
  * <li>changing node type <code>primaryItemName</code> value
@@ -53,27 +53,22 @@ import java.util.Set;
  * <li>changing property/child node <code>onParentVersion</code> value
  * <li>changing property/child node <code>mandatory</code> flag to <code>false</code>
  * <li>changing property/child node <code>autoCreated</code> flag
+ * <li>changing specific property/child node <code>name</code> to <code>*</code>
  * <li>changing child node <code>defaultPrimaryType</code>
  * <li>changing child node <code>sameNameSiblings</code> flag to <code>true</code>
- * <li>weaken property <code>valueConstraints</code> (e.g. by removing completely
- * or by adding to existing or by making a single constraint less restrictive)
- * <li>changing property <code>defaultValues</code>
- * </ul>
- * <p/>
- * A <b><code>MINOR</code></b> modification has no impact on the consistency
- * of existing content but <i>does</i> affect existing/assigned definition id's.
- * The following modifications are considered <code>MINOR</code>:
- * <ul>
- * <li>changing specific property/child node <code>name</code> to <code>*</code>
  * <li>weaken child node <code>requiredPrimaryTypes</code> (e.g. by removing)
+ * <li>weaken property <code>valueConstraints</code> (e.g. by removing a constraint
+ * or by making a specific constraint less restrictive)
+ * <li>changing property <code>defaultValues</code>
  * <li>changing specific property <code>requiredType</code> to <code>undefined</code>
  * <li>changing property <code>multiple</code> flag to <code>true</code>
  * </ul>
  * <p/>
- * A <b><code>MAJOR</code></b> modification <i>affects</i> the consistency of
- * existing content and <i>does</i> change existing/assigned definition id's.
- * All modifications that are neither <b><code>TRIVIAL</code></b> nor
- * <b><code>MINOR</code></b> are considered <b><code>MAJOR</code></b>.
+ * A <b><code>MAJOR</code></b> modification potentially <i>affects</i> the
+ * consistency of existing content.
+ *
+ * All modifications that are not <b><code>TRIVIAL</code></b> are considered
+ * <b><code>MAJOR</code></b>.
  *
  * @see #getType()
  */
@@ -84,20 +79,13 @@ public class NodeTypeDefDiff {
      */
     public static final int NONE = 0;
     /**
-     * trivial modification: does neither affect consistency of existing content
-     * nor does it change existing/assigned definition id's
+     * trivial modification: does not affect consistency of existing content
      */
     public static final int TRIVIAL = 1;
     /**
-     * minor modification: does not affect consistency of existing content but
-     * <i>does</i> change existing/assigned definition id's
-     */
-    public static final int MINOR = 2;
-    /**
      * major modification: <i>does</i> affect consistency of existing content
-     * and <i>does</i> change existing/assigned definition id's
      */
-    public static final int MAJOR = 3;
+    public static final int MAJOR = 2;
 
     private final QNodeTypeDefinition oldDef;
     private final QNodeTypeDefinition newDef;
@@ -195,13 +183,6 @@ public class NodeTypeDefDiff {
     }
 
     /**
-     * @return <code>true</code> if minor
-     */
-    public boolean isMinor() {
-        return type == MINOR;
-    }
-
-    /**
      * @return <code>true</code> if major
      */
     public boolean isMajor() {
@@ -212,12 +193,10 @@ public class NodeTypeDefDiff {
      * Returns the type of modification as expressed by the following constants:
      * <ul>
      * <li><b><code>NONE</code></b>: no modification at all
-     * <li><b><code>TRIVIAL</code></b>: does neither affect consistency of
-     * existing content nor does it change existing/assigned definition id's
-     * <li><b><code>MINOR</code></b>: does not affect consistency of existing
-     * content but <i>does</i> change existing/assigned definition id's
+     * <li><b><code>TRIVIAL</code></b>: does not affect consistency of
+     * existing content
      * <li><b><code>MAJOR</code></b>: <i>does</i> affect consistency of existing
-     * content and <i>does</i> change existing/assigned definition id's
+     * content
      * </ul>
      *
      * @return the type of modification
@@ -244,18 +223,15 @@ public class NodeTypeDefDiff {
      * @return <code>true</code> if supertypes diff
      */
     public int supertypesDiff() {
-        return !Arrays.equals(oldDef.getSupertypes(), newDef.getSupertypes()) ? MAJOR : NONE;
+        Set<Name> set1 = new HashSet<Name>(Arrays.asList(oldDef.getSupertypes()));
+        Set<Name> set2 = new HashSet<Name>(Arrays.asList(newDef.getSupertypes()));
+        return !set1.equals(set2) ? MAJOR : NONE;
     }
 
     /**
      * @return diff type
      */
     private int buildPropDefDiffs() {
-        /**
-         * propDefId determinants: declaringNodeType, name, requiredType, multiple
-         * todo: try also to match entries with modified id's
-         */
-
         int maxType = NONE;
         Map<QPropertyDefinitionId, QPropertyDefinition> oldDefs = new HashMap<QPropertyDefinitionId, QPropertyDefinition>();
         for (QPropertyDefinition def : oldDef.getPropertyDefs()) {
@@ -303,11 +279,6 @@ public class NodeTypeDefDiff {
      * @return diff type
      */
     private int buildChildNodeDefDiffs() {
-        /**
-         * nodeDefId determinants: declaringNodeType, name, requiredPrimaryTypes
-         * todo: try also to match entries with modified id's
-         */
-
         int maxType = NONE;
         QNodeDefinition[] cnda1 = oldDef.getChildNodeDefs();
         Map<QNodeDefinitionId, QNodeDefinition> defs1 = new HashMap<QNodeDefinitionId, QNodeDefinition>();
@@ -395,9 +366,6 @@ public class NodeTypeDefDiff {
             case TRIVIAL:
                 typeString = "TRIVIAL";
                 break;
-            case MINOR:
-                typeString = "MINOR";
-                break;
             case MAJOR:
                 typeString = "MAJOR";
                 break;
@@ -449,8 +417,8 @@ public class NodeTypeDefDiff {
                     } else {
                         if (!oldDef.definesResidual()
                                 && newDef.definesResidual()) {
-                            // just making a child item residual is a MINOR change
-                            type = MINOR;
+                            // just making a child item residual is a TRIVIAL change
+                            type = TRIVIAL;
                         } else {
                             if (!oldDef.getName().equals(newDef.getName())) {
                                 // changing the name of a child item is a MAJOR change
@@ -525,15 +493,12 @@ public class NodeTypeDefDiff {
             super.init();
             /**
              * only need to do comparison if base class implementation
-             * detected a non-MAJOR modification (i.e. TRIVIAL or MINOR);
+             * detected a non-MAJOR (i.e. TRIVIAL) modification;
              * no need to check for additions or removals as this is already
              * handled in base class implementation.
              */
-            if (isModified() && type != NONE && type != MAJOR) {
-                /**
-                 * check if valueConstraints were made more restrictive
-                 * (constraints are ORed)
-                 */
+            if (isModified() && type == TRIVIAL) {
+                // check if valueConstraints were made more restrictive
                 QValueConstraint[] vca1 = getOldDef().getValueConstraints();
                 Set<String> set1 = new HashSet<String>();
                 for (QValueConstraint aVca1 : vca1) {
@@ -545,12 +510,20 @@ public class NodeTypeDefDiff {
                     set2.add(aVca2.getString());
                 }
 
-                if (set1.isEmpty() && !set2.isEmpty()) {
-                    // added constraint where there was no constraint (MAJOR change)
-                    type = MAJOR;
-                } else if (!set2.containsAll(set1) && !set2.isEmpty()) {
-                    // removed existing constraint (MAJOR change)
-                    type = MAJOR;
+                if (!set1.equals(set2)) {
+                    // valueConstraints have been modified
+                    if (set2.containsAll(set1)) {
+                        // new set is a superset of old set
+                        // => constraints have been removed
+                        // (TRIVIAL change, since constraints are OR'ed)
+                        type = TRIVIAL;
+                    } else {
+                        // constraint have been removed/modified (MAJOR change);
+                        // since we're unable to semantically compare
+                        // value constraints (e.g. regular expressions), all
+                        // modifications are considered a MAJOR change.
+                        type = MAJOR;
+                    }
                 }
 
                 // no need to check defaultValues (TRIVIAL change)
@@ -562,8 +535,8 @@ public class NodeTypeDefDiff {
                     int t2 = getNewDef().getRequiredType();
                     if (t1 != t2) {
                         if (t2 == PropertyType.UNDEFINED) {
-                            // changed getRequiredType to UNDEFINED (MINOR change)
-                            type = MINOR;
+                            // changed getRequiredType to UNDEFINED (TRIVIAL change)
+                            type = TRIVIAL;
                         } else {
                             // changed getRequiredType to specific type (MAJOR change)
                             type = MAJOR;
@@ -573,8 +546,8 @@ public class NodeTypeDefDiff {
                     boolean b2 = getNewDef().isMultiple();
                     if (b1 != b2) {
                         if (b2) {
-                            // changed multiple flag to true (MINOR change)
-                            type = MINOR;
+                            // changed multiple flag to true (TRIVIAL change)
+                            type = TRIVIAL;
                         } else {
                             // changed multiple flag to false (MAJOR change)
                             type = MAJOR;
@@ -604,11 +577,11 @@ public class NodeTypeDefDiff {
             super.init();
             /**
              * only need to do comparison if base class implementation
-             * detected a non-MAJOR modification (i.e. TRIVIAL or MINOR);
+             * detected a non-MAJOR (i.e. TRIVIAL) modification;
              * no need to check for additions or removals as this is already
              * handled in base class implementation.
              */
-            if (isModified() && type != NONE && type != MAJOR) {
+            if (isModified() && type == TRIVIAL) {
 
                 boolean b1 = getOldDef().allowsSameNameSiblings();
                 boolean b2 = getNewDef().allowsSameNameSiblings();
@@ -623,11 +596,14 @@ public class NodeTypeDefDiff {
                     List<Name> l1 = Arrays.asList(getOldDef().getRequiredPrimaryTypes());
                     List<Name> l2 = Arrays.asList(getNewDef().getRequiredPrimaryTypes());
                     if (!l1.equals(l2)) {
+                        // requiredPrimaryTypes have been modified
                         if (l1.containsAll(l2)) {
-                            // removed requiredPrimaryType (MINOR change)
-                            type = MINOR;
+                            // old list is a superset of new list
+                            // => removed requiredPrimaryType (TRIVIAL change)
+                            type = TRIVIAL;
                         } else {
-                            // added requiredPrimaryType (MAJOR change)
+                            // added/modified requiredPrimaryType (MAJOR change)
+                            // todo check whether aggregate of old requiredTypes would include aggregate of new requiredTypes => trivial change
                             type = MAJOR;
                         }
                     }
