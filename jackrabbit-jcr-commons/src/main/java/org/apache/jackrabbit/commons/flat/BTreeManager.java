@@ -124,7 +124,7 @@ public class BTreeManager implements TreeManager {
         if (maxChildren > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("maxChildren must not exceed " + Integer.MAX_VALUE);
         }
-        if (2 * minChildren < maxChildren) {
+        if (2 * minChildren > maxChildren) {
             throw new IllegalArgumentException("maxChildren must be at least twice minChildren");
         }
         if (order == null) {
