@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * A factory for new database connections.
  * Supported are regular JDBC drivers, as well as
  * JNDI resources.
- * 
+ *
  * FIXME: the registry currently is ClassLoader wide. I.e., if you start two repositories
  * then you share the registered datasources...
  */
@@ -48,7 +48,7 @@ public final class ConnectionFactory {
     private static final Logger log = LoggerFactory.getLogger(ConnectionFactory.class);
 
     /**
-     * The lock to protect the fields of this class. 
+     * The lock to protect the fields of this class.
      */
     private final Object lock = new Object();
 
@@ -76,7 +76,7 @@ public final class ConnectionFactory {
 
     /**
      * Registers a number of data sources.
-     * 
+     *
      * @param dsc the {@link DataSourceConfig} which contains the configuration
      */
     public void registerDataSources(DataSourceConfig dsc) throws RepositoryException {
@@ -107,7 +107,7 @@ public final class ConnectionFactory {
 
     /**
      * Retrieves a configured data source by logical name.
-     * 
+     *
      * @param logicalName the name of the {@code DataSource}
      * @return a {@code DataSource}
      * @throws RepositoryException if there is no {@code DataSource} with the given name
@@ -167,11 +167,11 @@ public final class ConnectionFactory {
                 keyToDataSource.put(key, ds);
             }
             return ds;
-        }        
+        }
     }
 
     /**
-     * 
+     *
      */
     public void close() {
         synchronized(lock) {
@@ -193,9 +193,9 @@ public final class ConnectionFactory {
 
     /**
      * Needed for pre-10R2 Oracle blob support....:(
-     * 
+     *
      * This method actually assumes that we are using commons DBCP 1.2.2.
-     * 
+     *
      * @param con the commons-DBCP {@code DelegatingConnection} to unwrap
      * @return the unwrapped connection
      */
@@ -216,7 +216,7 @@ public final class ConnectionFactory {
 
     /**
      * Create a new pooling data source or finds an existing JNDI data source (depends on driver).
-     * 
+     *
      * @param driver
      * @param url
      * @param user
@@ -267,7 +267,7 @@ public final class ConnectionFactory {
      * Returns the JDBC {@link DataSource} bound to the given name in
      * the JNDI {@link Context} identified by the given class.
      *
-     * @param contextClass class that is instantiated to get the JNDI context 
+     * @param contextClass class that is instantiated to get the JNDI context
      * @param name name of the DataSource within the JNDI context
      * @return the DataSource bound in JNDI
      * @throws RepositoryException if the JNDI context can not be accessed,
@@ -335,7 +335,7 @@ public final class ConnectionFactory {
         ds.setTestWhileIdle(true);
         ds.setTimeBetweenEvictionRunsMillis(1000);
         ds.setMaxActive(-1); // unlimited
-        ds.setValidationQuery(guessValidationQuery(url));   
+        ds.setValidationQuery(guessValidationQuery(url));
         ds.setAccessToUnderlyingConnectionAllowed(true);
         ds.setPoolPreparedStatements(true);
         ds.setMaxOpenPreparedStatements(-1); // unlimited
@@ -351,6 +351,8 @@ public final class ConnectionFactory {
             return "select 1";
         } else if (url.contains("oracle")) {
             return "select 'validationQuery' from dual";
+        } else if (url.contains("postgresql")) {
+            return "select 1";
         } else if (url.contains("h2")) {
             return "select 1";
         }
