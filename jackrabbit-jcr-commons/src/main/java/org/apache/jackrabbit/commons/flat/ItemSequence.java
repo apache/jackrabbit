@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.commons.flat;
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Set;
+import org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler;
+import org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
@@ -29,8 +28,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
-import org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler;
-import org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <p>
@@ -361,8 +361,13 @@ public abstract class ItemSequence {
 
     protected static class NodeSequenceImpl extends ItemSequence implements NodeSequence {
         private final InclusionPolicy<Node> inclusionPolicy = new InclusionPolicy<Node>() {
-            public boolean include(Node node) throws RepositoryException {
-                return treeManager.isLeaf(node);
+            public boolean include(Node node) {
+                try {
+                    return treeManager.isLeaf(node);
+                }
+                catch (RepositoryException e) {
+                    return false;
+                }
             }
         };
 
@@ -446,8 +451,13 @@ public abstract class ItemSequence {
     protected static class PropertySequenceImpl extends ItemSequence implements PropertySequence {
         private final InclusionPolicy<Property> inclusionPolicy = new InclusionPolicy<Property>() {
             private final Set<String> ignoredProperties = treeManager.getIgnoredProperties();
-            public boolean include(Property property) throws RepositoryException {
-                return !ignoredProperties.contains(property.getName());
+            public boolean include(Property property) {
+                try {
+                    return !ignoredProperties.contains(property.getName());
+                }
+                catch (RepositoryException e) {
+                    return false;
+                }
             }
         };
 
