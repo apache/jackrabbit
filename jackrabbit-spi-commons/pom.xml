@@ -33,6 +33,10 @@
   <name>Jackrabbit SPI Commons</name>
   <packaging>bundle</packaging>
 
+  <properties>
+    <sonar.exclusions>org/apache/jackrabbit/spi/commons/query/sql/*.java,org/apache/jackrabbit/spi/commons/query/xpath/*.java</sonar.exclusions>
+  </properties>
+
   <build>
     <plugins>
         <plugin>
