@@ -21,8 +21,10 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.RepositoryException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <code>GroupTest</code>...
@@ -360,6 +362,45 @@ public class GroupTest extends AbstractUserTest {
                 newGroup2.removeMember(auth);
                 newGroup2.remove();
                 save(superuser);
+            }
+        }
+    }
+
+    public void testDeeplyNestedGroups() throws NotExecutableException, RepositoryException {
+        Set<Group> groups = new HashSet<Group>();
+        try {
+            User auth = getTestUser(superuser);
+            Group topGroup = userMgr.createGroup(getTestPrincipal());
+
+            // Create chain of nested groups with auth member of bottom group
+            Group bottomGroup = topGroup;
+            for (int k = 0; k < 100; k++) {
+                Group g = userMgr.createGroup(getTestPrincipal());
+                groups.add(g);
+                bottomGroup.addMember(g);
+                bottomGroup = g;
+            }
+            bottomGroup.addMember(auth);
+
+            // Check that every groups has exactly one member
+            for (Group g : groups) {
+                Iterator<Authorizable> declaredMembers = g.getDeclaredMembers();
+                assertTrue(declaredMembers.hasNext());
+                declaredMembers.next();
+                assertFalse(declaredMembers.hasNext());
+            }
+
+            // Check that we get all members from the getMembers call
+            HashSet<Group> allGroups = new HashSet<Group>(groups);
+            for (Iterator<Authorizable> it = topGroup.getMembers(); it.hasNext(); ) {
+                Authorizable a = it.next();
+                assertTrue(a.equals(auth) || allGroups.remove(a));
+            }
+            assertTrue(allGroups.isEmpty());
+        }
+        finally {
+            for (Group g : groups) {
+                g.remove();
             }
         }
     }

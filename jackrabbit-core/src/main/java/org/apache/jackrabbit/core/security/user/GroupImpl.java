@@ -18,17 +18,18 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.flat.BTreeManager;
 import org.apache.jackrabbit.commons.flat.ItemSequence;
 import org.apache.jackrabbit.commons.flat.PropertySequence;
 import org.apache.jackrabbit.commons.flat.Rank;
 import org.apache.jackrabbit.commons.flat.TreeManager;
+import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -92,14 +94,14 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * @see Group#getDeclaredMembers()
      */
     public Iterator<Authorizable> getDeclaredMembers() throws RepositoryException {
-        return getMembers(false, UserManager.SEARCH_TYPE_AUTHORIZABLE).iterator();
+        return getMembers(false, UserManager.SEARCH_TYPE_AUTHORIZABLE);
     }
 
     /**
      * @see Group#getMembers()
      */
     public Iterator<Authorizable> getMembers() throws RepositoryException {
-        return getMembers(true, UserManager.SEARCH_TYPE_AUTHORIZABLE).iterator();
+        return getMembers(true, UserManager.SEARCH_TYPE_AUTHORIZABLE);
     }
 
     /**
@@ -189,7 +191,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * @return A collection of members of this group.
      * @throws RepositoryException If an error occurs while collecting the members.
      */
-    private Collection<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException {
+    private Iterator<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException {
         return getMembershipProvider(getNode()).getMembers(includeIndirect, type);
     }
 
@@ -205,7 +207,8 @@ class GroupImpl extends AuthorizableImpl implements Group {
     private boolean isCyclicMembership(AuthorizableImpl newMember) throws RepositoryException {
         if (newMember.isGroup()) {
             GroupImpl gr = (GroupImpl) newMember;
-            for (Authorizable member : gr.getMembers(true, UserManager.SEARCH_TYPE_GROUP)) {
+            for (Iterator<Authorizable> it = gr.getMembers(true, UserManager.SEARCH_TYPE_GROUP); it.hasNext(); ) {
+                Authorizable member = it.next();
                 GroupImpl grMemberImpl = (GroupImpl) member;
                 if (getNode().getUUID().equals(grMemberImpl.getNode().getUUID())) {
                     // found cyclic group membership
@@ -226,38 +229,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 userManager.isAutoSave());
 
         return ItemSequence.createPropertySequence(treeManager);
-    }
-
-    private void collectMembers(Value memberRef, Collection<Authorizable> members, boolean includeIndirect,
-                                int type) throws RepositoryException {
-
-        try {
-            NodeImpl member = (NodeImpl) getSession().getNodeByIdentifier(memberRef.getString());
-            if (member.isNodeType(NT_REP_GROUP)) {
-                if (type != UserManager.SEARCH_TYPE_USER) {
-                    Group group = userManager.createGroup(member);
-                    // only retrieve indirect group-members if the group is not
-                    // yet present (detected eventual circular membership).
-                    if (members.add(group) && includeIndirect) {
-                        members.addAll(((GroupImpl) group).getMembers(true, type));
-                    }
-                } // else: groups are ignored
-            } else if (member.isNodeType(NT_REP_USER)) {
-                if (type != UserManager.SEARCH_TYPE_GROUP) {
-                    User user = userManager.createUser(member);
-                    members.add(user);
-                }
-            } else {
-                // reference does point to an authorizable node -> not a
-                // member of this group -> ignore
-                log.debug("Group member entry with invalid node type {} -> " +
-                        "Not included in member set.", member.getPrimaryNodeType().getName());
-            }
-        } catch (ItemNotFoundException e) {
-            // dangling weak reference -> clean upon next write.
-            log.debug("Authorizable node referenced by {} doesn't exist any more -> " +
-                    "Ignored from member list.", getID());
-        }
     }
 
     //------------------------------------------------------< inner classes >---
@@ -357,10 +328,8 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     private interface MembershipProvider {
         boolean addMember(AuthorizableImpl authorizable) throws RepositoryException;
-
         boolean removeMember(AuthorizableImpl authorizable) throws RepositoryException;
-
-        Collection<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException;
+        Iterator<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException;
     }
 
     private class PropertyBasedMembershipProvider implements MembershipProvider {
@@ -428,14 +397,20 @@ class GroupImpl extends AuthorizableImpl implements Group {
             }
         }
 
-        public Collection<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException {
-            Collection<Authorizable> members = new HashSet<Authorizable>();
+        public Iterator<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException {
             if (node.hasProperty(P_MEMBERS)) {
-                for (Value member : node.getProperty(P_MEMBERS).getValues()) {
-                    collectMembers(member, members, includeIndirect, type);
+                Value[] members = node.getProperty(P_MEMBERS).getValues();
+
+                if (includeIndirect) {
+                    return includeIndirect(toAuthorizables(members, type));
+                }
+                else {
+                    return toAuthorizables(members, type);
                 }
             }
-            return members;
+            else {
+                return Iterators.empty();
+            }
         }
 
     }
@@ -520,18 +495,171 @@ class GroupImpl extends AuthorizableImpl implements Group {
             });
         }
 
-        public Collection<Authorizable> getMembers(boolean includeIndirect, int type)
-                throws RepositoryException {
-
-            Collection<Authorizable> members = new HashSet<Authorizable>();
+        public Iterator<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException {
             if (node.hasNode(N_MEMBERS)) {
-                for (Property member : getPropertySequence(node.getNode(N_MEMBERS), userManager)) {
-                    collectMembers(member.getValue(), members, includeIndirect, type);
+                PropertySequence members = getPropertySequence(node.getNode(N_MEMBERS), userManager);
+                if (includeIndirect) {
+                    return includeIndirect(toAuthorizables(members.iterator(), type));
+                }
+                else {
+                    return toAuthorizables(members.iterator(), type);
                 }
             }
-
-            return members;
+            else {
+                return Iterators.empty();
+            }
         }
 
     }
+
+    // -----------------------------------------------------< utility >---
+
+    /**
+     * Returns an iterator of authorizables which includes all indirect members of the given iterator
+     * of authorizables.
+     */
+    private Iterator<Authorizable> includeIndirect(final Iterator<Authorizable> authorizables) {
+        Iterator<Iterator<Authorizable>> indirectMembers = new Iterator<Iterator<Authorizable>>() {
+            public boolean hasNext() {
+                return authorizables.hasNext();
+            }
+
+            public Iterator<Authorizable> next() {
+                Authorizable next = authorizables.next();
+                return Iterators.iteratorChain(Iterators.singleton(next), indirect(next));
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            /**
+             * Returns the transitive closure over the members of this authorizable
+             */
+            private Iterator<Authorizable> indirect(Authorizable authorizable) {
+                if (authorizable.isGroup()) {
+                    try {
+                        return ((Group) authorizable).getMembers();
+                    }
+                    catch (RepositoryException e) {
+                        log.warn("Could not determine members of " + authorizable, e);
+                    }
+                }
+
+                return Iterators.empty();
+            }
+        };
+
+        return new LazyIteratorChain<Authorizable>(indirectMembers);
+    }
+
+    /**
+     * Map an array of values to an iterator of authorizables.
+     */
+    private Iterator<Authorizable> toAuthorizables(final Value[] members, int type) {
+        return new AuthorizableIterator(type) {
+            private int pos;
+
+            @Override
+            protected String getNextMemberRef() throws RepositoryException {
+                return pos < members.length
+                    ? members[pos++].getString()
+                    : null;
+            }
+        };
+    }
+
+    /**
+     * Map an iterator of properties to an iterator of authorizables.
+     */
+    private Iterator<Authorizable> toAuthorizables(final Iterator<Property> members, int type) {
+        return new AuthorizableIterator(type) {
+            @Override
+            protected String getNextMemberRef() throws RepositoryException {
+                return members.hasNext()
+                    ? members.next().getString()
+                    : null;
+            }
+        };
+    }
+
+    /**
+     * Iterator of authorizables of a specific type.
+     */
+    private abstract class AuthorizableIterator implements Iterator<Authorizable> {
+        private Authorizable next;
+        private final int type;
+
+        public AuthorizableIterator(int type) {
+            super();
+            this.type = type;
+        }
+
+        public boolean hasNext() {
+            prefetch();
+            return next != null;
+        }
+
+        public Authorizable next() {
+            prefetch();
+            if (next == null) {
+                throw new NoSuchElementException();
+            }
+
+            Authorizable element = next;
+            next = null;
+            return element;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Returns the reference value of the next node representing the next authorizable or
+         * <code>null</code> if there there are no more.
+         */
+        protected abstract String getNextMemberRef() throws RepositoryException;
+
+        private void prefetch() {
+            while (next == null) {
+                try {
+                    String memberRef = getNextMemberRef();
+                    if (memberRef == null) {
+                        return;
+                    }
+
+                    NodeImpl member = (NodeImpl) getSession().getNodeByIdentifier(memberRef);
+                    if (type != UserManager.SEARCH_TYPE_USER && member.isNodeType(NT_REP_GROUP)) {
+                        next = userManager.createGroup(member);
+                    }
+                    else if (type != UserManager.SEARCH_TYPE_GROUP && member.isNodeType(NT_REP_USER)) {
+                        next = userManager.createUser(member);
+                    }
+                    else {
+                        log.debug("Group member entry with invalid node type {} -> " +
+                                "Not included in member set.", member.getPrimaryNodeType().getName());
+                    }
+                }
+                catch (ItemNotFoundException e) {
+                    log.debug("Authorizable node referenced by {} doesn't exist any more -> " +
+                            "Ignored from member list.", safeGetID());
+                }
+                catch (RepositoryException e) {
+                    log.debug("Error pre-fetching member for " + safeGetID(), e);
+                }
+
+            }
+        }
+    }
+
+    private String safeGetID() {
+        try {
+            return getID();
+        }
+        catch (RepositoryException e) {
+            return getNode().toString();
+        }
+    }
+
 }

@@ -31,6 +31,7 @@ import java.util.NoSuchElementException;
 public class LazyIteratorChain<T> implements Iterator<T> {
     private final Iterator<Iterator<T>> iterators;
     private Iterator<T> currentIterator;
+    private Boolean hasNext;
 
     /**
      * Returns the concatenation of all iterators in <code>iterators</code>.
@@ -65,14 +66,20 @@ public class LazyIteratorChain<T> implements Iterator<T> {
     }
 
     public boolean hasNext() {
-        while ((currentIterator == null || !currentIterator.hasNext()) && iterators.hasNext()) {
-            currentIterator = iterators.next();
+        // Memoizing the result of hasNext is crucial to performance when recursively
+        // traversing tree structures.
+        if (hasNext == null) {
+            while ((currentIterator == null || !currentIterator.hasNext()) && iterators.hasNext()) {
+                currentIterator = iterators.next();
+            }
+            hasNext = currentIterator != null && currentIterator.hasNext();
         }
-        return currentIterator != null && currentIterator.hasNext();
+        return hasNext;
     }
 
     public T next() {
         if (hasNext()) {
+            hasNext = null;
             return currentIterator.next();
         }
         else {

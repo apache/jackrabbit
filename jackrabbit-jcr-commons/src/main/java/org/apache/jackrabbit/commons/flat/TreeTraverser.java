@@ -129,8 +129,13 @@ public final class TreeTraverser implements Iterable<Node> {
          * node is a node which does not have child nodes.
          */
         public static InclusionPolicy<Node> LEAVES = new InclusionPolicy<Node>() {
-            public boolean include(Node node) throws RepositoryException {
-                return !node.hasNodes();
+            public boolean include(Node node) {
+                try {
+                    return !node.hasNodes();
+                }
+                catch (RepositoryException e) {
+                    return false;
+                }
             }
         };
 
@@ -140,10 +145,8 @@ public final class TreeTraverser implements Iterable<Node> {
          * @param item The item under consideration
          * @return <code>true</code> when <code>item</code> should be included.
          *         <code>false</code> otherwise.
-         *
-         * @throws RepositoryException
          */
-        boolean include(T item) throws RepositoryException;
+        boolean include(T item);
     }
 
     /**
@@ -254,16 +257,11 @@ public final class TreeTraverser implements Iterable<Node> {
      */
     @SuppressWarnings("unchecked")
     private Iterator<Node> iterator(Node node) {
-        try {
-            if (inclusionPolicy.include(node)) {
-                return chain(singleton(node), chain(childIterators(node)));
-            }
-            else {
-                return chain(childIterators(node));
-            }
-        } catch (RepositoryException e) {
-            errorHandler.call(node, e);
-            return empty();
+        if (inclusionPolicy.include(node)) {
+            return chain(singleton(node), chain(childIterators(node)));
+        }
+        else {
+            return chain(childIterators(node));
         }
     }
 
@@ -341,12 +339,7 @@ public final class TreeTraverser implements Iterable<Node> {
         return new FilterIterator<T>(iterator, new Predicate() {
             @SuppressWarnings("unchecked")
             public boolean evaluate(Object object) {
-                try {
-                    return inclusionPolicy.include((T) object);
-                }
-                catch (RepositoryException ignore) {
-                    return true;
-                }
+                return inclusionPolicy.include((T) object);
             }
         });
     }
