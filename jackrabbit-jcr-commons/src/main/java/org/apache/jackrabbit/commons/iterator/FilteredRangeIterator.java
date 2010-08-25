@@ -25,8 +25,6 @@ import org.apache.jackrabbit.commons.predicate.Predicate;
 
 /**
  * Filtering decorator for iterators.
- *
- * @since Apache Jackrabbit 2.2
  */
 public class FilteredRangeIterator implements RangeIterator {
 

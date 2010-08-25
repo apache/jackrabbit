@@ -24,8 +24,6 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RangeIterator;
 
-import org.apache.jackrabbit.commons.predicate.Predicate;
-
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
  * into {@link PropertyIterator}s.
@@ -40,24 +38,21 @@ public class PropertyIteratorAdapter extends RangeIteratorDecorator
         new PropertyIteratorAdapter(RangeIteratorAdapter.EMPTY);
 
     /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link Property} instances
+     */
+    public PropertyIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
+
+    /**
      * Creates an adapter for the given {@link Iterator}.
      *
      * @param iterator iterator of {@link Property} instances
      */
-    public PropertyIteratorAdapter(Iterator<?> iterator) {
-        super(RangeIteratorAdapter.adapt(iterator));
-    }
-
-    /**
-     * Creates a filtered adapter for the given {@link Iterator}
-     * and {@link Predicate).
-     *
-     * @since Apache Jackrabbit 2.2
-     * @param iterator property iterator
-     * @param predicate filtering predicate
-     */
-    public PropertyIteratorAdapter(Iterator<?> iterator, Predicate predicate) {
-        super(new FilteredRangeIterator(iterator, predicate));
+    public PropertyIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
     }
 
     /**
@@ -65,7 +60,7 @@ public class PropertyIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link Property} instances
      */
-    public PropertyIteratorAdapter(Collection<?> collection) {
+    public PropertyIteratorAdapter(Collection collection) {
         super(new RangeIteratorAdapter(collection));
     }
 
