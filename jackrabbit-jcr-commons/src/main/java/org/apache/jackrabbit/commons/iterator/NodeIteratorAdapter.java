@@ -24,8 +24,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RangeIterator;
 
-import org.apache.jackrabbit.commons.predicate.Predicate;
-
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
  * into {@link NodeIterator}s.
@@ -40,24 +38,21 @@ public class NodeIteratorAdapter extends RangeIteratorDecorator
         new NodeIteratorAdapter(RangeIteratorAdapter.EMPTY);
 
     /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link Node}s
+     */
+    public NodeIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
+
+    /**
      * Creates an adapter for the given {@link Iterator}.
      *
      * @param iterator iterator of {@link Node}s
      */
-    public NodeIteratorAdapter(Iterator<?> iterator) {
-        super(RangeIteratorAdapter.adapt(iterator));
-    }
-
-    /**
-     * Creates a filtered adapter for the given {@link Iterator}
-     * and {@link Predicate).
-     *
-     * @since Apache Jackrabbit 2.2
-     * @param iterator node iterator
-     * @param predicate filtering predicate
-     */
-    public NodeIteratorAdapter(Iterator<?> iterator, Predicate predicate) {
-        super(new FilteredRangeIterator(iterator, predicate));
+    public NodeIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
     }
 
     /**
@@ -65,7 +60,7 @@ public class NodeIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link Node}s
      */
-    public NodeIteratorAdapter(Collection<?> collection) {
+    public NodeIteratorAdapter(Collection collection) {
         super(new RangeIteratorAdapter(collection));
     }
 
