@@ -48,10 +48,10 @@ class SystemSession extends SessionImpl {
     /**
      * Package private factory method
      *
-     * @param rep
-     * @param wspConfig
-     * @return
-     * @throws RepositoryException
+     * @param repositoryContext The repository context
+     * @param wspConfig The workspace configuration
+     * @return A new instance of <code>SystemSession</code>
+     * @throws RepositoryException If an error occurs
      */
     static SystemSession create(RepositoryImpl rep, WorkspaceConfig wspConfig)
             throws RepositoryException {
@@ -68,7 +68,9 @@ class SystemSession extends SessionImpl {
      * private constructor
      *
      * @param rep
-     * @param wspConfig
+     * @param subject The subject
+     * @param wspConfig The workspace configuration
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     private SystemSession(RepositoryImpl rep, Subject subject,
                           WorkspaceConfig wspConfig)
@@ -192,10 +194,9 @@ class SystemSession extends SessionImpl {
         /**
          * Always returns true.
          *
-         * @see AccessManager#canRead(Path)
-         * @param itemPath
+         * @see AccessManager#canRead(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.id.ItemId)
          */
-        public boolean canRead(Path itemPath) throws RepositoryException {
+        public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
             return true;
         }
 

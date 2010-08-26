@@ -38,7 +38,7 @@ import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -50,6 +50,7 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -425,26 +426,48 @@ public class ItemManager implements Dumpable, ItemStateListener {
         if (state == null) {
             throw new InvalidItemStateException(data.getId() + ": the item does not exist anymore");
         }
-        if (state.getStatus() == ItemState.STATUS_NEW &&
-                !data.getDefinition().isProtected()) {
-            // NEW items can always be read as long they have been added
-            // through the API and NOT by the system (i.e. protected props).
-            return true;
+        if (state.getStatus() == ItemState.STATUS_NEW) {
+            if (!data.getDefinition().isProtected()) {
+                /*
+                NEW items can always be read as long they have been added through
+                the API and NOT by the system (i.e. protected items).
+                */
+                return true;
+            } else {
+                /*
+                NEW protected (system) item:
+                need use the path to evaluate the effective permissions.
+                */
+                return (path == null) ?
+                        session.getAccessManager().isGranted(data.getId(), AccessManager.READ) :
+                        session.getAccessManager().isGranted(path, Permission.READ);
+            }
         } else {
-            return (path == null) ?
-                    canRead(data.getId()) :
-                    session.getAccessManager().canRead(path);
+            /* item is not NEW -> save to call acMgr.canRead(Path,ItemId) */
+            return session.getAccessManager().canRead(path, data.getId());
         }
     }
 
     /**
-     * @param id
-     * @return true if the item with the given <code>id</code> can be read;
+     * @param parent The item data of the parent node.
+     * @param childId
+     * @return true if the item with the given <code>childId</code> can be read;
      * <code>false</code> otherwise.
      * @throws RepositoryException
      */
-    private boolean canRead(ItemId id) throws RepositoryException {
-        return session.getAccessManager().isGranted(id, AccessManager.READ);
+    private boolean canRead(ItemData parent, ItemId childId) throws RepositoryException {
+        if (parent.getStatus() == ItemState.STATUS_EXISTING) {
+            /*
+             child item is for sure not NEW (because then the parent was modified).
+             safe to use AccessManager#canRead(Path, ItemId).
+             */
+            return session.getAccessManager().canRead(null, childId);
+        } else {
+            /*
+             child could be NEW -> don't use AccessManager#canRead(Path, ItemId)
+             */
+            return session.getAccessManager().isGranted(childId, AccessManager.READ);
+        }
     }
 
     //--------------------------------------------------< item access methods >
@@ -685,7 +708,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         NodeState state = (NodeState) data.getState();
         for (ChildNodeEntry entry : state.getChildNodeEntries()) {
             // make sure any of the properties can be read.
-            if (canRead(entry.getId())) {
+            if (canRead(data, entry.getId())) {
                 return true;
             }
         }
@@ -746,7 +769,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         while (iter.hasNext()) {
             Name propName = iter.next();
             // make sure any of the properties can be read.
-            if (canRead(new PropertyId(parentId, propName))) {
+            if (canRead(data, new PropertyId(parentId, propName))) {
                 return true;
             }
         }

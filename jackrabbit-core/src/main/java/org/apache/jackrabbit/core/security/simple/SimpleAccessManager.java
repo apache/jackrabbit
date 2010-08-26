@@ -167,7 +167,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         return internalIsGranted(parentPath, permissions);
     }
 
-    public boolean canRead(Path itemPath) throws RepositoryException {
+    public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
         return true;
     }
 

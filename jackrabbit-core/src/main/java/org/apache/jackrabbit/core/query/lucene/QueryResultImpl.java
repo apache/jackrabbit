@@ -371,8 +371,7 @@ public abstract class QueryResultImpl implements QueryResult {
             throws RepositoryException {
         for (ScoreNode node : nodes) {
             try {
-                // TODO: rather use AccessManager.canRead(Path)
-                if (node != null && !accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
+                if (node != null && !accessMgr.canRead(null, node.getNodeId())) {
                     return false;
                 }
             } catch (ItemNotFoundException e) {
