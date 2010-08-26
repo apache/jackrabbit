@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.performance;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.Arrays;
-
-import javax.jcr.SimpleCredentials;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+
+import javax.jcr.SimpleCredentials;
+
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.Arrays;
 
 public abstract class AbstractPerformanceTest {
 
@@ -83,6 +83,10 @@ public abstract class AbstractPerformanceTest {
         runTest(suite, new CreateManyChildNodesTest(), name);
         runTest(suite, new UpdateManyChildNodesTest(), name);
         runTest(suite, new TransientManyChildNodesTest(), name);
+        runTest(suite, new CreateUserTest(), name);
+        runTest(suite, new AddGroupMembersTest(), name);
+        runTest(suite, new GroupMemberLookupTest(), name);
+        runTest(suite, new GroupGetMembersTest(), name);
     }
 
     private void runTest(
