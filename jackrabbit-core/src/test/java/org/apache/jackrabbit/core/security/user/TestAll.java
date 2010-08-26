@@ -51,6 +51,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(DefaultPrincipalProviderTest.class);
 
+        suite.addTestSuite(UserAccessControlProviderTest.class);        
+
         return suite;
     }
 }
