@@ -21,6 +21,8 @@ import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -276,6 +278,53 @@ public class AccessManagerTest extends AbstractJCRTest {
             assertFalse(acMgr.isGranted(p, Permission.ALL));
             // not existing property:
             assertFalse(acMgr.isGranted(p, NameConstants.JCR_CREATED, Permission.ALL));
+        } finally {
+            s.logout();
+        }
+    }
+
+    public void testCanReadPathId() throws Exception {
+        Session s = getHelper().getReadOnlySession();
+        try {
+            AccessManager acMgr = getAccessManager(s);
+
+            ItemId id = ((NodeImpl) testRootNode).getId();
+            Path path = ((NodeImpl) testRootNode).getPrimaryPath();
+            assertTrue(acMgr.canRead(null, id));
+            assertTrue(acMgr.canRead(path, null));
+            assertTrue(acMgr.canRead(path, id));
+
+            id = ((PropertyImpl) testRootNode.getProperty(jcrPrimaryType)).getId();
+            path = ((PropertyImpl) testRootNode.getProperty(jcrPrimaryType)).getPrimaryPath();
+            assertTrue(acMgr.canRead(null, id));
+            assertTrue(acMgr.canRead(path, null));
+            assertTrue(acMgr.canRead(path, id));
+
+        } finally {
+            s.logout();
+        }
+
+    }
+
+    public void testCanReadNewId() throws Exception {
+        Session s = getHelper().getReadOnlySession();
+        try {
+            NodeImpl n = (NodeImpl) testRootNode.addNode(nodeName1);
+            PropertyImpl p = (PropertyImpl) n.setProperty(propertyName1, "somevalue");
+            try {
+                AccessManager acMgr = getAccessManager(s);
+                acMgr.canRead(null, n.getId());
+                fail("expected repositoryexception");
+            } catch (RepositoryException e) {
+                // success
+            }
+            try {
+                AccessManager acMgr = getAccessManager(s);
+                acMgr.canRead(null, p.getId());
+                fail("expected repositoryexception");
+            } catch (RepositoryException e) {
+                // success
+            }
         } finally {
             s.logout();
         }

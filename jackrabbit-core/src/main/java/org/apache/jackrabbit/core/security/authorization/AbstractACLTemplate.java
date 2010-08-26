@@ -76,12 +76,9 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
      * Return the list of entries, if they are held in a orderable list.
      *
      * @return the list of entries.
-     * @throws UnsupportedRepositoryOperationException If the implementation
-     * does not held the entries in a list.
-     * @throws RepositoryException
      * @see #orderBefore(AccessControlEntry, AccessControlEntry)
      */
-    protected abstract List<? extends AccessControlEntry> getEntries() throws UnsupportedRepositoryOperationException, RepositoryException;
+    protected abstract List<? extends AccessControlEntry> getEntries();
 
     //--------------------------------------< JackrabbitAccessControlPolicy >---
     /**
@@ -98,6 +95,20 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
     public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow)
             throws AccessControlException, RepositoryException {
         return addEntry(principal, privileges, isAllow, Collections.<String, Value>emptyMap());
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
+     */
+    public int size() {
+        return getEntries().size();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#isEmpty()
+     */
+    public boolean isEmpty() {
+        return getEntries().isEmpty();
     }
 
     /**
@@ -130,6 +141,14 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
     }
 
     //--------------------------------------------------< AccessControlList >---
+    /**
+     * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
+     */
+    public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {       
+        List<? extends AccessControlEntry> l = getEntries();
+        return l.toArray(new AccessControlEntry[l.size()]);
+    }
+
     /**
      * @see javax.jcr.security.AccessControlList#addAccessControlEntry(java.security.Principal , javax.jcr.security.Privilege[])
      */

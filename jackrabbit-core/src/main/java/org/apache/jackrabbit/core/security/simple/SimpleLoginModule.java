@@ -41,6 +41,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
     /**
      * @see AbstractLoginModule#doInit(javax.security.auth.callback.CallbackHandler, javax.jcr.Session, java.util.Map)
      */
+    @Override
     protected void doInit(CallbackHandler callbackHandler, Session session, Map options) throws LoginException {
         // nothing to do
         log.debug("init: SimpleLoginModule. Done.");
@@ -49,6 +50,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
     /**
      * @see AbstractLoginModule#impersonate(java.security.Principal, javax.jcr.Credentials)
      */
+    @Override
     protected boolean impersonate(Principal principal, Credentials credentials) throws RepositoryException, LoginException {
         if (principal instanceof Group) {
             return false;
@@ -60,6 +62,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
     /**
      * @see AbstractLoginModule#getAuthentication(java.security.Principal, javax.jcr.Credentials)
      */
+    @Override
     protected Authentication getAuthentication(Principal principal, Credentials creds) throws RepositoryException {
         if (principal instanceof Group) {
             return null;
@@ -86,6 +89,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
      *
      * @see AbstractLoginModule#getPrincipal(Credentials)
      */
+    @Override
     protected Principal getPrincipal(Credentials credentials) {
         String userId = getUserID(credentials);
         Principal principal = principalProvider.getPrincipal(userId);
