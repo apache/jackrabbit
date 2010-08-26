@@ -193,8 +193,9 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             ItemBasedPrincipal userPrincipal = getUserPrincipal(principals);
             NodeImpl userNode = getUserNode(userPrincipal);
             if (userNode == null) {
-                // no 'user' within set of principals -> READ-only
-                return getReadOnlyPermissions();
+                // no 'user' within set of principals -> no permissions in the
+                // security workspace.
+                return CompiledPermissions.NO_PERMISSION;
             } else {
                 return new CompiledPermissionsImpl(principals, userNode.getPath());
             }
@@ -337,7 +338,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 // no Node corresponding to user for which the permissions are
                 // calculated -> no permissions/privileges.
                 log.debug("No node at " + userNodePath);
-                return new Result(Permission.NONE, Permission.NONE, PrivilegeRegistry.NO_PRIVILEGE, PrivilegeRegistry.NO_PRIVILEGE);
+                return Result.EMPTY;
             }
 
             // no explicit denied permissions:
@@ -445,8 +446,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         @Override
         public boolean grants(Path absPath, int permissions) throws RepositoryException {
             if (permissions == Permission.READ) {
-                // read is always granted
-                return true;
+                return canReadAll();
             }
             // otherwise: retrieve from cache (or build)
             return super.grants(absPath, permissions);
@@ -457,7 +457,9 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
          */
         @Override
         public boolean canReadAll() throws RepositoryException {
-            return true;
+            // for consistency with 'grants(Path, int) this method only returns
+            // true if there exists a node for 'userNodePath'
+            return session.nodeExists(userNodePath);
         }
 
         //--------------------------------------------------< EventListener >---
