@@ -32,7 +32,7 @@ import javax.jcr.query.RowIterator;
  */
 public class ThreeWayJoinTest extends AbstractTest {
 
-    private static final int NODE_COUNT = 50;
+    private static final int NODE_COUNT = 30;
 
     private final Random random = new Random();
 
@@ -90,11 +90,10 @@ public class ThreeWayJoinTest extends AbstractTest {
             }
             count++;
         }
-        // FIXME: The query returns 125k results instead of the expected 50!
-        // if (count != NODE_COUNT) {
-        //     throw new Exception(
-        //             "Invalid test result count: " + count + " != " + NODE_COUNT);
-        // }
+        if (count != NODE_COUNT * NODE_COUNT * NODE_COUNT) {
+            throw new Exception(
+                    "Invalid test result count: " + count);
+        }
     }
 
     public void afterSuite() throws RepositoryException {
