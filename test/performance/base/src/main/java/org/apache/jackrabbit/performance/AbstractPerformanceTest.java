@@ -91,7 +91,7 @@ public abstract class AbstractPerformanceTest {
 
     private void runTest(
             PerformanceTestSuite suite, AbstractTest test, String name) {
-        String selected = System.getProperty("test");
+        String selected = System.getProperty("only");
         if (selected != null && !selected.equals(test.toString())) {
             return;
         }

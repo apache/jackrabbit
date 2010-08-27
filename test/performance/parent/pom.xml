@@ -56,6 +56,10 @@
                 <name>derby.stream.error.file</name>
                 <value>target/derby.log</value>
               </property>
+              <property>
+                <name>only</name>
+                <value>${only}</value>
+              </property>
             </systemProperties>
           </configuration>
         </plugin>
