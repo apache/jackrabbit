@@ -40,7 +40,7 @@ public class RankTest extends TestCase {
         assertEquals(0, r.size());
         try {
             r.take(1);
-            fail("Excpeted " + NoSuchElementException.class.getName());
+            fail("Excepted " + NoSuchElementException.class.getName());
         }
         catch (NoSuchElementException ignore) { }
     }
@@ -59,7 +59,7 @@ public class RankTest extends TestCase {
 
         try {
             r.take(1);
-            fail("Excpeted " + NoSuchElementException.class.getName());
+            fail("Excepted " + NoSuchElementException.class.getName());
         }
         catch (NoSuchElementException ignore) { }
     }
@@ -77,7 +77,7 @@ public class RankTest extends TestCase {
 
         try {
             r.take(n + 1);
-            fail("Excpeted " + NoSuchElementException.class.getName());
+            fail("Expected " + NoSuchElementException.class.getName());
         }
         catch (NoSuchElementException ignore) { }
 

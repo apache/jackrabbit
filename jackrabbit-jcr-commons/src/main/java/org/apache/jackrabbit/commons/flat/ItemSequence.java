@@ -281,7 +281,7 @@ public abstract class ItemSequence {
         }
         catch (PathNotFoundException ignore) { }
 
-        // Search for direct succecessor of key in the nodes children
+        // Search for direct successor of key in the nodes children
         // todo performance: for ordered nodes use binary search
         NodeIterator childNodes = node.getNodes();
         Node s = null;

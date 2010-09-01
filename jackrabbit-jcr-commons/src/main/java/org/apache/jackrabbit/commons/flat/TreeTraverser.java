@@ -105,7 +105,7 @@ public final class TreeTraverser implements Iterable<Node> {
     }
 
     /**
-     * Inclusion policy to determine which itmes to include when traversing.
+     * Inclusion policy to determine which items to include when traversing.
      * There a two predefined inclusion policies:
      * <ul>
      * <li>{@link #ALL} includes all items.</li>
