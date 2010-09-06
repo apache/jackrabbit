@@ -124,8 +124,8 @@ public abstract class AbstractPerformanceTest {
             } finally {
                 writer.close();
             }
-        } catch (Exception e) {
-            System.out.println("Unable to run " + test + ": " + e.getMessage());
+        } catch (Throwable t) {
+            System.out.println("Unable to run " + test + ": " + t.getMessage());
         }
     }
 
