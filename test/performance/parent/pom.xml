@@ -67,4 +67,27 @@
     </pluginManagement>
   </build>
 
+  <profiles>
+    <profile>
+      <id>profiler</id>
+      <activation>
+        <property>
+          <name>agentlib</name>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <argLine>-agentlib:${agentlib}</argLine>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
