@@ -30,14 +30,31 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class AbstractPerformanceTest {
 
     protected void testPerformance(String name) throws Exception {
+        Set<String> tests = new HashSet<String>();
+        Set<String> names = new HashSet<String>();
+        String selected = System.getProperty("only");
+        if (selected != null && selected.length() > 0) {
+            int colon = selected.indexOf(':');
+            if (colon != -1) {
+                names.addAll(Arrays.asList(selected.substring(colon + 1).split(",")));
+                selected = selected.substring(0, colon);
+            }
+            tests.addAll(Arrays.asList(selected.split(",")));
+        }
+
         // Create a repository using the Jackrabbit default configuration
-        testPerformance(
-                name,
-                RepositoryImpl.class.getResourceAsStream("repository.xml"));
+        if (names.isEmpty() || names.contains(name)) {
+            testPerformance(
+                    name,
+                    RepositoryImpl.class.getResourceAsStream("repository.xml"),
+                    tests);
+        }
 
         // Create repositories for any special configurations included
         File directory = new File(new File("src", "test"), "resources");
@@ -47,52 +64,58 @@ public abstract class AbstractPerformanceTest {
             for (File file : files) {
                 String xml = file.getName();
                 if (file.isFile() && xml.endsWith(".xml")) {
-                    testPerformance(
-                            name + "-" + xml.substring(0, xml.length() - 4),
-                            FileUtils.openInputStream(file));
+                    String repositoryName =
+                        name + "-" + xml.substring(0, xml.length() - 4);
+                    if (names.isEmpty() || names.contains(repositoryName)) {
+                        testPerformance(
+                                repositoryName,
+                                FileUtils.openInputStream(file),
+                                tests);
+                    }
                 }
             }
         }
     }
 
-    private void testPerformance(String name, InputStream xml)
-            throws Exception {
+    private void testPerformance(
+            String name, InputStream xml, Set<String> tests) throws Exception {
         RepositoryImpl repository = createRepository(name, xml);
         try {
-            testPerformance(name, repository);
+            testPerformance(name, repository, tests);
         } finally {
             repository.shutdown();
         }
     }
 
-    private void testPerformance(String name, RepositoryImpl repository) {
+    private void testPerformance(
+            String name, RepositoryImpl repository, Set<String> tests) {
         PerformanceTestSuite suite = new PerformanceTestSuite(
                 repository,
                 new SimpleCredentials("admin", "admin".toCharArray()));
-        runTest(suite, new LoginTest(), name);
-        runTest(suite, new LoginLogoutTest(), name);
-        runTest(suite, new SmallFileReadTest(), name);
-        runTest(suite, new SmallFileWriteTest(), name);
-        runTest(suite, new BigFileReadTest(), name);
-        runTest(suite, new BigFileWriteTest(), name);
-        runTest(suite, new ConcurrentReadTest(), name);
-        runTest(suite, new ConcurrentReadWriteTest(), name);
-        runTest(suite, new SimpleSearchTest(), name);
-        runTest(suite, new TwoWayJoinTest(), name);
-        runTest(suite, new ThreeWayJoinTest(), name);
-        runTest(suite, new CreateManyChildNodesTest(), name);
-        runTest(suite, new UpdateManyChildNodesTest(), name);
-        runTest(suite, new TransientManyChildNodesTest(), name);
-        runTest(suite, new CreateUserTest(), name);
-        runTest(suite, new AddGroupMembersTest(), name);
-        runTest(suite, new GroupMemberLookupTest(), name);
-        runTest(suite, new GroupGetMembersTest(), name);
+        runTest(suite, new LoginTest(), name, tests);
+        runTest(suite, new LoginLogoutTest(), name, tests);
+        runTest(suite, new SmallFileReadTest(), name, tests);
+        runTest(suite, new SmallFileWriteTest(), name, tests);
+        runTest(suite, new BigFileReadTest(), name, tests);
+        runTest(suite, new BigFileWriteTest(), name, tests);
+        runTest(suite, new ConcurrentReadTest(), name, tests);
+        runTest(suite, new ConcurrentReadWriteTest(), name, tests);
+        runTest(suite, new SimpleSearchTest(), name, tests);
+        runTest(suite, new TwoWayJoinTest(), name, tests);
+        runTest(suite, new ThreeWayJoinTest(), name, tests);
+        runTest(suite, new CreateManyChildNodesTest(), name, tests);
+        runTest(suite, new UpdateManyChildNodesTest(), name, tests);
+        runTest(suite, new TransientManyChildNodesTest(), name, tests);
+        runTest(suite, new CreateUserTest(), name, tests);
+        runTest(suite, new AddGroupMembersTest(), name, tests);
+        runTest(suite, new GroupMemberLookupTest(), name, tests);
+        runTest(suite, new GroupGetMembersTest(), name, tests);
     }
 
     private void runTest(
-            PerformanceTestSuite suite, AbstractTest test, String name) {
-        String selected = System.getProperty("only");
-        if (selected != null && !selected.equals(test.toString())) {
+            PerformanceTestSuite suite, AbstractTest test, String name,
+            Set<String> tests) {
+        if (!tests.isEmpty() && !tests.contains(test.toString())) {
             return;
         }
 
