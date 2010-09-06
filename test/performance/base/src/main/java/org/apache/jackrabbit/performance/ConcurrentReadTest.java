@@ -19,7 +19,6 @@ package org.apache.jackrabbit.performance;
 import java.util.Random;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -73,12 +72,9 @@ public class ConcurrentReadTest extends AbstractTest {
     }
 
     public void runTest() throws Exception {
-        NodeIterator i = root.getNodes();
-        while (i.hasNext()) {
-            NodeIterator j = i.nextNode().getNodes();
-            while (j.hasNext()) {
-                j.nextNode();
-            }
+        Reader reader = new Reader();
+        for (int i = 0; i < 1000; i++) {
+            reader.run();
         }
     }
 
