@@ -45,7 +45,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -60,7 +60,7 @@ import org.apache.jackrabbit.value.ValueHelper;
 /**
  * Session operation for removing a mixin type from a node.
  */
-class RemoveMixinOperation implements SessionOperation<Object> {
+class RemoveMixinOperation implements SessionWriteOperation<Object> {
 
     private final NodeImpl node;
 

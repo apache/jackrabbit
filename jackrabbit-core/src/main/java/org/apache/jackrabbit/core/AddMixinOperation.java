@@ -38,7 +38,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
@@ -47,7 +47,7 @@ import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
 /**
  * Session operation for adding a mixin type to a node.
  */
-class AddMixinOperation implements SessionOperation<Object> {
+class AddMixinOperation implements SessionWriteOperation<Object> {
 
     private final NodeImpl node;
 

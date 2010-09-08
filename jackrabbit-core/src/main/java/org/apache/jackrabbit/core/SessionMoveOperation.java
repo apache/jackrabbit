@@ -28,7 +28,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -36,7 +36,7 @@ import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SessionMoveOperation implements SessionOperation<Object> {
+public class SessionMoveOperation implements SessionWriteOperation<Object> {
 
     private final Logger log =
         LoggerFactory.getLogger(SessionMoveOperation.class);
