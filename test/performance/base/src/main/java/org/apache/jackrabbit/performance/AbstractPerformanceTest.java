@@ -16,6 +16,15 @@
  */
 package org.apache.jackrabbit.performance;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
+import javax.jcr.SimpleCredentials;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.FileWriterWithEncoding;
@@ -23,37 +32,25 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
-import javax.jcr.SimpleCredentials;
-
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 public abstract class AbstractPerformanceTest {
 
     protected void testPerformance(String name) throws Exception {
-        Set<String> tests = new HashSet<String>();
-        Set<String> names = new HashSet<String>();
-        String selected = System.getProperty("only");
-        if (selected != null && selected.length() > 0) {
-            int colon = selected.indexOf(':');
-            if (colon != -1) {
-                names.addAll(Arrays.asList(selected.substring(colon + 1).split(",")));
-                selected = selected.substring(0, colon);
-            }
-            tests.addAll(Arrays.asList(selected.split(",")));
+        String only = System.getProperty("only", ".*:.*");
+        int colon = only.indexOf(':');
+        if (colon == -1) {
+            colon = only.length();
+            only = only + ":-1";
         }
 
+        Pattern testPattern = Pattern.compile(only.substring(0, colon));
+        Pattern namePattern = Pattern.compile(only.substring(colon + 1));
+
         // Create a repository using the Jackrabbit default configuration
-        if (names.isEmpty() || names.contains(name)) {
+        if (namePattern.matcher(name).matches()) {
             testPerformance(
                     name,
                     RepositoryImpl.class.getResourceAsStream("repository.xml"),
-                    tests);
+                    testPattern);
         }
 
         // Create repositories for any special configurations included
@@ -66,11 +63,11 @@ public abstract class AbstractPerformanceTest {
                 if (file.isFile() && xml.endsWith(".xml")) {
                     String repositoryName =
                         name + "-" + xml.substring(0, xml.length() - 4);
-                    if (names.isEmpty() || names.contains(repositoryName)) {
+                    if (namePattern.matcher(repositoryName).matches()) {
                         testPerformance(
                                 repositoryName,
                                 FileUtils.openInputStream(file),
-                                tests);
+                                testPattern);
                     }
                 }
             }
@@ -78,53 +75,57 @@ public abstract class AbstractPerformanceTest {
     }
 
     private void testPerformance(
-            String name, InputStream xml, Set<String> tests) throws Exception {
+            String name, InputStream xml, Pattern testPattern)
+            throws Exception {
         RepositoryImpl repository = createRepository(name, xml);
         try {
-            testPerformance(name, repository, tests);
+            testPerformance(name, repository, testPattern);
         } finally {
             repository.shutdown();
         }
     }
 
     private void testPerformance(
-            String name, RepositoryImpl repository, Set<String> tests) {
+            String name, RepositoryImpl repository, Pattern testPattern) {
         PerformanceTestSuite suite = new PerformanceTestSuite(
                 repository,
                 new SimpleCredentials("admin", "admin".toCharArray()));
-        runTest(suite, new LoginTest(), name, tests);
-        runTest(suite, new LoginLogoutTest(), name, tests);
-        runTest(suite, new SmallFileReadTest(), name, tests);
-        runTest(suite, new SmallFileWriteTest(), name, tests);
-        runTest(suite, new BigFileReadTest(), name, tests);
-        runTest(suite, new BigFileWriteTest(), name, tests);
-        runTest(suite, new ConcurrentReadTest(), name, tests);
-        runTest(suite, new ConcurrentReadWriteTest(), name, tests);
-        runTest(suite, new SimpleSearchTest(), name, tests);
-        runTest(suite, new TwoWayJoinTest(), name, tests);
-        runTest(suite, new ThreeWayJoinTest(), name, tests);
-        runTest(suite, new CreateManyChildNodesTest(), name, tests);
-        runTest(suite, new UpdateManyChildNodesTest(), name, tests);
-        runTest(suite, new TransientManyChildNodesTest(), name, tests);
-        runTest(suite, new CreateUserTest(), name, tests);
-        runTest(suite, new AddGroupMembersTest(), name, tests);
-        runTest(suite, new GroupMemberLookupTest(), name, tests);
-        runTest(suite, new GroupGetMembersTest(), name, tests);
+        runTest(suite, new LoginTest(), name, testPattern);
+        runTest(suite, new LoginLogoutTest(), name, testPattern);
+        runTest(suite, new SmallFileReadTest(), name, testPattern);
+        runTest(suite, new SmallFileWriteTest(), name, testPattern);
+        runTest(suite, new BigFileReadTest(), name, testPattern);
+        runTest(suite, new BigFileWriteTest(), name, testPattern);
+        runTest(suite, new ConcurrentReadTest(), name, testPattern);
+        runTest(suite, new ConcurrentReadWriteTest(), name, testPattern);
+        runTest(suite, new SimpleSearchTest(), name, testPattern);
+        runTest(suite, new TwoWayJoinTest(), name, testPattern);
+        runTest(suite, new ThreeWayJoinTest(), name, testPattern);
+        runTest(suite, new CreateManyChildNodesTest(), name, testPattern);
+        runTest(suite, new UpdateManyChildNodesTest(), name, testPattern);
+        runTest(suite, new TransientManyChildNodesTest(), name, testPattern);
+        runTest(suite, new CreateUserTest(), name, testPattern);
+        try {
+            runTest(suite, new AddGroupMembersTest(), name, testPattern);
+            runTest(suite, new GroupMemberLookupTest(), name, testPattern);
+            runTest(suite, new GroupGetMembersTest(), name, testPattern);
+        } catch (NoClassDefFoundError e) {
+            // ignore these tests if the required jackrabbit-api
+            // extensions are not available
+        }
     }
 
     private void runTest(
             PerformanceTestSuite suite, AbstractTest test, String name,
-            Set<String> tests) {
-        if (!tests.isEmpty() && !tests.contains(test.toString())) {
+            Pattern testPattern) {
+        if (!testPattern.matcher(test.toString()).matches()) {
             return;
         }
 
         try {
             DescriptiveStatistics statistics = suite.runTest(test);
 
-            File base = new File("..", "base");
-            File target = new File(base, "target");
-            File report = new File(target, test + ".txt");
+            File report = new File("target", test + ".txt");
             boolean needsPrefix = !report.exists();
 
             PrintWriter writer = new PrintWriter(

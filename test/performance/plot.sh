@@ -1,3 +1,4 @@
+#!/bin/sh
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -17,32 +18,43 @@
 # produced by the Jackrabbit performance test suite. Before you run this
 # script you need to preprocess the individual performance reports.
 
+cat <<HTML >target/report.html
+<html>
+  <head>
+    <title>Jackrabbit performance</title>
+  </head>
+  <body>
+    <h1>Jackrabbit performance</h1>
+    <p>
+HTML
+
+for dat in */target/*.txt; do
+    cat "$dat" >>target/`basename "$dat"`
+done
+
+for dat in target/*.txt; do
+    name=`basename "$dat" .txt`
+    gnuplot <<PLOT
 set term svg
 set xlabel "Jackrabbit version"
 set xrange [-1:10]
 set ylabel "Time (ms)"
 set yrange [0:]
+set output "target/$name.svg"
+set title "$name"
+plot "$dat" using 0:3:4:xtic(1) with errorlines notitle
+PLOT
+    convert "target/$name.svg" "target/$name.png"
+    cat <<HTML >>target/report.html
+      <img src="$name.png" alt="$name">
+HTML
+done
 
-set output "login.svg"
-set title "1000 x login()"
-plot "login.dat" using 0:3:4:xtic(1) with errorlines notitle
+cat <<HTML >>target/report.html
+    </p>
+  </body>
+</html>
+HTML
 
-set output "logout.svg"
-set title "1000 x login().logout()"
-plot "logout.dat" using 0:3:4:xtic(1) with errorlines notitle
+echo file://`pwd`/target/report.html
 
-set output "smallread.svg"
-set title "1000 x read a 10kB file"
-plot "smallread.dat" using 0:3:4:xtic(1) with errorlines notitle
-
-set output "smallwrite.svg"
-set title "100 x write a 10kB file"
-plot "smallwrite.dat" using 0:3:4:xtic(1) with errorlines notitle
-
-set output "bigread.svg"
-set title "read a 100MB file"
-plot "bigread.dat" using 0:3:4:xtic(1) with errorlines notitle
-
-set output "bigwrite.svg"
-set title "write a 100MB file"
-plot "bigwrite.dat" using 0:3:4:xtic(1) with errorlines notitle
