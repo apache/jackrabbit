@@ -908,4 +908,14 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
         }
     }
 
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns a string representation of this operation.
+     */
+    public String toString() {
+        return "item.save()";
+    }
+
 }

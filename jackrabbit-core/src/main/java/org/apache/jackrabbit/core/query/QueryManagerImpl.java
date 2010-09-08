@@ -39,7 +39,6 @@ import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**
  * This class implements the {@link QueryManager} interface.
@@ -95,6 +94,9 @@ public class QueryManagerImpl implements QueryManager {
                 QueryFactory qf = new QueryFactoryImpl(language);
                 return qf.createQuery(statement, language);
             }
+            public String toString() {
+                return "node.createQuery(" + statement + ", " + language + ")";
+            }
         });
     }
 
@@ -116,6 +118,9 @@ public class QueryManagerImpl implements QueryManager {
 
                 QueryFactory qf = new QueryFactoryImpl(node, language);
                 return qf.createQuery(statement, language);
+            }
+            public String toString() {
+                return "queryManager.getQuery(node)";
             }
         });
     }
@@ -166,6 +171,9 @@ public class QueryManagerImpl implements QueryManager {
                     throw new RepositoryException(e);
                 }
                 return nodes;
+            }
+            public String toString() {
+                return "queryManager.getWeaklyReferringNodes(node)";
             }
         });
     }

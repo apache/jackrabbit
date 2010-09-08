@@ -121,6 +121,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 NodeId baseId = checkoutCheckin(state, true, false, created);
                 return (Version) session.getNodeById(baseId);
             }
+            public String toString() {
+                return "versionManager.checkin(" + absPath + ", " + created + ")";
+            }
         });
     }
 
@@ -136,6 +139,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                         CHECK_LOCK | CHECK_HOLD,
                         Permission.VERSION_MNGMT);
                 return checkoutCheckin(state, false, true, null);
+            }
+            public String toString() {
+                return "versionManager.checkout(" + absPath + ")";
             }
         });
     }
@@ -153,6 +159,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                         Permission.VERSION_MNGMT);
                 NodeId baseId = checkoutCheckin(state, true, true, null);
                 return (Version) session.getNodeById(baseId);
+            }
+            public String toString() {
+                return "versionManager.checkpoint(" + absPath + ")";
             }
         });
     }
@@ -174,6 +183,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 InternalVersionHistory vh = getVersionHistory(state);
                 return (VersionHistory) session.getNodeById(vh.getId());
             }
+            public String toString() {
+                return "versionManager.getVersionHistory(" + absPath + ")";
+            }
         });
     }
 
@@ -188,6 +200,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 NodeStateEx state = getNodeState(absPath);
                 InternalVersion v = getBaseVersion(state);
                 return (Version) session.getNodeById(v.getId());
+            }
+            public String toString() {
+                return "versionManager.getBaseVersion(" + absPath + ")";
             }
         });
     }
@@ -240,6 +255,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
 
                 return this;
             }
+            public String toString() {
+                return "versionManager.restore(versions, " + removeExisting + ")";
+            }
         });
     }
 
@@ -258,6 +276,11 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                         Permission.NONE);
                 restore(state, context.getQName(versionName), removeExisting);
                 return this;
+            }
+            public String toString() {
+                return "versionManager.restore("
+                    + absPath + ", " +  versionName + ", "
+                    +  removeExisting + ")";
             }
         });
     }
@@ -300,6 +323,10 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 }
                 return this;
             }
+            public String toString() {
+                return "versionManager.restore("
+                    + absPath + ", version, " + removeExisting + ")";
+            }
         });
     }
 
@@ -338,6 +365,11 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 restoreByLabel(
                         state, context.getQName(versionLabel), removeExisting);
                 return this;
+            }
+            public String toString() {
+                return "versionManager.restoreByLabel("
+                    + absPath + ", " +  versionLabel + ", "
+                    + removeExisting + ")";
             }
         });
     }
@@ -382,6 +414,11 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                 List<ItemId> failedIds = new LinkedList<ItemId>();
                 mergeOrUpdate(state, srcWorkspaceName, failedIds, bestEffort, isShallow);
                 return new LazyItemIterator(session.getItemManager(), failedIds);
+            }
+            public String toString() {
+                return "versionManager.merge("
+                    + absPath + ", " +  srcWorkspaceName + ", "
+                    + bestEffort + ", " +  isShallow + ")";
             }
         });
     }

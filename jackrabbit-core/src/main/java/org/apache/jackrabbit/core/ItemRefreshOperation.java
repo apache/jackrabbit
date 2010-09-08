@@ -135,4 +135,13 @@ public class ItemRefreshOperation implements SessionOperation<Object> {
         return this;
     }
 
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns a string representation of this operation.
+     */
+    public String toString() {
+        return "item.refresh(" + keepChanges + ")";
+    }
+
 }

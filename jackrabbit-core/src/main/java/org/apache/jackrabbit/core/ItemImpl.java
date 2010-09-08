@@ -363,6 +363,9 @@ public abstract class ItemImpl implements Item {
                     throw new ItemNotFoundException("Ancestor not found", e);
                 }
             }
+            public String toString() {
+                return "item.getAncestor(" + degree + ")";
+            }
         });
     }
 
@@ -374,6 +377,9 @@ public abstract class ItemImpl implements Item {
             public String perform(SessionContext context)
                     throws RepositoryException {
                 return context.getJCRPath(getPrimaryPath());
+            }
+            public String toString() {
+                return "item.getPath()";
             }
         });
     }
@@ -391,6 +397,9 @@ public abstract class ItemImpl implements Item {
                 } else {
                     return context.getHierarchyManager().getDepth(id);
                 }
+            }
+            public String toString() {
+                return "item.getDepth()";
             }
         });
     }

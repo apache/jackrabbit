@@ -72,4 +72,13 @@ public class SessionRefreshOperation implements SessionOperation<Object> {
         return this;
     }
 
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns a string representation of this operation.
+     */
+    public String toString() {
+        return "session.refresh(" + keepChanges + ")";
+    }
+
 }

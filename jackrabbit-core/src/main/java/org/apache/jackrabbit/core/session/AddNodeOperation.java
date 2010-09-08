@@ -112,4 +112,14 @@ public class AddNodeOperation implements SessionWriteOperation<Node> {
         return parentNode.addNode(last.getName(), typeName, id);
     }
 
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns a string representation of this operation.
+     */
+    public String toString() {
+        return "node.addNode(" + relPath + ", " + nodeTypeName + ", " + uuid  + ")";
+    }
+
 }
