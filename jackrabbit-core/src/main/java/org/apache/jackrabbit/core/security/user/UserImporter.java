@@ -16,6 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.ConstraintViolationException;
+
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -30,7 +45,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.xml.NodeInfo;
@@ -42,21 +57,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.nodetype.ConstraintViolationException;
-
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <code>UserImporter</code> implements a
@@ -396,7 +396,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
                         final NodeImpl groupNode = ((AuthorizableImpl) gr).getNode();
 
                         if (userManager.getGroupMembershipSplitSize() > 0) {
-                            userManager.performProtectedOperation((SessionImpl) session, new SessionOperation<Object>() {
+                            userManager.performProtectedOperation((SessionImpl) session, new SessionWriteOperation<Object>() {
                                 public Boolean perform(SessionContext context) throws RepositoryException {
                                     NodeImpl nMembers = (groupNode.hasNode(UserConstants.N_MEMBERS)
                                             ? groupNode.getNode(UserConstants.N_MEMBERS)

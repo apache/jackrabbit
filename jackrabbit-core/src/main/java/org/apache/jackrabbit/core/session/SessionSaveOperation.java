@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 /**
  * Operation to persist transient changes in a session.
  */
-public class SessionSaveOperation implements SessionOperation<Object> {
+public class SessionSaveOperation implements SessionWriteOperation<Object> {
 
     /**
      * Persists transient changes by delegating to the save() method of the

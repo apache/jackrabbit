@@ -16,6 +16,13 @@
  */
 package org.apache.jackrabbit.core;
 
+import static javax.jcr.PropertyType.STRING;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_CURRENT_LIFECYCLE_STATE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ISCHECKEDOUT;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LIFECYCLE_POLICY;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_LIFECYCLE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_REFERENCEABLE;
+
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -82,6 +89,7 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.AddNodeOperation;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -97,9 +105,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
-import static javax.jcr.PropertyType.STRING;
-import static org.apache.jackrabbit.spi.commons.name.NameConstants.*;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
@@ -1913,7 +1918,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * definition and the implementation tries to convert the passed value to
      * that type. If that fails, then a {@link ValueFormatException} is thrown.
      */
-    private class SetPropertyOperation implements SessionOperation<PropertyImpl> {
+    private class SetPropertyOperation implements SessionWriteOperation<PropertyImpl> {
 
         private final Name name;
 

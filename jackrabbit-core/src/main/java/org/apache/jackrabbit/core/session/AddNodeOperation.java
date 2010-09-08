@@ -34,7 +34,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 /**
  * Session operation for adding a new node.
  */
-public class AddNodeOperation implements SessionOperation<Node> {
+public class AddNodeOperation implements SessionWriteOperation<Node> {
 
     private final NodeImpl node;
 

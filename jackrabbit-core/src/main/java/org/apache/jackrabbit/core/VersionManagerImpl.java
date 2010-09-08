@@ -44,17 +44,18 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.version.InternalActivity;
+import org.apache.jackrabbit.core.version.InternalBaseline;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.NodeStateEx;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionManagerImplConfig;
 import org.apache.jackrabbit.core.version.VersionSet;
-import org.apache.jackrabbit.core.version.InternalBaseline;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -110,7 +111,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      */
     public Version checkin(final String absPath, final Calendar created)
             throws RepositoryException {
-        return perform(new SessionOperation<Version> () {
+        return perform(new SessionWriteOperation<Version> () {
             public Version perform(SessionContext context)
                     throws RepositoryException {
                 NodeStateEx state = getNodeState(
@@ -127,7 +128,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      * {@inheritDoc}
      */
     public void checkout(final String absPath) throws RepositoryException {
-        perform(new SessionOperation<NodeId> () {
+        perform(new SessionWriteOperation<NodeId> () {
             public NodeId perform(SessionContext context)
                     throws RepositoryException {
                 NodeStateEx state = getNodeState(
@@ -143,7 +144,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      * {@inheritDoc}
      */
     public Version checkpoint(final String absPath) throws RepositoryException {
-        return perform(new SessionOperation<Version> () {
+        return perform(new SessionWriteOperation<Version> () {
             public Version perform(SessionContext context)
                     throws RepositoryException {
                 NodeStateEx state = getNodeState(
@@ -202,7 +203,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
      */
     public void restore(final Version[] versions, final boolean removeExisting)
             throws RepositoryException {
-        perform(new SessionOperation<Object> () {
+        perform(new SessionWriteOperation<Object> () {
             public Object perform(SessionContext context)
                     throws RepositoryException {
                 // check for pending changes
@@ -248,7 +249,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     public void restore(
             final String absPath, final String versionName,
             final boolean removeExisting) throws RepositoryException {
-        perform(new SessionOperation<Object> () {
+        perform(new SessionWriteOperation<Object> () {
             public Object perform(SessionContext context)
                     throws RepositoryException {
                 NodeStateEx state = getNodeState(
@@ -267,7 +268,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     public void restore(
             final String absPath, final Version version, final boolean removeExisting)
             throws RepositoryException {
-        perform(new SessionOperation<Object> () {
+        perform(new SessionWriteOperation<Object> () {
             public Object perform(SessionContext context)
                     throws RepositoryException {
                 // first check if node exists
@@ -327,7 +328,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
     public void restoreByLabel(
             final String absPath, final String versionLabel,
             final boolean removeExisting) throws RepositoryException {
-        perform(new SessionOperation<Object> () {
+        perform(new SessionWriteOperation<Object> () {
             public Object perform(SessionContext context)
                     throws RepositoryException {
                 NodeStateEx state = getNodeState(
@@ -371,7 +372,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
             final String absPath, final String srcWorkspaceName,
             final boolean bestEffort, final boolean isShallow)
             throws RepositoryException {
-        return perform(new SessionOperation<NodeIterator> () {
+        return perform(new SessionWriteOperation<NodeIterator> () {
             public NodeIterator perform(SessionContext context)
                     throws RepositoryException {
                 NodeStateEx state = getNodeState(

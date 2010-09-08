@@ -16,31 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.commons.flat.BTreeManager;
-import org.apache.jackrabbit.commons.flat.ItemSequence;
-import org.apache.jackrabbit.commons.flat.PropertySequence;
-import org.apache.jackrabbit.commons.flat.Rank;
-import org.apache.jackrabbit.commons.flat.TreeManager;
-import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.session.SessionOperation;
-import org.apache.jackrabbit.spi.commons.iterator.Iterators;
-import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.security.Principal;
@@ -55,6 +30,32 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.commons.flat.BTreeManager;
+import org.apache.jackrabbit.commons.flat.ItemSequence;
+import org.apache.jackrabbit.commons.flat.PropertySequence;
+import org.apache.jackrabbit.commons.flat.Rank;
+import org.apache.jackrabbit.commons.flat.TreeManager;
+import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * GroupImpl...
@@ -424,7 +425,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
         }
 
         public boolean addMember(final AuthorizableImpl authorizable) throws RepositoryException {
-            return userManager.performProtectedOperation(getSession(), new SessionOperation<Boolean>() {
+            return userManager.performProtectedOperation(getSession(), new SessionWriteOperation<Boolean>() {
                 public Boolean perform(SessionContext context) throws RepositoryException {
                     NodeImpl nMembers = (node.hasNode(N_MEMBERS)
                             ? node.getNode(N_MEMBERS)
@@ -465,7 +466,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 return false;
             }
 
-            return userManager.performProtectedOperation(getSession(), new SessionOperation<Boolean>() {
+            return userManager.performProtectedOperation(getSession(), new SessionWriteOperation<Boolean>() {
                 public Boolean perform(SessionContext context) throws RepositoryException {
                     NodeImpl nMembers = node.getNode(N_MEMBERS);
                     try {
