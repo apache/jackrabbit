@@ -124,9 +124,8 @@ public class SessionState {
     public <T> T perform(SessionOperation<T> operation)
             throws RepositoryException {
         // Set MDC variables to reflect the current session and this operation
-        LogState logState = new LogState(
-                "jcr.session", context.toString(),
-                "jcr.operation", operation.toString());
+        LogState logState =
+            new LogState("jcr.session", context, "jcr.operation", operation);
         try {
             // Acquire the exclusive lock for accessing session internals.
             // No other session should be holding the lock, so we log a
@@ -191,9 +190,8 @@ public class SessionState {
      *         <code>false</code> if the session had already been closed
      */
     public boolean close() {
-        LogState logState = new LogState(
-                "jcr.session", context.toString(),
-                "jcr.operation", "close()");
+        LogState logState =
+            new LogState("jcr.session", context, "jcr.operation", "close()");
         try {
             if (!lock.tryLock()) {
                 log.warn("Attempt to close a session while another thread is"
@@ -226,13 +224,14 @@ public class SessionState {
      */
     private static class LogState {
 
-        private final String[] keyValuePairs;
+        private final Object[] keyValuePairs;
 
-        public LogState(String... keyValuePairs) {
+        public LogState(Object... keyValuePairs) {
             this.keyValuePairs = keyValuePairs;
             for (int i = 0; i + 1 < keyValuePairs.length; i += 2) {
-                if (MDC.get(keyValuePairs[i]) == null) {
-                    MDC.put(keyValuePairs[i], keyValuePairs[i + 1]);
+                String key = keyValuePairs[i].toString();
+                if (MDC.get(key) == null) {
+                    MDC.put(key, keyValuePairs[i + 1].toString());
                 } else {
                     keyValuePairs[i + 1] = null;
                 }
@@ -242,7 +241,7 @@ public class SessionState {
         public void reset() {
             for (int i = 0; i + 1 < keyValuePairs.length; i += 2) {
                 if (keyValuePairs[i + 1] != null) {
-                    MDC.remove(keyValuePairs[i]);
+                    MDC.remove(keyValuePairs[i].toString());
                 }
             }
         }
