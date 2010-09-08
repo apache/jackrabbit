@@ -50,6 +50,11 @@ public class SessionState {
         LoggerFactory.getLogger(SessionState.class);
 
     /**
+     * Number of nanoseconds in a microsecond.
+     */
+    private static final int NS_PER_US = 1000;
+
+    /**
      * Number of nanoseconds in a millisecond.
      */
     private static final int NS_PER_MS = 1000000;
@@ -170,9 +175,14 @@ public class SessionState {
                         try {
                             return operation.perform(context);
                         } finally {
-                            log.debug("It took {}ms to perform {}",
-                                    (System.nanoTime() - start) / NS_PER_MS,
-                                    operation);
+                            long time = System.nanoTime() - start;
+                            if (time > NS_PER_MS) {
+                                log.debug("Performed {} in {}ms",
+                                        operation, time / NS_PER_MS);
+                            } else {
+                                log.debug("Performed {} in {}us",
+                                        operation, time / NS_PER_US);
+                            }
                         }
                     } else {
                         return operation.perform(context);
