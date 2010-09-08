@@ -34,10 +34,11 @@ done
 
 for dat in target/*.txt; do
     name=`basename "$dat" .txt`
+    rows=`grep -v "#" "$dat" | wc -l`
     gnuplot <<PLOT
 set term svg
 set xlabel "Jackrabbit version"
-set xrange [-1:10]
+set xrange [-1:$rows]
 set ylabel "Time (ms)"
 set yrange [0:]
 set output "target/$name.svg"
