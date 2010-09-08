@@ -123,8 +123,9 @@ public class SessionState {
      */
     public <T> T perform(SessionOperation<T> operation)
             throws RepositoryException {
-        String previous = MDC.get("jcr.session");
-        MDC.put("jcr.session", context.toString());
+        LogState state = new LogState(
+                "jcr.session", context.toString(),
+                "jcr.operation", operation.toString());
         try {
             if (log.isDebugEnabled()) {
                 long start = System.nanoTime();
@@ -138,12 +139,37 @@ public class SessionState {
                 return internalPerform(operation);
             }
         } finally {
-            if (previous != null) {
-                MDC.put("jcr.session", previous);
-            } else {
-                MDC.remove("jcr.session");
+            state.reset();
+        }
+    }
+
+    /**
+     * Internal utility class for setting MDC variables during the execution
+     * of a session operation.
+     */
+    private static class LogState {
+
+        private final String[] keyValuePairs;
+
+        public LogState(String... keyValuePairs) {
+            this.keyValuePairs = keyValuePairs;
+            for (int i = 0; i + 1 < keyValuePairs.length; i += 2) {
+                if (MDC.get(keyValuePairs[i]) == null) {
+                    MDC.put(keyValuePairs[i], keyValuePairs[i + 1]);
+                } else {
+                    keyValuePairs[i + 1] = null;
+                }
             }
         }
+
+        public void reset() {
+            for (int i = 0; i + 1 < keyValuePairs.length; i += 2) {
+                if (keyValuePairs[i + 1] != null) {
+                    MDC.remove(keyValuePairs[i]);
+                }
+            }
+        }
+
     }
 
     /**
