@@ -50,6 +50,11 @@ public class SessionState {
         LoggerFactory.getLogger(SessionState.class);
 
     /**
+     * Number of nanoseconds in a millisecond.
+     */
+    private static final int NS_PER_MS = 1000000;
+
+    /**
      * Component context of this session.
      */
     private final SessionContext context;
@@ -161,13 +166,13 @@ public class SessionState {
                     // Perform the actual operation, optionally with debug logs
                     if (log.isDebugEnabled()) {
                         log.debug("Performing {}", operation);
-                        long start = System.currentTimeMillis();
+                        long start = System.nanoTime();
                         try {
                             return operation.perform(context);
                         } finally {
-                            log.debug("{} performed in {}ms",
-                                    operation,
-                                    System.currentTimeMillis() - start);
+                            log.debug("It took {}ms to perform {}",
+                                    (System.nanoTime() - start) / NS_PER_MS,
+                                    operation);
                         }
                     } else {
                         return operation.perform(context);
