@@ -63,6 +63,12 @@ public class SessionState {
     private final Lock lock = new ReentrantLock();
 
     /**
+     * Flag to indicate that the current operation is a write operation.
+     * Used to detect concurrent writes.
+     */
+    private volatile boolean isWriteOperation = false;
+
+    /**
      * Flag to indicate a closed session. When <code>null</code>, the session
      * is still alive. And when the session is closed, this reference is set
      * to an exception that contains the stack trace of where the session was
@@ -71,6 +77,11 @@ public class SessionState {
      */
     private volatile Exception closed = null;
 
+    /**
+     * Creates a state instance for a session.
+     *
+     * @param context component context of this session
+     */
     public SessionState(SessionContext context) {
         this.context = context;
     }
@@ -148,17 +159,29 @@ public class SessionState {
     private <T> T internalPerform(SessionOperation<T> operation)
             throws RepositoryException {
         if (!lock.tryLock()) {
-            log.debug("Attempt to perform {} while another thread is"
-                    + " concurrently accessing the session. Blocking until"
-                    + " the other thread is finished using this session.",
-                    operation);
+            if (isWriteOperation && operation instanceof SessionWriteOperation) {
+                log.warn("Attempt to perform {} while another thread is"
+                        + " concurrently modifying the session. Blocking until"
+                        + " the other thread is finished using this session.",
+                        operation);
+            } else {
+                log.debug("Attempt to perform {} while another thread is"
+                        + " concurrently accessing the session. Blocking until"
+                        + " the other thread is finished using this session.",
+                        operation);
+            }
             lock.lock();
+        }
+        boolean wasWriteOperation = isWriteOperation;
+        if (!wasWriteOperation && operation instanceof SessionWriteOperation) {
+            isWriteOperation = true;
         }
         try {
             checkAlive();
             log.debug("Performing {}", operation);
             return operation.perform(context);
         } finally {
+            isWriteOperation = wasWriteOperation;
             lock.unlock();
         }
     }
