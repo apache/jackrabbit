@@ -42,12 +42,34 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.test.api.util.Text;
 
 /**
  * Component context of a session. This class keeps track of the internal
  * components associated with a session.
  */
 public class SessionContext implements NamePathResolver {
+
+    /**
+     * Session counter. Used to generate unique internal session names.
+     */
+    private static long counter = 0;
+
+    /**
+     * Creates a unique internal session name for a session with the
+     * given user.
+     *
+     * @param userId session user, or <code>null</code>
+     * @return session name
+     */
+    private static synchronized String createSessionName(String userId) {
+        if (userId != null) {
+            String user = Text.escapeIllegalJcrChars(userId);
+            return "session-" + user + "-" + counter++;
+        } else {
+            return "session-" + counter++;
+        }
+    }
 
     /**
      * The repository context of this session.
@@ -58,6 +80,12 @@ public class SessionContext implements NamePathResolver {
      * This session.
      */
     private final SessionImpl session;
+
+    /**
+     * Unique internal name of this session. Returned by the
+     * {@link #toString()} method for use in logging and debugging.
+     */
+    private final String sessionName;
 
     /**
      * The state of this session.
@@ -119,6 +147,7 @@ public class SessionContext implements NamePathResolver {
         assert session != null;
         this.repositoryContext = repositoryContext;
         this.session = session;
+        this.sessionName = createSessionName(session.getUserID());
         this.state = new SessionState(this);
         this.valueFactory =
             new ValueFactoryImpl(session, repositoryContext.getDataStore());
@@ -313,6 +342,20 @@ public class SessionContext implements NamePathResolver {
 
     public String getJCRPath(Path path) throws NamespaceException {
         return session.getJCRPath(path);
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns the unique internal name of this session. The returned name
+     * is especially useful for debugging and logging purposes.
+     *
+     * @see #sessionName
+     * @return session name
+     */
+    @Override
+    public String toString() {
+        return sessionName;
     }
 
 }

@@ -230,7 +230,7 @@ public class SessionImpl extends AbstractSession
         this.repositoryContext = repositoryContext;
         this.subject = subject;
 
-        userId = retrieveUserId(subject, wspConfig.getName());
+        this.userId = retrieveUserId(subject, wspConfig.getName());
 
         namePathResolver = new DefaultNamePathResolver(this, this, true);
         context.setItemStateManager(createSessionItemStateManager());
@@ -1210,6 +1210,20 @@ public class SessionImpl extends AbstractSession
         context.getItemManager().dump(ps);
         ps.println();
         context.getItemStateManager().dump(ps);
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns the unique internal name of this session. The returned name
+     * is especially useful for debugging and logging purposes.
+     *
+     * @see #sessionName
+     * @return session name
+     */
+    @Override
+    public String toString() {
+        return context.toString();
     }
 
     /**
