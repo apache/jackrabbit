@@ -131,6 +131,9 @@ public class QueryImpl extends AbstractQueryImpl {
                             throws RepositoryException {
                         return query.execute(offset, limit);
                     }
+                    public String toString() {
+                        return "query.execute(" + statement + ")";
+                    }
                 });
         if (log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;

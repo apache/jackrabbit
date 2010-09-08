@@ -1095,6 +1095,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     throw new ItemNotFoundException();
                 }
             }
+            public String toString() {
+                return "node.getNode(" + name + "[" + index + "])";
+            }
         });
     }
 
@@ -1131,6 +1134,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 return cne != null
                     && context.getItemManager().itemExists(cne.getId());
             }
+            public String toString() {
+                return "node.hasNode(" + name + "[" + index + "])";
+            }
         });
     }
 
@@ -1158,6 +1164,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                             "Property " + n + " not found");
                 }
             }
+            public String toString() {
+                return "node.getProperty(" + name + ")";
+            }
         });
     }
 
@@ -1177,6 +1186,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 return data.getNodeState().hasPropertyName(name)
                     && context.getItemManager().itemExists(
                             new PropertyId(getNodeId(), name));
+            }
+            public String toString() {
+                return "node.hasProperty(" + name + ")";
             }
         });
     }
@@ -1649,6 +1661,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 }
                 return context.getJCRName(name);
             }
+            public String toString() {
+                return "node.getName()";
+            }
         });
     }
 
@@ -1676,6 +1691,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     throw new ItemNotFoundException(
                             "Root node doesn't have a parent");
                 }
+            }
+            public String toString() {
+                return "node.getParent()";
             }
         });
     }
@@ -1985,6 +2003,15 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             return property;
         }
 
+        //--------------------------------------------------------------< Object >
+
+        /**
+         * Returns a string representation of this operation.
+         */
+        public String toString() {
+            return "node.setProperty(" + name + ", " + value + ")";
+        }
+
     }
 
     /**
@@ -2046,6 +2073,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 }
                 return prop;
             }
+            public String toString() {
+                return "node.setProperty(...)";
+            }
         });
     }
 
@@ -2081,6 +2111,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     throw new PathNotFoundException(relPath);
                 }
             }
+            public String toString() {
+                return "node.getNode(" + relPath + ")";
+            }
         });
     }
 
@@ -2103,6 +2136,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     throw new RepositoryException(
                             "Failed to list child nodes of " + NodeImpl.this, e);
                 }
+            }
+            public String toString() {
+                return "node.getNodes()";
             }
         });
     }
@@ -2127,6 +2163,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                             "Failed to list properties of " + NodeImpl.this, e);
                 }
             }
+            public String toString() {
+                return "node.getProperties()";
+            }
         });
     }
 
@@ -2150,6 +2189,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 } else {
                     throw new PathNotFoundException(relPath);
                 }
+            }
+            public String toString() {
+                return "node.getProperty(" + relPath + ")";
             }
         });
     }

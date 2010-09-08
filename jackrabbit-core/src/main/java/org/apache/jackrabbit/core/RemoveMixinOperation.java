@@ -293,4 +293,13 @@ class RemoveMixinOperation implements SessionWriteOperation<Object> {
             || mixin.isDerivedFrom(MIX_REFERENCEABLE);
     }
 
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns a string representation of this operation.
+     */
+    public String toString() {
+        return "node.removeMixin(" + mixinName + ")";
+    }
+
 }
