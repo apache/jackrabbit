@@ -38,6 +38,10 @@
   <version>SNAPSHOT</version>
   <packaging>pom</packaging>
 
+  <properties>
+    <only>.*:.*</only>
+  </properties>
+
   <build>
     <pluginManagement>
       <plugins>
