@@ -162,12 +162,13 @@ public class SessionState {
                     // Perform the actual operation, optionally with debug logs
                     if (log.isDebugEnabled()) {
                         log.debug("Performing {}", operation);
-                        long start = System.nanoTime();
+                        long start = System.currentTimeMillis();
                         try {
                             return operation.perform(context);
                         } finally {
-                            log.debug("{} performed in {}ns",
-                                    operation, System.nanoTime() - start);
+                            log.debug("{} performed in {}ms",
+                                    operation,
+                                    System.currentTimeMillis() - start);
                         }
                     } else {
                         return operation.perform(context);
