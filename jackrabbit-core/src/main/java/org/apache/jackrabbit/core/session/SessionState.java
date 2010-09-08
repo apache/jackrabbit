@@ -24,6 +24,7 @@ import javax.jcr.Session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * Internal session state. This class keeps track of the lifecycle of
@@ -108,6 +109,21 @@ public class SessionState {
      *                             if the session has already been closed
      */
     public <T> T perform(SessionOperation<T> operation)
+            throws RepositoryException {
+        String previous = MDC.get("jcr.session");
+        MDC.put("jcr.session", context.toString());
+        try {
+            return internalPerform(operation);
+        } finally {
+            if (previous != null) {
+                MDC.put("jcr.session", previous);
+            } else {
+                MDC.remove("jcr.session");
+            }
+        }
+    }
+
+    private <T> T internalPerform(SessionOperation<T> operation)
             throws RepositoryException {
         if (!lock.tryLock()) {
             log.debug("Attempt to perform {} while another thread is"
