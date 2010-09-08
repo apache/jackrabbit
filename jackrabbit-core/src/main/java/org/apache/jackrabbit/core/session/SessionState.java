@@ -109,7 +109,7 @@ public class SessionState {
         if (!isAlive()) {
             throw new RepositoryException(
                     "This session has been closed. See the chained exception"
-                    + " for a trace of where the session was closed", closed);
+                    + " for a trace of where the session was closed.", closed);
         }
     }
 
@@ -123,23 +123,99 @@ public class SessionState {
      */
     public <T> T perform(SessionOperation<T> operation)
             throws RepositoryException {
-        LogState state = new LogState(
+        // Set MDC variables to reflect the current session and this operation
+        LogState logState = new LogState(
                 "jcr.session", context.toString(),
                 "jcr.operation", operation.toString());
         try {
-            if (log.isDebugEnabled()) {
-                long start = System.nanoTime();
-                try {
-                    return internalPerform(operation);
-                } finally {
-                    log.debug("{} performed in {}ns",
-                            operation, System.nanoTime() - start);
+            // Acquire the exclusive lock for accessing session internals.
+            // No other session should be holding the lock, so we log a
+            // message to let the user know of such cases.
+            if (!lock.tryLock()) {
+                if (isWriteOperation
+                        && operation instanceof SessionWriteOperation) {
+                    log.warn("Attempt to perform {} while another thread"
+                            + " is concurrently modifying the session."
+                            + " Blocking until the other thread is finished"
+                            + " using this session.", operation);
+                } else {
+                    log.debug("Attempt to perform {} while another thread"
+                            + " is concurrently accessing the session."
+                            + " Blocking until the other thread is finished"
+                            + " using this session.", operation);
                 }
-            } else {
-                return internalPerform(operation);
+                lock.lock();
+            }
+
+            try {
+                // Check that the session is still alive
+                checkAlive();
+
+                // Raise the isWriteOperation flag for write operations.
+                // The flag is used to set the appropriate log level above.
+                boolean wasWriteOperation = isWriteOperation;
+                if (!wasWriteOperation
+                        && operation instanceof SessionWriteOperation) {
+                    isWriteOperation = true;
+                }
+                try {
+                    // Perform the actual operation, optionally with debug logs
+                    if (log.isDebugEnabled()) {
+                        log.debug("Performing {}", operation);
+                        long start = System.nanoTime();
+                        try {
+                            return operation.perform(context);
+                        } finally {
+                            log.debug("{} performed in {}ns",
+                                    operation, System.nanoTime() - start);
+                        }
+                    } else {
+                        return operation.perform(context);
+                    }
+                } finally {
+                    isWriteOperation = wasWriteOperation;
+                }
+            } finally {
+                lock.unlock();
             }
         } finally {
-            state.reset();
+            logState.reset();
+        }
+    }
+
+    /**
+     * Closes this session.
+     *
+     * @return <code>true</code> if the session was closed, or
+     *         <code>false</code> if the session had already been closed
+     */
+    public boolean close() {
+        LogState logState = new LogState(
+                "jcr.session", context.toString(),
+                "jcr.operation", "close()");
+        try {
+            if (!lock.tryLock()) {
+                log.warn("Attempt to close a session while another thread is"
+                        + " concurrently accessing the session. Blocking until"
+                        + " the other thread is finished using this session.");
+                lock.lock();
+            }
+            try {
+                if (isAlive()) {
+                    closed = new Exception(
+                            "Stack trace of where " + context + " was closed");
+                    return true;
+                } else {
+                    log.warn("This session has already been closed. See the"
+                            + " chained exception for a trace of where the "
+                            + " session was closed.", closed);
+                    return false;
+                }
+            } finally {
+                lock.unlock();
+            }
+        } finally {
+            logState.reset();
         }
     }
 
@@ -170,72 +246,6 @@ public class SessionState {
             }
         }
 
-    }
-
-    /**
-     * The actual implementation of the {@link #perform(SessionOperation)}
-     * method, extracted since the public method is already filled with
-     * somewhat complex logging and timing logic.
-     *
-     * @param operation session operation
-     * @return the return value of the executed operation
-     * @throws RepositoryException if the operation fails or
-     *                             if the session has already been closed
-     */
-    private <T> T internalPerform(SessionOperation<T> operation)
-            throws RepositoryException {
-        if (!lock.tryLock()) {
-            if (isWriteOperation && operation instanceof SessionWriteOperation) {
-                log.warn("Attempt to perform {} while another thread is"
-                        + " concurrently modifying the session. Blocking until"
-                        + " the other thread is finished using this session.",
-                        operation);
-            } else {
-                log.debug("Attempt to perform {} while another thread is"
-                        + " concurrently accessing the session. Blocking until"
-                        + " the other thread is finished using this session.",
-                        operation);
-            }
-            lock.lock();
-        }
-        boolean wasWriteOperation = isWriteOperation;
-        if (!wasWriteOperation && operation instanceof SessionWriteOperation) {
-            isWriteOperation = true;
-        }
-        try {
-            checkAlive();
-            log.debug("Performing {}", operation);
-            return operation.perform(context);
-        } finally {
-            isWriteOperation = wasWriteOperation;
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Closes this session.
-     *
-     * @return <code>true</code> if the session was closed, or
-     *         <code>false</code> if the session had already been closed
-     */
-    public boolean close() {
-        if (!lock.tryLock()) {
-            log.warn("Attempt to close a session while another thread is"
-                    + " concurrently accessing the session. Blocking until"
-                    + " the other thread is finished using this session.");
-            lock.lock();
-        }
-        try {
-            if (isAlive()) {
-                closed = new Exception();
-                return true;
-            } else {
-                log.warn("This session has already been closed", closed);
-                return false;
-            }
-        } finally {
-            lock.unlock();
-        }
     }
 
 }
