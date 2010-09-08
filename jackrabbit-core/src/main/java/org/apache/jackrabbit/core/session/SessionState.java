@@ -113,7 +113,17 @@ public class SessionState {
         String previous = MDC.get("jcr.session");
         MDC.put("jcr.session", context.toString());
         try {
-            return internalPerform(operation);
+            if (log.isDebugEnabled()) {
+                long start = System.nanoTime();
+                try {
+                    return internalPerform(operation);
+                } finally {
+                    log.debug("{} performed in {}ns",
+                            operation, System.nanoTime() - start);
+                }
+            } else {
+                return internalPerform(operation);
+            }
         } finally {
             if (previous != null) {
                 MDC.put("jcr.session", previous);
