@@ -105,6 +105,8 @@ public class SessionState {
     /**
      * Performs the given operation within a synchronized block.
      *
+     * @param operation session operation
+     * @return the return value of the executed operation
      * @throws RepositoryException if the operation fails or
      *                             if the session has already been closed
      */
@@ -133,6 +135,16 @@ public class SessionState {
         }
     }
 
+    /**
+     * The actual implementation of the {@link #perform(SessionOperation)}
+     * method, extracted since the public method is already filled with
+     * somewhat complex logging and timing logic.
+     *
+     * @param operation session operation
+     * @return the return value of the executed operation
+     * @throws RepositoryException if the operation fails or
+     *                             if the session has already been closed
+     */
     private <T> T internalPerform(SessionOperation<T> operation)
             throws RepositoryException {
         if (!lock.tryLock()) {
