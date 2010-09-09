@@ -275,6 +275,7 @@ public class RepositoryImpl extends AbstractRepository
         repLock.init(repConfig.getHomeDir());
         repLock.acquire();
 
+        long t0 = System.currentTimeMillis();
         log.info("Starting repository...");
 
         boolean succeeded = false;
@@ -377,7 +378,7 @@ public class RepositoryImpl extends AbstractRepository
             }
 
             succeeded = true;
-            log.info("Repository started");
+            log.info("Repository started (" + (System.currentTimeMillis() - t0) + "ms)");
         } catch (RepositoryException e) {
             log.error("failed to start Repository: " + e.getMessage(), e);
             throw e;
@@ -2033,6 +2034,8 @@ public class RepositoryImpl extends AbstractRepository
              * {@link org.apache.jackrabbit.core.state.SharedItemStateManager#createRootNodeState}
              */
 
+            log.debug("initializing SearchManager...");
+            long t0 = System.currentTimeMillis();
             // register SearchManager as event listener
             SearchManager searchMgr = getSearchManager();
             if (searchMgr != null) {
@@ -2042,6 +2045,7 @@ public class RepositoryImpl extends AbstractRepository
                                 | Event.PROPERTY_CHANGED,
                         "/", true, null, null, false);
             }
+            log.debug("SearchManager initialized (" + (System.currentTimeMillis() - t0) + "ms)");
         }
 
         /**
