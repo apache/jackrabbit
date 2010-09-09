@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.session;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
@@ -42,7 +44,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.test.api.util.Text;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * Component context of a session. This class keeps track of the internal
@@ -53,7 +55,7 @@ public class SessionContext implements NamePathResolver {
     /**
      * Session counter. Used to generate unique internal session names.
      */
-    private static long counter = 0;
+    private static AtomicLong counter = new AtomicLong();
 
     /**
      * Creates a unique internal session name for a session with the
@@ -62,12 +64,13 @@ public class SessionContext implements NamePathResolver {
      * @param userId session user, or <code>null</code>
      * @return session name
      */
-    private static synchronized String createSessionName(String userId) {
+    private static String createSessionName(String userId) {
+        long count = counter.incrementAndGet();
         if (userId != null) {
             String user = Text.escapeIllegalJcrChars(userId);
-            return "session-" + user + "-" + counter++;
+            return "session-" + user + "-" + count;
         } else {
-            return "session-" + counter++;
+            return "session-" + count;
         }
     }
 
