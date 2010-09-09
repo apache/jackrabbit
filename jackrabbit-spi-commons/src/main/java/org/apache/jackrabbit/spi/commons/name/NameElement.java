@@ -28,6 +28,26 @@ final class NameElement extends AbstractElement {
     /** Serial version UID */
     private static final long serialVersionUID = -6655583285077651379L;
 
+    /** Static cache of instances of this class. */
+    private static final HashCache cache = new HashCache();
+
+    /**
+     * Creates and returns a named path element. A cache of path elements
+     * with an unspecified index is used to avoid having too many instances
+     * of this class in memory.
+     *
+     * @param element the element to return from the cache
+     * @return the given element or a previously cached copy
+     */
+    public static NameElement create(Name name, int index) {
+        NameElement element = new NameElement(name, index);
+        if (index == Path.INDEX_UNDEFINED) {
+            return (NameElement) cache.get(element);
+        } else {
+            return element;
+        }
+    }
+
     /**
      * Name of the path element.
      */
@@ -46,7 +66,7 @@ final class NameElement extends AbstractElement {
      * @param name name of this element
      * @param index index of this element, or {@link Path#INDEX_UNDEFINED}
      */
-    public NameElement(Name name, int index) {
+    private NameElement(Name name, int index) {
         if (name != null && index >= 0) {
             this.index = index;
             this.name = name;
