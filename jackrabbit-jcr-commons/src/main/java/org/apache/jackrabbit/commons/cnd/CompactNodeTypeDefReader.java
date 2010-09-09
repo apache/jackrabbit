@@ -16,30 +16,29 @@
  */
 package org.apache.jackrabbit.commons.cnd;
 
-import java.io.Reader;
-import java.util.LinkedList;
-import java.util.List;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractNodeDefinitionBuilder;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractNodeTypeDefinitionBuilder;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractPropertyDefinitionBuilder;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
-
-import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractNodeDefinitionBuilder;
-import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractNodeTypeDefinitionBuilder;
-import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory.AbstractPropertyDefinitionBuilder;
+import java.io.Reader;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * CompactNodeTypeDefReader. Parses node type definitions written in the compact
  * node type definition format and provides a list of type definition
  * objects that can then be used to register node types.
- *
+ * <p/>
  * The CompactNodeTypeDefReader is parameterizable in the type of the node type
  * definition <code>T</code> and the type of the namespace mapping <code>N</code>
  * which the parser should build. For types <code>T</code> and <code>N</code> the
  * parser's constructor takes a {@link DefinitionBuilderFactory} for
  * <code>T</code> and <code>N</code>.
- *
+ * <p/>
  * <p/>
  * The EBNF grammar of the compact node type definition:<br>
  * <pre>
@@ -129,13 +128,13 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * Creates a new CND reader and parses the given stream.
      *
-     * @param r a reader to the CND
+     * @param r        a reader to the CND
      * @param systemId a informative id of the given stream
-     * @param factory builder for creating new definitions and handling namespaces
+     * @param factory  builder for creating new definitions and handling namespaces
      * @throws ParseException if an error occurs
      */
     public CompactNodeTypeDefReader(Reader r, String systemId,
-            DefinitionBuilderFactory<T, N> factory) throws ParseException {
+                                    DefinitionBuilderFactory<T, N> factory) throws ParseException {
 
         this(r, systemId, null, factory);
     }
@@ -143,14 +142,14 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * Creates a new CND reader and parses the given stream.
      *
-     * @param r a reader to the CND
-     * @param systemId a informative id of the given stream
+     * @param r         a reader to the CND
+     * @param systemId  a informative id of the given stream
      * @param nsMapping default namespace mapping to use
-     * @param factory builder for creating new definitions and handling namespaces
+     * @param factory   builder for creating new definitions and handling namespaces
      * @throws ParseException if an error occurs
      */
     public CompactNodeTypeDefReader(Reader r, String systemId, N nsMapping,
-            DefinitionBuilderFactory<T, N> factory) throws ParseException {
+                                    DefinitionBuilderFactory<T, N> factory) throws ParseException {
 
         super();
 
@@ -166,6 +165,7 @@ public class CompactNodeTypeDefReader<T, N> {
 
     /**
      * Returns the previously assigned system id
+     *
      * @return the system id
      */
     public String getSystemId() {
@@ -214,16 +214,15 @@ public class CompactNodeTypeDefReader<T, N> {
                 doItemDefs(ntd);
                 nodeTypeDefs.add(ntd.build());
             }
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail(e);
         }
     }
 
 
-
     /**
      * processes the namespace declaration
+     *
      * @return <code>true</code> if a namespace was parsed
      * @throws ParseException if an error during parsing occurs
      */
@@ -245,8 +244,7 @@ public class CompactNodeTypeDefReader<T, N> {
         }
         try {
             factory.setNamespace(prefix, uri);
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail("Error setting namespace mapping " + currentToken, e);
         }
         nextToken();
@@ -266,8 +264,7 @@ public class CompactNodeTypeDefReader<T, N> {
         nextToken();
         try {
             ntd.setName(currentToken);
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail("Error setting node type name " + currentToken, e);
         }
 
@@ -284,15 +281,14 @@ public class CompactNodeTypeDefReader<T, N> {
      * @param ntd nodetype definition builder
      * @throws ParseException if an error during parsing occurs
      */
-    private void doSuperTypes(AbstractNodeTypeDefinitionBuilder<T> ntd) throws ParseException  {
+    private void doSuperTypes(AbstractNodeTypeDefinitionBuilder<T> ntd) throws ParseException {
 
         if (currentTokenEquals(Lexer.EXTENDS))
             do {
                 nextToken();
                 try {
                     ntd.addSupertype(currentToken);
-                }
-                catch (RepositoryException e) {
+                } catch (RepositoryException e) {
                     lexer.fail("Error setting super type of " + ntd.getName() + " to " + currentToken, e);
                 }
                 nextToken();
@@ -333,8 +329,7 @@ public class CompactNodeTypeDefReader<T, N> {
                     hasOption = false;
                 }
             }
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail("Error setting option of " + ntd.getName() + " to " + currentToken, e);
         }
     }
@@ -360,15 +355,13 @@ public class CompactNodeTypeDefReader<T, N> {
                         pd.setRequiredType(PropertyType.STRING);
                         pd.setFullTextSearchable(true);
                         pd.setQueryOrderable(true);
-                    }
-                    catch (RepositoryException e) {
+                    } catch (RepositoryException e) {
                         lexer.fail("Error setting property definitions of " + pd.getName() + " to " + currentToken, e);
                     }
                     nextToken();
                     doPropertyDefinition(pd, ntd);
                     pd.build();
-                }
-                catch (RepositoryException e) {
+                } catch (RepositoryException e) {
                     lexer.fail("Error building property definition for " + ntd.getName(), e);
                 }
 
@@ -382,16 +375,14 @@ public class CompactNodeTypeDefReader<T, N> {
                         nd.setMandatory(false);
                         nd.setOnParentVersion(OnParentVersionAction.COPY);
                         nd.setProtected(false);
-                    }
-                    catch (RepositoryException e) {
+                    } catch (RepositoryException e) {
                         lexer.fail("Error setting node definitions of " + nd.getName() + " to " + currentToken, e);
                     }
 
                     nextToken();
                     doChildNodeDefinition(nd, ntd);
                     nd.build();
-                }
-                catch (RepositoryException e) {
+                } catch (RepositoryException e) {
                     lexer.fail("Error building node definition for " + ntd.getName(), e);
                 }
             }
@@ -401,7 +392,7 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * processes the property definition
      *
-     * @param pd property definition builder
+     * @param pd  property definition builder
      * @param ntd declaring nodetype definition builder
      * @throws ParseException if an error during parsing occur
      */
@@ -410,9 +401,8 @@ public class CompactNodeTypeDefReader<T, N> {
 
         try {
             pd.setName(currentToken);
-        }
-        catch (RepositoryException e) {
-            lexer.fail("Error setting name of " + pd.getName() + " to " + currentToken);
+        } catch (RepositoryException e) {
+            lexer.fail("Invalid property name '" + currentToken + "': " + e.getMessage());
         }
         nextToken();
         doPropertyType(pd);
@@ -463,8 +453,7 @@ public class CompactNodeTypeDefReader<T, N> {
             } else {
                 lexer.fail("Unkown property type '" + currentToken + "' specified");
             }
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail("Error setting property type of " + pd.getName() + " to " + currentToken);
         }
         nextToken();
@@ -477,12 +466,12 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * processes the property attributes
      *
-     * @param pd property definition builder
+     * @param pd  property definition builder
      * @param ntd declaring nodetype definition builder
      * @throws ParseException if an error during parsing occurs
      */
     private void doPropertyAttributes(AbstractPropertyDefinitionBuilder<T> pd,
-            AbstractNodeTypeDefinitionBuilder<T> ntd) throws ParseException {
+                                      AbstractNodeTypeDefinitionBuilder<T> ntd) throws ParseException {
 
         try {
             while (currentTokenEquals(Lexer.PROP_ATTRIBUTE)) {
@@ -517,8 +506,7 @@ public class CompactNodeTypeDefReader<T, N> {
                 }
                 nextToken();
             }
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail("Error setting property attribute of " + pd.getName() + " to " + currentToken);
         }
     }
@@ -560,8 +548,7 @@ public class CompactNodeTypeDefReader<T, N> {
         }
         try {
             pd.setAvailableQueryOperators(queryOps.toArray(new String[queryOps.size()]));
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail("Error query operators for " + pd.getName() + " to " + currentToken);
         }
     }
@@ -583,9 +570,8 @@ public class CompactNodeTypeDefReader<T, N> {
             nextToken();
             try {
                 pd.addDefaultValues(currentToken);
-            }
-            catch (RepositoryException e) {
-                lexer.fail("Error adding default value for " + pd.getName() + " to " + currentToken);
+            } catch (RepositoryException e) {
+                lexer.fail("Error adding default value for " + pd.getName() + " to " + currentToken + ": " + e.getMessage());
             }
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
@@ -608,9 +594,8 @@ public class CompactNodeTypeDefReader<T, N> {
             nextToken();
             try {
                 pd.addValueConstraint(currentToken);
-            }
-            catch (RepositoryException e) {
-                lexer.fail("Error adding value constraint for " + pd.getName() + " to " + currentToken);
+            } catch (RepositoryException e) {
+                lexer.fail("Error adding value constraint for " + pd.getName() + " to " + currentToken + ": " + e.getMessage());
             }
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
@@ -619,7 +604,7 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * processes the childnode definition
      *
-     * @param nd node definition builder
+     * @param nd  node definition builder
      * @param ntd declaring nodetype definition builder
      * @throws ParseException if an error during parsing occurs
      */
@@ -629,9 +614,8 @@ public class CompactNodeTypeDefReader<T, N> {
 
         try {
             nd.setName(currentToken);
-        }
-        catch (RepositoryException e) {
-            lexer.fail("Error setting child name of " + nd.getName() + " to " + currentToken);
+        } catch (RepositoryException e) {
+            lexer.fail("Invalid child node name '" + currentToken + "': " + e.getMessage());
         }
         nextToken();
         doChildNodeRequiredTypes(nd);
@@ -656,9 +640,8 @@ public class CompactNodeTypeDefReader<T, N> {
             nextToken();
             try {
                 nd.addRequiredPrimaryType(currentToken);
-            }
-            catch (RepositoryException e) {
-                lexer.fail("Error setting required primary type of " + nd.getName() + " to " + currentToken);
+            } catch (RepositoryException e) {
+                lexer.fail("Error setting required primary type of " + nd.getName() + " to " + currentToken + ": " + e.getMessage());
             }
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
@@ -680,9 +663,8 @@ public class CompactNodeTypeDefReader<T, N> {
         nextToken();
         try {
             nd.setDefaultPrimaryType(currentToken);
-        }
-        catch (RepositoryException e) {
-            lexer.fail("Error setting default primary type of " + nd.getName() + " to " + currentToken);
+        } catch (RepositoryException e) {
+            lexer.fail("Error setting default primary type of " + nd.getName() + " to " + currentToken + ": " + e.getMessage());
         }
         nextToken();
     }
@@ -690,7 +672,7 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * processes the childnode attributes
      *
-     * @param nd node definition builder
+     * @param nd  node definition builder
      * @param ntd declaring nodetype definition builder
      * @throws ParseException if an error during parsing occurs
      */
@@ -725,8 +707,7 @@ public class CompactNodeTypeDefReader<T, N> {
                 }
                 nextToken();
             }
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             lexer.fail("Error setting child node attribute of " + nd.getName() + " to " + currentToken);
         }
     }
@@ -734,8 +715,8 @@ public class CompactNodeTypeDefReader<T, N> {
     /**
      * Gets the next token from the underlying lexer.
      *
-     * @see Lexer#getNextToken()
      * @throws ParseException if the lexer fails to get the next token.
+     * @see Lexer#getNextToken()
      */
     private void nextToken() throws ParseException {
         currentToken = lexer.getNextToken();
