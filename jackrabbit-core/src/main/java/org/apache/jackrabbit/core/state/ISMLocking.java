@@ -81,10 +81,8 @@ public interface ISMLocking {
          * used to further release the read lock.
          *
          * @return the read lock downgraded from this write lock.
-         * @throws InterruptedException if the current thread is interrupted
-         *                              while downgrading the write lock.
          */
-        ReadLock downgrade() throws InterruptedException;
+        ReadLock downgrade();
 
     }
 
