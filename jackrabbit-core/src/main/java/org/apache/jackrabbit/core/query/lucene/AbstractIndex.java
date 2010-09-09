@@ -16,25 +16,29 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.IndexDeletionPolicy;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.search.Similarity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.index.IndexDeletionPolicy;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.store.Directory;
+import org.apache.tika.io.IOExceptionWithCause;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements common functionality for a lucene index.
@@ -171,44 +175,48 @@ abstract class AbstractIndex {
      * @throws IOException if an error occurs while writing to the index.
      */
     void addDocuments(Document[] docs) throws IOException {
+        final List<IOException> exceptions =
+            Collections.synchronizedList(new ArrayList<IOException>());
+        final CountDownLatch latch = new CountDownLatch(docs.length);
+
         final IndexWriter writer = getIndexWriter();
-        DynamicPooledExecutor.Command[] commands =
-                new DynamicPooledExecutor.Command[docs.length];
-        for (int i = 0; i < docs.length; i++) {
-            // check if text extractor completed its work
-            final Document doc = getFinishedDocument(docs[i]);
-            // create a command for inverting the document
-            commands[i] = new DynamicPooledExecutor.Command() {
-                public Object call() throws Exception {
-                    long time = System.currentTimeMillis();
-                    writer.addDocument(doc);
-                    return System.currentTimeMillis() - time;
-                }
-            };
-        }
-        DynamicPooledExecutor.Result[] results = EXECUTOR.executeAndWait(commands);
-        invalidateSharedReader();
-        IOException ex = null;
-        for (DynamicPooledExecutor.Result result : results) {
-            if (result.getException() != null) {
-                Throwable cause = result.getException().getCause();
-                if (ex == null) {
-                    // only throw the first exception
-                    if (cause instanceof IOException) {
-                        ex = (IOException) cause;
-                    } else {
-                        throw Util.createIOException(cause);
+        for (final Document doc : docs) {
+            EXECUTOR.execute(new Runnable() {
+                public void run() {
+                    try {
+                        // check if text extractor completed its work
+                        Document document = getFinishedDocument(doc);
+                        if (log.isDebugEnabled()) {
+                            long start = System.nanoTime();
+                            writer.addDocument(document);
+                            log.debug("Inverted a document in {}us",
+                                    (System.nanoTime() - start) / 1000);
+                        } else {
+                            writer.addDocument(document);
+                        }
+                    } catch (IOException e) {
+                        log.warn("Exception while inverting a document", e);
+                        exceptions.add(e);
+                    } finally {
+                        latch.countDown();
                     }
-                } else {
-                    // all others are logged
-                    log.warn("Exception while inverting document", cause);
                 }
-            } else {
-                log.debug("Inverted document in {} ms", result.get());
-            }
+            });
         }
-        if (ex != null) {
-            throw ex;
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new IOExceptionWithCause(
+                    "Wait for background indexing tasks was interrupted", e);
+        } finally {
+            invalidateSharedReader();
+        }
+
+        if (!exceptions.isEmpty()) {
+            throw new IOExceptionWithCause(
+                    exceptions.size() + " of " + docs.length
+                    + " background indexer tasks failed", exceptions.get(0));
         }
     }
 
