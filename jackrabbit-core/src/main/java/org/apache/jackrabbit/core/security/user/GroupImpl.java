@@ -16,6 +16,31 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.commons.flat.BTreeManager;
+import org.apache.jackrabbit.commons.flat.ItemSequence;
+import org.apache.jackrabbit.commons.flat.PropertySequence;
+import org.apache.jackrabbit.commons.flat.Rank;
+import org.apache.jackrabbit.commons.flat.TreeManager;
+import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionWriteOperation;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.security.Principal;
@@ -30,32 +55,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.commons.flat.BTreeManager;
-import org.apache.jackrabbit.commons.flat.ItemSequence;
-import org.apache.jackrabbit.commons.flat.PropertySequence;
-import org.apache.jackrabbit.commons.flat.Rank;
-import org.apache.jackrabbit.commons.flat.TreeManager;
-import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.session.SessionOperation;
-import org.apache.jackrabbit.core.session.SessionWriteOperation;
-import org.apache.jackrabbit.spi.commons.iterator.Iterators;
-import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * GroupImpl...
@@ -403,7 +402,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 Value[] members = node.getProperty(P_MEMBERS).getValues();
 
                 if (includeIndirect) {
-                    return includeIndirect(toAuthorizables(members, type));
+                    return includeIndirect(toAuthorizables(members, type), type);
                 }
                 else {
                     return toAuthorizables(members, type);
@@ -500,7 +499,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
             if (node.hasNode(N_MEMBERS)) {
                 PropertySequence members = getPropertySequence(node.getNode(N_MEMBERS), userManager);
                 if (includeIndirect) {
-                    return includeIndirect(toAuthorizables(members.iterator(), type));
+                    return includeIndirect(toAuthorizables(members.iterator(), type), type);
                 }
                 else {
                     return toAuthorizables(members.iterator(), type);
@@ -519,7 +518,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * Returns an iterator of authorizables which includes all indirect members of the given iterator
      * of authorizables.
      */
-    private Iterator<Authorizable> includeIndirect(final Iterator<Authorizable> authorizables) {
+    private Iterator<Authorizable> includeIndirect(final Iterator<Authorizable> authorizables, final int type) {
         Iterator<Iterator<Authorizable>> indirectMembers = new Iterator<Iterator<Authorizable>>() {
             public boolean hasNext() {
                 return authorizables.hasNext();
@@ -540,7 +539,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
             private Iterator<Authorizable> indirect(Authorizable authorizable) {
                 if (authorizable.isGroup()) {
                     try {
-                        return ((Group) authorizable).getMembers();
+                        return ((GroupImpl) authorizable).getMembers(true, type);
                     }
                     catch (RepositoryException e) {
                         log.warn("Could not determine members of " + authorizable, e);

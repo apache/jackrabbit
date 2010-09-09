@@ -405,6 +405,29 @@ public class GroupTest extends AbstractUserTest {
         }
     }
 
+    public void testCyclicGroups() throws AuthorizableExistsException, RepositoryException, NotExecutableException {
+        Group group1 = null;
+        Group group2 = null;
+        Group group3 = null;
+        try {
+            group1 = userMgr.createGroup(getTestPrincipal());
+            group2 = userMgr.createGroup(getTestPrincipal());
+            group3 = userMgr.createGroup(getTestPrincipal());
+
+            group1.addMember(getTestUser(superuser));
+            group2.addMember(getTestUser(superuser));
+
+            assertTrue(group1.addMember(group2));
+            assertTrue(group2.addMember(group3));
+            assertFalse(group3.addMember(group1));
+        }
+        finally {
+            if (group1 != null) group1.remove();
+            if (group2 != null) group2.remove();
+            if (group3 != null) group3.remove();
+        }
+    }
+
     public void testRemoveMemberTwice() throws NotExecutableException, RepositoryException {
         User auth = getTestUser(superuser);
         Group newGroup = null;
