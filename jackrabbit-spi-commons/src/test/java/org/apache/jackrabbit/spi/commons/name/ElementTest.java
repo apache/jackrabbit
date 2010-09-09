@@ -59,7 +59,7 @@ public class ElementTest extends TestCase {
 
     public void testNameElement() {
         Element element =
-            new NameElement(createName("test"), Path.INDEX_UNDEFINED);
+            NameElement.create(createName("test"), Path.INDEX_UNDEFINED);
         assertFalse(element.denotesCurrent());
         assertFalse(element.denotesIdentifier());
         assertTrue(element.denotesName());
@@ -72,7 +72,7 @@ public class ElementTest extends TestCase {
     }
 
     public void testIndexedNameElement() {
-        Element element = new NameElement(createName("test"), 123);
+        Element element = NameElement.create(createName("test"), 123);
         assertFalse(element.denotesCurrent());
         assertFalse(element.denotesIdentifier());
         assertTrue(element.denotesName());

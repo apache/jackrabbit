@@ -43,18 +43,17 @@ public class PathFactoryImpl implements PathFactory {
     private final static Name PARENT_NAME = NAME_FACTORY.create(Name.NS_DEFAULT_URI, PARENT_LITERAL);
     private final static Name ROOT_NAME = NAME_FACTORY.create(Name.NS_DEFAULT_URI, "");
 
-    private static final Path.Element CURRENT_ELEMENT = new SpecialElement(CURRENT_NAME);
-    private static final Path.Element PARENT_ELEMENT = new SpecialElement(PARENT_NAME);
-    private static final Path.Element ROOT_ELEMENT = new SpecialElement(ROOT_NAME);
-
     /**
      * the root path
      */
-    private static final Path ROOT = new PathImpl(new Path.Element[]{ROOT_ELEMENT}, true);
-    private static final Path CURRENT_PATH = new PathImpl(new Path.Element[]{CURRENT_ELEMENT}, true);
-    private static final Path PARENT_PATH = new PathImpl(new Path.Element[]{PARENT_ELEMENT}, true);
+    private static final Path ROOT =
+        new PathImpl(new Path.Element[] { RootElement.INSTANCE }, true);
 
-    private final HashCache ELEMENT_CACHE = new HashCache();
+    private static final Path CURRENT_PATH =
+        new PathImpl(new Path.Element[] { CurrentElement.INSTANCE }, true);
+
+    private static final Path PARENT_PATH =
+        new PathImpl(new Path.Element[] { ParentElement.INSTANCE }, true);
 
     private PathFactoryImpl() {}
 
@@ -193,13 +192,13 @@ public class PathFactoryImpl implements PathFactory {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
         } else if (name.equals(PARENT_NAME)) {
-            return PARENT_ELEMENT;
+            return ParentElement.INSTANCE;
         } else if (name.equals(CURRENT_NAME)) {
-            return CURRENT_ELEMENT;
+            return CurrentElement.INSTANCE;
         } else if (name.equals(ROOT_NAME)) {
-            return ROOT_ELEMENT;
+            return RootElement.INSTANCE;
         } else {
-            return getCachedElement(new Element(name, Path.INDEX_UNDEFINED));
+            return NameElement.create(name, Path.INDEX_UNDEFINED);
         }
     }
 
@@ -219,7 +218,7 @@ public class PathFactoryImpl implements PathFactory {
                     "Special path elements (root, '.' and '..') can not have an explicit index: "
                     + name + "[" + index + "]");
         } else {
-            return new Element(name, index);
+            return NameElement.create(name, index);
         }
     }
 
@@ -239,11 +238,11 @@ public class PathFactoryImpl implements PathFactory {
             throw new IllegalArgumentException("null PathElement literal");
         }
         if (elementString.equals(ROOT_NAME.toString())) {
-            return ROOT_ELEMENT;
+            return RootElement.INSTANCE;
         } else if (elementString.equals(CURRENT_LITERAL)) {
-            return CURRENT_ELEMENT;
+            return CurrentElement.INSTANCE;
         } else if (elementString.equals(PARENT_LITERAL)) {
-            return PARENT_ELEMENT;
+            return ParentElement.INSTANCE;
         } else if (elementString.startsWith("[") && elementString.endsWith("]") && elementString.length() > 2) {
             return new IdentifierElement(elementString.substring(1, elementString.length()-1));
         }
@@ -251,7 +250,7 @@ public class PathFactoryImpl implements PathFactory {
         int pos = elementString.indexOf('[');
         if (pos == -1) {
             Name name = NAME_FACTORY.create(elementString);
-            return getCachedElement(new Element(name, Path.INDEX_UNDEFINED));
+            return NameElement.create(name, Path.INDEX_UNDEFINED);
         }
         Name name = NAME_FACTORY.create(elementString.substring(0, pos));
         int pos1 = elementString.indexOf(']');
@@ -263,7 +262,7 @@ public class PathFactoryImpl implements PathFactory {
             if (index < 1) {
                 throw new IllegalArgumentException("invalid PathElement literal: " + elementString + " (index is 1-based)");
             }
-            return new Element(name, index);
+            return NameElement.create(name, index);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("invalid PathElement literal: " + elementString + " (" + e.getMessage() + ")");
         }
@@ -273,21 +272,21 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#getCurrentElement()
      */
     public Path.Element getCurrentElement() {
-        return CURRENT_ELEMENT;
+        return CurrentElement.INSTANCE;
     }
 
     /**
      * @see PathFactory#getParentElement()
      */
     public Path.Element getParentElement() {
-        return PARENT_ELEMENT;
+        return ParentElement.INSTANCE;
     }
 
     /**
      * @see PathFactory#getRootElement()
      */
     public Path.Element getRootElement() {
-        return ROOT_ELEMENT;
+        return RootElement.INSTANCE;
     }
 
     /**
@@ -464,7 +463,7 @@ public class PathFactoryImpl implements PathFactory {
                  */
                 int tmp = elems0.length - lengthCommon;
                 while (tmp-- > 0) {
-                    l.add(0, PARENT_ELEMENT);
+                    l.add(0, ParentElement.INSTANCE);
                 }
             }
             // add remainder of other path
@@ -500,7 +499,7 @@ public class PathFactoryImpl implements PathFactory {
                 System.arraycopy(elements, 0, ancestorElements, 0, elements.length);
 
                 for (int i = elements.length; i < ancestorElements.length; i++) {
-                    ancestorElements[i] = PARENT_ELEMENT;
+                    ancestorElements[i] = ParentElement.INSTANCE;
                 }
                 return new PathImpl(ancestorElements, false).getNormalizedPath();
             }
@@ -712,331 +711,6 @@ public class PathFactoryImpl implements PathFactory {
         }
     }
 
-    //-------------------------------------------------------< Path.Element >---
-
-    /**
-     * If a cached copy of the given element already exists, then returns
-     * that copy. Otherwise the given element is cached and returned. This
-     * method only works correctly with elements that have an undefined index!
-     *
-     * @param element the element to return from the cache
-     * @return the given element or a previously cached copy
-     */
-    private Element getCachedElement(Element element) {
-        assert element.getIndex() == Path.INDEX_UNDEFINED;
-        return (Element) ELEMENT_CACHE.get(element);
-    }
-
-    /**
-     * Object representation of a single JCR path element.
-     *
-     * @see Path.Element
-     */
-    private static class Element implements Path.Element {
-
-        /**
-         * Name of the path element.
-         */
-        private final Name name;
-
-        /**
-         * Optional index of the path element. Set to zero, if not
-         * explicitly specified, otherwise contains the 1-based index.
-         */
-        private final int index;
-
-        /**
-         * Private constructor for creating a path element with the given
-         * name and index. Instead of using this constructor directly
-         * the factory methods {@link PathFactory#createElement(Name)} and
-         * {@link PathFactory#create(Name, int)} should be used.
-         *
-         * @param name A <code>Name</code> object.
-         * @param index index
-         */
-        private Element(Name name, int index) {
-            this.index = index;
-            this.name = name;
-        }
-
-        /**
-         * @see Path.Element#getName()
-         */
-        public Name getName() {
-            return name;
-        }
-
-        /**
-         * @see Path.Element#getIndex()
-         */
-        public int getIndex() {
-            return index;
-        }
-
-        /**
-         * @see Path.Element#getNormalizedIndex()
-         */
-        public int getNormalizedIndex() {
-            if (index == Path.INDEX_UNDEFINED) {
-                return Path.INDEX_DEFAULT;
-            } else {
-                return index;
-            }
-        }
-
-        /**
-         * @return always returns false.
-         * @see Path.Element#denotesRoot()
-         */
-        public boolean denotesRoot() {
-            return false;
-        }
-
-        /**
-         * @return always returns false.
-         * @see Path.Element#denotesParent()
-         */
-        public boolean denotesParent() {
-            return false;
-        }
-
-        /**
-         * @return always returns false.
-         * @see Path.Element#denotesCurrent()
-         */
-        public boolean denotesCurrent() {
-            return false;
-        }
-
-        /**
-         * @return always returns true.
-         * @see Path.Element#denotesName()
-         */
-        public boolean denotesName() {
-            return true;
-        }
-
-        /**
-         * @return always returns false.
-         * @see Path.Element#denotesIdentifier()
-         */
-        public boolean denotesIdentifier() {
-            return false;
-        }
-
-        /**
-         * @see Path.Element#getString()
-         */
-        public String getString() {
-            return toString();
-        }
-
-        /**
-         * Returns a string representation of this path element. Note that
-         * the path element name is expressed using the <code>{uri}name</code>
-         * syntax.
-         *
-         * @return string representation of the path element
-         * @see Object#toString()
-         */
-        @Override
-        public String toString() {
-            StringBuffer sb = new StringBuffer();
-            // name
-            sb.append(name.toString());
-            // index
-            if (index > Path.INDEX_DEFAULT) {
-                sb.append('[');
-                sb.append(index);
-                sb.append(']');
-            }
-            return sb.toString();
-        }
-
-        /**
-         * Computes a hash code for this path element.
-         *
-         * @return hash code
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            int h = 17;
-            h = 37 * h + getNormalizedIndex();
-            h = 37 * h + name.hashCode();
-            return h;
-        }
-
-        /**
-         * Check for path element equality. Returns true if the given
-         * object is a PathElement and contains the same name and index
-         * as this one.
-         *
-         * @param obj the object to compare with
-         * @return <code>true</code> if the path elements are equal
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof Path.Element) {
-                Path.Element other = (Path.Element) obj;
-                return name.equals(other.getName())
-                        && getNormalizedIndex() == other.getNormalizedIndex();
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Object representation of a special JCR path element notably the root, the
-     * current and the parent element.
-     */
-    private static final class SpecialElement extends Element {
-
-        private final static int ROOT = 1;
-        private final static int CURRENT = 2;
-        private final static int PARENT = 4;
-
-        private final int type;
-
-        private SpecialElement(Name name) {
-            super(name, Path.INDEX_UNDEFINED);
-            if (ROOT_NAME.equals(name)) {
-                type = ROOT;
-            } else if (CURRENT_NAME.equals(name)) {
-                type = CURRENT;
-            } else if (PARENT_NAME.equals(name)) {
-                type = PARENT;
-            } else {
-                throw new IllegalArgumentException();
-            }
-        }
-
-        /**
-         * @return true if this is the {@link #ROOT root element}.
-         * @see Path.Element#denotesRoot()
-         */
-        @Override
-        public boolean denotesRoot() {
-            return type == ROOT;
-        }
-
-        /**
-         * @return true if this is the {@link #PARENT parent element}.
-         * @see Path.Element#denotesParent()
-         */
-        @Override
-        public boolean denotesParent() {
-            return type == PARENT;
-        }
-
-        /**
-         * @return true if this is the {@link #CURRENT current element}.
-         * @see Path.Element#denotesCurrent()
-         */
-        @Override
-        public boolean denotesCurrent() {
-            return type == CURRENT;
-        }
-
-        /**
-         * @return Always returns false.
-         * @see Path.Element#denotesName()
-         */
-        @Override
-        public boolean denotesName() {
-            return false;
-        }
-    }
-
-    /**
-     * 
-     */
-    private static final class IdentifierElement extends Element {
-
-        private final String identifier;
-        /**
-         * 
-         * @param identifier
-         */
-        private IdentifierElement(String identifier) {
-            super(null, Path.INDEX_UNDEFINED);
-            this.identifier = identifier;
-        }
-
-        /**
-         * @return Always returns true.
-         * @see Path.Element#denotesIdentifier()
-         */
-        @Override
-        public boolean denotesIdentifier() {
-            return true;
-        }
-
-        /**
-         * @return Always returns false.
-         * @see Path.Element#denotesName()
-         */
-        @Override
-        public boolean denotesName() {
-            return false;
-        }
-
-        /**
-         * Returns a string representation of this path element. Note that
-         * the path element name is expressed using the <code>{uri}name</code>
-         * syntax.
-         *
-         * @return string representation of the path element
-         * @see Object#toString()
-         */
-        @Override
-        public String toString() {
-            StringBuffer sb = new StringBuffer();
-            sb.append('[');
-            sb.append(identifier);
-            sb.append(']');
-            return sb.toString();
-        }
-
-        /**
-         * Computes a hash code for this path element.
-         *
-         * @return hash code
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            int h = 37 * 17 + identifier.hashCode();
-            return h;
-        }
-
-        /**
-         * Check for path element equality. Returns true if the given
-         * object is a PathElement and contains the same name and index
-         * as this one.
-         *
-         * @param obj the object to compare with
-         * @return <code>true</code> if the path elements are equal
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof IdentifierElement) {
-                return identifier.equals(((IdentifierElement) obj).identifier);
-            } if (obj instanceof Path.Element) {
-                Path.Element other = (Path.Element) obj;
-                return other.denotesIdentifier() && getString().equals(other.getString());
-            }
-            return false;
-        }
-    }
     /**
      * Builder internal class
      */
