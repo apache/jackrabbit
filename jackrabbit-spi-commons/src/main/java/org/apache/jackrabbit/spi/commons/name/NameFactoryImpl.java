@@ -31,7 +31,7 @@ public class NameFactoryImpl implements NameFactory {
      *
      * @see <a href="https://issues.apache.org/jira/browse/JCR-1663">JCR-1663</a>
      */
-    private final HashCache cache = new HashCache();
+    private final HashCache<Name> cache = new HashCache<Name>();
 
     private NameFactoryImpl() {};
 
@@ -51,7 +51,7 @@ public class NameFactoryImpl implements NameFactory {
         if (localName == null) {
             throw new IllegalArgumentException("No localName specified");
         }
-        return (Name) cache.get(new NameImpl(namespaceURI, localName));
+        return cache.get(new NameImpl(namespaceURI, localName));
     }
 
     /**
