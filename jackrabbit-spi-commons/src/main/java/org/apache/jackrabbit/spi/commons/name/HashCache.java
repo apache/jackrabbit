@@ -25,13 +25,13 @@ package org.apache.jackrabbit.spi.commons.name;
  *
  * @see https://issues.apache.org/jira/browse/JCR-1663
  */
-public class HashCache {
+public class HashCache<T> {
 
     /**
      * Array of cached objects, indexed by their hash codes
      * (module size of the array).
      */
-    private final Object[] array;
+    private final T[] array;
 
     /**
      * Creates a hash cache with 1024 slots.
@@ -45,8 +45,9 @@ public class HashCache {
      *
      * @param exponent the exponent.
      */
+    @SuppressWarnings("unchecked")
     public HashCache(int exponent) {
-        this.array = new Object[2 << exponent];
+        this.array = (T[]) new Object[2 << exponent];
     }
 
     /**
@@ -56,9 +57,9 @@ public class HashCache {
      * @param object object to return from the cache
      * @return the given object or a previously cached copy
      */
-    public Object get(Object object) {
+    public T get(T object) {
         int position = object.hashCode() & (array.length - 1);
-        Object previous = array[position];
+        T previous = array[position];
         if (object.equals(previous)) {
             return previous;
         } else {

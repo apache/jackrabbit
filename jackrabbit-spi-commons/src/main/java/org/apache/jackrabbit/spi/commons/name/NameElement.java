@@ -29,7 +29,8 @@ final class NameElement extends AbstractElement {
     private static final long serialVersionUID = -6655583285077651379L;
 
     /** Static cache of instances of this class. */
-    private static final HashCache cache = new HashCache();
+    private static final HashCache<NameElement> cache =
+        new HashCache<NameElement>();
 
     /**
      * Creates and returns a named path element. A cache of path elements
@@ -42,7 +43,7 @@ final class NameElement extends AbstractElement {
     public static NameElement create(Name name, int index) {
         NameElement element = new NameElement(name, index);
         if (index == Path.INDEX_UNDEFINED) {
-            return (NameElement) cache.get(element);
+            return cache.get(element);
         } else {
             return element;
         }
