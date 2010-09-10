@@ -133,7 +133,7 @@ public abstract class AbstractPerformanceTest {
             try {
                 if (needsPrefix) {
                     writer.format(
-                            "# %-34.34s     min     10%     50%     90%     max%n",
+                            "# %-34.34s     min     10%%     50%%     90%%     max%n",
                             test);
                 }
 
