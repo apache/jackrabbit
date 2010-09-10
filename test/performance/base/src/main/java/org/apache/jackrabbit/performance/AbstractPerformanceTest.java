@@ -91,6 +91,7 @@ public abstract class AbstractPerformanceTest {
                 new SimpleCredentials("admin", "admin".toCharArray()));
         runTest(suite, new LoginTest(), name, testPattern);
         runTest(suite, new LoginLogoutTest(), name, testPattern);
+        runTest(suite, new SetPropertyTest(), name, testPattern);
         runTest(suite, new SmallFileReadTest(), name, testPattern);
         runTest(suite, new SmallFileWriteTest(), name, testPattern);
         runTest(suite, new BigFileReadTest(), name, testPattern);
