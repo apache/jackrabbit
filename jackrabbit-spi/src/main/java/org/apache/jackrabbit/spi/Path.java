@@ -201,6 +201,27 @@ public interface Path extends Serializable {
     public Path getCanonicalPath() throws RepositoryException;
 
     /**
+     * Resolves the given path element against this path. If the given
+     * element is absolute (i.e. the root or an identifier element), then
+     * a path containing just that element is returned. Otherwise the
+     * returned path consists of this path followed by the given element.
+     *
+     * @param element path element
+     * @return resolved path
+     */
+    Path resolve(Element element);
+
+    /**
+     * Resolves the given path against this path. If the given path is
+     * absolute, then it is returned as-is. Otherwise the path is resolved
+     * relative to this path and the resulting resolved path is returned.
+     *
+     * @param relative the path to be resolved
+     * @return resolved path
+     */
+    Path resolve(Path relative);
+
+    /**
      * Computes the relative path from <code>this</code> absolute path to
      * <code>other</code>.
      *
@@ -335,11 +356,10 @@ public interface Path extends Serializable {
 
     /**
      * Returns a new <code>Path</code> consisting of those Path.Element objects
-     * between the given <tt><code>from</code>, inclusive, and the given <code>to</code>,
+     * between the given <code>from</code>, inclusive, and the given <code>to</code>,
      * exclusive. An <code>IllegalArgumentException</code> is thrown if <code>from</code>
      * is greater or equal than <code>to</code> or if any of both params is
-     * out of the possible range. A <code>RepositoryException</code> is thrown
-     * if this <code>Path</code> is not normalized.
+     * out of the possible range.
      *
      * @param from index of the element to start with and low endpoint
      * (inclusive) within the list of elements to use for the sub-path.
@@ -351,9 +371,8 @@ public interface Path extends Serializable {
      * @throws IllegalArgumentException if <code>from</code>
      * is greater or equal than <code>to</code> or if any of both params is
      * out of the possible range.
-     * @throws RepositoryException If this Path is not normalized.
      */
-    public Path subPath(int from, int to) throws IllegalArgumentException, RepositoryException;
+    public Path subPath(int from, int to) throws IllegalArgumentException;
 
     /**
      * Returns the elements of this path.

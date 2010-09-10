@@ -16,16 +16,14 @@
  */
 package org.apache.jackrabbit.spi.commons.name;
 
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 
-import java.util.LinkedList;
-
 /**
  * Helper class used to build a path from pre-parsed path elements.
- * <p/>
+ * <p>
  * Note that this class does neither validate the format of the path elements nor
  * does it validate the format of the entire path.
  * This class should therefore only be used in situations, where the elements
@@ -41,9 +39,9 @@ public final class PathBuilder {
     private final PathFactory factory;
 
     /**
-     * the list of path elements of the constructed path
+     * The current path
      */
-    private final LinkedList<Path.Element> queue;
+    private Path path = null;
 
     /**
      * Creates a new PathBuilder to create a Path using the
@@ -61,8 +59,7 @@ public final class PathBuilder {
      * @param factory The PathFactory used to create the elements and the final path.
      */
     public PathBuilder(PathFactory factory) {
-        this.factory = (factory != null) ? factory : PathFactoryImpl.getInstance();
-        queue = new LinkedList<Path.Element>();
+        this.factory = factory;
     }
 
     /**
@@ -73,7 +70,7 @@ public final class PathBuilder {
      */
     public PathBuilder(Path.Element[] elements) {
         this();
-        addAll(elements);
+        path = factory.create(elements);
     }
 
     /**
@@ -84,14 +81,18 @@ public final class PathBuilder {
      */
     public PathBuilder(Path parent) {
         this();
-        addAll(parent.getElements());
+        path = parent;
     }
 
     /**
      * Adds the {@link org.apache.jackrabbit.spi.PathFactory#getRootElement()}.
      */
     public void addRoot() {
-        addFirst(factory.getRootElement());
+        if (path != null) {
+            path = RootPath.INSTANCE.resolve(path);
+        } else {
+            path = RootPath.INSTANCE;
+        }
     }
 
     /**
@@ -101,7 +102,11 @@ public final class PathBuilder {
      */
     public void addAll(Path.Element[] elements) {
         for (Path.Element element : elements) {
-            addLast(element);
+            if (path != null) {
+                path = path.resolve(element);
+            } else {
+                path = factory.create(element);
+            }
         }
     }
 
@@ -111,7 +116,12 @@ public final class PathBuilder {
      * @param elem
      */
     public void addFirst(Path.Element elem) {
-        queue.addFirst(elem);
+        Path first = factory.create(elem);
+        if (path != null) {
+            path = first.resolve(path);
+        } else {
+            path = first;
+        }
     }
 
     /**
@@ -139,7 +149,11 @@ public final class PathBuilder {
      * @param elem
      */
     public void addLast(Path.Element elem) {
-        queue.addLast(elem);
+        if (path != null) {
+            path = path.resolve(elem);
+        } else {
+            path = factory.create(elem);
+        }
     }
 
     /**
@@ -148,7 +162,7 @@ public final class PathBuilder {
      * @param name
      */
     public void addLast(Name name) {
-        addLast(factory.createElement(name));
+        addLast(name, Path.INDEX_UNDEFINED);
     }
 
     /**
@@ -158,7 +172,7 @@ public final class PathBuilder {
      * @param index
      */
     public void addLast(Name name, int index) {
-        addLast(factory.createElement(name, index));
+        path = new NamePath(path, NameElement.create(name, index));
     }
 
     /**
@@ -168,10 +182,10 @@ public final class PathBuilder {
      * @throws MalformedPathException if the internal path element queue is empty.
      */
     public Path getPath() throws MalformedPathException {
-        if (queue.size() == 0) {
+        if (path != null) {
+            return path;
+        } else {
             throw new MalformedPathException("empty path");
         }
-        Path.Element[] elements = queue.toArray(new Path.Element[queue.size()]);
-        return factory.create(elements);
     }
 }

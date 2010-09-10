@@ -28,31 +28,37 @@ abstract class AbstractPath implements Path {
     /** Serial version UID */
     private static final long serialVersionUID = 3018771833963770499L;
 
-    protected Path createPath(Path parent, Element element)
-            throws RepositoryException {
-        if (element.denotesCurrent()) {
-            return new CurrentPath(parent);
+    public final Path resolve(Element element) {
+        if (element.denotesName()) {
+            return new NamePath(this, element);
         } else if (element.denotesParent()) {
-            return new ParentPath(parent);
-        } else if (element.denotesName()) {
-            return new NamePath(parent, element);
+            if (isAbsolute() && getDepth() == 0) {
+                throw new IllegalArgumentException(
+                        "An absolute paths with negative depth is not allowed");
+            }
+            return new ParentPath(this);
+        } else if (element.denotesCurrent()) {
+            return new CurrentPath(this);
+        } else if (element.denotesRoot()) {
+            return RootPath.INSTANCE;
+        } else if (element.denotesIdentifier()) {
+            return new IdentifierPath(element);
         } else {
-            throw new RepositoryException("Unknown path element: " + element);
+            throw new IllegalArgumentException(
+                    "Unknown path element type: " + element);
         }
     }
 
-    public final Path resolve(Path relative) throws RepositoryException {
+    public final Path resolve(Path relative) {
         if (relative.isAbsolute()) {
             return relative;
         } else {
-            Element element = relative.getNameElement();
+            Path path = this;
             int n = relative.getLength();
             if (n > 1) {
-                Path parent = relative.subPath(0, n - 1);
-                return createPath(resolve(parent), element);
-            } else {
-                return createPath(this, element);
+                path = resolve(relative.subPath(0, n - 1));
             }
+            return path.resolve(relative.getNameElement());
         }
     }
 
@@ -103,7 +109,7 @@ abstract class AbstractPath implements Path {
                 }
 
                 while (bi < b.length) {
-                    path = createPath(path, b[bi++]);
+                    path = path.resolve(b[bi++]);
                 }
 
                 if (path != null) {

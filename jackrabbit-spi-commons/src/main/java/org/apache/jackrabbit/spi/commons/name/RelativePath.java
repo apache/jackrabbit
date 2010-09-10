@@ -93,22 +93,29 @@ abstract class RelativePath extends AbstractPath {
         return length;
     }
 
-    public final Path subPath(int from, int to) throws RepositoryException {
+    public final Path subPath(int from, int to) {
         if (from < 0 || length < to || to <= from) {
             throw new IllegalArgumentException(
                     this + ".subPath(" + from + ", " + to + ")");
-        } else if (!isNormalized()) {
-            throw new RepositoryException(
-                    "Path " + this + " is not normalized");
         } else if (from == 0 && to == length) {
-            // this is only case where parent can be null
+            // this is only case where parent can be null (from = 0, to = 1)
             return this;
         } else if (to < length) {
             return parent.subPath(from, to);
-        } else if (from < to - 1) {
-            return createPath(parent.subPath(from, to - 1), getNameElement());
         } else {
-            return createPath(null, getNameElement());
+            Element element = getNameElement();
+            if (from < to - 1) {
+                return parent.subPath(from, to - 1).resolve(element);
+            } else if (element.denotesName()) {
+                return new NamePath(null, element);
+            } else if (element.denotesParent()) {
+                return new ParentPath(null);
+            } else if (element.denotesCurrent()) {
+                return new CurrentPath(null);
+            } else {
+                throw new IllegalStateException(
+                        "Unknown path element type: " + element);
+            }
         }
     }
 

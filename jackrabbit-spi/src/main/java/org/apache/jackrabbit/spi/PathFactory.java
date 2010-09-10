@@ -40,7 +40,7 @@ public interface PathFactory {
     public Path create(Path parent, Path relPath, boolean normalize) throws IllegalArgumentException, RepositoryException;
 
     /**
-     * Creates a new <code>Path</code> out of the given <code>parent<code> path
+     * Creates a new <code>Path</code> out of the given <code>parent</code> path
      * and the give name. If <code>normalize</code> is <code>true</code>,
      * the returned path will be normalized (or canonicalized, if the parent
      * path is absolute). Use {@link PathFactory#create(Path, Name, int, boolean)}
@@ -93,6 +93,15 @@ public interface PathFactory {
      * than {@link Path#INDEX_UNDEFINED} or if the name is not valid.
      */
     public Path create(Name name, int index) throws IllegalArgumentException;
+
+    /**
+     * Creates a path from the given element.
+     *
+     * @param element path element
+     * @return the created path
+     * @throws IllegalArgumentException if the given element is <code>null</code>
+     */
+    Path create(Path.Element element) throws IllegalArgumentException;
 
     /**
      * Create a new <code>Path</code> from the given elements.

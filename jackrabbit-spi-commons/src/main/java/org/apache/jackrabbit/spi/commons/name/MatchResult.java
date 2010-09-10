@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.name;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.spi.Path;
 
 /**
@@ -54,15 +52,8 @@ public class MatchResult {
     public Path getRemainder() {
         if (matchPos + matchLength >= pathLength) {
             return null;
-        }
-        else {
-            try {
-                return path.subPath(matchPos + matchLength, pathLength);
-            }
-            catch (RepositoryException e) {
-                throw (IllegalStateException) new IllegalStateException("Path not normalized")
-                        .initCause(e);
-            }
+        } else {
+            return path.subPath(matchPos + matchLength, pathLength);
         }
     }
 
@@ -75,17 +66,9 @@ public class MatchResult {
     public Path getMatch() {
         if (matchLength == 0) {
             return null;
+        } else {
+            return path.subPath(matchPos, matchPos + matchLength);
         }
-        else {
-            try {
-                return path.subPath(matchPos, matchPos + matchLength);
-            }
-            catch (RepositoryException e) {
-                throw (IllegalStateException) new IllegalStateException("Path not normalized")
-                        .initCause(e);
-            }
-        }
-
     }
 
     /**

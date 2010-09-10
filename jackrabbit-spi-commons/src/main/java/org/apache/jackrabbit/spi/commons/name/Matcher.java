@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.name;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.spi.Path;
 
 /**
@@ -79,20 +77,14 @@ public final class Matcher {
             throw new IllegalArgumentException("Index out of bounds");
         }
 
-        try {
-            for (int k = pos; k < length; k++) {
-                Path path = input.subPath(k, length);
-                MatchResult result = pattern.match(path);
-                if (result.isMatch()) {
-                    return new MatchResult(input, k, result.getMatchLength());
-                }
+        for (int k = pos; k < length; k++) {
+            Path path = input.subPath(k, length);
+            MatchResult result = pattern.match(path);
+            if (result.isMatch()) {
+                return new MatchResult(input, k, result.getMatchLength());
             }
-            return null;
         }
-        catch (RepositoryException e) {
-            throw (IllegalArgumentException) new IllegalArgumentException("Path not normalizable")
-                    .initCause(e);
-        }
+        return null;
     }
 
 }
