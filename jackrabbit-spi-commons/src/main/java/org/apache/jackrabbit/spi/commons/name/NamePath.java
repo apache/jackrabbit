@@ -50,7 +50,9 @@ final class NamePath extends RelativePath {
     }
 
     public boolean isNormalized() {
-        return parent == null || parent.isNormalized();
+        return parent == null
+            || (parent.isNormalized()
+                    && !parent.getNameElement().denotesCurrent());
     }
 
     public Path getNormalizedPath() throws RepositoryException {
@@ -58,7 +60,11 @@ final class NamePath extends RelativePath {
             return this;
         } else {
             // parent is guaranteed to be !null
-            return new NamePath(parent.getNormalizedPath(), element);
+            Path normalized = parent.getNormalizedPath();
+            if (normalized.getNameElement().denotesCurrent()) {
+                normalized = null; // special case: ./a
+            }
+            return new NamePath(normalized, element);
         }
     }
 
@@ -79,7 +85,7 @@ final class NamePath extends RelativePath {
 
     public String getString() {
         if (parent != null) {
-            return parent.getString() + "/" + element.getString();
+            return parent.getString() + Path.DELIMITER + element.getString();
         } else {
             return element.getString();
         }

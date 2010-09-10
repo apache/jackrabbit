@@ -29,6 +29,8 @@ abstract class RelativePath extends AbstractPath {
 
     private final boolean absolute;
 
+    private final boolean identifier;
+
     private final int depth;
 
     private final int length;
@@ -37,10 +39,12 @@ abstract class RelativePath extends AbstractPath {
         this.parent = parent;
         if (parent != null) {
             this.absolute = parent.isAbsolute();
+            this.identifier = parent.denotesIdentifier();
             this.depth = parent.getDepth() + getDepthModifier();
             this.length = parent.getLength() + 1;
         } else {
             this.absolute = false;
+            this.identifier = false;
             this.depth = getDepthModifier();
             this.length = 1;
         }
@@ -55,7 +59,7 @@ abstract class RelativePath extends AbstractPath {
     }
 
     public final boolean denotesIdentifier() {
-        return false;
+        return identifier;
     }
 
     public final boolean isAbsolute() {
@@ -67,7 +71,7 @@ abstract class RelativePath extends AbstractPath {
             throw new IllegalArgumentException(
                     "Invalid ancestor degree " + degree);
         } else if (degree == 0) {
-            return this;
+            return getNormalizedPath();
         } else {
             return getParent().getAncestor(degree - 1);
         }
@@ -93,6 +97,9 @@ abstract class RelativePath extends AbstractPath {
         if (from < 0 || length < to || to <= from) {
             throw new IllegalArgumentException(
                     this + ".subPath(" + from + ", " + to + ")");
+        } else if (!isNormalized()) {
+            throw new RepositoryException(
+                    "Path " + this + " is not normalized");
         } else if (from == 0 && to == length) {
             // this is only case where parent can be null
             return this;

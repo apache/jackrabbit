@@ -177,7 +177,7 @@ public class ParsingPathResolverTest extends TestCase {
             assertEquals(1, p.getLength());
             assertTrue(p.isAbsolute());
             assertFalse(p.isNormalized());
-            assertFalse(p.isCanonical());
+            assertTrue(p.isCanonical());
             assertEquals(jcrPath, resolverV2.getJCRPath(p));
         }
     }

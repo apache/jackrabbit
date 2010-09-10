@@ -199,7 +199,7 @@ public class PathFactoryTest extends TestCase {
         }
     }
 
-    public void testIdentifier() {
+    public void testIdentifier() throws RepositoryException {
         String identifier = UUID.randomUUID().toString();
 
         Path.Element elem = factory.createElement(identifier);
@@ -218,11 +218,11 @@ public class PathFactoryTest extends TestCase {
         assertTrue(p.isAbsolute());
 
         assertFalse(p.denotesRoot());
-        assertFalse(p.isCanonical());
+        assertTrue(p.isCanonical());
         assertFalse(p.isNormalized());
 
         assertEquals(1, p.getLength());
-        assertEquals(-1, p.getAncestorCount());
+        assertEquals(0, p.getAncestorCount());
 
         Path.Element lastElem = p.getNameElement();
         assertNotNull(lastElem);
@@ -244,10 +244,11 @@ public class PathFactoryTest extends TestCase {
         } catch (RepositoryException e) {
             //expected
         }
+
         try {
             p.isAncestorOf(factory.getRootPath());
             fail();
-        } catch (RepositoryException e) {
+        } catch (IllegalArgumentException e) {
             //expected
         }
         try {
@@ -256,16 +257,13 @@ public class PathFactoryTest extends TestCase {
         } catch (RepositoryException e) {
             //expected
         }
-        try {
-            p.getCanonicalPath();
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
+
+        assertEquals(p, p.getCanonicalPath());
+
         try {
             p.isDescendantOf(factory.getRootPath());
             fail();
-        } catch (RepositoryException e) {
+        } catch (IllegalArgumentException e) {
             //expected
         }
         try {

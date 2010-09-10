@@ -25,9 +25,11 @@ final class IdentifierPath extends AbstractPath {
     /** Serial version UID */
     private static final long serialVersionUID = 1602959709588338642L;
 
-    private final IdentifierElement element;
+    private final Element element;
 
-    public IdentifierPath(IdentifierElement element) {
+    public IdentifierPath(Element element) {
+        assert element != null;
+        assert element.denotesIdentifier();
         this.element = element;
     }
 
@@ -93,12 +95,11 @@ final class IdentifierPath extends AbstractPath {
         if (degree < 0) {
             throw new IllegalArgumentException(
                     this + ".getAncestor(" + degree + ")");
+        } else if (degree > 0) {
+            throw new RepositoryException(
+                    "Cannot construct ancestor path from an identifier");
         } else {
-            Path ancestor = this;
-            while (degree-- > 0) {
-                ancestor = new ParentPath(ancestor);
-            }
-            return ancestor;
+            return this;
         }
     }
 
@@ -133,6 +134,23 @@ final class IdentifierPath extends AbstractPath {
 
     public String getString() {
         return element.getString();
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    public final boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        } else if (that instanceof IdentifierPath) {
+            IdentifierPath path = (IdentifierPath) that;
+            return element.equals(path.element);
+        } else {
+            return false;
+        }
+    }
+
+    public final int hashCode() {
+        return element.hashCode();
     }
 
 }
