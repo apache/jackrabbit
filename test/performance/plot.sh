@@ -43,7 +43,7 @@ set ylabel "Time (ms)"
 set yrange [0:]
 set output "target/$name.svg"
 set title "$name"
-plot "$dat" using 0:3:4:xtic(1) with errorlines notitle
+plot "$dat" using 0:4:3:5:xtic(1) with yerrorlines notitle
 PLOT
     convert "target/$name.svg" "target/$name.png"
     cat <<HTML >>target/report.html

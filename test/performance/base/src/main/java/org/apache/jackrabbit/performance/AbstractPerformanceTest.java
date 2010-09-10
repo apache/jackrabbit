@@ -133,18 +133,18 @@ public abstract class AbstractPerformanceTest {
             try {
                 if (needsPrefix) {
                     writer.format(
-                            "# %-34.34s     avg     std     min     max   count%n",
+                            "# %-34.34s     min     10%     50%     90%     max%n",
                             test);
                 }
 
                 writer.format(
                         "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
                         name,
-                        statistics.getMean(),
-                        statistics.getStandardDeviation(),
                         statistics.getMin(),
-                        statistics.getMax(),
-                        statistics.getN());
+                        statistics.getPercentile(10.0),
+                        statistics.getPercentile(50.0),
+                        statistics.getPercentile(90.0),
+                        statistics.getMax());
             } finally {
                 writer.close();
             }
