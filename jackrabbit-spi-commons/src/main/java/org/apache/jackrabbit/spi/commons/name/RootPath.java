@@ -153,7 +153,7 @@ final class RootPath extends AbstractPath {
     }
 
     public String getString() {
-        return "/";
+        return "{}";
     }
 
     //--------------------------------------------------------< Serializable >

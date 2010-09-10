@@ -574,7 +574,7 @@ public class PathTest extends TestCase {
                 Path p = resolver.getQPath(tests[i].path);
                 try {
                     p.subPath(0, p.getLength());
-                    fail("Path.subPath on a non-normalized path to must throw IllegalArumentException");
+                    fail("Path.subPath on a non-normalized path to must throw RepositoryException");
                 } catch (RepositoryException e) {
                     // ok
                 }

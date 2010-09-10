@@ -152,7 +152,9 @@ abstract class AbstractPath implements Path {
      */
     public final boolean isAncestorOf(Path other)
             throws IllegalArgumentException, RepositoryException {
-        if (other != null && isAbsolute() == other.isAbsolute()) {
+        if (other != null
+                && isAbsolute() == other.isAbsolute()
+                && denotesIdentifier() == other.denotesIdentifier()) {
             int d = other.getDepth() - getDepth();
             return d > 0 && isEquivalentTo(other.getAncestor(d));
         } else {
@@ -176,7 +178,9 @@ abstract class AbstractPath implements Path {
      */
     public final boolean isDescendantOf(Path other)
             throws IllegalArgumentException, RepositoryException {
-        if (other != null && isAbsolute() == other.isAbsolute()) {
+        if (other != null
+                && isAbsolute() == other.isAbsolute()
+                && denotesIdentifier() == other.denotesIdentifier()) {
             int d = getDepth() - other.getDepth();
             return d > 0 && getAncestor(d).isEquivalentTo(other);
         } else {

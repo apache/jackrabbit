@@ -66,7 +66,15 @@ final class ParentPath extends RelativePath {
         if (isNormalized()) {
             return this;
         } else {
-            return parent.getNormalizedPath().getAncestor(1);
+            // parent is guaranteed to be !null
+            Path normalized = parent.getNormalizedPath();
+            if (normalized.getNameElement().denotesParent()) {
+                return new ParentPath(normalized); // special case: ../..
+            } else if (normalized.getNameElement().denotesCurrent()) {
+                return new ParentPath(null); // special case: ./..
+            } else {
+                return normalized.getAncestor(1);
+            }
         }
     }
 

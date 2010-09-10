@@ -22,8 +22,6 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.NameFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.PathNotFoundException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,14 +44,7 @@ public class PathFactoryImpl implements PathFactory {
     /**
      * the root path
      */
-    private static final Path ROOT =
-        new PathImpl(new Path.Element[] { RootElement.INSTANCE }, true);
-
-    private static final Path CURRENT_PATH =
-        new PathImpl(new Path.Element[] { CurrentElement.INSTANCE }, true);
-
-    private static final Path PARENT_PATH =
-        new PathImpl(new Path.Element[] { ParentElement.INSTANCE }, true);
+    private static final Path ROOT = RootPath.INSTANCE;
 
     private PathFactoryImpl() {}
 
@@ -296,417 +287,6 @@ public class PathFactoryImpl implements PathFactory {
         return ROOT;
     }
 
-    //--------------------------------------------------------------------------
-    private static final class PathImpl implements Path {
-
-        /**
-         * the elements of this path
-         */
-        private final Path.Element[] elements;
-
-        /**
-         * flag indicating if this path is normalized
-         */
-        private final boolean normalized;
-
-        /**
-         * flag indicating if this path is absolute
-         */
-        private final boolean absolute;
-
-        /**
-         * the cached hashcode of this path
-         */
-        private transient int hash = 0;
-
-        /**
-         * the cached 'toString' of this path
-         */
-        private transient String string;
-
-        private PathImpl(Path.Element[] elements, boolean isNormalized) {
-            if (elements == null || elements.length == 0) {
-                throw new IllegalArgumentException("Empty paths are not allowed");
-            }
-            this.elements = elements;
-            this.absolute = elements[0].denotesRoot() || elements[0].denotesIdentifier();
-            this.normalized = isNormalized;
-        }
-
-        /**
-         * @see Path#denotesRoot()
-         */
-        public boolean denotesRoot() {
-            return absolute && elements.length == 1 && elements[0].denotesRoot();
-        }
-
-        /**
-         * @see Path#denotesIdentifier()
-         */
-        public boolean denotesIdentifier() {
-            return elements.length == 1 && elements[0].denotesIdentifier();
-        }
-
-        /**
-         * @see Path#isAbsolute()
-         */
-        public boolean isAbsolute() {
-            return absolute;
-        }
-
-        /**
-         * @see Path#isCanonical()
-         */
-        public boolean isCanonical() {
-            return absolute && normalized;
-        }
-
-        /**
-         * @see Path#isNormalized()
-         */
-        public boolean isNormalized() {
-            return normalized;
-        }
-
-        /**
-         * @see Path#getNormalizedPath()
-         */
-        public Path getNormalizedPath() throws RepositoryException {
-            if (isNormalized()) {
-                return this;
-            }
-            if (denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Identifier-based path cannot be normalized: " + this);
-            }
-            LinkedList<Path.Element> queue = new LinkedList<Path.Element>();
-            for (Element elem : elements) {
-                if (elem.denotesParent() && !queue.isEmpty() && !queue.getLast().denotesParent()) {
-                    if (queue.getLast().denotesRoot()) {
-                        throw new RepositoryException("Path cannot be normalized: " + this);
-                    }
-                    queue.removeLast();
-                } else if (!elem.denotesCurrent()) {
-                    queue.add(elem);
-                }
-            }
-            if (queue.isEmpty()) {
-                return CURRENT_PATH;
-            }
-            boolean isNormalized = true;
-            return new PathImpl(queue.toArray(new Element[queue.size()]), isNormalized);
-        }
-
-        /**
-         * @see Path#getCanonicalPath()
-         */
-        public Path getCanonicalPath() throws RepositoryException {
-            if (isCanonical()) {
-                return this;
-            }
-            if (!isAbsolute()) {
-                throw new RepositoryException(
-                        "Only an absolute path can be canonicalized: "  + this);
-            }
-            if (denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Identifier-based path cannot be canonicalized: " + this);
-            }
-            return getNormalizedPath();
-        }
-
-        /**
-         * @see Path#computeRelativePath(Path)
-         */
-        public Path computeRelativePath(Path other) throws RepositoryException {
-            if (other == null) {
-                throw new IllegalArgumentException("null argument");
-            }
-
-            // make sure both paths are absolute and not id-based
-            if (!isAbsolute() || !other.isAbsolute()) {
-                throw new RepositoryException(
-                        "Cannot compute relative path from relative paths: "
-                        + this + " vs. " + other);
-            }
-            if (denotesIdentifier() || other.denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Cannot compute relative path from identifier-based paths: "
-                        + this + " vs. " + other);
-            }
-
-            // make sure we're comparing canonical paths
-            Path p0 = getCanonicalPath();
-            Path p1 = other.getCanonicalPath();
-
-            if (p0.equals(p1)) {
-                // both paths are equal, the relative path is therefore '.'
-                return CURRENT_PATH;
-            }
-
-            // determine length of common path fragment
-            int lengthCommon = 0;
-            Path.Element[] elems0 = p0.getElements();
-            Path.Element[] elems1 = p1.getElements();
-            for (int i = 0; i < elems0.length && i < elems1.length; i++) {
-                if (!elems0[i].equals(elems1[i])) {
-                    break;
-                }
-                lengthCommon++;
-            }
-            List<Path.Element> l = new ArrayList<Path.Element>();
-            if (lengthCommon < elems0.length) {
-                /**
-                 * the common path fragment is an ancestor of this path;
-                 * this has to be accounted for by prepending '..' elements
-                 * to the relative path
-                 */
-                int tmp = elems0.length - lengthCommon;
-                while (tmp-- > 0) {
-                    l.add(0, ParentElement.INSTANCE);
-                }
-            }
-            // add remainder of other path
-            for (int i = lengthCommon; i < elems1.length; i++) {
-                l.add(elems1[i]);
-            }
-            return new Builder(l).getPath();
-        }
-
-        /**
-         * @see Path#getAncestor(int)
-         */
-        public Path getAncestor(int degree) throws IllegalArgumentException, PathNotFoundException, RepositoryException {
-            if (degree < 0) {
-                throw new IllegalArgumentException(
-                        "degree must be >= 0: " + this);
-            } else if (degree == 0) {
-                return getNormalizedPath();
-            }
-
-            if (isAbsolute()) {
-                Path.Element[] normElems = getNormalizedPath().getElements();
-                int length = normElems.length - degree;
-                if (length < 1) {
-                    throw new PathNotFoundException(
-                            "no ancestor at degree " + degree + ": " + this);
-                }
-                Path.Element[] ancestorElements = new Element[length];
-                System.arraycopy(normElems, 0, ancestorElements, 0, length);
-                return new PathImpl(ancestorElements, true);
-            } else {
-                Path.Element[] ancestorElements = new Element[elements.length + degree];
-                System.arraycopy(elements, 0, ancestorElements, 0, elements.length);
-
-                for (int i = elements.length; i < ancestorElements.length; i++) {
-                    ancestorElements[i] = ParentElement.INSTANCE;
-                }
-                return new PathImpl(ancestorElements, false).getNormalizedPath();
-            }
-        }
-
-        /**
-         * @see Path#getAncestorCount()
-         */
-        public int getAncestorCount() {
-            return (isAbsolute() && !denotesIdentifier()) ? getDepth() : -1;
-        }
-
-        /**
-         * @see Path#getLength()
-         */
-        public int getLength() {
-            return elements.length;
-        }
-
-        /**
-         * @see Path#getDepth()
-         */
-        public int getDepth() {
-            int depth = ROOT_DEPTH;
-            for (Element element : elements) {
-                if (element.denotesParent()) {
-                    depth--;
-                } else if (element.denotesName()) {
-                    // don't count root/identifier/current element.
-                    depth++;
-                }
-            }
-            return depth;
-        }
-
-        /**
-         * @see Path#isEquivalentTo(Path)
-         */
-        public boolean isEquivalentTo(Path other) throws RepositoryException {
-            if (other == null) {
-                throw new IllegalArgumentException("null argument");
-            }
-            if (isAbsolute() != other.isAbsolute()) {
-                throw new IllegalArgumentException(
-                        "Cannot compare a relative path with an absolute path: "
-                        + this + " vs. " + other);
-            }
-
-            if (getDepth() != other.getDepth()) {
-                return false;
-            }
-
-            Element[] elems0 = getNormalizedPath().getElements();
-            Element[] elems1 = other.getNormalizedPath().getElements();
-
-            if (elems0.length != elems1.length)
-                return false;
-
-            for (int k = 0; k < elems0.length; k++) {
-                if (!elems0[k].equals(elems1[k]))
-                    return false;
-            }
-            return true;
-        }
-
-        /**
-         * @see Path#isAncestorOf(Path)
-         */
-        public boolean isAncestorOf(Path other) throws IllegalArgumentException, RepositoryException {
-            if (other == null) {
-                throw new IllegalArgumentException("null argument");
-            }
-            // make sure both paths are either absolute or relative
-            if (isAbsolute() != other.isAbsolute()) {
-                throw new IllegalArgumentException(
-                        "Cannot compare a relative path with an absolute path: "
-                        + this + " vs. " + other);
-            }
-            // make sure both paths are either identifier-based or not
-            if (denotesIdentifier() != other.denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Cannot compare paths: " + this + " vs. " + other);
-            }
-
-            int delta = other.getDepth() - getDepth();
-            if (delta <= 0)
-                return false;
-
-            return isEquivalentTo(other.getAncestor(delta));
-        }
-
-        /**
-         * @see Path#isDescendantOf(Path)
-         */
-        public boolean isDescendantOf(Path other) throws IllegalArgumentException, RepositoryException {
-            if (other == null) {
-                throw new IllegalArgumentException("Null argument");
-            }
-            return other.isAncestorOf(this);
-        }
-
-        /**
-         * @see Path#subPath(int, int)
-         */
-        public Path subPath(int from, int to) throws IllegalArgumentException, RepositoryException {
-            if (from < 0 || to > elements.length || from >= to) {
-                throw new IllegalArgumentException();
-            }
-            if (!isNormalized()) {
-                throw new RepositoryException(
-                        "Cannot extract sub-Path from a non-normalized Path: "
-                        + this);
-            }
-            Path.Element[] dest = new Path.Element[to-from];
-            System.arraycopy(elements, from, dest, 0, dest.length);
-            Builder pb = new Builder(dest);
-            return pb.getPath();
-        }
-
-        /**
-         * @see Path#getNameElement()
-         */
-        public Element getNameElement() {
-            return elements[elements.length - 1];
-        }
-
-        /**
-         * @see Path#getString()
-         */
-        public String getString() {
-            return toString();
-        }
-
-        /**
-         * @see Path#getElements()
-         */
-        public Element[] getElements() {
-            return elements;
-        }
-
-        //---------------------------------------------------------< Object >---
-        /**
-         * Returns the internal string representation of this <code>Path</code>.
-         * <p/>
-         * Note that the returned string is not a valid JCR path, i.e. the
-         * namespace URI's of the individual path elements are not replaced with
-         * their mapped prefixes.
-         *
-         * @return the internal string representation of this <code>Path</code>.
-         */
-        @Override
-        public String toString() {
-            // Path is immutable, we can store the string representation
-            if (string == null) {
-                StringBuffer sb = new StringBuffer();
-                for (int i = 0; i < elements.length; i++) {
-                    if (i > 0) {
-                        sb.append(Path.DELIMITER);
-                    }
-                    Path.Element element = elements[i];
-                    String elem = element.toString();
-                    sb.append(elem);
-                }
-                string = sb.toString();
-            }
-            return string;
-        }
-
-        /**
-         * Returns a hash code value for this path.
-         *
-         * @return a hash code value for this path.
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            // Path is immutable, we can store the computed hash code value
-            int h = hash;
-            if (h == 0) {
-                h = 17;
-                for (Element element : elements) {
-                    h = 37 * h + element.hashCode();
-                }
-                hash = h;
-            }
-            return h;
-        }
-
-        /**
-         * Compares the specified object with this path for equality.
-         *
-         * @param obj the object to be compared for equality with this path.
-         * @return <tt>true</tt> if the specified object is equal to this path.
-         */
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof Path) {
-                Path other = (Path) obj;
-                return Arrays.equals(elements, other.getElements());
-            }
-            return false;
-        }
-    }
-
     /**
      * Builder internal class
      */
@@ -716,11 +296,6 @@ public class PathFactoryImpl implements PathFactory {
          * the lpath elements of the constructed path
          */
         private final Path.Element[] elements;
-
-        /**
-         * flag indicating if the current path is normalized
-         */
-        private boolean isNormalized;
 
         /**
          * Creates a new Builder and initialized it with the given path
@@ -748,11 +323,8 @@ public class PathFactoryImpl implements PathFactory {
             }
 
             this.elements = elements;
-            if (elements.length == 1) {
-                isNormalized = !elements[0].denotesIdentifier();
-            } else {
+            if (elements.length > 1) {
                 boolean absolute = elements[0].denotesRoot();
-                isNormalized = true;
                 int depth = 0;
                 for (int i = 0; i < elements.length; i++) {
                     Path.Element elem = elements[i];
@@ -769,11 +341,6 @@ public class PathFactoryImpl implements PathFactory {
                         if (absolute && depth < 0) {
                             throw new IllegalArgumentException("Invalid path: Too many parent elements.");
                         }
-                        if (absolute || (i > 0 && elements[i - 1].denotesName())) {
-                            isNormalized = false;
-                        }
-                    } else /* current element */ {
-                        isNormalized = false;
                     }
                 }
             }
@@ -785,22 +352,21 @@ public class PathFactoryImpl implements PathFactory {
          * @return a new {@link Path}
          */
         private Path getPath() {
-            // special path with a single element
-            if (elements.length == 1) {
-                if (elements[0].denotesRoot()) {
-                    return PathFactoryImpl.ROOT;
-                }
-                if (elements[0].denotesParent()) {
-                    return PathFactoryImpl.PARENT_PATH;
-                }
-                if (elements[0].denotesCurrent()) {
-                    return PathFactoryImpl.CURRENT_PATH;
+            Path path = null;
+            for (Path.Element element : elements) {
+                if (element.denotesCurrent()) {
+                    path = new CurrentPath(path);
+                } else if (element.denotesIdentifier()) {
+                    path = new IdentifierPath(element);
+                } else if (element.denotesName()) {
+                    path = new NamePath(path, element);
+                } else if (element.denotesParent()) {
+                    path = new ParentPath(path);
+                } else if (element.denotesRoot()) {
+                    path = RootPath.INSTANCE;
                 }
             }
-
-            // default: build a new path
-            // no need to check the path format, assuming all names correct
-            return new PathImpl(elements, isNormalized);
+            return path;
         }
     }
 
