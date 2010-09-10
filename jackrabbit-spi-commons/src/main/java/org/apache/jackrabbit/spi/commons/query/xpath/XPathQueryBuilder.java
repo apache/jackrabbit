@@ -1131,14 +1131,15 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 // cut off left parenthesis at end
                 propName = propName.substring(0, propName.length() - 1);
             }
-            PathBuilder builder = new PathBuilder();
-            Name name = decode(resolver.getQName(propName));
-            Path relPath = getRelativePath();
-            if (relPath != null) {
-                builder.addAll(relPath.getElements());
+            Path.Element element = PathFactoryImpl.getInstance().createElement(
+                    decode(resolver.getQName(propName)));
+            Path path = getRelativePath();
+            if (path != null) {
+                path = path.resolve(element);
+            } else {
+                path = PathFactoryImpl.getInstance().create(element);
             }
-            builder.addLast(name);
-            spec = new OrderQueryNode.OrderSpec(builder.getPath(), true);
+            spec = new OrderQueryNode.OrderSpec(path, true);
             queryNode.addOrderSpec(spec);
         } catch (NameException e) {
             exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));

@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.spi.commons.name;
 
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.NameFactory;
+import java.util.ArrayList;
 
 import javax.jcr.RepositoryException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 
 /**
  * <code>PathFactoryImpl</code>...
@@ -41,11 +40,6 @@ public class PathFactoryImpl implements PathFactory {
     private final static Name PARENT_NAME = NAME_FACTORY.create(Name.NS_DEFAULT_URI, PARENT_LITERAL);
     private final static Name ROOT_NAME = NAME_FACTORY.create(Name.NS_DEFAULT_URI, "");
 
-    /**
-     * the root path
-     */
-    private static final Path ROOT = RootPath.INSTANCE;
-
     private PathFactoryImpl() {}
 
     public static PathFactory getInstance() {
@@ -60,22 +54,13 @@ public class PathFactoryImpl implements PathFactory {
         if (relPath.isAbsolute()) {
             throw new IllegalArgumentException(
                     "relPath is not a relative path: " + relPath);
-        }
-        List<Path.Element> l = new ArrayList<Path.Element>();
-        l.addAll(Arrays.asList(parent.getElements()));
-        l.addAll(Arrays.asList(relPath.getElements()));
-
-        Builder pb;
-        try {
-            pb = new Builder(l);
-        } catch (IllegalArgumentException iae) {
-             throw new RepositoryException(iae.getMessage());
-        }
-        Path path = pb.getPath();
-        if (normalize) {
-            return path.getNormalizedPath();
         } else {
-            return path;
+            Path path = parent.resolve(relPath);
+            if (normalize) {
+                return path.getNormalizedPath();
+            } else {
+                return path;
+            }
         }
     }
 
@@ -83,39 +68,18 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#create(Path, Name, boolean)
      */
     public Path create(Path parent, Name name, boolean normalize) throws RepositoryException {
-        List<Path.Element> elements = new ArrayList<Path.Element>();
-        elements.addAll(Arrays.asList(parent.getElements()));
-        elements.add(createElement(name));
-
-        Builder pb;
-        try {
-            pb = new Builder(elements);
-        } catch (IllegalArgumentException iae) {
-             throw new RepositoryException(iae.getMessage());
-        }
-        Path path = pb.getPath();
-        if (normalize) {
-            return path.getNormalizedPath();
-        } else {
-            return path;
-        }
+        return create(parent, name, Path.INDEX_UNDEFINED, normalize);
     }
 
     /**
      * @see PathFactory#create(Path, Name, int, boolean)
      */
     public Path create(Path parent, Name name, int index, boolean normalize) throws IllegalArgumentException, RepositoryException {
-        List<Path.Element> elements = new ArrayList<Path.Element>();
-        elements.addAll(Arrays.asList(parent.getElements()));
-        elements.add(createElement(name, index));
-
-        Builder pb;
-        try {
-            pb = new Builder(elements);
-        } catch (IllegalArgumentException iae) {
-             throw new RepositoryException(iae.getMessage());
+        if (ROOT_NAME.equals(name)) {
+            throw new IllegalArgumentException();
         }
-        Path path = pb.getPath();
+        NameElement element = NameElement.create(name, index);
+        Path path = new NamePath(parent, element).getNormalizedPath();
         if (normalize) {
             return path.getNormalizedPath();
         } else {
@@ -127,8 +91,7 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#create(Name)
      */
     public Path create(Name name) throws IllegalArgumentException {
-        Path.Element elem = createElement(name);
-        return new Builder(new Path.Element[]{elem}).getPath();
+        return create(name, Path.INDEX_UNDEFINED);
     }
 
     /**
@@ -138,16 +101,74 @@ public class PathFactoryImpl implements PathFactory {
         if (index < Path.INDEX_UNDEFINED) {
             throw new IllegalArgumentException(
                     "Index must not be negative: " + name + "[" + index + "]");
+        } else if (CURRENT_NAME.equals(name)) {
+            if (index == Path.INDEX_UNDEFINED) {
+                return new CurrentPath(null);
+            } else {
+                throw new IllegalArgumentException();
+            }
+        } else if (PARENT_NAME.equals(name)) {
+            if (index == Path.INDEX_UNDEFINED) {
+                return new ParentPath(null);
+            } else {
+                throw new IllegalArgumentException();
+            }
+        } else if (ROOT_NAME.equals(name)) {
+            if (index == Path.INDEX_UNDEFINED) {
+                return RootPath.INSTANCE;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        } else {
+            return new NamePath(null, NameElement.create(name, index));
         }
-        Path.Element elem = createElement(name, index);
-        return new Builder(new Path.Element[]{elem}).getPath();
+    }
+
+    public Path create(Path.Element element) {
+        if (element.denotesCurrent()) {
+            return new CurrentPath(null);
+        } else if (element.denotesIdentifier()) {
+            return new IdentifierPath(element);
+        } else if (element.denotesName()) {
+            return new NamePath(null, element);
+        } else if (element.denotesParent()) {
+            return new ParentPath(null);
+        } else if (element.denotesRoot()) {
+            return RootPath.INSTANCE;
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown path element type: " + element);
+        }
     }
 
     /**
      * @see PathFactory#create(org.apache.jackrabbit.spi.Path.Element[])
      */
     public Path create(Path.Element[] elements) throws IllegalArgumentException {
-        return new Builder(elements).getPath();
+        Path path = null;
+        for (Path.Element element : elements) {
+            if (element.denotesCurrent()) {
+                path = new CurrentPath(path);
+            } else if (element.denotesIdentifier()) {
+                if (path != null) {
+                    throw new IllegalArgumentException();
+                }
+                path = new IdentifierPath(element);
+            } else if (element.denotesName()) {
+                path = new NamePath(path, element);
+            } else if (element.denotesParent()) {
+                if (path != null && path.isAbsolute() && path.getDepth() == 0) {
+                    throw new IllegalArgumentException();
+                }
+                path = new ParentPath(path);
+            } else if (element.denotesRoot()) {
+                if (path != null) {
+                    throw new IllegalArgumentException();
+                }
+                path = RootPath.INSTANCE;
+            }
+        }
+        return path;
     }
 
     /**
@@ -173,7 +194,7 @@ public class PathFactoryImpl implements PathFactory {
             }
             list.add(elem);
         }
-        return new Builder(list).getPath();
+        return create(list.toArray(new Path.Element[list.size()]));
     }
 
     /**
@@ -284,90 +305,7 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#getRootPath()
      */
     public Path getRootPath() {
-        return ROOT;
-    }
-
-    /**
-     * Builder internal class
-     */
-    private static final class Builder {
-
-        /**
-         * the lpath elements of the constructed path
-         */
-        private final Path.Element[] elements;
-
-        /**
-         * Creates a new Builder and initialized it with the given path
-         * elements.
-         *
-         * @param elemList
-         * @throws IllegalArgumentException if the given elements array is null
-         * or has a zero length or would otherwise constitute an invalid path
-         */
-        private Builder(List<Path.Element> elemList) throws IllegalArgumentException {
-            this(elemList.toArray(new Path.Element[elemList.size()]));
-        }
-
-        /**
-         * Creates a new Builder and initialized it with the given path
-         * elements.
-         *
-         * @param elements
-         * @throws IllegalArgumentException if the given elements array is null
-         * or has a zero length or would otherwise constitute an invalid path
-         */
-        private Builder(Path.Element[] elements) throws IllegalArgumentException {
-            if (elements == null || elements.length == 0) {
-                throw new IllegalArgumentException("Cannot build path from null or 0 elements.");
-            }
-
-            this.elements = elements;
-            if (elements.length > 1) {
-                boolean absolute = elements[0].denotesRoot();
-                int depth = 0;
-                for (int i = 0; i < elements.length; i++) {
-                    Path.Element elem = elements[i];
-                    if (elem.denotesName()) {
-                        depth++;
-                    } else if (elem.denotesRoot()) {
-                        if (i > 0) {
-                            throw new IllegalArgumentException("Invalid path: The root element may only occur at the beginning.");
-                        }
-                    } else if (elem.denotesIdentifier()) {
-                        throw new IllegalArgumentException("Invalid path: The identifier element may only occur at the beginning of a single element path.");
-                    } else  if (elem.denotesParent()) {
-                        depth--;
-                        if (absolute && depth < 0) {
-                            throw new IllegalArgumentException("Invalid path: Too many parent elements.");
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
-         * Assembles the built path and returns a new {@link Path}.
-         *
-         * @return a new {@link Path}
-         */
-        private Path getPath() {
-            Path path = null;
-            for (Path.Element element : elements) {
-                if (element.denotesCurrent()) {
-                    path = new CurrentPath(path);
-                } else if (element.denotesIdentifier()) {
-                    path = new IdentifierPath(element);
-                } else if (element.denotesName()) {
-                    path = new NamePath(path, element);
-                } else if (element.denotesParent()) {
-                    path = new ParentPath(path);
-                } else if (element.denotesRoot()) {
-                    path = RootPath.INSTANCE;
-                }
-            }
-            return path;
-        }
+        return RootPath.INSTANCE;
     }
 
 }

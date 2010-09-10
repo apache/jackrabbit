@@ -566,22 +566,6 @@ public class PathTest extends TestCase {
         }
     }
 
-    public void testSubPathNotNormalized() throws RepositoryException {
-        Path root = factory.getRootPath();
-        JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && !tests[i].isNormalized()) {
-                Path p = resolver.getQPath(tests[i].path);
-                try {
-                    p.subPath(0, p.getLength());
-                    fail("Path.subPath on a non-normalized path to must throw RepositoryException");
-                } catch (RepositoryException e) {
-                    // ok
-                }
-            }
-        }
-    }
-
     //--------------------------------------------------------------------------
     private static class JcrPathAndAncestor {
 

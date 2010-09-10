@@ -89,6 +89,13 @@ public class PathFactoryLogger extends AbstractLogger implements PathFactory {
             }}, "create(Name, int)", new Object[]{name, new Integer(index)});
     }
 
+    public Path create(final Element element) {
+        return (Path) execute(new SafeCallable() {
+            public Object call() {
+                return pathFactory.create(element);
+            }}, "create(Element)", new Object[]{element});
+    }
+
     public Path create(final Element[] elements) {
         return (Path) execute(new SafeCallable() {
             public Object call() {
