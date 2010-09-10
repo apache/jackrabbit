@@ -509,12 +509,7 @@ public class PathFactoryImpl implements PathFactory {
          * @see Path#getAncestorCount()
          */
         public int getAncestorCount() {
-            try {
-                return (isAbsolute() && !denotesIdentifier()) ? getDepth() : -1;
-            } catch (RepositoryException e) {
-                // never gets here.
-                return -1;
-            }
+            return (isAbsolute() && !denotesIdentifier()) ? getDepth() : -1;
         }
 
         /**
@@ -527,17 +522,13 @@ public class PathFactoryImpl implements PathFactory {
         /**
          * @see Path#getDepth()
          */
-        public int getDepth() throws RepositoryException {
-            if (denotesIdentifier()) {
-                throw new RepositoryException(
-                        "Cannot determine depth of an identifier based path: " + this);
-            }
+        public int getDepth() {
             int depth = ROOT_DEPTH;
             for (Element element : elements) {
                 if (element.denotesParent()) {
                     depth--;
                 } else if (element.denotesName()) {
-                    // don't count root/current element.
+                    // don't count root/identifier/current element.
                     depth++;
                 }
             }
@@ -586,6 +577,11 @@ public class PathFactoryImpl implements PathFactory {
                 throw new IllegalArgumentException(
                         "Cannot compare a relative path with an absolute path: "
                         + this + " vs. " + other);
+            }
+            // make sure both paths are either identifier-based or not
+            if (denotesIdentifier() != other.denotesIdentifier()) {
+                throw new RepositoryException(
+                        "Cannot compare paths: " + this + " vs. " + other);
             }
 
             int delta = other.getDepth() - getDepth();

@@ -277,18 +277,17 @@ public interface Path extends Serializable {
      * Returns the depth of this path. The depth reflects the absolute or
      * relative hierarchy level this path is representing, depending on whether
      * this path is an absolute or a relative path. The depth also takes '.'
-     * and '..' elements into account. The depth of the root path and the
-     * current path must be 0.
+     * and '..' elements into account. The depth of the root path, an
+     * identifier and the current path must be 0.
      * <p/>
      * Note that the returned value might be negative if this path is not
      * canonical, e.g. the depth of "../../a" is -1.
      *
      * @return the depth this path
-     * @throws RepositoryException If the depths cannot be determined.
      * @see #getLength()
      * @see #getAncestorCount()
      */
-    public int getDepth() throws RepositoryException;
+    public int getDepth();
 
     /**
      * Determines if the the <code>other</code> path would be equal to <code>this</code>

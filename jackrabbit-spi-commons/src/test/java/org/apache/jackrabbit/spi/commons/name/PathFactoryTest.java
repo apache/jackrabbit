@@ -230,12 +230,8 @@ public class PathFactoryTest extends TestCase {
 
         assertEquals(1, p.getElements().length);
 
-        try {
-            p.getDepth();
-            fail();
-        } catch (RepositoryException e) {
-            //expected
-        }
+        assertEquals(0, p.getDepth());
+
         try {
             p.getNormalizedPath();
             fail();
