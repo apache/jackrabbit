@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 
 import org.apache.commons.io.FileUtils;
@@ -30,6 +31,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 public abstract class AbstractPerformanceTest {
@@ -47,10 +49,7 @@ public abstract class AbstractPerformanceTest {
 
         // Create a repository using the Jackrabbit default configuration
         if (namePattern.matcher(name).matches()) {
-            testPerformance(
-                    name,
-                    RepositoryImpl.class.getResourceAsStream("repository.xml"),
-                    testPattern);
+            testPerformance(name, getDefaultConfig(), testPattern);
         }
 
         // Create repositories for any special configurations included
@@ -138,7 +137,7 @@ public abstract class AbstractPerformanceTest {
                 }
 
                 writer.format(
-                        "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6d%n",
+                        "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6.0f%n",
                         name,
                         statistics.getMin(),
                         statistics.getPercentile(10.0),
@@ -178,6 +177,16 @@ public abstract class AbstractPerformanceTest {
         }
 
         // Create the repository
+        return createRepository(directory, configuration);
+    }
+
+    protected InputStream getDefaultConfig() {
+        return RepositoryImpl.class.getResourceAsStream("repository.xml");
+    }
+
+    protected RepositoryImpl createRepository(
+            File directory, File configuration)
+            throws RepositoryException, ConfigurationException {
         return RepositoryImpl.create(RepositoryConfig.create(
                 configuration.getPath(), directory.getPath()));
     }
