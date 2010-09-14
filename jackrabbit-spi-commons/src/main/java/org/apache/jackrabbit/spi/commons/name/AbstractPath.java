@@ -108,15 +108,15 @@ abstract class AbstractPath implements Path {
                     }
                 }
 
+                if (path == null) {
+                    path = new CurrentPath(null);
+                }
+
                 while (bi < b.length) {
                     path = path.resolve(b[bi++]);
                 }
 
-                if (path != null) {
-                    return path;
-                } else {
-                    return new CurrentPath(null);
-                }
+                return path;
             }
         }
         throw new RepositoryException(
