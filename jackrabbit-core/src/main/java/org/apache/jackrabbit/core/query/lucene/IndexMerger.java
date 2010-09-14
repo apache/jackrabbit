@@ -119,8 +119,10 @@ class IndexMerger implements IndexListener {
      */
     void start() {
         isStarted.set(true);
-        for (Worker worker : busyMergers) {
-            worker.unblock();
+        synchronized (busyMergers) {
+            for (Worker worker : busyMergers) {
+                worker.unblock();
+            }
         }
     }
 
