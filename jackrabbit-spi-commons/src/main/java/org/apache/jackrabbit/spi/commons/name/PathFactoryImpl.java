@@ -32,14 +32,6 @@ public class PathFactoryImpl implements PathFactory {
 
     private static PathFactory FACTORY = new PathFactoryImpl();
 
-    private static final String CURRENT_LITERAL = ".";
-    private static final String PARENT_LITERAL = "..";
-
-    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
-    private final static Name CURRENT_NAME = NAME_FACTORY.create(Name.NS_DEFAULT_URI, CURRENT_LITERAL);
-    private final static Name PARENT_NAME = NAME_FACTORY.create(Name.NS_DEFAULT_URI, PARENT_LITERAL);
-    private final static Name ROOT_NAME = NAME_FACTORY.create(Name.NS_DEFAULT_URI, "");
-
     private PathFactoryImpl() {}
 
     public static PathFactory getInstance() {
@@ -75,11 +67,10 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#create(Path, Name, int, boolean)
      */
     public Path create(Path parent, Name name, int index, boolean normalize) throws IllegalArgumentException, RepositoryException {
-        if (ROOT_NAME.equals(name)) {
+        if (RootPath.NAME.equals(name)) {
             throw new IllegalArgumentException();
         }
-        NameElement element = NameElement.create(name, index);
-        Path path = new NamePath(parent, element).getNormalizedPath();
+        Path path = new NamePath(parent, name, index);
         if (normalize) {
             return path.getNormalizedPath();
         } else {
@@ -91,50 +82,56 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#create(Name)
      */
     public Path create(Name name) throws IllegalArgumentException {
-        return create(name, Path.INDEX_UNDEFINED);
+        if (name != null) {
+            return create(name, Path.INDEX_UNDEFINED);
+        } else {
+            throw new IllegalArgumentException("PathFactory.create(null)");
+        }
     }
 
     /**
      * @see PathFactory#create(Name, int)
      */
     public Path create(Name name, int index) throws IllegalArgumentException {
-        if (index < Path.INDEX_UNDEFINED) {
+        if (name == null) {
+            throw new IllegalArgumentException("PathFactory.create(null, index");
+        } else if (index < Path.INDEX_UNDEFINED) {
             throw new IllegalArgumentException(
                     "Index must not be negative: " + name + "[" + index + "]");
-        } else if (CURRENT_NAME.equals(name)) {
+        } else if (CurrentPath.NAME.equals(name)) {
             if (index == Path.INDEX_UNDEFINED) {
-                return new CurrentPath(null);
+                return CurrentPath.CURRENT_PATH;
             } else {
                 throw new IllegalArgumentException();
             }
-        } else if (PARENT_NAME.equals(name)) {
+        } else if (ParentPath.NAME.equals(name)) {
             if (index == Path.INDEX_UNDEFINED) {
-                return new ParentPath(null);
+                return ParentPath.PARENT_PATH;
             } else {
                 throw new IllegalArgumentException();
             }
-        } else if (ROOT_NAME.equals(name)) {
+        } else if (RootPath.NAME.equals(name)) {
             if (index == Path.INDEX_UNDEFINED) {
-                return RootPath.INSTANCE;
+                return RootPath.ROOT_PATH;
             } else {
                 throw new IllegalArgumentException();
             }
         } else {
-            return new NamePath(null, NameElement.create(name, index));
+            return new NamePath(null, name, index);
         }
     }
 
     public Path create(Path.Element element) {
         if (element.denotesCurrent()) {
-            return new CurrentPath(null);
+            return CurrentPath.CURRENT_PATH;
         } else if (element.denotesIdentifier()) {
-            return new IdentifierPath(element);
+            return new IdentifierPath(element.getIdentifier());
         } else if (element.denotesName()) {
-            return new NamePath(null, element);
+            return new NamePath(null, element.getName(), element.getIndex());
         } else if (element.denotesParent()) {
-            return new ParentPath(null);
+            return ParentPath.PARENT_PATH;
         } else if (element.denotesRoot()) {
-            return RootPath.INSTANCE;
+            return RootPath.ROOT_PATH;
         } else {
             throw new IllegalArgumentException(
                     "Unknown path element type: " + element);
@@ -153,9 +150,9 @@ public class PathFactoryImpl implements PathFactory {
                 if (path != null) {
                     throw new IllegalArgumentException();
                 }
-                path = new IdentifierPath(element);
+                path = new IdentifierPath(element.getIdentifier());
             } else if (element.denotesName()) {
-                path = new NamePath(path, element);
+                path = new NamePath(path, element.getName(), element.getIndex());
             } else if (element.denotesParent()) {
                 if (path != null && path.isAbsolute() && path.getDepth() == 0) {
                     throw new IllegalArgumentException();
@@ -165,7 +162,7 @@ public class PathFactoryImpl implements PathFactory {
                 if (path != null) {
                     throw new IllegalArgumentException();
                 }
-                path = RootPath.INSTANCE;
+                path = RootPath.ROOT_PATH;
             }
         }
         return path;
@@ -203,14 +200,14 @@ public class PathFactoryImpl implements PathFactory {
     public Path.Element createElement(Name name) throws IllegalArgumentException {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
-        } else if (name.equals(PARENT_NAME)) {
-            return ParentElement.INSTANCE;
-        } else if (name.equals(CURRENT_NAME)) {
-            return CurrentElement.INSTANCE;
-        } else if (name.equals(ROOT_NAME)) {
-            return RootElement.INSTANCE;
+        } else if (name.equals(ParentPath.NAME)) {
+            return ParentPath.PARENT_PATH;
+        } else if (name.equals(CurrentPath.NAME)) {
+            return CurrentPath.CURRENT_PATH;
+        } else if (name.equals(RootPath.NAME)) {
+            return RootPath.ROOT_PATH;
         } else {
-            return NameElement.create(name, Path.INDEX_UNDEFINED);
+            return new NamePath(null, name, Path.INDEX_UNDEFINED);
         }
     }
 
@@ -223,14 +220,14 @@ public class PathFactoryImpl implements PathFactory {
                     "The index may not be negative: " + name + "[" + index + "]");
         } else if (name == null) {
             throw new IllegalArgumentException("The name must not be null");
-        } else if (name.equals(PARENT_NAME)
-                || name.equals(CURRENT_NAME)
-                || name.equals(ROOT_NAME)) {
+        } else if (name.equals(ParentPath.NAME)
+                || name.equals(CurrentPath.NAME)
+                || name.equals(RootPath.NAME)) {
             throw new IllegalArgumentException(
                     "Special path elements (root, '.' and '..') can not have an explicit index: "
                     + name + "[" + index + "]");
         } else {
-            return NameElement.create(name, index);
+            return new NamePath(null, name, index);
         }
     }
 
@@ -238,7 +235,7 @@ public class PathFactoryImpl implements PathFactory {
         if (identifier == null) {
             throw new IllegalArgumentException("The id must not be null.");
         } else {
-            return new IdentifierElement(identifier);
+            return new IdentifierPath(identifier);
         }
     }
 
@@ -249,22 +246,24 @@ public class PathFactoryImpl implements PathFactory {
         if (elementString == null) {
             throw new IllegalArgumentException("null PathElement literal");
         }
-        if (elementString.equals(ROOT_NAME.toString())) {
-            return RootElement.INSTANCE;
-        } else if (elementString.equals(CURRENT_LITERAL)) {
-            return CurrentElement.INSTANCE;
-        } else if (elementString.equals(PARENT_LITERAL)) {
-            return ParentElement.INSTANCE;
+        if (elementString.equals(RootPath.NAME.toString())) {
+            return RootPath.ROOT_PATH;
+        } else if (elementString.equals(CurrentPath.CURRENT_PATH.getString())) {
+            return CurrentPath.CURRENT_PATH;
+        } else if (elementString.equals(ParentPath.PARENT_PATH.getString())) {
+            return ParentPath.PARENT_PATH;
         } else if (elementString.startsWith("[") && elementString.endsWith("]") && elementString.length() > 2) {
-            return new IdentifierElement(elementString.substring(1, elementString.length()-1));
+            return new IdentifierPath(
+                    elementString.substring(1, elementString.length()-1));
         }
 
+        NameFactory factory = NameFactoryImpl.getInstance();
         int pos = elementString.indexOf('[');
         if (pos == -1) {
-            Name name = NAME_FACTORY.create(elementString);
-            return NameElement.create(name, Path.INDEX_UNDEFINED);
+            Name name = factory.create(elementString);
+            return new NamePath(null, name, Path.INDEX_UNDEFINED);
         }
-        Name name = NAME_FACTORY.create(elementString.substring(0, pos));
+        Name name = factory.create(elementString.substring(0, pos));
         int pos1 = elementString.indexOf(']');
         if (pos1 == -1) {
             throw new IllegalArgumentException("invalid PathElement literal: " + elementString + " (missing ']')");
@@ -274,7 +273,7 @@ public class PathFactoryImpl implements PathFactory {
             if (index < 1) {
                 throw new IllegalArgumentException("invalid PathElement literal: " + elementString + " (index is 1-based)");
             }
-            return NameElement.create(name, index);
+            return new NamePath(null, name, index);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("invalid PathElement literal: " + elementString + " (" + e.getMessage() + ")");
         }
@@ -284,28 +283,28 @@ public class PathFactoryImpl implements PathFactory {
      * @see PathFactory#getCurrentElement()
      */
     public Path.Element getCurrentElement() {
-        return CurrentElement.INSTANCE;
+        return CurrentPath.CURRENT_PATH;
     }
 
     /**
      * @see PathFactory#getParentElement()
      */
     public Path.Element getParentElement() {
-        return ParentElement.INSTANCE;
+        return ParentPath.PARENT_PATH;
     }
 
     /**
      * @see PathFactory#getRootElement()
      */
     public Path.Element getRootElement() {
-        return RootElement.INSTANCE;
+        return RootPath.ROOT_PATH;
     }
 
     /**
      * @see PathFactory#getRootPath()
      */
     public Path getRootPath() {
-        return RootPath.INSTANCE;
+        return RootPath.ROOT_PATH;
     }
 
 }

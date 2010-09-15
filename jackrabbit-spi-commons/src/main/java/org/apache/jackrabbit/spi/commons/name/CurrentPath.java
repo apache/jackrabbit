@@ -31,6 +31,13 @@ final class CurrentPath extends RelativePath {
     /** Serial version UID */
     private static final long serialVersionUID = 1729196441091297231L;
 
+    /** The current path "." */
+    public static final CurrentPath CURRENT_PATH = new CurrentPath(null);
+
+    /** Name of the current element */
+    public static final Name NAME =
+        NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, ".");
+
     public CurrentPath(Path parent) {
         super(parent);
     }
@@ -47,8 +54,12 @@ final class CurrentPath extends RelativePath {
         }
     }
 
+    protected String getElementString() {
+        return NAME.getLocalName();
+    }
+
     public Name getName() {
-        return CurrentElement.INSTANCE.getName();
+        return NAME;
     }
 
     /**
@@ -92,26 +103,14 @@ final class CurrentPath extends RelativePath {
         }
     }
 
-    public Element getNameElement() {
-        return CurrentElement.INSTANCE;
-    }
-
     /**
      * Returns the current path ".".
      *
      * @return current path
      */
     @Override
-    public Path getLastElement() {
-        return new CurrentPath(null);
-    }
-
-    public String getString() {
-        if (parent != null) {
-            return parent.getString() + Path.DELIMITER + ".";
-        } else {
-            return ".";
-        }
+    public AbstractPath getLastElement() {
+        return CURRENT_PATH;
     }
 
     //--------------------------------------------------------------< Object >

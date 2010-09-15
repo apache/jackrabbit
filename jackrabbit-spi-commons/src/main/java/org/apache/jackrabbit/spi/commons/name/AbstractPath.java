@@ -23,7 +23,7 @@ import org.apache.jackrabbit.spi.Path;
 /**
  * Abstract base class for paths.
  */
-abstract class AbstractPath implements Path {
+abstract class AbstractPath implements Path, Path.Element {
 
     /** Serial version UID */
     private static final long serialVersionUID = 3018771833963770499L;
@@ -46,6 +46,16 @@ abstract class AbstractPath implements Path {
      */
     public int getNormalizedIndex() {
         return INDEX_DEFAULT;
+    }
+
+    /**
+     * Returns <code>null</code>, except when overridden by the
+     * {@link IdentifierPath} subclass.
+     *
+     * @return <code>null</code>
+     */
+    public String getIdentifier() {
+        return null;
     }
 
     /**
@@ -98,13 +108,17 @@ abstract class AbstractPath implements Path {
         return false;
     }
 
+    public Element getNameElement() {
+        return getLastElement();
+    }
+
     /**
      * Returns this path, except when overridden by the {@link RelativePath}
      * subclasses.
      *
      * @return this path
      */
-    public Path getLastElement() {
+    public AbstractPath getLastElement() {
         return this;
     }
 
@@ -120,7 +134,7 @@ abstract class AbstractPath implements Path {
 
     public final Path resolve(Element element) {
         if (element.denotesName()) {
-            return new NamePath(this, element);
+            return new NamePath(this, element.getName(), element.getIndex());
         } else if (element.denotesParent()) {
             if (isAbsolute() && getDepth() == 0) {
                 throw new IllegalArgumentException(
@@ -130,9 +144,9 @@ abstract class AbstractPath implements Path {
         } else if (element.denotesCurrent()) {
             return new CurrentPath(this);
         } else if (element.denotesRoot()) {
-            return RootPath.INSTANCE;
+            return RootPath.ROOT_PATH;
         } else if (element.denotesIdentifier()) {
-            return new IdentifierPath(element);
+            return new IdentifierPath(element.getIdentifier());
         } else {
             throw new IllegalArgumentException(
                     "Unknown path element type: " + element);
@@ -151,7 +165,7 @@ abstract class AbstractPath implements Path {
         } else if (relative.denotesParent()) {
             return new ParentPath(this);
         } else if (relative.denotesName()) {
-            return new NamePath(this, relative.getNameElement());
+            return new NamePath(this, relative.getName(), relative.getIndex());
         } else {
             throw new IllegalArgumentException(
                     "Unknown path type: " + relative);

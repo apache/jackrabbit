@@ -32,7 +32,7 @@ public class ElementTest extends TestCase {
     }
 
     public void testCurrentElement() {
-        Element element = CurrentElement.INSTANCE;
+        Element element = CurrentPath.CURRENT_PATH;
         assertTrue(element.denotesCurrent());
         assertFalse(element.denotesIdentifier());
         assertFalse(element.denotesName());
@@ -45,7 +45,7 @@ public class ElementTest extends TestCase {
     }
 
     public void testIdentifierElement() {
-        Element element = new IdentifierElement("test");
+        Element element = new IdentifierPath("test");
         assertFalse(element.denotesCurrent());
         assertTrue(element.denotesIdentifier());
         assertFalse(element.denotesName());
@@ -59,7 +59,7 @@ public class ElementTest extends TestCase {
 
     public void testNameElement() {
         Element element =
-            NameElement.create(createName("test"), Path.INDEX_UNDEFINED);
+            new NamePath(null, createName("test"), Path.INDEX_UNDEFINED);
         assertFalse(element.denotesCurrent());
         assertFalse(element.denotesIdentifier());
         assertTrue(element.denotesName());
@@ -72,7 +72,7 @@ public class ElementTest extends TestCase {
     }
 
     public void testIndexedNameElement() {
-        Element element = NameElement.create(createName("test"), 123);
+        Element element = new NamePath(null, createName("test"), 123);
         assertFalse(element.denotesCurrent());
         assertFalse(element.denotesIdentifier());
         assertTrue(element.denotesName());
@@ -85,7 +85,7 @@ public class ElementTest extends TestCase {
     }
 
     public void testParentElement() {
-        Element element = ParentElement.INSTANCE;
+        Element element = ParentPath.PARENT_PATH;
         assertFalse(element.denotesCurrent());
         assertFalse(element.denotesIdentifier());
         assertFalse(element.denotesName());
@@ -98,7 +98,7 @@ public class ElementTest extends TestCase {
     }
 
     public void testRootElement() {
-        Element element = RootElement.INSTANCE;
+        Element element = RootPath.ROOT_PATH;
         assertFalse(element.denotesCurrent());
         assertFalse(element.denotesIdentifier());
         assertFalse(element.denotesName());

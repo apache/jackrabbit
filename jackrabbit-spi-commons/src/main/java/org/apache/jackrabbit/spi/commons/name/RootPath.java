@@ -24,17 +24,21 @@ import org.apache.jackrabbit.spi.Path;
 final class RootPath extends AbstractPath {
 
     /** Singleton instance */
-    public static final RootPath INSTANCE = new RootPath();
+    public static final RootPath ROOT_PATH = new RootPath();
 
     /** Serial version UID */
     private static final long serialVersionUID = 8621451607549214925L;
+
+    /** Name of the root element */
+    public static final Name NAME =
+        NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, "");
 
     /** Hidden constructor */
     private RootPath() {
     }
 
     public Name getName() {
-        return RootElement.INSTANCE.getName();
+        return NAME;
     }
 
     /**
@@ -151,11 +155,11 @@ final class RootPath extends AbstractPath {
     }
 
     public Element[] getElements() {
-        return new Element[] { RootElement.INSTANCE };
+        return new Element[] { ROOT_PATH };
     }
 
     public Element getNameElement() {
-        return RootElement.INSTANCE;
+        return ROOT_PATH;
     }
 
     public String getString() {
@@ -166,7 +170,7 @@ final class RootPath extends AbstractPath {
 
     /** Returns the singleton instance of this class */
     public Object readResolve() {
-        return INSTANCE;
+        return ROOT_PATH;
     }
 
 }

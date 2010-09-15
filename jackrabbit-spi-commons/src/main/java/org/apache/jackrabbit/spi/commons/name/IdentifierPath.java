@@ -26,12 +26,11 @@ final class IdentifierPath extends AbstractPath {
     /** Serial version UID */
     private static final long serialVersionUID = 1602959709588338642L;
 
-    private final Element element;
+    private final String identifier;
 
-    public IdentifierPath(Element element) {
-        assert element != null;
-        assert element.denotesIdentifier();
-        this.element = element;
+    public IdentifierPath(String identifier) {
+        assert identifier != null;
+        this.identifier = identifier;
     }
 
     /**
@@ -41,6 +40,10 @@ final class IdentifierPath extends AbstractPath {
      */
     public Name getName() {
         return null;
+    }
+
+    public String getIdentifier() {
+        return identifier;
     }
 
     /**
@@ -136,15 +139,11 @@ final class IdentifierPath extends AbstractPath {
     }
 
     public Element[] getElements() {
-        return new Element[] { element };
-    }
-
-    public Element getNameElement() {
-        return element;
+        return new Element[] { getNameElement() };
     }
 
     public String getString() {
-        return element.getString();
+        return "[" + identifier + "]";
     }
 
     //--------------------------------------------------------------< Object >
@@ -152,16 +151,17 @@ final class IdentifierPath extends AbstractPath {
     public final boolean equals(Object that) {
         if (this == that) {
             return true;
-        } else if (that instanceof IdentifierPath) {
-            IdentifierPath path = (IdentifierPath) that;
-            return element.equals(path.element);
+        } else if (that instanceof Path) {
+            Path path = (Path) that;
+            return path.denotesIdentifier()
+                && identifier.equals(path.getIdentifier());
         } else {
             return false;
         }
     }
 
     public final int hashCode() {
-        return element.hashCode();
+        return identifier.hashCode();
     }
 
 }

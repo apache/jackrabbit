@@ -26,12 +26,24 @@ final class NamePath extends RelativePath {
     /** Serial version UID */
     private static final long serialVersionUID = -2887665244213430950L;
 
-    private final Element element;
+    /**
+     * Name of the last path element.
+     */
+    private final Name name;
 
-    public NamePath(Path parent, Element element) {
+    /**
+     * Optional index of the last path element. Set to
+     * {@link Path#INDEX_UNDEFINED} if not explicitly specified,
+     * otherwise contains the 1-based index.
+     */
+    private final int index;
+
+    public NamePath(Path parent, Name name, int index) {
         super(parent);
-        assert element.denotesName();
-        this.element = element;
+        assert name != null;
+        assert index >= 0;
+        this.name = name;
+        this.index = index;
     }
 
     protected int getDepthModifier() {
@@ -46,18 +58,30 @@ final class NamePath extends RelativePath {
         }
     }
 
+    protected String getElementString() {
+        if (index > Path.INDEX_DEFAULT) {
+            return name + "[" + index + "]";
+        } else {
+            return name.toString();
+        }
+    }
+
     public Name getName() {
-        return element.getName();
+        return name;
     }
 
     @Override
     public int getIndex() {
-        return element.getIndex();
+        return index;
     }
 
     @Override
     public int getNormalizedIndex() {
-        return element.getNormalizedIndex();
+        if (index != INDEX_UNDEFINED) {
+            return index;
+        } else {
+            return INDEX_DEFAULT;
+        }
     }
 
     /**
@@ -89,7 +113,7 @@ final class NamePath extends RelativePath {
             if (normalized.denotesCurrent()) {
                 normalized = null; // special case: ./a
             }
-            return new NamePath(normalized, element);
+            return new NamePath(normalized, name, index);
         }
     }
 
@@ -97,15 +121,11 @@ final class NamePath extends RelativePath {
         if (isCanonical()) {
             return this;
         } else if (parent != null) {
-            return new NamePath(parent.getCanonicalPath(), element);
+            return new NamePath(parent.getCanonicalPath(), name, index);
         } else {
             throw new RepositoryException(
                     "There is no canonical representation of " + this);
         }
-    }
-
-    public Element getNameElement() {
-        return element;
     }
 
     /**
@@ -114,15 +134,11 @@ final class NamePath extends RelativePath {
      * @return last element of this path
      */
     @Override
-    public Path getLastElement() {
-        return new NamePath(null, element);
-    }
-
-    public String getString() {
+    public AbstractPath getLastElement() {
         if (parent != null) {
-            return parent.getString() + Path.DELIMITER + element.getString();
+            return new NamePath(null, name, index);
         } else {
-            return element.getString();
+            return this;
         }
     }
 
@@ -135,7 +151,8 @@ final class NamePath extends RelativePath {
         } else if (that instanceof Path) {
             Path path = (Path) that;
             return path.denotesName()
-                && element.equals(path.getNameElement()) 
+                && name.equals(path.getName())
+                && getNormalizedIndex() == path.getNormalizedIndex()
                 && super.equals(that);
         } else {
             return false;
@@ -144,7 +161,7 @@ final class NamePath extends RelativePath {
 
     @Override
     public final int hashCode() {
-        return super.hashCode() * 37 + element.hashCode();
+        return super.hashCode() * 37 + name.hashCode() + getNormalizedIndex();
     }
 
 }
