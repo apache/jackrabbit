@@ -39,7 +39,7 @@ abstract class RelativePath extends AbstractPath {
         this.parent = parent;
         if (parent != null) {
             this.absolute = parent.isAbsolute();
-            this.identifier = parent.denotesIdentifier();
+            this.identifier = parent.isIdentifierBased();
             this.depth = parent.getDepth() + getDepthModifier();
             this.length = parent.getLength() + 1;
         } else {
@@ -54,11 +54,7 @@ abstract class RelativePath extends AbstractPath {
 
     protected abstract Path getParent() throws RepositoryException;
 
-    public final boolean denotesRoot() {
-        return false;
-    }
-
-    public final boolean denotesIdentifier() {
+    public final boolean isIdentifierBased() {
         return identifier;
     }
 

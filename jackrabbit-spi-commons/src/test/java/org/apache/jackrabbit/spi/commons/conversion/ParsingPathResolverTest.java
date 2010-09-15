@@ -166,14 +166,14 @@ public class ParsingPathResolverTest extends TestCase {
             String jcrPath = "[" + it.next().toString() + "]";
 
             Path p = resolverV2.getQPath(jcrPath, true);
-            assertFalse(p.denotesIdentifier());
+            assertFalse(p.isIdentifierBased());
             assertTrue(p.isAbsolute());
             assertTrue(p.isNormalized());
             assertTrue(p.isCanonical());
             assertEquals(DummyIdentifierResolver.JCR_PATH, resolverV2.getJCRPath(p));
 
             p = resolverV2.getQPath(jcrPath, false);
-            assertTrue(p.denotesIdentifier());
+            assertTrue(p.isIdentifierBased());
             assertEquals(1, p.getLength());
             assertTrue(p.isAbsolute());
             assertFalse(p.isNormalized());

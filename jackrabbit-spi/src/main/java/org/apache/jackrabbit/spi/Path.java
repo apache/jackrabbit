@@ -24,45 +24,44 @@ import javax.jcr.RepositoryException;
 /**
  * The <code>Path</code> interface defines the SPI level representation of
  * a JCR path. It consists of an ordered list of {@link Path.Element} objects
- * and is immutable.<p/>
- *
+ * and is immutable.
+ * <p>
  * A {@link Path.Element} is either {@link Path.Element#denotesName() named}
  * or one of the following special elements:
  * <ul>
  * <li>the {@link Element#denotesCurrent() current} element (Notation: "."),</li>
  * <li>the {@link Element#denotesParent() parent} element (Notation: ".."),</li>
  * <li>the {@link Element#denotesRoot() root} element (Notation: {}), which can
+ * only occur as the first element in a path, or</li>
+ * <li>an {@link Element#denotesIdentifier() identifier} element, which can
  * only occur as the first element in a path.</li>
  * </ul>
- *
+ * <p>
  * A <code>Path</code> is defined to have the following characteristics:
- * <p/>
- *
+ * <p>
  * <strong>Equality:</strong><br>
  * Two paths are equal if they consist of the same elements.
- * <p/>
- *
+ * <p>
  * <strong>Length:</strong><br>
  * The {@link Path#getLength() length} of a path is the number of its elements.
- * <p/>
- *
+ * <p>
  * <strong>Depth:</strong><br>
  * The {@link Path#getDepth() depth} of a path is
  * <ul>
  * <li>0 for the root path,</li>
+ * <li>0 for a path consisting of an identifier element only,</li>
  * <li>0 for the path consisting of the current element only,</li>
  * <li>-1 for the path consisting of the parent element only,</li>
- * <li>1 for the path consisting of any other single element,</li>
+ * <li>1 for the path consisting of a single named element,</li>
  * <li>depth(P) + depth(Q) for the path P/Q.</li>
  * </ul>
- * The depth of a valid absolute path equals the length of its
- * normalization minus 1.
- * <p/>
- *
+ * <p>
+ * The depth of a normalized absolute path equals its length minus 1.
+ * <p>
  * <strong>Absolute vs. Relative</strong><br>
  * A path can be absolute or relative:<br>
  * A path {@link #isAbsolute() is absolute} if its first element is the root
- * element. A path is relative if it is not absolute.
+ * or an identifier element. A path is relative if it is not absolute.
  * <ul>
  * <li>An absolute path is valid if its depth is greater or equals 0. A relative
  * path is always valid.</li>
@@ -71,27 +70,24 @@ import javax.jcr.RepositoryException;
  * <li>Two relative paths P and Q are equivalent if for every absolute path R such
  * that R/P and R/Q are valid, R/P and R/Q are equivalent.</li>
  * </ul>
- * <p/>
- *
+ * <p>
  * <strong>Normalization:</strong><br>
  * A path P {@link Path#isNormalized() is normalized} if P has minimal length
  * amongst the set of all paths Q which are equivalent to P.<br>
  * This means that '.' and '..' elements are resolved as much as possible.
- * An absolute path it is normalized if it contains no current nor parent
- * element. The normalization of a path is unique.<br>
- * <p/>
- *
- * <strong>Equalivalence:</strong><br>
+ * An absolute path it is normalized if it is not identifier-based and
+ * contains no current or parent elements. The normalization of a path
+ * is unique.<br>
+ * <p>
+ * <strong>Equivalence:</strong><br>
  * Path P is {@link Path#isEquivalentTo(Path) equivalent} to path Q (in the above sense)
  * if the normalization of P is equal to the normalization of Q. This is
  * an equivalence relation (i.e. reflexive, transitive,
  * and symmetric).
- * <p/>
- *
+ * <p>
  * <strong>Canonical Paths:</strong><br>
  * A path {@link Path#isCanonical() is canonical} if its absolute and normalized.
- * <p/>
- *
+ * <p>
  * <strong>Hierarchical Relationship:</strong><br>
  * The ancestor relationship is a strict partial order (i.e. irreflexive, transitive,
  * and asymmetric). Path P is a direct ancestor of path Q if P is equivalent to Q/..
@@ -101,7 +97,7 @@ import javax.jcr.RepositoryException;
  * <li>P is a direct ancestor of Q or</li>
  * <li>P is a direct ancestor of some path S which is an ancestor of Q.</li>
  * </ul>
- *
+ * <p>
  * Path P is an {@link Path#isDescendantOf(Path) descendant} of path Q if
  * <ul>
  * <li>Path P is a descendant of path Q if Q is an ancestor of P.</li>
@@ -131,11 +127,71 @@ public interface Path extends Serializable {
     public static final char DELIMITER = '\t';
 
     /**
-     * Tests whether this path represents the root path, i.e. "/".
+     * Returns the name of the last path element, or <code>null</code>
+     * for an identifier. The names of the special root, current and parent
+     * elements are "", "." and ".." in the default namespace.
      *
-     * @return true if this path represents the root path; false otherwise.
+     * @return name of the last path element, or <code>null</code>
      */
-    public boolean denotesRoot();
+    Name getName();
+
+    /**
+     * Returns the index of the last path element, or {@link #INDEX_UNDEFINED}
+     * if the index is not defined or not applicable. The index of an
+     * identifier or the special root, current or parent element is always
+     * undefined.
+     *
+     * @return index of the last path element, or {@link #INDEX_UNDEFINED}
+     */
+    int getIndex();
+
+    /**
+     * Returns the normalized index of the last path element. The normalized
+     * index of an element with an undefined index is {@link #INDEX_DEFAULT}.
+     *
+     * @return normalized index of the last path element
+     */
+    int getNormalizedIndex();
+
+    /**
+     * Tests whether this is the root path, i.e. "/".
+     *
+     * @return <code>true</code> if this is the root path,
+     *         <code>false</code> otherwise.
+     */
+    boolean denotesRoot();
+
+    /**
+     * Test if this path consists of a single identifier element.
+     *
+     * @return <code>true</code> if this path is an identifier
+     */
+    boolean denotesIdentifier();
+
+    /**
+     * Checks if the last path element is the parent element ("..").
+     *
+     * @return <code>true</code> if the last path element is the parent element,
+     *         <code>false</code> otherwise
+     */
+    boolean denotesParent();
+
+    /**
+     * Checks if the last path element is the current element (".").
+     *
+     * @return <code>true</code> if the last path element is the current element,
+     *         <code>false</code> otherwise
+     */
+    boolean denotesCurrent();
+
+    /**
+     * Checks if the last path element is a named and optionally indexed
+     * element.
+     *
+     * @return <code>true</code> if the last path element is a named element,
+     *         <code>false</code> otherwise
+     */
+    boolean denotesName();
 
     /**
      * Test if this path represents an unresolved identifier-based path.
@@ -143,7 +199,7 @@ public interface Path extends Serializable {
      * @return <code>true</code> if this path represents an unresolved
      * identifier-based path.
      */
-    public boolean denotesIdentifier();
+    boolean isIdentifierBased();
 
     /**
      * Tests whether this path is absolute, i.e. whether it starts with "/" or

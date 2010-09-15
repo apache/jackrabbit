@@ -228,10 +228,10 @@ public class PathParserTest extends TestCase {
             }
 
             Path p = PathParser.parse(jcrPath, resolver, idResolver, factory, true);
-            assertFalse(p.denotesIdentifier());
+            assertFalse(p.isIdentifierBased());
 
             p = PathParser.parse(jcrPath, resolver, idResolver, factory, false);
-            assertTrue(p.denotesIdentifier());
+            assertTrue(p.isIdentifierBased());
 
             try {
                 PathParser.parse(factory.getRootPath(), jcrPath, resolver, idResolver, factory);

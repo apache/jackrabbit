@@ -214,7 +214,7 @@ public class PathFactoryTest extends TestCase {
         assertEquals(Path.INDEX_DEFAULT, elem.getNormalizedIndex());
 
         Path p = factory.create(new Path.Element[] {elem});
-        assertTrue(p.denotesIdentifier());
+        assertTrue(p.isIdentifierBased());
         assertTrue(p.isAbsolute());
 
         assertFalse(p.denotesRoot());
