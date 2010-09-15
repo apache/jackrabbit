@@ -485,7 +485,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             // all node entries present in the hierarchy and the direct ancestor
             // has already been resolved and isn't invalidated -> no need to
             // retrieve property entry from SPI
-            pe = entry.properties.get(path.getNameElement().getName());
+            pe = entry.properties.get(path.getName());
         } else {
             /*
             * Unknown parent entry (not-existing or not yet loaded) or a parent
@@ -502,8 +502,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
             IdFactory idFactory = getIdFactory();
             NodeId parentId = entry.getWorkspaceId();
-            parentId = (remainingPath.getLength() == 1) ? parentId : idFactory.createNodeId(parentId, remainingPath.getAncestor(1));
-            PropertyId propId = idFactory.createPropertyId(parentId, remainingPath.getNameElement().getName());
+            if (remainingPath.getLength() != 1) {
+                parentId = idFactory.createNodeId(parentId, remainingPath.getAncestor(1));
+            }
+            PropertyId propId = idFactory.createPropertyId(parentId, remainingPath.getName());
             pe = entry.loadPropertyEntry(propId);
         }
 
@@ -898,7 +900,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     public void refresh(Event childEvent) {
         ItemId eventId = childEvent.getItemId();
         Path eventPath = childEvent.getPath();
-        Name eventName = eventPath.getNameElement().getName();
+        Name eventName = eventPath.getName();
         HierarchyEntry child = lookupEntry(eventId, eventPath);
 
         switch (childEvent.getType()) {
@@ -909,7 +911,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     // removed already -> add the new entry.
                     if (childEvent.getType() ==  Event.NODE_ADDED) {
                         String uniqueChildID = (eventId.getPath() == null) ? eventId.getUniqueID() : null;
-                        int index = eventPath.getNameElement().getNormalizedIndex();
+                        int index = eventPath.getNormalizedIndex();
                         internalAddNodeEntry(eventName, uniqueChildID, index);
                     } else {
                         internalAddPropertyEntry(eventName, true);
@@ -1193,11 +1195,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * <code>Status#NEW</code>.
      */
     private HierarchyEntry lookupEntry(ItemId eventId, Path eventPath) {
-        Name childName = eventPath.getNameElement().getName();
+        Name childName = eventPath.getName();
         HierarchyEntry child;
         if (eventId.denotesNode()) {
             String uniqueChildID = (eventId.getPath() == null) ? eventId.getUniqueID() : null;
-            int index = eventPath.getNameElement().getNormalizedIndex();
+            int index = eventPath.getNormalizedIndex();
             child = lookupNodeEntry(uniqueChildID, childName, index);
         } else {
             child = lookupPropertyEntry(childName);

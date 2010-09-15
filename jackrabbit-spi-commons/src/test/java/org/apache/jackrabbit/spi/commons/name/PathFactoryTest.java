@@ -224,7 +224,7 @@ public class PathFactoryTest extends TestCase {
         assertEquals(1, p.getLength());
         assertEquals(0, p.getAncestorCount());
 
-        Path.Element lastElem = p.getNameElement();
+        Path lastElem = p.getLastElement();
         assertNotNull(lastElem);
         assertTrue(lastElem.denotesIdentifier());
 

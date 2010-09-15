@@ -717,8 +717,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             return;
         }
         PathMap.Element<LRUEntry> element =
-            parent.getDescendant(PathFactoryImpl.getInstance().create(
-                new Path.Element[] { path.getNameElement() }), true);
+            parent.getDescendant(path.getLastElement(), true);
         if (element != null) {
             // with SNS, this might evict a child that is NOT the one
             // having <code>id</code>, check first whether item has

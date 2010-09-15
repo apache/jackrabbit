@@ -112,13 +112,19 @@ public class ReorderNodes extends AbstractOperation {
 
     //------------------------------------------------------------< Factory >---
 
-    public static Operation create(NodeState parentState, Path.Element srcName,
-                                   Path.Element beforeName) throws ItemNotFoundException, RepositoryException {
+    public static Operation create(
+            NodeState parentState, Path srcPath, Path beforePath)
+            throws ItemNotFoundException, RepositoryException {
         // make sure the parent hierarchy entry has its child entries loaded
         assertChildNodeEntries(parentState);
 
-        NodeState insert = parentState.getChildNodeState(srcName.getName(), srcName.getNormalizedIndex());
-        NodeState before = (beforeName == null) ? null : parentState.getChildNodeState(beforeName.getName(), beforeName.getNormalizedIndex());
+        NodeState insert = parentState.getChildNodeState(
+                srcPath.getName(), srcPath.getNormalizedIndex());
+        NodeState before = null;
+        if (beforePath != null) {
+            before = parentState.getChildNodeState(
+                    beforePath.getName(), beforePath.getNormalizedIndex());
+        }
         return new ReorderNodes(parentState, insert, before);
     }
 }

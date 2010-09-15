@@ -812,8 +812,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
         private Path calcRemovePath(Path removedNodePath) throws RepositoryException {
             removed.put(removedNodePath, removedNodePath);
-            Name name = removedNodePath.getNameElement().getName();
-            int index = removedNodePath.getNameElement().getNormalizedIndex();
+            Name name = removedNodePath.getName();
+            int index = removedNodePath.getNormalizedIndex();
             if (index > Path.INDEX_DEFAULT) {
                 Path.Element[] elems = removedNodePath.getElements();
                 PathBuilder pb = new PathBuilder();

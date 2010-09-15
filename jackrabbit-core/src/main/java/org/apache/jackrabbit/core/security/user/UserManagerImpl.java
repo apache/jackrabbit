@@ -478,7 +478,7 @@ public class UserManagerImpl extends ProtectedItemModifier
                     default:
                         ntName = NT_REP_AUTHORIZABLE;
                 }
-                nodes = authResolver.findNodes(path.getNameElement().getName(), value, ntName, true);
+                nodes = authResolver.findNodes(path.getName(), value, ntName, true);
             } else {
                 // search below authorizable nodes but take some path constraints
                 // into account.

@@ -58,7 +58,7 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
      * {@inheritDoc}
      */
     public Name getName() {
-        return path.getNameElement().getName();
+        return path.getName();
     }
 
     /**

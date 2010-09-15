@@ -436,7 +436,7 @@ class AggregateRuleImpl implements AggregateRule {
         PropertyInclude(Path pattern)
                 throws RepositoryException {
             super(pattern.getAncestor(1), null);
-            this.propertyName = pattern.getNameElement().getName();
+            this.propertyName = pattern.getName();
         }
 
         /**

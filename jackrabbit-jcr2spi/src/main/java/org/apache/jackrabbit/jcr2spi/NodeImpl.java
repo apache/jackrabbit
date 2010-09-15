@@ -156,7 +156,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsWritable();
         // build path object and retrieve parent node
         Path nodePath = getPath(relPath).getNormalizedPath();
-        if (nodePath.getNameElement().getIndex() != Path.INDEX_UNDEFINED) {
+        if (nodePath.getIndex() != Path.INDEX_UNDEFINED) {
             String msg = "Illegal subscript specified: " + relPath;
             log.debug(msg);
             throw new RepositoryException(msg);
@@ -180,7 +180,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // get names objects for node and nt
-        Name nodeName = nodePath.getNameElement().getName();
+        Name nodeName = nodePath.getName();
         Name ntName = (primaryNodeTypeName == null) ? null : getQName(primaryNodeTypeName);
 
         // create new node (including validation checks)
@@ -211,10 +211,13 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException("Node " + safeGetJCRPath() + " has no child node with name " + destChildRelPath);
         }
 
-        Path.Element srcName = getReorderPath(srcChildRelPath).getNameElement();
-        Path.Element beforeName = (destChildRelPath == null) ? null : getReorderPath(destChildRelPath).getNameElement();
+        Path srcPath = getReorderPath(srcChildRelPath);
+        Path beforePath = null;
+        if (destChildRelPath != null) {
+            beforePath = getReorderPath(destChildRelPath);
+        }
 
-        Operation op = ReorderNodes.create(getNodeState(), srcName, beforeName);
+        Operation op = ReorderNodes.create(getNodeState(), srcPath, beforePath);
         session.getSessionItemStateManager().execute(op);
     }
 
@@ -1719,7 +1722,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private Path getPath(Path relativePath) throws RepositoryException {
         // shortcut
-        if (relativePath.getLength() == 1 && relativePath.getNameElement() == session.getPathFactory().getCurrentElement()) {
+        if (relativePath.getLength() == 1 && relativePath.denotesCurrent()) {
             return getQPath();
         }
         return session.getPathFactory().create(getQPath(), relativePath, true);
@@ -1743,14 +1746,14 @@ public class NodeImpl extends ItemImpl implements Node {
             Path rp = session.getPathResolver().getQPath(relPath);
             // shortcut
             if (rp.getLength() == 1) {
-                Path.Element pe = rp.getNameElement();
-                if (pe.denotesCurrent()) {
+                if (rp.denotesCurrent()) {
                     targetEntry = getNodeEntry();
-                } else if (pe.denotesParent()) {
+                } else if (rp.denotesParent()) {
                     targetEntry = getNodeEntry().getParent();
                 } else {
                     // try to get child entry + force loading of not known yet
-                    targetEntry = getNodeEntry().getNodeEntry(pe.getName(), pe.getNormalizedIndex(), true);
+                    targetEntry = getNodeEntry().getNodeEntry(
+                            rp.getName(), rp.getNormalizedIndex(), true);
                 }
             } else {
                 // rp length > 1
@@ -1783,11 +1786,11 @@ public class NodeImpl extends ItemImpl implements Node {
         PropertyEntry targetEntry = null;
         try {
             Path rp = session.getPathResolver().getQPath(relPath);
-            if (rp.getLength() == 1 && rp.getNameElement().denotesName()) {
+            if (rp.getLength() == 1 && rp.denotesName()) {
                 // a single path element must always denote a name. '.' and '..'
                 // will never point to a property. If the NodeEntry does not
                 // contain such a property entry, the targetEntry is 'null;
-                Name propName = rp.getNameElement().getName();
+                Name propName = rp.getName();
                 // check if property entry exists
                 targetEntry = getNodeEntry().getPropertyEntry(propName, true);
             } else {

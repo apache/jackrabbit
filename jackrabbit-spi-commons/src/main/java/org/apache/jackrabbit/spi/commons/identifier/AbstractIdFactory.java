@@ -279,7 +279,7 @@ public abstract class AbstractIdFactory implements IdFactory {
         }
 
         public Name getName() {
-            return getPath().getNameElement().getName();
+            return getPath().getName();
         }
 
         @Override

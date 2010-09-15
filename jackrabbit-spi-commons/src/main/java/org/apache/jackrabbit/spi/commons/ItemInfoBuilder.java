@@ -339,8 +339,9 @@ public final class ItemInfoBuilder {
             return transformIterator(itemInfos.iterator(),
                     new Transformer<ItemInfo, ChildInfo>(){
                         public ChildInfo transform(ItemInfo info) {
-                            Name name = info.getPath().getNameElement().getName();
-                            return new ChildInfoImpl(name, null, Path.INDEX_DEFAULT);
+                            return new ChildInfoImpl(
+                                    info.getPath().getName(), null,
+                                    Path.INDEX_DEFAULT);
                         }
                     });
         }

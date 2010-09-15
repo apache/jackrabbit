@@ -53,15 +53,14 @@ public abstract class AbstractCopy extends AbstractOperation {
         this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager());
 
         // check for illegal index present in destination path
-        Path.Element destElement = destPath.getNameElement();
-        int index = destElement.getIndex();
-        if (index > Path.INDEX_UNDEFINED) {
+        int index = destPath.getIndex();
+        if (index != Path.INDEX_UNDEFINED) {
             // subscript in name element
             String msg = "invalid destination path (subscript in name element is not allowed)";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        this.destName = destElement.getName();
+        this.destName = destPath.getName();
         this.srcWorkspaceName = srcWorkspaceName;
 
         // NOTE: affected-states only needed for transient modifications

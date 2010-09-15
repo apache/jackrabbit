@@ -160,10 +160,10 @@ public class Move extends AbstractOperation {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        Path.Element destElement = destPath.getNameElement();
+
         // destination must not contain an index
-        int index = destElement.getIndex();
-        if (index > Path.INDEX_UNDEFINED) {
+        int index = destPath.getIndex();
+        if (index != Path.INDEX_UNDEFINED) {
             // subscript in name element
             String msg = "Invalid destination path: subscript in name element is not allowed (" + LogUtil.safeGetJCRPath(destPath, resolver) + ")";
             log.debug(msg);
@@ -179,7 +179,7 @@ public class Move extends AbstractOperation {
         NodeState srcState = getNodeState(srcPath, hierMgr);
         NodeState srcParentState = getNodeState(srcPath.getAncestor(1), hierMgr);
         NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr);
-        Name destName = destElement.getName();
+        Name destName = destPath.getName();
 
         if (sessionMove) {
             NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();

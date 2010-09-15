@@ -114,4 +114,23 @@ final class CurrentPath extends RelativePath {
         }
     }
 
+    //--------------------------------------------------------------< Object >
+
+    @Override
+    public final boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        } else if (that instanceof Path) {
+            Path path = (Path) that;
+            return path.denotesCurrent() && super.equals(that);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public final int hashCode() {
+        return super.hashCode() + 1;
+    }
+
 }

@@ -217,10 +217,9 @@ public class BatchedItemOperations extends ItemValidator {
         // 1. check paths & retrieve state
         NodeState srcState = getNodeState(srcPath);
 
-        Path.Element destName = destPath.getNameElement();
         Path destParentPath = destPath.getAncestor(1);
         NodeState destParentState = getNodeState(destParentPath);
-        int ind = destName.getIndex();
+        int ind = destPath.getIndex();
         if (ind > 0) {
             // subscript in name element
             String msg =
@@ -230,7 +229,7 @@ public class BatchedItemOperations extends ItemValidator {
             throw new RepositoryException(msg);
         }
 
-        return clone(srcState, destParentState, destName.getName());
+        return clone(srcState, destParentState, destPath.getName());
     }
 
     /**
@@ -381,10 +380,9 @@ public class BatchedItemOperations extends ItemValidator {
 
         NodeState srcState = getNodeState(srcStateMgr, srcHierMgr, srcPath);
 
-        Path.Element destName = destPath.getNameElement();
         Path destParentPath = destPath.getAncestor(1);
         NodeState destParentState = getNodeState(destParentPath);
-        int ind = destName.getIndex();
+        int ind = destPath.getIndex();
         if (ind > 0) {
             // subscript in name element
             String msg =
@@ -400,7 +398,7 @@ public class BatchedItemOperations extends ItemValidator {
         // precautionary measure in order to isolate it from concurrent
         // underlying changes while checking preconditions
         stateMgr.store(destParentState);
-        checkAddNode(destParentState, destName.getName(),
+        checkAddNode(destParentState, destPath.getName(),
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
                 | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
         // check read access right on source node using source access manager
@@ -425,7 +423,7 @@ public class BatchedItemOperations extends ItemValidator {
                 destParentState.getNodeId(), flag, refTracker);
 
         // add to new parent
-        destParentState.addChildNodeEntry(destName.getName(), newState.getNodeId());
+        destParentState.addChildNodeEntry(destPath.getName(), newState.getNodeId());
 
         // adjust references that refer to uuid's which have been mapped to
         // newly generated uuid's on copy/clone
@@ -509,16 +507,14 @@ public class BatchedItemOperations extends ItemValidator {
             throw new RepositoryException(msg, mpe);
         }
 
-        Path.Element srcName = srcPath.getNameElement();
         Path srcParentPath = srcPath.getAncestor(1);
         NodeState target = getNodeState(srcPath);
         NodeState srcParent = getNodeState(srcParentPath);
 
-        Path.Element destName = destPath.getNameElement();
         Path destParentPath = destPath.getAncestor(1);
         NodeState destParent = getNodeState(destParentPath);
 
-        int ind = destName.getIndex();
+        int ind = destPath.getIndex();
         if (ind > 0) {
             // subscript in name element
             String msg =
@@ -542,22 +538,22 @@ public class BatchedItemOperations extends ItemValidator {
         checkRemoveNode(target, srcParent.getNodeId(),
                 CHECK_ACCESS | CHECK_LOCK | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS
                 | CHECK_HOLD | CHECK_RETENTION);
-        checkAddNode(destParent, destName.getName(),
+        checkAddNode(destParent, destPath.getName(),
                 target.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
                 | CHECK_CHECKED_OUT | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. do move operation (modify and store affected states)
         boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
 
-        int srcNameIndex = srcName.getIndex();
+        int srcNameIndex = srcPath.getIndex();
         if (srcNameIndex == 0) {
             srcNameIndex = 1;
         }
 
         if (renameOnly) {
             // change child node entry
-            destParent.renameChildNodeEntry(srcName.getName(), srcNameIndex,
-                    destName.getName());
+            destParent.renameChildNodeEntry(srcPath.getName(), srcNameIndex,
+                    destPath.getName());
         } else {
             // check shareable case
             if (target.isShareable()) {
@@ -574,7 +570,7 @@ public class BatchedItemOperations extends ItemValidator {
                 // 2. re-parent target node
                 target.setParentId(destParent.getNodeId());
                 // 3. add child node entry to new parent
-                destParent.addChildNodeEntry(destName.getName(), target.getNodeId());
+                destParent.addChildNodeEntry(destPath.getName(), target.getNodeId());
             }
         }
 

@@ -53,7 +53,7 @@ public class XPathOrderByTest extends TestCase {
         checkName(Name.NS_DEFAULT_URI, "bar", specs[0].getProperty());
         Path propPath = specs[0].getPropertyPath();
         assertEquals(1, propPath.getLength());
-        checkName(Name.NS_DEFAULT_URI, "bar", propPath.getNameElement().getName());
+        checkName(Name.NS_DEFAULT_URI, "bar", propPath.getName());
     }
 
     public void testAscending() throws Exception {

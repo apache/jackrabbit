@@ -306,7 +306,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
             try {
                 Path evPath = session.getQPath(ev.getPath());
                 Path nodePath = evPath.getAncestor(1);
-                Name propName = evPath.getNameElement().getName();
+                Name propName = evPath.getName();
 
                 if (RetentionManagerImpl.REP_HOLD.equals(propName)) {
                     // hold changes

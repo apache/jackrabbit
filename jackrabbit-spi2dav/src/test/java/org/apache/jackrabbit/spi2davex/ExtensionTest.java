@@ -98,13 +98,13 @@ public class ExtensionTest extends AbstractSPITest {
 
         NodeInfo nInfo = rs.getNodeInfo(si, getNodeId(path));
         //System.out.println("NodeInfo: " + nInfo.getPath().getNameElement().getName());
-        assertEquals(testName, nInfo.getPath().getNameElement().getName());
+        assertEquals(testName, nInfo.getPath().getName());
 
         Iterator<? extends ItemInfo > it = rs.getItemInfos(si, getNodeId(path));
         assertTrue(it.hasNext());
         nInfo = (NodeInfo) it.next();
         //System.out.println("ItemInfo: " + nInfo.getPath().getNameElement().getName());
-        assertEquals(testName, nInfo.getPath().getNameElement().getName());
+        assertEquals(testName, nInfo.getPath().getName());
     }
 
     public void testJsonExtension() throws RepositoryException {
@@ -141,13 +141,13 @@ public class ExtensionTest extends AbstractSPITest {
 
          NodeInfo nInfo = rs.getNodeInfo(si, getNodeId("/test[2]"));
          //System.out.println("NodeInfo: " + nInfo.getPath().getNameElement().getName());
-         assertEquals(testName, nInfo.getPath().getNameElement().getName());
+         assertEquals(testName, nInfo.getPath().getName());
 
          Iterator<? extends ItemInfo> it = rs.getItemInfos(si, getNodeId("/test[2]"));
          assertTrue(it.hasNext());
          nInfo = (NodeInfo) it.next();
          //System.out.println("ItemInfo: " + nInfo.getPath().getNameElement().getName());
-         assertEquals(testName, nInfo.getPath().getNameElement().getName());
+         assertEquals(testName, nInfo.getPath().getName());
 
          removeTestNode("/test[2]");
      }

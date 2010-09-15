@@ -382,7 +382,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 fieldname = FieldNames.FULLTEXT;
             } else {
                 // final path element is a property name
-                Name propName = relPath.getNameElement().getName();
+                Name propName = relPath.getName();
                 StringBuffer tmp = new StringBuffer();
                 tmp.append(nsMappings.getPrefix(propName.getNamespaceURI()));
                 tmp.append(":").append(FieldNames.FULLTEXT_PREFIX);

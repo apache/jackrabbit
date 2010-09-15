@@ -98,20 +98,10 @@ abstract class RelativePath extends AbstractPath {
             return this;
         } else if (to < length) {
             return parent.subPath(from, to);
+        } else if (from < to - 1) {
+            return parent.subPath(from, to - 1).resolve(getLastElement());
         } else {
-            Element element = getNameElement();
-            if (from < to - 1) {
-                return parent.subPath(from, to - 1).resolve(element);
-            } else if (element.denotesName()) {
-                return new NamePath(null, element);
-            } else if (element.denotesParent()) {
-                return new ParentPath(null);
-            } else if (element.denotesCurrent()) {
-                return new CurrentPath(null);
-            } else {
-                throw new IllegalStateException(
-                        "Unknown path element type: " + element);
-            }
+            return getLastElement();
         }
     }
 
@@ -136,14 +126,12 @@ abstract class RelativePath extends AbstractPath {
 
     //--------------------------------------------------------------< Object >
 
-    public final boolean equals(Object that) {
+    public boolean equals(Object that) {
         if (this == that) {
             return true;
         } else if (that instanceof RelativePath) {
             RelativePath path = (RelativePath) that;
-            if (!getNameElement().equals(path.getNameElement())) {
-                return false;
-            } else if (parent != null) {
+            if (parent != null) {
                 return parent.equals(path.parent);
             } else {
                 return path.parent == null;
@@ -153,13 +141,12 @@ abstract class RelativePath extends AbstractPath {
         }
     }
 
-    public final int hashCode() {
-        int h = 17;
+    public int hashCode() {
         if (parent != null) {
-            h = h * 37 + parent.hashCode();
+            return parent.hashCode();
+        } else {
+            return 17;
         }
-        h = h * 37 + getNameElement().hashCode();
-        return h;
     }
 
 }
