@@ -31,6 +31,13 @@ final class ParentPath extends RelativePath {
     /** Serial version UID */
     private static final long serialVersionUID = -688611157827116290L;
 
+    /** The parent path ".." */
+    public static final ParentPath PARENT_PATH = new ParentPath(null);
+
+    /** Name of the parent element */
+    public static final Name NAME =
+        NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, "..");
+
     public ParentPath(Path parent) {
         super(parent);
     }
@@ -47,8 +54,12 @@ final class ParentPath extends RelativePath {
         }
     }
 
+    protected String getElementString() {
+        return NAME.getLocalName();
+    }
+
     public Name getName() {
-        return ParentElement.INSTANCE.getName();
+        return NAME;
     }
 
     /**
@@ -101,26 +112,14 @@ final class ParentPath extends RelativePath {
         }
     }
 
-    public Element getNameElement() {
-        return ParentElement.INSTANCE;
-    }
-
     /**
      * Returns the parent path "..".
      *
      * @return parent path
      */
     @Override
-    public Path getLastElement() {
-        return new ParentPath(null);
-    }
-
-    public String getString() {
-        if (parent != null) {
-            return parent.getString() + Path.DELIMITER + "..";
-        } else {
-            return "..";
-        }
+    public AbstractPath getLastElement() {
+        return PARENT_PATH;
     }
 
     //--------------------------------------------------------------< Object >

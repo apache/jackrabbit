@@ -154,6 +154,15 @@ public interface Path extends Serializable {
     int getNormalizedIndex();
 
     /**
+     * Returns the identifier of a single identifier element. Returns null
+     * for non-identifier paths or identifier paths with other relative path
+     * elements.
+     *
+     * @return identifier, or <code>null</code>
+     */
+    String getIdentifier();
+
+    /**
      * Tests whether this is the root path, i.e. "/".
      *
      * @return <code>true</code> if this is the root path,
@@ -514,6 +523,14 @@ public interface Path extends Serializable {
         public int getNormalizedIndex();
 
         /**
+         * Returns the identifier of an identifier element, or
+         * <code>null</code> for other kinds of elements.
+         *
+         * @return identifier, or <code>null</code>
+         */
+        String getIdentifier();
+
+        /**
          * Returns <code>true</code> if this element denotes the <i>root</i> element,
          * otherwise returns <code>false</code>.
          *
@@ -566,5 +583,6 @@ public interface Path extends Serializable {
          * @return String representation of a {@link Path.Element}.
          */
         public String getString();
+
     }
 }

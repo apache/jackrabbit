@@ -89,9 +89,9 @@ public final class PathBuilder {
      */
     public void addRoot() {
         if (path != null) {
-            path = RootPath.INSTANCE.resolve(path);
+            path = RootPath.ROOT_PATH.resolve(path);
         } else {
-            path = RootPath.INSTANCE;
+            path = RootPath.ROOT_PATH;
         }
     }
 
@@ -172,7 +172,7 @@ public final class PathBuilder {
      * @param index
      */
     public void addLast(Name name, int index) {
-        path = new NamePath(path, NameElement.create(name, index));
+        path = new NamePath(path, name, index);
     }
 
     /**

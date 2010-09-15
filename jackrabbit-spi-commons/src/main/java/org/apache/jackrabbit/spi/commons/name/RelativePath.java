@@ -54,6 +54,8 @@ abstract class RelativePath extends AbstractPath {
 
     protected abstract Path getParent() throws RepositoryException;
 
+    protected abstract String getElementString();
+
     public final boolean isIdentifierBased() {
         return identifier;
     }
@@ -99,7 +101,7 @@ abstract class RelativePath extends AbstractPath {
         } else if (to < length) {
             return parent.subPath(from, to);
         } else if (from < to - 1) {
-            return parent.subPath(from, to - 1).resolve(getLastElement());
+            return parent.subPath(from, to - 1).resolve(getNameElement());
         } else {
             return getLastElement();
         }
@@ -107,10 +109,11 @@ abstract class RelativePath extends AbstractPath {
 
     public final Element[] getElements() {
         Element[] elements = new Element[length];
-        if (parent != null) {
-            System.arraycopy(parent.getElements(), 0, elements, 0, length - 1);
+        Path path = this;
+        for (int i = 1; i <= length; i++) {
+            elements[length - i] = path.getNameElement();
+            path = path.getFirstElements();
         }
-        elements[length - 1] = getNameElement();
         return elements;
     }
 
@@ -122,6 +125,14 @@ abstract class RelativePath extends AbstractPath {
     @Override
     public Path getFirstElements() {
         return parent;
+    }
+
+    public String getString() {
+        if (parent != null) {
+            return parent.getString() + Path.DELIMITER + getElementString();
+        } else {
+            return getElementString();
+        }
     }
 
     //--------------------------------------------------------------< Object >
