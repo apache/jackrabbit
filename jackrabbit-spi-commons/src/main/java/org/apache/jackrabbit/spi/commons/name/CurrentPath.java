@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.name;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
 /**
@@ -44,6 +45,20 @@ final class CurrentPath extends RelativePath {
         } else {
             return new ParentPath(null);
         }
+    }
+
+    public Name getName() {
+        return CurrentElement.INSTANCE.getName();
+    }
+
+    /**
+     * Returns <code>true</code> as this path ends in the current element.
+     *
+     * @return <code>true</code>
+     */
+    @Override
+    public boolean denotesCurrent() {
+        return true;
     }
 
     /**

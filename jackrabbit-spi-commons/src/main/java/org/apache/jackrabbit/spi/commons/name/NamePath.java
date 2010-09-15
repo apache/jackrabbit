@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.name;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
 final class NamePath extends RelativePath {
@@ -43,6 +44,30 @@ final class NamePath extends RelativePath {
         } else {
             return new CurrentPath(null);
         }
+    }
+
+    public Name getName() {
+        return element.getName();
+    }
+
+    @Override
+    public int getIndex() {
+        return element.getIndex();
+    }
+
+    @Override
+    public int getNormalizedIndex() {
+        return element.getNormalizedIndex();
+    }
+
+    /**
+     * Returns <code>true</code> as this path ends in a named element.
+     *
+     * @return <code>true</code>
+     */
+    @Override
+    public boolean denotesName() {
+        return true;
     }
 
     public boolean isCanonical() {

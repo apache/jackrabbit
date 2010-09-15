@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.name;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
 final class IdentifierPath extends AbstractPath {
@@ -34,12 +35,12 @@ final class IdentifierPath extends AbstractPath {
     }
 
     /**
-     * Returns <code>false</code> as this is an identifier-based path.
+     * Returns <code>null</code> as an identifier element has no name.
      *
-     * @return <code>false</code>
+     * @return <code>null</code>
      */
-    public boolean denotesRoot() {
-        return false;
+    public Name getName() {
+        return null;
     }
 
     /**
@@ -47,7 +48,17 @@ final class IdentifierPath extends AbstractPath {
      *
      * @return <code>true</code>
      */
+    @Override
     public boolean denotesIdentifier() {
+        return true;
+    }
+
+    /**
+     * Returns <code>true</code> as this is an identifier-based path.
+     *
+     * @return <code>true</code>
+     */
+    public boolean isIdentifierBased() {
         return true;
     }
 

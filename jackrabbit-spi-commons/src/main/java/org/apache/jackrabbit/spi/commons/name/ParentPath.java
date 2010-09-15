@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.name;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
 /**
@@ -44,6 +45,20 @@ final class ParentPath extends RelativePath {
         } else {
             return parent.getAncestor(2);
         }
+    }
+
+    public Name getName() {
+        return ParentElement.INSTANCE.getName();
+    }
+
+    /**
+     * Returns <code>true</code> as this path ends in the parent element.
+     *
+     * @return <code>true</code>
+     */
+    @Override
+    public boolean denotesParent() {
+        return true;
     }
 
     /**

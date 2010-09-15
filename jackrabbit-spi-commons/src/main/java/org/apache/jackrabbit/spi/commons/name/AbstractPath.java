@@ -28,6 +28,76 @@ abstract class AbstractPath implements Path {
     /** Serial version UID */
     private static final long serialVersionUID = 3018771833963770499L;
 
+    /**
+     * Returns {@link Path#INDEX_UNDEFINED}, except when overridden by the
+     * {@link NamePath} subclass.
+     *
+     * @return {@link Path#INDEX_UNDEFINED}
+     */
+    public int getIndex() {
+        return INDEX_UNDEFINED;
+    }
+
+    /**
+     * Returns {@link Path#INDEX_DEFAULT}, except when overridden by the
+     * {@link NamePath} subclass.
+     *
+     * @return {@link Path#INDEX_DEFAULT}
+     */
+    public int getNormalizedIndex() {
+        return INDEX_DEFAULT;
+    }
+
+    /**
+     * Returns <code>false</code>, except when overridden by the
+     * {@link RootPath} subclass.
+     *
+     * @return <code>false</code>
+     */
+    public boolean denotesRoot() {
+        return false;
+    }
+
+    /**
+     * Returns <code>false</code>, except when overridden by the
+     * {@link IdentifierPath} subclass.
+     *
+     * @return <code>false</code>
+     */
+    public boolean denotesIdentifier() {
+        return false;
+    }
+
+    /**
+     * Returns <code>false</code>, except when overridden by the
+     * {@link ParentPath} subclass.
+     *
+     * @return <code>false</code>
+     */
+    public boolean denotesParent() {
+        return false;
+    }
+
+    /**
+     * Returns <code>false</code>, except when overridden by the
+     * {@link CurrentPath} subclass.
+     *
+     * @return <code>false</code>
+     */
+    public boolean denotesCurrent() {
+        return false;
+    }
+
+    /**
+     * Returns <code>false</code>, except when overridden by the
+     * {@link NamePath} subclass.
+     *
+     * @return <code>false</code>
+     */
+    public boolean denotesName() {
+        return false;
+    }
+
     public final Path resolve(Element element) {
         if (element.denotesName()) {
             return new NamePath(this, element);
@@ -160,7 +230,7 @@ abstract class AbstractPath implements Path {
             throws IllegalArgumentException, RepositoryException {
         if (other != null
                 && isAbsolute() == other.isAbsolute()
-                && denotesIdentifier() == other.denotesIdentifier()) {
+                && isIdentifierBased() == other.isIdentifierBased()) {
             int d = other.getDepth() - getDepth();
             return d > 0 && isEquivalentTo(other.getAncestor(d));
         } else {
@@ -186,7 +256,7 @@ abstract class AbstractPath implements Path {
             throws IllegalArgumentException, RepositoryException {
         if (other != null
                 && isAbsolute() == other.isAbsolute()
-                && denotesIdentifier() == other.denotesIdentifier()) {
+                && isIdentifierBased() == other.isIdentifierBased()) {
             int d = getDepth() - other.getDepth();
             return d > 0 && getAncestor(d).isEquivalentTo(other);
         } else {

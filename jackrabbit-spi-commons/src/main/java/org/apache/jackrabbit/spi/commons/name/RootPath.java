@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.name;
 
 import javax.jcr.PathNotFoundException;
 
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
 final class RootPath extends AbstractPath {
@@ -32,11 +33,16 @@ final class RootPath extends AbstractPath {
     private RootPath() {
     }
 
+    public Name getName() {
+        return RootElement.INSTANCE.getName();
+    }
+
     /**
      * Returns <code>true</code> as this is the root path.
      *
      * @return <code>true</code>
      */
+    @Override
     public boolean denotesRoot() {
         return true;
     }
@@ -46,7 +52,7 @@ final class RootPath extends AbstractPath {
      *
      * @return <code>false</code>
      */
-    public boolean denotesIdentifier() {
+    public boolean isIdentifierBased() {
         return false;
     }
 
