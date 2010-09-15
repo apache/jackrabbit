@@ -108,6 +108,16 @@ final class NamePath extends RelativePath {
         return element;
     }
 
+    /**
+     * Returns the last element of this path.
+     *
+     * @return last element of this path
+     */
+    @Override
+    public Path getLastElement() {
+        return new NamePath(null, element);
+    }
+
     public String getString() {
         if (parent != null) {
             return parent.getString() + Path.DELIMITER + element.getString();

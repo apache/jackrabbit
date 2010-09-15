@@ -96,6 +96,16 @@ final class CurrentPath extends RelativePath {
         return CurrentElement.INSTANCE;
     }
 
+    /**
+     * Returns the current path ".".
+     *
+     * @return current path
+     */
+    @Override
+    public Path getLastElement() {
+        return new CurrentPath(null);
+    }
+
     public String getString() {
         if (parent != null) {
             return parent.getString() + Path.DELIMITER + ".";

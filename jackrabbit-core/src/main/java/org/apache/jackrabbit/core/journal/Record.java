@@ -113,12 +113,12 @@ public interface Record {
     Name readQName() throws JournalException;
 
     /**
-     * Read a <code>Path.Element</code> from the underlying stream.
+     * Read a named path element from the underlying stream.
      *
      * @return path element
      * @throws JournalException if an error occurs
      */
-    Path.Element readPathElement() throws JournalException;
+    Path readPathElement() throws JournalException;
 
     /**
      * Read a <code>Path</code> from the underlying stream.
@@ -222,7 +222,7 @@ public interface Record {
      * @param element path element
      * @throws JournalException if an error occurs
      */
-    void writePathElement(Path.Element element) throws JournalException;
+    void writePathElement(Path element) throws JournalException;
 
     /**
      * Write a <code>Path</code> to the underlying stream.

@@ -164,7 +164,7 @@ public final class EventImpl implements JackrabbitEvent, Event {
     public Path getQPath() throws RepositoryException {
         try {
             Path parent = eventState.getParentPath();
-            Path.Element child = eventState.getChildRelPath();
+            Path child = eventState.getChildRelPath();
             int index = child.getIndex();
             if (index > 0) {
                 return PathFactoryImpl.getInstance().create(parent, child.getName(), index, false);

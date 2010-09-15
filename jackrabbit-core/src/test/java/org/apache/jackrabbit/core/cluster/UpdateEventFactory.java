@@ -187,7 +187,7 @@ public class UpdateEventFactory {
      */
     protected EventState createEventState(NodeState n, int type, String name,
                                           Session session) {
-        Path.Element relPath = pathFactory.createElement(nameFactory.create(name));
+        Path relPath = pathFactory.create(nameFactory.create(name));
 
         switch (type) {
         case Event.NODE_ADDED:
@@ -215,7 +215,7 @@ public class UpdateEventFactory {
      */
     protected EventState createEventState(PropertyState p, NodeState parent, int type,
                                           Session session) {
-        Path.Element relPath = pathFactory.createElement(p.getName());
+        Path relPath = pathFactory.create(p.getName());
 
         switch (type) {
         case Event.PROPERTY_ADDED:

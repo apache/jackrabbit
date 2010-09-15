@@ -124,6 +124,16 @@ abstract class RelativePath extends AbstractPath {
         return elements;
     }
 
+    /**
+     * Returns the first elements of this path.
+     *
+     * @return first elements of this path, or <code>null</code>
+     */
+    @Override
+    public Path getFirstElements() {
+        return parent;
+    }
+
     //--------------------------------------------------------------< Object >
 
     public final boolean equals(Object that) {

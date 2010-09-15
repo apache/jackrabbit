@@ -445,6 +445,23 @@ public interface Path extends Serializable {
     public Element getNameElement();
 
     /**
+     * Returns a path that consists of only the last element of this path.
+     *
+     * @see #getFirstElements()
+     * @return last element of this path
+     */
+    Path getLastElement();
+
+    /**
+     * Returns a path that consists of all but the last element of this path.
+     * Returns <code>null</code> if this path contains just a single element.
+     *
+     * @see #getLastElement()
+     * @return first elements of this path, or <code>null</code>
+     */
+    Path getFirstElements();
+
+    /**
      * Returns the String representation of this Path as it is used
      * by {@link PathFactory#create(String)}.<p/>
      * The String representation must consist of the String representation of

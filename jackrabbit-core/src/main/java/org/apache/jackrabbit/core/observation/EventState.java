@@ -24,8 +24,6 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import javax.jcr.observation.Event;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -99,7 +97,7 @@ public class EventState {
      * The relative path of the child item associated with this event.
      * This is basically the name of the item with an optional index.
      */
-    private final Path.Element childRelPath;
+    private final Path childRelPath;
 
     /**
      * The node type name of the parent node.
@@ -170,7 +168,7 @@ public class EventState {
      * @param session    the {@link javax.jcr.Session} that caused this event.
      */
     private EventState(int type, NodeId parentId, Path parentPath,
-                       NodeId childId, Path.Element childPath, Name nodeType,
+                       NodeId childId, Path childPath, Name nodeType,
                        Set<Name> mixins, Session session, boolean external) {
 
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
@@ -214,7 +212,7 @@ public class EventState {
     public static EventState childNodeAdded(NodeId parentId,
                                             Path parentPath,
                                             NodeId childId,
-                                            Path.Element childPath,
+                                            Path childPath,
                                             Name nodeType,
                                             Set<Name> mixins,
                                             Session session) {
@@ -242,7 +240,7 @@ public class EventState {
     public static EventState childNodeAdded(NodeId parentId,
                                             Path parentPath,
                                             NodeId childId,
-                                            Path.Element childPath,
+                                            Path childPath,
                                             Name nodeType,
                                             Set<Name> mixins,
                                             Session session,
@@ -270,7 +268,7 @@ public class EventState {
     public static EventState childNodeRemoved(NodeId parentId,
                                               Path parentPath,
                                               NodeId childId,
-                                              Path.Element childPath,
+                                              Path childPath,
                                               Name nodeType,
                                               Set<Name> mixins,
                                               Session session) {
@@ -298,7 +296,7 @@ public class EventState {
     public static EventState childNodeRemoved(NodeId parentId,
                                               Path parentPath,
                                               NodeId childId,
-                                              Path.Element childPath,
+                                              Path childPath,
                                               Name nodeType,
                                               Set<Name> mixins,
                                               Session session,
@@ -330,12 +328,11 @@ public class EventState {
     public static EventState nodeMoved(NodeId parentId,
                                        Path parentPath,
                                        NodeId childId,
-                                       Path.Element childPath,
+                                       Path childPath,
                                        Name nodeType,
                                        Set<Name> mixins,
                                        Session session,
                                        boolean external) {
-
         return new EventState(Event.NODE_MOVED, parentId, parentPath,
                 childId, childPath, nodeType, mixins, session, external);
     }
@@ -358,18 +355,13 @@ public class EventState {
      * @throws ItemStateException if <code>destPath</code> does not have a
      *                            parent.
      */
-    public static EventState nodeMoved(NodeId parentId,
-                                       Path destPath,
-                                       NodeId childId,
-                                       Path srcPath,
-                                       Name nodeType,
-                                       Set<Name> mixins,
-                                       Session session,
-                                       boolean external)
+    public static EventState nodeMovedWithInfo(
+            NodeId parentId, Path destPath, NodeId childId, Path srcPath,
+            Name nodeType, Set<Name> mixins, Session session, boolean external)
             throws ItemStateException {
         try {
             EventState es = nodeMoved(parentId, destPath.getAncestor(1),
-                    childId, destPath.getNameElement(), nodeType, mixins,
+                    childId, destPath, nodeType, mixins,
                     session, external);
             Map<String, InternalValue> info = new HashMap<String, InternalValue>();
             info.put(SRC_ABS_PATH, InternalValue.create(srcPath));
@@ -410,15 +402,16 @@ public class EventState {
     public static EventState nodeReordered(NodeId parentId,
                                            Path parentPath,
                                            NodeId childId,
-                                           Path.Element destChildPath,
-                                           Path.Element srcChildPath,
-                                           Path.Element beforeChildPath,
+                                           Path destChildPath,
+                                           Path srcChildPath,
+                                           Path beforeChildPath,
                                            Name nodeType,
                                            Set<Name> mixins,
                                            Session session,
                                            boolean external) {
-        EventState es = nodeMoved(parentId, parentPath, childId, destChildPath,
-               nodeType, mixins, session, external);
+        EventState es = nodeMoved(
+                parentId, parentPath, childId, destChildPath,
+                nodeType, mixins, session, external);
         Map<String, InternalValue> info = new HashMap<String, InternalValue>();
         info.put(SRC_CHILD_REL_PATH, createValue(srcChildPath));
         InternalValue value = null;
@@ -446,7 +439,7 @@ public class EventState {
      */
     public static EventState propertyAdded(NodeId parentId,
                                            Path parentPath,
-                                           Path.Element childPath,
+                                           Path childPath,
                                            Name nodeType,
                                            Set<Name> mixins,
                                            Session session) {
@@ -472,7 +465,7 @@ public class EventState {
      */
     public static EventState propertyAdded(NodeId parentId,
                                            Path parentPath,
-                                           Path.Element childPath,
+                                           Path childPath,
                                            Name nodeType,
                                            Set<Name> mixins,
                                            Session session,
@@ -498,7 +491,7 @@ public class EventState {
      */
     public static EventState propertyRemoved(NodeId parentId,
                                              Path parentPath,
-                                             Path.Element childPath,
+                                             Path childPath,
                                              Name nodeType,
                                              Set<Name> mixins,
                                              Session session) {
@@ -524,7 +517,7 @@ public class EventState {
      */
     public static EventState propertyRemoved(NodeId parentId,
                                              Path parentPath,
-                                             Path.Element childPath,
+                                             Path childPath,
                                              Name nodeType,
                                              Set<Name> mixins,
                                              Session session,
@@ -550,7 +543,7 @@ public class EventState {
      */
     public static EventState propertyChanged(NodeId parentId,
                                              Path parentPath,
-                                             Path.Element childPath,
+                                             Path childPath,
                                              Name nodeType,
                                              Set<Name> mixins,
                                              Session session) {
@@ -576,7 +569,7 @@ public class EventState {
      */
     public static EventState propertyChanged(NodeId parentId,
                                              Path parentPath,
-                                             Path.Element childPath,
+                                             Path childPath,
                                              Name nodeType,
                                              Set<Name> mixins,
                                              Session session,
@@ -626,9 +619,9 @@ public class EventState {
      * Returns the relative {@link Path} of the child
      * {@link javax.jcr.Item} associated with this event.
      *
-     * @return the <code>Path.Element</code> associated with this event.
+     * @return the <code>Path</code> associated with this event.
      */
-    public Path.Element getChildRelPath() {
+    public Path getChildRelPath() {
         return childRelPath;
     }
 
@@ -846,19 +839,12 @@ public class EventState {
     }
 
     /**
-     * Creates an internal path value from the given path <code>element</code>.
+     * Creates an internal path value from the given path.
      *
-     * @param element the path element.
-     * @return an internal value wrapping the path element.
+     * @param path the path
+     * @return an internal value wrapping the path
      */
-    private static InternalValue createValue(Path.Element element) {
-        PathBuilder builder = new PathBuilder();
-        builder.addFirst(element);
-        try {
-            return InternalValue.create(builder.getPath());
-        } catch (MalformedPathException e) {
-            // this exception is only thrown when number of element is zero
-            throw new InternalError();
-        }
+    private static InternalValue createValue(Path path) {
+        return InternalValue.create(path);
     }
 }
