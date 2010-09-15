@@ -106,6 +106,16 @@ final class ParentPath extends RelativePath {
         return ParentElement.INSTANCE;
     }
 
+    /**
+     * Returns the parent path "..".
+     *
+     * @return parent path
+     */
+    @Override
+    public Path getLastElement() {
+        return new ParentPath(null);
+    }
+
     public String getString() {
         if (parent != null) {
             return parent.getString() + Path.DELIMITER + "..";

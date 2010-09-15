@@ -273,7 +273,7 @@ public class ChangeLogRecord extends ClusterRecord {
         NodeId parentId = record.readNodeId();
         Path parentPath = record.readPath();
         NodeId childId = record.readNodeId();
-        Path.Element childRelPath = record.readPathElement();
+        Path childRelPath = record.readPathElement();
         Name ntName = record.readQName();
 
         Set<Name> mixins = new HashSet<Name>();
@@ -324,7 +324,7 @@ public class ChangeLogRecord extends ClusterRecord {
      * @return event state
      */
     private EventState createEventState(int type, NodeId parentId, Path parentPath,
-                                        NodeId childId, Path.Element childRelPath,
+                                        NodeId childId, Path childRelPath,
                                         Name ntName, Set<Name> mixins, String userId) {
         switch (type) {
             case Event.NODE_ADDED:

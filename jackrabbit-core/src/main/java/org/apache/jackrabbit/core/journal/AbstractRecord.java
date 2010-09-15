@@ -96,9 +96,9 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
-    public void writePathElement(Path.Element element) throws JournalException {
-        writeQName(element.getName());
-        writeInt(element.getIndex());
+    public void writePathElement(Path path) throws JournalException {
+        writeQName(path.getName());
+        writeInt(path.getIndex());
     }
 
     /**
@@ -175,14 +175,14 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
-    public Path.Element readPathElement() throws JournalException {
+    public Path readPathElement() throws JournalException {
         try {
             Name name = resolver.getQName(readString());
             int index = readInt();
             if (index != 0) {
-                return PathFactoryImpl.getInstance().createElement(name, index);
+                return PathFactoryImpl.getInstance().create(name, index);
             } else {
-                return PathFactoryImpl.getInstance().createElement(name);
+                return PathFactoryImpl.getInstance().create(name);
             }
         } catch (NameException e) {
             String msg = "Unknown prefix error while reading path element.";

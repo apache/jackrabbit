@@ -98,6 +98,26 @@ abstract class AbstractPath implements Path {
         return false;
     }
 
+    /**
+     * Returns this path, except when overridden by the {@link RelativePath}
+     * subclasses.
+     *
+     * @return this path
+     */
+    public Path getLastElement() {
+        return this;
+    }
+
+    /**
+     * Returns <code>null</code>, except when overridden by the
+     * {@link RelativePath} subclass.
+     *
+     * @return <code>null</code>
+     */
+    public Path getFirstElements() {
+        return null;
+    }
+
     public final Path resolve(Element element) {
         if (element.denotesName()) {
             return new NamePath(this, element);
