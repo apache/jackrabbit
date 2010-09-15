@@ -220,9 +220,11 @@ public class SessionState {
                             "Stack trace of where " + context + " was closed");
                     return true;
                 } else {
-                    log.warn("This session has already been closed. See the"
-                            + " chained exception for a trace of where the "
+                    log.debug("This session has already been closed. See the"
+                            + " exception for a trace of where the "
                             + " session was closed.", closed);
+                    log.debug("And additionally at", 
+                            new Exception("Stack trace of where " + context + " was also closed"));
                     return false;
                 }
             } finally {
