@@ -1049,7 +1049,7 @@ public class SearchIndex extends AbstractQueryHandler {
         List<SortField> sortFields = new ArrayList<SortField>();
         for (int i = 0; i < orderProps.length; i++) {
             if (orderProps[i].getLength() == 1
-                    && NameConstants.JCR_SCORE.equals(orderProps[i].getNameElement().getName())) {
+                    && NameConstants.JCR_SCORE.equals(orderProps[i].getName())) {
                 // order on jcr:score does not use the natural order as
                 // implemented in lucene. score ascending in lucene means that
                 // higher scores are first. JCR specs that lower score values

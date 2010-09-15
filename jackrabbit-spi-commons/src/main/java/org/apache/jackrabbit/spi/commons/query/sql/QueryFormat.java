@@ -291,7 +291,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 exceptions.add(new InvalidQueryException("Child axis not supported in SQL"));
             } else {
                 try {
-                    appendName(node.getRelativePath().getNameElement().getName(), resolver, sb);
+                    appendName(node.getRelativePath().getName(), resolver, sb);
                 } catch (NamespaceException e) {
                     exceptions.add(e);
                 }
@@ -489,7 +489,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                         exceptions.add(new InvalidQueryException("SQL does not support relative paths in order by clause"));
                         return sb;
                     }
-                    appendName(propPath.getNameElement().getName(), resolver, sb);
+                    appendName(propPath.getName(), resolver, sb);
                     if (!specs[i].isAscending()) {
                         sb.append(" DESC");
                     }

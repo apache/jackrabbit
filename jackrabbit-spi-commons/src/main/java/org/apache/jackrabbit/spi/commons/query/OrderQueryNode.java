@@ -179,7 +179,7 @@ public class OrderQueryNode extends QueryNode {
          * @deprecated use {@link #getPropertyPath()} instead.
          */
         public Name getProperty() {
-            return property.getNameElement().getName();
+            return property.getName();
         }
 
         /**

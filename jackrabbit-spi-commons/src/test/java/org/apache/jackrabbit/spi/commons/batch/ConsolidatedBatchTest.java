@@ -380,7 +380,7 @@ public class ConsolidatedBatchTest extends TestCase {
 
     public PropertyId createPropertyId(String propertyId) throws RepositoryException {
         Path path = createPath(propertyId);
-        return idFactory.createPropertyId(createNodeId(path.getAncestor(1)), path.getNameElement().getName());
+        return idFactory.createPropertyId(createNodeId(path.getAncestor(1)), path.getName());
     }
 
     private QValue createValue(String value, int type) throws RepositoryException {
@@ -395,7 +395,7 @@ public class ConsolidatedBatchTest extends TestCase {
 
         public TestChangeLog addNode(String nodeId) throws RepositoryException {
             Path path = createPath(nodeId);
-            addNode(createNodeId(path.getAncestor(1)), path.getNameElement().getName(),
+            addNode(createNodeId(path.getAncestor(1)), path.getName(),
                     createName("anyType"), null);
 
             return this;
@@ -403,13 +403,13 @@ public class ConsolidatedBatchTest extends TestCase {
 
         public TestChangeLog addProp(String propertyId, String value, int type) throws RepositoryException {
             Path path = createPath(propertyId);
-            addProperty(createNodeId(path.getAncestor(1)), path.getNameElement().getName(), createValue(value, type));
+            addProperty(createNodeId(path.getAncestor(1)), path.getName(), createValue(value, type));
             return this;
         }
 
         public TestChangeLog movItem(String srcNodeId, String destNodeId) throws RepositoryException {
             Path path = createPath(destNodeId);
-            move(createNodeId(srcNodeId), createNodeId(path.getAncestor(1)), path.getNameElement().getName());
+            move(createNodeId(srcNodeId), createNodeId(path.getAncestor(1)), path.getName());
             return this;
         }
 

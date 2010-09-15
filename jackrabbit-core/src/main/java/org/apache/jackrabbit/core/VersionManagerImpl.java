@@ -305,7 +305,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                     // parent has to exist
                     Path path = context.getQPath(absPath);
                     Path parentPath = path.getAncestor(1);
-                    Name name = path.getNameElement().getName();
+                    Name name = path.getName();
                     NodeImpl parent = context.getItemManager().getNode(parentPath);
 
                     NodeStateEx state = getNodeState(

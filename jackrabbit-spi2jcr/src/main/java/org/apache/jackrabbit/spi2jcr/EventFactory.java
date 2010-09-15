@@ -93,8 +93,7 @@ class EventFactory {
                 case Event.PROPERTY_CHANGED:
                     node = session.getItem(e.getPath()).getParent();
                 case Event.PROPERTY_REMOVED:
-                    itemId = idFactory.createPropertyId(parentId,
-                            p.getNameElement().getName());
+                    itemId = idFactory.createPropertyId(parentId, p.getName());
                     break;
                 case Event.PERSIST:
                 default:

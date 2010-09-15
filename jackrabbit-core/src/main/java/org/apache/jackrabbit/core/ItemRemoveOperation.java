@@ -78,8 +78,7 @@ class ItemRemoveOperation implements SessionWriteOperation<Object> {
         if (item.isNode()) {
             parentNode.removeChildNode((NodeId) item.getId());
         } else {
-            Path.Element thisName = item.getPrimaryPath().getNameElement();
-            parentNode.removeChildProperty(thisName.getName());
+            parentNode.removeChildProperty(item.getPrimaryPath().getName());
         }
 
         return this;

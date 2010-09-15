@@ -99,7 +99,7 @@ class IndexNodeResolver extends NodeResolver {
     public NodeIterator findNodes(Path relPath, String value, int authorizableType, boolean exact, long maxSize) throws RepositoryException {
         Query query;
         if (relPath.getLength() == 1) {
-            Set<Name> names = Collections.singleton(relPath.getNameElement().getName());
+            Set<Name> names = Collections.singleton(relPath.getName());
             // search without nt-restriction in order not to limit the query to the
             // authorizable nodes and filter non-matching results later.
             query = buildQuery(value, names, null, exact, maxSize, getSearchRoot(authorizableType));
@@ -218,7 +218,7 @@ class IndexNodeResolver extends NodeResolver {
 
         if (value != null) {
             stmt.append("[");
-            Name prop = relPath.getNameElement().getName();
+            Name prop = relPath.getName();
             stmt.append((exact) ? "@" : "jcr:like(@");
             String pName = getNamePathResolver().getJCRName(prop);
             stmt.append(ISO9075.encode(pName));

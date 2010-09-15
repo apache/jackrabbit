@@ -142,13 +142,19 @@ abstract class AbstractPath implements Path {
     public final Path resolve(Path relative) {
         if (relative.isAbsolute()) {
             return relative;
+        } else if (relative.getLength() > 1) {
+            Path first = relative.getFirstElements();
+            Path last = relative.getLastElement();
+            return resolve(first).resolve(last);
+        } else if (relative.denotesCurrent()) {
+            return new CurrentPath(this);
+        } else if (relative.denotesParent()) {
+            return new ParentPath(this);
+        } else if (relative.denotesName()) {
+            return new NamePath(this, relative.getNameElement());
         } else {
-            Path path = this;
-            int n = relative.getLength();
-            if (n > 1) {
-                path = resolve(relative.subPath(0, n - 1));
-            }
-            return path.resolve(relative.getNameElement());
+            throw new IllegalArgumentException(
+                    "Unknown path type: " + relative);
         }
     }
 

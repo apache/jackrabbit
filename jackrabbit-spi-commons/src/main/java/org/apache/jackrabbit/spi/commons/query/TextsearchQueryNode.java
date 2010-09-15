@@ -99,7 +99,7 @@ public class TextsearchQueryNode extends QueryNode {
      * @deprecated Use {@link #getRelativePath()} instead.
      */
     public Name getPropertyName() {
-        return relPath == null ? null : relPath.getNameElement().getName();
+        return relPath == null ? null : relPath.getName();
     }
 
     /**

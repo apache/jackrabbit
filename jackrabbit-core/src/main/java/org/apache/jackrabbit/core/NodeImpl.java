@@ -249,35 +249,26 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      *                             relative path
      */
     private NodeId getNodeId(Path p) throws RepositoryException {
-        if (p.getLength() == 1) {
-            Path.Element pe = p.getNameElement();
-            if (pe.denotesName()) {
-                // check if node entry exists
-                NodeState thisState = data.getNodeState();
-                int index = pe.getIndex();
-                if (index == 0) {
-                    index = 1;
-                }
-                ChildNodeEntry cne =
-                        thisState.getChildNodeEntry(pe.getName(), index);
-                if (cne != null) {
-                    return cne.getId();
-                } else {
-                    // there's no child node with that name
-                    return null;
-                }
+        if (p.getLength() == 1 && p.denotesName()) {
+            // check if node entry exists
+            ChildNodeEntry cne = data.getNodeState().getChildNodeEntry(
+                    p.getName(), p.getNormalizedIndex());
+            if (cne != null) {
+                return cne.getId();
+            } else {
+                return null; // there's no child node with that name
             }
+        } else {
+            // build and resolve absolute path
+            try {
+                p = PathFactoryImpl.getInstance().create(
+                        getPrimaryPath(), p, true);
+            } catch (RepositoryException re) {
+                // failed to build canonical path
+                return null;
+            }
+            return sessionContext.getHierarchyManager().resolveNodePath(p);
         }
-        /**
-         * build and resolve absolute path
-         */
-        try {
-            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-        } catch (RepositoryException re) {
-            // failed to build canonical path
-            return null;
-        }
-        return sessionContext.getHierarchyManager().resolveNodePath(p);
     }
 
     /**
@@ -293,30 +284,26 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      *                             relative path
      */
     private PropertyId getPropertyId(Path p) throws RepositoryException {
-        if (p.getLength() == 1) {
-            Path.Element pe = p.getNameElement();
-            if (pe.denotesName()) {
-                // check if property entry exists
-                NodeState thisState = data.getNodeState();
-                if (pe.getIndex() == Path.INDEX_UNDEFINED
-                        && thisState.hasPropertyName(pe.getName())) {
-                    return new PropertyId(thisState.getNodeId(), pe.getName());
-                } else {
-                    // there's no property with that name
-                    return null;
-                }
+        if (p.getLength() == 1 && p.denotesName()) {
+            // check if property entry exists
+            NodeState thisState = data.getNodeState();
+            if (p.getIndex() == Path.INDEX_UNDEFINED
+                    && thisState.hasPropertyName(p.getName())) {
+                return new PropertyId(thisState.getNodeId(), p.getName());
+            } else {
+                return null; // there's no property with that name
             }
+        } else {
+            // build and resolve absolute path
+            try {
+                p = PathFactoryImpl.getInstance().create(
+                        getPrimaryPath(), p, true);
+            } catch (RepositoryException re) {
+                // failed to build canonical path
+                return null;
+            }
+            return sessionContext.getHierarchyManager().resolvePropertyPath(p);
         }
-        /**
-         * build and resolve absolute path
-         */
-        try {
-            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-        } catch (RepositoryException re) {
-            // failed to build canonical path
-            return null;
-        }
-        return sessionContext.getHierarchyManager().resolvePropertyPath(p);
     }
 
     /**

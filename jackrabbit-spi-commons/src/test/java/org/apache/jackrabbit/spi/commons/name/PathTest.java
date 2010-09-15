@@ -530,7 +530,7 @@ public class PathTest extends TestCase {
                 }
                 // subpath name element
                 if (p.getLength() > 2) {
-                    Path expected = factory.create(new Path.Element[] {p.getNameElement()});
+                    Path expected = p.getLastElement();
                     assertEquals(expected, p.subPath(p.getLength()-1, p.getLength()));
                 }
             }

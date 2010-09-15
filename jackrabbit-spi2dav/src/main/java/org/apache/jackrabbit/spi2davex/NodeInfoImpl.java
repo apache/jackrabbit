@@ -64,7 +64,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     }
 
     public int getIndex() {
-        return getPath().getNameElement().getNormalizedIndex();
+        return getPath().getNormalizedIndex();
     }
 
     public Name getNodetype() {

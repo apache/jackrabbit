@@ -40,7 +40,7 @@ public class PathMap<T> {
      * Root element
      */
     private final Element<T> root =
-        new Element<T>(PATH_FACTORY.getRootPath().getNameElement());
+        new Element<T>(PATH_FACTORY.getRootElement());
 
     /**
      * Map a path to a child. If <code>exact</code> is <code>false</code>,
@@ -459,9 +459,9 @@ public class PathMap<T> {
          */
         public Path.Element getPathElement() {
             if (index < Path.INDEX_DEFAULT) {
-                return PATH_FACTORY.create(getName()).getNameElement();
+                return PATH_FACTORY.createElement(getName());
             } else {
-                return PATH_FACTORY.create(getName(), index).getNameElement();
+                return PATH_FACTORY.createElement(getName(), index);
             }
         }
 

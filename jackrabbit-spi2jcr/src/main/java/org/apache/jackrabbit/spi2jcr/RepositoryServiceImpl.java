@@ -1507,14 +1507,14 @@ public class RepositoryServiceImpl implements RepositoryService {
             Path p = itemId.getPath();
             if (p != null) {
                 removedNodeIds.add(nodeId);
-                int index = p.getNameElement().getNormalizedIndex();
+                int index = p.getNormalizedIndex();
                 if (index > Path.INDEX_DEFAULT) {
                     Path.Element[] elems = p.getElements();
                     PathBuilder pb = new PathBuilder();
                     for (int i = 0; i <= elems.length - 2; i++) {
                         pb.addLast(elems[i]);
                     }
-                    pb.addLast(p.getNameElement().getName(), index - 1);
+                    pb.addLast(p.getName(), index - 1);
 
                     NodeId prevSibling = idFactory.createNodeId(itemId.getUniqueID(), pb.getPath());
                     if (removedNodeIds.contains(prevSibling)) {

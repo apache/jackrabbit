@@ -67,9 +67,8 @@ public class AddNodeOperation implements SessionWriteOperation<Node> {
                     + " relative to " + node, e);
         }
 
-        // Get the last path element and check that it's a simple name
-        Path.Element last = path.getNameElement();
-        if (!last.denotesName() || last.getIndex() != 0) {
+        // Check that the last path element is a simple name
+        if (!path.denotesName() || path.getIndex() != Path.INDEX_UNDEFINED) {
             throw new RepositoryException(
                     "Invalid last path element for adding node "
                     + relPath + " relative to " + node);
@@ -109,7 +108,7 @@ public class AddNodeOperation implements SessionWriteOperation<Node> {
             }
         }
 
-        return parentNode.addNode(last.getName(), typeName, id);
+        return parentNode.addNode(path.getName(), typeName, id);
     }
 
 

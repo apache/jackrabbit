@@ -77,7 +77,7 @@ final class NamePath extends RelativePath {
     public boolean isNormalized() {
         return parent == null
             || (parent.isNormalized()
-                    && !parent.getNameElement().denotesCurrent());
+                    && !parent.denotesCurrent());
     }
 
     public Path getNormalizedPath() throws RepositoryException {
@@ -86,7 +86,7 @@ final class NamePath extends RelativePath {
         } else {
             // parent is guaranteed to be !null
             Path normalized = parent.getNormalizedPath();
-            if (normalized.getNameElement().denotesCurrent()) {
+            if (normalized.denotesCurrent()) {
                 normalized = null; // special case: ./a
             }
             return new NamePath(normalized, element);
@@ -124,6 +124,27 @@ final class NamePath extends RelativePath {
         } else {
             return element.getString();
         }
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    @Override
+    public final boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        } else if (that instanceof Path) {
+            Path path = (Path) that;
+            return path.denotesName()
+                && element.equals(path.getNameElement()) 
+                && super.equals(that);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public final int hashCode() {
+        return super.hashCode() * 37 + element.hashCode();
     }
 
 }

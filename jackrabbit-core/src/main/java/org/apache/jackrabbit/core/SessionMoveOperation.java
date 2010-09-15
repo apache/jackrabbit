@@ -45,25 +45,19 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
 
     private final Path srcPath;
 
-    private final Path.Element srcName;
-
     private final String destAbsPath;
 
     private final Path destPath;
-
-    private final Path.Element destName;
 
     public SessionMoveOperation(
             PathResolver resolver, String srcAbsPath, String destAbsPath)
             throws RepositoryException {
         this.srcAbsPath = srcAbsPath;
         this.srcPath = getAbsolutePath(resolver, srcAbsPath);
-        this.srcName = srcPath.getNameElement();
 
         this.destAbsPath = destAbsPath;
         this.destPath = getAbsolutePath(resolver, destAbsPath);
-        this.destName = destPath.getNameElement();
-        if (destName.getIndex() > 0) {
+        if (destPath.getIndex() != Path.INDEX_UNDEFINED) {
             // subscript in name element
             String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
             log.debug(msg);
@@ -147,7 +141,7 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
         NodeTypeImpl nt = (NodeTypeImpl) targetNode.getPrimaryNodeType();
         org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl newTargetDef;
         try {
-            newTargetDef = destParentNode.getApplicableChildNodeDefinition(destName.getName(), nt.getQName());
+            newTargetDef = destParentNode.getApplicableChildNodeDefinition(destPath.getName(), nt.getQName());
         } catch (RepositoryException re) {
             String msg = destAbsPath + ": no definition found in parent node's node type for new node";
             log.debug(msg);
@@ -163,10 +157,7 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
         }
 
         NodeId targetId = targetNode.getNodeId();
-        int index = srcName.getIndex();
-        if (index == 0) {
-            index = 1;
-        }
+        int index = srcPath.getNormalizedIndex();
 
         // check permissions
         AccessManager acMgr = context.getAccessManager();
@@ -181,7 +172,7 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
             // change definition of target
             targetNode.onRedefine(newTargetDef.unwrap());
             // do rename
-            destParentNode.renameChildNode(targetId, destName.getName(), false);
+            destParentNode.renameChildNode(targetId, destPath.getName(), false);
         } else {
             // check shareable case
             if (targetNode.getNodeState().isShareable()) {
@@ -206,7 +197,7 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
                 // 2. re-parent target node
                 targetState.setParentId(destParentNode.getNodeId());
                 // 3. add child node entry to new parent
-                destParentState.addChildNodeEntry(destName.getName(), targetId);
+                destParentState.addChildNodeEntry(destPath.getName(), targetId);
             }
         }
 

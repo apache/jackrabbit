@@ -221,7 +221,7 @@ public class Join implements MultiColumnQueryHits {
                         outer = src1;
                         outerIdx = getIndex(outer, node.getSelector1QName());
                         Path selector2Path = node.getSelector2QPath();
-                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.getNameElement().denotesCurrent())) {
+                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.denotesCurrent())) {
                             c = new SameNodeJoin(src2, node.getSelector2QName(), reader);
                         } else {
                             c = new DescendantPathNodeJoin(src2, node.getSelector2QName(),
@@ -231,7 +231,7 @@ public class Join implements MultiColumnQueryHits {
                         outer = src2;
                         outerIdx = getIndex(outer, node.getSelector2QName());
                         Path selector2Path = node.getSelector2QPath();
-                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.getNameElement().denotesCurrent())) {
+                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.denotesCurrent())) {
                             c = new SameNodeJoin(src1, node.getSelector1QName(), reader);
                         } else {
                             c = new AncestorPathNodeJoin(src1, node.getSelector1QName(),
