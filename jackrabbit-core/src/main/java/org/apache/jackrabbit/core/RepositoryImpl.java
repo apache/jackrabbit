@@ -472,16 +472,17 @@ public class RepositoryImpl extends AbstractRepository
         if (smc != null && smc.getWorkspaceName() != null) {
             workspaceName = smc.getWorkspaceName();
         }
-        SystemSession securitySession = getSystemSession(workspaceName);
-        // mark system session as 'active' for that the system workspace does
-        // not get disposed by workspace-janitor
-        onSessionCreated(securitySession);
+
+        // mark the workspace as 'active' for that it does not get disposed
+        // by the workspace-janitor
+        // TODO: There should be a cleaner way to do this
+        markWorkspaceActive(workspaceName);
 
         // FIXME: Note that this call must be done *after* the security
         // manager has been added to the repository context, since the
         // initialisation code may invoke code that depends on the presence
         // of a security manager. It would be better if this was not the case.
-        securityMgr.init(this, securitySession);
+        securityMgr.init(this, getSystemSession(workspaceName));
     }
 
     /**
@@ -903,6 +904,21 @@ public class RepositoryImpl extends AbstractRepository
         sanityCheck();
 
         return getWorkspaceInfo(workspaceName).getSystemSession();
+    }
+
+    /**
+     * Marks the specified workspace as "active", so that the workspace
+     * janitor won't attempt to dispose it. This is used by features like
+     * security managers and the data store garbage collector to prevent
+     * workspaces from disappearing from below them.
+     * <p>
+     * FIXME: There should be a cleaner way to do this.
+     *
+     * @param workspaceName workspace name
+     * @throws RepositoryException if the workspace can not be accessed
+     */
+    void markWorkspaceActive(String workspaceName) throws RepositoryException {
+        getWorkspaceInfo(workspaceName).setActive(true);
     }
 
     /**
@@ -1381,15 +1397,19 @@ public class RepositoryImpl extends AbstractRepository
         for (int i = 0; i < wspNames.length; i++) {
             String wspName = wspNames[i];
             WorkspaceInfo wspInfo = getWorkspaceInfo(wspName);
+
             // this will initialize the workspace if required
             SessionImpl systemSession =
                 SystemSession.create(context, wspInfo.getConfig());
-            // mark this session as 'active' so the workspace does not get disposed
-            // by the workspace-janitor until the garbage collector is done
-            onSessionCreated(systemSession);
-            // the workspace could be disposed again, so re-initialize if required
-            // afterwards it will not be disposed because a session is registered
+
+            // mark the workspace as 'active' so it does not get disposed by
+            // the workspace-janitor until the garbage collector is done
+            wspInfo.setActive(true);
+
+            // the workspace could be disposed, so re-initialize if required
+            // afterwards it will not be disposed because it was marked active
             wspInfo.initialize();
+
             sessions[i] = systemSession;
             pm = wspInfo.getPersistenceManager();
             pmList.add(pm);
@@ -1641,6 +1661,12 @@ public class RepositoryImpl extends AbstractRepository
         private boolean initialized;
 
         /**
+         * Flag used to mark this as an "active" workspace that should not
+         * get automatically disposed by the workspace janitor.
+         */
+        private boolean active;
+
+        /**
          * lock that guards the initialization of this instance
          */
         private final ReadWriteLock initLock =
@@ -1736,6 +1762,14 @@ public class RepositoryImpl extends AbstractRepository
             boolean ret = initialized;
             initLock.readLock().release();
             return ret;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public void setActive(boolean active) {
+            this.active = active;
         }
 
         /**
@@ -2062,7 +2096,7 @@ public class RepositoryImpl extends AbstractRepository
                 return;
             }
             try {
-                if (!initialized) {
+                if (!initialized || active) {
                     return;
                 }
                 long currentTS = System.currentTimeMillis();
@@ -2103,6 +2137,7 @@ public class RepositoryImpl extends AbstractRepository
                 // reset idle timestamp
                 idleTimestamp = 0;
 
+                active = false;
                 initialized = false;
                 log.info("workspace '" + getName() + "' has been shutdown");
             } finally {

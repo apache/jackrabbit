@@ -567,16 +567,21 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         checkInitialized();
         AccessControlProvider provider = acProviders.get(workspaceName);
         if (provider == null || !provider.isLive()) {
-            SystemSession systemSession = repository.getSystemSession(workspaceName);
-            // mark this session as 'active' so the workspace does not get disposed
-            // by the workspace-janitor until the garbage collector is done
-            // TODO: review again... this workaround is now used in several places.
-            repository.onSessionCreated(systemSession);
+            // mark this workspace as 'active' so the workspace does not
+            // get disposed by the workspace-janitor
+            // TODO: There should be a cleaner way to do this.
+            repository.markWorkspaceActive(workspaceName);
 
-            WorkspaceConfig conf = repository.getConfig().getWorkspaceConfig(workspaceName);
-            WorkspaceSecurityConfig secConf = (conf == null) ?  null : conf.getSecurityConfig();
+            WorkspaceSecurityConfig secConf = null;
+            WorkspaceConfig conf =
+                repository.getConfig().getWorkspaceConfig(workspaceName);
+            if (conf != null) {
+                secConf = conf.getSecurityConfig();
+            }
+
+            provider = acProviderFactory.createProvider(
+                    repository.getSystemSession(workspaceName), secConf);
             synchronized (acProviders) {
-                provider = acProviderFactory.createProvider(systemSession, secConf);
                 acProviders.put(workspaceName, provider);
             }
         }

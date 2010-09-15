@@ -84,7 +84,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
                     RepositoryImpl repo = (RepositoryImpl) getRepository();
                     systemSession = repo.getSystemSession(wspName);
                     // TODO: review again... this workaround is used in several places.
-                    repo.onSessionCreated(systemSession);
+                    repo.markWorkspaceActive(wspName);
                 }
 
                 PrincipalProvider defaultPP = new DefaultPrincipalProvider(systemSession, (UserManagerImpl) getUserManager(systemSession));
