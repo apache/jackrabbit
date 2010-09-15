@@ -124,7 +124,9 @@ public class SessionState {
     }
 
     /**
-     * Performs the given operation within a synchronized block.
+     * Performs the given operation within a synchronized block. Special care
+     * is made to detect attempts to access the session concurrently and to
+     * log detailed warnings in such cases.
      *
      * @param operation session operation
      * @return the return value of the executed operation
@@ -143,15 +145,23 @@ public class SessionState {
             if (!lock.tryLock()) {
                 if (isWriteOperation
                         && operation instanceof SessionWriteOperation) {
-                    log.warn("Attempt to perform {} while another thread"
-                            + " is concurrently modifying the session."
-                            + " Blocking until the other thread is finished"
-                            + " using this session.", operation);
-                } else {
-                    log.debug("Attempt to perform {} while another thread"
-                            + " is concurrently accessing the session."
-                            + " Blocking until the other thread is finished"
-                            + " using this session.", operation);
+                    Exception trace = new Exception(
+                            "Stack trace of concurrent access to " + context);
+                    log.warn("Attempt to perform " + operation
+                            + " while another thread is concurrently writing"
+                            + " to " + context + ". Blocking until the other"
+                            + " thread is finished using this session. Please"
+                            + " review your code to avoid concurrent use of"
+                            + " a session.", trace);
+                } else if (log.isDebugEnabled()) {
+                    Exception trace = new Exception(
+                            "Stack trace of concurrent access to " + context);
+                    log.debug("Attempt to perform " + operation + " while"
+                            + " another thread is concurrently reading from "
+                            + context + ". Blocking until the other thread"
+                            + " is finished using this session. Please"
+                            + " review your code to avoid concurrent use of"
+                            + " a session.", trace);
                 }
                 lock.lock();
             }
@@ -199,7 +209,9 @@ public class SessionState {
     }
 
     /**
-     * Closes this session.
+     * Closes this session.  Special care is made to detect attempts to
+     * access the session concurrently or to close it more than once, and to
+     * log detailed warnings in such cases.
      *
      * @return <code>true</code> if the session was closed, or
      *         <code>false</code> if the session had already been closed
@@ -209,22 +221,31 @@ public class SessionState {
             new LogState("jcr.session", context, "jcr.operation", "close()");
         try {
             if (!lock.tryLock()) {
-                log.warn("Attempt to close a session while another thread is"
-                        + " concurrently accessing the session. Blocking until"
-                        + " the other thread is finished using this session.");
+                Exception trace = new Exception(
+                        "Stack trace of concurrent access to " + context);
+                log.warn("Attempt to close " + context + " while another"
+                        + " thread is concurrently accessing this session."
+                        + " Blocking until the other thread is finished"
+                        + " using this session. Please review your code"
+                        + " to avoid concurrent use of a session.", trace);
                 lock.lock();
             }
             try {
                 if (isAlive()) {
                     closed = new Exception(
-                            "Stack trace of where " + context + " was closed");
+                            "Stack trace of  where " + context
+                            + " was originally closed");
                     return true;
                 } else {
-                    log.debug("This session has already been closed. See the"
-                            + " exception for a trace of where the "
+                    Exception trace = new Exception(
+                            "Stack trace of the duplicate attempt to close "
+                            + context);
+                    log.warn("Attempt to close " + context + " after it has"
+                            + " already been closed. Please review your code"
+                            + " for proper session management.", trace);
+                    log.warn(context + " has already been closed. See the"
+                            + " attached exception for a trace of where this"
                             + " session was closed.", closed);
-                    log.debug("And additionally at", 
-                            new Exception("Stack trace of where " + context + " was also closed"));
                     return false;
                 }
             } finally {
