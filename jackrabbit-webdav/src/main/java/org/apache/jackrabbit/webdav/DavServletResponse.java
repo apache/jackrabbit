@@ -96,17 +96,6 @@ public interface DavServletResponse extends HttpServletResponse {
     public void sendMultiStatus(MultiStatus multistatus) throws IOException;
 
     /**
-     * Send the lock response for a successful LOCK request. The given <code>ActiveLock</code>
-     * object is included in the lockdiscovery property of the response
-     * body as required by RFC 2518.
-     *
-     * @param lock
-     * @throws IOException
-     * @see DavConstants#PROPERTY_LOCKDISCOVERY
-     */
-    public void sendLockResponse(ActiveLock lock) throws IOException;
-
-    /**
      * Send the lock response for a successful LOCK request, that was intended
      * to refresh an existing lock. The locks array must contain at least
      * a single element; the <code>ActiveLock</code> objects are then
