@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
-
 import static org.apache.jackrabbit.webdav.DavConstants.HEADER_ETAG;
 import static org.apache.jackrabbit.webdav.DavConstants.HEADER_LAST_MODIFIED;
 
@@ -41,7 +40,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.ByteArrayInputStream;
@@ -550,8 +548,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
             } else {
                 // TODO: improve. jcr-server sends XML for multivalued properties
                 try {
-                    DocumentBuilder db = DomUtil.BUILDER_FACTORY.newDocumentBuilder();
-                    Document doc = db.parse(in);
+                    Document doc = DomUtil.parseDocument(in);
                     Element prop = DomUtil.getChildElement(doc, ItemResourceConstants.JCR_VALUES.getName(), ItemResourceConstants.JCR_VALUES.getNamespace());
                     DavProperty<?> p = DefaultDavProperty.createFromXml(prop);
                     ValuesProperty vp = new ValuesProperty(p, PropertyType.BINARY, vf);

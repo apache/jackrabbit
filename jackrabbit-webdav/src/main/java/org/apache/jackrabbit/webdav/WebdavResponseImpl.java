@@ -141,11 +141,11 @@ public class WebdavResponseImpl implements WebdavResponse {
         if (serializable != null) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             try {
-                Document doc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+                Document doc = DomUtil.createDocument();
                 doc.appendChild(serializable.toXml(doc));
 
                 // JCR-2636: Need to use an explicit OutputStreamWriter
-                // instead of relying on the built-in UTF-8 serialisation
+                // instead of relying on the built-in UTF-8 serialization
                 // to avoid problems with surrogate pairs on Sun JRE 1.5.
                 Writer writer = new OutputStreamWriter(
                         out, SerializingContentHandler.ENCODING);

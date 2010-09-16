@@ -138,8 +138,8 @@ public class ExportViewReport extends AbstractJcrReport {
             }
             out.close();
 
-            InputStream in = new FileInputStream(tmpfile);
-            Document tmpDoc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().parse(in);
+            Document tmpDoc =
+                DomUtil.parseDocument(new FileInputStream(tmpfile));
 
             // import the root node of the generated xml to the given document.
             Element rootElem = (Element)document.importNode(tmpDoc.getDocumentElement(), true);

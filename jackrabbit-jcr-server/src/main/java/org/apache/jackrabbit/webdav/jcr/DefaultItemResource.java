@@ -136,8 +136,7 @@ public class DefaultItemResource extends AbstractItemResource {
 
     private void spoolMultiValued(OutputStream out) {
         try {
-            Document doc =
-                DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+            Document doc = DomUtil.createDocument();
             doc.appendChild(getProperty(JCR_VALUES).toXml(doc));
 
             ContentHandler handler =

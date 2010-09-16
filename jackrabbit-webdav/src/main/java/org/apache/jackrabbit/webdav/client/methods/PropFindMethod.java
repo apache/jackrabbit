@@ -79,7 +79,7 @@ public class PropFindMethod extends DavMethodBase {
         // build the request body
         try {
             // create the document and attach the root element
-            Document document = BUILDER_FACTORY.newDocumentBuilder().newDocument();
+            Document document = DomUtil.createDocument();
             Element propfind = DomUtil.createElement(document, XML_PROPFIND, NAMESPACE);
             document.appendChild(propfind);
 

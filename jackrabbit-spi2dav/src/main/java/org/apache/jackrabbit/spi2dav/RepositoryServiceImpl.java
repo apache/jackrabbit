@@ -53,7 +53,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.httpclient.Header;
@@ -256,7 +255,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         this.itemInfoCacheSize = itemInfoCacheSize;
 
         try {
-            domFactory = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+            domFactory = DomUtil.createDocument();
         } catch (ParserConfigurationException e) {
             throw new RepositoryException(e);
         }
@@ -1157,8 +1156,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private QValue[] getValues(InputStream response, NamePathResolver resolver, ItemId id) throws RepositoryException {
         try {
-            DocumentBuilder db = DomUtil.BUILDER_FACTORY.newDocumentBuilder();
-            Document doc = db.parse(response);
+            Document doc = DomUtil.parseDocument(response);
             Element prop = DomUtil.getChildElement(doc, ItemResourceConstants.JCR_VALUES.getName(), ItemResourceConstants.JCR_VALUES.getNamespace());
             if (prop == null) {
                 // no jcr-values present in the response body -> apparently
@@ -2421,7 +2419,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 MkColMethod method = new MkColMethod(uri);
 
                 // build 'sys-view' for the node to create and append it as request body
-                Document body = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+                Document body = DomUtil.createDocument();
                 Element nodeElement = DomUtil.addChildElement(body, NODE_ELEMENT, SV_NAMESPACE);
                 String nameAttr = resolver.getJCRName(nodeName);
                 DomUtil.setAttribute(nodeElement, NAME_ATTRIBUTE, SV_NAMESPACE, nameAttr);

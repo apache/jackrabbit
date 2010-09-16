@@ -43,7 +43,7 @@ public class ActiveLockTest extends TestCase {
     }
 
     public void testParsing() throws ParserConfigurationException {
-        Document doc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+        Document doc = DomUtil.createDocument();
 
         ActiveLock lock = new DefaultActiveLock();
         lock.setLockroot("lockroot");

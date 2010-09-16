@@ -27,8 +27,16 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.NamedNodeMap;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,14 +49,53 @@ public class DomUtil {
 
     /**
      * Constant for <code>DocumentBuilderFactory</code> which is used
-     * widely to create new <code>Document</code>s
+     * to create and parse DOM documents.
      */
-    public static DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
-    static {
-        BUILDER_FACTORY.setNamespaceAware(true);
-        BUILDER_FACTORY.setIgnoringComments(true);
-        BUILDER_FACTORY.setIgnoringElementContentWhitespace(true);
-        BUILDER_FACTORY.setCoalescing(true);
+    private static DocumentBuilderFactory BUILDER_FACTORY = createFactory();
+
+    private static DocumentBuilderFactory createFactory() {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setIgnoringComments(true);
+        factory.setIgnoringElementContentWhitespace(true);
+        factory.setCoalescing(true);
+        try {
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        } catch (ParserConfigurationException e) {
+            log.warn("Secure XML processing is not supported", e);
+        }
+        return factory;
+    }
+
+    /**
+     * Creates and returns a new empty DOM document.
+     *
+     * @return new DOM document
+     * @throws ParserConfigurationException if the document can not be created
+     */
+    public static Document createDocument()
+            throws ParserConfigurationException {
+        return BUILDER_FACTORY.newDocumentBuilder().newDocument();
+    }
+
+    /**
+     * Parses the given input stream and returns the resulting DOM document.
+     *
+     * @param input XML input stream
+     * @return parsed DOM document
+     * @throws ParserConfigurationException if the document can not be created
+     * @throws SAXException if the document can not be parsed
+     * @throws IOException if the input stream can not be read
+     */
+    public static Document parseDocument(InputStream stream)
+            throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
+
+        // Set an error handler to prevent parsers like Xerces
+        // from printing error messages to standard output!
+        docBuilder.setErrorHandler(new DefaultHandler());
+
+        return docBuilder.parse(stream);
     }
 
     /**

@@ -65,7 +65,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
             throw new IllegalArgumentException("PROPPATCH cannot be executed without properties to be set or removed.");
         }
         try {
-            Document document = BUILDER_FACTORY.newDocumentBuilder().newDocument();
+            Document document = DomUtil.createDocument();
             Element propUpdateElement = DomUtil.addChildElement(document, XML_PROPERTYUPDATE, NAMESPACE);
 
             Element propElement = null;
@@ -115,7 +115,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
         }
 
         try {
-            Document document = BUILDER_FACTORY.newDocumentBuilder().newDocument();
+            Document document = DomUtil.createDocument();
             Element propupdate = DomUtil.addChildElement(document, XML_PROPERTYUPDATE, NAMESPACE);
             // DAV:set
             if (!setProperties.isEmpty()) {
