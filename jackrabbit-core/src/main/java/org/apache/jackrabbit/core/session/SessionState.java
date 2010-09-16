@@ -24,7 +24,6 @@ import javax.jcr.Session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 /**
  * Internal session state. This class keeps track of the lifecycle of
@@ -135,76 +134,69 @@ public class SessionState {
      */
     public <T> T perform(SessionOperation<T> operation)
             throws RepositoryException {
-        // Set MDC variables to reflect the current session and this operation
-        LogState logState =
-            new LogState("jcr.session", context, "jcr.operation", operation);
-        try {
-            // Acquire the exclusive lock for accessing session internals.
-            // No other session should be holding the lock, so we log a
-            // message to let the user know of such cases.
-            if (!lock.tryLock()) {
-                if (isWriteOperation
-                        && operation instanceof SessionWriteOperation) {
-                    Exception trace = new Exception(
-                            "Stack trace of concurrent access to " + context);
-                    log.warn("Attempt to perform " + operation
-                            + " while another thread is concurrently writing"
-                            + " to " + context + ". Blocking until the other"
-                            + " thread is finished using this session. Please"
-                            + " review your code to avoid concurrent use of"
-                            + " a session.", trace);
-                } else if (log.isDebugEnabled()) {
-                    Exception trace = new Exception(
-                            "Stack trace of concurrent access to " + context);
-                    log.debug("Attempt to perform " + operation + " while"
-                            + " another thread is concurrently reading from "
-                            + context + ". Blocking until the other thread"
-                            + " is finished using this session. Please"
-                            + " review your code to avoid concurrent use of"
-                            + " a session.", trace);
-                }
-                lock.lock();
+        // Acquire the exclusive lock for accessing session internals.
+        // No other session should be holding the lock, so we log a
+        // message to let the user know of such cases.
+        if (!lock.tryLock()) {
+            if (isWriteOperation
+                    && operation instanceof SessionWriteOperation) {
+                Exception trace = new Exception(
+                        "Stack trace of concurrent access to " + context);
+                log.warn("Attempt to perform " + operation
+                        + " while another thread is concurrently writing"
+                        + " to " + context + ". Blocking until the other"
+                        + " thread is finished using this session. Please"
+                        + " review your code to avoid concurrent use of"
+                        + " a session.", trace);
+            } else if (log.isDebugEnabled()) {
+                Exception trace = new Exception(
+                        "Stack trace of concurrent access to " + context);
+                log.debug("Attempt to perform " + operation + " while"
+                        + " another thread is concurrently reading from "
+                        + context + ". Blocking until the other thread"
+                        + " is finished using this session. Please"
+                        + " review your code to avoid concurrent use of"
+                        + " a session.", trace);
             }
+            lock.lock();
+        }
 
+        try {
+            // Check that the session is still alive
+            checkAlive();
+
+            // Raise the isWriteOperation flag for write operations.
+            // The flag is used to set the appropriate log level above.
+            boolean wasWriteOperation = isWriteOperation;
+            if (!wasWriteOperation
+                    && operation instanceof SessionWriteOperation) {
+                isWriteOperation = true;
+            }
             try {
-                // Check that the session is still alive
-                checkAlive();
-
-                // Raise the isWriteOperation flag for write operations.
-                // The flag is used to set the appropriate log level above.
-                boolean wasWriteOperation = isWriteOperation;
-                if (!wasWriteOperation
-                        && operation instanceof SessionWriteOperation) {
-                    isWriteOperation = true;
-                }
-                try {
-                    // Perform the actual operation, optionally with debug logs
-                    if (log.isDebugEnabled()) {
-                        log.debug("Performing {}", operation);
-                        long start = System.nanoTime();
-                        try {
-                            return operation.perform(context);
-                        } finally {
-                            long time = System.nanoTime() - start;
-                            if (time > NS_PER_MS) {
-                                log.debug("Performed {} in {}ms",
-                                        operation, time / NS_PER_MS);
-                            } else {
-                                log.debug("Performed {} in {}us",
-                                        operation, time / NS_PER_US);
-                            }
-                        }
-                    } else {
+                // Perform the actual operation, optionally with debug logs
+                if (log.isDebugEnabled()) {
+                    log.debug("Performing {}", operation);
+                    long start = System.nanoTime();
+                    try {
                         return operation.perform(context);
+                    } finally {
+                        long time = System.nanoTime() - start;
+                        if (time > NS_PER_MS) {
+                            log.debug("Performed {} in {}ms",
+                                    operation, time / NS_PER_MS);
+                        } else {
+                            log.debug("Performed {} in {}us",
+                                    operation, time / NS_PER_US);
+                        }
                     }
-                } finally {
-                    isWriteOperation = wasWriteOperation;
+                } else {
+                    return operation.perform(context);
                 }
             } finally {
-                lock.unlock();
+                isWriteOperation = wasWriteOperation;
             }
         } finally {
-            logState.reset();
+            lock.unlock();
         }
     }
 
@@ -217,73 +209,37 @@ public class SessionState {
      *         <code>false</code> if the session had already been closed
      */
     public boolean close() {
-        LogState logState =
-            new LogState("jcr.session", context, "jcr.operation", "close()");
+        if (!lock.tryLock()) {
+            Exception trace = new Exception(
+                    "Stack trace of concurrent access to " + context);
+            log.warn("Attempt to close " + context + " while another"
+                    + " thread is concurrently accessing this session."
+                    + " Blocking until the other thread is finished"
+                    + " using this session. Please review your code"
+                    + " to avoid concurrent use of a session.", trace);
+            lock.lock();
+        }
         try {
-            if (!lock.tryLock()) {
+            if (isAlive()) {
+                closed = new Exception(
+                        "Stack trace of  where " + context
+                        + " was originally closed");
+                return true;
+            } else {
                 Exception trace = new Exception(
-                        "Stack trace of concurrent access to " + context);
-                log.warn("Attempt to close " + context + " while another"
-                        + " thread is concurrently accessing this session."
-                        + " Blocking until the other thread is finished"
-                        + " using this session. Please review your code"
-                        + " to avoid concurrent use of a session.", trace);
-                lock.lock();
-            }
-            try {
-                if (isAlive()) {
-                    closed = new Exception(
-                            "Stack trace of  where " + context
-                            + " was originally closed");
-                    return true;
-                } else {
-                    Exception trace = new Exception(
-                            "Stack trace of the duplicate attempt to close "
-                            + context);
-                    log.warn("Attempt to close " + context + " after it has"
-                            + " already been closed. Please review your code"
-                            + " for proper session management.", trace);
-                    log.warn(context + " has already been closed. See the"
-                            + " attached exception for a trace of where this"
-                            + " session was closed.", closed);
-                    return false;
-                }
-            } finally {
-                lock.unlock();
+                        "Stack trace of the duplicate attempt to close "
+                        + context);
+                log.warn("Attempt to close " + context + " after it has"
+                        + " already been closed. Please review your code"
+                        + " for proper session management.", trace);
+                log.warn(context + " has already been closed. See the"
+                        + " attached exception for a trace of where this"
+                        + " session was closed.", closed);
+                return false;
             }
         } finally {
-            logState.reset();
+            lock.unlock();
         }
-    }
-
-    /**
-     * Internal utility class for setting MDC variables during the execution
-     * of a session operation.
-     */
-    private static class LogState {
-
-        private final Object[] keyValuePairs;
-
-        public LogState(Object... keyValuePairs) {
-            this.keyValuePairs = keyValuePairs;
-            for (int i = 0; i + 1 < keyValuePairs.length; i += 2) {
-                String key = keyValuePairs[i].toString();
-                if (MDC.get(key) == null) {
-                    MDC.put(key, keyValuePairs[i + 1].toString());
-                } else {
-                    keyValuePairs[i + 1] = null;
-                }
-            }
-        }
-
-        public void reset() {
-            for (int i = 0; i + 1 < keyValuePairs.length; i += 2) {
-                if (keyValuePairs[i + 1] != null) {
-                    MDC.remove(keyValuePairs[i].toString());
-                }
-            }
-        }
-
     }
 
 }
