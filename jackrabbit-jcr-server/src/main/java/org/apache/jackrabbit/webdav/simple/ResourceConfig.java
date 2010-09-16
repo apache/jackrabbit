@@ -25,7 +25,6 @@ import java.util.List;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.server.io.DefaultIOManager;
@@ -39,7 +38,6 @@ import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.tika.detect.Detector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
@@ -105,9 +103,7 @@ public class ResourceConfig {
     public void parse(URL configURL) {
         try {
             InputStream in = configURL.openStream();
-            DocumentBuilder builder = DomUtil.BUILDER_FACTORY.newDocumentBuilder();
-            Document document = builder.parse(in);
-            Element config = document.getDocumentElement();
+            Element config = DomUtil.parseDocument(in).getDocumentElement();
 
             if (config == null) {
                 log.warn("Resource configuration: mandatory 'config' element is missing.");

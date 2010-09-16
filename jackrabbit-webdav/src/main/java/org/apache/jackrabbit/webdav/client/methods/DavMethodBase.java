@@ -34,10 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,8 +45,6 @@ import java.io.InputStream;
 public abstract class DavMethodBase extends EntityEnclosingMethod implements DavMethod, DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(DavMethodBase.class);
-
-    static final DocumentBuilderFactory BUILDER_FACTORY = DomUtil.BUILDER_FACTORY;
 
     private boolean success;
     private Document responseDocument;
@@ -115,10 +110,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
         if (in != null) {
             // read response and try to build a xml document
             try {
-                DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
-                docBuilder.setErrorHandler(new DefaultHandler());
-                responseDocument = docBuilder.parse(in);
-                return responseDocument;
+                return DomUtil.parseDocument(in);
             } catch (ParserConfigurationException e) {
                 IOException exception =
                     new IOException("XML parser configuration error");
@@ -208,7 +200,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      */
     public void setRequestBody(XmlSerializable requestBody) throws IOException {
         try {
-            Document doc = BUILDER_FACTORY.newDocumentBuilder().newDocument();
+            Document doc = DomUtil.createDocument();
             doc.appendChild(requestBody.toXml(doc));
             setRequestBody(doc);
         } catch (ParserConfigurationException e) {

@@ -36,7 +36,6 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.webdav.bind.BindInfo;
@@ -300,8 +299,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 boolean isEmpty = -1 == bin.read();
                 bin.reset();
                 if (!isEmpty) {
-                    DocumentBuilder docBuilder = DomUtil.BUILDER_FACTORY.newDocumentBuilder();
-                    requestDocument = docBuilder.parse(bin);
+                    requestDocument = DomUtil.parseDocument(bin);
                 }
             }
         } catch (IOException e) {

@@ -1000,7 +1000,7 @@ public class DefaultItemCollection extends AbstractItemResource
     private ValuesProperty buildValuesProperty(InputStream in) {
         String errorMsg = "Cannot parse stream into a 'ValuesProperty'.";
         try {
-            Document reqBody = DomUtil.BUILDER_FACTORY.newDocumentBuilder().parse(in);
+            Document reqBody = DomUtil.parseDocument(in);
             DavProperty<?> defaultProp = DefaultDavProperty.createFromXml(reqBody.getDocumentElement());
             ValuesProperty vp = new ValuesProperty(defaultProp, PropertyType.STRING, getRepositorySession().getValueFactory());
             return vp;

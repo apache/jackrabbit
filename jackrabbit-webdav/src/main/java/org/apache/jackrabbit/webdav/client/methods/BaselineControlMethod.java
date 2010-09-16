@@ -45,7 +45,7 @@ public class BaselineControlMethod extends DavMethodBase {
             // build the request body
             try {
                 // create the document and attach the root element
-                Document document = BUILDER_FACTORY.newDocumentBuilder().newDocument();
+                Document document = DomUtil.createDocument();
                 Element el = DomUtil.addChildElement(document, "baseline-control", DeltaVConstants.NAMESPACE);
                 el.appendChild(DomUtil.hrefToXml(baselineHref, document));
                 // set the request body
