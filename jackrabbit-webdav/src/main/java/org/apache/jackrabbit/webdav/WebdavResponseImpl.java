@@ -114,22 +114,6 @@ public class WebdavResponseImpl implements WebdavResponse {
     }
 
     /**
-     * Send response body for a lock request intended to create a new lock.
-     *
-     * @param lock
-     * @throws java.io.IOException
-     * @see DavServletResponse#sendLockResponse(org.apache.jackrabbit.webdav.lock.ActiveLock)
-     */
-    public void sendLockResponse(ActiveLock lock) throws IOException {
-        CodedUrlHeader ltHeader = new CodedUrlHeader(DavConstants.HEADER_LOCK_TOKEN, lock.getToken());
-        httpResponse.setHeader(ltHeader.getHeaderName(), ltHeader.getHeaderValue());
-
-        DavPropertySet propSet = new DavPropertySet();
-        propSet.add(new LockDiscovery(lock));
-        sendXmlResponse(propSet, SC_OK);
-    }
-
-    /**
      * Send response body for a lock request that was intended to refresh one
      * or several locks.
      *

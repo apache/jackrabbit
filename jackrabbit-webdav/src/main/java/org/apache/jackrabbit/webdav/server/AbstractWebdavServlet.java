@@ -36,11 +36,13 @@ import org.apache.jackrabbit.webdav.bind.RebindInfo;
 import org.apache.jackrabbit.webdav.bind.UnbindInfo;
 import org.apache.jackrabbit.webdav.bind.BindableResource;
 import org.apache.jackrabbit.webdav.bind.BindInfo;
+import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.InputContextImpl;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.io.OutputContextImpl;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.LockDiscovery;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
@@ -51,6 +53,7 @@ import org.apache.jackrabbit.webdav.ordering.OrderingResource;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
@@ -800,9 +803,22 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             ActiveLock[] refreshedLocks = lList.toArray(new ActiveLock[lList.size()]);
             response.sendRefreshLockResponse(refreshedLocks);
         } else {
+            int status = HttpServletResponse.SC_OK;
+            if (!resource.exists()) {
+                // lock-empty requires status code 201 (Created)
+                status = HttpServletResponse.SC_CREATED;
+            }
+
             // create a new lock
-            ActiveLock lock = resource.lock(lockInfo);
-            response.sendLockResponse(lock);
+            ActiveLock lock = resource.lock(lockInfo); 
+
+            CodedUrlHeader header = new CodedUrlHeader(
+                    DavConstants.HEADER_LOCK_TOKEN, lock.getToken()); 
+            response.setHeader(header.getHeaderName(), header.getHeaderValue()); 
+
+            DavPropertySet propSet = new DavPropertySet(); 
+            propSet.add(new LockDiscovery(lock)); 
+            response.sendXmlResponse(propSet, status); 
         }
     }
 
