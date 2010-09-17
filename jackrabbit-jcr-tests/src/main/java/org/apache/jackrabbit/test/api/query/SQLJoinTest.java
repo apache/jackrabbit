@@ -63,7 +63,7 @@ public class SQLJoinTest extends AbstractQueryTest {
         query.append(" WHERE ");
         query.append(testNodeType).append(".").append(jcrPath);
         query.append(" = ");
-        query.append(mixReferenceable).append(".").append(jcrPath);
+        query.append(testMixin).append(".").append(jcrPath);
         query.append(" AND ").append(jcrPath).append(" LIKE ");
         query.append("'").append(testRoot).append("/%'");
 
@@ -92,11 +92,11 @@ public class SQLJoinTest extends AbstractQueryTest {
         assertFalse("Node at " + n2.getPath() + " should not have mixin " + testMixin, n2.isNodeType(testMixin));
 
         StringBuffer query = new StringBuffer("SELECT * FROM ");
-        query.append(ntBase).append(", ").append(testMixin);
+        query.append(testNodeType).append(", ").append(testMixin);
         query.append(" WHERE ");
         query.append(testNodeType).append(".").append(jcrPath);
         query.append(" = ");
-        query.append(mixReferenceable).append(".").append(jcrPath);
+        query.append(testMixin).append(".").append(jcrPath);
         query.append(" AND ").append(jcrPath).append(" LIKE ");
         query.append("'").append(testRoot).append("/%'");
 
@@ -120,7 +120,7 @@ public class SQLJoinTest extends AbstractQueryTest {
         query.append(" WHERE ");
         query.append(testNodeType).append(".").append(jcrPath);
         query.append(" = ");
-        query.append(mixReferenceable).append(".").append(jcrPath);
+        query.append(ntBase).append(".").append(jcrPath);
         query.append(" AND ").append(jcrPath).append(" LIKE ");
         query.append("'").append(testRoot).append("/%'");
 
