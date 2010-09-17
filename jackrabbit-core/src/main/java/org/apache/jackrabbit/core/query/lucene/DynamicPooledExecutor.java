@@ -43,7 +43,7 @@ public class DynamicPooledExecutor implements Executor {
      */
     public DynamicPooledExecutor() {
         this.executor = new ThreadPoolExecutor(
-                0, Runtime.getRuntime().availableProcessors(),
+                1, Runtime.getRuntime().availableProcessors(),
                 500, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>());
         this.lastCheck = System.currentTimeMillis();
