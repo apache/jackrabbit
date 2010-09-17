@@ -171,7 +171,8 @@ public class LockMethod extends DavMethodBase {
      */
     @Override
     protected boolean isSuccess(int statusCode) {
-        return statusCode == DavServletResponse.SC_OK;
+        return statusCode == DavServletResponse.SC_OK
+            || statusCode == DavServletResponse.SC_CREATED;
     }
 
     //-----------------------------------------------------< HttpMethodBase >---
