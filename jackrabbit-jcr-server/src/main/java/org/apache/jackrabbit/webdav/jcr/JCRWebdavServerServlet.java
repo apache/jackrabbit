@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
 import org.apache.jackrabbit.server.CredentialsProvider;
+import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.server.jcr.JCRWebdavServer;
 import org.apache.jackrabbit.webdav.DavException;
@@ -169,7 +170,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     public DavSessionProvider getDavSessionProvider() {
         if (server == null) {
             Repository repository = getRepository();
-            server = new JCRWebdavServer(repository, new SessionProviderImpl(getCredentialsProvider()));
+            server = new JCRWebdavServer(repository, getSessionProvider());
         }
         return server;
     }
@@ -317,5 +318,14 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      */
     protected CredentialsProvider getCredentialsProvider() {
         return new BasicCredentialsProvider(getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING));
+    }
+
+    /**
+     * Returns a new instanceof <code>SessionProviderImpl</code>.
+     *
+     * @return a new session provider
+     */
+    protected SessionProvider getSessionProvider() {
+        return new SessionProviderImpl(getCredentialsProvider());
     }
 }
