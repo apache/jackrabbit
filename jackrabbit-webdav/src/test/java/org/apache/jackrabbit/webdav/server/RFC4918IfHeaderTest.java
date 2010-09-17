@@ -107,7 +107,8 @@ public class RFC4918IfHeaderTest extends TestCase {
           status = this.client.executeMethod(put);
           assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
 
-          LockMethod lock = new LockMethod(testuri, new LockInfo(Scope.EXCLUSIVE, Type.WRITE, "testcase", 1800, true));
+          LockMethod lock = new LockMethod(testuri, new LockInfo(
+                  Scope.EXCLUSIVE, Type.WRITE, "testcase", 10000, true));
           status = this.client.executeMethod(lock);
           assertEquals("status", 200, status);
           locktoken = lock.getLockToken();
