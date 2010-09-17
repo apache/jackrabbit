@@ -31,7 +31,7 @@ public abstract class AbstractFileSystemTest extends TestCase {
     private FileSystem fs;
     private byte[] sampleBytes = new byte[]{(byte)0x12, (byte)0x0F, (byte)0xF0};
 
-    protected abstract FileSystem getFileSystem();
+    protected abstract FileSystem getFileSystem() throws Exception;
 
     protected void setUp() throws Exception {
         fs = getFileSystem();
