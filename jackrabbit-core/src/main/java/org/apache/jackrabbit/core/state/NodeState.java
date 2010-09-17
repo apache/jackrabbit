@@ -23,7 +23,6 @@ import org.apache.jackrabbit.spi.Name;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -298,7 +297,7 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries() {
-        return childNodeEntries;
+        return childNodeEntries.list();
     }
 
     /**
@@ -606,7 +605,7 @@ public class NodeState extends ItemState {
      */
     public synchronized List getAddedChildNodeEntries() {
         if (!hasOverlayedState()) {
-            return childNodeEntries;
+            return childNodeEntries.list();
         }
 
         NodeState other = (NodeState) getOverlayedState();
@@ -655,32 +654,10 @@ public class NodeState extends ItemState {
      */
     public synchronized List getRenamedChildNodeEntries() {
         if (!hasOverlayedState()) {
-            return Collections.EMPTY_LIST;
-        }
-
-        ChildNodeEntries otherChildNodeEntries =
-                ((NodeState) overlayedState).childNodeEntries;
-
-        // do a lazy init
-        List renamed = null;
-
-        for (Iterator iter = childNodeEntries.iterator(); iter.hasNext();) {
-            ChildNodeEntry cne = (ChildNodeEntry) iter.next();
-            ChildNodeEntry cneOther = otherChildNodeEntries.get(cne.getId());
-            if (cneOther != null && !cne.getName().equals(cneOther.getName())) {
-                // child node entry with same id but different name exists in
-                // overlayed and this state => renamed entry detected
-                if (renamed == null) {
-                    renamed = new ArrayList();
-                }
-                renamed.add(cne);
-            }
-        }
-
-        if (renamed == null) {
-            return Collections.EMPTY_LIST;
+            return childNodeEntries.getRenamedEntries(
+                    ((NodeState) overlayedState).childNodeEntries);
         } else {
-            return renamed;
+            return Collections.emptyList();
         }
     }
 
@@ -753,7 +730,7 @@ public class NodeState extends ItemState {
                 if (i + 1 < ours.size()) {
                     // if entry is the next in the other list then probably
                     // the other entry at position <code>i</code> was reordered
-                    if (entry.getId().equals(((ChildNodeEntry) others.get(i + 1)).getId())) {
+                    if (((ChildNodeEntry) entry).getId().equals(((ChildNodeEntry) others.get(i + 1)).getId())) {
                         // scan for the uuid of the other entry in our list
                         for (int j = i; j < ours.size(); j++) {
                             if (((ChildNodeEntry) ours.get(j)).getId().equals(other.getId())) {
