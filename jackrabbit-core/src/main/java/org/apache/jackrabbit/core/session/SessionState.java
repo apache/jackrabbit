@@ -190,6 +190,7 @@ public class SessionState {
                         }
                     }
                 } else {
+                    context.delayIfNecessary();
                     return operation.perform(context);
                 }
             } finally {
