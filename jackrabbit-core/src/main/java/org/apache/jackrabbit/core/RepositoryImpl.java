@@ -259,8 +259,7 @@ public class RepositoryImpl extends AbstractRepository
                         final Thread t = new Thread(null, r,
                                               "jackrabbit-pool-" + threadNumber.getAndIncrement(),
                                               0);
-                        if (t.isDaemon())
-                            t.setDaemon(false);
+                        t.setDaemon(true);
                         if (t.getPriority() != Thread.NORM_PRIORITY)
                             t.setPriority(Thread.NORM_PRIORITY);
                         t.setContextClassLoader(poolClassLoader);
@@ -346,7 +345,7 @@ public class RepositoryImpl extends AbstractRepository
 
             // Initialise the security manager;
             initSecurityManager();
-            
+
             // after the workspace is initialized we pass a system session to
             // the virtual node type manager
 
@@ -1384,7 +1383,7 @@ public class RepositoryImpl extends AbstractRepository
      * <p>
      * Note that you should use the {@link RepositoryManager} interface
      * to access this functionality. This RepositoryImpl method may be
-     * removed in future Jackrabbit versions. 
+     * removed in future Jackrabbit versions.
      */
     public GarbageCollector createDataStoreGarbageCollector()
             throws RepositoryException {
