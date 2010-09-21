@@ -58,6 +58,19 @@ public class SessionContext implements NamePathResolver {
     private static AtomicLong counter = new AtomicLong();
 
     /**
+     * The thread in which not to delay operations.
+     * If null, no operations are delayed.
+     * If not null, the next operation is delayed,
+     * except operations that are executed from this thread.
+     */
+    private Thread delayExceptInThread;
+
+    /**
+     * The delay in milliseconds.
+     */
+    private long delayMs;
+
+    /**
      * Creates a unique internal session name for a session with the
      * given user.
      *
@@ -359,6 +372,35 @@ public class SessionContext implements NamePathResolver {
     @Override
     public String toString() {
         return sessionName;
+    }
+
+    /**
+     * Delay the next operation, except if it is run using the given thread.
+     *
+     * @param exceptInThread the thread that shouldn't be delayed
+     * @param ms the delay in milliseconds
+     */
+    public void delayNextOperation(Thread exceptInThread, long ms) {
+        this.delayExceptInThread = exceptInThread;
+        this.delayMs = ms;
+    }
+
+    /**
+     * Delay a session operation if it is necessary.
+     */
+    public void delayIfNecessary() {
+        if (delayExceptInThread != null) {
+            Thread currentThread = Thread.currentThread();
+            if (currentThread != delayExceptInThread) {
+                try {
+                    Thread.sleep(delayMs);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+                // don't delay the next operation
+                delayExceptInThread = null;
+            }
+        }
     }
 
 }

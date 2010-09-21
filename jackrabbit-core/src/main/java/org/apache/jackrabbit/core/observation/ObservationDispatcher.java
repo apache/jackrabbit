@@ -236,12 +236,11 @@ public final class ObservationDispatcher extends EventDispatcher
                 if (logWarning) {
                     log.warn("Waiting");
                 }
-                while (eventQueueSize.get() > MAX_QUEUED_EVENTS) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
+                if (eventQueueSize.get() > MAX_QUEUED_EVENTS) {
+                    // slow down the current session
+                    // but not here, because locks are held
+                    // (that may block an observation listener, which is not what we want)
+                    events.getSession().delayNextOperation(notificationThread, 100);
                 }
             }
         }
