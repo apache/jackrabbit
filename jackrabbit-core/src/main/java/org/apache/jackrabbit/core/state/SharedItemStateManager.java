@@ -787,6 +787,9 @@ public class SharedItemStateManager
                     String path = events.getSession().getUserID() + "@" + events.getCommonPath();
                     eventChannel.updateCommitted(this, path);
                 }
+
+            } catch (InterruptedException e) {
+                throw new ItemStateException("Interrupted while downgrading to read lock");
             } finally {
                 if (writeLock != null) {
                     // exception occurred before downgrading lock
@@ -1509,6 +1512,9 @@ public class SharedItemStateManager
                 holdingWriteLock = false;
                 events.dispatch();
             }
+        } catch (InterruptedException e) {
+            String msg = "Unable to downgrade to read lock.";
+            log.error(msg);
         } finally {
             if (holdingWriteLock) {
                 if (wLock != null) {
