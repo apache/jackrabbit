@@ -35,7 +35,6 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.core.lock tests");
 
-        suite.addTestSuite(DefaultISMLockingTest.class);
         suite.addTestSuite(ExtendedLockingTest.class);
 
         return suite;

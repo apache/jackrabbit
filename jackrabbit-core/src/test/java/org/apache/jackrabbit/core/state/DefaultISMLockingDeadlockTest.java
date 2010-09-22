@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.lock;
+package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking;
@@ -24,7 +24,7 @@ import org.apache.jackrabbit.test.JUnitTest;
 /**
  * Tests the DefaultISMLocking class.
  */
-public class DefaultISMLockingTest extends JUnitTest {
+public class DefaultISMLockingDeadlockTest extends JUnitTest {
 
     public void test() throws InterruptedException {
         final ISMLocking lock = new DefaultISMLocking();
