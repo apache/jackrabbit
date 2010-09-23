@@ -28,6 +28,38 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 public class MoveTest extends AbstractJCRTest {
 
     /**
+     * Test case for
+     * <a href="https://issues.apache.org/jira/browse/JCR-2720">JCR-2720</a>
+     */
+    public void testMoveVisibilityAcrossSessions() throws RepositoryException {
+        Session session1 = getHelper().getReadWriteSession();
+        Session session2 = getHelper().getReadWriteSession();
+
+        if (session1.itemExists("/foo")) {
+            session1.removeItem("/foo");
+            session1.save();
+        }
+
+        session1.getRootNode().addNode("libs").addNode("foo").addNode("install");
+        session1.save();
+
+        assertTrue(session1.itemExists("/libs/foo/install"));
+        assertFalse(session1.itemExists("/foo"));
+
+        assertTrue(session2.itemExists("/libs/foo/install"));
+        assertFalse(session2.itemExists("/foo"));
+
+        session1.move("/libs", "/foo");
+        session1.save();
+
+        assertFalse(session1.itemExists("/libs/foo/install"));
+
+        session2.refresh(false);
+
+        assertFalse("JCR-2720", session2.itemExists("/libs/foo/install"));
+    }
+
+    /**
      * Tests moving a node, and then refreshing or saving it.
      */
     public void testMove() throws RepositoryException {

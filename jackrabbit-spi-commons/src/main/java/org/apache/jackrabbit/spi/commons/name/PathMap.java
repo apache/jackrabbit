@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 
 /**
@@ -603,7 +602,7 @@ public class PathMap<T> {
          * Return an iterator over all of this element's children. Every
          * element returned by this iterator is of type {@link Element}.
          */
-        public Iterator<Element<T>> getChildren() {
+        public List<Element<T>> getChildren() {
             ArrayList<Element<T>> result = new ArrayList<Element<T>>();
             if (children != null) {
                 for (List<Element<T>> list : children.values()) {
@@ -614,7 +613,7 @@ public class PathMap<T> {
                     }
                 }
             }
-            return result.iterator();
+            return result;
         }
 
         /**
