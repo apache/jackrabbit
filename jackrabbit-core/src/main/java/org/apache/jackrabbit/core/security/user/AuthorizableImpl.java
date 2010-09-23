@@ -186,7 +186,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 node.save();
             }
         } catch (RepositoryException e) {
-            log.warn("Failed to set Property " + name + " for " + this, e);
+            log.debug("Failed to set Property " + name + " for " + this, e);
             node.refresh(false);
             throw e;
         }
@@ -223,7 +223,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 node.save();
             }
         } catch (RepositoryException e) {
-            log.warn("Failed to set Property " + name + " for " + this, e);
+            log.debug("Failed to set Property " + name + " for " + this, e);
             node.refresh(false);
             throw e;
         }
@@ -249,7 +249,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             // no such property or wasn't a property of this authorizable.
             return false;
         } catch (RepositoryException e) {
-            log.warn("Failed to remove Property " + relPath + " from " + this, e);
+            log.debug("Failed to remove Property " + relPath + " from " + this, e);
             node.refresh(false);
             throw e;
         }
