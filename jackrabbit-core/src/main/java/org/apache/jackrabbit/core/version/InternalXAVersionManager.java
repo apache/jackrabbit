@@ -655,9 +655,17 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
             }
 
             public void commit(TransactionContext tx) {
+                // JCR-2712: Ensure that the transaction is prepared
+                if (!vmgrLocked) {
+                    prepare(tx);
+                }
             }
 
             public void rollback(TransactionContext tx) {
+                // JCR-2712: Ensure that the transaction is prepared
+                if (!vmgrLocked) {
+                    prepare(tx);
+                }
             }
 
             public void afterOperation(TransactionContext tx) {
