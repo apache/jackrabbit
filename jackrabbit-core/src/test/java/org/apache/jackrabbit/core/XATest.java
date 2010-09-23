@@ -30,6 +30,7 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.NodeType;
 import javax.transaction.UserTransaction;
 import javax.transaction.RollbackException;
 import java.util.StringTokenizer;
@@ -101,6 +102,33 @@ public class XATest extends AbstractJCRTest {
     protected void runTest() throws Throwable {
         if (isSupported(Repository.OPTION_TRANSACTIONS_SUPPORTED)) {
             super.runTest();
+        }
+    }
+
+    /**
+     * Test case for
+     * <a href="https://issues.apache.org/jira/browse/JCR-2712">JCR-2712</a>.
+     */
+    public void testVersioningRollbackWithoutPrepare() throws Exception {
+        Session session = getHelper().getSuperuserSession();
+        try {
+            if (session.getRootNode().hasNode("testNode")) {
+                session.getRootNode().getNode("testNode").remove();
+                session.save();
+            }
+
+            UserTransaction utx;
+            for (int i = 0; i < 50; i++) {
+                utx = new UserTransactionImpl(session);
+                utx.begin();
+                session.getRootNode().addNode("testNode").addMixin(
+                        NodeType.MIX_VERSIONABLE);
+                session.save();
+
+                utx.rollback();
+            }
+        } finally {
+            session.logout();
         }
     }
 
