@@ -31,7 +31,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <code>MultiStatusResponse</code> represents the DAV:multistatus element defined
@@ -145,7 +147,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
-     * Constucts a WebDAV multistatus response and retrieves the resource
+     * Constructs a WebDAV multistatus response and retrieves the resource
      * properties according to the given <code>DavPropertyNameSet</code>. It
      * adds all known property to the '200' set, while unknown properties are
      * added to the '404' set.
@@ -160,40 +162,57 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * #PROPFIND_ALL_PROP}, {@link #PROPFIND_BY_PROPERTY}, {@link
      * #PROPFIND_PROPERTY_NAMES}, {@link #PROPFIND_ALL_PROP_INCLUDE}
      */
-    public MultiStatusResponse(DavResource resource, DavPropertyNameSet propNameSet,
-                               int propFindType) {
+    public MultiStatusResponse(
+            DavResource resource, DavPropertyNameSet propNameSet,
+            int propFindType) {
         this(resource.getHref(), null, TYPE_PROPSTAT);
 
         // only property names requested
         if (propFindType == PROPFIND_PROPERTY_NAMES) {
-            PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, true);
+            PropContainer status200 =
+                getPropContainer(DavServletResponse.SC_OK, true);
             for (DavPropertyName propName : resource.getPropertyNames()) {
                 status200.addContent(propName);
             }
-            // all or a specified set of property and their values requested.
+        // all or a specified set of property and their values requested.
         } else {
-            PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, false);
-            // clone set of property, since several resources could use this again
-            propNameSet = new DavPropertyNameSet(propNameSet);
-            // Add requested properties or all non-protected properties, or 
-            // non-protected properties plus requested properties (allprop/include) 
-            DavPropertyIterator iter = resource.getProperties().iterator();
-            while (iter.hasNext()) {
-                DavProperty<?> property = iter.nextProperty();
-                boolean allDeadPlusRfc4918LiveProperties =
-                    propFindType == PROPFIND_ALL_PROP || propFindType == PROPFIND_ALL_PROP_INCLUDE;
-                boolean wasRequested = propNameSet.remove(property.getName());
-                
-                if ((allDeadPlusRfc4918LiveProperties && !property.isInvisibleInAllprop()) || wasRequested) {
-                    status200.addContent(property);
+            PropContainer status200 =
+                getPropContainer(DavServletResponse.SC_OK, false);
+
+            // Collection of missing property names for 404 responses
+            Set<DavPropertyName> missing =
+                new HashSet<DavPropertyName>(propNameSet.getContent());
+
+            // Add requested properties or all non-protected properties,
+            // or non-protected properties plus requested properties
+            // (allprop/include) 
+            if (propFindType == PROPFIND_BY_PROPERTY) {
+                for (DavPropertyName propName : propNameSet) {
+                    DavProperty<?> prop = resource.getProperty(propName);
+                    if (prop != null) {
+                        status200.addContent(prop);
+                        missing.remove(propName);
+                    }
+                }
+            } else {
+                for (DavProperty<?> property : resource.getProperties()) {
+                    boolean allDeadPlusRfc4918LiveProperties =
+                        propFindType == PROPFIND_ALL_PROP
+                        || propFindType == PROPFIND_ALL_PROP_INCLUDE;
+                    boolean wasRequested = missing.remove(property.getName());
+
+                    if ((allDeadPlusRfc4918LiveProperties
+                            && !property.isInvisibleInAllprop())
+                            || wasRequested) {
+                        status200.addContent(property);
+                    }
                 }
             }
 
-            if (!propNameSet.isEmpty() && propFindType != PROPFIND_ALL_PROP) {
-                PropContainer status404 = getPropContainer(DavServletResponse.SC_NOT_FOUND, true);
-                DavPropertyNameIterator iter1 = propNameSet.iterator();
-                while (iter1.hasNext()) {
-                    DavPropertyName propName = iter1.nextPropertyName();
+            if (!missing.isEmpty() && propFindType != PROPFIND_ALL_PROP) {
+                PropContainer status404 =
+                    getPropContainer(DavServletResponse.SC_NOT_FOUND, true);
+                for (DavPropertyName propName : missing) {
                     status404.addContent(propName);
                 }
             }

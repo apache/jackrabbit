@@ -30,7 +30,8 @@ import java.util.NoSuchElementException;
  * The <code>DavPropertySet</code> class represents a set of WebDAV
  * property.
  */
-public class DavPropertySet extends PropContainer {
+public class DavPropertySet extends PropContainer
+        implements Iterable<DavProperty<?>> {
 
     private static Logger log = LoggerFactory.getLogger(DavPropertySet.class);
 

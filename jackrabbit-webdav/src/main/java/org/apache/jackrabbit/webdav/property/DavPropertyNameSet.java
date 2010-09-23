@@ -31,7 +31,8 @@ import java.util.Set;
  * <code>DavPropertyNameSet</code> represents a Set of {@link DavPropertyName}
  * objects.
  */
-public class DavPropertyNameSet extends PropContainer {
+public class DavPropertyNameSet extends PropContainer
+        implements Iterable<DavPropertyName> {
 
     private static Logger log = LoggerFactory.getLogger(DavPropertyNameSet.class);
     private final Set<DavPropertyName> set = new HashSet<DavPropertyName>();
@@ -157,7 +158,7 @@ public class DavPropertyNameSet extends PropContainer {
      * @see PropContainer#getContent()
      */
     @Override
-    public Collection<? extends PropEntry> getContent() {
+    public Collection<DavPropertyName> getContent() {
         return set;
     }
 
