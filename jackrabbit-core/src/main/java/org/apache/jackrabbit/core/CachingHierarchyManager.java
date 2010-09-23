@@ -17,8 +17,11 @@
 package org.apache.jackrabbit.core;
 
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
@@ -306,31 +309,40 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     public void nodeModified(NodeState modified) {
         synchronized (cacheMonitor) {
-            LRUEntry entry = (LRUEntry) idCache.get(modified.getNodeId());
-            if (entry == null) {
-                // Item not cached, ignore
-                return;
-            }
-            for (PathMap.Element<LRUEntry> element : entry.getElements()) {
-                Iterator<PathMap.Element<LRUEntry>> iter = element.getChildren();
-                while (iter.hasNext()) {
-                    PathMap.Element<LRUEntry> child = iter.next();
+            for (PathMap.Element<LRUEntry> element
+                    : getCachedPaths(modified.getNodeId())) {
+                for (PathMap.Element<LRUEntry> child : element.getChildren()) {
                     ChildNodeEntry cne = modified.getChildNodeEntry(
                             child.getName(), child.getNormalizedIndex());
                     if (cne == null) {
                         // Item does not exist, remove
                         evict(child, true);
-                        continue;
-                    }
-
-                    LRUEntry childEntry = child.get();
-                    if (childEntry != null && !cne.getId().equals(childEntry.getId())) {
-                        // Different child item, remove
-                        evict(child, true);
+                    } else {
+                        LRUEntry childEntry = child.get();
+                        if (childEntry != null
+                                && !cne.getId().equals(childEntry.getId())) {
+                            // Different child item, remove
+                            evict(child, true);
+                        }
                     }
                 }
             }
             checkConsistency();
+        }
+    }
+
+    private List<PathMap.Element<LRUEntry>> getCachedPaths(NodeId id) {
+        // JCR-2720: Handle the root path as a special case
+        if (rootNodeId.equals(id)) {
+            return Collections.singletonList(pathCache.map(
+                    PathFactoryImpl.getInstance().getRootPath(), true));
+        }
+
+        LRUEntry entry = (LRUEntry) idCache.get(id);
+        if (entry != null) {
+            return Arrays.asList(entry.getElements());
+        } else {
+            return Collections.emptyList();
         }
     }
 
@@ -400,39 +412,33 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                     new HashMap<Path.Element, PathMap.Element<LRUEntry>>();
                 boolean orderChanged = false;
 
-                Iterator<PathMap.Element<LRUEntry>> iter = parent.getChildren();
-                while (iter.hasNext()) {
-                    PathMap.Element<LRUEntry> child = iter.next();
+                for (PathMap.Element<LRUEntry> child : parent.getChildren()) {
                     LRUEntry childEntry = (LRUEntry) child.get();
                     if (childEntry == null) {
-                        /**
-                         * Child has no associated UUID information: we're
-                         * therefore unable to determine if this child's
-                         * position is still accurate and have to assume
-                         * the worst and remove it.
-                         */
+                        // Child has no associated UUID information: we're
+                        // therefore unable to determine if this child's
+                        // position is still accurate and have to assume
+                        // the worst and remove it.
                         evict(child, false);
-                        continue;
-                    }
-                    NodeId childId = childEntry.getId();
-                    ChildNodeEntry cne = state.getChildNodeEntry(childId);
-                    if (cne == null) {
-                        /* Child no longer in parent node state, so remove it */
-                        evict(child, false);
-                        continue;
-                    }
+                    } else {
+                        NodeId childId = childEntry.getId();
+                        ChildNodeEntry cne = state.getChildNodeEntry(childId);
+                        if (cne == null) {
+                            // Child no longer in parent node, so remove it
+                            evict(child, false);
+                        } else {
+                            // Put all children into map of new children order
+                            // - regardless whether their position changed or
+                            // not - as we might need to reorder them later on.
+                            Path.Element newNameIndex =
+                                PathFactoryImpl.getInstance().createElement(
+                                        cne.getName(), cne.getIndex());
+                            newChildrenOrder.put(newNameIndex, child);
 
-                    /**
-                     * Put all children into map of new children order - regardless
-                     * whether their position changed or not - as we might need
-                     * to reorder them later on.
-                     */
-                    Path.Element newNameIndex = PathFactoryImpl.getInstance().createElement(
-                            cne.getName(), cne.getIndex());
-                    newChildrenOrder.put(newNameIndex, child);
-
-                    if (!newNameIndex.equals(child.getPathElement())) {
-                        orderChanged = true;
+                            if (!newNameIndex.equals(child.getPathElement())) {
+                                orderChanged = true;
+                            }
+                        }
                     }
                 }
 
