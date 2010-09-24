@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
+import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.test.JUnitTest;
 
 /**
@@ -28,7 +29,8 @@ public class DefaultISMLockingDeadlockTest extends JUnitTest {
 
     public void test() throws InterruptedException {
         final ISMLocking lock = new DefaultISMLocking();
-        ReadLock r1 = lock.acquireReadLock(null);
+        WriteLock w1 = lock.acquireWriteLock(null);
+        ReadLock r1 = w1.downgrade();
         final InterruptedException[] ex = new InterruptedException[1];
         Thread thread = new Thread() {
             public void run() {
