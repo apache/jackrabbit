@@ -281,8 +281,7 @@ public class SessionImpl extends AbstractSession
         try {
             return new ObservationManagerImpl(
                     context.getRepository().getObservationDispatcher(wspName),
-                    this, context.getItemManager(),
-                    context.getRepositoryContext().getClusterNode());
+                    this, context.getRepositoryContext().getClusterNode());
         } catch (NoSuchWorkspaceException e) {
             // should never get here
             throw new RepositoryException(

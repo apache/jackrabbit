@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
@@ -55,11 +54,6 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
     private final SessionImpl session;
 
     /**
-     * The <code>ItemManager</code> for this <code>ObservationManager</code>.
-     */
-    private final ItemManager itemMgr;
-
-    /**
      * The cluster node where this session is running.
      */
     private final ClusterNode clusterNode;
@@ -92,20 +86,16 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      */
     public ObservationManagerImpl(
             ObservationDispatcher dispatcher, SessionImpl session,
-            ItemManager itemMgr, ClusterNode clusterNode) {
+            ClusterNode clusterNode) {
         if (dispatcher == null) {
             throw new NullPointerException("dispatcher");
         }
         if (session == null) {
             throw new NullPointerException("session");
         }
-        if (itemMgr == null) {
-            throw new NullPointerException("itemMgr");
-        }
-        
+
         this.dispatcher = dispatcher;
         this.session = session;
-        this.itemMgr = itemMgr;
         this.clusterNode = clusterNode;
     }
 
@@ -230,8 +220,8 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
             }
         }
         // create filter
-        return new EventFilter(itemMgr, session, eventTypes, path,
-                isDeep, ids, nodeTypes, noLocal);
+        return new EventFilter(
+                session, eventTypes, path, isDeep, ids, nodeTypes, noLocal);
     }
 
     /**
@@ -267,7 +257,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
         EventFilter filter = createEventFilter(
                 eventTypes, absPath, isDeep, uuid, nodeTypeName, false);
         return new EventJournalImpl(
-                filter, clusterNode.getJournal(), clusterNode.getId());
+                filter, clusterNode.getJournal(), clusterNode.getId(), session);
     }
 
     /**

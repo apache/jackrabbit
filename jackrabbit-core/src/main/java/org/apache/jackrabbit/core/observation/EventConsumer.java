@@ -219,6 +219,10 @@ class EventConsumer {
     void consumeEvents(EventStateCollection events) throws RepositoryException {
         // Set of ItemIds of denied ItemStates
         Set<ItemId> denied = accessDenied.remove(events);
+        if (denied == null) {
+            denied = new HashSet<ItemId>();
+        }
+
         // check permissions
         for (Iterator<EventState> it = events.iterator(); it.hasNext() && session.isLive();) {
             EventState state = it.next();
@@ -227,9 +231,6 @@ class EventConsumer {
                     || state.getType() == Event.PROPERTY_CHANGED) {
                 ItemId targetId = state.getTargetId();
                 if (!canRead(state)) {
-                    if (denied == null) {
-                        denied = new HashSet<ItemId>();
-                    }
                     denied.add(targetId);
                 }
             }
@@ -239,8 +240,9 @@ class EventConsumer {
             return;
         }
         // check if filtered iterator has at least one event
-        EventIterator it = new FilteredEventIterator(events.iterator(),
-                events.getTimestamp(), events.getUserData(), filter, denied);
+        EventIterator it = new FilteredEventIterator(
+                session, events.iterator(), events.getTimestamp(),
+                events.getUserData(), filter, denied);
         if (it.hasNext()) {
             long time = System.currentTimeMillis();
             listener.onEvent(it);
