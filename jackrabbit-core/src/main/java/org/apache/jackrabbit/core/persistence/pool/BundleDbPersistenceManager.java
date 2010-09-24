@@ -580,7 +580,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * @return a new {@link CheckSchemaOperation} instance
      */
     protected CheckSchemaOperation createCheckSchemaOperation() {
-        InputStream in = BundleDbPersistenceManager.class.getResourceAsStream(databaseType + ".ddl");
+        InputStream in =
+            org.apache.jackrabbit.core.persistence.bundle.BundleDbPersistenceManager.class.getResourceAsStream(
+                    databaseType + ".ddl");
         return new CheckSchemaOperation(conHelper, in, schemaObjectPrefix + "BUNDLE").addVariableReplacement(
             CheckSchemaOperation.SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
     }
