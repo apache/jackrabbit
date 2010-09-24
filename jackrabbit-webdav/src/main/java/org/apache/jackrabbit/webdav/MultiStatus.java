@@ -34,7 +34,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
 
     /**
      * Map collecting the responses for this multistatus, where every href must
-     * only occure one single time.
+     * only occur one single time.
      */
     private Map<String, MultiStatusResponse> responses = new LinkedHashMap<String, MultiStatusResponse>();
 
@@ -105,20 +105,26 @@ public class MultiStatus implements DavConstants, XmlSerializable {
 
     /**
      * Add a <code>MultiStatusResponse</code> element to this <code>MultiStatus</code>
+     * <p>
+     * This method is synchronized to avoid the problem described in
+     * <a href="https://issues.apache.org/jira/browse/JCR-2755">JCR-2755</a>.
      *
      * @param response
      */
-    public void addResponse(MultiStatusResponse response) {
+    public synchronized void addResponse(MultiStatusResponse response) {
         responses.put(response.getHref(), response);
     }
 
     /**
      * Returns the multistatus responses present as array.
+     * <p>
+     * This method is synchronized to avoid the problem described in
+     * <a href="https://issues.apache.org/jira/browse/JCR-2755">JCR-2755</a>.
      *
      * @return array of all {@link MultiStatusResponse responses} present in this
      * multistatus.
      */
-    public MultiStatusResponse[] getResponses() {
+    public synchronized MultiStatusResponse[] getResponses() {
         return responses.values().toArray(new MultiStatusResponse[responses.size()]);
     }
 
