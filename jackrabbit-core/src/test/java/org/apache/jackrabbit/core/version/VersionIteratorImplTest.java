@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -37,8 +39,8 @@ public class VersionIteratorImplTest extends TestCase {
             this.id = id;
         }
 
-        public InternalVersion[] getSuccessors() {
-            return successors;
+        public List<InternalVersion> getSuccessors() {
+            return Arrays.asList(successors);
         }
 
         public NodeId getId() {
