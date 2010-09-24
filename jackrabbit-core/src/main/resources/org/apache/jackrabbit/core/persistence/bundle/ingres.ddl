@@ -19,4 +19,4 @@ create unique index ${schemaObjectPrefix}REFS_IDX on ${schemaObjectPrefix}REFS (
 create table ${schemaObjectPrefix}BINVAL (BINVAL_ID varchar(64), BINVAL_DATA long byte not null)
 create unique index ${schemaObjectPrefix}BINVAL_IDX on ${schemaObjectPrefix}BINVAL (BINVAL_ID)
 create sequence ${schemaObjectPrefix}seq_names_id
-create table ${schemaObjectPrefix}NAMES (ID INTEGER PRIMARY KEY WITH DEFAULT NEXT VALUE FOR ${schemaObjectPrefix}seq_names_id, NAME varchar(255) not null)
+create table ${schemaObjectPrefix}NAMES (ID INTEGER PRIMARY KEY WITH DEFAULT NEXT VALUE FOR ${schemaObjectPrefix}seq_names_id, NAME nvarchar(255) not null)
