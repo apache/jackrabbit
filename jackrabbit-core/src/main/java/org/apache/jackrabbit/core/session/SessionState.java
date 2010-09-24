@@ -22,6 +22,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.core.WorkspaceManager;
+import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,6 +163,7 @@ public class SessionState {
             lock.lock();
         }
 
+        boolean isOutermostWriteOperation = false;
         try {
             // Check that the session is still alive
             checkAlive();
@@ -171,7 +174,9 @@ public class SessionState {
             if (!wasWriteOperation
                     && operation instanceof SessionWriteOperation) {
                 isWriteOperation = true;
+                isOutermostWriteOperation = true;
             }
+
             try {
                 // Perform the actual operation, optionally with debug logs
                 if (log.isDebugEnabled()) {
@@ -190,7 +195,6 @@ public class SessionState {
                         }
                     }
                 } else {
-                    context.delayIfNecessary();
                     return operation.perform(context);
                 }
             } finally {
@@ -198,6 +202,18 @@ public class SessionState {
             }
         } finally {
             lock.unlock();
+
+            // Delay return from a write operation if the observation queue
+            // is being overloaded. This needs to be done after releasing
+            // the (outermost) write locks to prevent potential deadlocks.
+            // See https://issues.apache.org/jira/browse/JCR-2746
+            if (isOutermostWriteOperation) {
+                WorkspaceManager manager =
+                    context.getRepositoryContext().getWorkspaceManager();
+                ObservationDispatcher dispatcher =
+                    manager.getObservationDispatcher(context.getWorkspace().getName());
+                dispatcher.delayIfEventQueueOverloaded();
+            }
         }
     }
 
