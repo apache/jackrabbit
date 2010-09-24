@@ -45,8 +45,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  */
 public class ShareableNodeTest extends AbstractJCRTest {
 
-    private String mixShareable;
-
     protected void setUp() throws Exception {
         super.setUp();
         try {
@@ -56,7 +54,6 @@ public class ShareableNodeTest extends AbstractJCRTest {
             cleanUp();
             throw e;
         }
-        mixShareable = superuser.getNamespacePrefix(NS_MIX_URI) + ":shareable";
     }
 
     protected void tearDown() throws Exception {
