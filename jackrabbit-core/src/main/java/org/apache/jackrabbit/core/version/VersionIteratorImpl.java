@@ -26,7 +26,6 @@ import javax.jcr.version.VersionIterator;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
-import java.util.Arrays;
 
 /**
  * This Class implements a VersionIterator that iterates over a version
@@ -170,8 +169,7 @@ class VersionIteratorImpl implements VersionIterator {
             NodeId id = currentVersion.getId();
             if (!versions.contains(id)) {
                 versions.add(id);
-                InternalVersion[] successors = currentVersion.getSuccessors();
-                workQueue.addAll(Arrays.asList(successors));
+                workQueue.addAll(currentVersion.getSuccessors());
             }
         }
 

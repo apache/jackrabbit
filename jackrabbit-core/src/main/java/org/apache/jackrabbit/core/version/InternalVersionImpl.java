@@ -22,11 +22,14 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
@@ -36,6 +39,10 @@ import java.util.ArrayList;
  */
 class InternalVersionImpl extends InternalVersionItemImpl
         implements InternalVersion {
+
+    /** Logger instance */
+    private static final Logger log =
+        LoggerFactory.getLogger(InternalVersionImpl.class);
 
     /**
      * the date when this version was created
@@ -138,18 +145,27 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public InternalVersion[] getSuccessors() {
+    public List<InternalVersion> getSuccessors() {
         ReadLock lock = vMgr.acquireReadLock();
         try {
-            InternalValue[] values = node.getPropertyValues(NameConstants.JCR_SUCCESSORS);
+            InternalValue[] values =
+                node.getPropertyValues(NameConstants.JCR_SUCCESSORS);
             if (values != null) {
-                InternalVersion[] versions = new InternalVersion[values.length];
-                for (int i = 0; i < values.length; i++) {
-                    versions[i] = versionHistory.getVersion(values[i].getNodeId());
+                List<InternalVersion> versions =
+                    new ArrayList<InternalVersion>(values.length);
+                for (InternalValue value : values) {
+                    InternalVersion version =
+                        versionHistory.getVersion(value.getNodeId());
+                    if (version != null) {
+                        versions.add(version);
+                    } else {
+                        // Can happen with a corrupted repository (JCR-2655)
+                        log.warn("Missing successor {}", value.getNodeId());
+                    }
                 }
                 return versions;
             } else {
-                return new InternalVersion[0];
+                return Collections.emptyList();
             }
         } finally {
             lock.release();
@@ -275,8 +291,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     void internalDetach() throws RepositoryException {
         // detach this from all successors
-        InternalVersion[] succ = getSuccessors();
-        for (InternalVersion aSucc : succ) {
+        for (InternalVersion aSucc :  getSuccessors()) {
             ((InternalVersionImpl) aSucc).internalDetachPredecessor(this, true);
         }
 
@@ -312,7 +327,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     private void internalAddSuccessor(InternalVersionImpl succ, boolean store)
             throws RepositoryException {
-        List<InternalVersion> l = new ArrayList<InternalVersion>(Arrays.asList(getSuccessors()));
+        List<InternalVersion> l = new ArrayList<InternalVersion>(getSuccessors());
         if (!l.contains(succ)) {
             l.add(succ);
             storeXCessors(l, NameConstants.JCR_SUCCESSORS, store);
@@ -353,11 +368,11 @@ class InternalVersionImpl extends InternalVersionItemImpl
     private void internalDetachSuccessor(InternalVersionImpl v, boolean store)
             throws RepositoryException {
         // remove 'v' from successors list
-        List<InternalVersion> l = new ArrayList<InternalVersion>(Arrays.asList(getSuccessors()));
+        List<InternalVersion> l = new ArrayList<InternalVersion>(getSuccessors());
         l.remove(v);
 
         // attach V's successors
-        l.addAll(Arrays.asList(v.getSuccessors()));
+        l.addAll(v.getSuccessors());
         storeXCessors(l, NameConstants.JCR_SUCCESSORS, store);
     }
 
