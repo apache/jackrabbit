@@ -1238,14 +1238,4 @@ public class SessionImpl extends AbstractSession
         }
     }
 
-    /**
-     * Delay the next operation, except if it is run using the given thread.
-     *
-     * @param exceptInThread the thread that shouldn't be delayed
-     * @param ms the delay in milliseconds
-     */
-    public void delayNextOperation(Thread exceptInThread, long ms) {
-        context.delayNextOperation(exceptInThread, ms);
-    }
-
 }

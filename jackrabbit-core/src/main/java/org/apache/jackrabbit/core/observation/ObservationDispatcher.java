@@ -218,8 +218,21 @@ public final class ObservationDispatcher extends EventDispatcher
             }
         }
         eventQueue.add(new DispatchAction(events, getAsynchronousConsumers()));
-        int size = eventQueueSize.addAndGet(events.size());
-        if (size > MAX_QUEUED_EVENTS) {
+        eventQueueSize.addAndGet(events.size());
+    }
+
+    /**
+     * Checks if the observation event queue contains more than the
+     * configured {@link #MAX_QUEUED_EVENTS maximum number of events},
+     * and delays the current thread in such cases. No delay is added
+     * if the current thread is the observation thread, for example if
+     * an observation listener writes to the repository.
+     * <p>
+     * This method should only be called outside the scope of internal
+     * repository access locks.
+     */
+    public void delayIfEventQueueOverloaded() {
+        if (eventQueueSize.get() > MAX_QUEUED_EVENTS) {
             boolean logWarning = false;
             long now = System.currentTimeMillis();
             // log a warning at most every 5 seconds (to avoid filling the log file)
@@ -236,11 +249,10 @@ public final class ObservationDispatcher extends EventDispatcher
                 if (logWarning) {
                     log.warn("Waiting");
                 }
-                if (eventQueueSize.get() > MAX_QUEUED_EVENTS) {
-                    // slow down the current session
-                    // but not here, because locks are held
-                    // (that may block an observation listener, which is not what we want)
-                    events.getSession().delayNextOperation(notificationThread, 100);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted while rate-limiting writes", e);
                 }
             }
         }
