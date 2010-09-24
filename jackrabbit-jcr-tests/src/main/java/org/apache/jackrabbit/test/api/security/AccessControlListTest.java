@@ -485,6 +485,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         checkCanModifyAc(path);
 
         AccessControlList list = getList(acMgr, path);
+        list.addAccessControlEntry(testPrincipal, privs);
         AccessControlEntry[] entries = list.getAccessControlEntries();
         if (entries.length > 0) {
             assertFalse("Adding an existing entry again must not modify the AC-List",
