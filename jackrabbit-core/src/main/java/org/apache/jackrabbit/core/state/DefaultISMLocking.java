@@ -87,8 +87,9 @@ public class DefaultISMLocking implements ISMLocking {
      */
     public synchronized ReadLock acquireReadLock(ItemId id)
             throws InterruptedException {
-        while (writerCount > 0
-                ? !isSameId(writerId, getCurrentId()) : writersWaiting > 0) {
+        while (writerId != null
+                ? (writerCount > 0 && !isSameId(writerId, getCurrentId()))
+                : writersWaiting > 0) {
             wait();
         }
 
