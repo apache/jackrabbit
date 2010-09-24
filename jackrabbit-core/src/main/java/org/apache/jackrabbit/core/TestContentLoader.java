@@ -35,6 +35,7 @@ import javax.jcr.retention.RetentionPolicy;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
 
 /**
@@ -168,6 +169,11 @@ public class TestContentLoader {
                 factory.createValue(resource),
                 factory.createValue(resReference)
             });
+
+        // NodeDefTest requires a test node with a mandatory child node
+        JcrUtils.putFile(
+                node, "testFile", "text/plain",
+                new ByteArrayInputStream("Hello, World!".getBytes("UTF-8")));
     }
 
     /**
