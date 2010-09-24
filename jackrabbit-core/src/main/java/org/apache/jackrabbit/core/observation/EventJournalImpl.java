@@ -31,6 +31,8 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
 import javax.jcr.observation.EventJournal;
+
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.RecordIterator;
 import org.apache.jackrabbit.core.journal.JournalException;
@@ -90,9 +92,9 @@ public class EventJournalImpl implements EventJournal {
     private final String producerId;
 
     /**
-     * The name of the workspace to filter journal records.
+     * Target session.
      */
-    private final String wspName;
+    private final SessionImpl session;
 
     /**
      * Buffer of {@link EventBundle}s.
@@ -110,14 +112,15 @@ public class EventJournalImpl implements EventJournal {
      * @param filter for filtering the events read from the journal.
      * @param journal the cluster journal.
      * @param producerId the producer id of the cluster node.
+     * @param session target session
      */
-    public EventJournalImpl(EventFilter filter,
-                            Journal journal,
-                            String producerId) {
+    public EventJournalImpl(
+            EventFilter filter, Journal journal,
+            String producerId, SessionImpl session) {
         this.filter = filter;
         this.journal = journal;
         this.producerId = producerId;
-        this.wspName = filter.getSession().getWorkspace().getName();
+        this.session = session;
     }
 
     //------------------------< EventJournal >---------------------------------
@@ -269,8 +272,8 @@ public class EventJournalImpl implements EventJournal {
         public void process(ChangeLogRecord record) {
             List<EventState> events = record.getEvents();
             if (!events.isEmpty()) {
-                EventBundle bundle = new EventBundle(events,
-                        record.getTimestamp(), record.getUserData(), filter);
+                EventBundle bundle = new EventBundle(
+                        events, record.getTimestamp(), record.getUserData());
                 if (bundle.events.hasNext()) {
                     // only queue bundle if there is an event
                     eventBundleBuffer.add(bundle);
@@ -336,7 +339,7 @@ public class EventJournalImpl implements EventJournal {
                     Record record = records.nextRecord();
                     if (record.getProducerId().equals(producerId)) {
                         ClusterRecord cr = deserializer.deserialize(record);
-                        if (!wspName.equals(cr.getWorkspace())) {
+                        if (!session.getWorkspace().getName().equals(cr.getWorkspace())) {
                             continue;
                         }
                         cr.process(processor);
@@ -383,7 +386,7 @@ public class EventJournalImpl implements EventJournal {
     /**
      * Simple class to associate an {@link EventState} iterator with a timestamp.
      */
-    private static final class EventBundle {
+    private final class EventBundle {
 
         /**
          * An iterator of {@link Event}s.
@@ -403,12 +406,11 @@ public class EventJournalImpl implements EventJournal {
          * @param userData the user data associated with this event.
          * @param filter the event filter.
          */
-        private EventBundle(List<EventState> eventStates,
-                            long timestamp,
-                            String userData,
-                            EventFilter filter) {
-            this.events = new FilteredEventIterator(eventStates.iterator(),
-                    timestamp, userData, filter, Collections.EMPTY_SET);
+        private EventBundle(
+                List<EventState> eventStates, long timestamp, String userData) {
+            this.events = new FilteredEventIterator(
+                    session, eventStates.iterator(),
+                    timestamp, userData, filter, Collections.emptySet());
             this.timestamp = timestamp;
         }
     }

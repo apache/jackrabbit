@@ -17,18 +17,20 @@
 package org.apache.jackrabbit.core.observation;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
 
+import org.apache.jackrabbit.commons.iterator.EventIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.FilteredRangeIterator;
+import org.apache.jackrabbit.commons.predicate.Predicate;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  */
-class FilteredEventIterator implements javax.jcr.observation.EventIterator {
+class FilteredEventIterator extends EventIteratorAdapter {
 
     /**
      * Logger instance for this class
@@ -37,34 +39,14 @@ class FilteredEventIterator implements javax.jcr.observation.EventIterator {
             = LoggerFactory.getLogger(FilteredEventIterator.class);
 
     /**
-     * The actual {@link EventState}s fired by the workspace (unfiltered)
+     * Target session
      */
-    private final Iterator actualEvents;
+    private final SessionImpl session;
 
     /**
-     * For filtering the {@link javax.jcr.observation.Event}s.
+     * The timestamp when the events occurred.
      */
-    private final EventFilter filter;
-
-    /**
-     * Set of <code>ItemId</code>s of denied <code>ItemState</code>s.
-     */
-    private final Set denied;
-
-    /**
-     * The next {@link javax.jcr.observation.Event} in this iterator
-     */
-    private Event next;
-
-    /**
-     * Current position
-     */
-    private long pos;
-
-    /**
-     * The timestamp when the events occured.
-     */
-    private long timestamp;
+    private final long timestamp;
 
     /**
      * The user data associated with these events.
@@ -74,111 +56,40 @@ class FilteredEventIterator implements javax.jcr.observation.EventIterator {
     /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
+     * @param session target session
      * @param eventStates an iterator over unfiltered {@link EventState}s.
      * @param timestamp the time when the event were created.
      * @param userData   the user data associated with these events.
      * @param filter only event that pass the filter will be dispatched to the
      *               event listener.
      * @param denied <code>Set</code> of <code>ItemId</code>s of denied <code>ItemState</code>s
-     *               rejected by the <code>AccessManager</code>. If
-     *               <code>null</code> no <code>ItemState</code> is denied.
+     *               rejected by the <code>AccessManager</code>
      */
-    public FilteredEventIterator(Iterator eventStates,
-                                 long timestamp,
-                                 String userData,
-                                 EventFilter filter,
-                                 Set denied) {
-        this.actualEvents = eventStates;
-        this.filter = filter;
-        this.denied = denied;
-        this.timestamp = timestamp;
-        this.userData = userData;
-        fetchNext();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Object next() {
-        if (next == null) {
-            throw new NoSuchElementException();
-        }
-        Event e = next;
-        fetchNext();
-        pos++;
-        return e;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Event nextEvent() {
-        return (Event) next();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void skip(long skipNum) {
-        while (skipNum-- > 0) {
-            next();
-        }
-    }
-
-    /**
-     * Always returns <code>-1</code>.
-     *
-     * @return <code>-1</code>.
-     */
-    public long getSize() {
-        return -1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public long getPosition() {
-        return pos;
-    }
-
-    /**
-     * This method is not supported.
-     * Always throws a <code>UnsupportedOperationException</code>.
-     */
-    public void remove() {
-        throw new UnsupportedOperationException("EventIterator.remove()");
-    }
-
-    /**
-     * Returns <tt>true</tt> if the iteration has more elements. (In other
-     * words, returns <tt>true</tt> if <tt>next</tt> would return an element
-     * rather than throwing an exception.)
-     *
-     * @return <tt>true</tt> if the iterator has more elements.
-     */
-    public boolean hasNext() {
-        return (next != null);
-    }
-
-    /**
-     * Fetches the next Event from the collection of events
-     * passed in the constructor of <code>FilteredEventIterator</code>
-     * that is allowed by the {@link EventFilter}.
-     */
-    private void fetchNext() {
-        EventState state;
-        next = null;
-        while (next == null && actualEvents.hasNext()) {
-            state = (EventState) actualEvents.next();
-            // check denied set
-            if (denied == null || !denied.contains(state.getTargetId())) {
+    public FilteredEventIterator(
+            SessionImpl session, Iterator<?> eventStates,
+            long timestamp, String userData,
+            final EventFilter filter, final Set<?> denied) {
+        super(new FilteredRangeIterator(eventStates, new Predicate() {
+            public boolean evaluate(Object object) {
                 try {
-                    next = filter.blocks(state) ? null : new EventImpl(
-                            filter.getSession(), state, timestamp, userData);
+                    EventState state = (EventState) object;
+                    return !denied.contains(state.getTargetId())
+                        && !filter.blocks(state);
                 } catch (RepositoryException e) {
-                    log.error("Exception while applying filter.", e);
+                    log.error("Exception while applying event filter", e);
+                    return false;
                 }
             }
-        }
+        }));
+        this.session = session;
+        this.timestamp = timestamp;
+        this.userData = userData;
     }
+
+    @Override
+    public Object next() {
+        return new EventImpl(
+                session, (EventState) super.next(), timestamp, userData);
+    }
+
 }

@@ -19,11 +19,9 @@ package org.apache.jackrabbit.core.observation;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
@@ -36,11 +34,6 @@ import javax.jcr.nodetype.NodeType;
 public class EventFilter {
 
     static final EventFilter BLOCK_ALL = new BlockAllFilter();
-
-    /**
-     * The ItemManager of the session
-     */
-    private final ItemManager itemMgr;
 
     /**
      * The session this EventFilter belongs to.
@@ -83,7 +76,6 @@ public class EventFilter {
     /**
      * Creates a new <code>EventFilter</code> instance.
      *
-     * @param itemMgr    the <code>ItemManager</code> of the <code>session</code>.
      * @param session    the <code>Session</code> that registered the {@link
      *                   javax.jcr.observation.EventListener}.
      * @param eventTypes only allow specified {@link javax.jcr.observation.Event} types.
@@ -101,16 +93,13 @@ public class EventFilter {
      *                   created from changes related to the <code>Session</code>
      *                   that registered the {@link javax.jcr.observation.EventListener}.
      */
-    EventFilter(ItemManager itemMgr,
-                SessionImpl session,
+    EventFilter(SessionImpl session,
                 long eventTypes,
                 Path path,
                 boolean isDeep,
                 NodeId[] ids,
                 NodeTypeImpl[] nodeTypes,
                 boolean noLocal) {
-
-        this.itemMgr = itemMgr;
         this.session = session;
         this.eventTypes = eventTypes;
         this.path = path;
@@ -118,29 +107,6 @@ public class EventFilter {
         this.ids = ids;
         this.noLocal = noLocal;
         this.nodeTypes = nodeTypes;
-    }
-
-    /**
-     * Returns the <code>Session</code> associated with this
-     * <code>EventFilter</code>.
-     *
-     * @return the <code>Session</code> associated with this
-     *         <code>EventFilter</code>.
-     */
-    SessionImpl getSession() {
-        return session;
-    }
-
-    /**
-     * TODO: remove this unused method.
-     * Returns the <code>ItemManager</code> associated with this
-     * <code>EventFilter</code>.
-     *
-     * @return the <code>ItemManager</code> associated with this
-     *         <code>EventFilter</code>.
-     */
-    ItemManager getItemManager() {
-        return itemMgr;
     }
 
     /**
@@ -196,18 +162,13 @@ public class EventFilter {
         }
 
         // finally check path
-        try {
-            Path eventPath = eventState.getParentPath();
-            boolean match = eventPath.equals(path);
-            if (!match && isDeep) {
-                match = eventPath.isDescendantOf(path);
-            }
-
-            return !match;
-        } catch (MalformedPathException mpe) {
-            // should never get here...
-            throw new RepositoryException("internal error: failed to check path filter", mpe);
+        Path eventPath = eventState.getParentPath();
+        boolean match = eventPath.equals(path);
+        if (!match && isDeep) {
+            match = eventPath.isDescendantOf(path);
         }
+
+        return !match;
     }
 
     /**
@@ -220,7 +181,7 @@ public class EventFilter {
          * Creates a new <code>BlockAllFilter</code>.
          */
         BlockAllFilter() {
-            super(null, null, 0, null, true, null, null, true);
+            super(null, 0, null, true, null, null, true);
         }
 
         /**
