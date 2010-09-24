@@ -399,7 +399,7 @@ public class MultiIndex {
                 NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
                 count = createIndex(rootState, rootPath, stateMgr, count);
                 executeAndLog(new Commit(getTransactionId()));
-                log.info("Created initial index for {} nodes", count);
+                log.debug("Created initial index for {} nodes", count);
                 releaseMultiReader();
                 scheduleFlushTask();
             } catch (Exception e) {
@@ -565,7 +565,7 @@ public class MultiIndex {
                 try {
                     entry.getKey().release();
                 } catch (IOException ex) {
-                    log.warn("Exception releasing index reader: " + ex);
+                    log.warn("Exception releasing index reader", ex);
                 }
                 entry.getValue().resetListener();
             }
@@ -1023,9 +1023,9 @@ public class MultiIndex {
         synchronized (iq) {
             while (iq.getNumPendingDocuments() > 0 || indexingQueueCommitPending) {
                 try {
-                    log.info("waiting for indexing queue to become empty");
+                    log.debug("waiting for indexing queue to become empty");
                     iq.wait();
-                    log.info("notified");
+                    log.debug("notified");
                 } catch (InterruptedException e) {
                     // interrupted, check again if queue is empty
                 }
@@ -1243,7 +1243,8 @@ public class MultiIndex {
                     if (directoryManager.delete(indexName)) {
                         it.remove();
                     } else {
-                        log.info("Unable to delete obsolete index: " + indexName);
+                        // JCR-2705: We will retry later, so only a debug log
+                        log.debug("Unable to delete obsolete index: {}", indexName);
                     }
                 }
             }
