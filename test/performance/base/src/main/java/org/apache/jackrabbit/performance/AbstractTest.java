@@ -39,6 +39,10 @@ public abstract class AbstractTest {
 
     private volatile boolean running;
 
+    protected static int getScale(int def) {
+        return Integer.getInteger("scale", def);
+    }
+
     /**
      * Prepares this performance benchmark.
      *
