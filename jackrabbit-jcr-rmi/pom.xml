@@ -118,16 +118,8 @@
                 <property>
                   <name>known.issues</name>
                   <value>
-org.apache.jackrabbit.test.api.ShareableNodeTest#testGetName
-org.apache.jackrabbit.test.api.ShareableNodeTest#testGetPath
-org.apache.jackrabbit.test.api.ShareableNodeTest#testIsSame
-org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNode
-org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodes
-org.apache.jackrabbit.test.api.ShareableNodeTest#testGetIndex
-org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
-org.apache.jackrabbit.test.api.ShareableNodeTest#testGetSharedSet
-org.apache.jackrabbit.test.api.ShareableNodeTest#testRestore
-org.apache.jackrabbit.test.api.ShareableNodeTest#testRemoveShare
+org.apache.jackrabbit.test.api.ShareableNodeTest
+org.apache.jackrabbit.test.api.SetValueValueFormatExceptionTest#testNodeNotReferenceable
 
 org.apache.jackrabbit.test.api.LifecycleTest#testFollowLifecycleTransition
 org.apache.jackrabbit.test.api.LifecycleTest#testGetAllowedLifecycleTransitions
