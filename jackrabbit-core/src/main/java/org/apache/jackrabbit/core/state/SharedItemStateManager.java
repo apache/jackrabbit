@@ -257,9 +257,12 @@ public class SharedItemStateManager
         ISMLocking.ReadLock readLock = acquireReadLock(id);
         try {
             // check internal first
-            if (hasNonVirtualItemState(id)) {
-                return getNonVirtualItemState(id);
-            }
+            return getNonVirtualItemState(id);
+        } catch (NoSuchItemStateException e) {
+            // Fall through to virtual state providers. We can afford the
+            // exception-for-control-flow performance hit here, as almost
+            // all performance-critical content is non-virtual. With this
+            // catch we can avoid an extra hasNonVirtualItemState() call.
         } finally {
             readLock.release();
         }
