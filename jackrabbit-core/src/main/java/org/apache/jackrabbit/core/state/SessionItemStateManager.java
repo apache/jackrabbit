@@ -547,7 +547,7 @@ public class SessionItemStateManager
                     }
                 }
                 if (continueWithParent) {
-                    state = (NodeState) getItemState(candidateId);
+                    state = (NodeState) getItemState(parentId);
                     parentId = state.getParentId();
                     continueWithParent = false;
                 } else {
