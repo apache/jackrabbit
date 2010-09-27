@@ -16,13 +16,17 @@
  */
 package org.apache.jackrabbit.performance;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+import javax.jcr.Credentials;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 
@@ -36,6 +40,15 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 public abstract class AbstractPerformanceTest {
 
+    private final int warmup = 10;
+
+    private final int runtime = 50;
+
+    private final Credentials credentials =
+        new SimpleCredentials("admin", "admin".toCharArray());
+
+    private Pattern testPattern;
+
     protected void testPerformance(String name) throws Exception {
         String only = System.getProperty("only", ".*:.*");
         int colon = only.indexOf(':');
@@ -44,12 +57,12 @@ public abstract class AbstractPerformanceTest {
             only = only + ":-1";
         }
 
-        Pattern testPattern = Pattern.compile(only.substring(0, colon));
+        testPattern = Pattern.compile(only.substring(0, colon));
         Pattern namePattern = Pattern.compile(only.substring(colon + 1));
 
         // Create a repository using the Jackrabbit default configuration
         if (namePattern.matcher(name).matches()) {
-            testPerformance(name, getDefaultConfig(), testPattern);
+            testPerformance(name, getDefaultConfig());
         }
 
         // Create repositories for any special configurations included
@@ -65,131 +78,148 @@ public abstract class AbstractPerformanceTest {
                     if (namePattern.matcher(repositoryName).matches()) {
                         testPerformance(
                                 repositoryName,
-                                FileUtils.openInputStream(file),
-                                testPattern);
+                                FileUtils.openInputStream(file));
                     }
                 }
             }
         }
     }
 
-    private void testPerformance(
-            String name, InputStream xml, Pattern testPattern)
+    private void testPerformance(String name, InputStream xml)
             throws Exception {
-        RepositoryImpl repository = createRepository(name, xml);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try {
-            testPerformance(name, repository, testPattern);
+            IOUtils.copy(xml, buffer);
         } finally {
-            repository.shutdown();
+            xml.close();
         }
-    }
+        byte[] conf = buffer.toByteArray();
 
-    private void testPerformance(
-            String name, RepositoryImpl repository, Pattern testPattern) {
-        PerformanceTestSuite suite = new PerformanceTestSuite(
-                repository,
-                new SimpleCredentials("admin", "admin".toCharArray()));
-        runTest(suite, new LoginTest(), name, testPattern);
-        runTest(suite, new LoginLogoutTest(), name, testPattern);
-        runTest(suite, new SetPropertyTest(), name, testPattern);
-        runTest(suite, new SmallFileReadTest(), name, testPattern);
-        runTest(suite, new SmallFileWriteTest(), name, testPattern);
-        runTest(suite, new BigFileReadTest(), name, testPattern);
-        runTest(suite, new BigFileWriteTest(), name, testPattern);
-        runTest(suite, new ConcurrentReadTest(), name, testPattern);
-        runTest(suite, new ConcurrentReadWriteTest(), name, testPattern);
-        runTest(suite, new SimpleSearchTest(), name, testPattern);
-        runTest(suite, new TwoWayJoinTest(), name, testPattern);
-        runTest(suite, new ThreeWayJoinTest(), name, testPattern);
-        runTest(suite, new CreateManyChildNodesTest(), name, testPattern);
-        runTest(suite, new UpdateManyChildNodesTest(), name, testPattern);
-        runTest(suite, new TransientManyChildNodesTest(), name, testPattern);
-        runTest(suite, new CreateUserTest(), name, testPattern);
+        runTest(new LoginTest(), name, conf);
+        runTest(new LoginLogoutTest(), name, conf);
+        runTest(new SetPropertyTest(), name, conf);
+        runTest(new SmallFileReadTest(), name, conf);
+        runTest(new SmallFileWriteTest(), name, conf);
+        runTest(new BigFileReadTest(), name, conf);
+        runTest(new BigFileWriteTest(), name, conf);
+        runTest(new ConcurrentReadTest(), name, conf);
+        runTest(new ConcurrentReadWriteTest(), name, conf);
+        runTest(new SimpleSearchTest(), name, conf);
+        runTest(new TwoWayJoinTest(), name, conf);
+        runTest(new ThreeWayJoinTest(), name, conf);
+        runTest(new CreateManyChildNodesTest(), name, conf);
+        runTest(new UpdateManyChildNodesTest(), name, conf);
+        runTest(new TransientManyChildNodesTest(), name, conf);
+        runTest(new CreateUserTest(), name, conf);
         try {
-            runTest(suite, new AddGroupMembersTest(), name, testPattern);
-            runTest(suite, new GroupMemberLookupTest(), name, testPattern);
-            runTest(suite, new GroupGetMembersTest(), name, testPattern);
+            runTest(new AddGroupMembersTest(), name, conf);
+            runTest(new GroupMemberLookupTest(), name, conf);
+            runTest(new GroupGetMembersTest(), name, conf);
         } catch (NoClassDefFoundError e) {
             // ignore these tests if the required jackrabbit-api
             // extensions are not available
         }
     }
 
-    private void runTest(
-            PerformanceTestSuite suite, AbstractTest test, String name,
-            Pattern testPattern) {
-        if (!testPattern.matcher(test.toString()).matches()) {
-            return;
-        }
+    private void runTest(AbstractTest test, String name, byte[] conf) {
+        if (testPattern.matcher(test.toString()).matches()) {
+            // Create the repository directory
+            File dir = new File(
+                    new File("target", "repository"),
+                    name + "-" + test);
+            dir.mkdirs();
 
-        try {
-            DescriptiveStatistics statistics = suite.runTest(test);
-
-            File report = new File("target", test + ".txt");
-            boolean needsPrefix = !report.exists();
-
-            PrintWriter writer = new PrintWriter(
-                    new FileWriterWithEncoding(report, "UTF-8", true));
             try {
-                if (needsPrefix) {
-                    writer.format(
-                            "# %-34.34s     min     10%%     50%%     90%%     max%n",
-                            test);
+                // Copy the configuration file into the repository directory
+                File xml = new File(dir, "repository.xml");
+                OutputStream output = FileUtils.openOutputStream(xml);
+                try {
+                    output.write(conf, 0, conf.length);
+                } finally {
+                    output.close();
                 }
 
-                writer.format(
-                        "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6.0f%n",
-                        name,
-                        statistics.getMin(),
-                        statistics.getPercentile(10.0),
-                        statistics.getPercentile(50.0),
-                        statistics.getPercentile(90.0),
-                        statistics.getMax());
+                // Create the repository
+                RepositoryImpl repository = createRepository(dir, xml);
+                try {
+                    // Run the test
+                    DescriptiveStatistics statistics = runTest(test, repository);
+                    if (statistics.getN() > 0) {
+                        writeReport(test.toString(), name, statistics);
+                    }
+                } finally {
+                    repository.shutdown();
+                }
+            } catch (Throwable t) {
+                System.out.println(
+                        "Unable to run " + test + ": " + t.getMessage());
             } finally {
-                writer.close();
+                FileUtils.deleteQuietly(dir);
             }
-        } catch (Throwable t) {
-            System.out.println("Unable to run " + test + ": " + t.getMessage());
         }
     }
 
-    /**
-     * Creates a named test repository with the given configuration file.
-     *
-     * @param name name of the repository
-     * @param xml input stream for reading the repository configuration
-     * @throws Exception if the repository could not be created
-     */
-    private RepositoryImpl createRepository(String name, InputStream xml)
+    private DescriptiveStatistics runTest(
+            AbstractTest test, Repository repository)
             throws Exception {
-        File directory = new File(new File("target", "repository"), name);
-        File configuration = new File(directory, "repository.xml");
+        DescriptiveStatistics statistics = new DescriptiveStatistics();
 
-        // Copy the configuration file into the repository directory
+        test.setUp(repository, credentials);
         try {
-            OutputStream output = FileUtils.openOutputStream(configuration);
-            try {
-                IOUtils.copy(xml, output);
-            } finally {
-                output.close();
+            // Run a few iterations to warm up the system
+            long warmupEnd = System.currentTimeMillis() + warmup * 1000;
+            while (System.currentTimeMillis() < warmupEnd) {
+                test.execute();
+            }
+
+            // Run test iterations, and capture the execution times
+            long runtimeEnd = System.currentTimeMillis() + runtime * 1000;
+            while (System.currentTimeMillis() < runtimeEnd) {
+                statistics.addValue(test.execute());
             }
         } finally {
-            xml.close();
+            test.tearDown();
         }
 
-        // Create the repository
-        return createRepository(directory, configuration);
+        return statistics;
+    }
+
+    private void writeReport(
+            String test, String name, DescriptiveStatistics statistics)
+            throws IOException {
+        File report = new File("target", test + ".txt");
+
+        boolean needsPrefix = !report.exists();
+        PrintWriter writer = new PrintWriter(
+                new FileWriterWithEncoding(report, "UTF-8", true));
+        try {
+            if (needsPrefix) {
+                writer.format(
+                        "# %-34.34s     min     10%%     50%%     90%%     max%n",
+                        test);
+            }
+
+            writer.format(
+                    "%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6.0f%n",
+                    name,
+                    statistics.getMin(),
+                    statistics.getPercentile(10.0),
+                    statistics.getPercentile(50.0),
+                    statistics.getPercentile(90.0),
+                    statistics.getMax());
+        } finally {
+            writer.close();
+        }
     }
 
     protected InputStream getDefaultConfig() {
         return RepositoryImpl.class.getResourceAsStream("repository.xml");
     }
 
-    protected RepositoryImpl createRepository(
-            File directory, File configuration)
+    protected RepositoryImpl createRepository(File dir, File xml)
             throws RepositoryException, ConfigurationException {
-        return RepositoryImpl.create(RepositoryConfig.create(
-                configuration.getPath(), directory.getPath()));
+        return RepositoryImpl.create(
+                RepositoryConfig.create(xml.getPath(), dir.getPath()));
     }
 
 }
