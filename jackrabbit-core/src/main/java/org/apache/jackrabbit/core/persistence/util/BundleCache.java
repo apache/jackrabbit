@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import org.apache.commons.collections.map.LinkedMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -54,15 +56,29 @@ public class BundleCache {
     /**
      * a map of the cache entries
      */
-    private LinkedMap bundles = new LinkedMap();
+    private final LinkedHashMap<NodeId, NodePropBundle> bundles;
 
     /**
      * Creates a new BundleCache
      *
      * @param maxSize the maximum size of this cache in bytes.
      */
+    @SuppressWarnings("serial")
     public BundleCache(long maxSize) {
         this.maxSize = maxSize;
+        this.bundles = new LinkedHashMap<NodeId, NodePropBundle>(
+                (int) maxSize / 1024, 0.75f, true /* access-ordered */) {
+            @Override
+            protected boolean removeEldestEntry(
+                    Map.Entry<NodeId, NodePropBundle> e) {
+                if (curSize > BundleCache.this.maxSize) {
+                    curSize -= e.getValue().getSize();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
     }
 
     /**
@@ -90,11 +106,9 @@ public class BundleCache {
      * @param id the id of the bundle
      * @return the cached bundle or <code>null</code>
      */
-    public NodePropBundle get(NodeId id) {
-        Entry entry = (Entry) bundles.remove(id);
-        if (entry != null) {
-            // at end
-            bundles.put(id, entry);
+    public synchronized NodePropBundle get(NodeId id) {
+        NodePropBundle bundle = bundles.get(id);
+        if (bundle != null) {
             hits++;
         } else {
             misses++;
@@ -106,32 +120,21 @@ public class BundleCache {
             log.info("num=" + bundles.size() + " mem=" + c + "k max=" + m + "k avg=" + a
                     + " hits=" + hits + " miss=" + misses);
         }
-        return entry == null ? null : entry.bundle;
+        return bundle;
     }
 
     /**
-     * Puts a bunlde to the cache. If the new size of the cache exceeds the
-     * {@link #getMaxSize() max size} of the cache it will remove bundles from
-     * this cache until the limit is satisfied.
+     * Puts a bundle to the cache.
      *
      * @param bundle the bunlde to put to the cache
      */
-    public void put(NodePropBundle bundle) {
-        Entry entry = (Entry) bundles.remove(bundle.getId());
-        if (entry == null) {
-            entry = new Entry(bundle, bundle.getSize());
-        } else {
-            curSize -= entry.size;
-            entry.bundle = bundle;
-            entry.size = bundle.getSize();
+    public synchronized void put(NodePropBundle bundle) {
+        NodePropBundle previous = bundles.get(bundle.getId());
+        if (previous != null) {
+            curSize -= previous.getSize();
         }
-        bundles.put(bundle.getId(), entry);
-        curSize += entry.size;
-        // now limit size of cache
-        while (curSize > maxSize) {
-            entry = (Entry) bundles.remove(0);
-            curSize -= entry.size;
-        }
+        bundles.put(bundle.getId(), bundle);
+        curSize += bundle.getSize();
     }
 
     /**
@@ -141,7 +144,7 @@ public class BundleCache {
      * @return <code>true</code> if the bundle is cached;
      *         <code>false</code> otherwise.
      */
-    public boolean contains(NodeId id) {
+    public synchronized boolean contains(NodeId id) {
         return bundles.containsKey(id);
     }
 
@@ -152,51 +155,22 @@ public class BundleCache {
      * @return the previously cached bunlde or <code>null</code> of the bundle
      *         was not cached.
      */
-    public NodePropBundle remove(NodeId id) {
-        Entry entry = (Entry) bundles.remove(id);
-        if (entry != null) {
-            curSize -= entry.size;
-            return entry.bundle;
-        } else {
-            return null;
+    public synchronized NodePropBundle remove(NodeId id) {
+        NodePropBundle bundle = bundles.remove(id);
+        if (bundle != null) {
+            curSize -= bundle.getSize();
         }
+        return bundle;
     }
 
     /**
      * Clears this cache and removes all bundles.
      */
-    public void clear() {
+    public synchronized void clear() {
         bundles.clear();
         curSize = 0;
         hits = 0;
         misses = 0;
-    }
-
-    /**
-     * Internal class that holds the bundles.
-     */
-    private static final class Entry {
-
-        /**
-         * the cached bundle
-         */
-        private NodePropBundle bundle;
-
-        /**
-         * the memory usage of the bundle in bytes
-         */
-        private long size;
-
-        /**
-         * Creates a new entry.
-         *
-         * @param bundle the bundle to cache
-         * @param size the size of the bundle
-         */
-        public Entry(NodePropBundle bundle, long size) {
-            this.bundle = bundle;
-            this.size = size;
-        }
     }
 
 }
