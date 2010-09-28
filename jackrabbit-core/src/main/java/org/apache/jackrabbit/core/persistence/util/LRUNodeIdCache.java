@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import org.apache.commons.collections.map.LinkedMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -34,7 +36,7 @@ public class LRUNodeIdCache {
     /**
      * The maximum number of ids to cache
      */
-    private long maxSize = 10240;
+    private static final int maxSize = 10240;
 
     /**
      * the number of cache hits
@@ -49,7 +51,14 @@ public class LRUNodeIdCache {
     /**
      * the map of cached ids
      */
-    private final LinkedMap missing = new LinkedMap();
+    @SuppressWarnings("serial")
+    private final LinkedHashMap<NodeId, NodeId> missing =
+        new LinkedHashMap<NodeId, NodeId>(maxSize * 2, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<NodeId, NodeId> e) {
+                return size() > maxSize;
+            }
+        };
 
     /**
      * Checks if the given id is contained in this cached.
@@ -58,31 +67,25 @@ public class LRUNodeIdCache {
      * @return <code>true</code> if the id is cached;
      *         <code>false</code> otherwise.
      */
-    public boolean contains(NodeId id) {
-        Object o = missing.remove(id);
-        if (o == null) {
-            misses++;
-        } else {
-            missing.put(id, id);
+    public synchronized boolean contains(NodeId id) {
+        boolean rv = missing.get(id) != null;
+        if (rv) {
             hits++;
+        } else {
+            misses++;
         }
         if (log.isInfoEnabled() && (hits + misses) % 10000 == 0) {
             log.info("num=" + missing.size() + "/" + maxSize + " hits=" + hits + " miss=" + misses);
         }
-        return o != null;
+        return rv;
     }
 
     /**
      * Puts the given id to this cache.
      * @param id the id to put.
      */
-    public void put(NodeId id) {
-        if (!missing.containsKey(id)) {
-            if (missing.size() == maxSize) {
-                missing.remove(0);
-            }
-            missing.put(id, id);
-        }
+    public synchronized void put(NodeId id) {
+        missing.put(id, id);
     }
 
     /**
@@ -91,14 +94,14 @@ public class LRUNodeIdCache {
      * @return <code>true</code> if the id was cached;
      *         <code>false</code> otherwise.
      */
-    public boolean remove(NodeId id) {
+    public synchronized boolean remove(NodeId id) {
         return missing.remove(id) != null;
     }
 
     /**
      * Clears this cache.
      */
-    public void clear() {
+    public synchronized void clear() {
         missing.clear();
     }
 
