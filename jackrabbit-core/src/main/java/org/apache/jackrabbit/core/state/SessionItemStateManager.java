@@ -20,8 +20,10 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -36,11 +38,8 @@ import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,23 +64,20 @@ public class SessionItemStateManager
     /**
      * map of those states that have been removed transiently
      */
-    private final ItemStateStore atticStore;
+    private final Map<ItemId, ItemState> atticStore =
+        new HashMap<ItemId, ItemState>();
 
     /**
      * map of new or modified transient states
      */
-    private final ItemStateStore transientStore;
+    private final Map<ItemId, ItemState> transientStore =
+        new HashMap<ItemId, ItemState>();
 
     /**
      * ItemStateManager view of the states in the attic; lazily instantiated
      * in {@link #getAttic()}
      */
     private AtticItemStateManager attic;
-
-    /**
-     * Node Type Registry
-     */
-    private final NodeTypeRegistry ntReg;
 
     /**
      * State change dispatcher.
@@ -93,21 +89,14 @@ public class SessionItemStateManager
      *
      * @param rootNodeId the root node id
      * @param stateMgr the local item state manager
-     * @param ntReg node type registry
      */
-    public SessionItemStateManager(NodeId rootNodeId,
-                                   LocalItemStateManager stateMgr,
-                                   NodeTypeRegistry ntReg) {
-        transientStore = new ItemStateMap();
-        atticStore = new ItemStateMap();
-
+    public SessionItemStateManager(
+            NodeId rootNodeId, LocalItemStateManager stateMgr) {
         this.stateMgr = stateMgr;
 
         // create hierarchy manager that uses both transient and persistent state
         hierMgr = new CachingHierarchyManager(rootNodeId, this);
         addListener(hierMgr);
-
-        this.ntReg = ntReg;
     }
 
     /**
@@ -163,7 +152,7 @@ public class SessionItemStateManager
             throws NoSuchItemStateException, ItemStateException {
 
         // first check if the specified item has been transiently removed
-        if (atticStore.contains(id)) {
+        if (atticStore.containsKey(id)) {
             /**
              * check if there's new transient state for the specified item
              * (e.g. if a property with name 'x' has been removed and a new
@@ -175,7 +164,7 @@ public class SessionItemStateManager
         }
 
         // check if there's transient state for the specified item
-        if (transientStore.contains(id)) {
+        if (transientStore.containsKey(id)) {
             return getTransientItemState(id);
         }
 
@@ -187,16 +176,16 @@ public class SessionItemStateManager
      */
     public boolean hasItemState(ItemId id) {
         // first check if the specified item has been transiently removed
-        if (atticStore.contains(id)) {
+        if (atticStore.containsKey(id)) {
             /**
              * check if there's new transient state for the specified item
              * (e.g. if a property with name 'x' has been removed and a new
              * property with same name has been created);
              */
-            return transientStore.contains(id);
+            return transientStore.containsKey(id);
         }
         // check if there's transient state for the specified item
-        if (transientStore.contains(id)) {
+        if (transientStore.containsKey(id)) {
             return true;
         }
         // check if there's persistent state for the specified item
@@ -346,7 +335,7 @@ public class SessionItemStateManager
      * @return
      */
     public boolean hasTransientItemState(ItemId id) {
-        return transientStore.contains(id);
+        return transientStore.containsKey(id);
     }
 
     /**
@@ -355,7 +344,7 @@ public class SessionItemStateManager
      * @return
      */
     public boolean hasTransientItemStateInAttic(ItemId id) {
-        return atticStore.contains(id);
+        return atticStore.containsKey(id);
     }
 
     /**
@@ -429,8 +418,8 @@ public class SessionItemStateManager
      * @throws RepositoryException if the descendants could not be accessed
      */
     private List<ItemState> getDescendantItemStates(
-            ItemId id, ItemStateStore store, HierarchyManager hierarchyManager)
-            throws RepositoryException {
+            ItemId id, Map<ItemId, ItemState> store,
+            HierarchyManager hierarchyManager) throws RepositoryException {
         if (id.denotesNode() && !store.isEmpty()) {
             // Group the descendants by reverse relative depth
             SortedMap<Integer, Collection<ItemState>> statesByReverseDepth =
@@ -476,7 +465,7 @@ public class SessionItemStateManager
         }
 
         // short cut
-        if (transientStore.contains(hierMgr.getRootNodeId())) {
+        if (transientStore.containsKey(hierMgr.getRootNodeId())) {
             return hierMgr.getRootNodeId();
         }
 
@@ -569,7 +558,7 @@ public class SessionItemStateManager
      *         <code>false</code> otherwise
      */
     public boolean isItemStateInAttic(ItemId id) {
-        return atticStore.contains(id);
+        return atticStore.containsKey(id);
     }
 
     //------< methods for creating & discarding transient ItemState instances >
@@ -587,7 +576,7 @@ public class SessionItemStateManager
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
-            if (transientStore.contains(id)) {
+            if (transientStore.containsKey(id)) {
                 String msg = "there's already a node state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -596,7 +585,7 @@ public class SessionItemStateManager
             NodeState state = new NodeState(id, nodeTypeName, parentId,
                     initialStatus, true);
             // put transient state in the map
-            transientStore.put(state);
+            transientStore.put(state.getId(), state);
             state.setContainer(this);
             return state;
         }
@@ -615,7 +604,7 @@ public class SessionItemStateManager
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
-            if (transientStore.contains(id)) {
+            if (transientStore.containsKey(id)) {
                 String msg = "there's already a node state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -623,7 +612,7 @@ public class SessionItemStateManager
 
             NodeState state = new NodeState(overlayedState, initialStatus, true);
             // put transient state in the map
-            transientStore.put(state);
+            transientStore.put(id, state);
             state.setContainer(this);
             return state;
         }
@@ -643,7 +632,7 @@ public class SessionItemStateManager
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
-            if (transientStore.contains(id)) {
+            if (transientStore.containsKey(id)) {
                 String msg = "there's already a property state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -651,7 +640,7 @@ public class SessionItemStateManager
 
             PropertyState state = new PropertyState(id, initialStatus, true);
             // put transient state in the map
-            transientStore.put(state);
+            transientStore.put(id, state);
             state.setContainer(this);
             return state;
         }
@@ -670,7 +659,7 @@ public class SessionItemStateManager
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
-            if (transientStore.contains(id)) {
+            if (transientStore.containsKey(id)) {
                 String msg = "there's already a property state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -678,7 +667,7 @@ public class SessionItemStateManager
 
             PropertyState state = new PropertyState(overlayedState, initialStatus, true);
             // put transient state in the map
-            transientStore.put(state);
+            transientStore.put(id, state);
             state.setContainer(this);
             return state;
         }
@@ -724,7 +713,7 @@ public class SessionItemStateManager
         // remove from map
         transientStore.remove(state.getId());
         // add to attic
-        atticStore.put(state);
+        atticStore.put(state.getId(), state);
     }
 
     /**
@@ -896,7 +885,8 @@ public class SessionItemStateManager
      * or if the local state is not overlayed.
      */
     public void nodeAdded(NodeState state, Name name, int index, NodeId id) {
-        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+        if (state.getContainer() == this
+                || !transientStore.containsKey(state.getId())) {
             dispatcher.notifyNodeAdded(state, name, index, id);
         }
     }
@@ -908,7 +898,8 @@ public class SessionItemStateManager
      * or if the local state is not overlayed.
      */
     public void nodesReplaced(NodeState state) {
-        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+        if (state.getContainer() == this
+                || !transientStore.containsKey(state.getId())) {
             dispatcher.notifyNodesReplaced(state);
         }
     }
@@ -920,7 +911,8 @@ public class SessionItemStateManager
      * or if the local state is not overlayed.
      */
     public void nodeModified(NodeState state) {
-        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+        if (state.getContainer() == this
+                || !transientStore.containsKey(state.getId())) {
             dispatcher.notifyNodeModified(state);
         }
     }
@@ -932,7 +924,8 @@ public class SessionItemStateManager
      * or if the local state is not overlayed.
      */
     public void nodeRemoved(NodeState state, Name name, int index, NodeId id) {
-        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+        if (state.getContainer() == this
+                || !transientStore.containsKey(state.getId())) {
             dispatcher.notifyNodeRemoved(state, name, index, id);
         }
     }
@@ -964,7 +957,7 @@ public class SessionItemStateManager
          * {@inheritDoc}
          */
         public boolean hasItemState(ItemId id) {
-            return atticStore.contains(id);
+            return atticStore.containsKey(id);
         }
 
         /**

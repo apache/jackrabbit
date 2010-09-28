@@ -260,8 +260,7 @@ public class SessionImpl extends AbstractSession
     protected SessionItemStateManager createSessionItemStateManager() {
         SessionItemStateManager mgr = new SessionItemStateManager(
                 context.getRootNodeId(),
-                context.getWorkspace().getItemStateManager(),
-                context.getNodeTypeRegistry());
+                context.getWorkspace().getItemStateManager());
         context.getWorkspace().getItemStateManager().addListener(mgr);
         return mgr;
     }
