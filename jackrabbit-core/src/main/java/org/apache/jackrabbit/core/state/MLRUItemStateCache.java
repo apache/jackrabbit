@@ -16,7 +16,10 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -41,16 +44,16 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     public static final int DEFAULT_MAX_MEM = 4 * 1024 * 1024;
 
     /** the amount of memory the entries use */
-    private long totalMem;
+    private volatile long totalMem;
 
     /** the maximum of memory the cache may use */
-    private long maxMem;
+    private volatile long maxMem;
 
     /** the number of writes */
-    private long numWrites;
+    private volatile long numWrites;
 
     /** the access count */
-    private long accessCount;
+    private volatile long accessCount;
 
     /** the cache access listeners */
     private CacheAccessListener accessListener;
@@ -58,7 +61,7 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     /**
      * A cache for <code>ItemState</code> instances
      */
-    private final LinkedMap cache = new LinkedMap();
+    private final Map<ItemId, Entry> cache;
 
     /**
      * Constructs a new, empty <code>ItemStateCache</code> with a maximum amount
@@ -74,8 +77,21 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      *
      * @param maxMem the maximum amount of memory this cache may use.
      */
+    @SuppressWarnings("serial")
     private MLRUItemStateCache(int maxMem) {
         this.maxMem = maxMem;
+        this.cache = new LinkedHashMap<ItemId, MLRUItemStateCache.Entry>(
+                maxMem / 1024, 0.75f, true /* access-ordered */) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<ItemId, Entry> e) {
+                if (totalMem > MLRUItemStateCache.this.maxMem) {
+                    totalMem -= e.getValue().size;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
     }
 
     //-------------------------------------------------------< ItemStateCache >
@@ -94,10 +110,8 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     public ItemState retrieve(ItemId id) {
         touch();
         synchronized (cache) {
-            Entry entry = (Entry) cache.remove(id);
+            Entry entry = cache.get(id);
             if (entry != null) {
-                // 'touch' item, by adding at end of list
-                cache.put(id, entry);
                 return entry.state;
             } else {
                 return null;
@@ -110,7 +124,12 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      */
     public ItemState[] retrieveAll() {
         synchronized (cache) {
-            return (ItemState[]) cache.values().toArray(new ItemState[cache.size()]);
+            ItemState[] states = new ItemState[cache.size()];
+            int i = 0;
+            for (Entry entry : cache.values()) {
+                states[i++] = entry.state;
+            }
+            return states;
         }
     }
 
@@ -120,7 +139,7 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     public void update(ItemId id) {
         touch();
         synchronized (cache) {
-            Entry entry = (Entry) cache.get(id);
+            Entry entry = cache.get(id);
             if (entry != null) {
                 totalMem -= entry.size;
                 entry.recalc();
@@ -141,22 +160,10 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
                 evict(id);
             }
             Entry entry = new Entry(state);
-            cache.put(id, entry);
             totalMem += entry.size;
-            shrinkIfRequired();
+            cache.put(id, entry);
             if (numWrites++ % 10000 == 0 && log.isDebugEnabled()) {
                 log.debug(this + " size=" + cache.size() + ", " + totalMem + "/" + maxMem);
-            }
-        }
-    }
-
-    private void shrinkIfRequired() {
-        // remove items, if too many
-        synchronized (cache) {
-            while (totalMem > maxMem) {
-                ItemId id = (ItemId) cache.firstKey();
-                Entry entry = (Entry) cache.remove(id);
-                totalMem -= entry.size;
             }
         }
     }
@@ -167,7 +174,7 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     public void evict(ItemId id) {
         touch();
         synchronized (cache) {
-            Entry entry = (Entry) cache.remove(id);
+            Entry entry = cache.remove(id);
             if (entry != null) {
                 totalMem -= entry.size;
             }
@@ -220,15 +227,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      * {@inheritDoc}
      */
     public long getMemoryUsed() {
-        synchronized (cache) {
-            totalMem = 0;
-            Iterator iter = cache.values().iterator();
-            while (iter.hasNext()) {
-                Entry entry = (Entry) iter.next();
-                entry.recalc();
-                totalMem += entry.size;
-            }
-        }
         return totalMem;
     }
 
@@ -247,7 +245,21 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     public void setMaxMemorySize(long size) {
         synchronized (cache) {
             this.maxMem = size;
-            shrinkIfRequired();
+
+            // remove items, if too many
+            if (totalMem > maxMem) {
+                totalMem = 0;
+                List<Map.Entry<ItemId, Entry>> entries =
+                    new ArrayList<Map.Entry<ItemId, Entry>>(cache.entrySet());
+                for (Map.Entry<ItemId, Entry> entry : entries) {
+                    long entrySize = entry.getValue().size;
+                    if (totalMem + entrySize > maxMem) {
+                        cache.remove(entry.getKey());
+                    } else {
+                        totalMem += entrySize;
+                    }
+                }
+            }
         }
     }
 
