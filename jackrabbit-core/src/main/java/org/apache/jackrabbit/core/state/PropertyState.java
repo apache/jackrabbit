@@ -196,20 +196,21 @@ public class PropertyState extends ItemState {
     /**
      * {@inheritDoc}
      */
+    @Override
     public long calculateMemoryFootprint() {
         /*
         private PropertyId id;
         private InternalValue[] values;
         private int type;
         private boolean multiValued;
-        private PropDefId defId;
 
-        we assume an average Name localname of 30 chars.
-        PropertyId = 8 + nodeId(36) * name(250) + hash(4) ~ 300;
-        NodeDefId = 8 + id(4) = 12
+        We assume only 16 bytes per name or node id,
+        as they are shared between states
+        PropertyId = 8 + nodeId(16) + name(16) + hash(4) ~ 44;
         InternalValue = 8 + n * (values) ~ 8 + n*100;
         value=approx 100 bytes.
         */
-        return 350 + values.length * 100;
+        return 64 + values.length * 100;
     }
+
 }
