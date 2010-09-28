@@ -71,7 +71,7 @@ import java.util.Set;
  * in the workspace applying the following rules:
  * <ul>
  * <li>A <code>Node</code> is considered <i>access controlled</i> if an ACL has
- * been explicitely assigned to it by adding the mixin type
+ * been explicitly assigned to it by adding the mixin type
  * <code>rep:AccessControllable</code> and adding child node of type
  * <code>rep:acl</code> that forms the acl.</li>
  * <li>a Property is considered 'access controlled' if its parent Node is.</li>
